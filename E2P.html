@@ -1,0 +1,1699 @@
+<!DOCTYPE html><html lang="zh-Hans" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>小红故事 | 小红故事</title><meta name="author" content="小红叔"><meta name="copyright" content="小红叔"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Semitel通用Excel数据源生成目标打印程序                             &#x2F;* 基础重置 - 与上一版本完全相同 *&#x2F;         * { margin: 0; padding: 0; box-sizing: border-box; }         body {              font-family: &quot;Mic">
+<meta property="og:type" content="website">
+<meta property="og:title" content="小红故事">
+<meta property="og:url" content="https://snowhoo.net/E2P.html">
+<meta property="og:site_name" content="小红故事">
+<meta property="og:description" content="Semitel通用Excel数据源生成目标打印程序                             &#x2F;* 基础重置 - 与上一版本完全相同 *&#x2F;         * { margin: 0; padding: 0; box-sizing: border-box; }         body {              font-family: &quot;Mic">
+<meta property="og:locale">
+<meta property="og:image" content="https://snowhoo.net/img/profile_PIC.jpg">
+<meta property="article:published_time" content="2026-02-26T09:23:54.294Z">
+<meta property="article:modified_time" content="2026-02-26T09:23:54.294Z">
+<meta property="article:author" content="小红叔">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://snowhoo.net/img/profile_PIC.jpg"><script type="application/ld+json"></script><link rel="shortcut icon" href="/img/favicon.ico"><link rel="canonical" href="https://snowhoo.net/E2P.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.3"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":true,"hitsPerPage":8},"languages":{"hits_empty":"No results found for: ${query}","hits_stats":"${hits} articles found"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '小红故事',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'page'
+}</script><meta name="generator" content="Hexo 8.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/profile_PIC.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">42</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">18</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">3</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page fixed" id="page-header" style="background-image: url(/img/banner.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/img/logo.png" alt="Logo"></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> Search</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="page-site-info"><h1 id="site-title"></h1></div></header><main class="layout" id="content-inner"><div id="page"><div class="container" id="article-container"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semitel通用Excel数据源生成目标打印程序</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        /* 基础重置 - 与上一版本完全相同 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif; 
+            background: #f0f2f5; 
+            padding: 15px; 
+            min-height: 100vh; 
+        }
+        .container { 
+            max-width: 1600px; 
+            margin: 0 auto; 
+            background: white; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+            overflow: hidden; 
+        }
+
+        /* 头部 - 更紧凑 */
+        .header { 
+            padding: 12px 20px; 
+            background: #f8fafc; 
+            border-bottom: 1px solid #e2e8f0; 
+        }
+        .header h1 { 
+            font-size: 1.5rem; 
+            color: #1e293b; 
+            margin-bottom: 2px; 
+        }
+
+        /* 标签页 - 紧凑 */
+        .tabs { 
+            display: flex; 
+            gap: 2px; 
+            background: #f1f5f9; 
+            padding: 0 20px; 
+            border-bottom: 1px solid #cbd5e1; 
+        }
+        .tab-btn { 
+            padding: 8px 20px; 
+            border: none; 
+            background: transparent; 
+            color: #475569; 
+            font-weight: 600; 
+            font-size: 0.9rem; 
+            cursor: pointer; 
+            border-bottom: 3px solid transparent; 
+            transition: all 0.15s; 
+            margin-bottom: -1px; 
+        }
+        .tab-btn:hover { 
+            color: #1e293b; 
+            background: rgba(52, 152, 219, 0.05); 
+        }
+        .tab-btn.active { 
+            color: #2563eb; 
+            border-bottom-color: #2563eb; 
+            background: white; 
+            border-radius: 8px 8px 0 0; 
+        }
+        .tab-content { 
+            display: none; 
+            padding: 16px 20px; 
+            background: white; 
+        }
+        .tab-content.active { display: block; }
+
+        /* 面板标题 - 更紧凑 */
+        .panel { margin-bottom: 16px; }
+        .panel-title { 
+            font-size: 0.95rem; 
+            font-weight: 600; 
+            color: #1e293b; 
+            margin-bottom: 8px; 
+            padding-bottom: 4px; 
+            border-bottom: 1.5px solid #94a3b8; 
+            display: flex; 
+            align-items: center; 
+        }
+        .panel-title::before { 
+            content: '▍'; 
+            margin-right: 4px; 
+            color: #3b82f6; 
+            font-size: 1.2rem; 
+        }
+
+        /* 上传区域 - 高度降低 */
+        .upload-zone { 
+            border: 2px dashed #94a3b8; 
+            border-radius: 8px; 
+            padding: 20px; 
+            text-align: center; 
+            background: #f8fafc; 
+            cursor: pointer; 
+            transition: 0.2s; 
+        }
+        .upload-zone:hover { 
+            background: #eef2f6; 
+            border-color: #3b82f6; 
+        }
+        .upload-zone .icon { font-size: 32px; margin-bottom: 4px; }
+
+        /* 列选择器 - 更紧凑网格 */
+        .column-selector { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
+            gap: 6px; 
+            margin: 8px 0; 
+        }
+        .column-chip { 
+            padding: 4px 8px; 
+            background: #f1f4f9; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 16px; 
+            cursor: pointer; 
+            font-size: 0.8rem; 
+            text-align: center; 
+            transition: 0.1s; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+        }
+        .column-chip.selected { 
+            background: #3b82f6; 
+            color: white; 
+            border-color: #2563eb; 
+        }
+
+        /* 字段映射 - 紧凑 */
+        .field-mapping { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+            gap: 8px; 
+        }
+        .field-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            padding: 4px 8px; 
+            background: #f8fafc; 
+            border-radius: 6px; 
+        }
+        .field-item label { 
+            min-width: 60px; 
+            font-size: 0.8rem; 
+            color: #475569; 
+        }
+        .field-item select { 
+            flex: 1; 
+            padding: 4px 6px; 
+            font-size: 0.8rem; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 4px; 
+        }
+
+        /* 编辑器布局 - 稍微紧凑 */
+        .editor-container { 
+            display: flex; 
+            gap: 12px; 
+            min-height: 450px; 
+        }
+        .editor-sidebar { 
+            width: 200px; 
+            flex-shrink: 0; 
+        }
+        .editor-canvas { 
+            flex: 1; 
+            background: #e2e8f0; 
+            border-radius: 12px; 
+            padding: 12px; 
+            overflow: auto; 
+            position: relative; 
+        }
+        .editor-properties { 
+            width: 240px; 
+            flex-shrink: 0; 
+            background: #f8fafc; 
+            border-radius: 12px; 
+            padding: 12px; 
+            border: 1px solid #e2e8f0; 
+        }
+
+        /* 元素面板 - 紧凑 */
+        .element-palette { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 4px; 
+            margin-bottom: 12px; 
+        }
+        .palette-btn { 
+            padding: 5px 4px; 
+            font-size: 0.75rem; 
+            background: white; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+        .palette-btn:hover { 
+            background: #e6f0fa; 
+            border-color: #3b82f6; 
+        }
+
+        .data-fields h4 { 
+            font-size: 0.8rem; 
+            color: #334155; 
+            margin: 8px 0 4px; 
+        }
+        .data-field { 
+            padding: 4px 8px; 
+            background: #e6f0fa; 
+            border: 1px solid #b9d0e7; 
+            border-radius: 4px; 
+            margin-bottom: 4px; 
+            font-size: 0.75rem; 
+            cursor: grab; 
+        }
+
+        /* 画布元素 - 支持缩放 */
+        .label-canvas { 
+            background: white; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+            margin: 0 auto; 
+            position: relative; 
+            transform-origin: 0 0;
+        }
+        .canvas-element { 
+            position: absolute; 
+            cursor: move; 
+            border: 2px solid transparent; 
+        }
+        .canvas-element:hover { border-color: #3b82f6; }
+        .canvas-element.selected { border-color: #ef4444; }
+        .canvas-element .delete-btn { 
+            position: absolute; 
+            top: -8px; 
+            right: -8px; 
+            width: 16px; 
+            height: 16px; 
+            background: #ef4444; 
+            color: white; 
+            border: none; 
+            border-radius: 50%; 
+            font-size: 10px; 
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            z-index: 200; 
+        }
+        .canvas-element:hover .delete-btn { display: flex; }
+
+        /* 调整手柄 - 稍小 */
+        .resize-handle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #3b82f6;
+            border: 1px solid white;
+            border-radius: 2px;
+            z-index: 150;
+        }
+        .resize-handle.nw { top: -4px; left: -4px; cursor: nw-resize; }
+        .resize-handle.n { top: -4px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+        .resize-handle.ne { top: -4px; right: -4px; cursor: ne-resize; }
+        .resize-handle.w { top: 50%; left: -4px; transform: translateY(-50%); cursor: w-resize; }
+        .resize-handle.e { top: 50%; right: -4px; transform: translateY(-50%); cursor: e-resize; }
+        .resize-handle.sw { bottom: -4px; left: -4px; cursor: sw-resize; }
+        .resize-handle.s { bottom: -4px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+        .resize-handle.se { bottom: -4px; right: -4px; cursor: se-resize; }
+
+        /* 属性组 - 紧凑 */
+        .prop-group { margin-bottom: 10px; }
+        .prop-group label { 
+            display: block; 
+            font-size: 0.75rem; 
+            color: #475569; 
+            margin-bottom: 2px; 
+        }
+        .prop-group input, .prop-group select { 
+            width: 100%; 
+            padding: 4px 6px; 
+            font-size: 0.8rem; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 4px; 
+        }
+        .prop-group input[type="checkbox"] { 
+            width: auto; 
+            margin-right: 4px; 
+        }
+        .prop-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        .prop-group input[type="number"]::-webkit-outer-spin-button,
+        .prop-group input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* 按钮组 - 紧凑 */
+        .button-row { 
+            display: flex; 
+            gap: 8px; 
+            flex-wrap: wrap; 
+            margin: 12px 0 4px; 
+        }
+        .btn { 
+            padding: 6px 12px; 
+            font-size: 0.8rem; 
+            border-radius: 20px; 
+            border: 1px solid #cbd5e1; 
+            background: white; 
+            color: #1e293b; 
+            cursor: pointer; 
+            font-weight: 500; 
+            transition: 0.1s; 
+        }
+        .btn-primary { 
+            background: #3b82f6; 
+            color: white; 
+            border: none; 
+        }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success { 
+            background: #10b981; 
+            color: white; 
+            border: none; 
+        }
+        .btn-danger { 
+            background: #ef4444; 
+            color: white; 
+            border: none; 
+        }
+        .btn:hover { filter: brightness(0.95); }
+
+        /* 预览区域 - 使用 Flex 布局防止重叠 */
+        .preview-grid { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 12px; 
+            margin-top: 12px; 
+        }
+        /* 标签预览卡片 */
+        .label-preview { 
+            background: white; 
+            border: 2px solid #1e293b; 
+            border-radius: 8px; 
+            padding: 8px; 
+            position: relative; 
+            overflow: hidden; 
+            outline: 1px dashed #aaa; 
+            box-sizing: border-box;
+        }
+
+        /* 统计栏 - 紧凑 */
+        .stats-bar { 
+            display: flex; 
+            gap: 16px; 
+            padding: 8px 12px; 
+            background: #f1f5f9; 
+            border-radius: 40px; 
+            font-size: 0.8rem; 
+            margin-bottom: 12px; 
+        }
+
+        /* 本地模板列表 - 紧凑 */
+        #localTemplateList { 
+            display: flex; 
+            gap: 6px; 
+            flex-wrap: wrap; 
+            margin-top: 6px; 
+        }
+        #localTemplateList .preset-btn { 
+            padding: 4px 12px; 
+            font-size: 0.75rem; 
+            background: #e2e8f0; 
+            border: 1px solid #94a3b8; 
+            border-radius: 20px; 
+            cursor: pointer; 
+        }
+
+        .error-msg { 
+            background: #fee; 
+            border: 1px solid #fcc; 
+            color: #c33; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            margin-bottom: 12px; 
+            font-size: 0.8rem; 
+            display: none; 
+        }
+        .error-msg.show { display: block; }
+        .loading { text-align: center; padding: 20px; color: #64748b; }
+
+        /* ========== 打印样式优化 ========== */
+        @media print {
+            * {
+                margin: 0 !important;
+                padding: 0 !important;
+                box-sizing: border-box !important;
+            }
+            @page {
+                margin: 0;
+                size: auto;
+            }
+            .no-print {
+                display: none !important;
+            }
+            #tab-preview {
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: transparent !important;
+            }
+            .preview-grid {
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                gap: 0 !important;
+                background: transparent !important;
+            }
+            .label-preview {
+                outline: none;
+                page-break-after: always;
+                break-after: page;
+                margin: 0 auto !important;
+                border-radius: 8px !important;
+                overflow: hidden !important;
+                background: white !important;
+                box-shadow: none;
+                padding: 8px !important;
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+            .label-preview:last-child {
+                page-break-after: auto;
+                break-after: auto;
+            }
+            .container {
+                overflow: visible !important;
+            }
+            .label-preview [style*="font-weight: bold"] {
+                font-weight: bold !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header no-print">
+        <h1>🏷️ Semitel通用Excel数据源生成目标打印程序</h1>
+    </div>
+
+    <div class="tabs no-print">
+        <button class="tab-btn active" onclick="switchTab('data')">1. 数据导入</button>
+        <button class="tab-btn" onclick="switchTab('design')" id="designTab" disabled>2. 模板设计</button>
+        <button class="tab-btn" onclick="switchTab('preview')" id="previewTab" disabled>3. 预览打印</button>
+    </div>
+
+    <!-- 数据导入面板 -->
+    <div id="tab-data" class="tab-content active no-print">
+        <div class="panel">
+            <div class="panel-title">上传Excel文件</div>
+            <div class="upload-zone" id="dropZone">
+                <div class="icon">📂</div>
+                <p>点击或拖拽 .xlsx / .xls 文件</p>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;">
+            </div>
+        </div>
+
+        <div class="error-msg" id="errorMsg"></div>
+
+        <div class="panel" id="columnPanel" style="display:none;">
+            <div class="panel-title">选择显示的列 (可多选)</div>
+            <div class="column-selector" id="columnSelector"></div>
+
+            <div style="background:#f8fafc; padding:10px; border-radius:8px; margin:10px 0;">
+                <div style="font-weight:600; font-size:0.85rem; margin-bottom:6px;">📌 数量列 (必选)</div>
+                <select id="qtyColumn" style="width:100%; padding:6px; border-radius:6px; border:1px solid #cbd5e1;">
+                    <option value="">— 选择数量列 —</option>
+                </select>
+            </div>
+
+            <div style="background:#f8fafc; padding:10px; border-radius:8px; margin:10px 0;">
+                <div style="font-weight:600; font-size:0.85rem; margin-bottom:6px;">🔢 序号格式</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:6px;">
+                    <label><input type="radio" name="seqFormat" value="seqTotal" checked> 1/5</label>
+                    <label><input type="radio" name="seqFormat" value="seqOnly"> 1</label>
+                    <label><input type="radio" name="seqFormat" value="custom"> 自定义</label>
+                </div>
+                <div id="customSeqOptions" style="display:none; gap:6px; flex-wrap:wrap;">
+                    <input type="text" id="seqPrefix" placeholder="前缀" style="width:70px; padding:4px;">
+                    <input type="text" id="seqSuffix" placeholder="后缀" style="width:70px; padding:4px;">
+                </div>
+                <div style="display:flex; gap:12px; align-items:center; margin-top:6px;">
+                    <span>位数 <input type="number" id="seqPadding" value="0" min="0" max="10" style="width:50px;"></span>
+                    <label><input type="checkbox" id="seqShowTotal"> 显示总页数</label>
+                    <span style="background:#e6f0fa; padding:2px 8px; border-radius:12px;">预览: <span id="seqPreview">1</span></span>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="confirmColumns()" style="width:100%;">✓ 确认列选择</button>
+
+            <div id="templateMatchSection" style="margin-top:12px; padding:10px; background:#fef9e7; border-radius:8px; display:none;">
+                <div style="font-weight:600; font-size:0.85rem;">📎 自动匹配模板列</div>
+                <select id="templateMatchColumn" style="width:100%; margin:6px 0; padding:4px;" onchange="updateTemplateMatchColumn()">
+                    <option value="">不启用</option>
+                </select>
+                <p style="font-size:0.7rem; color:#64748b;">选择列，其值将作为模板名称</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模板设计面板 -->
+    <div id="tab-design" class="tab-content no-print">
+        <div style="display:flex; gap:12px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
+            <div class="panel-title" style="margin:0;">📐 画布尺寸</div>
+            <span>宽 <input type="number" id="canvasWidth" value="85" min="30" max="200" style="width:60px;"></span>
+            <span>高 <input type="number" id="canvasHeight" value="45" min="20" max="150" style="width:60px;"></span>
+            <button class="btn btn-primary" onclick="updateCanvasSize()" style="padding:4px 12px;">应用</button>
+            
+            <!-- 缩放控件 -->
+            <div style="display:flex; gap:8px; align-items:center; margin-left:20px;">
+                <span style="font-size:0.85rem;">🔍</span>
+                <button class="btn" onclick="zoomCanvas(-0.1)" style="padding:4px 8px;">−</button>
+                <span id="zoomPercent" style="min-width:45px; text-align:center; font-size:0.85rem;">100%</span>
+                <button class="btn" onclick="zoomCanvas(0.1)" style="padding:4px 8px;">+</button>
+                <button class="btn" onclick="zoomCanvas(0, true)" style="padding:4px 8px;">↺</button>
+            </div>
+
+            <!-- 按钮组：保存/导出/导入 + 生成预览/打印/清空 -->
+            <div style="display:flex; gap:8px; margin-left:auto;">
+                <button class="btn" onclick="saveCurrentTemplate()">保存</button>
+                <button class="btn" onclick="exportCurrentTemplate()">导出</button>
+                <button class="btn" onclick="document.getElementById('importSingleTemplate').click()">导入</button>
+                <input type="file" id="importSingleTemplate" accept=".json" style="display:none;" onchange="importSingleTemplateFile(event)">
+                <button class="btn btn-primary" onclick="generatePreview()">✨ 生成预览</button>
+                <button class="btn btn-success" onclick="printLabels()">🖨️ 打印</button>
+                <button class="btn btn-danger" onclick="clearCanvas()">🗑️ 清空画布</button>
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <!-- 左侧面板 -->
+            <div class="editor-sidebar">
+                <div class="panel">
+                    <div class="panel-title">➕ 添加元素</div>
+                    <div class="element-palette">
+                        <button class="palette-btn" onclick="addTextElement()">📝 文本</button>
+                        <button class="palette-btn" onclick="addBarcodeElement()">📊 条码</button>
+                        <button class="palette-btn" onclick="addQRCodeElement()">⬛ 二维码</button>
+                        <button class="palette-btn" onclick="document.getElementById('imageUpload').click()">🖼️ 图片</button>
+                        <button class="palette-btn" onclick="addHLineElement()">➖ 水平线</button>
+                        <button class="palette-btn" onclick="addVLineElement()">▮ 垂直线</button>
+                        <button class="palette-btn" onclick="addSeqElement()">🔢 {序号}</button>
+                        <input type="file" id="imageUpload" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+                    </div>
+                    <div class="data-fields">
+                        <h4>📋 数据字段 (拖拽到画布)</h4>
+                        <div id="dataFieldList"></div>
+                    </div>
+                </div>
+                <div class="panel" style="margin-top:8px;">
+                    <div class="panel-title">📂 本地模板</div>
+                    <div id="localTemplateList"></div>
+                </div>
+            </div>
+
+            <!-- 画布区 -->
+            <div class="editor-canvas" id="editorCanvas">
+                <div class="label-canvas" id="labelCanvas" style="width:321px;height:170px; transform-origin:0 0;"></div>
+            </div>
+
+            <!-- 属性面板 -->
+            <div class="editor-properties">
+                <div class="panel-title" style="margin-top:0;">⚙️ 元素属性</div>
+                <div id="propPanel">
+                    <p style="color:#64748b; font-size:0.8rem;">点击画布上的元素开始编辑</p>
+                </div>
+                <div class="button-row" style="justify-content:center;">
+                    <button class="btn" onclick="bringToFront()" id="btnFront" disabled>⬆️ 上移一层</button>
+                    <button class="btn" onclick="sendToBack()" id="btnBack" disabled>⬇️ 下移一层</button>
+                    <button class="btn" onclick="bringToTop()" id="btnTop" disabled>🔼 顶层</button>
+                    <button class="btn" onclick="sendToBottom()" id="btnBottom" disabled>🔽 底层</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预览面板 -->
+    <div id="tab-preview" class="tab-content">
+        <div class="panel no-print">
+            <div class="stats-bar" id="statsBar" style="display:none;">
+                <span>📊 数据行: <span id="rowCount">0</span></span>
+                <span>🏷️ 标签总数: <span id="labelCount">0</span></span>
+                <label><input type="checkbox" id="showBorder" checked onchange="toggleBorder()"> 显示边框</label>
+            </div>
+            <div class="button-row">
+                <button class="btn btn-success" onclick="window.print()">🖨️ 打印</button>
+                <button class="btn" onclick="switchTab('design')">← 返回编辑</button>
+            </div>
+        </div>
+        <div class="preview-grid" id="previewGrid"></div>
+    </div>
+</div>
+
+<script>
+    // ================= 全局变量 =================
+    let excelData = [], excelHeaders = [], selectedColumns = [];
+    let canvasElements = [], selectedElement = null, elementIdCounter = 0;
+    let isResizing = false, resizeTimeout = null;
+    const MM_TO_PX = 3.78;
+    let qtyColumnIndex = null, templateMatchColumn = '';
+    let localTemplates = JSON.parse(localStorage.getItem('labelTemplates') || '{}');
+
+    // 序号格式
+    let seqFormat = { type: 'seqTotal', prefix: '', suffix: '', showTotal: false, padding: 0 };
+
+    // 缩放相关
+    let canvasScale = 1.0;
+    const MIN_SCALE = 0.5, MAX_SCALE = 2.0;
+
+    // DOM 元素
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const labelCanvas = document.getElementById('labelCanvas');
+    const propPanel = document.getElementById('propPanel');
+    const dataFieldList = document.getElementById('dataFieldList');
+    const zoomPercent = document.getElementById('zoomPercent');
+    const btnFront = document.getElementById('btnFront');
+    const btnBack = document.getElementById('btnBack');
+    const btnTop = document.getElementById('btnTop');
+    const btnBottom = document.getElementById('btnBottom');
+
+    // ================= 工具函数 =================
+    // 转义正则特殊字符
+    function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // ================= 初始化 =================
+    window.addEventListener('load', () => {
+        renderLocalTemplateList();
+        updateCanvasSize();
+        updateZoomDisplay();
+    });
+
+    // ================= 缩放函数 =================
+    function zoomCanvas(delta, reset = false) {
+        if (reset) {
+            canvasScale = 1.0;
+        } else {
+            canvasScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, canvasScale + delta));
+        }
+        labelCanvas.dataset.scale = canvasScale;
+        labelCanvas.style.transform = `scale(${canvasScale})`;
+        updateZoomDisplay();
+    }
+
+    function updateZoomDisplay() {
+        zoomPercent.textContent = Math.round(canvasScale * 100) + '%';
+    }
+
+    // ================= 文件上传 =================
+    fileInput.addEventListener('change', handleFileSelect);
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.background = '#e6f0fa'; });
+    dropZone.addEventListener('dragleave', () => { dropZone.style.background = '#f8fafc'; });
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.style.background = '#f8fafc';
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            handleFileSelect({ target: fileInput });
+        }
+    });
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                if (excelData.length < 2) throw new Error('文件内容为空');
+                excelHeaders = excelData[0].map((h, i) => ({ name: String(h||'').trim(), index: i })).filter(h => h.name);
+                showColumnSelector();
+                // 默认全选所有列
+                selectedColumns = excelHeaders.map(h => h.index);
+                // 更新芯片选中状态
+                document.querySelectorAll('.column-chip').forEach((chip, idx) => {
+                    if (selectedColumns.includes(idx)) {
+                        chip.classList.add('selected');
+                    } else {
+                        chip.classList.remove('selected');
+                    }
+                });
+            } catch (error) {
+                showError('读取失败: ' + error.message);
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function showColumnSelector() {
+        const container = document.getElementById('columnSelector');
+        const qtySelect = document.getElementById('qtyColumn');
+        container.innerHTML = '';
+        qtySelect.innerHTML = '<option value="">— 选择数量列 —</option>';
+
+        excelHeaders.forEach((header, idx) => {
+            const chip = document.createElement('div');
+            chip.className = 'column-chip';
+            chip.textContent = header.name;
+            chip.onclick = function() {
+                this.classList.toggle('selected');
+                if (selectedColumns.includes(idx))
+                    selectedColumns = selectedColumns.filter(i => i !== idx);
+                else selectedColumns.push(idx);
+            };
+            container.appendChild(chip);
+
+            const opt = document.createElement('option');
+            opt.value = idx;
+            opt.textContent = header.name;
+            qtySelect.appendChild(opt);
+        });
+
+        // 自动选择数量列
+        excelHeaders.forEach((header, idx) => {
+            if (header.name.toLowerCase().match(/(数量|qty|份数|num)/))
+                qtySelect.value = idx;
+        });
+
+        document.getElementById('columnPanel').style.display = 'block';
+    }
+
+    // ================= 序号格式 =================
+    function updateSeqFormatPreview() {
+        const formatType = document.querySelector('input[name="seqFormat"]:checked').value;
+        seqFormat.type = formatType;
+        seqFormat.prefix = document.getElementById('seqPrefix').value;
+        seqFormat.suffix = document.getElementById('seqSuffix').value;
+        seqFormat.showTotal = document.getElementById('seqShowTotal').checked;
+        seqFormat.padding = parseInt(document.getElementById('seqPadding').value) || 0;
+        document.getElementById('customSeqOptions').style.display = formatType === 'custom' ? 'flex' : 'none';
+        document.getElementById('seqPreview').textContent = getFormattedSequence(1, 5);
+    }
+
+    function getFormattedSequence(seq, total) {
+        let s = seqFormat.padding ? String(seq).padStart(seqFormat.padding, '0') : seq;
+        if (seqFormat.type === 'seqTotal') return s + '/' + total;
+        if (seqFormat.type === 'seqOnly') return String(s);
+        let res = seqFormat.prefix + s + seqFormat.suffix;
+        if (seqFormat.showTotal && total > 1) res += '/' + total;
+        return res;
+    }
+
+    // 监听序号控件
+    document.querySelectorAll('input[name="seqFormat"], #seqPrefix, #seqSuffix, #seqShowTotal, #seqPadding')
+        .forEach(el => el.addEventListener('change', updateSeqFormatPreview));
+    updateSeqFormatPreview();
+
+    // ================= 确认列 =================
+    function confirmColumns() {
+        const qty = document.getElementById('qtyColumn').value;
+        if (!qty) { showError('请选择数量列'); return; }
+        qtyColumnIndex = parseInt(qty);
+        if (selectedColumns.length === 0) { showError('至少选一列'); return; }
+        if (!selectedColumns.includes(qtyColumnIndex)) selectedColumns.push(qtyColumnIndex);
+
+        // 更新数据字段列表
+        dataFieldList.innerHTML = '';
+        selectedColumns.forEach(idx => {
+            const header = excelHeaders.find(h => h.index === idx);
+            const field = document.createElement('div');
+            field.className = 'data-field';
+            field.draggable = true;
+            field.textContent = '{' + header.name + '}';
+            field.dataset.field = header.name;
+            field.dataset.index = idx;
+            field.ondragstart = e => e.dataTransfer.setData('text/plain', JSON.stringify({ field: header.name, index: idx }));
+            dataFieldList.appendChild(field);
+        });
+
+        // 匹配列下拉
+        const matchSelect = document.getElementById('templateMatchColumn');
+        matchSelect.innerHTML = '<option value="">不启用</option>';
+        selectedColumns.forEach(idx => {
+            const header = excelHeaders.find(h => h.index === idx);
+            matchSelect.innerHTML += `<option value="${header.name}">${header.name}</option>`;
+        });
+
+        document.getElementById('templateMatchSection').style.display = 'block';
+        document.getElementById('designTab').disabled = false;
+        switchTab('design');
+    }
+
+    function updateTemplateMatchColumn() {
+        templateMatchColumn = document.getElementById('templateMatchColumn').value;
+    }
+
+    // ================= 模板管理 =================
+    function saveCurrentTemplate() {
+        const name = prompt('模板名称');
+        if (!name) return;
+        localTemplates[name] = {
+            width: parseInt(document.getElementById('canvasWidth').value) || 85,
+            height: parseInt(document.getElementById('canvasHeight').value) || 45,
+            elements: canvasElements.map(el => ({
+                type: el.type, x: el.x, y: el.y, content: el.content,
+                fontSize: el.fontSize, fontWeight: el.fontWeight, color: el.color,
+                height: el.height, width: el.width, size: el.size, src: el.src,
+                displayValue: el.displayValue, textPosition: el.textPosition,
+                barWidth: el.barWidth
+            }))
+        };
+        localStorage.setItem('labelTemplates', JSON.stringify(localTemplates));
+        renderLocalTemplateList();
+    }
+
+    function exportCurrentTemplate() {
+        if (!canvasElements.length) { alert('画布为空'); return; }
+        const name = prompt('文件名', 'template');
+        if (!name) return;
+        const data = {
+            version: '2.0', name,
+            width: parseInt(document.getElementById('canvasWidth').value) || 85,
+            height: parseInt(document.getElementById('canvasHeight').value) || 45,
+            elements: canvasElements.map(e => ({
+                type: e.type, x: e.x, y: e.y, content: e.content,
+                fontSize: e.fontSize, fontWeight: e.fontWeight, color: e.color,
+                width: e.width, height: e.height, size: e.size, src: e.src,
+                displayValue: e.displayValue, textPosition: e.textPosition,
+                barWidth: e.barWidth
+            }))
+        };
+        const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = name + '.json';
+        a.click();
+    }
+
+    function importSingleTemplateFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            try {
+                const t = JSON.parse(ev.target.result);
+                document.getElementById('canvasWidth').value = t.width || 85;
+                document.getElementById('canvasHeight').value = t.height || 45;
+                updateCanvasSize();
+                canvasElements = [];
+                labelCanvas.innerHTML = '';
+                if (t.elements) t.elements.forEach(el => {
+                    if (el.type === 'text') addTextElement(el.content, el.x, el.y, el.fontSize, el.fontWeight, el.color);
+                    else if (el.type === 'barcode') addBarcodeElement(el.content, el.x, el.y, el.height, el.displayValue, el.textPosition, el.barWidth);
+                    else if (el.type === 'qrcode') addQRCodeElement(el.content, el.x, el.y, el.size);
+                    else if (el.type === 'hline') addHLineElement(el.x, el.y, el.width);
+                    else if (el.type === 'vline') addVLineElement(el.x, el.y, el.height);
+                    else if (el.type === 'image') addImageElement(el.src, el.x, el.y, el.width, el.height);
+                });
+            } catch(err) { alert('导入失败'); }
+        };
+        reader.readAsText(file);
+    }
+
+    function renderLocalTemplateList() {
+        const container = document.getElementById('localTemplateList');
+        container.innerHTML = '';
+        Object.keys(localTemplates).forEach(name => {
+            const btn = document.createElement('span');
+            btn.className = 'preset-btn';
+            btn.textContent = name;
+            btn.onclick = () => loadLocalTemplate(name);
+            const del = document.createElement('span');
+            del.textContent = '✕';
+            del.style.marginLeft = '4px'; del.style.cursor = 'pointer'; del.style.color = '#c00';
+            del.onclick = e => { e.stopPropagation(); delete localTemplates[name]; localStorage.setItem('labelTemplates', JSON.stringify(localTemplates)); renderLocalTemplateList(); };
+            const wrap = document.createElement('div');
+            wrap.style.display = 'flex'; wrap.style.alignItems = 'center';
+            wrap.appendChild(btn); wrap.appendChild(del);
+            container.appendChild(wrap);
+        });
+    }
+
+    function loadLocalTemplate(name) {
+        const t = localTemplates[name];
+        if (!t) return;
+        document.getElementById('canvasWidth').value = t.width;
+        document.getElementById('canvasHeight').value = t.height;
+        updateCanvasSize();
+        canvasElements = [];
+        labelCanvas.innerHTML = '';
+        t.elements.forEach(el => {
+            if (el.type === 'text') addTextElement(el.content, el.x, el.y, el.fontSize, el.fontWeight, el.color);
+            else if (el.type === 'barcode') addBarcodeElement(el.content, el.x, el.y, el.height, el.displayValue, el.textPosition, el.barWidth);
+            else if (el.type === 'qrcode') addQRCodeElement(el.content, el.x, el.y, el.size);
+            else if (el.type === 'hline') addHLineElement(el.x, el.y, el.width);
+            else if (el.type === 'vline') addVLineElement(el.x, el.y, el.height);
+            else if (el.type === 'image') addImageElement(el.src, el.x, el.y, el.width, el.height);
+        });
+    }
+
+    function getTemplateForRow(row) {
+        return templateMatchColumn && localTemplates[row[templateMatchColumn]] ? localTemplates[row[templateMatchColumn]] : null;
+    }
+
+    // ================= 画布尺寸 =================
+    function updateCanvasSize() {
+        const w = parseInt(document.getElementById('canvasWidth').value) || 85;
+        const h = parseInt(document.getElementById('canvasHeight').value) || 45;
+        labelCanvas.style.width = (w * MM_TO_PX) + 'px';
+        labelCanvas.style.height = (h * MM_TO_PX) + 'px';
+        labelCanvas.dataset.width = w;
+        labelCanvas.dataset.height = h;
+    }
+
+    // ================= 添加元素 =================
+    function addTextElement(c='文本', x=10, y=10, fs=12, fw='normal', cl='#000') {
+        const el = { id:'el_'+(++elementIdCounter), type:'text', content:c, x, y, fontSize:fs, fontWeight:fw, color:cl };
+        renderElement(el, true); canvasElements.push(el); selectElement(el);
+    }
+    function addBarcodeElement(c='{条码}', x=10, y=20, h=7, dv=true, tp='bottom', bw=1.5) {
+        const el = { id:'el_'+(++elementIdCounter), type:'barcode', content:c, x, y, height:h, displayValue:dv, textPosition:tp, barWidth:bw };
+        renderElement(el, true); canvasElements.push(el); selectElement(el);
+    }
+    function addQRCodeElement(c='{条码}', x=50, y=20, s=20) {
+        const el = { id:'el_'+(++elementIdCounter), type:'qrcode', content:c, x, y, size:s };
+        renderElement(el, true); canvasElements.push(el); selectElement(el);
+    }
+    function addHLineElement(x=5, y=10, w=75) {
+        const el = { id:'el_'+(++elementIdCounter), type:'hline', content:'', x, y, width:w };
+        renderElement(el, false); canvasElements.push(el); selectElement(el);
+    }
+    function addVLineElement(x=10, y=5, h=35) {
+        const el = { id:'el_'+(++elementIdCounter), type:'vline', content:'', x, y, height:h };
+        renderElement(el, false); canvasElements.push(el); selectElement(el);
+    }
+    function addImageElement(src, x=10, y=10, w=30, h=30) {
+        const el = { id:'el_'+(++elementIdCounter), type:'image', content:'', x, y, width:w, height:h, src };
+        renderElement(el, false); canvasElements.push(el); selectElement(el);
+    }
+    function addSeqElement(x=10, y=10) {
+        addTextElement('{序号}', x, y, 12, 'normal', '#000000');
+    }
+
+    // ================= 渲染元素 =================
+    function renderElement(el, useExample) {
+        const div = document.createElement('div');
+        div.className = 'canvas-element';
+        div.id = el.id;
+        div.style.left = (el.x * MM_TO_PX) + 'px';
+        div.style.top = (el.y * MM_TO_PX) + 'px';
+        div.style.zIndex = canvasElements.length + 1;
+        div.style.width = 'max-content';
+        div.style.height = 'max-content';
+
+        if (el.type === 'text') {
+            div.innerHTML = el.content + '<button class="delete-btn" onclick="deleteElement(\''+el.id+'\')">×</button>';
+            div.style.fontSize = (el.fontSize||12)+'px';
+            div.style.fontWeight = el.fontWeight||'normal';
+            div.style.color = el.color||'#000';
+        } else if (el.type === 'barcode') {
+            const svgId = 'barcode_'+el.id;
+            div.innerHTML = `<svg id="${svgId}"></svg><button class="delete-btn" onclick="deleteElement('${el.id}')">×</button>`;
+            const displayContent = useExample ? '12345678' : (el.content || ' ');
+            requestAnimationFrame(() => {
+                try {
+                    JsBarcode('#'+svgId, displayContent, {
+                        format:'CODE128',
+                        width: el.barWidth || 1.5,
+                        height: el.height * MM_TO_PX,
+                        displayValue: el.displayValue !== false,
+                        textPosition: el.textPosition||'bottom',
+                        fontSize: 10,
+                        margin: 0
+                    });
+                } catch(e){}
+            });
+        } else if (el.type === 'qrcode') {
+            const sizePx = el.size * MM_TO_PX;
+            div.style.width = sizePx + 'px';
+            div.style.height = sizePx + 'px';
+            // 容器设置 line-height:0 消除内联空白
+            div.style.lineHeight = '0';
+            div.style.fontSize = '0';
+            const qrId = 'qr_'+el.id;
+            div.innerHTML = `<div id="${qrId}"></div><button class="delete-btn" onclick="deleteElement('${el.id}')">×</button>`;
+            requestAnimationFrame(() => {
+                try {
+                    new QRCode(document.getElementById(qrId), {
+                        text: useExample ? 'https://ex.com' : (el.content||' '),
+                        width: sizePx, height: sizePx
+                    });
+                    // 让 canvas 填满容器并消除内联空白
+                    const canvas = document.querySelector('#' + qrId + ' canvas');
+                    if (canvas) {
+                        canvas.style.display = 'block';
+                        canvas.style.width = '100%';
+                        canvas.style.height = '100%';
+                    }
+                } catch(e){}
+            });
+        } else if (el.type === 'hline') {
+            div.style.width = (el.width * MM_TO_PX) + 'px';
+            div.innerHTML = `<div style="border-top:2px solid #000; width:100%;"></div><button class="delete-btn" onclick="deleteElement('${el.id}')">×</button>`;
+        } else if (el.type === 'vline') {
+            div.style.height = (el.height * MM_TO_PX) + 'px';
+            div.innerHTML = `<div style="border-left:2px solid #000; height:100%;"></div><button class="delete-btn" onclick="deleteElement('${el.id}')">×</button>`;
+        } else if (el.type === 'image') {
+            div.style.width = (el.width * MM_TO_PX) + 'px';
+            div.style.height = (el.height * MM_TO_PX) + 'px';
+            div.innerHTML = `<img src="${el.src}" style="width:100%;height:100%;object-fit:contain;"><button class="delete-btn" onclick="deleteElement('${el.id}')">×</button>`;
+        }
+
+        // 拖拽移动（考虑缩放）
+        div.onmousedown = function(e) {
+            if (e.target.classList.contains('delete-btn') || e.target.classList.contains('resize-handle') || isResizing) return;
+            selectElement(el);
+            const scale = parseFloat(labelCanvas.dataset.scale) || 1;
+            const startX = e.clientX, startY = e.clientY;
+            const ox = el.x, oy = el.y;
+            // 获取当前元素的实际尺寸（像素转毫米），考虑缩放
+            const elWidth = div.offsetWidth / scale / MM_TO_PX;
+            const elHeight = div.offsetHeight / scale / MM_TO_PX;
+            const cw = parseFloat(labelCanvas.dataset.width), ch = parseFloat(labelCanvas.dataset.height);
+            const maxX = Math.max(0, cw - elWidth);
+            const maxY = Math.max(0, ch - elHeight);
+
+            function move(e) {
+                const dx = ((e.clientX - startX) / scale) / MM_TO_PX;
+                const dy = ((e.clientY - startY) / scale) / MM_TO_PX;
+                el.x = Math.max(0, Math.min(maxX, ox+dx));
+                el.y = Math.max(0, Math.min(maxY, oy+dy));
+                div.style.left = (el.x*MM_TO_PX)+'px';
+                div.style.top = (el.y*MM_TO_PX)+'px';
+            }
+            function up() { document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); }
+            document.addEventListener('mousemove',move);
+            document.addEventListener('mouseup',up);
+        };
+        labelCanvas.appendChild(div);
+    }
+
+    // ================= 调整手柄 =================
+    function addResizeHandles(el, div) {
+        div.querySelectorAll('.resize-handle').forEach(h=>h.remove());
+        const handles = ['nw','n','ne','w','e','sw','s','se'];
+        handles.forEach(pos => {
+            const h = document.createElement('div');
+            h.className = `resize-handle ${pos}`;
+            h.onmousedown = (e) => {
+                e.stopPropagation(); isResizing = true;
+                const scale = parseFloat(labelCanvas.dataset.scale) || 1;
+                const startX = e.clientX, startY = e.clientY;
+                const sw = div.offsetWidth / scale / MM_TO_PX;
+                const sh = div.offsetHeight / scale / MM_TO_PX;
+                const sl = el.x, st = el.y;
+                const cw = parseFloat(labelCanvas.dataset.width), ch = parseFloat(labelCanvas.dataset.height);
+                function move(e) {
+                    const dx = ((e.clientX - startX) / scale) / MM_TO_PX;
+                    const dy = ((e.clientY - startY) / scale) / MM_TO_PX;
+                    let nw = sw, nh = sh, nx = sl, ny = st;
+                    if (pos.includes('e')) nw = Math.max(3, sw+dx);
+                    if (pos.includes('w')) { nw = Math.max(3, sw-dx); nx = sl + (sw - nw); }
+                    if (pos.includes('s')) nh = Math.max(3, sh+dy);
+                    if (pos.includes('n')) { nh = Math.max(3, sh-dy); ny = st + (sh - nh); }
+                    // 边界限制
+                    if (nx < 0) { nw += nx; nx = 0; }
+                    if (ny < 0) { nh += ny; ny = 0; }
+                    if (nx + nw > cw) nw = cw - nx;
+                    if (ny + nh > ch) nh = ch - ny;
+                    el.x = nx; el.y = ny;
+                    if (el.type === 'text') el.fontSize = Math.max(6, nw*0.8);
+                    else if (el.type === 'barcode') el.height = nh;
+                    else if (el.type === 'qrcode') el.size = nw;
+                    else if (el.type === 'image') { el.width = nw; el.height = nh; }
+                    else if (el.type === 'hline') el.width = nw;
+                    else if (el.type === 'vline') el.height = nh;
+                    // 实时样式
+                    div.style.left = (el.x*MM_TO_PX)+'px';
+                    div.style.top = (el.y*MM_TO_PX)+'px';
+                    if (el.type === 'text') div.style.fontSize = el.fontSize+'px';
+                    else if (el.type === 'barcode') div.style.height = (el.height*MM_TO_PX)+'px';
+                    else if (el.type === 'qrcode') { div.style.width = (el.size*MM_TO_PX)+'px'; div.style.height = (el.size*MM_TO_PX)+'px'; }
+                    else if (el.type === 'image') { div.style.width = (el.width*MM_TO_PX)+'px'; div.style.height = (el.height*MM_TO_PX)+'px'; }
+                    else if (el.type === 'hline') div.style.width = (el.width*MM_TO_PX)+'px';
+                    else if (el.type === 'vline') div.style.height = (el.height*MM_TO_PX)+'px';
+                }
+                function up() {
+                    if (el.type === 'barcode' || el.type === 'qrcode') {
+                        requestAnimationFrame(() => {
+                            const idx = canvasElements.findIndex(e => e.id === el.id);
+                            if (idx !== -1) { 
+                                div.remove(); 
+                                renderElement(el, true); 
+                                selectElement(el); 
+                            }
+                        });
+                    }
+                    document.removeEventListener('mousemove', move);
+                    document.removeEventListener('mouseup', up);
+                    isResizing = false;
+                }
+                document.addEventListener('mousemove', move);
+                document.addEventListener('mouseup', up);
+            };
+            div.appendChild(h);
+        });
+    }
+
+    // ================= 选择元素 =================
+    function selectElement(el) {
+        selectedElement = el;
+        document.querySelectorAll('.canvas-element').forEach(d => {
+            d.classList.remove('selected');
+            d.querySelectorAll('.resize-handle').forEach(h=>h.remove());
+        });
+        const div = document.getElementById(el.id);
+        if (div) { div.classList.add('selected'); addResizeHandles(el, div); }
+        showProperties(el);
+        // 启用图层按钮
+        btnFront.disabled = false;
+        btnBack.disabled = false;
+        btnTop.disabled = false;
+        btnBottom.disabled = false;
+    }
+
+    // ================= 属性面板 =================
+    function showProperties(el) {
+        let html = '';
+        if (el.type === 'text') {
+            html = `
+                <div class="prop-group"><label>内容</label><input value="${el.content}" onchange="updateElementProp('content',this.value)"></div>
+                <div class="prop-group"><label>字体大小</label><input type="number" value="${el.fontSize||12}" onchange="updateElementProp('fontSize',parseInt(this.value))"></div>
+                <div class="prop-group"><label>粗细</label><select onchange="updateElementProp('fontWeight',this.value)"><option ${el.fontWeight==='normal'?'selected':''}>normal</option><option ${el.fontWeight==='bold'?'selected':''}>bold</option></select></div>
+                <div class="prop-group"><label>颜色</label><input type="color" value="${el.color||'#000000'}" onchange="updateElementProp('color',this.value)"></div>
+                <div class="prop-group"><label>X(mm)</label><input value="${el.x.toFixed(1)}" onchange="updateElementProp('x',parseFloat(this.value))"></div>
+                <div class="prop-group"><label>Y(mm)</label><input value="${el.y.toFixed(1)}" onchange="updateElementProp('y',parseFloat(this.value))"></div>
+            `;
+        } else if (el.type === 'barcode') {
+            html = `
+                <div class="prop-group"><label>数据</label><input value="${el.content}" onchange="updateElementProp('content',this.value)"></div>
+                <div class="prop-group"><label>高度(mm)</label><input type="number" value="${el.height||7}" onchange="updateElementProp('height',parseInt(this.value))"></div>
+                <div class="prop-group"><label>条宽</label><input type="number" value="${el.barWidth||1.5}" step="0.1" min="0.5" max="5" onchange="updateElementProp('barWidth',parseFloat(this.value))"></div>
+                <div class="prop-group"><label><input type="checkbox" ${el.displayValue!==false?'checked':''} onchange="updateElementProp('displayValue',this.checked)"> 显示数值</label></div>
+                <div class="prop-group"><label>数值位置</label><select onchange="updateElementProp('textPosition',this.value)"><option value="bottom" ${el.textPosition==='bottom'?'selected':''}>下方</option><option value="top" ${el.textPosition==='top'?'selected':''}>上方</option></select></div>
+                <div class="prop-group"><label>X(mm)</label><input value="${el.x.toFixed(1)}" onchange="updateElementProp('x',parseFloat(this.value))"></div>
+                <div class="prop-group"><label>Y(mm)</label><input value="${el.y.toFixed(1)}" onchange="updateElementProp('y',parseFloat(this.value))"></div>
+            `;
+        } else if (el.type === 'qrcode') {
+            html = `
+                <div class="prop-group"><label>数据</label><input value="${el.content}" onchange="updateElementProp('content',this.value)"></div>
+                <div class="prop-group"><label>尺寸(mm)</label><input type="number" value="${el.size||20}" onchange="updateElementProp('size',parseInt(this.value))"></div>
+                <div class="prop-group"><label>X(mm)</label><input value="${el.x.toFixed(1)}" onchange="updateElementProp('x',parseFloat(this.value))"></div>
+                <div class="prop-group"><label>Y(mm)</label><input value="${el.y.toFixed(1)}" onchange="updateElementProp('y',parseFloat(this.value))"></div>
+            `;
+        } else if (el.type === 'hline') {
+            html = `
+                <div class="prop-group"><label>宽度(mm)</label><input type="number" value="${el.width||75}" onchange="updateElementProp('width',parseInt(this.value))"></div>
+                <div class="prop-group"><label>X(mm)</label><input value="${el.x.toFixed(1)}" onchange="updateElementProp('x',parseFloat(this.value))"></div>
+                <div class="prop-group"><label>Y(mm)</label><input value="${el.y.toFixed(1)}" onchange="updateElementProp('y',parseFloat(this.value))"></div>
+            `;
+        } else if (el.type === 'vline') {
+            html = `
+                <div class="prop-group"><label>高度(mm)</label><input type="number" value="${el.height||35}" onchange="updateElementProp('height',parseInt(this.value))"></div>
+                <div class="prop-group"><label>X(mm)</label><input value="${el.x.toFixed(1)}" onchange="updateElementProp('x',parseFloat(this.value))"></div>
+                <div class="prop-group"><label>Y(mm)</label><input value="${el.y.toFixed(1)}" onchange="updateElementProp('y',parseFloat(this.value))"></div>
+            `;
+        } else if (el.type === 'image') {
+            html = `
+                <div class="prop-group"><label>宽度(mm)</label><input type="number" value="${el.width||30}" onchange="updateElementProp('width',parseInt(this.value))"></div>
+                <div class="prop-group"><label>高度(mm)</label><input type="number" value="${el.height||30}" onchange="updateElementProp('height',parseInt(this.value))"></div>
+                <div class="prop-group"><label>X(mm)</label><input value="${el.x.toFixed(1)}" onchange="updateElementProp('x',parseFloat(this.value))"></div>
+                <div class="prop-group"><label>Y(mm)</label><input value="${el.y.toFixed(1)}" onchange="updateElementProp('y',parseFloat(this.value))"></div>
+            `;
+        } else {
+            html = `<p style="color:#64748b; font-size:0.8rem;">该元素无可编辑属性</p>`;
+        }
+        propPanel.innerHTML = html;
+    }
+
+    function updateElementProp(prop, val) {
+        if (!selectedElement) return;
+        selectedElement[prop] = val;
+        const div = document.getElementById(selectedElement.id);
+        if (!div) return;
+        if (prop === 'x' || prop === 'y') {
+            div.style.left = (selectedElement.x*MM_TO_PX)+'px';
+            div.style.top = (selectedElement.y*MM_TO_PX)+'px';
+        } else {
+            const idx = canvasElements.findIndex(e => e.id === selectedElement.id);
+            if (idx !== -1) {
+                div.remove();
+                renderElement(selectedElement, true);
+                selectElement(selectedElement);
+            }
+        }
+    }
+
+    function deleteElement(id) {
+        canvasElements = canvasElements.filter(e => e.id !== id);
+        document.getElementById(id)?.remove();
+        if (selectedElement?.id === id) {
+            selectedElement = null;
+            propPanel.innerHTML = '<p style="color:#64748b; font-size:0.8rem;">点击画布上的元素开始编辑</p>';
+            // 禁用图层按钮
+            btnFront.disabled = true;
+            btnBack.disabled = true;
+            btnTop.disabled = true;
+            btnBottom.disabled = true;
+        }
+    }
+
+    function clearCanvas() {
+        if (!confirm('清空画布?')) return;
+        canvasElements = [];
+        labelCanvas.innerHTML = '';
+        selectedElement = null;
+        propPanel.innerHTML = '<p style="color:#64748b; font-size:0.8rem;">点击画布上的元素开始编辑</p>';
+        btnFront.disabled = true;
+        btnBack.disabled = true;
+        btnTop.disabled = true;
+        btnBottom.disabled = true;
+    }
+
+    // ================= 图层调整 =================
+    function updateElementZIndex() {
+        canvasElements.forEach((el, index) => {
+            const div = document.getElementById(el.id);
+            if (div) {
+                div.style.zIndex = index + 1;
+            }
+        });
+    }
+
+    function bringToFront() {
+        if (!selectedElement) return;
+        const index = canvasElements.findIndex(e => e.id === selectedElement.id);
+        if (index < canvasElements.length - 1) {
+            // 与下一个交换
+            [canvasElements[index], canvasElements[index + 1]] = [canvasElements[index + 1], canvasElements[index]];
+            updateElementZIndex();
+        }
+    }
+
+    function sendToBack() {
+        if (!selectedElement) return;
+        const index = canvasElements.findIndex(e => e.id === selectedElement.id);
+        if (index > 0) {
+            // 与前一个交换
+            [canvasElements[index - 1], canvasElements[index]] = [canvasElements[index], canvasElements[index - 1]];
+            updateElementZIndex();
+        }
+    }
+
+    function bringToTop() {
+        if (!selectedElement) return;
+        const index = canvasElements.findIndex(e => e.id === selectedElement.id);
+        if (index < canvasElements.length - 1) {
+            const [el] = canvasElements.splice(index, 1);
+            canvasElements.push(el);
+            updateElementZIndex();
+        }
+    }
+
+    function sendToBottom() {
+        if (!selectedElement) return;
+        const index = canvasElements.findIndex(e => e.id === selectedElement.id);
+        if (index > 0) {
+            const [el] = canvasElements.splice(index, 1);
+            canvasElements.unshift(el);
+            updateElementZIndex();
+        }
+    }
+
+    // ================= 图片上传 =================
+    function handleImageUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const img = new Image();
+            img.onload = function() {
+                let w = 30, h = 30;
+                if (img.width > img.height) h = (img.height/img.width)*w;
+                else w = (img.width/img.height)*h;
+                addImageElement(ev.target.result, 10, 10, w, h);
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ================= 预览生成 =================
+    function generatePreview() {
+        if (!canvasElements.length) { showError('请先添加元素'); return; }
+        if (qtyColumnIndex === null) { showError('请先选择数量列'); switchTab('data'); return; }
+
+        const grid = document.getElementById('previewGrid');
+        grid.innerHTML = '<div style="padding:20px;text-align:center;">生成中...</div>';
+        switchTab('preview');
+
+        const allLabels = [];
+        for (let r=1; r<excelData.length; r++) {
+            const row = excelData[r];
+            if (!row) continue;
+            const qty = Math.max(1, parseInt(row[qtyColumnIndex]) || 1);
+            for (let q=0; q<qty; q++) {
+                if (allLabels.length >= 5000) break;
+                allLabels.push({ row, idx:r, seq:q+1, total:qty });
+            }
+        }
+
+        grid.innerHTML = '';
+        allLabels.forEach((d, i) => {
+            const label = createLabelPreview(d.row, d.idx, d.seq, d.total);
+            grid.appendChild(label);
+        });
+        document.getElementById('rowCount').textContent = excelData.length-1;
+        document.getElementById('labelCount').textContent = allLabels.length;
+        document.getElementById('statsBar').style.display = 'flex';
+    }
+
+    function createLabelPreview(row, rowIdx, seq, total) {
+        const w = parseInt(document.getElementById('canvasWidth').value) || 85;
+        const h = parseInt(document.getElementById('canvasHeight').value) || 45;
+        const label = document.createElement('div');
+        label.className = 'label-preview';
+        label.style.width = (w * MM_TO_PX) + 'px';
+        label.style.minHeight = (h * MM_TO_PX) + 'px';
+        label.style.position = 'relative';
+
+        canvasElements.forEach(el => {
+            let content = el.content || '';
+            // 替换数据字段（注意转义字段名）
+            selectedColumns.forEach(colIdx => {
+                const header = excelHeaders.find(h => h.index === colIdx);
+                if (!header) return;
+                const val = row[colIdx] || '';
+                // 使用转义后的字段名构建正则
+                const escapedName = escapeRegExp(header.name);
+                content = content.replace(new RegExp('\\{' + escapedName + '\\}', 'g'), val);
+            });
+            // 替换序号
+            content = content.replace(/{序号}/g, getFormattedSequence(seq, total));
+
+            const item = document.createElement('div');
+            item.style.position = 'absolute';
+            item.style.left = (el.x||0) + 'mm';
+            item.style.top = (el.y||0) + 'mm';
+
+            if (el.type === 'text') {
+                item.textContent = content;
+                item.style.fontSize = (el.fontSize||12)+'px';
+                item.style.fontWeight = el.fontWeight||'normal';
+                item.style.color = el.color||'#000';
+            } else if (el.type === 'barcode') {
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.id = 'pre_'+rowIdx+'_'+seq+'_'+el.id;
+                item.appendChild(svg);
+                requestAnimationFrame(() => {
+                    try {
+                        JsBarcode('#'+svg.id, content||' ', {
+                            format:'CODE128',
+                            width: el.barWidth || 1.5,
+                            height: (el.height||7)*MM_TO_PX,
+                            displayValue: el.displayValue!==false,
+                            textPosition: el.textPosition||'bottom',
+                            fontSize: 10,
+                            margin: 0
+                        });
+                    } catch(e){}
+                });
+            } else if (el.type === 'qrcode') {
+                const sizePx = (el.size||20) * MM_TO_PX;
+                const qr = document.createElement('div');
+                qr.id = 'pre_qr_'+rowIdx+'_'+seq+'_'+el.id;
+                item.appendChild(qr);
+                item.style.width = sizePx + 'px';
+                item.style.height = sizePx + 'px';
+                item.style.lineHeight = '0';
+                item.style.fontSize = '0';
+                requestAnimationFrame(() => {
+                    try {
+                        new QRCode(qr, { text:content||' ', width: sizePx, height: sizePx });
+                        const canvas = qr.querySelector('canvas');
+                        if (canvas) {
+                            canvas.style.display = 'block';
+                            canvas.style.width = '100%';
+                            canvas.style.height = '100%';
+                        }
+                    } catch(e){}
+                });
+            } else if (el.type === 'hline') {
+                item.style.width = (el.width||75)+'mm';
+                item.innerHTML = '<div style="border-top:2px solid #000;width:100%;"></div>';
+            } else if (el.type === 'vline') {
+                item.style.height = (el.height||35)+'mm';
+                item.innerHTML = '<div style="border-left:2px solid #000;height:100%;"></div>';
+            } else if (el.type === 'image') {
+                item.style.width = (el.width||30)+'mm';
+                item.style.height = (el.height||30)+'mm';
+                item.innerHTML = `<img src="${el.src}" style="width:100%;height:100%;object-fit:contain;">`;
+            }
+            label.appendChild(item);
+        });
+        return label;
+    }
+
+    function printLabels() {
+        switchTab('preview');
+        setTimeout(() => window.print(), 200);
+    }
+
+    function toggleBorder() {
+        const show = document.getElementById('showBorder').checked;
+        document.querySelectorAll('.label-preview').forEach(p => p.style.border = show ? '2px solid #1e293b' : 'none');
+    }
+
+    function switchTab(name) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(name+'Tab')?.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById('tab-'+name)?.classList.add('active');
+    }
+
+    function showError(msg) {
+        const el = document.getElementById('errorMsg');
+        el.textContent = msg;
+        el.classList.add('show');
+        setTimeout(() => el.classList.remove('show'), 3000);
+    }
+
+    // 拖拽字段到画布
+    labelCanvas.addEventListener('dragover', e => e.preventDefault());
+    labelCanvas.addEventListener('drop', e => {
+        e.preventDefault();
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        const rect = labelCanvas.getBoundingClientRect();
+        const scale = parseFloat(labelCanvas.dataset.scale) || 1;
+        const x = ((e.clientX - rect.left) / scale) / MM_TO_PX;
+        const y = ((e.clientY - rect.top) / scale) / MM_TO_PX;
+        addTextElement('{'+data.field+'}', x, y);
+    });
+</script>
+</body>
+</html></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/profile_PIC.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">小红叔</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">42</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">18</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">3</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/snowhoo"><i class="fab fa-github"></i><span>我的 Github</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/snowhoo" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:9187541@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="http://wpa.qq.com/msgrd?v=3&amp;uin=9187541&amp;site=qq&amp;menu=yes" target="_blank" title="QQ"><i class="fab fa-qq" style="color: #4a7dbe;"></i></a><a class="social-icon" href="https://weibo.com/snowhoo" target="_blank" title="weibo"><i class="fab fa-weibo" style="color: #be514a;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">一九七九，注定是不平凡的；九个月前，小红在亿万竞争者中脱颖而出，并一直存活到这年春天。于是新的生命故事由此拉开序幕……</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">🏷️ Semitel通用Excel数据源生成目标打印程序</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#tab-design"><span class="toc-number">1.1.</span> <span class="toc-text">📋 数据字段 (拖拽到画布)</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/01/04/%E8%BF%99%E6%98%AF%E4%B8%80%E7%AF%87%E7%94%A8ai%E5%86%99%E7%9A%84%E5%8F%91%E5%B8%83%E5%99%A8%E7%94%9F%E6%88%90%E7%9A%84%E6%96%87%E7%AB%A0/" title="这是一篇用ai写的发布器生成的文章">这是一篇用ai写的发布器生成的文章</a><time datetime="2026-01-03T22:54:00.000Z" title="Created 2026-01-04 06:54:00">2026-01-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/12/31/%E7%AA%81%E7%84%B6%E6%83%B3%EF%BC%8C%E5%8D%B3%E5%88%BB%E5%90%AF%E7%A8%8B%EF%BC%8C%E9%A9%BE%E4%B8%80%E6%95%B4%E6%99%9A%E8%BD%A6%E2%80%A6%E2%80%A6/" title="突然想，即刻启程，驾一整晚车……"><img src="/images/20251231162226.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="突然想，即刻启程，驾一整晚车……"/></a><div class="content"><a class="title" href="/2025/12/31/%E7%AA%81%E7%84%B6%E6%83%B3%EF%BC%8C%E5%8D%B3%E5%88%BB%E5%90%AF%E7%A8%8B%EF%BC%8C%E9%A9%BE%E4%B8%80%E6%95%B4%E6%99%9A%E8%BD%A6%E2%80%A6%E2%80%A6/" title="突然想，即刻启程，驾一整晚车……">突然想，即刻启程，驾一整晚车……</a><time datetime="2025-12-31T08:13:34.000Z" title="Created 2025-12-31 16:13:34">2025-12-31</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/12/31/%E9%9D%99%E6%80%81blog%E6%9C%80%E9%BA%BB%E7%83%A6%E7%9A%84%E5%B0%B1%E6%98%AF%E5%8F%91%E8%A1%A8%E6%96%87%E7%AB%A0/" title="静态blog最麻烦的就是发表文章">静态blog最麻烦的就是发表文章</a><time datetime="2025-12-31T07:07:34.000Z" title="Created 2025-12-31 15:07:34">2025-12-31</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/12/20/2025-12-20-204917/" title="冬至大如年！">冬至大如年！</a><time datetime="2025-12-20T12:49:17.000Z" title="Created 2025-12-20 20:49:17">2025-12-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/12/10/2025-12-10-184000/" title="本来应该从从容容、游刃有余，现在是匆匆忙忙、连滚带爬"><img src="/images/20251220130433.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="本来应该从从容容、游刃有余，现在是匆匆忙忙、连滚带爬"/></a><div class="content"><a class="title" href="/2025/12/10/2025-12-10-184000/" title="本来应该从从容容、游刃有余，现在是匆匆忙忙、连滚带爬">本来应该从从容容、游刃有余，现在是匆匆忙忙、连滚带爬</a><time datetime="2025-12-10T10:40:00.000Z" title="Created 2025-12-10 18:40:00">2025-12-10</time></div></div></div></div><div class="card-widget card-categories"><div class="item-headline">
+            <i class="fas fa-folder-open"></i>
+            <span>Categories</span>
+            
+          </div>
+          <ul class="card-category-list" id="aside-cat-list">
+            <li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%97%A0%E7%95%8C%E4%B9%8B%E7%95%8C/"><span class="card-category-list-name">无界之界</span><span class="card-category-list-count">8</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E9%87%8E%E7%8C%AB%E9%98%BF%E7%93%9C/"><span class="card-category-list-name">野猫阿瓜</span><span class="card-category-list-count">1</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E9%9A%8F%E7%AC%94/"><span class="card-category-list-name">随笔</span><span class="card-category-list-count">23</span></a></li>
+          </ul></div><div class="card-widget card-tags"><div class="item-headline"><i class="fas fa-tags"></i><span>Tags</span></div><div class="card-tag-cloud"><a href="/tags/%E6%A0%B8%E6%A3%80/" style="font-size: 1.1em; color: #999">核检</a> <a href="/tags/IT/" style="font-size: 1.1em; color: #999">IT</a> <a href="/tags/%E9%9A%8F%E7%AC%94/" style="font-size: 1.1em; color: #999">随笔</a> <a href="/tags/%E9%A3%8E%E6%99%AF/" style="font-size: 1.1em; color: #999">风景</a> <a href="/tags/%E5%AE%A0%E7%89%A9/" style="font-size: 1.1em; color: #999">宠物</a> <a href="/tags/%E7%94%9F%E6%97%A5/" style="font-size: 1.1em; color: #999">生日</a> <a href="/tags/%E5%86%AC%E8%87%B3/" style="font-size: 1.2em; color: #999da3">冬至</a> <a href="/tags/%E5%B0%8F%E8%AF%B4/" style="font-size: 1.5em; color: #99a9bf">小说</a> <a href="/tags/%E5%B0%8F%E7%BA%A2/" style="font-size: 1.1em; color: #999">小红</a> <a href="/tags/%E8%8A%82%E6%97%A5/" style="font-size: 1.1em; color: #999">节日</a> <a href="/tags/%E6%83%85%E6%84%9F/" style="font-size: 1.4em; color: #99a5b6">情感</a> <a href="/tags/%E8%8B%8F%E5%B7%9E/" style="font-size: 1.1em; color: #999">苏州</a> <a href="/tags/%E9%B8%A1%E6%B1%A4/" style="font-size: 1.1em; color: #999">鸡汤</a> <a href="/tags/%E7%AB%8B%E6%98%A5/" style="font-size: 1.1em; color: #999">立春</a> <a href="/tags/1979/" style="font-size: 1.1em; color: #999">1979</a> <a href="/tags/1985/" style="font-size: 1.1em; color: #999">1985</a> <a href="/tags/%E8%8A%82%E6%B0%94/" style="font-size: 1.3em; color: #99a1ac">节气</a> <a href="/tags/%E4%B8%AD%E7%A7%8B/" style="font-size: 1.1em; color: #999">中秋</a></div></div><div class="card-widget card-archives">
+    <div class="item-headline">
+      <i class="fas fa-archive"></i>
+      <span>Archives</span>
+      <a class="card-more-btn" href="/archives/"
+            title="View More">
+            <i class="fas fa-angle-right"></i>
+          </a>
+    </div>
+  
+    <ul class="card-archive-list">
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/01/">
+            <span class="card-archive-list-date">
+              2026 年 01 月
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2025/12/">
+            <span class="card-archive-list-date">
+              2025 年 12 月
+            </span>
+            <span class="card-archive-list-count">4</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2025/11/">
+            <span class="card-archive-list-date">
+              2025 年 11 月
+            </span>
+            <span class="card-archive-list-count">3</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2025/10/">
+            <span class="card-archive-list-date">
+              2025 年 10 月
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2024/12/">
+            <span class="card-archive-list-date">
+              2024 年 12 月
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2024/06/">
+            <span class="card-archive-list-date">
+              2024 年 06 月
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2024/05/">
+            <span class="card-archive-list-date">
+              2024 年 05 月
+            </span>
+            <span class="card-archive-list-count">3</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2024/04/">
+            <span class="card-archive-list-date">
+              2024 年 04 月
+            </span>
+            <span class="card-archive-list-count">1</span>
+          </a>
+        </li>
+      
+    </ul>
+  </div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>Website Info</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">Article Count :</div><div class="item-count">42</div></div><div class="webinfo-item"><div class="item-name">Total Word Count :</div><div class="item-count">21.2k</div></div><div class="webinfo-item"><div class="item-name">Unique Visitors :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">Page Views :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">Last Update :</div><div class="item-count" id="last-push-date" data-lastPushDate="2026-02-26T09:24:36.275Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/banner.jpg);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 小红叔</span></div><div class="footer_custom_text">小红故事 | SnowHoo.NET</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="translateLink" type="button" title="Toggle Between Traditional and Simplified Chinese">繁</button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.3"></script><script src="/js/main.js?v=5.5.3"></script><script src="/js/tw_cn.js?v=5.5.3"></script><div class="js-pjax"></div><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="false"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">Search</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  Loading Database</span></div><div class="local-search-input"><input placeholder="Search for Posts" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.3"></script></div></div></body></html>
