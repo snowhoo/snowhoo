@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="35%" stop-color="#a5d6a7"/>
+      <stop offset="70%" stop-color="#e8f5e9"/>
+      <stop offset="100%" stop-color="#f1f8e9"/>
+    </linearGradient>
+    <filter id="softShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#1b5e20" flood-opacity="0.15"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff9c4" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#fff9c4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 天空背景 -->
+  <rect width="800" height="400" fill="url(#sky)" rx="16"/>
+
+  <!-- 远景大圆装饰 -->
+  <circle cx="780" cy="20" r="100" fill="#fff" opacity="0.08"/>
+  <circle cx="20" cy="390" r="70" fill="#fff" opacity="0.06"/>
+
+  <!-- 节气专属场景 -->
+  
+    <!-- 远山云雾 -->
+    <path d="M0 280 Q200 250 400 270 Q600 240 800 260 L800 400 L0 400Z" fill="#a5d6a7" opacity="0.35"/>
+    <!-- 雨雾层 -->
+    <ellipse cx="200" cy="250" rx="300" ry="60" fill="rgba(200,230,201,0.5)" opacity="0.6"/>
+    <ellipse cx="600" cy="260" rx="250" ry="50" fill="rgba(200,230,201,0.5)" opacity="0.5"/>
+    <!-- 雨中池塘 -->
+    <ellipse cx="400" cy="370" rx="280" ry="35" fill="#b2dfdb" opacity="0.5"/>
+    <ellipse cx="400" cy="368" rx="240" ry="25" fill="#4fc3f7" opacity="0.3"/>
+    <!-- 涟漪 -->
+    <ellipse cx="300" cy="365" rx="30" ry="8" fill="none" stroke="#90caf9" stroke-width="1" opacity="0.6"/>
+    <ellipse cx="500" cy="372" rx="25" ry="6" fill="none" stroke="#90caf9" stroke-width="1" opacity="0.5"/>
+    <!-- 雨 -->
+    <line x1="0" y1="0" x2="-4" y2="18" stroke="#64b5f6" stroke-width="1.2" opacity="0.21"/><line x1="28" y1="12" x2="24" y2="30" stroke="#64b5f6" stroke-width="1.2" opacity="0.31499999999999995"/><line x1="56" y1="24" x2="52" y2="42" stroke="#64b5f6" stroke-width="1.2" opacity="0.42"/><line x1="84" y1="0" x2="80" y2="18" stroke="#64b5f6" stroke-width="1.2" opacity="0.5249999999999999"/><line x1="112" y1="12" x2="108" y2="30" stroke="#64b5f6" stroke-width="1.2" opacity="0.21"/><line x1="140" y1="24" x2="136" y2="42" stroke="#64b5f6" stroke-width="1.2" opacity="0.31499999999999995"/><line x1="168" y1="0" x2="164" y2="18" stroke="#64b5f6" stroke-width="1.2" opacity="0.42"/><line x1="196" y1="12" x2="192" y2="30" stroke="#64b5f6" stroke-width="1.2" opacity="0.5249999999999999"/><line x1="224" y1="24" x2="220" y2="42" stroke="#64b5f6" stroke-width="1.2" opacity="0.21"/><line x1="252" y1="0" x2="248" y2="18" stroke="#64b5f6" stroke-width="1.2" opacity="0.31499999999999995"/><line x1="280" y1="12" x2="276" y2="30" stroke="#64b5f6" stroke-width="1.2" opacity="0.42"/><line x1="308" y1="24" x2="304" y2="42" stroke="#64b5f6" stroke-width="1.2" opacity="0.5249999999999999"/><line x1="336" y1="0" x2="332" y2="18" stroke="#64b5f6" stroke-width="1.2" opacity="0.21"/><line x1="364" y1="12" x2="360" y2="30" stroke="#64b5f6" stroke-width="1.2" opacity="0.31499999999999995"/><line x1="392" y1="24" x2="388" y2="42" stroke="#64b5f6" stroke-width="1.2" opacity="0.42"/><line x1="420" y1="0" x2="416" y2="18" stroke="#64b5f6" stroke-width="1.2" opacity="0.5249999999999999"/><line x1="448" y1="12" x2="444" y2="30" stroke="#64b5f6" stroke-width="1.2" opacity="0.21"/><line x1="476" y1="24" x2="472" y2="42" stroke="#64b5f6" stroke-width="1.2" opacity="0.31499999999999995"/><line x1="504" y1="0" x2="500" y2="18" stroke="#64b5f6" stroke-width="1.2" opacity="0.42"/><line x1="532" y1="12" x2="528" y2="30" stroke="#64b5f6" stroke-width="1.2" opacity="0.5249999999999999"/>
+    <!-- 柳树倒影 -->
+    <path d="M120 400 Q105 360 130 325" stroke="#2e7d32" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/>
+    <!-- 戴笠渔夫 -->
+    <ellipse cx="420" cy="350" rx="20" ry="8" fill="#795548" opacity="0.8"/>
+    <path d="M420 342 L420 310" stroke="#5d4037" stroke-width="2.5"/>
+    <ellipse cx="420" cy="310" rx="14" ry="8" fill="#8d6e63"/>
+    <line x1="420" y1="342" x2="420" y2="360" stroke="#4e342e" stroke-width="1.5" opacity="0.6"/>
+    <!-- 鸭子 -->
+    <ellipse cx="600" cy="368" rx="18" ry="8" fill="#2e7d32" opacity="0.8"/>
+    <circle cx="615" cy="364" r="7" fill="#2e7d32"/>
+    <path d="M622 364 L628 362 L622 366Z" fill="#ff8f00"/>
+  
+
+  <!-- 底部渐变遮罩 -->
+  <rect x="0" y="320" width="800" height="80" fill="url(#sky)" opacity="0.3" rx="0"/>
+
+  <!-- 标题区背景 -->
+  <rect x="250" y="130" width="300" height="160" fill="#fff" opacity="0.18" rx="12"/>
+
+  <!-- 主标题 -->
+  <text x="400" y="208" text-anchor="middle" font-size="80" font-weight="bold"
+    fill="#1b5e20" font-family="'Noto Serif SC', 'SimHei', 'STKaiti', serif"
+    filter="url(#softShadow)" letter-spacing="8">雨水</text>
+
+  <!-- 拼音 -->
+  <text x="400" y="246" text-anchor="middle" font-size="20"
+    fill="#1b5e20" opacity="0.7"
+    font-family="Arial, sans-serif" letter-spacing="6">Yǔshuǐ</text>
+
+  <!-- 分隔线 -->
+  <line x1="350" y1="265" x2="450" y2="265" stroke="#1b5e20" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- 日期 -->
+  <text x="400" y="287" text-anchor="middle" font-size="15"
+    fill="#1b5e20" opacity="0.65"
+    font-family="'Noto Sans SC', Arial, sans-serif">02月18日 · 二十四节气</text>
+
+  <!-- 底部关键词 -->
+  <text x="400" y="378" text-anchor="middle" font-size="13"
+    fill="#1b5e20" opacity="0.5"
+    font-family="'Noto Sans SC', Arial, sans-serif">滋润  ·  生长  ·  祈福  ·  回春</text>
+</svg>

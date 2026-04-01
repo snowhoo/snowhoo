@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e3f2fd"/>
+      <stop offset="35%" stop-color="#bbdefb"/>
+      <stop offset="70%" stop-color="#f5f5f5"/>
+      <stop offset="100%" stop-color="#eceff1"/>
+    </linearGradient>
+    <filter id="softShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#37474f" flood-opacity="0.15"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff9c4" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#fff9c4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 天空背景 -->
+  <rect width="800" height="400" fill="url(#sky)" rx="16"/>
+
+  <!-- 远景大圆装饰 -->
+  <circle cx="780" cy="20" r="100" fill="#fff" opacity="0.08"/>
+  <circle cx="20" cy="390" r="70" fill="#fff" opacity="0.06"/>
+
+  <!-- 节气专属场景 -->
+  
+    <!-- 冬至红日 -->
+    <circle cx="400" cy="220" r="80" fill="#cfd8dc" opacity="0.7"/>
+    <circle cx="400" cy="220" r="62" fill="#ffe082" opacity="0.65"/>
+    <circle cx="400" cy="220" r="44" fill="#fff9c4" opacity="0.6"/>
+    <!-- 暖阳光线 -->
+    
+      <line x1="490" y1="220" x2="530" y2="220" stroke="#ffe082" stroke-width="2" opacity="0.3"/>
+    
+      <line x1="477.9422863405995" y1="265" x2="512.5833024919771" y2="285" stroke="#ffe082" stroke-width="2" opacity="0.3"/>
+    
+      <line x1="445" y1="297.9422863405995" x2="465" y2="332.583302491977" stroke="#ffe082" stroke-width="2" opacity="0.3"/>
+    
+      <line x1="400" y1="310" x2="400" y2="350" stroke="#ffe082" stroke-width="2" opacity="0.3"/>
+    
+      <line x1="355" y1="297.9422863405995" x2="335" y2="332.58330249197707" stroke="#ffe082" stroke-width="2" opacity="0.3"/>
+    
+      <line x1="322.0577136594005" y1="265" x2="287.41669750802293" y2="285" stroke="#ffe082" stroke-width="2" opacity="0.3"/>
+    
+      <line x1="310" y1="220" x2="270" y2="220.00000000000003" stroke="#ffe082" stroke-width="2" opacity="0.3"/>
+    
+      <line x1="322.0577136594005" y1="175" x2="287.416697508023" y2="155" stroke="#ffe082" stroke-width="2" opacity="0.3"/>
+    
+      <line x1="354.99999999999994" y1="142.05771365940055" x2="334.99999999999994" y2="107.416697508023" stroke="#ffe082" stroke-width="2" opacity="0.3"/>
+    
+      <line x1="400" y1="130" x2="400" y2="90" stroke="#ffe082" stroke-width="2" opacity="0.3"/>
+    
+      <line x1="445" y1="142.05771365940052" x2="465" y2="107.41669750802298" stroke="#ffe082" stroke-width="2" opacity="0.3"/>
+    
+      <line x1="477.9422863405995" y1="174.99999999999994" x2="512.583302491977" y2="154.99999999999994" stroke="#ffe082" stroke-width="2" opacity="0.3"/>
+    
+    <!-- 远山 -->
+    <path d="M0 290 Q200 262 400 275 Q600 248 800 262 L800 400 L0 400Z" fill="#90a4ae" opacity="0.45"/>
+    <!-- 冬至雪景 -->
+    <path d="M0 360 Q200 338 400 350 Q600 332 800 344 L800 400 L0 400Z" fill="#78909c" opacity="0.6"/>
+    <!-- 飘雪 -->
+    <circle cx="0" cy="48" r="1" fill="#fff" opacity="0.2"/><circle cx="9.88584981961792" cy="43.9076331746175" r="1.8" fill="#fff" opacity="0.26"/><circle cx="-19.620158837412347" cy="32.32834379153214" r="2.6" fill="#fff" opacity="0.32"/><circle cx="29.053709229860722" cy="15.236577672945678" r="1" fill="#fff" opacity="0.38"/><circle cx="-38.04189352096466" cy="-4.453257820687722" r="1.8" fill="#fff" opacity="0.44"/><circle cx="46.44693127917158" cy="-23.38374479056039" r="2.6" fill="#fff" opacity="0.2"/><circle cx="-54.13998116211068" cy="-38.32694586734555" r="1" fill="#fff" opacity="0.26"/><circle cx="61.003115933479506" cy="-46.73481686972422" r="1.8" fill="#fff" opacity="0.32"/><circle cx="-66.93113017692508" cy="-47.17368728260349" r="2.6" fill="#fff" opacity="0.38"/><circle cx="71.83315299636217" cy="-39.56872299272047" r="1" fill="#fff" opacity="0.44"/><circle cx="-75.6340409815459" cy="-25.216686648747494" r="1.8" fill="#fff" opacity="0.2"/><circle cx="78.27553008604367" cy="-6.564819809466184" r="2.6" fill="#fff" opacity="0.26"/><circle cx="-79.71712876039766" cy="13.206449146601509" r="1" fill="#fff" opacity="0.32"/><circle cx="79.93673864958475" cy="30.725816670641994" r="1.8" fill="#fff" opacity="0.38"/><circle cx="-78.93099334006405" cy="43.00596282694415" r="2.6" fill="#fff" opacity="0.44"/><circle cx="76.71530996373782" cy="47.95293500130384" r="1" fill="#fff" opacity="0.2"/><circle cx="-73.32365286778534" cy="44.72319882653607" r="1.8" fill="#fff" opacity="0.26"/><circle cx="68.80801297308938" cy="33.867473684989065" r="2.6" fill="#fff" opacity="0.32"/><circle cx="-63.23761080220234" cy="17.236826636443553" r="1" fill="#fff" opacity="0.38"/><circle cx="56.697835393685224" cy="-2.332962808012413" r="1.8" fill="#fff" opacity="0.44"/>
+    <!-- 雪人 -->
+    <ellipse cx="560" cy="375" rx="28" ry="22" fill="#fff" opacity="0.95"/>
+    <circle cx="560" cy="345" r="20" fill="#fff" opacity="0.95"/>
+    <circle cx="560" cy="330" r="14" fill="#fff" opacity="0.95"/>
+    <!-- 雪人五官 -->
+    <circle cx="553" cy="326" r="2.5" fill="#37474f"/><circle cx="567" cy="326" r="2.5" fill="#37474f"/>
+    <ellipse cx="560" cy="333" rx="3" ry="2" fill="#ff8f00"/>
+    <ellipse cx="560" cy="338" rx="2" ry="1.5" fill="#ff8f00"/>
+    <!-- 围巾 -->
+    <path d="M548 338 Q560 345 572 338" stroke="#f44336" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M572 338 L582 350" stroke="#f44336" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <!-- 梅花枝 -->
+    <path d="M80 400 Q72 355 98 315 Q124 275 105 240" stroke="#6d4c41" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M98 315 Q125 298 148 305" stroke="#6d4c41" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle cx="95" cy="248" r="5.5" fill="#f48fb1"/><circle cx="112" cy="233" r="5" fill="#f8bbd0"/><circle cx="130" cy="220" r="4.5" fill="#f48fb1"/>
+    <circle cx="105" cy="260" r="4.5" fill="#f8bbd0"/><circle cx="122" cy="246" r="4" fill="#f48fb1"/><circle cx="142" cy="232" r="4" fill="#f8bbd0"/>
+    <!-- 汤圆热气 -->
+    <path d="M420 340 Q425 328 420 316" stroke="#e0e0e0" stroke-width="1.5" fill="none" opacity="0.5"/>
+    <path d="M440 338 Q445 326 440 314" stroke="#e0e0e0" stroke-width="1.5" fill="none" opacity="0.45"/>
+    <ellipse cx="430" cy="345" rx="28" ry="12" fill="#fff" opacity="0.9"/>
+    <ellipse cx="422" cy="342" rx="5" ry="4" fill="#f48fb1" opacity="0.8"/>
+    <ellipse cx="436" cy="343" rx="5" ry="4" fill="#fdd835" opacity="0.8"/>
+    <ellipse cx="430" cy="340" rx="5" ry="4" fill="#81c784" opacity="0.8"/>
+  
+
+  <!-- 底部渐变遮罩 -->
+  <rect x="0" y="320" width="800" height="80" fill="url(#sky)" opacity="0.3" rx="0"/>
+
+  <!-- 标题区背景 -->
+  <rect x="250" y="130" width="300" height="160" fill="#fff" opacity="0.18" rx="12"/>
+
+  <!-- 主标题 -->
+  <text x="400" y="208" text-anchor="middle" font-size="80" font-weight="bold"
+    fill="#37474f" font-family="'Noto Serif SC', 'SimHei', 'STKaiti', serif"
+    filter="url(#softShadow)" letter-spacing="8">冬至</text>
+
+  <!-- 拼音 -->
+  <text x="400" y="246" text-anchor="middle" font-size="20"
+    fill="#37474f" opacity="0.7"
+    font-family="Arial, sans-serif" letter-spacing="6">Dōngzhì</text>
+
+  <!-- 分隔线 -->
+  <line x1="350" y1="265" x2="450" y2="265" stroke="#37474f" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- 日期 -->
+  <text x="400" y="287" text-anchor="middle" font-size="15"
+    fill="#37474f" opacity="0.65"
+    font-family="'Noto Sans SC', Arial, sans-serif">12月21日 · 二十四节气</text>
+
+  <!-- 底部关键词 -->
+  <text x="400" y="378" text-anchor="middle" font-size="13"
+    fill="#37474f" opacity="0.5"
+    font-family="'Noto Sans SC', Arial, sans-serif">至阴  ·  最短日  ·  数九  ·  岁末</text>
+</svg>

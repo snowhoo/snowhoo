@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+  <defs>
+    <linearGradient id="nightSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#04091a"/>
+      <stop offset="38%"  stop-color="#0a1628"/>
+      <stop offset="68%"  stop-color="#0d1f3c"/>
+      <stop offset="100%" stop-color="#1a3060"/>
+    </linearGradient>
+    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#d4e0f8" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#d4e0f8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="txtShadow2" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="#000" flood-opacity="0.65"/>
+    </filter>
+  </defs>
+
+  <!-- 深夜渐变天空 -->
+  <rect width="800" height="400" fill="url(#nightSky)"/>
+
+  <!-- 星星（散布左侧大部分区域，月亮旁留空） -->
+  <circle cx="80"  cy="55"  r="1.5" fill="#fff" opacity="0.8"/>
+  <circle cx="155" cy="38"  r="1"   fill="#fff" opacity="0.6"/>
+  <circle cx="235" cy="72"  r="1.5" fill="#fff" opacity="0.7"/>
+  <circle cx="310" cy="50"  r="1"   fill="#fff" opacity="0.5"/>
+  <circle cx="450" cy="45"  r="1.5" fill="#fff" opacity="0.75"/>
+  <circle cx="530" cy="80"  r="1"   fill="#fff" opacity="0.6"/>
+  <circle cx="665" cy="55"  r="1.5" fill="#fff" opacity="0.8"/>
+  <circle cx="720" cy="35"  r="1"   fill="#fff" opacity="0.55"/>
+  <circle cx="770" cy="85"  r="1.5" fill="#fff" opacity="0.7"/>
+  <circle cx="60"  cy="110" r="1"   fill="#fff" opacity="0.45"/>
+  <circle cx="320" cy="120" r="1"   fill="#fff" opacity="0.4"/>
+  <circle cx="680" cy="125" r="1"   fill="#fff" opacity="0.5"/>
+  <circle cx="760" cy="140" r="1.5" fill="#fff" opacity="0.7"/>
+  <circle cx="785" cy="60"  r="1"   fill="#fff" opacity="0.5"/>
+  <circle cx="420" cy="130" r="1"   fill="#fff" opacity="0.45"/>
+  <circle cx="520" cy="100" r="1.5" fill="#fff" opacity="0.6"/>
+  <circle cx="580" cy="150" r="1"   fill="#fff" opacity="0.5"/>
+
+  <!-- 月牙光晕（移到左侧约 x=180） -->
+  <circle cx="180" cy="130" r="90" fill="url(#moonGlow)"/>
+  <!-- 弯月主体 -->
+  <circle cx="180" cy="130" r="50" fill="#d4e0f8"/>
+  <circle cx="208" cy="114" r="42" fill="#04091a"/>
+
+  <!-- 文字（统一位置） -->
+  <text x="400" y="295" text-anchor="middle"
+        font-family="Microsoft YaHei,SimHei,sans-serif"
+        font-size="52" font-weight="bold" fill="#FFFFFF"
+        filter="url(#txtShadow2)">热搜晚报</text>
+  <text x="400" y="330" text-anchor="middle"
+        font-family="Microsoft YaHei,SimHei,sans-serif"
+        font-size="18" fill="#A8C4E8" opacity="0.9">每日热闻 · 晚间速递</text>
+</svg>

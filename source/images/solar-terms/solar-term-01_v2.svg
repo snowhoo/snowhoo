@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c8e6c9"/>
+      <stop offset="35%" stop-color="#a5d6a7"/>
+      <stop offset="70%" stop-color="#e8f5e9"/>
+      <stop offset="100%" stop-color="#f1f8e9"/>
+    </linearGradient>
+    <filter id="softShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#1b5e20" flood-opacity="0.15"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff9c4" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#fff9c4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 天空背景 -->
+  <rect width="800" height="400" fill="url(#sky)" rx="16"/>
+
+  <!-- 远景大圆装饰 -->
+  <circle cx="780" cy="20" r="100" fill="#fff" opacity="0.08"/>
+  <circle cx="20" cy="390" r="70" fill="#fff" opacity="0.06"/>
+
+  <!-- 节气专属场景 -->
+  
+    <!-- 远山淡影 -->
+    <path d="M0 300 Q100 260 200 280 Q350 240 450 265 Q600 230 700 255 Q780 235 800 250 L800 400 L0 400Z" fill="#a5d6a7" opacity="0.4"/>
+    <path d="M0 330 Q150 295 300 315 Q500 280 650 300 Q750 285 800 295 L800 400 L0 400Z" fill="#66bb6a" opacity="0.5"/>
+    <!-- 早春嫩绿草地 -->
+    <path d="M0 380 Q200 360 400 375 Q600 355 800 370 L800 400 L0 400Z" fill="#2e7d32" opacity="0.7"/>
+    <!-- 柳枝 -->
+    <path d="M520 400 Q500 340 540 290 Q580 240 560 190" stroke="#66bb6a" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M540 290 Q560 270 580 280" stroke="#66bb6a" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M540 260 Q565 240 585 250" stroke="#66bb6a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <!-- 柳叶 -->
+    <path d="M520 300 Q522 295 525 300" stroke="#81c784" stroke-width="1.5" fill="none" opacity="0.6" transform="rotate(-20,522,298)"/><path d="M524 291 Q526 286 529 291" stroke="#81c784" stroke-width="1.5" fill="none" opacity="0.72" transform="rotate(-20,526,289)"/><path d="M528 282 Q530 277 533 282" stroke="#81c784" stroke-width="1.5" fill="none" opacity="0.84" transform="rotate(-20,530,280)"/><path d="M532 273 Q534 268 537 273" stroke="#81c784" stroke-width="1.5" fill="none" opacity="0.6" transform="rotate(-20,534,271)"/><path d="M536 264 Q538 259 541 264" stroke="#81c784" stroke-width="1.5" fill="none" opacity="0.72" transform="rotate(-20,538,262)"/><path d="M540 255 Q542 250 545 255" stroke="#81c784" stroke-width="1.5" fill="none" opacity="0.84" transform="rotate(-20,542,253)"/><path d="M544 246 Q546 241 549 246" stroke="#81c784" stroke-width="1.5" fill="none" opacity="0.6" transform="rotate(-20,546,244)"/><path d="M548 237 Q550 232 553 237" stroke="#81c784" stroke-width="1.5" fill="none" opacity="0.72" transform="rotate(-20,550,235)"/><path d="M552 228 Q554 223 557 228" stroke="#81c784" stroke-width="1.5" fill="none" opacity="0.84" transform="rotate(-20,554,226)"/><path d="M556 219 Q558 214 561 219" stroke="#81c784" stroke-width="1.5" fill="none" opacity="0.6" transform="rotate(-20,558,217)"/><path d="M560 210 Q562 205 565 210" stroke="#81c784" stroke-width="1.5" fill="none" opacity="0.72" transform="rotate(-20,562,208)"/><path d="M564 201 Q566 196 569 201" stroke="#81c784" stroke-width="1.5" fill="none" opacity="0.84" transform="rotate(-20,566,199)"/>
+    <!-- 桃花 -->
+    <path d="M680 400 Q660 350 690 310 Q720 270 700 230" stroke="#795548" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M690 310 Q720 290 750 295" stroke="#795548" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle cx="678" cy="240" r="6" fill="#e91e63"/><circle cx="698" cy="225" r="5.5" fill="#e91e63"/><circle cx="718" cy="210" r="5" fill="#e91e63"/>
+    <circle cx="740" cy="218" r="4.5" fill="#f8bbd0"/><circle cx="755" cy="228" r="4" fill="#e91e63"/>
+    <!-- 早春燕子 -->
+    <path d="M200 200 Q215 192 230 198 Q215 196 200 200Z" fill="#2e7d32"/><circle cx="198" cy="197" r="3" fill="#2e7d32"/>
+    <path d="M280 180 Q295 172 310 178 Q295 176 280 180Z" fill="#2e7d32"/><circle cx="278" cy="177" r="3" fill="#2e7d32"/>
+  
+
+  <!-- 底部渐变遮罩 -->
+  <rect x="0" y="320" width="800" height="80" fill="url(#sky)" opacity="0.3" rx="0"/>
+
+  <!-- 标题区背景 -->
+  <rect x="250" y="130" width="300" height="160" fill="#fff" opacity="0.18" rx="12"/>
+
+  <!-- 主标题 -->
+  <text x="400" y="208" text-anchor="middle" font-size="80" font-weight="bold"
+    fill="#1b5e20" font-family="'Noto Serif SC', 'SimHei', 'STKaiti', serif"
+    filter="url(#softShadow)" letter-spacing="8">立春</text>
+
+  <!-- 拼音 -->
+  <text x="400" y="246" text-anchor="middle" font-size="20"
+    fill="#1b5e20" opacity="0.7"
+    font-family="Arial, sans-serif" letter-spacing="6">Lìchūn</text>
+
+  <!-- 分隔线 -->
+  <line x1="350" y1="265" x2="450" y2="265" stroke="#1b5e20" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- 日期 -->
+  <text x="400" y="287" text-anchor="middle" font-size="15"
+    fill="#1b5e20" opacity="0.65"
+    font-family="'Noto Sans SC', Arial, sans-serif">02月03日 · 二十四节气</text>
+
+  <!-- 底部关键词 -->
+  <text x="400" y="378" text-anchor="middle" font-size="13"
+    fill="#1b5e20" opacity="0.5"
+    font-family="'Noto Sans SC', Arial, sans-serif">新生  ·  希望  ·  耕耘  ·  播种</text>
+</svg>

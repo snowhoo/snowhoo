@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff9c4"/>
+      <stop offset="35%" stop-color="#ffecb3"/>
+      <stop offset="70%" stop-color="#fff8e1"/>
+      <stop offset="100%" stop-color="#fffde7"/>
+    </linearGradient>
+    <filter id="softShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#bf360c" flood-opacity="0.15"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff9c4" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#fff9c4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 天空背景 -->
+  <rect width="800" height="400" fill="url(#sky)" rx="16"/>
+
+  <!-- 远景大圆装饰 -->
+  <circle cx="780" cy="20" r="100" fill="#fff" opacity="0.08"/>
+  <circle cx="20" cy="390" r="70" fill="#fff" opacity="0.06"/>
+
+  <!-- 节气专属场景 -->
+  
+    <!-- 太阳直射 -->
+    <circle cx="400" cy="180" r="100" fill="#ff8f00" opacity="0.85"/>
+    <circle cx="400" cy="180" r="80" fill="#ffca28" opacity="0.8"/>
+    <circle cx="400" cy="180" r="60" fill="#fff176" opacity="0.7"/>
+    <circle cx="400" cy="180" r="40" fill="#fff9c4" opacity="0.6"/>
+    
+      <line x1="510" y1="180" x2="550" y2="180" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="506.25184089179754" y1="208.47009496127728" x2="544.8888739433603" y2="218.8228567653781" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="495.2627944162883" y1="235" x2="529.9038105676658" y2="255" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="477.78174593052023" y1="257.78174593052023" x2="506.06601717798213" y2="286.06601717798213" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="455" y1="275.2627944162882" x2="475" y2="309.9038105676658" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="428.47009496127725" y1="286.25184089179754" x2="438.8228567653781" y2="324.88887394336024" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="400" y1="290" x2="400" y2="330" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="371.5299050387227" y1="286.25184089179754" x2="361.1771432346219" y2="324.88887394336024" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="345" y1="275.2627944162883" x2="325" y2="309.9038105676658" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="322.21825406947977" y1="257.78174593052023" x2="293.93398282201787" y2="286.06601717798213" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="304.7372055837117" y1="235" x2="270.0961894323342" y2="255" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="293.7481591082025" y1="208.4700949612773" x2="255.11112605663976" y2="218.82285676537816" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="290" y1="180" x2="250" y2="180.00000000000003" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="293.74815910820246" y1="151.52990503872277" x2="255.11112605663973" y2="141.17714323462195" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="304.7372055837118" y1="124.99999999999999" x2="270.0961894323342" y2="104.99999999999999" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="322.21825406947977" y1="102.21825406947978" x2="293.93398282201787" y2="73.93398282201788" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="344.99999999999994" y1="84.73720558371178" x2="324.99999999999994" y2="50.096189432334256" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="371.52990503872275" y1="73.74815910820249" x2="361.1771432346219" y2="35.11112605663976" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="400" y1="70" x2="400" y2="30" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="428.4700949612773" y1="73.7481591082025" x2="438.82285676537816" y2="35.11112605663976" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="455" y1="84.73720558371176" x2="475" y2="50.0961894323342" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="477.7817459305202" y1="102.21825406947976" x2="506.0660171779821" y2="73.93398282201785" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="495.2627944162882" y1="124.99999999999994" x2="529.9038105676657" y2="104.99999999999993" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+      <line x1="506.25184089179754" y1="151.52990503872272" x2="544.8888739433603" y2="141.1771432346219" stroke="#fff176" stroke-width="2" opacity="0.4"/>
+    
+    <!-- 荷塘 -->
+    <path d="M0 340 Q200 320 400 332 Q600 312 800 325 L800 400 L0 400Z" fill="#4fc3f7" opacity="0.65"/>
+    <!-- 荷花 -->
+    <ellipse cx="180" cy="368" rx="22" ry="11" fill="#1e88e5" opacity="0.75"/>
+    <ellipse cx="180" cy="366" rx="15" ry="8" fill="#f8bbd0" opacity="0.9"/>
+    <path d="M170 366 Q180 356 190 366" stroke="#f48fb1" stroke-width="1.5" fill="none"/>
+    <ellipse cx="600" cy="372" rx="20" ry="10" fill="#1e88e5" opacity="0.75"/>
+    <ellipse cx="600" cy="370" rx="13" ry="7" fill="#fff59d" opacity="0.9"/>
+    <!-- 荷叶 -->
+    <ellipse cx="380" cy="378" rx="30" ry="14" fill="#1e88e5" opacity="0.8"/>
+    <path d="M380 364 Q380 378 380 392" stroke="#90caf9" stroke-width="2" fill="none"/>
+    <!-- 蜻蜓 -->
+    <ellipse cx="480" cy="260" rx="14" ry="3.5" fill="#81d4fa" opacity="0.9"/>
+    <path d="M470 260 L466 250 M470 260 L468 248" stroke="#81d4fa" stroke-width="1.2"/>
+    <path d="M490 260 L494 250 M490 260 L492 248" stroke="#81d4fa" stroke-width="1.2"/>
+  
+
+  <!-- 底部渐变遮罩 -->
+  <rect x="0" y="320" width="800" height="80" fill="url(#sky)" opacity="0.3" rx="0"/>
+
+  <!-- 标题区背景 -->
+  <rect x="250" y="130" width="300" height="160" fill="#fff" opacity="0.18" rx="12"/>
+
+  <!-- 主标题 -->
+  <text x="400" y="208" text-anchor="middle" font-size="80" font-weight="bold"
+    fill="#bf360c" font-family="'Noto Serif SC', 'SimHei', 'STKaiti', serif"
+    filter="url(#softShadow)" letter-spacing="8">夏至</text>
+
+  <!-- 拼音 -->
+  <text x="400" y="246" text-anchor="middle" font-size="20"
+    fill="#bf360c" opacity="0.7"
+    font-family="Arial, sans-serif" letter-spacing="6">Xiàzhì</text>
+
+  <!-- 分隔线 -->
+  <line x1="350" y1="265" x2="450" y2="265" stroke="#bf360c" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- 日期 -->
+  <text x="400" y="287" text-anchor="middle" font-size="15"
+    fill="#bf360c" opacity="0.65"
+    font-family="'Noto Sans SC', Arial, sans-serif">06月21日 · 二十四节气</text>
+
+  <!-- 底部关键词 -->
+  <text x="400" y="378" text-anchor="middle" font-size="13"
+    fill="#bf360c" opacity="0.5"
+    font-family="'Noto Sans SC', Arial, sans-serif">极阳  ·  最长日  ·  消暑  ·  夏浓</text>
+</svg>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e3f2fd"/>
+      <stop offset="35%" stop-color="#bbdefb"/>
+      <stop offset="70%" stop-color="#f5f5f5"/>
+      <stop offset="100%" stop-color="#eceff1"/>
+    </linearGradient>
+    <filter id="softShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#37474f" flood-opacity="0.15"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff9c4" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#fff9c4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 天空背景 -->
+  <rect width="800" height="400" fill="url(#sky)" rx="16"/>
+
+  <!-- 远景大圆装饰 -->
+  <circle cx="780" cy="20" r="100" fill="#fff" opacity="0.08"/>
+  <circle cx="20" cy="390" r="70" fill="#fff" opacity="0.06"/>
+
+  <!-- 节气专属场景 -->
+  
+    <!-- 大雪山 -->
+    <path d="M0 275 Q150 245 300 260 Q480 228 650 250 Q750 235 800 248 L800 400 L0 400Z" fill="#90a4ae" opacity="0.6"/>
+    <!-- 雪盖山尖 -->
+    <path d="M450 228 L400 155 L350 228Z" fill="#fff" opacity="0.9"/>
+    <path d="M650 250 L700 175 L750 250Z" fill="#fff" opacity="0.85"/>
+    <path d="M280 260 L240 190 L200 260Z" fill="#fff" opacity="0.8"/>
+    <!-- 大雪纷飞 -->
+    <circle cx="0" cy="96" r="1" fill="#fff" opacity="0.32000000000000006"/><circle cx="19.77169963923584" cy="87.815266349235" r="1.8" fill="#fff" opacity="0.41600000000000004"/><circle cx="-39.240317674824695" cy="64.65668758306428" r="2.6" fill="#fff" opacity="0.512"/><circle cx="58.107418459721444" cy="30.473155345891357" r="1" fill="#fff" opacity="0.6080000000000001"/><circle cx="-76.08378704192933" cy="-8.906515641375444" r="1.8" fill="#fff" opacity="0.7040000000000001"/><circle cx="92.89386255834316" cy="-46.76748958112078" r="2.6" fill="#fff" opacity="0.32000000000000006"/><circle cx="-108.27996232422136" cy="-76.6538917346911" r="1" fill="#fff" opacity="0.41600000000000004"/><circle cx="122.00623186695901" cy="-93.46963373944844" r="1.8" fill="#fff" opacity="0.512"/><circle cx="-133.86226035385016" cy="-94.34737456520698" r="2.6" fill="#fff" opacity="0.6080000000000001"/><circle cx="143.66630599272435" cy="-79.13744598544093" r="1" fill="#fff" opacity="0.7040000000000001"/><circle cx="-151.2680819630918" cy="-50.43337329749499" r="1.8" fill="#fff" opacity="0.32000000000000006"/><circle cx="156.55106017208735" cy="-13.129639618932368" r="2.6" fill="#fff" opacity="0.41600000000000004"/><circle cx="-159.4342575207953" cy="26.412898293203018" r="1" fill="#fff" opacity="0.512"/><circle cx="159.8734772991695" cy="61.45163334128399" r="1.8" fill="#fff" opacity="0.6080000000000001"/><circle cx="-157.8619866801281" cy="86.0119256538883" r="2.6" fill="#fff" opacity="0.7040000000000001"/><circle cx="153.43061992747565" cy="95.90587000260768" r="1" fill="#fff" opacity="0.32000000000000006"/><circle cx="-146.64730573557068" cy="89.44639765307214" r="1.8" fill="#fff" opacity="0.41600000000000004"/><circle cx="137.61602594617875" cy="67.73494736997813" r="2.6" fill="#fff" opacity="0.512"/><circle cx="-126.47522160440468" cy="34.473653272887105" r="1" fill="#fff" opacity="0.6080000000000001"/><circle cx="113.39567078737045" cy="-4.665925616024826" r="1.8" fill="#fff" opacity="0.7040000000000001"/>
+    <circle cx="200" cy="108" r="1" fill="#fff" opacity="0.27999999999999997"/><circle cx="216.06450595687912" cy="101.34990390875343" r="1.8" fill="#fff" opacity="0.364"/><circle cx="168.11724188920493" cy="82.53355866123972" r="2.6" fill="#fff" opacity="0.44799999999999995"/><circle cx="247.21227749852366" cy="54.75943871853673" r="1" fill="#fff" opacity="0.5319999999999999"/><circle cx="138.1819230284324" cy="22.76345604138245" r="1.8" fill="#fff" opacity="0.616"/><circle cx="275.47626332865383" cy="-7.998585284660635" r="2.6" fill="#fff" opacity="0.27999999999999997"/><circle cx="112.02253061157015" cy="-32.281287034436524" r="1" fill="#fff" opacity="0.364"/><circle cx="299.1300633919042" cy="-45.94407741330187" r="1.8" fill="#fff" opacity="0.44799999999999995"/><circle cx="91.23691346249674" cy="-46.65724183423066" r="2.6" fill="#fff" opacity="0.5319999999999999"/><circle cx="316.7288736190885" cy="-34.29917486317075" r="1" fill="#fff" opacity="0.616"/><circle cx="77.09468340498792" cy="-10.97711580421467" r="1.8" fill="#fff" opacity="0.27999999999999997"/><circle cx="327.197736389821" cy="19.332167809617452" r="2.6" fill="#fff" opacity="0.364"/><circle cx="70.45966576435379" cy="51.46047986322745" r="1" fill="#fff" opacity="0.44799999999999995"/><circle cx="329.8972003055752" cy="79.92945208979324" r="1.8" fill="#fff" opacity="0.5319999999999999"/><circle cx="71.73713582239594" cy="99.88468959378424" r="2.6" fill="#fff" opacity="0.616"/><circle cx="324.66237869107397" cy="107.92351937711875" r="1" fill="#fff" opacity="0.27999999999999997"/><circle cx="80.84906408984882" cy="102.67519809312111" r="1.8" fill="#fff" opacity="0.364"/><circle cx="311.8130210812702" cy="85.03464473810723" r="2.6" fill="#fff" opacity="0.44799999999999995"/><circle cx="97.2388824464212" cy="58.00984328422077" r="1" fill="#fff" opacity="0.5319999999999999"/><circle cx="292.1339825147385" cy="26.20893543697983" r="1.8" fill="#fff" opacity="0.616"/>
+    <circle cx="400" cy="116" r="1" fill="#fff" opacity="0.26"/><circle cx="413.59304350197465" cy="110.37299561509906" r="1.8" fill="#fff" opacity="0.338"/><circle cx="373.02228159855804" cy="94.4514727133567" r="2.6" fill="#fff" opacity="0.41600000000000004"/><circle cx="439.9488501910585" cy="70.95029430030031" r="1" fill="#fff" opacity="0.49400000000000005"/><circle cx="347.6923964086736" cy="43.87677049655438" r="1.8" fill="#fff" opacity="0.5720000000000001"/><circle cx="463.8645305088609" cy="17.847350912979465" r="2.6" fill="#fff" opacity="0.26"/><circle cx="325.55752590209784" cy="-2.6995505676001343" r="1" fill="#fff" opacity="0.338"/><circle cx="483.8792844085343" cy="-14.260373195870798" r="1.8" fill="#fff" opacity="0.41600000000000004"/><circle cx="307.969696006728" cy="-14.863820013579797" r="2.6" fill="#fff" opacity="0.49400000000000005"/><circle cx="498.770585369998" cy="-4.4069941149906455" r="1" fill="#fff" opacity="0.5720000000000001"/><circle cx="296.0031936503744" cy="15.327055857972198" r="1.8" fill="#fff" opacity="0.26"/><circle cx="507.62885386831005" cy="40.973372761983995" r="2.6" fill="#fff" opacity="0.338"/><circle cx="290.3889479544532" cy="68.15886757657708" r="1" fill="#fff" opacity="0.41600000000000004"/><circle cx="509.91301564317905" cy="92.24799792213274" r="1.8" fill="#fff" opacity="0.49400000000000005"/><circle cx="291.4698841574119" cy="109.13319888704821" r="2.6" fill="#fff" opacity="0.5720000000000001"/><circle cx="505.4835512001395" cy="115.93528562679278" r="1" fill="#fff" opacity="0.26"/><circle cx="299.1799773067952" cy="111.49439838648709" r="1.8" fill="#fff" opacity="0.338"/><circle cx="494.6110178379979" cy="96.56777631685998" r="2.6" fill="#fff" opacity="0.41600000000000004"/><circle cx="313.0482851469718" cy="73.70063662510988" r="1" fill="#fff" opacity="0.49400000000000005"/><circle cx="477.9595236663172" cy="46.79217613898293" r="1.8" fill="#fff" opacity="0.5720000000000001"/>
+    <circle cx="600" cy="74" r="1" fill="#fff" opacity="0.22000000000000003"/><circle cx="611.1215810470702" cy="69.39608732144468" r="1.8" fill="#fff" opacity="0.28600000000000003"/><circle cx="577.9273213079111" cy="56.36938676547366" r="2.6" fill="#fff" opacity="0.35200000000000004"/><circle cx="632.6854228835933" cy="37.141149882063885" r="1" fill="#fff" opacity="0.41800000000000004"/><circle cx="557.2028697889148" cy="14.990084951726313" r="1.8" fill="#fff" opacity="0.48400000000000004"/><circle cx="652.2527976890681" cy="-6.306712889380439" r="2.6" fill="#fff" opacity="0.22000000000000003"/><circle cx="539.0925211926254" cy="-23.117814100763752" r="1" fill="#fff" opacity="0.28600000000000003"/><circle cx="668.6285054251645" cy="-32.576668978439756" r="1.8" fill="#fff" opacity="0.35200000000000004"/><circle cx="524.7024785509593" cy="-33.07039819292892" r="2.6" fill="#fff" opacity="0.41800000000000004"/><circle cx="680.8122971209075" cy="-24.51481336681052" r="1" fill="#fff" opacity="0.48400000000000004"/><circle cx="514.9117038957609" cy="-8.368772479840931" r="1.8" fill="#fff" opacity="0.22000000000000003"/><circle cx="688.0599713467991" cy="12.614577714350544" r="2.6" fill="#fff" opacity="0.28600000000000003"/><circle cx="510.3182301445526" cy="34.8572552899267" r="1" fill="#fff" opacity="0.35200000000000004"/><circle cx="689.9288309807829" cy="54.56654375447224" r="1.8" fill="#fff" opacity="0.41800000000000004"/><circle cx="511.20263249242794" cy="68.38170818031217" r="2.6" fill="#fff" opacity="0.48400000000000004"/><circle cx="686.3047237092051" cy="73.94705187646682" r="1" fill="#fff" opacity="0.22000000000000003"/><circle cx="517.5108905237415" cy="70.31359867985309" r="1.8" fill="#fff" opacity="0.28600000000000003"/><circle cx="677.4090145947256" cy="58.1009078956127" r="2.6" fill="#fff" opacity="0.35200000000000004"/><circle cx="528.8576878475224" cy="39.391429965998995" r="1" fill="#fff" opacity="0.41800000000000004"/><circle cx="663.7850648178959" cy="17.375416840986034" r="1.8" fill="#fff" opacity="0.48400000000000004"/>
+    <!-- 积雪河面 -->
+    <path d="M0 370 Q200 352 400 362 Q600 348 800 358 L800 400 L0 400Z" fill="#b0bec5" opacity="0.6"/>
+    <path d="M0 375 Q200 358 400 368 Q600 354 800 364 L800 385 L0 385Z" fill="#fff" opacity="0.4"/>
+    <!-- 踏雪寻梅 -->
+    <path d="M120 400 L120 368" stroke="#5d4037" stroke-width="2.5"/>
+    <circle cx="120" cy="360" r="8" fill="#8d6e63"/>
+    <!-- 足迹 -->
+    <ellipse cx="170" cy="385" rx="10" ry="5" fill="#90a4ae" opacity="0.5"/>
+    <ellipse cx="200" cy="388" rx="10" ry="5" fill="#90a4ae" opacity="0.45"/>
+    <!-- 梅花 -->
+    <path d="M680 400 Q670 355 695 318 Q720 282 700 245" stroke="#5d4037" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <path d="M695 318 Q725 300 750 310" stroke="#5d4037" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle cx="690" cy="253" r="6" fill="#f48fb1"/><circle cx="708" cy="238" r="5.5" fill="#f8bbd0"/><circle cx="725" cy="225" r="5" fill="#f48fb1"/>
+    <circle cx="698" cy="265" r="5" fill="#f8bbd0"/><circle cx="715" cy="250" r="4.5" fill="#f48fb1"/><circle cx="738" cy="238" r="4.5" fill="#f8bbd0"/>
+  
+
+  <!-- 底部渐变遮罩 -->
+  <rect x="0" y="320" width="800" height="80" fill="url(#sky)" opacity="0.3" rx="0"/>
+
+  <!-- 标题区背景 -->
+  <rect x="250" y="130" width="300" height="160" fill="#fff" opacity="0.18" rx="12"/>
+
+  <!-- 主标题 -->
+  <text x="400" y="208" text-anchor="middle" font-size="80" font-weight="bold"
+    fill="#37474f" font-family="'Noto Serif SC', 'SimHei', 'STKaiti', serif"
+    filter="url(#softShadow)" letter-spacing="8">大雪</text>
+
+  <!-- 拼音 -->
+  <text x="400" y="246" text-anchor="middle" font-size="20"
+    fill="#37474f" opacity="0.7"
+    font-family="Arial, sans-serif" letter-spacing="6">Dàxuě</text>
+
+  <!-- 分隔线 -->
+  <line x1="350" y1="265" x2="450" y2="265" stroke="#37474f" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- 日期 -->
+  <text x="400" y="287" text-anchor="middle" font-size="15"
+    fill="#37474f" opacity="0.65"
+    font-family="'Noto Sans SC', Arial, sans-serif">12月07日 · 二十四节气</text>
+
+  <!-- 底部关键词 -->
+  <text x="400" y="378" text-anchor="middle" font-size="13"
+    fill="#37474f" opacity="0.5"
+    font-family="'Noto Sans SC', Arial, sans-serif">大雪  ·  隆冬  ·  冰封  ·  寒梅</text>
+</svg>
