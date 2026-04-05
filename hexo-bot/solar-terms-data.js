@@ -47,7 +47,7 @@ const SOLAR_TERMS = [
   {
     name: '清明',
     pinyin: 'Qīngmíng',
-    month: 4, day: 4,
+    month: 4, day: 5,
     season: 'spring',
     desc: '清明节是中国传统节日，也是二十四节气之一。清明时节，春暖花开，天朗气清，适合踏青游春。',
     customs: ['扫墓祭祖', '踏青', '插柳', '放风筝', '吃青团'],
