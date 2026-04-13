@@ -64,8 +64,8 @@ function hexoDeploy() {
   });
 }
 
-function savePost(term, content) {
-  const title = term.name;
+function savePost(term, content, displayTitle) {
+  const title = displayTitle || term.name;
   const idx = TERM_INDEX[title];
   const coverFile = `solar-term-${String(idx).padStart(2,'0')}.svg`;
   const now = new Date();
@@ -213,7 +213,7 @@ function main() {
   content += todayTerm.keywords.map(k => `#${k}`).join('  ') + '\n\n';
 
   // 保存
-  savePost(todayTerm, content);
+  savePost(todayTerm, content, title);
 
   // 部署
   hexoDeploy().then(() => {
