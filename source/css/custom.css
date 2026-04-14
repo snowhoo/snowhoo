@@ -1,57 +1,24 @@
 /* ========================================
    文章封面样式 + 色条
 
-   宽度 <= 768px（大图模式）：应用色条
-   宽度 > 768px（小图模式）：不应用色条
+   宽度 <= 768px：大图模式（不应用样式）
+   宽度 > 768px：小图布局 + 色条
    ======================================== */
 
 /* ========================================
-   手机端（宽度 <= 768px）：大图模式 + 色条
+   手机端（宽度 <= 768px）：大图模式，不应用任何样式
    ======================================== */
 
 @media (max-width: 768px) {
-  /* 置顶文章色条效果 */
-  .sticky-bar,
-  .sticky-bar span,
-  .sticky-bar * {
-    position: absolute !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    height: 24px !important;
-    line-height: 24px !important;
-    text-align: center !important;
-    font-size: 11px !important;
-    font-weight: bold !important;
-    color: #ffffff !important;
-    background-color: inherit !important;
-    z-index: 10 !important;
-    opacity: 1 !important;
-    pointer-events: none !important;
-    box-sizing: border-box !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-
-  /* 强制白色文字 */
-  html body .sticky-bar {
-    color: #ffffff !important;
-  }
-  html body .sticky-bar,
-  html body .recent-post-item .sticky-bar {
-    color: #ffffff !important;
-    fill: #ffffff !important;
-  }
+  /* 保持主题默认，不做任何修改 */
 }
 
 /* ========================================
-   桌面端（宽度 > 768px）：小图模式，不应用色条
+   桌面端（宽度 > 768px）：小图布局 + 色条
    ======================================== */
 
 @media (min-width: 769px) {
-  /* 小图布局样式（不含色条） */
+  /* 小图布局 */
   #recent-posts .recent-post-item {
     display: flex !important;
     flex-direction: row !important;
@@ -109,6 +76,41 @@
 
   #recent-posts .recent-post-item .recent-post-info .article-meta {
     margin-top: 4px !important;
+  }
+
+  /* 色条样式 */
+  .sticky-bar,
+  .sticky-bar span,
+  .sticky-bar * {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 28px !important;
+    line-height: 28px !important;
+    text-align: center !important;
+    font-size: 13px !important;
+    font-weight: bold !important;
+    color: #ffffff !important;
+    background-color: inherit !important;
+    z-index: 10 !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* 强制白色文字 */
+  html body .sticky-bar {
+    color: #ffffff !important;
+  }
+  html body .sticky-bar,
+  html body .recent-post-item .sticky-bar {
+    color: #ffffff !important;
+    fill: #ffffff !important;
   }
 }
 
