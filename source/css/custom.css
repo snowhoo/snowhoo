@@ -5,6 +5,8 @@
    宽度 > 768px：小图模式（不应用样式）
    ======================================== */
 
+/* 置顶帖边框 - 由模板动态生成，颜色与色条一致 */
+
 /* ========================================
    手机端（宽度 <= 768px）：大图模式 + 色条
    ======================================== */
@@ -70,4 +72,32 @@
   height: 55px !important;
   width: auto !important;
   object-fit: contain !important;
+}
+
+/* LOGO 右边的标语 */
+#nav #blog-info .nav-site-title {
+  display: inline-flex !important;
+  align-items: flex-end !important;
+}
+
+#nav #blog-info .site-slogan {
+  display: inline-block !important;
+  margin-left: 1em !important;
+  font-size: 12px !important;
+  white-space: nowrap !important;
+}
+
+/* 覆盖主题的浅灰色 */
+html[data-theme="light"] #nav #blog-info .site-slogan {
+  color: #333333 !important;
+}
+
+html[data-theme="dark"] #nav #blog-info .site-slogan {
+  color: #e0e0e0 !important;
+}
+
+@media (max-width: 768px) {
+  #nav #blog-info .site-slogan {
+    display: none !important;
+  }
 }
