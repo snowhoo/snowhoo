@@ -8,7 +8,7 @@
 # --------------------------------------
 
 nav:
-  logo: /img/logo.png
+  logo: /images/logo.png
   display_title: false
   display_post_title: true
   fixed: true
@@ -41,15 +41,15 @@ social:
 # Image Settings
 # --------------------------------------
 
-favicon: /img/favicon.ico
+favicon: /images/favicon.ico
 
 avatar:
-  img: /img/profile_PIC.jpg
+  img: /images/profile_PIC.jpg
   effect: false
 
 disable_top_img: true
 
-default_top_img: /img/banner.jpg
+default_top_img: /images/banner.jpg
 
 index_img:
 archive_img:
@@ -67,13 +67,13 @@ cover:
   default_cover:
 
 error_img:
-  flink: /img/friend_404.gif
-  post_page: /img/404.jpg
+  flink: /images/friend_404.gif
+  post_page: /images/404.jpg
 
 error_404:
   enable: true
   subtitle: '页面没有找到'
-  background: /img/404.jpg
+  background: /images/404.jpg
 
 post_meta:
   page:
@@ -137,13 +137,13 @@ post_copyright:
   license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
 reward:
-  enable: ture
+  enable: true
   text:
   QR_code:
-     - img: /img/wechat.png
-       text: #微信
-     - img: /img/alipay.jpg
-       text: #支付宝
+     - img: /images/wechat.png
+       text: 微信
+     - img: /images/alipay.jpg
+       text: 支付宝
 
 post_edit:
   enable: false
