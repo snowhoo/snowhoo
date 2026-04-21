@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fefce8"/>
+      <stop offset="40%" stop-color="#fef9c3"/>
+      <stop offset="100%" stop-color="#fef08a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ca8a04"/>
+      <stop offset="100%" stop-color="#eab308"/>
+    </linearGradient>
+    <linearGradient id="mtn1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#92400e" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#92400e" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="mtn2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b45309" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#b45309" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="moon" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#fef08a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="textBg">
+      <feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#000000" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- 水墨山峦 -->
+  <path d="M-50 630 L150 400 L350 630 Z" fill="url(#mtn1)" opacity="0.6"/>
+  <path d="M200 630 L420 350 L620 630 Z" fill="url(#mtn1)" opacity="0.6"/>
+  <path d="M500 630 L780 300 L1050 630 Z" fill="url(#mtn1)" opacity="0.6"/>
+  <path d="M900 630 L1100 380 L1250 630 Z" fill="url(#mtn1)" opacity="0.6"/>
+  <path d="M-50 630 L80 480 L280 630 Z" fill="url(#mtn2)" opacity="0.6"/>
+  <path d="M700 630 L900 460 L1100 630 Z" fill="url(#mtn2)" opacity="0.6"/>
+
+  <!-- 月亮光晕 -->
+  <circle cx="950" cy="120" r="80" fill="url(#moon)"/>
+  <circle cx="950" cy="120" r="38" fill="#fef08a" opacity="0.15"/>
+
+  <!-- 飞鸟 -->
+  <path d="M200 150 Q210 140 220 150 Q230 140 240 150" stroke="#92400e" stroke-width="1.5" fill="none" opacity="0.35"/>
+  <path d="M260 130 Q268 122 276 130 Q284 122 292 130" stroke="#92400e" stroke-width="1.5" fill="none" opacity="0.28"/>
+
+  <!-- 云雾 -->
+  <ellipse cx="800" cy="200" rx="150" ry="30" fill="#ffffff" opacity="0.16"/>
+  <ellipse cx="400" cy="180" rx="120" ry="25" fill="#ffffff" opacity="0.13"/>
+
+  <!-- 松树剪影 -->
+  <g opacity="0.18" fill="#78350f">
+    <rect x="1060" y="420" width="8" height="210"/>
+    <ellipse cx="1064" cy="410" rx="50" ry="35"/>
+    <ellipse cx="1064" cy="380" rx="38" ry="28"/>
+    <ellipse cx="1064" cy="355" rx="25" ry="20"/>
+  </g>
+  <g opacity="0.14" fill="#78350f">
+    <rect x="1110" y="450" width="6" height="180"/>
+    <ellipse cx="1113" cy="440" rx="40" ry="28"/>
+    <ellipse cx="1113" cy="415" rx="30" ry="22"/>
+  </g>
+
+  <!-- 顶部渐变条 -->
+  <rect x="0" y="0" width="1200" height="8" fill="url(#accent)"/>
+
+  <!-- 底部渐变条 -->
+  <rect x="0" y="622" width="1200" height="8" fill="url(#accent)"/>
+
+  <!-- 名言文字 -->
+  <text x="600" y="274.8"
+        font-family="'Microsoft YaHei', 'PingFang SC', 'SimHei', 'Arial', sans-serif"
+        font-size="64" fill="#451a03" text-anchor="middle" font-weight="900"
+        dominant-baseline="auto" filter="url(#textBg)">
+      <tspan x="600" dy="0">眼睛仅盯在自己小口袋的是小商人，</tspan>
+      <tspan x="600" dy="84">眼光放在全世界的是大商人。</tspan>
+  </text>
+
+  <!-- 分隔线 -->
+  <rect x="360" y="462.8" width="480" height="3" rx="1.5" fill="url(#accent)" opacity="0.75"/>
+
+  <!-- 作者名 -->
+  <text x="600" y="514.8"
+        font-family="'Microsoft YaHei', 'PingFang SC', 'SimHei', 'Arial', sans-serif"
+        font-size="42" fill="#ca8a04" text-anchor="middle" font-weight="700"
+        letter-spacing="5" filter="url(#textBg)">—— 李嘉诚</text>
+
+  <!-- 右下角标签 -->
+  <rect x="480" y="575" width="240" height="36" rx="18" fill="url(#accent)" opacity="0.88"/>
+  <text x="600" y="598"
+        font-family="'Microsoft YaHei', sans-serif"
+        font-size="16" fill="#ffffff" text-anchor="middle" font-weight="500">每日正能量</text>
+</svg>
