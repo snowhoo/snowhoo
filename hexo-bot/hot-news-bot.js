@@ -322,42 +322,84 @@ function isAlreadyPublished(dateFile, type) {
   return files.some(f => f.startsWith(dateFile) && f.includes(marker));
 }
 
-// ========== 执行 hexo generate + deploy ==========
-function deploy() {
+// ========== 执行 hexo generate + deploy（先备份） ==========
+function deploy(type) {
   console.log('[deploy] 开始生成并部署...');
   const hexoDir = 'D:/hexo';
   return new Promise((resolve) => {
-    const gen = spawn('cmd', ['/c', 'hexo generate'], {
+    // Step 1: Git 备份
+    const gitAdd = spawn('cmd', ['/c', 'git add source/_posts/ source/images/hotnews/'], {
       cwd: hexoDir,
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true
     });
-    let genOut = '';
-    gen.stdout.on('data', d => { genOut += d; });
-    gen.stderr.on('data', d => { genOut += d; });
-    gen.on('close', (code) => {
-      if (genOut.includes('Generated') || code === 0) {
-        console.log('[deploy] 生成完成，开始推送...');
-        const dep = spawn('cmd', ['/c', 'hexo deploy'], {
+    let gitOut = '';
+    gitAdd.stdout.on('data', d => { gitOut += d; });
+    gitAdd.stderr.on('data', d => { gitOut += d; });
+    gitAdd.on('close', () => {
+      const commitMsg = type === '晨报' ? 'post: 热搜晨报推送' : 'post: 热搜晚报推送';
+      const gitCommit = spawn('cmd', ['/c', `git commit -m "${commitMsg}"`], {
+        cwd: hexoDir,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        windowsHide: true
+      });
+      let commitOut = '';
+      gitCommit.stdout.on('data', d => { commitOut += d; });
+      gitCommit.stderr.on('data', d => { commitOut += d; });
+      gitCommit.on('close', () => {
+        if (commitOut.includes('nothing to commit')) {
+          console.log('[backup] ⚠️ 无新内容需要提交');
+        } else {
+          console.log('[backup] ✅ 已提交到 source 分支');
+        }
+
+        const gitPush = spawn('cmd', ['/c', 'git push origin source'], {
           cwd: hexoDir,
           stdio: ['ignore', 'pipe', 'pipe'],
           windowsHide: true
         });
-        let depOut = '';
-        dep.stdout.on('data', d => { depOut += d; });
-        dep.stderr.on('data', d => { depOut += d; });
-        dep.on('close', (dCode) => {
-          if (depOut.includes('Deploy done') || dCode === 0) {
-            console.log('[done] 热搜文章发布成功！');
-          } else {
-            console.error('[error] 部署失败:', depOut.slice(-200));
-          }
-          resolve();
+        let pushOut = '';
+        gitPush.stdout.on('data', d => { pushOut += d; });
+        gitPush.stderr.on('data', d => { pushOut += d; });
+        gitPush.on('close', () => {
+          console.log('[backup] ✅ 已推送到远程 source 分支');
+
+          // Step 2: Hexo generate
+          const gen = spawn('cmd', ['/c', 'hexo generate'], {
+            cwd: hexoDir,
+            stdio: ['ignore', 'pipe', 'pipe'],
+            windowsHide: true
+          });
+          let genOut = '';
+          gen.stdout.on('data', d => { genOut += d; });
+          gen.stderr.on('data', d => { genOut += d; });
+          gen.on('close', (code) => {
+            if (genOut.includes('Generated') || code === 0) {
+              console.log('[deploy] 生成完成，开始推送...');
+              // Step 3: Hexo deploy
+              const dep = spawn('cmd', ['/c', 'hexo deploy'], {
+                cwd: hexoDir,
+                stdio: ['ignore', 'pipe', 'pipe'],
+                windowsHide: true
+              });
+              let depOut = '';
+              dep.stdout.on('data', d => { depOut += d; });
+              dep.stderr.on('data', d => { depOut += d; });
+              dep.on('close', (dCode) => {
+                if (depOut.includes('Deploy done') || dCode === 0) {
+                  console.log('[done] 热搜文章发布成功！');
+                } else {
+                  console.error('[error] 部署失败:', depOut.slice(-200));
+                }
+                resolve();
+              });
+            } else {
+              console.error('[error] hexo generate 失败');
+              resolve();
+            }
+          });
         });
-      } else {
-        console.error('[error] hexo generate 失败');
-        resolve();
-      }
+      });
     });
   });
 }
@@ -385,7 +427,7 @@ async function main() {
   const { fm, body, title, dateFile: df } = generatePostContent(news, type);
   const filepath = writeHexoPost(title, fm + body, df, type);
   if (filepath) {
-    await deploy();
+    await deploy(type);
   }
 }
 

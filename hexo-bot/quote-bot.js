@@ -386,30 +386,66 @@ function getThemeTag(quote, isEnglish = false) {
   return '🌟 心有光芒，何惧风雨';
 }
 
-// ========== 部署到博客（先清理再生成推送） ==========
+// ========== 部署到博客（先备份再清理生成推送） ==========
 function deploy(callback) {
   console.log('[deploy] 开始清理、生成并部署...');
   const hexoDir = 'D:/hexo';
-  const clean = spawn('cmd', ['/c', 'hexo clean'], {
+
+  // Step 1: Git 备份
+  const gitAdd = spawn('cmd', ['/c', 'git add source/_posts/ source/images/quotes/'], {
     cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true
   });
-  let out = '';
-  clean.stdout.on('data', d => { out += d; });
-  clean.stderr.on('data', d => { out += d; });
-  clean.on('close', () => {
-    const gen = spawn('cmd', ['/c', 'hexo generate && hexo deploy'], {
+  let gitOut = '';
+  gitAdd.stdout.on('data', d => { gitOut += d; });
+  gitAdd.stderr.on('data', d => { gitOut += d; });
+  gitAdd.on('close', () => {
+    const gitCommit = spawn('cmd', ['/c', 'git commit -m "post: 每日名言推送"'], {
       cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true
     });
-    let out2 = '';
-    gen.stdout.on('data', d => { out2 += d; });
-    gen.stderr.on('data', d => { out2 += d; });
-    gen.on('close', () => {
-      if (out2.includes('Deploy done') || out2.includes('To github')) {
-        console.log('[done] 部署完成！');
+    let commitOut = '';
+    gitCommit.stdout.on('data', d => { commitOut += d; });
+    gitCommit.stderr.on('data', d => { commitOut += d; });
+    gitCommit.on('close', () => {
+      if (commitOut.includes('nothing to commit')) {
+        console.log('[backup] ⚠️ 无新内容需要提交');
       } else {
-        console.log('[error] 部署异常:', out2.slice(-200));
+        console.log('[backup] ✅ 已提交到 source 分支');
       }
-      callback();
+
+      const gitPush = spawn('cmd', ['/c', 'git push origin source'], {
+        cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true
+      });
+      let pushOut = '';
+      gitPush.stdout.on('data', d => { pushOut += d; });
+      gitPush.stderr.on('data', d => { pushOut += d; });
+      gitPush.on('close', () => {
+        console.log('[backup] ✅ 已推送到远程 source 分支');
+
+        // Step 2: Hexo clean
+        const clean = spawn('cmd', ['/c', 'hexo clean'], {
+          cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true
+        });
+        let out = '';
+        clean.stdout.on('data', d => { out += d; });
+        clean.stderr.on('data', d => { out += d; });
+        clean.on('close', () => {
+          // Step 3: Hexo generate + deploy
+          const gen = spawn('cmd', ['/c', 'hexo generate && hexo deploy'], {
+            cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true
+          });
+          let out2 = '';
+          gen.stdout.on('data', d => { out2 += d; });
+          gen.stderr.on('data', d => { out2 += d; });
+          gen.on('close', () => {
+            if (out2.includes('Deploy done') || out2.includes('To github')) {
+              console.log('[done] 部署完成！');
+            } else {
+              console.log('[error] 部署异常:', out2.slice(-200));
+            }
+            callback();
+          });
+        });
+      });
     });
   });
 }

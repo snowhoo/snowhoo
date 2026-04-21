@@ -163,30 +163,77 @@ function savePost(parsed) {
   return { filepath, filename, draft: parsed.draft };
 }
 
-async function triggerDeploy() {
+async function triggerDeploy(filename) {
   return new Promise((resolve) => {
-    const args = ['--config', path.join(HEXO_PATH, '_config.yml')];
-    const hexo = spawn('npx', ['hexo'].concat(['generate'].concat(args)), {
+    // ─── Step 1: Git 备份到 source 分支 ─────────────────────────────
+    const gitAdd = spawn('git', ['add', 'source/_posts/', 'source/images/email-attachments/'], {
       cwd: HEXO_PATH, shell: true,
     });
-    let out = '';
-    hexo.stdout.on('data', d => out += d);
-    hexo.stderr.on('data', d => out += d);
-    hexo.on('close', async (code) => {
-      if (code !== 0) {
-        console.error(`[deploy] ❌ generate 失败 (code ${code}):\n${out.slice(-200)}`);
-        resolve();
-        return;
+    let gitOut = '';
+    gitAdd.stdout.on('data', d => gitOut += d);
+    gitAdd.stderr.on('data', d => gitOut += d);
+    gitAdd.on('close', (addCode) => {
+      if (addCode !== 0) {
+        console.error(`[backup] ❌ git add 失败 (code ${addCode}): ${gitOut.slice(-200)}`);
       }
-      const dep = spawn('npx', ['hexo'].concat(['deploy'].concat(args)), {
+
+      const gitCommit = spawn('git', ['commit', '-m', `post: 邮件发布文章 - ${filename || 'auto'}`], {
         cwd: HEXO_PATH, shell: true,
       });
-      let depOut = '';
-      dep.stdout.on('data', d => depOut += d);
-      dep.stderr.on('data', d => depOut += d);
-      dep.on('close', (c) => {
-        console.log(c === 0 ? '[deploy] ✅ 部署完成' : `[deploy] ❌ 失败 (code ${c}):\n${depOut.slice(-200)}`);
-        resolve();
+      let commitOut = '';
+      gitCommit.stdout.on('data', d => commitOut += d);
+      gitCommit.stderr.on('data', d => commitOut += d);
+      gitCommit.on('close', (commitCode) => {
+        if (commitCode === 0) {
+          console.log('[backup] ✅ 已提交到 source 分支');
+        } else if (commitOut.includes('nothing to commit')) {
+          console.log('[backup] ⚠️ 无新内容需要提交');
+        } else {
+          console.error(`[backup] ❌ git commit 失败: ${commitOut.slice(-200)}`);
+        }
+
+        // 无论 git 成功与否，继续推送备份
+        const gitPush = spawn('git', ['push', 'origin', 'source'], {
+          cwd: HEXO_PATH, shell: true,
+        });
+        let pushOut = '';
+        gitPush.stdout.on('data', d => pushOut += d);
+        gitPush.stderr.on('data', d => pushOut += d);
+        gitPush.on('close', (pushCode) => {
+          if (pushCode === 0) {
+            console.log('[backup] ✅ 已推送到远程 source 分支');
+          } else {
+            console.error(`[backup] ❌ git push 失败: ${pushOut.slice(-200)}`);
+          }
+
+          // ─── Step 2: Hexo generate ─────────────────────────────────
+          const args = ['--config', path.join(HEXO_PATH, '_config.yml')];
+          const hexo = spawn('npx', ['hexo'].concat(['generate'].concat(args)), {
+            cwd: HEXO_PATH, shell: true,
+          });
+          let out = '';
+          hexo.stdout.on('data', d => out += d);
+          hexo.stderr.on('data', d => out += d);
+          hexo.on('close', async (code) => {
+            if (code !== 0) {
+              console.error(`[deploy] ❌ generate 失败 (code ${code}): ${out.slice(-200)}`);
+              resolve();
+              return;
+            }
+
+            // ─── Step 3: Hexo deploy ───────────────────────────────────
+            const dep = spawn('npx', ['hexo'].concat(['deploy'].concat(args)), {
+              cwd: HEXO_PATH, shell: true,
+            });
+            let depOut = '';
+            dep.stdout.on('data', d => depOut += d);
+            dep.stderr.on('data', d => depOut += d);
+            dep.on('close', (c) => {
+              console.log(c === 0 ? '[deploy] ✅ 部署完成' : `[deploy] ❌ 失败 (code ${c}): ${depOut.slice(-200)}`);
+              resolve();
+            });
+          });
+        });
       });
     });
   });
@@ -369,7 +416,7 @@ async function processEmails() {
           // 记录已处理 UID，防止下次重复处理
           newUIDs.add(String(uid));
 
-          if (!draft && AUTO_DEPLOY) await triggerDeploy();
+          if (!draft && AUTO_DEPLOY) await triggerDeploy(filename);
 
           // 全部成功后才标记已读
           await client.messageFlagsAdd(uid, ['\\Seen']);

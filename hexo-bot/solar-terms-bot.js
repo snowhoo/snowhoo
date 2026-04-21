@@ -42,32 +42,74 @@ function log(tag, msg) {
   }
 }
 
-function hexoDeploy() {
+function hexoDeploy(termName) {
   return new Promise((resolve) => {
-    log('solar', '开始生成并部署...');
-    const hexo = spawn('cmd', ['/c', 'npm run deploy'], {
+    log('solar', '开始备份、生成并部署...');
+
+    // Step 1: Git 备份
+    const gitAdd = spawn('cmd', ['/c', 'git add source/_posts/ source/images/solar-terms/'], {
       cwd: HEXO_PATH,
       stdio: 'pipe',
       windowsHide: true
     });
-    let output = '';
-    hexo.stdout.on('data', d => { output += d; });
-    hexo.stderr.on('data', d => { output += d; });
-    hexo.on('close', code => {
-      log('solar', output.includes('Deploy done') ? '部署完成' : '部署异常: ' + output.slice(-200));
-      resolve();
-    });
-    hexo.on('error', err => {
-      log('error', '部署失败: ' + err.message);
-      resolve();
+    let gitOut = '';
+    gitAdd.stdout.on('data', d => { gitOut += d; });
+    gitAdd.stderr.on('data', d => { gitOut += d; });
+    gitAdd.on('close', () => {
+      const commitMsg = `post: 节气文章推送 - ${termName || 'auto'}`;
+      const gitCommit = spawn('cmd', ['/c', `git commit -m "${commitMsg}"`], {
+        cwd: HEXO_PATH,
+        stdio: 'pipe',
+        windowsHide: true
+      });
+      let commitOut = '';
+      gitCommit.stdout.on('data', d => { commitOut += d; });
+      gitCommit.stderr.on('data', d => { commitOut += d; });
+      gitCommit.on('close', () => {
+        if (commitOut.includes('nothing to commit')) {
+          log('backup', '无新内容需要提交');
+        } else {
+          log('backup', '已提交到 source 分支');
+        }
+
+        const gitPush = spawn('cmd', ['/c', 'git push origin source'], {
+          cwd: HEXO_PATH,
+          stdio: 'pipe',
+          windowsHide: true
+        });
+        let pushOut = '';
+        gitPush.stdout.on('data', d => { pushOut += d; });
+        gitPush.stderr.on('data', d => { pushOut += d; });
+        gitPush.on('close', () => {
+          log('backup', '已推送到远程 source 分支');
+
+          // Step 2: Hexo deploy
+          const hexo = spawn('cmd', ['/c', 'npm run deploy'], {
+            cwd: HEXO_PATH,
+            stdio: 'pipe',
+            windowsHide: true
+          });
+          let output = '';
+          hexo.stdout.on('data', d => { output += d; });
+          hexo.stderr.on('data', d => { output += d; });
+          hexo.on('close', code => {
+            log('solar', output.includes('Deploy done') ? '部署完成' : '部署异常: ' + output.slice(-200));
+            resolve();
+          });
+          hexo.on('error', err => {
+            log('error', '部署失败: ' + err.message);
+            resolve();
+          });
+        });
+      });
     });
   });
 }
 
-function savePost(term, content, displayTitle) {
+function savePost(term, content, displayTitle, coverFileName) {
   const title = displayTitle || term.name;
-  const idx = TERM_INDEX[title];
-  const coverFile = `solar-term-${String(idx).padStart(2,'0')}.svg`;
+  const idx = TERM_INDEX[term.name];  // 用节气名查序号，不是显示标题
+  const coverFile = coverFileName || `solar-term-${String(idx).padStart(2,'0')}.svg`;
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
   const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
@@ -80,10 +122,10 @@ function savePost(term, content, displayTitle) {
     `date: ${now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\//g, '-')}`,
     `updated: ${now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/\//g, '-')}`,
     'categories:',
-    '  - 二十四节气',
+    '  - 节气',
     'tags:',
     '  - 节气',
-    `  - ${title}`,
+    `  - ${term.name}`,
     `cover: /images/solar-terms/${coverFile}`,
     'toc: true',
     '---',
@@ -126,22 +168,25 @@ function main() {
   if (!acquireLock()) return;
 
   const now = new Date();
+  const year = now.getFullYear();
   const month = now.getMonth() + 1; // 1-12
   const day = now.getDate();
 
-  // 农历正月的小寒/大寒跨年处理
-  // 如果当前是1月，检查是否有节气是今天
-  const todayTerm = SOLAR_TERMS.find(t => {
-    // 特殊处理：当年年末未过春节时，1月节气仍算上一年
-    if (t.month === 1) {
-      // 小寒(1/5)和大寒(1/20) 永远在公历1月
-      return t.month === month && t.day === day;
-    }
-    return t.month === month && t.day === day;
-  });
+  // 使用 solar2lunar 动态检测今天是否为节气日
+  const lunarInfo = solar2lunar(year, month, day);
+
+  if (!lunarInfo.isTerm || !lunarInfo.Term) {
+    log('solar', `${month}月${day}日 — 今天不是节气日`);
+    return;
+  }
+
+  const termName = lunarInfo.Term;
+
+  // 从 SOLAR_TERMS 数据中获取节气详情
+  const todayTerm = SOLAR_TERMS.find(t => t.name === termName);
 
   if (!todayTerm) {
-    log('solar', `${month}月${day}日 — 今天不是节气日`);
+    log('error', `节气数据缺失: ${termName}`);
     return;
   }
 
@@ -156,16 +201,24 @@ function main() {
   const idx = TERM_INDEX[todayTerm.name];
   const coverFile = `solar-term-${String(idx).padStart(2,'0')}.svg`;
   const coverPath = path.join(IMG_DIR, coverFile);
+
+  // 尝试查找封面图（支持 _v2 版本）
+  let actualCoverFile = coverFile;
   if (!fs.existsSync(coverPath)) {
-    log('error', '封面图不存在: ' + coverFile + '，请先运行 generate-solar-term-svgs.js');
-    return;
+    const v2Path = path.join(IMG_DIR, `solar-term-${String(idx).padStart(2,'0')}_v2.svg`);
+    if (fs.existsSync(v2Path)) {
+      actualCoverFile = `solar-term-${String(idx).padStart(2,'0')}_v2.svg`;
+      log('solar', `使用 _v2 版本封面图: ${actualCoverFile}`);
+    } else {
+      log('error', '封面图不存在: ' + coverFile + '，请先运行 generate-solar-term-svgs.js');
+      return;
+    }
   }
 
-  // 生成文章内容
-  const year = now.getFullYear();
-  const lunarDate = formatLunarDate(year, todayTerm.month, todayTerm.day);
+  // 生成文章内容（使用实际的节气日期，来自 lunarInfo）
+  const lunarDate = formatLunarDate(year, month, day);
   const title = `${todayTerm.name} · ${lunarDate.slice(5)}`;
-  let content = `> 来源：互联网 | 农历${lunarDate} | ${todayTerm.month}月${todayTerm.day}日\n\n`;
+  let content = `> 来源：互联网 | 农历${lunarDate} | ${month}月${day}日\n\n`;
 
   // 年份差异引言（每年不同）
   const yearIntros = [
@@ -212,11 +265,11 @@ function main() {
   content += `## 时令关键词\n\n`;
   content += todayTerm.keywords.map(k => `#${k}`).join('  ') + '\n\n';
 
-  // 保存
-  savePost(todayTerm, content, title);
+  // 保存（使用实际封面图）
+  savePost(todayTerm, content, title, actualCoverFile);
 
   // 部署
-  hexoDeploy().then(() => {
+  hexoDeploy(todayTerm.name).then(() => {
     log('done', `${todayTerm.name}节气文章发布成功！`);
   });
 }
