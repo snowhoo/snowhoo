@@ -101,3 +101,11 @@ html[data-theme="dark"] #nav #blog-info .site-slogan {
     display: none !important;
   }
 }
+
+/* ========================================
+   黑暗模式 Logo 切换
+   ======================================== */
+
+html[data-theme="dark"] #nav #blog-info .site-icon img {
+  content: url(/images/dark-logo.jpg) !important;
+}
