@@ -5,8 +5,8 @@
 # Site
 title: 小红故事
 subtitle: 一九七九年，春天
-description: ''
-keywords:
+description: 小红故事 - 记录生活中的点滴感悟与美好时光，分享个人成长、旅行风景、人生思考
+keywords: 小红故事, snowhoo, 个人博客, 生活随笔, 成长记录, 旅行故事
 author: 小红叔
 language: zh-Hans
 timezone: ''
@@ -109,3 +109,7 @@ deploy:
   repository: git@github.com:snowhoo/snowhoo.git
 ##https://github.com/snowhoo/snowhoo.git
   branch: main
+
+# Sitemap
+sitemap:
+  path: sitemap.xml

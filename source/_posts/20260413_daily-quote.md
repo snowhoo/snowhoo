@@ -3,7 +3,7 @@ title: The future belongs to those who believe in the bea… —— Eleanor Roos
 date: 2026-04-13 06:00:01
 updated: 2026-04-13 06:00:01
 categories:
-  - 每日正能量
+  - 正能量
 tags:
   - 名言
   - 正能量
