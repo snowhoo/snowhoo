@@ -602,6 +602,307 @@ inject:
       s.parentNode.insertBefore(bp, s);
       })();
       </script>
+    - |
+      <style>
+      /* ========== 语音播报功能样式 ========== */
+      .tts-player-wrapper {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-right: 12px;
+        vertical-align: middle;
+      }
+      .tts-btn-inline {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(238, 90, 90, 0.3);
+        color: white;
+        font-size: 14px;
+      }
+      .tts-btn-inline:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(238, 90, 90, 0.4);
+      }
+      .tts-btn-inline.playing {
+        background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(78, 205, 196, 0.4); }
+        50% { box-shadow: 0 0 0 10px rgba(78, 205, 196, 0); }
+      }
+      .tts-controls-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        background: rgba(255,255,255,0.9);
+        padding: 4px 10px;
+        border-radius: 16px;
+        border: 1px solid rgba(0,0,0,0.1);
+      }
+      .tts-player-wrapper:hover .tts-controls-inline,
+      .tts-controls-inline.active {
+        opacity: 1;
+      }
+      .tts-status-inline {
+        font-size: 12px;
+        color: #666;
+        min-width: 60px;
+      }
+      .tts-rate-inline {
+        font-size: 11px;
+        padding: 2px 6px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background: white;
+        cursor: pointer;
+        color: #333;
+      }
+      .tts-rate-inline:hover {
+        background: #f0f0f0;
+      }
+      .tts-stop-inline {
+        font-size: 11px;
+        padding: 2px 8px;
+        background: #ff6b6b;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      .tts-stop-inline:hover {
+        background: #ee5a5a;
+      }
+      /* 文章页面才显示 */
+      .is-post .tts-player-wrapper,
+      #post .tts-player-wrapper {
+        display: inline-flex !important;
+      }
+      </style>
+      <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // 延迟初始化，确保页面完全加载
+        setTimeout(function() {
+          initTTSPlayer();
+        }, 500);
+      });
+
+      function initTTSPlayer() {
+        // 检查浏览器是否支持语音合成
+        if (!window.speechSynthesis) {
+          console.log('[TTS] 浏览器不支持语音合成');
+          return;
+        }
+
+        // 只在文章页面加载
+        const postEl = document.getElementById('post');
+        const articleEl = document.getElementById('article-container');
+        const isPostPage = postEl !== null || articleEl !== null;
+        console.log('[TTS] Page check - postEl:', postEl, 'articleEl:', articleEl, 'isPostPage:', isPostPage);
+        if (!isPostPage) {
+          console.log('[TTS] Not a post page, exiting');
+          return;
+        }
+
+        // 获取文章标题元素
+        const titleEl = document.querySelector('#post h1, .post-title, #article-container h1, article h1');
+        if (!titleEl) {
+          console.log('[TTS] Title element not found');
+          return;
+        }
+
+        console.log('[TTS] Initializing TTS player...');
+
+        // 创建播放器HTML
+        const playerHTML = `
+          <div class="tts-player-wrapper" id="tts-player">
+            <button class="tts-btn-inline" id="tts-btn" title="朗读文章">
+              <i class="fas fa-volume-up"></i>
+            </button>
+            <div class="tts-controls-inline" id="tts-controls">
+              <span class="tts-status-inline" id="tts-status">就绪</span>
+              <select class="tts-rate-inline" id="tts-rate" title="语速">
+                <option value="0.7">慢</option>
+                <option value="1" selected>正常</option>
+                <option value="1.3">快</option>
+              </select>
+              <button class="tts-stop-inline" id="tts-stop" title="停止">停止</button>
+            </div>
+          </div>
+        `;
+
+        // 插入到标题前面
+        titleEl.insertAdjacentHTML('beforebegin', playerHTML);
+
+        // 初始化TTS播放器
+        new TTSPlayer();
+      }
+
+      class TTSPlayer {
+        constructor() {
+          this.synth = window.speechSynthesis;
+          this.utterance = null;
+          this.isPlaying = false;
+          this.isPaused = false;
+          this.btn = document.getElementById('tts-btn');
+          this.controls = document.getElementById('tts-controls');
+          this.status = document.getElementById('tts-status');
+          this.rateSelect = document.getElementById('tts-rate');
+          this.stopBtn = document.getElementById('tts-stop');
+
+          this.bindEvents();
+        }
+
+        bindEvents() {
+          this.btn.addEventListener('click', () => this.toggle());
+          this.stopBtn.addEventListener('click', () => this.stop());
+          this.rateSelect.addEventListener('change', () => {
+            if (this.isPlaying) {
+              this.stop();
+              this.play();
+            }
+          });
+
+          // 页面离开时停止播放
+          window.addEventListener('beforeunload', () => this.stop());
+        }
+
+        getArticleText() {
+          // 获取文章内容，排除不需要朗读的元素
+          const article = document.querySelector('#article-container, .post-content, article');
+          if (!article) return '';
+
+          // 克隆节点以避免修改原内容
+          const clone = article.cloneNode(true);
+
+          // 移除不需要朗读的元素
+          const excludeSelectors = ['.code-block', 'pre', 'code', 'script', 'style', '.copyright', '.share', '.relatedPosts', 'img', 'iframe'];
+          excludeSelectors.forEach(selector => {
+            const elements = clone.querySelectorAll(selector);
+            elements.forEach(el => el.remove());
+          });
+
+          // 获取纯文本
+          let text = clone.textContent || clone.innerText || '';
+
+          // 清理文本
+          text = text.replace(/\s+/g, ' ').trim();
+
+          // 限制长度
+          if (text.length > 5000) {
+            text = text.substring(0, 5000) + '...（内容过长，已截断）';
+          }
+
+          return text;
+        }
+
+        play() {
+          const text = this.getArticleText();
+          if (!text) {
+            this.status.textContent = '无内容';
+            return;
+          }
+
+          // 取消之前的朗读
+          this.synth.cancel();
+
+          this.utterance = new SpeechSynthesisUtterance(text);
+
+          // 设置语言为中文
+          this.utterance.lang = 'zh-CN';
+
+          // 设置语速
+          this.utterance.rate = parseFloat(this.rateSelect.value);
+
+          // 尝试设置中文语音
+          const voices = this.synth.getVoices();
+          const zhVoice = voices.find(v => v.lang.includes('zh') || v.lang.includes('CN'));
+          if (zhVoice) {
+            this.utterance.voice = zhVoice;
+          }
+
+          // 事件监听
+          this.utterance.onstart = () => {
+            this.isPlaying = true;
+            this.isPaused = false;
+            this.btn.classList.add('playing');
+            this.btn.innerHTML = '<i class="fas fa-pause"></i>';
+            this.status.textContent = '朗读中...';
+            this.controls.classList.add('active');
+          };
+
+          this.utterance.onend = () => {
+            this.isPlaying = false;
+            this.isPaused = false;
+            this.btn.classList.remove('playing');
+            this.btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            this.status.textContent = '完成';
+            setTimeout(() => {
+              this.controls.classList.remove('active');
+              this.status.textContent = '就绪';
+            }, 2000);
+          };
+
+          this.utterance.onerror = (e) => {
+            console.error('[TTS] Error:', e);
+            this.isPlaying = false;
+            this.btn.classList.remove('playing');
+            this.btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            this.status.textContent = '错误';
+          };
+
+          this.synth.speak(this.utterance);
+        }
+
+        pause() {
+          if (this.synth.speaking && !this.synth.paused) {
+            this.synth.pause();
+            this.isPaused = true;
+            this.btn.innerHTML = '<i class="fas fa-play"></i>';
+            this.status.textContent = '已暂停';
+          }
+        }
+
+        resume() {
+          if (this.synth.paused) {
+            this.synth.resume();
+            this.isPaused = false;
+            this.btn.innerHTML = '<i class="fas fa-pause"></i>';
+            this.status.textContent = '朗读中...';
+          }
+        }
+
+        stop() {
+          this.synth.cancel();
+          this.isPlaying = false;
+          this.isPaused = false;
+          this.btn.classList.remove('playing');
+          this.btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+          this.status.textContent = '就绪';
+          this.controls.classList.remove('active');
+        }
+
+        toggle() {
+          if (!this.isPlaying) {
+            this.play();
+          } else if (this.isPaused) {
+            this.resume();
+          } else {
+            this.pause();
+          }
+        }
+      }
+      </script>
 
 # CDN Settings
 CDN:
