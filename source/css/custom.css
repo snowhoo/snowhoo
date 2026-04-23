@@ -91,23 +91,28 @@ html body #nav #blog-info a.nav-site-title {
   flex-direction: row !important;
 }
 
-/* 标语样式 */
+/* 标语样式 - 红色渐变背景 */
 html body #nav #blog-info a.nav-site-title .site-slogan {
-  display: inline !important;
+  display: inline-block !important;
   margin-left: 1em !important;
   font-size: 12px !important;
+  font-weight: bold !important;
   white-space: nowrap !important;
   vertical-align: middle !important;
-  line-height: 55px !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
 }
 
-/* 覆盖主题的浅灰色 */
+/* 亮色模式：鲜红到深红渐变 */
 html[data-theme="light"] body #nav #blog-info .site-slogan {
-  color: #333333 !important;
+  background: linear-gradient(135deg, #c41e3a, #8b0000) !important;
+  color: #ffffff !important;
 }
 
+/* 黑暗模式：暗红到酒红渐变 */
 html[data-theme="dark"] body #nav #blog-info .site-slogan {
-  color: #e0e0e0 !important;
+  background: linear-gradient(135deg, #9a1b30, #5c0011) !important;
+  color: #ffffff !important;
 }
 
 @media (max-width: 768px) {
