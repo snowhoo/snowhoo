@@ -65,34 +65,48 @@
 .post-content h3 { font-size: 1.0em !important; }
 
 /* ========================================
-   LOGO 显示优化
+   LOGO 显示优化 - 标语垂直居中
    ======================================== */
 
+/* LOGO 图片高度 */
 #nav #blog-info .site-icon {
   height: 55px !important;
   width: auto !important;
   object-fit: contain !important;
 }
 
-/* LOGO 右边的标语 */
-#nav #blog-info .nav-site-title {
-  display: inline-flex !important;
-  align-items: flex-end !important;
+/* LOGO + 标语容器：flexbox 垂直居中 */
+html body #nav #blog-info a.nav-site-title {
+  display: -webkit-flex !important;
+  display: -moz-flex !important;
+  display: -ms-flexbox !important;
+  display: flex !important;
+  -webkit-align-items: center !important;
+  -moz-align-items: center !important;
+  -ms-flex-align: center !important;
+  align-items: center !important;
+  -webkit-flex-direction: row !important;
+  -moz-flex-direction: row !important;
+  -ms-flex-direction: row !important;
+  flex-direction: row !important;
 }
 
-#nav #blog-info .site-slogan {
-  display: inline-block !important;
+/* 标语样式 */
+html body #nav #blog-info a.nav-site-title .site-slogan {
+  display: inline !important;
   margin-left: 1em !important;
   font-size: 12px !important;
   white-space: nowrap !important;
+  vertical-align: middle !important;
+  line-height: 55px !important;
 }
 
 /* 覆盖主题的浅灰色 */
-html[data-theme="light"] #nav #blog-info .site-slogan {
+html[data-theme="light"] body #nav #blog-info .site-slogan {
   color: #333333 !important;
 }
 
-html[data-theme="dark"] #nav #blog-info .site-slogan {
+html[data-theme="dark"] body #nav #blog-info .site-slogan {
   color: #e0e0e0 !important;
 }
 
@@ -101,6 +115,8 @@ html[data-theme="dark"] #nav #blog-info .site-slogan {
     display: none !important;
   }
 }
+
+/* Prev/Next 样式已移至 _config.butterfly.yml 统一管理 */
 
 /* ========================================
    黑暗模式 Logo 切换

@@ -16,7 +16,15 @@ hexo.on('generateBefore', function() {
     return;
   }
 
-  // 递归复制所有 .pug 文件
+  // 复制 pagination.pug 到 layout/includes
+  const paginationSrc = path.join(partialDir, 'includes/pagination.pug');
+  const paginationDest = path.join(themeDir, 'includes/pagination.pug');
+  if (fs.existsSync(paginationSrc)) {
+    fs.copyFileSync(paginationSrc, paginationDest);
+    hexo.log.info('[持久化模板] 已覆盖: pagination.pug');
+  }
+
+  // 递归复制所有其他 .pug 文件
   copyPugFiles(partialDir, themeDir);
 });
 
@@ -33,8 +41,8 @@ function copyPugFiles(sourceDir, targetDir) {
     if (stat.isDirectory()) {
       // 递归处理子目录
       copyPugFiles(sourcePath, targetPath);
-    } else if (file.endsWith('.pug')) {
-      // 复制 .pug 文件
+    } else if (file.endsWith('.pug') && file !== 'pagination.pug') {
+      // 复制 .pug 文件（排除 pagination.pug，已单独处理）
       if (!fs.existsSync(targetDir)) {
         fs.mkdirSync(targetDir, { recursive: true });
       }
