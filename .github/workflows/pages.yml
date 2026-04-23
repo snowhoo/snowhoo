@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
