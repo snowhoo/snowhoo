@@ -737,6 +737,47 @@ inject:
         z-index: 1000;
         pointer-events: none;
       }
+
+      /* ========== 文章卡片与顶部导航栏间距减少 ========== */
+      .layout, #page {
+        padding-top: 10px !important;
+      }
+      .recent-post-item:first-child {
+        margin-top: 0 !important;
+      }
+      /* 正文页文章顶部间距 */
+      .post-header {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        margin-bottom: 8px !important;
+      }
+
+      /* ========== 标题和播放按钮顶部空间缩小 ========== */
+      .post-title, #article-container h1 {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        margin-bottom: 6px !important;
+      }
+      /* 确保浮动按钮不增加额外空间 */
+      .tts-inline-wrapper {
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      /* ========== 正文页文章卡片内边距和行间距减少 ========== */
+      #article-container {
+        padding: 10px 15px !important;
+        line-height: 1.6 !important;
+      }
+      .post-content {
+        padding: 0 !important;
+        line-height: 1.6 !important;
+      }
+      /* 文章内容段落间距 */
+      #article-container p, .post-content p {
+        margin-bottom: 8px !important;
+        line-height: 1.6 !important;
+      }
       </style>
       <script>
       document.addEventListener('DOMContentLoaded', function() {
@@ -823,17 +864,33 @@ inject:
         }
 
         bindEvents() {
-          this.btn.addEventListener('click', () => this.toggle());
-          this.stopBtn.addEventListener('click', () => this.stop());
+          this.btn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 阻止冒泡，避免立即触发 document 点击
+            this.toggle();
+          });
+          this.stopBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.stop();
+          });
           this.rateSelect.addEventListener('change', () => {
             if (this.isPlaying) {
               this.stop();
               this.play();
             }
           });
+          this.controls.addEventListener('click', (e) => {
+            e.stopPropagation(); // 点击控件区域不隐藏
+          });
 
           // 页面离开时停止播放
           window.addEventListener('beforeunload', () => this.stop());
+
+          // 点击空白处隐藏控件
+          document.addEventListener('click', () => {
+            if (this.controls.classList.contains('active') && !this.isPlaying) {
+              this.controls.classList.remove('active');
+            }
+          });
         }
 
         getArticleText() {
@@ -898,6 +955,13 @@ inject:
             this.btn.innerHTML = '<i class="fas fa-pause"></i>';
             this.status.textContent = '朗读中...';
             this.controls.classList.add('active');
+            // 2秒后自动隐藏控件（播放中不改变状态的话）
+            clearTimeout(this._hideTimer);
+            this._hideTimer = setTimeout(() => {
+              if (this.isPlaying && !this.isPaused) {
+                this.controls.classList.remove('active');
+              }
+            }, 2000);
           };
 
           this.utterance.onend = () => {
