@@ -740,25 +740,25 @@ inject:
 
       /* ========== 文章卡片与顶部导航栏间距减少 ========== */
       .layout, #page {
-        padding-top: 10px !important;
+        padding-top: 5px !important;
       }
       .recent-post-item:first-child {
         margin-top: 0 !important;
       }
-      /* 正文页文章顶部间距 */
+
+      /* ========== 正文页文章头部间距 ========== */
       .post-header {
         margin-top: 0 !important;
         padding-top: 0 !important;
-        margin-bottom: 8px !important;
+        margin-bottom: 4px !important;
       }
-
-      /* ========== 标题和播放按钮顶部空间缩小 ========== */
       .post-title, #article-container h1 {
         margin-top: 0 !important;
         padding-top: 0 !important;
-        margin-bottom: 6px !important;
+        margin-bottom: 4px !important;
       }
-      /* 确保浮动按钮不增加额外空间 */
+
+      /* ========== 标题和播放按钮顶部空间缩小 ========== */
       .tts-inline-wrapper {
         margin: 0 !important;
         padding: 0 !important;
@@ -766,7 +766,7 @@ inject:
 
       /* ========== 正文页文章卡片内边距和行间距减少 ========== */
       #article-container {
-        padding: 2px 8px !important;
+        padding: 0 5px !important;
         line-height: 1.4 !important;
       }
       .post-content {
@@ -777,6 +777,61 @@ inject:
       #article-container p, .post-content p {
         margin-bottom: 4px !important;
         line-height: 1.4 !important;
+      }
+
+      /* ========== 减少文章元数据（Author、日期等）与正文之间的间距 ========== */
+      .post-meta {
+        margin-bottom: 4px !important;
+        padding-bottom: 0 !important;
+      }
+      .post-meta__separator {
+        margin: 0 4px !important;
+      }
+
+      /* ========== 减少 Sponsor（赞助）区域上方间距 ========== */
+      .sponsor {
+        margin-top: 4px !important;
+        padding-top: 0 !important;
+      }
+      .sponsor-title {
+        margin-top: 0 !important;
+        margin-bottom: 4px !important;
+      }
+
+      /* ========== 减少版权声明与正文之间的间距 ========== */
+      .post-copyright {
+        margin-top: 4px !important;
+        padding: 6px 10px !important;
+      }
+
+      /* ========== 减少标签区域间距 ========== */
+      .post-tags {
+        margin-top: 4px !important;
+        padding-top: 0 !important;
+      }
+
+      /* ========== 减少上下篇文章导航间距 ========== */
+      #pagination {
+        margin-top: 4px !important;
+        padding-top: 0 !important;
+      }
+
+      /* ========== 减少相关文章区域间距 ========== */
+      .relatedPosts {
+        margin-top: 4px !important;
+        padding-top: 0 !important;
+      }
+
+      /* ========== 减少评论区上方间距 ========== */
+      #comments {
+        margin-top: 4px !important;
+        padding-top: 0 !important;
+      }
+
+      /* ========== 确保浮动按钮不增加额外空间 ========== */
+      .tts-player-wrapper:hover .tts-controls-inline,
+      .tts-controls-inline.active {
+        opacity: 1;
       }
       </style>
       <script>
