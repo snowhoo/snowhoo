@@ -450,7 +450,7 @@ function deploy(callback) {
   });
 }
 
-// ========== 主程序 ==========
+// ========== 主程序（等待部署完成） ==========
 async function main() {
   console.log('[quote] ===== 每日名言推送开始 =====');
 
@@ -465,8 +465,12 @@ async function main() {
   const postPath = createPost(quoteData.quote, quoteData.author, quoteData.source);
 
   if (postPath) {
-    deploy(() => {
-      console.log('[done] ===== 名言推送完成 =====');
+    // 等待部署完成后再退出
+    await new Promise((resolve) => {
+      deploy(() => {
+        console.log('[done] ===== 名言推送完成 =====');
+        resolve();
+      });
     });
   } else {
     console.log('[skip] 今日已发布，跳过部署');
