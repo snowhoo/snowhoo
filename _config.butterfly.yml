@@ -764,101 +764,152 @@ inject:
         padding: 0 !important;
       }
 
-      /* ========== 正文页文章卡片内边距和行间距减少 ========== */
-      #article-container {
-        padding: 0 5px !important;
-        line-height: 1.4 !important;
+      /* ========== 调试：显示边框帮助识别间距来源（需要时取消注释）========== */
+      /*
+      #article-container,
+      #article-container *,
+      .post-header,
+      .post-meta,
+      .post-content,
+      .post-body,
+      .sponsor,
+      .post-tags,
+      .relatedPosts,
+      #comments {
+        border: 1px solid rgba(255,0,0,0.3) !important;
       }
+      */
+
+      /* ========== 强制减少正文页所有容器内边距 ========== */
+      #article-container,
+      .post,
+      .post-body,
+      .article,
+      .article-content,
       .post-content {
-        padding: 0 !important;
-        line-height: 1.4 !important;
-      }
-      /* 文章内容段落间距 */
-      #article-container p, .post-content p {
-        margin-bottom: 4px !important;
+        padding: 0 2px !important;
+        margin: 0 !important;
         line-height: 1.4 !important;
       }
 
-      /* ========== 减少文章元数据（Author、日期等）与正文之间的间距 ========== */
+      /* ========== 减少文章头部所有间距 ========== */
+      .post-header,
+      .article-header {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        margin-bottom: 2px !important;
+        padding-bottom: 0 !important;
+      }
+      .post-header *,
+      .article-header * {
+        margin-top: 0 !important !important;
+        padding-top: 0 !important !important;
+        margin-bottom: 2px !important;
+        padding-bottom: 0 !important;
+      }
+
+      /* ========== 减少元数据（来源、作者等）间距 ========== */
       .post-meta,
       .post-meta-wrap,
       .article-meta-wrap,
       .post-info,
-      .article-meta {
-        margin-top: 0 !important;
-        margin-bottom: 4px !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
+      .article-meta,
+      .meta,
+      #post-info {
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.2 !important;
+      }
+      .post-meta *,
+      .article-meta * {
+        margin: 0 2px !important;
+        padding: 0 !important;
       }
 
-      /* ========== 减少 Sponsor（赞助）区域上方间距 ========== */
+      /* ========== 减少文章内容所有元素间距 ========== */
+      .post-content,
+      .article-content {
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .post-content > *,
+      .article-content > * {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        margin-bottom: 4px !important;
+        padding-bottom: 0 !important;
+      }
+      .post-content p,
+      .article-content p {
+        margin-bottom: 4px !important;
+        line-height: 1.4 !important;
+      }
+
+      /* ========== 减少 Sponsor 上方间距 ========== */
       .sponsor,
       .sponsor-wrap,
       .post-sponsor,
-      .reward-wrap {
-        margin-top: 4px !important;
+      .reward-wrap,
+      .reward,
+      #sponsor {
+        margin-top: 2px !important;
         padding-top: 0 !important;
-        margin-bottom: 4px !important;
-      }
-      .sponsor-title,
-      .reward-title {
-        margin-top: 0 !important;
-        margin-bottom: 4px !important;
+        margin-bottom: 2px !important;
       }
 
-      /* ========== 减少版权声明与正文之间的间距 ========== */
+      /* ========== 减少版权声明间距 ========== */
       .post-copyright,
       .copyright-wrap,
-      .article-copyright {
-        margin-top: 4px !important;
-        padding: 6px 10px !important;
+      .article-copyright,
+      #copyright {
+        margin-top: 2px !important;
+        padding: 4px 8px !important;
       }
 
       /* ========== 减少标签区域间距 ========== */
       .post-tags,
       .tag-wrap,
-      .article-tags {
-        margin-top: 4px !important;
+      .article-tags,
+      #post-tags {
+        margin-top: 2px !important;
         padding-top: 0 !important;
-        margin-bottom: 4px !important;
+        margin-bottom: 2px !important;
       }
 
       /* ========== 减少上下篇文章导航间距 ========== */
       #pagination,
       .pagination-post,
-      .post-nav {
-        margin-top: 4px !important;
+      .post-nav,
+      #post-nav {
+        margin-top: 2px !important;
         padding-top: 0 !important;
       }
 
       /* ========== 减少相关文章区域间距 ========== */
       .relatedPosts,
-      .related-posts {
-        margin-top: 4px !important;
+      .related-posts,
+      #related-posts {
+        margin-top: 2px !important;
         padding-top: 0 !important;
       }
 
       /* ========== 减少评论区上方间距 ========== */
       #comments,
-      .comments-wrap {
-        margin-top: 4px !important;
+      .comments-wrap,
+      #comment {
+        margin-top: 2px !important;
         padding-top: 0 !important;
       }
 
-      /* ========== 通用：减少所有文章内部组件的上下间距 ========== */
-      .post-content > *:first-child {
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-      }
-      .post-content > *:last-child {
-        margin-bottom: 0 !important;
-        padding-bottom: 0 !important;
-      }
-
-      /* ========== 确保浮动按钮不增加额外空间 ========== */
-      .tts-player-wrapper:hover .tts-controls-inline,
-      .tts-controls-inline.active {
-        opacity: 1;
+      /* ========== 通用：强制减少所有 div 和 section 的上下 margin ========== */
+      #post > div,
+      #post > section,
+      .post > div,
+      .post > section,
+      #article-container > div,
+      #article-container > section {
+        margin-top: 1px !important;
+        margin-bottom: 1px !important;
       }
       </style>
       <script>
