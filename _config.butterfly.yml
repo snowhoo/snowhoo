@@ -818,14 +818,26 @@ inject:
       .article-meta,
       .meta,
       #post-info {
-        margin: 6px 0 !important;
-        padding: 4px 0 !important;
+        margin: 12px 0 !important;
+        padding: 8px 0 !important;
         line-height: 1.6 !important;
       }
       .post-meta *,
       .article-meta * {
         margin: 0 4px !important;
         padding: 0 !important;
+      }
+
+      /* ========== Sponsor 上方区域适当留白 ========== */
+      .sponsor,
+      .sponsor-wrap,
+      .post-sponsor,
+      .reward-wrap,
+      .reward,
+      #sponsor {
+        margin-top: 12px !important;
+        padding-top: 8px !important;
+        margin-bottom: 12px !important;
       }
 
       /* ========== 减少文章内容所有元素间距 ========== */
