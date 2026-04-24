@@ -827,10 +827,13 @@ inject:
       .sticky-layout p {
         line-height: 1.8 !important;
       }
-      /* 公告模块内部所有 div */
+      /* 公告模块内部所有元素 */
       .card-announcement div,
       .card-announcement span,
-      .card-announcement p {
+      .card-announcement p,
+      .card-announcement .announcement_content,
+      .card-announcement .announcement_content div,
+      .card-announcement .announcement_content p {
         line-height: 1.8 !important;
       }
       /* 站长信息（Website Info）- 行间距大一点 */
