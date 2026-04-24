@@ -159,14 +159,14 @@ function generateCoverSvg(quote, author, outputPath) {
   const lines = wrapText(quote, maxChars, isEnglish);
   const lineH = fontSize + 20;
   const totalH = lines.length * lineH;
-  const startY = 300 - totalH / 2 + lineH * 0.7;
+  const startY = 200 - totalH / 2 + lineH * 0.7;
 
   const tspanLines = lines.map((l, i) =>
     `      <tspan x="600" dy="${i === 0 ? 0 : lineH}">${escapeXml(l)}</tspan>`
   ).join('\n');
 
   const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="400" viewBox="0 0 1300 400">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="${scheme.bgStart}"/>
@@ -195,49 +195,49 @@ function generateCoverSvg(quote, author, outputPath) {
   </defs>
 
   <!-- 背景 -->
-  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1300" height="400" fill="url(#bg)"/>
 
   <!-- 水墨山峦 -->
-  <path d="M-50 630 L150 400 L350 630 Z" fill="url(#mtn1)" opacity="0.6"/>
-  <path d="M200 630 L420 350 L620 630 Z" fill="url(#mtn1)" opacity="0.6"/>
-  <path d="M500 630 L780 300 L1050 630 Z" fill="url(#mtn1)" opacity="0.6"/>
-  <path d="M900 630 L1100 380 L1250 630 Z" fill="url(#mtn1)" opacity="0.6"/>
-  <path d="M-50 630 L80 480 L280 630 Z" fill="url(#mtn2)" opacity="0.6"/>
-  <path d="M700 630 L900 460 L1100 630 Z" fill="url(#mtn2)" opacity="0.6"/>
+  <path d="M-50 400 L162 254 L358 400 Z" fill="url(#mtn1)" opacity="0.6"/>
+  <path d="M200 400 L438 222 L638 400 Z" fill="url(#mtn1)" opacity="0.6"/>
+  <path d="M538 400 L845 191 L1133 400 Z" fill="url(#mtn1)" opacity="0.6"/>
+  <path d="M900 400 L1200 241 L1300 400 Z" fill="url(#mtn1)" opacity="0.6"/>
+  <path d="M-50 400 L96 305 L338 400 Z" fill="url(#mtn2)" opacity="0.6"/>
+  <path d="M746 400 L977 293 L1200 400 Z" fill="url(#mtn2)" opacity="0.6"/>
 
   <!-- 月亮光晕 -->
-  <circle cx="950" cy="120" r="80" fill="url(#moon)"/>
-  <circle cx="950" cy="120" r="38" fill="${scheme.moon}" opacity="0.15"/>
+  <circle cx="1025" cy="76" r="51" fill="url(#moon)"/>
+  <circle cx="1025" cy="76" r="24" fill="${scheme.moon}" opacity="0.15"/>
 
   <!-- 飞鸟 -->
-  <path d="M200 150 Q210 140 220 150 Q230 140 240 150" stroke="${scheme.mtn1}" stroke-width="1.5" fill="none" opacity="0.35"/>
-  <path d="M260 130 Q268 122 276 130 Q284 122 292 130" stroke="${scheme.mtn1}" stroke-width="1.5" fill="none" opacity="0.28"/>
+  <path d="M200 95 Q210 89 220 95 Q230 89 240 95" stroke="${scheme.mtn1}" stroke-width="1.5" fill="none" opacity="0.35"/>
+  <path d="M260 82 Q268 77 276 82 Q284 77 292 82" stroke="${scheme.mtn1}" stroke-width="1.5" fill="none" opacity="0.28"/>
 
   <!-- 云雾 -->
-  <ellipse cx="800" cy="200" rx="150" ry="30" fill="#ffffff" opacity="0.16"/>
-  <ellipse cx="400" cy="180" rx="120" ry="25" fill="#ffffff" opacity="0.13"/>
+  <ellipse cx="867" cy="127" rx="150" ry="19" fill="#ffffff" opacity="0.16"/>
+  <ellipse cx="433" cy="114" rx="120" ry="16" fill="#ffffff" opacity="0.13"/>
 
   <!-- 松树剪影 -->
   <g opacity="0.18" fill="${scheme.tree}">
-    <rect x="1060" y="420" width="8" height="210"/>
-    <ellipse cx="1064" cy="410" rx="50" ry="35"/>
-    <ellipse cx="1064" cy="380" rx="38" ry="28"/>
-    <ellipse cx="1064" cy="355" rx="25" ry="20"/>
+    <rect x="1141" y="267" width="5" height="133"/>
+    <ellipse cx="1143" cy="260" rx="32" ry="22"/>
+    <ellipse cx="1143" cy="241" rx="24" ry="18"/>
+    <ellipse cx="1143" cy="225" rx="16" ry="13"/>
   </g>
   <g opacity="0.14" fill="${scheme.tree}">
-    <rect x="1110" y="450" width="6" height="180"/>
-    <ellipse cx="1113" cy="440" rx="40" ry="28"/>
-    <ellipse cx="1113" cy="415" rx="30" ry="22"/>
+    <rect x="1195" y="286" width="4" height="114"/>
+    <ellipse cx="1197" cy="279" rx="25" ry="18"/>
+    <ellipse cx="1197" cy="263" rx="19" ry="14"/>
   </g>
 
   <!-- 顶部渐变条 -->
-  <rect x="0" y="0" width="1200" height="8" fill="url(#accent)"/>
+  <rect x="0" y="0" width="1300" height="5" fill="url(#accent)"/>
 
   <!-- 底部渐变条 -->
-  <rect x="0" y="622" width="1200" height="8" fill="url(#accent)"/>
+  <rect x="0" y="395" width="1300" height="5" fill="url(#accent)"/>
 
   <!-- 名言文字 -->
-  <text x="600" y="${startY}"
+  <text x="650" y="${startY}"
         font-family="'Microsoft YaHei', 'PingFang SC', 'SimHei', 'Arial', sans-serif"
         font-size="${fontSize}" fill="${scheme.text}" text-anchor="middle" font-weight="900"
         dominant-baseline="auto" filter="url(#textBg)">
@@ -245,17 +245,17 @@ ${tspanLines}
   </text>
 
   <!-- 分隔线 -->
-  <rect x="360" y="${startY + totalH + 20}" width="480" height="3" rx="1.5" fill="url(#accent)" opacity="0.75"/>
+  <rect x="390" y="${startY + totalH + 20}" width="520" height="3" rx="1.5" fill="url(#accent)" opacity="0.75"/>
 
   <!-- 作者名 -->
-  <text x="600" y="${startY + totalH + 72}"
+  <text x="650" y="${startY + totalH + 72}"
         font-family="'Microsoft YaHei', 'PingFang SC', 'SimHei', 'Arial', sans-serif"
         font-size="42" fill="${scheme.accent1}" text-anchor="middle" font-weight="700"
         letter-spacing="5" filter="url(#textBg)">—— ${escapeXml(author)}</text>
 
   <!-- 右下角标签 -->
-  <rect x="480" y="575" width="240" height="36" rx="18" fill="url(#accent)" opacity="0.88"/>
-  <text x="600" y="598"
+  <rect x="520" y="360" width="260" height="28" rx="14" fill="url(#accent)" opacity="0.88"/>
+  <text x="650" y="381"
         font-family="'Microsoft YaHei', sans-serif"
         font-size="16" fill="#ffffff" text-anchor="middle" font-weight="500">每日正能量</text>
 </svg>`;
