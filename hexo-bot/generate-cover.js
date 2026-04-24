@@ -7,7 +7,7 @@ const imagesDir = path.dirname(outputPath);
 if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
 
 // SVG 封面图：深红渐变背景 + 白色文字，两行标题
-const svg = `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+const svg = `<svg width="1300" height="400" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#7a1515"/>
@@ -24,26 +24,26 @@ const svg = `<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
     </linearGradient>
   </defs>
   <!-- 渐变背景 -->
-  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1300" height="400" fill="url(#bg)"/>
   <!-- 红色光晕 -->
-  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1300" height="400" fill="url(#glow)"/>
   <!-- 顶部渐变条 -->
-  <rect x="0" y="0" width="1200" height="5" fill="url(#accent)"/>
+  <rect x="0" y="0" width="1300" height="5" fill="url(#accent)"/>
   <!-- 主标题第一行 -->
-  <text x="600" y="270" text-anchor="middle" font-family="Microsoft YaHei, PingFang SC, sans-serif"
-    font-size="100" font-weight="bold" fill="#ffffff" letter-spacing="16">
+  <text x="650" y="170" text-anchor="middle" font-family="Microsoft YaHei, PingFang SC, sans-serif"
+    font-size="64" font-weight="bold" fill="#ffffff" letter-spacing="10">
     小红故事
   </text>
   <!-- 主标题第二行 -->
-  <text x="600" y="390" text-anchor="middle" font-family="Microsoft YaHei, PingFang SC, sans-serif"
-    font-size="100" font-weight="bold" fill="#ffffff" letter-spacing="16">
+  <text x="650" y="250" text-anchor="middle" font-family="Microsoft YaHei, PingFang SC, sans-serif"
+    font-size="64" font-weight="bold" fill="#ffffff" letter-spacing="10">
     热搜
   </text>
   <!-- 装饰线 -->
-  <rect x="420" y="430" width="360" height="4" rx="2" fill="url(#accent)"/>
+  <rect x="455" y="285" width="390" height="3" rx="1.5" fill="url(#accent)"/>
   <!-- 底部文字 -->
-  <text x="600" y="560" text-anchor="middle" font-family="Microsoft YaHei, PingFang SC, sans-serif"
-    font-size="28" fill="#8888aa">
+  <text x="650" y="360" text-anchor="middle" font-family="Microsoft YaHei, PingFang SC, sans-serif"
+    font-size="20" fill="#8888aa">
     snowhoo.net · 每日热榜
   </text>
 </svg>`;
