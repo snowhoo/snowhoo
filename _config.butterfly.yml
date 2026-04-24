@@ -781,6 +781,12 @@ inject:
       */
 
       /* ========== 强制减少文章卡片四周内边距 ========== */
+      /* 内容最外层容器 */
+      main#content-inner.layout,
+      #content-inner,
+      .layout #content-inner {
+        padding: 4px 8px !important;
+      }
       #article-container,
       .post,
       .post-block,
