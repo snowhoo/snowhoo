@@ -806,6 +806,17 @@ inject:
       #article-container .article-content {
         line-height: 1.8 !important;
       }
+      /* 首页右侧边栏所有模块行间距，与左侧文章保持一致 */
+      .aside-content,
+      .aside-content *,
+      .card-widget,
+      .card-widget *,
+      #aside-content,
+      #aside-content *,
+      .sticky_layout,
+      .sticky_layout * {
+        line-height: 1.8 !important;
+      }
       /* 文章卡片最外层容器 */
       .post,
       .card-widget .post,
