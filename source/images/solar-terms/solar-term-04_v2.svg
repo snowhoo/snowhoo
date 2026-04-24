@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+<svg width="1300" height="400" viewBox="0 0 1300 400" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#c8e6c9"/>
@@ -21,18 +21,18 @@
   </defs>
 
   <!-- 天空背景 -->
-  <rect width="800" height="400" fill="url(#sky)" rx="16"/>
+  <rect width="1300" height="400" fill="url(#sky)" rx="16"/>
 
   <!-- 远景大圆装饰 -->
-  <circle cx="780" cy="20" r="100" fill="#fff" opacity="0.08"/>
-  <circle cx="20" cy="390" r="70" fill="#fff" opacity="0.06"/>
+  <circle cx="1267.5" cy="20" r="100" fill="#fff" opacity="0.08"/>
+  <circle cx="32.5" cy="390" r="70" fill="#fff" opacity="0.06"/>
 
   <!-- 节气专属场景 -->
   
     <!-- 太阳在地平线 -->
-    <circle cx="400" cy="260" r="70" fill="#fdd835" opacity="0.8"/>
-    <circle cx="400" cy="260" r="55" fill="#ffeb3b" opacity="0.9"/>
-    <circle cx="400" cy="260" r="38" fill="#fff9c4" opacity="0.8"/>
+    <circle cx="650.0" cy="260" r="70" fill="#fdd835" opacity="0.8"/>
+    <circle cx="650.0" cy="260" r="55" fill="#ffeb3b" opacity="0.9"/>
+    <circle cx="650.0" cy="260" r="38" fill="#fff9c4" opacity="0.8"/>
     <!-- 太阳光线 -->
     
       <line x1="480" y1="260" x2="530" y2="260" stroke="#fdd835" stroke-width="2" opacity="0.3"/>
@@ -71,28 +71,28 @@
     <path d="M0 310 Q200 295 400 308 Q600 292 800 305 L800 400 L0 400Z" fill="#66bb6a" opacity="0.7"/>
     <!-- 草地和野花 -->
     <path d="M0 370 Q200 355 400 365 Q600 350 800 362 L800 400 L0 400Z" fill="#2e7d32" opacity="0.8"/>
-    <circle cx="40" cy="340" r="4" fill="#e91e63" opacity="0.7"/><circle cx="105" cy="358" r="2.5" fill="#e91e63" opacity="0.7999999999999999"/><circle cx="170" cy="376" r="4" fill="#e91e63" opacity="0.8999999999999999"/><circle cx="235" cy="340" r="2.5" fill="#e91e63" opacity="0.7"/><circle cx="300" cy="358" r="4" fill="#e91e63" opacity="0.7999999999999999"/><circle cx="365" cy="376" r="2.5" fill="#e91e63" opacity="0.8999999999999999"/><circle cx="430" cy="340" r="4" fill="#e91e63" opacity="0.7"/><circle cx="495" cy="358" r="2.5" fill="#e91e63" opacity="0.7999999999999999"/><circle cx="560" cy="376" r="4" fill="#e91e63" opacity="0.8999999999999999"/><circle cx="625" cy="340" r="2.5" fill="#e91e63" opacity="0.7"/><circle cx="690" cy="358" r="4" fill="#e91e63" opacity="0.7999999999999999"/><circle cx="755" cy="376" r="2.5" fill="#e91e63" opacity="0.8999999999999999"/>
+    <circle cx="65.0" cy="340" r="4" fill="#e91e63" opacity="0.7"/><circle cx="170.62" cy="358" r="2.5" fill="#e91e63" opacity="0.7999999999999999"/><circle cx="276.25" cy="376" r="4" fill="#e91e63" opacity="0.8999999999999999"/><circle cx="381.88" cy="340" r="2.5" fill="#e91e63" opacity="0.7"/><circle cx="487.5" cy="358" r="4" fill="#e91e63" opacity="0.7999999999999999"/><circle cx="593.12" cy="376" r="2.5" fill="#e91e63" opacity="0.8999999999999999"/><circle cx="698.75" cy="340" r="4" fill="#e91e63" opacity="0.7"/><circle cx="804.38" cy="358" r="2.5" fill="#e91e63" opacity="0.7999999999999999"/><circle cx="910.0" cy="376" r="4" fill="#e91e63" opacity="0.8999999999999999"/><circle cx="1015.62" cy="340" r="2.5" fill="#e91e63" opacity="0.7"/><circle cx="1121.25" cy="358" r="4" fill="#e91e63" opacity="0.7999999999999999"/><circle cx="1226.88" cy="376" r="2.5" fill="#e91e63" opacity="0.8999999999999999"/>
     <!-- 地平线光带 -->
     <path d="M0 310 Q200 295 400 308 Q600 292 800 305" stroke="#fdd835" stroke-width="3" fill="none" opacity="0.3"/>
     <!-- 燕子 -->
-    <path d="M550 180 Q560 174 570 178 Q560 177 550 180Z" fill="#2e7d32"/><circle cx="548" cy="178" r="2.5" fill="#2e7d32"/>
-    <path d="M620 160 Q630 154 640 158 Q630 157 620 160Z" fill="#2e7d32"/><circle cx="618" cy="158" r="2.5" fill="#2e7d32"/>
-    <path d="M690 175 Q700 169 710 173 Q700 172 690 175Z" fill="#2e7d32"/><circle cx="688" cy="173" r="2.5" fill="#2e7d32"/>
+    <path d="M550 180 Q560 174 570 178 Q560 177 550 180Z" fill="#2e7d32"/><circle cx="890.5" cy="178" r="2.5" fill="#2e7d32"/>
+    <path d="M620 160 Q630 154 640 158 Q630 157 620 160Z" fill="#2e7d32"/><circle cx="1004.25" cy="158" r="2.5" fill="#2e7d32"/>
+    <path d="M690 175 Q700 169 710 173 Q700 172 690 175Z" fill="#2e7d32"/><circle cx="1118.0" cy="173" r="2.5" fill="#2e7d32"/>
   
 
   <!-- 底部渐变遮罩 -->
-  <rect x="0" y="320" width="800" height="80" fill="url(#sky)" opacity="0.3" rx="0"/>
+  <rect x="0.0" y="320" width="1300" height="80" fill="url(#sky)" opacity="0.3" rx="0"/>
 
   <!-- 标题区背景 -->
-  <rect x="250" y="130" width="300" height="160" fill="#fff" opacity="0.18" rx="12"/>
+  <rect x="406.25" y="130" width="300" height="160" fill="#fff" opacity="0.18" rx="12"/>
 
   <!-- 主标题 -->
-  <text x="400" y="208" text-anchor="middle" font-size="80" font-weight="bold"
+  <text x="1056.25" y="208" text-anchor="middle" font-size="80" font-weight="bold"
     fill="#1b5e20" font-family="'Noto Serif SC', 'SimHei', 'STKaiti', serif"
     filter="url(#softShadow)" letter-spacing="8">春分</text>
 
   <!-- 拼音 -->
-  <text x="400" y="246" text-anchor="middle" font-size="20"
+  <text x="1056.25" y="246" text-anchor="middle" font-size="20"
     fill="#1b5e20" opacity="0.7"
     font-family="Arial, sans-serif" letter-spacing="6">Chūnfēn</text>
 
@@ -100,12 +100,12 @@
   <line x1="350" y1="265" x2="450" y2="265" stroke="#1b5e20" stroke-width="1.5" opacity="0.4"/>
 
   <!-- 日期 -->
-  <text x="400" y="287" text-anchor="middle" font-size="15"
+  <text x="1056.25" y="287" text-anchor="middle" font-size="15"
     fill="#1b5e20" opacity="0.65"
     font-family="'Noto Sans SC', Arial, sans-serif">03月20日 · 二十四节气</text>
 
   <!-- 底部关键词 -->
-  <text x="400" y="378" text-anchor="middle" font-size="13"
+  <text x="1056.25" y="378" text-anchor="middle" font-size="13"
     fill="#1b5e20" opacity="0.5"
     font-family="'Noto Sans SC', Arial, sans-serif">平衡  ·  昼夜平分  ·  踏青  ·  春暖</text>
 </svg>

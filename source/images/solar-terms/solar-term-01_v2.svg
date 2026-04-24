@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+<svg width="1300" height="400" viewBox="0 0 1300 400" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#c8e6c9"/>
@@ -21,11 +21,11 @@
   </defs>
 
   <!-- 天空背景 -->
-  <rect width="800" height="400" fill="url(#sky)" rx="16"/>
+  <rect width="1300" height="400" fill="url(#sky)" rx="16"/>
 
   <!-- 远景大圆装饰 -->
-  <circle cx="780" cy="20" r="100" fill="#fff" opacity="0.08"/>
-  <circle cx="20" cy="390" r="70" fill="#fff" opacity="0.06"/>
+  <circle cx="1267.5" cy="20" r="100" fill="#fff" opacity="0.08"/>
+  <circle cx="32.5" cy="390" r="70" fill="#fff" opacity="0.06"/>
 
   <!-- 节气专属场景 -->
   
@@ -43,26 +43,26 @@
     <!-- 桃花 -->
     <path d="M680 400 Q660 350 690 310 Q720 270 700 230" stroke="#795548" stroke-width="4" fill="none" stroke-linecap="round"/>
     <path d="M690 310 Q720 290 750 295" stroke="#795548" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <circle cx="678" cy="240" r="6" fill="#e91e63"/><circle cx="698" cy="225" r="5.5" fill="#e91e63"/><circle cx="718" cy="210" r="5" fill="#e91e63"/>
-    <circle cx="740" cy="218" r="4.5" fill="#f8bbd0"/><circle cx="755" cy="228" r="4" fill="#e91e63"/>
+    <circle cx="1101.75" cy="240" r="6" fill="#e91e63"/><circle cx="1134.25" cy="225" r="5.5" fill="#e91e63"/><circle cx="1166.75" cy="210" r="5" fill="#e91e63"/>
+    <circle cx="1202.5" cy="218" r="4.5" fill="#f8bbd0"/><circle cx="1226.88" cy="228" r="4" fill="#e91e63"/>
     <!-- 早春燕子 -->
-    <path d="M200 200 Q215 192 230 198 Q215 196 200 200Z" fill="#2e7d32"/><circle cx="198" cy="197" r="3" fill="#2e7d32"/>
-    <path d="M280 180 Q295 172 310 178 Q295 176 280 180Z" fill="#2e7d32"/><circle cx="278" cy="177" r="3" fill="#2e7d32"/>
+    <path d="M200 200 Q215 192 230 198 Q215 196 200 200Z" fill="#2e7d32"/><circle cx="321.75" cy="197" r="3" fill="#2e7d32"/>
+    <path d="M280 180 Q295 172 310 178 Q295 176 280 180Z" fill="#2e7d32"/><circle cx="451.75" cy="177" r="3" fill="#2e7d32"/>
   
 
   <!-- 底部渐变遮罩 -->
-  <rect x="0" y="320" width="800" height="80" fill="url(#sky)" opacity="0.3" rx="0"/>
+  <rect x="0.0" y="320" width="1300" height="80" fill="url(#sky)" opacity="0.3" rx="0"/>
 
   <!-- 标题区背景 -->
-  <rect x="250" y="130" width="300" height="160" fill="#fff" opacity="0.18" rx="12"/>
+  <rect x="406.25" y="130" width="300" height="160" fill="#fff" opacity="0.18" rx="12"/>
 
   <!-- 主标题 -->
-  <text x="400" y="208" text-anchor="middle" font-size="80" font-weight="bold"
+  <text x="1056.25" y="208" text-anchor="middle" font-size="80" font-weight="bold"
     fill="#1b5e20" font-family="'Noto Serif SC', 'SimHei', 'STKaiti', serif"
     filter="url(#softShadow)" letter-spacing="8">立春</text>
 
   <!-- 拼音 -->
-  <text x="400" y="246" text-anchor="middle" font-size="20"
+  <text x="1056.25" y="246" text-anchor="middle" font-size="20"
     fill="#1b5e20" opacity="0.7"
     font-family="Arial, sans-serif" letter-spacing="6">Lìchūn</text>
 
@@ -70,12 +70,12 @@
   <line x1="350" y1="265" x2="450" y2="265" stroke="#1b5e20" stroke-width="1.5" opacity="0.4"/>
 
   <!-- 日期 -->
-  <text x="400" y="287" text-anchor="middle" font-size="15"
+  <text x="1056.25" y="287" text-anchor="middle" font-size="15"
     fill="#1b5e20" opacity="0.65"
     font-family="'Noto Sans SC', Arial, sans-serif">02月03日 · 二十四节气</text>
 
   <!-- 底部关键词 -->
-  <text x="400" y="378" text-anchor="middle" font-size="13"
+  <text x="1056.25" y="378" text-anchor="middle" font-size="13"
     fill="#1b5e20" opacity="0.5"
     font-family="'Noto Sans SC', Arial, sans-serif">新生  ·  希望  ·  耕耘  ·  播种</text>
 </svg>

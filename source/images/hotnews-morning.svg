@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="400" viewBox="0 0 1300 400">
   <defs>
     <!-- 天空渐变：深蓝到地平线朝霞 -->
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
@@ -40,22 +40,22 @@
   </defs>
 
   <!-- 渐变天空 -->
-  <rect width="800" height="400" fill="url(#sky)"/>
+  <rect width="1300" height="400" fill="url(#sky)"/>
 
   <!-- 朝霞（覆盖太阳以上区域，制造天空染色效果） -->
-  <ellipse cx="400" cy="220" rx="440" ry="220" fill="url(#dawn)"/>
+  <ellipse cx="650.0" cy="220" rx="440" ry="220" fill="url(#dawn)"/>
 
   <!-- 地平线发光带 -->
-  <rect x="0" y="210" width="800" height="60" fill="url(#horizonGlow)"/>
+  <rect x="0.0" y="210" width="1300" height="60" fill="url(#horizonGlow)"/>
   <!-- 地平线细线 -->
-  <rect x="0" y="215" width="800" height="2" fill="#FFD93D" opacity="0.7"/>
+  <rect x="0.0" y="215" width="1300" height="2" fill="#FFD93D" opacity="0.7"/>
 
   <!-- 太阳光晕（最外层） -->
-  <circle cx="400" cy="215" r="100" fill="url(#sunHalo)"/>
+  <circle cx="650.0" cy="215" r="100" fill="url(#sunHalo)"/>
   <!-- 太阳光晕（中层） -->
-  <circle cx="400" cy="215" r="60"  fill="#FFE566" opacity="0.2"/>
+  <circle cx="650.0" cy="215" r="60"  fill="#FFE566" opacity="0.2"/>
   <!-- 太阳（半圆露出地平线） -->
-  <circle cx="400" cy="215" r="40" fill="url(#sunGrad)"/>
+  <circle cx="650.0" cy="215" r="40" fill="url(#sunGrad)"/>
 
   <!-- 太阳光芒 -->
   <g stroke="#FFE566" stroke-width="2" stroke-linecap="round" opacity="0.55">
@@ -67,11 +67,11 @@
   </g>
 
   <!-- 文字（统一位置） -->
-  <text x="400" y="295" text-anchor="middle"
+  <text x="1056.25" y="295" text-anchor="middle"
         font-family="Microsoft YaHei,SimHei,sans-serif"
         font-size="52" font-weight="bold" fill="#FFFFFF"
         filter="url(#txtShadow)">热搜晨报</text>
-  <text x="400" y="330" text-anchor="middle"
+  <text x="1056.25" y="330" text-anchor="middle"
         font-family="Microsoft YaHei,SimHei,sans-serif"
         font-size="18" fill="#D8EEFF" opacity="0.9">每日热闻 · 早晨播报</text>
 </svg>

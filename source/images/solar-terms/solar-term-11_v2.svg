@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg width="800" height="400" viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+<svg width="1300" height="400" viewBox="0 0 1300 400" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#fff9c4"/>
@@ -21,11 +21,11 @@
   </defs>
 
   <!-- 天空背景 -->
-  <rect width="800" height="400" fill="url(#sky)" rx="16"/>
+  <rect width="1300" height="400" fill="url(#sky)" rx="16"/>
 
   <!-- 远景大圆装饰 -->
-  <circle cx="780" cy="20" r="100" fill="#fff" opacity="0.08"/>
-  <circle cx="20" cy="390" r="70" fill="#fff" opacity="0.06"/>
+  <circle cx="1267.5" cy="20" r="100" fill="#fff" opacity="0.08"/>
+  <circle cx="32.5" cy="390" r="70" fill="#fff" opacity="0.06"/>
 
   <!-- 节气专属场景 -->
   
@@ -35,35 +35,35 @@
     <path d="M0 340 Q200 325 400 335 Q600 320 800 330 L800 400 L0 400Z" fill="#4fc3f7" opacity="0.5"/>
     <path d="M0 360 Q200 345 400 355 Q600 340 800 350 L800 400 L0 400Z" fill="#42a5f5" opacity="0.6"/>
     <!-- 烈日 -->
-    <circle cx="650" cy="100" r="55" fill="#ff8f00" opacity="0.9"/>
-    <circle cx="650" cy="100" r="42" fill="#ffca28" opacity="0.8"/>
-    <circle cx="650" cy="100" r="28" fill="#fff9c4" opacity="0.7"/>
+    <circle cx="1056.25" cy="100" r="55" fill="#ff8f00" opacity="0.9"/>
+    <circle cx="1056.25" cy="100" r="42" fill="#ffca28" opacity="0.8"/>
+    <circle cx="1056.25" cy="100" r="28" fill="#fff9c4" opacity="0.7"/>
     <!-- 热浪曲线 -->
     <path d="M0 310 Q100 300 200 308 Q300 298 400 306 Q500 296 600 304 Q700 294 800 302" stroke="#fff59d" stroke-width="2" fill="none" opacity="0.4"/>
     <path d="M0 318 Q100 308 200 316 Q300 306 400 314 Q500 304 600 312 Q700 302 800 310" stroke="#fff59d" stroke-width="1.5" fill="none" opacity="0.3"/>
     <!-- 荷塘蜻蜓 -->
-    <ellipse cx="300" cy="375" rx="25" ry="12" fill="#1e88e5" opacity="0.7"/>
-    <ellipse cx="300" cy="373" rx="16" ry="8" fill="#fff59d" opacity="0.85"/>
-    <ellipse cx="500" cy="380" rx="22" ry="10" fill="#1e88e5" opacity="0.7"/>
+    <ellipse cx="487.5" cy="375" rx="25" ry="12" fill="#1e88e5" opacity="0.7"/>
+    <ellipse cx="487.5" cy="373" rx="16" ry="8" fill="#fff59d" opacity="0.85"/>
+    <ellipse cx="812.5" cy="380" rx="22" ry="10" fill="#1e88e5" opacity="0.7"/>
     <!-- 知了 -->
-    <ellipse cx="120" cy="260" rx="14" ry="18" fill="#42a5f5" opacity="0.9"/>
-    <ellipse cx="120" cy="248" rx="11" ry="7" fill="#90caf9" opacity="0.9"/>
+    <ellipse cx="195.0" cy="260" rx="14" ry="18" fill="#42a5f5" opacity="0.9"/>
+    <ellipse cx="195.0" cy="248" rx="11" ry="7" fill="#90caf9" opacity="0.9"/>
     <path d="M108 255 Q120 250 132 255" stroke="#42a5f5" stroke-width="2.5" fill="none"/>
   
 
   <!-- 底部渐变遮罩 -->
-  <rect x="0" y="320" width="800" height="80" fill="url(#sky)" opacity="0.3" rx="0"/>
+  <rect x="0.0" y="320" width="1300" height="80" fill="url(#sky)" opacity="0.3" rx="0"/>
 
   <!-- 标题区背景 -->
-  <rect x="250" y="130" width="300" height="160" fill="#fff" opacity="0.18" rx="12"/>
+  <rect x="406.25" y="130" width="300" height="160" fill="#fff" opacity="0.18" rx="12"/>
 
   <!-- 主标题 -->
-  <text x="400" y="208" text-anchor="middle" font-size="80" font-weight="bold"
+  <text x="1056.25" y="208" text-anchor="middle" font-size="80" font-weight="bold"
     fill="#bf360c" font-family="'Noto Serif SC', 'SimHei', 'STKaiti', serif"
     filter="url(#softShadow)" letter-spacing="8">小暑</text>
 
   <!-- 拼音 -->
-  <text x="400" y="246" text-anchor="middle" font-size="20"
+  <text x="1056.25" y="246" text-anchor="middle" font-size="20"
     fill="#bf360c" opacity="0.7"
     font-family="Arial, sans-serif" letter-spacing="6">Xiǎoshǔ</text>
 
@@ -71,12 +71,12 @@
   <line x1="350" y1="265" x2="450" y2="265" stroke="#bf360c" stroke-width="1.5" opacity="0.4"/>
 
   <!-- 日期 -->
-  <text x="400" y="287" text-anchor="middle" font-size="15"
+  <text x="1056.25" y="287" text-anchor="middle" font-size="15"
     fill="#bf360c" opacity="0.65"
     font-family="'Noto Sans SC', Arial, sans-serif">07月06日 · 二十四节气</text>
 
   <!-- 底部关键词 -->
-  <text x="400" y="378" text-anchor="middle" font-size="13"
+  <text x="1056.25" y="378" text-anchor="middle" font-size="13"
     fill="#bf360c" opacity="0.5"
     font-family="'Noto Sans SC', Arial, sans-serif">暑热  ·  伏天  ·  温风  ·  蝉鸣</text>
 </svg>
