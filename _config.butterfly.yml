@@ -780,52 +780,79 @@ inject:
       }
 
       /* ========== 减少文章元数据（Author、日期等）与正文之间的间距 ========== */
-      .post-meta {
+      .post-meta,
+      .post-meta-wrap,
+      .article-meta-wrap,
+      .post-info,
+      .article-meta {
+        margin-top: 0 !important;
         margin-bottom: 4px !important;
+        padding-top: 0 !important;
         padding-bottom: 0 !important;
-      }
-      .post-meta__separator {
-        margin: 0 4px !important;
       }
 
       /* ========== 减少 Sponsor（赞助）区域上方间距 ========== */
-      .sponsor {
+      .sponsor,
+      .sponsor-wrap,
+      .post-sponsor,
+      .reward-wrap {
         margin-top: 4px !important;
         padding-top: 0 !important;
+        margin-bottom: 4px !important;
       }
-      .sponsor-title {
+      .sponsor-title,
+      .reward-title {
         margin-top: 0 !important;
         margin-bottom: 4px !important;
       }
 
       /* ========== 减少版权声明与正文之间的间距 ========== */
-      .post-copyright {
+      .post-copyright,
+      .copyright-wrap,
+      .article-copyright {
         margin-top: 4px !important;
         padding: 6px 10px !important;
       }
 
       /* ========== 减少标签区域间距 ========== */
-      .post-tags {
+      .post-tags,
+      .tag-wrap,
+      .article-tags {
         margin-top: 4px !important;
         padding-top: 0 !important;
+        margin-bottom: 4px !important;
       }
 
       /* ========== 减少上下篇文章导航间距 ========== */
-      #pagination {
+      #pagination,
+      .pagination-post,
+      .post-nav {
         margin-top: 4px !important;
         padding-top: 0 !important;
       }
 
       /* ========== 减少相关文章区域间距 ========== */
-      .relatedPosts {
+      .relatedPosts,
+      .related-posts {
         margin-top: 4px !important;
         padding-top: 0 !important;
       }
 
       /* ========== 减少评论区上方间距 ========== */
-      #comments {
+      #comments,
+      .comments-wrap {
         margin-top: 4px !important;
         padding-top: 0 !important;
+      }
+
+      /* ========== 通用：减少所有文章内部组件的上下间距 ========== */
+      .post-content > *:first-child {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+      }
+      .post-content > *:last-child {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
       }
 
       /* ========== 确保浮动按钮不增加额外空间 ========== */
