@@ -787,15 +787,19 @@ inject:
       .layout #content-inner {
         padding: 4px 8px !important;
       }
-      #article-container,
-      .post,
+      /* 文章主体容器 */
+      #post,
       .post-block,
-      .post-body,
-      .article,
-      .article-content,
-      .post-content {
+      .post-content,
+      #article-container {
         padding: 2px 4px !important;
         margin: 0 !important;
+      }
+      /* 文章文字内容行间距 */
+      #post .post-content,
+      #post .article-content,
+      #article-container .post-content,
+      #article-container .article-content {
         line-height: 1.8 !important;
       }
       /* 文章卡片最外层容器 */
