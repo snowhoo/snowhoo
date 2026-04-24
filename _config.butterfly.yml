@@ -821,42 +821,38 @@ inject:
         line-height: 1.8 !important;
       }
       /* 首页右侧边栏所有模块行间距，与左侧文章保持一致 */
-      /* sticky_layout 整体 */
-      .sticky-layout,
-      .sticky-layout .card-widget,
-      .sticky-layout .card-widget .card-content,
-      .sticky-layout .aside-list {
+      /* sticky_layout 内部所有 div */
+      .sticky-layout div,
+      .sticky-layout span,
+      .sticky-layout p {
         line-height: 1.8 !important;
       }
-      .sticky-layout .card-widget .card-content *,
-      .sticky-layout .aside-list * {
+      /* 公告模块内部所有 div */
+      .card-announcement div,
+      .card-announcement span,
+      .card-announcement p {
         line-height: 1.8 !important;
       }
-      /* 公告模块 */
-      .card-announcement,
-      .card-announcement .card-content,
-      .card-announcement .card-content * {
-        line-height: 1.8 !important;
-      }
-      /* Website Info、标签、分类、归档、最新文章等模块 */
+      /* 站长信息（Website Info）- 行间距大一点 */
       .card-info,
-      .card-info .card-content,
-      .card-info .card-content *,
-      .card-websiteinfo,
-      .card-websiteinfo .card-content,
-      .card-websiteinfo .card-content *,
-      .card-tags,
-      .card-tags .card-content,
-      .card-tags .card-content *,
-      .card-categories,
-      .card-categories .card-content,
-      .card-categories .card-content *,
-      .card-archives,
-      .card-archives .card-content,
-      .card-archives .card-content *,
-      .card-recent-post,
-      .card-recent-post .card-content,
-      .card-recent-post .card-content * {
+      .card-info div,
+      .card-info span,
+      .card-info p {
+        line-height: 2.0 !important;
+      }
+      /* 其他边栏模块 */
+      .card-tags div,
+      .card-tags span,
+      .card-tags p,
+      .card-categories div,
+      .card-categories span,
+      .card-categories p,
+      .card-archives div,
+      .card-archives span,
+      .card-archives p,
+      .card-recent-post div,
+      .card-recent-post span,
+      .card-recent-post p {
         line-height: 1.8 !important;
       }
       /* 文章卡片最外层容器 */
