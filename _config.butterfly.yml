@@ -780,35 +780,37 @@ inject:
       }
       */
 
-      /* ========== 强制减少正文页所有容器内边距 ========== */
+      /* ========== 强制减少文章卡片四周内边距 ========== */
       #article-container,
       .post,
+      .post-block,
       .post-body,
       .article,
       .article-content,
       .post-content {
-        padding: 0 2px !important;
+        padding: 2px 4px !important;
         margin: 0 !important;
         line-height: 1.4 !important;
       }
+      /* 文章卡片最外层容器 */
+      .post,
+      .card-widget .post,
+      .layout .post,
+      .post article,
+      article.post {
+        padding: 2px 4px !important;
+      }
 
-      /* ========== 减少文章头部所有间距 ========== */
+      /* ========== 文章头部：标题区域紧凑 ========== */
       .post-header,
       .article-header {
         margin-top: 0 !important;
         padding-top: 0 !important;
-        margin-bottom: 2px !important;
-        padding-bottom: 0 !important;
-      }
-      .post-header *,
-      .article-header * {
-        margin-top: 0 !important !important;
-        padding-top: 0 !important !important;
-        margin-bottom: 2px !important;
+        margin-bottom: 6px !important;
         padding-bottom: 0 !important;
       }
 
-      /* ========== 减少元数据（来源、作者等）间距 ========== */
+      /* ========== 元数据（来源、作者等）适当留白 ========== */
       .post-meta,
       .post-meta-wrap,
       .article-meta-wrap,
@@ -816,13 +818,13 @@ inject:
       .article-meta,
       .meta,
       #post-info {
-        margin: 0 !important;
-        padding: 0 !important;
-        line-height: 1.2 !important;
+        margin: 6px 0 !important;
+        padding: 4px 0 !important;
+        line-height: 1.6 !important;
       }
       .post-meta *,
       .article-meta * {
-        margin: 0 2px !important;
+        margin: 0 4px !important;
         padding: 0 !important;
       }
 
