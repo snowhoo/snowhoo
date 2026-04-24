@@ -1,7 +1,7 @@
 ---
-title: 但愿人长久，千里共婵娟。 —— 苏轼
-date: 2026-04-25 06:49:41
-updated: 2026-04-25 06:49:41
+title: The roots of education are bitter, but the fruit i… —— Aristotle
+date: 2026-04-25 07:35:03
+updated: 2026-04-25 07:35:03
 categories:
   - 每日正能量
 tags:
@@ -14,13 +14,13 @@ cover: /images/quotes/20260425_quote-cover.svg
 
 ![每日正能量](/images/quotes/20260425_quote-cover.svg)
 
-**每日正能量 · 2026-04-25 06:49:41**
+**每日正能量 · 2026-04-25 07:35:03**
 
-> 但愿人长久，千里共婵娟。
+> The roots of education are bitter, but the fruit is sweet.
 
-**出处：** 《水调歌头》
+**出处：** Attributed
 
-🌟 心有光芒，何惧风雨
+🌟 Shine Bright, Fear Nothing
 
 🌅 新的一天，从一句正能量开始。愿你今天心情愉快，万事顺意。
 
