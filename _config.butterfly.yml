@@ -843,16 +843,45 @@ inject:
       .card-info p {
         line-height: 2.0 !important;
       }
-      /* 其他边栏模块 */
+      /* 其他边栏模块 - 强力覆盖所有文本元素 */
+      /* 标签云 */
+      .card-tags,
+      .card-tags .card-tag-cloud,
+      .card-tags .card-tag-cloud a,
       .card-tags div,
       .card-tags span,
       .card-tags p,
+      .card-tags li {
+        line-height: 1.8 !important;
+      }
+      /* 分类 */
+      .card-categories,
+      .card-categories .category-list,
+      .card-categories .category-list li,
+      .card-categories .category-list a,
       .card-categories div,
       .card-categories span,
       .card-categories p,
+      .card-categories li {
+        line-height: 1.8 !important;
+      }
+      /* 归档 */
+      .card-archives,
+      .card-archives .archive-list,
+      .card-archives .archive-list li,
+      .card-archives .archive-list a,
       .card-archives div,
       .card-archives span,
       .card-archives p,
+      .card-archives li {
+        line-height: 1.8 !important;
+      }
+      /* 最新文章 */
+      .card-recent-post,
+      .card-recent-post .aside-list,
+      .card-recent-post .aside-list-item,
+      .card-recent-post .aside-list-item .content,
+      .card-recent-post .aside-list-item .title,
       .card-recent-post div,
       .card-recent-post span,
       .card-recent-post p {
