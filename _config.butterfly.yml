@@ -821,34 +821,42 @@ inject:
         line-height: 1.8 !important;
       }
       /* 首页右侧边栏所有模块行间距，与左侧文章保持一致 */
-      /* 针对所有边栏卡片内的文本内容 */
-      #aside-content .card-widget,
-      #aside-content .card-widget .card-content,
-      #aside-content .card-widget .card-content *,
-      #aside-content .aside-list,
-      #aside-content .aside-list *,
-      .sticky_layout .card-widget,
-      .sticky_layout .card-widget .card-content,
-      .sticky_layout .card-widget .card-content *,
-      .sticky_layout .aside-list,
-      .sticky_layout .aside-list * {
+      /* sticky_layout 整体 */
+      .sticky-layout,
+      .sticky-layout .card-widget,
+      .sticky-layout .card-widget .card-content,
+      .sticky-layout .aside-list {
         line-height: 1.8 !important;
       }
-      /* 公告、Website Info、目录等特定模块加强 */
+      .sticky-layout .card-widget .card-content *,
+      .sticky-layout .aside-list * {
+        line-height: 1.8 !important;
+      }
+      /* 公告模块 */
       .card-announcement,
-      .card-announcement *,
+      .card-announcement .card-content,
+      .card-announcement .card-content * {
+        line-height: 1.8 !important;
+      }
+      /* Website Info、标签、分类、归档、最新文章等模块 */
       .card-info,
-      .card-info *,
+      .card-info .card-content,
+      .card-info .card-content *,
       .card-websiteinfo,
-      .card-websiteinfo *,
+      .card-websiteinfo .card-content,
+      .card-websiteinfo .card-content *,
       .card-tags,
-      .card-tags *,
+      .card-tags .card-content,
+      .card-tags .card-content *,
       .card-categories,
-      .card-categories *,
+      .card-categories .card-content,
+      .card-categories .card-content *,
       .card-archives,
-      .card-archives *,
+      .card-archives .card-content,
+      .card-archives .card-content *,
       .card-recent-post,
-      .card-recent-post * {
+      .card-recent-post .card-content,
+      .card-recent-post .card-content * {
         line-height: 1.8 !important;
       }
       /* 文章卡片最外层容器 */
