@@ -1,7 +1,7 @@
 ---
-title: Do not fear to be eccentric in opinion, for every … —— Bertrand Russell
-date: 2026-04-25 06:00:01
-updated: 2026-04-25 06:00:01
+title: 但愿人长久，千里共婵娟。 —— 苏轼
+date: 2026-04-25 06:49:41
+updated: 2026-04-25 06:49:41
 categories:
   - 每日正能量
 tags:
@@ -14,13 +14,13 @@ cover: /images/quotes/20260425_quote-cover.svg
 
 ![每日正能量](/images/quotes/20260425_quote-cover.svg)
 
-**每日正能量 · 2026-04-25 06:00:01**
+**每日正能量 · 2026-04-25 06:49:41**
 
-> Do not fear to be eccentric in opinion, for every opinion now accepted was once eccentric.
+> 但愿人长久，千里共婵娟。
 
-**出处：** 《Attributed》
+**出处：** 《水调歌头》
 
-🌟 Shine Bright, Fear Nothing
+🌟 心有光芒，何惧风雨
 
 🌅 新的一天，从一句正能量开始。愿你今天心情愉快，万事顺意。
 
