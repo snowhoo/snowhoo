@@ -867,7 +867,16 @@ inject:
         padding: 0 !important;
       }
 
-      /* ========== Sponsor 上方区域留白 10px ========== */
+      /* ========== 分享按钮与 Sponsor 之间留白 10px ========== */
+      /* 分享按钮下方 */
+      .post-share,
+      #post .post-share,
+      #share,
+      .share-wrap,
+      .post-share-wrap {
+        margin-bottom: 10px !important;
+      }
+      /* Sponsor 上方 */
       .sponsor,
       .sponsor-wrap,
       .post-sponsor,
