@@ -780,16 +780,20 @@ inject:
       }
       */
 
-      /* ========== 强制减少文章卡片四周内边距 ========== */
+      /* ========== 调整文章卡片四周内边距 ========== */
       /* 内容最外层容器 */
       main#content-inner.layout,
       #content-inner,
       .layout #content-inner {
         padding: 4px 8px !important;
       }
-      /* 文章主体容器 */
+      /* 文章主体容器 - 默认值约 40px 60px，现改为一半 */
       #post,
-      .post-block,
+      .post-block {
+        padding: 20px 30px !important;
+        margin: 0 !important;
+      }
+      /* 文章内容区域 */
       .post-content,
       #article-container {
         padding: 2px 4px !important;
