@@ -821,14 +821,34 @@ inject:
         line-height: 1.8 !important;
       }
       /* 首页右侧边栏所有模块行间距，与左侧文章保持一致 */
-      .aside-content,
-      .aside-content *,
-      .card-widget,
-      .card-widget *,
-      #aside-content,
-      #aside-content *,
-      .sticky_layout,
-      .sticky_layout * {
+      /* 针对所有边栏卡片内的文本内容 */
+      #aside-content .card-widget,
+      #aside-content .card-widget .card-content,
+      #aside-content .card-widget .card-content *,
+      #aside-content .aside-list,
+      #aside-content .aside-list *,
+      .sticky_layout .card-widget,
+      .sticky_layout .card-widget .card-content,
+      .sticky_layout .card-widget .card-content *,
+      .sticky_layout .aside-list,
+      .sticky_layout .aside-list * {
+        line-height: 1.8 !important;
+      }
+      /* 公告、Website Info、目录等特定模块加强 */
+      .card-announcement,
+      .card-announcement *,
+      .card-info,
+      .card-info *,
+      .card-websiteinfo,
+      .card-websiteinfo *,
+      .card-tags,
+      .card-tags *,
+      .card-categories,
+      .card-categories *,
+      .card-archives,
+      .card-archives *,
+      .card-recent-post,
+      .card-recent-post * {
         line-height: 1.8 !important;
       }
       /* 文章卡片最外层容器 */
