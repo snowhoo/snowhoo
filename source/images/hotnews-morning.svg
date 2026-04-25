@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="400" viewBox="0 0 1300 400">
+  <defs>
+    <!-- 天空渐变：深蓝到地平线朝霞 -->
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#0a1628"/>
+      <stop offset="28%"  stop-color="#1a3a6b"/>
+      <stop offset="55%"  stop-color="#3a7fc8"/>
+      <stop offset="78%"  stop-color="#7ab8f0"/>
+      <stop offset="100%" stop-color="#c8e4ff"/>
+    </linearGradient>
+    <!-- 朝霞：地平线上方橙红金渐变 -->
+    <linearGradient id="dawn" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%"   stop-color="#FFD93D" stop-opacity="0.9"/>
+      <stop offset="30%"  stop-color="#FF9A3C" stop-opacity="0.75"/>
+      <stop offset="65%"  stop-color="#FF6B6B" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#FF6B6B" stop-opacity="0"/>
+    </linearGradient>
+    <!-- 太阳渐变：边缘到中心 -->
+    <radialGradient id="sunGrad" cx="38%" cy="38%" r="62%">
+      <stop offset="0%"   stop-color="#FFFDE7"/>
+      <stop offset="45%"  stop-color="#FFE566"/>
+      <stop offset="80%"  stop-color="#FFB347"/>
+      <stop offset="100%" stop-color="#FF8C42"/>
+    </radialGradient>
+    <!-- 太阳外层光晕 -->
+    <radialGradient id="sunHalo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#FFE566" stop-opacity="0.6"/>
+      <stop offset="50%"  stop-color="#FF9A3C" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FF6B6B" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 地平线发光 -->
+    <linearGradient id="horizonGlow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#FFD93D" stop-opacity="0.6"/>
+      <stop offset="50%"  stop-color="#FF9A3C" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#FF6B6B" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="txtShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="#000" flood-opacity="0.7"/>
+    </filter>
+  </defs>
+
+  <!-- 渐变天空 -->
+  <rect width="1300" height="400" fill="url(#sky)"/>
+
+  <!-- 朝霞（覆盖太阳以上区域，制造天空染色效果） -->
+  <ellipse cx="650.0" cy="220" rx="440" ry="220" fill="url(#dawn)"/>
+
+  <!-- 地平线发光带 -->
+  <rect x="0.0" y="210" width="1300" height="60" fill="url(#horizonGlow)"/>
+  <!-- 地平线细线 -->
+  <rect x="0.0" y="215" width="1300" height="2" fill="#FFD93D" opacity="0.7"/>
+
+  <!-- 太阳光晕（最外层） -->
+  <circle cx="650.0" cy="215" r="100" fill="url(#sunHalo)"/>
+  <!-- 太阳光晕（中层） -->
+  <circle cx="650.0" cy="215" r="60"  fill="#FFE566" opacity="0.2"/>
+  <!-- 太阳（半圆露出地平线） -->
+  <circle cx="650.0" cy="215" r="40" fill="url(#sunGrad)"/>
+
+  <!-- 太阳光芒 -->
+  <g stroke="#FFE566" stroke-width="2" stroke-linecap="round" opacity="0.55">
+    <line x1="400" y1="155" x2="400" y2="138"/>
+    <line x1="443" y1="167" x2="457" y2="152"/>
+    <line x1="468" y1="193" x2="482" y2="185"/>
+    <line x1="357" y1="167" x2="343" y2="152"/>
+    <line x1="332" y1="193" x2="318" y2="185"/>
+  </g>
+
+  <!-- 文字（统一位置） -->
+  <text x="1056.25" y="295" text-anchor="middle"
+        font-family="Microsoft YaHei,SimHei,sans-serif"
+        font-size="52" font-weight="bold" fill="#FFFFFF"
+        filter="url(#txtShadow)">热搜晨报</text>
+  <text x="1056.25" y="330" text-anchor="middle"
+        font-family="Microsoft YaHei,SimHei,sans-serif"
+        font-size="18" fill="#D8EEFF" opacity="0.9">每日热闻 · 早晨播报</text>
+</svg>
