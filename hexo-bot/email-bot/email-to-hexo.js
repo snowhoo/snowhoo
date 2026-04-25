@@ -163,80 +163,73 @@ function savePost(parsed) {
   return { filepath, filename, draft: parsed.draft };
 }
 
-async function triggerDeploy(filename) {
-  return new Promise((resolve) => {
-    // ─── Step 1: Git 备份到 source 分支 ─────────────────────────────
-    const gitAdd = spawn('git', ['add', 'source/_posts/', 'source/images/email-attachments/'], {
-      cwd: HEXO_PATH, shell: true,
+// ─── 超时包装 spawn ────────────────────────────────────────────────────────
+function runCmd(cmd, opts = {}) {
+  return new Promise((resolve, reject) => {
+    const timeout = opts.timeout || 120000;
+    const timer = setTimeout(() => {
+      try { p.kill('SIGTERM'); } catch (_) {}
+      reject(new Error(`Timeout after ${timeout}ms: ${cmd}`));
+    }, timeout);
+    const p = spawn('cmd', ['/c', cmd], {
+      cwd: opts.cwd || HEXO_PATH,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
     });
-    let gitOut = '';
-    gitAdd.stdout.on('data', d => gitOut += d);
-    gitAdd.stderr.on('data', d => gitOut += d);
-    gitAdd.on('close', (addCode) => {
-      if (addCode !== 0) {
-        console.error(`[backup] ❌ git add 失败 (code ${addCode}): ${gitOut.slice(-200)}`);
-      }
-
-      const gitCommit = spawn('git', ['commit', '-m', `post: 邮件发布文章 - ${filename || 'auto'}`], {
-        cwd: HEXO_PATH, shell: true,
-      });
-      let commitOut = '';
-      gitCommit.stdout.on('data', d => commitOut += d);
-      gitCommit.stderr.on('data', d => commitOut += d);
-      gitCommit.on('close', (commitCode) => {
-        if (commitCode === 0) {
-          console.log('[backup] ✅ 已提交到 source 分支');
-        } else if (commitOut.includes('nothing to commit')) {
-          console.log('[backup] ⚠️ 无新内容需要提交');
-        } else {
-          console.error(`[backup] ❌ git commit 失败: ${commitOut.slice(-200)}`);
-        }
-
-        // 无论 git 成功与否，继续推送备份
-        const gitPush = spawn('git', ['push', 'origin', 'source'], {
-          cwd: HEXO_PATH, shell: true,
-        });
-        let pushOut = '';
-        gitPush.stdout.on('data', d => pushOut += d);
-        gitPush.stderr.on('data', d => pushOut += d);
-        gitPush.on('close', (pushCode) => {
-          if (pushCode === 0) {
-            console.log('[backup] ✅ 已推送到远程 source 分支');
-          } else {
-            console.error(`[backup] ❌ git push 失败: ${pushOut.slice(-200)}`);
-          }
-
-          // ─── Step 2: Hexo generate ─────────────────────────────────
-          const args = ['--config', path.join(HEXO_PATH, '_config.yml')];
-          const hexo = spawn('npx', ['hexo'].concat(['generate'].concat(args)), {
-            cwd: HEXO_PATH, shell: true,
-          });
-          let out = '';
-          hexo.stdout.on('data', d => out += d);
-          hexo.stderr.on('data', d => out += d);
-          hexo.on('close', async (code) => {
-            if (code !== 0) {
-              console.error(`[deploy] ❌ generate 失败 (code ${code}): ${out.slice(-200)}`);
-              resolve();
-              return;
-            }
-
-            // ─── Step 3: Hexo deploy ───────────────────────────────────
-            const dep = spawn('npx', ['hexo'].concat(['deploy'].concat(args)), {
-              cwd: HEXO_PATH, shell: true,
-            });
-            let depOut = '';
-            dep.stdout.on('data', d => depOut += d);
-            dep.stderr.on('data', d => depOut += d);
-            dep.on('close', (c) => {
-              console.log(c === 0 ? '[deploy] ✅ 部署完成' : `[deploy] ❌ 失败 (code ${c}): ${depOut.slice(-200)}`);
-              resolve();
-            });
-          });
-        });
-      });
-    });
+    let out = '';
+    p.stdout.on('data', d => { out += d; });
+    p.stderr.on('data', d => { out += d; });
+    p.on('close', (code) => { clearTimeout(timer); resolve(out); });
+    p.on('error', (e) => { clearTimeout(timer); reject(e); });
   });
+}
+
+async function triggerDeploy(filename) {
+  const hexoArgs = ['--config', path.join(HEXO_PATH, '_config.yml')];
+  try {
+    // ─── Step 1: Git 备份 ───────────────────────────────────────────
+    await runCmd('git add source/_posts/ source/images/email-attachments/', { timeout: 30000 });
+
+    // 纯 ASCII commit message
+    const safeName = (filename || 'auto').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const commitMsg = `post-email-article-${safeName}`;
+    const commitOut = await runCmd(`git commit -m "${commitMsg}"`, { timeout: 30000 });
+
+    if (commitOut.includes('nothing to commit')) {
+      console.log('[backup] [info] no changes to commit');
+    } else if (commitOut.includes('[main') || commitOut.includes('[master') || commitOut.includes('[source')) {
+      console.log('[backup] [info] committed to source branch');
+    } else {
+      console.log('[backup] [info] commit done');
+    }
+
+    // ─── Step 2: Git push with force fallback ───────────────────────
+    try {
+      await runCmd('git push origin source', { timeout: 60000 });
+      console.log('[backup] [info] pushed to remote source branch');
+    } catch (e) {
+      console.log('[backup] [info] normal push failed, trying force push...');
+      await runCmd('git push origin source --force', { timeout: 60000 });
+      console.log('[backup] [info] force pushed to remote source branch');
+    }
+
+    // ─── Step 3: Hexo generate + deploy ────────────────────────────
+    const genOut = await runCmd('npx hexo generate ' + hexoArgs.join(' '), { timeout: 120000 });
+    if (!genOut.includes('Generated') && genOut.includes('ERROR')) {
+      console.error('[deploy] [error] generate failed:', genOut.slice(-200));
+      return;
+    }
+    console.log('[deploy] [info] generate done, starting deploy...');
+
+    const depOut = await runCmd('npx hexo deploy ' + hexoArgs.join(' '), { timeout: 120000 });
+    if (depOut.includes('Deploy done')) {
+      console.log('[deploy] [done] article published successfully!');
+    } else {
+      console.log('[deploy] [done] deploy finished (check site for result)');
+    }
+  } catch (e) {
+    console.error('[error]', e.message);
+  }
 }
 
 // ─── 发送回执 ──────────────────────────────────────────────────────────────
@@ -413,8 +406,10 @@ async function processEmails() {
 
           await sendReceipt(from, filename, draft);
 
-          // 记录已处理 UID，防止下次重复处理
+          // 立即记录 UID，防止脚本中途崩溃导致重复处理
           newUIDs.add(String(uid));
+          const allProcessed = new Set([...processedUIDs, ...newUIDs]);
+          saveProcessedUIDs(allProcessed);
 
           if (!draft && AUTO_DEPLOY) await triggerDeploy(filename);
 
@@ -440,12 +435,6 @@ async function processEmails() {
   } finally {
     if (connected) {
       try { await client.close(); } catch (_) {}
-    }
-    // 保存本次处理的 UID，防止下次重复处理
-    if (newUIDs.size > 0) {
-      [...processedUIDs, ...newUIDs].forEach(u => processedUIDs.add(u));
-      saveProcessedUIDs(processedUIDs);
-      console.log(`[debug] 已记录 ${newUIDs.size} 个 UID`);
     }
   }
 }

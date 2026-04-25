@@ -7,7 +7,6 @@
  * 建议配合 Windows 任务计划程序每日执行
  */
 
-const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { SOLAR_TERMS } = require('./solar-terms-data');
@@ -22,6 +21,28 @@ const HEXO_PATH = 'D:/hexo';
 const POSTS_DIR = path.join(HEXO_PATH, 'source', '_posts');
 const IMG_DIR = path.join(HEXO_PATH, 'source', 'images', 'solar-terms');
 const LOCK_FILE = path.join(__dirname, 'solar-terms.lock');
+
+// ─── 超时包装 spawn ─────────────────────────────────────────────────────────
+const { spawn } = require('child_process');
+function runCmd(cmd, opts = {}) {
+  return new Promise((resolve, reject) => {
+    const timeout = opts.timeout || 120000;
+    const timer = setTimeout(() => {
+      try { proc.kill('SIGTERM'); } catch (_) {}
+      reject(new Error(`Timeout after ${timeout}ms: ${cmd}`));
+    }, timeout);
+    const proc = spawn('cmd', ['/c', cmd], {
+      cwd: opts.cwd || HEXO_PATH,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true
+    });
+    let out = '';
+    proc.stdout.on('data', d => { out += d; });
+    proc.stderr.on('data', d => { out += d; });
+    proc.on('close', (code) => { clearTimeout(timer); resolve(out); });
+    proc.on('error', (e) => { clearTimeout(timer); reject(e); });
+  });
+}
 
 // ─── 农历工具 ─────────────────────────────────────────────────────────────
 const LUNAR_MONTHS = ['', '正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','腊月'];
@@ -42,68 +63,38 @@ function log(tag, msg) {
   }
 }
 
-function hexoDeploy(termName) {
-  return new Promise((resolve) => {
-    log('solar', '开始备份、生成并部署...');
-
+async function hexoDeploy(termName) {
+  log('solar', '开始备份、生成并部署...');
+  try {
     // Step 1: Git 备份
-    const gitAdd = spawn('cmd', ['/c', 'git add source/_posts/ source/images/solar-terms/'], {
-      cwd: HEXO_PATH,
-      stdio: 'pipe',
-      windowsHide: true
-    });
-    let gitOut = '';
-    gitAdd.stdout.on('data', d => { gitOut += d; });
-    gitAdd.stderr.on('data', d => { gitOut += d; });
-    gitAdd.on('close', () => {
-      const commitMsg = `post: 节气文章推送 - ${termName || 'auto'}`;
-      const gitCommit = spawn('cmd', ['/c', `git commit -m "${commitMsg}"`], {
-        cwd: HEXO_PATH,
-        stdio: 'pipe',
-        windowsHide: true
-      });
-      let commitOut = '';
-      gitCommit.stdout.on('data', d => { commitOut += d; });
-      gitCommit.stderr.on('data', d => { commitOut += d; });
-      gitCommit.on('close', () => {
-        if (commitOut.includes('nothing to commit')) {
-          log('backup', '无新内容需要提交');
-        } else {
-          log('backup', '已提交到 source 分支');
-        }
+    await runCmd('git add source/_posts/ source/images/solar-terms/', { timeout: 30000 });
+    
+    // 纯 ASCII commit message
+    const commitMsg = `post-daily-solar-term-${termName || 'auto'}`;
+    const commitOut = await runCmd(`git commit -m "${commitMsg}"`, { timeout: 30000 });
+    
+    if (commitOut.includes('nothing to commit')) {
+      log('info', 'no changes to commit');
+    } else {
+      log('info', 'committed to source branch');
+    }
 
-        const gitPush = spawn('cmd', ['/c', 'git push origin source'], {
-          cwd: HEXO_PATH,
-          stdio: 'pipe',
-          windowsHide: true
-        });
-        let pushOut = '';
-        gitPush.stdout.on('data', d => { pushOut += d; });
-        gitPush.stderr.on('data', d => { pushOut += d; });
-        gitPush.on('close', () => {
-          log('backup', '已推送到远程 source 分支');
+    // Step 2: Git push with force fallback
+    try {
+      await runCmd('git push origin source', { timeout: 60000 });
+      log('info', 'pushed to remote source branch');
+    } catch (e) {
+      log('info', 'normal push failed, trying force push...');
+      await runCmd('git push origin source --force', { timeout: 60000 });
+      log('info', 'force pushed to remote source branch');
+    }
 
-          // Step 2: Hexo deploy
-          const hexo = spawn('cmd', ['/c', 'npm run deploy'], {
-            cwd: HEXO_PATH,
-            stdio: 'pipe',
-            windowsHide: true
-          });
-          let output = '';
-          hexo.stdout.on('data', d => { output += d; });
-          hexo.stderr.on('data', d => { output += d; });
-          hexo.on('close', code => {
-            log('solar', output.includes('Deploy done') ? '部署完成' : '部署异常: ' + output.slice(-200));
-            resolve();
-          });
-          hexo.on('error', err => {
-            log('error', '部署失败: ' + err.message);
-            resolve();
-          });
-        });
-      });
-    });
-  });
+    // Step 3: Hexo deploy
+    const output = await runCmd('npm run deploy', { timeout: 120000 });
+    log('solar', output.includes('Deploy done') ? 'deploy done' : 'deploy may have issues: ' + output.slice(-200));
+  } catch (e) {
+    log('error', 'deployment failed: ' + e.message);
+  }
 }
 
 function savePost(term, content, displayTitle, coverFileName) {
@@ -164,7 +155,7 @@ function acquireLock() {
 }
 
 // ─── 主逻辑 ────────────────────────────────────────────────────────────────
-function main() {
+async function main() {
   if (!acquireLock()) return;
 
   const now = new Date();
@@ -176,7 +167,7 @@ function main() {
   const lunarInfo = solar2lunar(year, month, day);
 
   if (!lunarInfo.isTerm || !lunarInfo.Term) {
-    log('solar', `${month}月${day}日 — 今天不是节气日`);
+    log('solar', `${month}月${day}日 - today is not a solar term`);
     return;
   }
 
@@ -186,16 +177,16 @@ function main() {
   const todayTerm = SOLAR_TERMS.find(t => t.name === termName);
 
   if (!todayTerm) {
-    log('error', `节气数据缺失: ${termName}`);
+    log('error', `solar term data missing: ${termName}`);
     return;
   }
 
   if (alreadyPosted(todayTerm)) {
-    log('solar', `今年${todayTerm.name}文章已发布过，跳过`);
+    log('solar', `${todayTerm.name} already posted this year, skipping`);
     return;
   }
 
-  log('solar', `今天是${todayTerm.name}（${todayTerm.pinyin}），开始生成文章`);
+  log('solar', `today is ${todayTerm.name} (${todayTerm.pinyin}), generating article`);
 
   // 确认封面图存在
   const idx = TERM_INDEX[todayTerm.name];
@@ -208,9 +199,9 @@ function main() {
     const v2Path = path.join(IMG_DIR, `solar-term-${String(idx).padStart(2,'0')}_v2.svg`);
     if (fs.existsSync(v2Path)) {
       actualCoverFile = `solar-term-${String(idx).padStart(2,'0')}_v2.svg`;
-      log('solar', `使用 _v2 版本封面图: ${actualCoverFile}`);
+      log('solar', `using _v2 cover image: ${actualCoverFile}`);
     } else {
-      log('error', '封面图不存在: ' + coverFile + '，请先运行 generate-solar-term-svgs.js');
+      log('error', 'cover image not found: ' + coverFile + ', please run generate-solar-term-svgs.js first');
       return;
     }
   }
@@ -269,9 +260,8 @@ function main() {
   savePost(todayTerm, content, title, actualCoverFile);
 
   // 部署
-  hexoDeploy(todayTerm.name).then(() => {
-    log('done', `${todayTerm.name}节气文章发布成功！`);
-  });
+  await hexoDeploy(todayTerm.name);
+  log('done', `${todayTerm.name} solar term article published successfully!`);
 }
 
-main();
+main().catch(e => log('error', e.message));

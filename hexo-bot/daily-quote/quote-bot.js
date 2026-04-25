@@ -386,71 +386,101 @@ function getThemeTag(quote, isEnglish = false) {
   return '🌟 心有光芒，何惧风雨';
 }
 
-// ========== 部署到博客（先备份再清理生成推送） ==========
-function deploy(callback) {
-  console.log('[deploy] 开始清理、生成并部署...');
-  const hexoDir = 'D:/hexo';
+// ========== spawn 带超时封装 ==========
+function spawnWithTimeout(cmd, args, opts, timeoutSec, label) {
+  return new Promise((resolve) => {
+    const proc = spawn(cmd, args, opts);
+    let out = '';
+    proc.stdout.on('data', d => { out += d; });
+    proc.stderr.on('data', d => { out += d; });
 
-  // Step 1: Git 备份
-  const gitAdd = spawn('cmd', ['/c', 'git add source/_posts/ source/images/quotes/'], {
-    cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true
-  });
-  let gitOut = '';
-  gitAdd.stdout.on('data', d => { gitOut += d; });
-  gitAdd.stderr.on('data', d => { gitOut += d; });
-  gitAdd.on('close', () => {
-    const gitCommit = spawn('cmd', ['/c', 'git commit -m "post: 每日名言推送"'], {
-      cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true
-    });
-    let commitOut = '';
-    gitCommit.stdout.on('data', d => { commitOut += d; });
-    gitCommit.stderr.on('data', d => { commitOut += d; });
-    gitCommit.on('close', () => {
-      if (commitOut.includes('nothing to commit')) {
-        console.log('[backup] ⚠️ 无新内容需要提交');
-      } else {
-        console.log('[backup] ✅ 已提交到 source 分支');
-      }
+    const timer = setTimeout(() => {
+      proc.kill();
+      resolve({ code: -1, out: '[timeout]', killed: true });
+    }, timeoutSec * 1000);
 
-      const gitPush = spawn('cmd', ['/c', 'git push origin source'], {
-        cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true
-      });
-      let pushOut = '';
-      gitPush.stdout.on('data', d => { pushOut += d; });
-      gitPush.stderr.on('data', d => { pushOut += d; });
-      gitPush.on('close', () => {
-        console.log('[backup] ✅ 已推送到远程 source 分支');
-
-        // Step 2: Hexo clean
-        const clean = spawn('cmd', ['/c', 'hexo clean'], {
-          cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true
-        });
-        let out = '';
-        clean.stdout.on('data', d => { out += d; });
-        clean.stderr.on('data', d => { out += d; });
-        clean.on('close', () => {
-          // Step 3: Hexo generate + deploy
-          const gen = spawn('cmd', ['/c', 'hexo generate && hexo deploy'], {
-            cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true
-          });
-          let out2 = '';
-          gen.stdout.on('data', d => { out2 += d; });
-          gen.stderr.on('data', d => { out2 += d; });
-          gen.on('close', () => {
-            if (out2.includes('Deploy done') || out2.includes('To github')) {
-              console.log('[done] 部署完成！');
-            } else {
-              console.log('[error] 部署异常:', out2.slice(-200));
-            }
-            callback();
-          });
-        });
-      });
+    proc.on('close', (code) => {
+      clearTimeout(timer);
+      resolve({ code, out });
     });
   });
 }
 
-// ========== 主程序（等待部署完成） ==========
+// ========== 部署到博客（async/await + 完整错误处理） ==========
+async function deploy() {
+  const log = (...args) => process.stdout.write(args.join(' ') + '\n');
+  log('[deploy] ========== 开始部署 ==========');
+  const hexoDir = 'D:/hexo';
+
+  // Step 1: git add
+  let r = await spawnWithTimeout(
+    'cmd', ['/c', 'git add source/_posts/ source/images/quotes/'],
+    { cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
+    30, 'git add'
+  );
+  log('[git] add: code=' + r.code);
+
+  // Step 2: git commit（使用纯 ASCII 消息，避免引号编码问题）
+  r = await spawnWithTimeout(
+    'cmd', ['/c', 'git commit -m post:daily:quote:push'],
+    { cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
+    30, 'git commit'
+  );
+  log('[git] commit: code=' + r.code + ' | ' + r.out.slice(0, 100));
+  if (r.out.includes('nothing to commit')) {
+    log('[git] no changes to commit, skip');
+  } else if (r.code === 0) {
+    log('[git] committed successfully');
+  } else {
+    log('[git] commit failed: ' + r.out.slice(-200));
+  }
+
+  // Step 3: git push
+  r = await spawnWithTimeout(
+    'cmd', ['/c', 'git push origin source'],
+    { cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
+    60, 'git push'
+  );
+  log('[git] push: code=' + r.code + ' | ' + r.out.slice(0, 100));
+  if (r.code === 0) {
+    log('[git] pushed successfully');
+  } else if (r.out.includes('non-fast-forward') || r.out.includes('rejected')) {
+    log('[git] push rejected (non-fast-forward), trying force push...');
+    const rf = await spawnWithTimeout(
+      'cmd', ['/c', 'git push --force origin source'],
+      { cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
+      60, 'git push --force'
+    );
+    log('[git] force push: code=' + rf.code);
+    if (rf.code === 0) log('[git] force push succeeded');
+  } else {
+    log('[git] push failed: ' + r.out.slice(-200));
+  }
+
+  // Step 4: hexo clean
+  r = await spawnWithTimeout(
+    'cmd', ['/c', 'hexo clean'],
+    { cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
+    60, 'hexo clean'
+  );
+  log('[hexo] clean: code=' + r.code);
+
+  // Step 5: hexo generate + deploy
+  r = await spawnWithTimeout(
+    'cmd', ['/c', 'hexo generate && hexo deploy'],
+    { cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
+    120, 'hexo deploy'
+  );
+  log('[hexo] deploy: code=' + r.code + ' | ' + r.out.slice(0, 150));
+  if (r.out.includes('Deploy done') || r.out.includes('To github')) {
+    log('[done] hexo deploy finished');
+  } else {
+    log('[warn] hexo deploy output unexpected: ' + r.out.slice(-100));
+  }
+  log('[deploy] ========== 部署完成 ==========');
+}
+
+// ========== 主程序 ==========
 async function main() {
   console.log('[quote] ===== 每日名言推送开始 =====');
 
@@ -465,13 +495,8 @@ async function main() {
   const postPath = createPost(quoteData.quote, quoteData.author, quoteData.source);
 
   if (postPath) {
-    // 等待部署完成后再退出
-    await new Promise((resolve) => {
-      deploy(() => {
-        console.log('[done] ===== 名言推送完成 =====');
-        resolve();
-      });
-    });
+    await deploy();
+    console.log('[done] ===== 名言推送完成 =====');
   } else {
     console.log('[skip] 今日已发布，跳过部署');
   }

@@ -322,86 +322,70 @@ function isAlreadyPublished(dateFile, type) {
   return files.some(f => f.startsWith(dateFile) && f.includes(marker));
 }
 
+// ========== 超时包装 spawn ==========
+function runCmd(cmd, opts = {}) {
+  return new Promise((resolve, reject) => {
+    const timeout = opts.timeout || 120000;
+    const timer = setTimeout(() => {
+      try { process.kill(p.pid, 'SIGTERM'); } catch (_) {}
+      reject(new Error(`Timeout after ${timeout}ms: ${cmd}`));
+    }, timeout);
+    const p = spawn('cmd', ['/c', cmd], { cwd: opts.cwd || 'D:/hexo', stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+    let out = '';
+    p.stdout.on('data', d => { out += d; });
+    p.stderr.on('data', d => { out += d; });
+    p.on('close', (code) => { clearTimeout(timer); resolve(out); });
+    p.on('error', (e) => { clearTimeout(timer); reject(e); });
+  });
+}
+
 // ========== 执行 hexo generate + deploy（先备份） ==========
-function deploy(type) {
+async function deploy(type) {
   console.log('[deploy] 开始生成并部署...');
   const hexoDir = 'D:/hexo';
-  return new Promise((resolve) => {
+  try {
     // Step 1: Git 备份
-    const gitAdd = spawn('cmd', ['/c', 'git add source/_posts/ source/images/hotnews/'], {
-      cwd: hexoDir,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true
-    });
-    let gitOut = '';
-    gitAdd.stdout.on('data', d => { gitOut += d; });
-    gitAdd.stderr.on('data', d => { gitOut += d; });
-    gitAdd.on('close', () => {
-      const commitMsg = type === '晨报' ? 'post: 热搜晨报推送' : 'post: 热搜晚报推送';
-      const gitCommit = spawn('cmd', ['/c', `git commit -m "${commitMsg}"`], {
-        cwd: hexoDir,
-        stdio: ['ignore', 'pipe', 'pipe'],
-        windowsHide: true
-      });
-      let commitOut = '';
-      gitCommit.stdout.on('data', d => { commitOut += d; });
-      gitCommit.stderr.on('data', d => { commitOut += d; });
-      gitCommit.on('close', () => {
-        if (commitOut.includes('nothing to commit')) {
-          console.log('[backup] ⚠️ 无新内容需要提交');
-        } else {
-          console.log('[backup] ✅ 已提交到 source 分支');
-        }
+    await runCmd('git add source/_posts/ source/images/hotnews/', { cwd: hexoDir, timeout: 30000 });
+    
+    // 纯 ASCII commit message
+    const commitMsg = type === '晨报' ? 'post-daily-hotnews-morning' : 'post-daily-hotnews-evening';
+    const commitOut = await runCmd(`git commit -m "${commitMsg}"`, { cwd: hexoDir, timeout: 30000 });
+    
+    if (commitOut.includes('nothing to commit')) {
+      console.log('[backup] [info] no changes to commit');
+    } else {
+      console.log('[backup] [info] committed to source branch');
+    }
 
-        const gitPush = spawn('cmd', ['/c', 'git push origin source'], {
-          cwd: hexoDir,
-          stdio: ['ignore', 'pipe', 'pipe'],
-          windowsHide: true
-        });
-        let pushOut = '';
-        gitPush.stdout.on('data', d => { pushOut += d; });
-        gitPush.stderr.on('data', d => { pushOut += d; });
-        gitPush.on('close', () => {
-          console.log('[backup] ✅ 已推送到远程 source 分支');
+    // Step 2: Git push with force fallback
+    let pushOut;
+    try {
+      pushOut = await runCmd('git push origin source', { cwd: hexoDir, timeout: 60000 });
+      console.log('[backup] [info] pushed to remote source branch');
+    } catch (e) {
+      console.log('[backup] [info] normal push failed, trying force push...');
+      pushOut = await runCmd('git push origin source --force', { cwd: hexoDir, timeout: 60000 });
+      console.log('[backup] [info] force pushed to remote source branch');
+    }
 
-          // Step 2: Hexo generate
-          const gen = spawn('cmd', ['/c', 'hexo generate'], {
-            cwd: hexoDir,
-            stdio: ['ignore', 'pipe', 'pipe'],
-            windowsHide: true
-          });
-          let genOut = '';
-          gen.stdout.on('data', d => { genOut += d; });
-          gen.stderr.on('data', d => { genOut += d; });
-          gen.on('close', (code) => {
-            if (genOut.includes('Generated') || code === 0) {
-              console.log('[deploy] 生成完成，开始推送...');
-              // Step 3: Hexo deploy
-              const dep = spawn('cmd', ['/c', 'hexo deploy'], {
-                cwd: hexoDir,
-                stdio: ['ignore', 'pipe', 'pipe'],
-                windowsHide: true
-              });
-              let depOut = '';
-              dep.stdout.on('data', d => { depOut += d; });
-              dep.stderr.on('data', d => { depOut += d; });
-              dep.on('close', (dCode) => {
-                if (depOut.includes('Deploy done') || dCode === 0) {
-                  console.log('[done] 热搜文章发布成功！');
-                } else {
-                  console.error('[error] 部署失败:', depOut.slice(-200));
-                }
-                resolve();
-              });
-            } else {
-              console.error('[error] hexo generate 失败');
-              resolve();
-            }
-          });
-        });
-      });
-    });
-  });
+    // Step 3: Hexo generate
+    const genOut = await runCmd('hexo generate', { cwd: hexoDir, timeout: 120000 });
+    if (genOut.includes('Generated') || !genOut.includes('ERROR')) {
+      console.log('[deploy] [info] generate done, starting deploy...');
+      
+      // Step 4: Hexo deploy
+      const depOut = await runCmd('hexo deploy', { cwd: hexoDir, timeout: 120000 });
+      if (depOut.includes('Deploy done')) {
+        console.log('[done] hot news article published successfully!');
+      } else {
+        console.error('[error] deploy may have failed:', depOut.slice(-300));
+      }
+    } else {
+      console.error('[error] hexo generate failed');
+    }
+  } catch (e) {
+    console.error('[error]', e.message);
+  }
 }
 
 // ========== 主程序 ==========
