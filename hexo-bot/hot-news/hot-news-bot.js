@@ -276,6 +276,9 @@ function generatePostContent(newsItems, type) {
       body += `${item.desc}\n`;
     } else if (item.snippet) {
       body += `${item.snippet}\n`;
+    } else {
+      // 没有内容时复制标题
+      body += `${item.title}\n`;
     }
     body += `\n`;
   });
