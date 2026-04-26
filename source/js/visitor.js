@@ -133,10 +133,19 @@
     if (!isHomePage()) return;
 
     var visitKey = 'snowhoo_visitor_id';
-    var visitorId = localStorage.getItem(visitKey);
-    if (!visitorId) return;
+    var countKey = 'snowhoo_visit_count';
 
-    var count = getVisitCount();
+    // 获取或创建访客ID
+    var visitorId = localStorage.getItem(visitKey);
+    if (!visitorId) {
+      visitorId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem(visitKey, visitorId);
+    }
+
+    // 增加访问次数
+    var count = parseInt(localStorage.getItem(countKey) || '0', 10) + 1;
+    localStorage.setItem(countKey, count);
+
     var lucky = getLuckyNum(visitorId);
 
     // 生成徽章文案
