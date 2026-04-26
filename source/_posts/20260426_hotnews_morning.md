@@ -1,3 +1,18 @@
+---
+title: 2026-04-26 小红故事热搜晨报
+date: 2026-04-26 14:26:44
+updated: 2026-04-26 14:26:44
+categories:
+  - 新闻热搜
+tags:
+  - 热搜
+  - 今日要闻
+cover: /images/hotnews-morning.svg
+toc: true
+---
+
+> 来源：互联网 | 采集时间：2026-04-26 14:26:44
+
 
 ### <strong>美</strong>国白宫记者晚宴发生枪击事件
 <img src="/images/hotnews/20260426_morning_01.webp" class="hotnews-img" alt="热搜配图">
@@ -61,7 +76,8 @@
 <br clear="both">
 ### <strong>台</strong>胞打卡青岛：大陆厉害得像科幻片
 <img src="/images/hotnews/20260426_morning_16.webp" class="hotnews-img" alt="热搜配图">
-<p style="margin:0 0 4px 0;line-height:1.4;">近日，多位台湾同胞来到山东青岛打卡各种景点并登上了人民海军舰艇。一路上，大家反复提及三个关键词——那也是从心底发出的声音：惊艳、骄傲、期待。有台胞说：“大陆已经这么厉害，像科幻片一样。”</p>
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，多位台湾同胞来到山东青岛打卡各种景点并登上了人民海军舰艇。一路上，大家反复提及三个关键词——那也是从心底发出的声音：惊艳、骄傲、期待。有台胞说：“大陆已经这么厉害，像科幻片一样。”
+</p>
 <br clear="both">
 ### <strong>特</strong>朗普发布枪手冲闯安检口瞬间录像
 <img src="/images/hotnews/20260426_morning_17.webp" class="hotnews-img" alt="热搜配图">
@@ -85,7 +101,8 @@
 <br clear="both">
 ### <strong>塑</strong>料价格暴涨
 <img src="/images/hotnews/20260426_morning_22.webp" class="hotnews-img" alt="热搜配图">
-<p style="margin:0 0 4px 0;line-height:1.4;">近期，霍尔木兹海峡运输受阻，波及全球石化产业链，塑料生产的重要原材料石脑油价格水涨船高。美国化工巨头陶氏化学（DOW）已于4月宣布将聚乙烯价格每磅上调30美分（涨幅约60%），并计划5月再次提价。‌‌</p>
+<p style="margin:0 0 4px 0;line-height:1.4;">近期，霍尔木兹海峡运输受阻，波及全球石化产业链，塑料生产的重要原材料石脑油价格水涨船高。美国化工巨头陶氏化学（DOW）已于4月宣布将聚乙烯价格每磅上调30美分（涨幅约60%），并计划5月再次提价。‌‌
+</p>
 <br clear="both">
 ### <strong>央</strong>视曝光掺假黄金
 <img src="/images/hotnews/20260426_morning_23.webp" class="hotnews-img" alt="热搜配图">
@@ -101,7 +118,8 @@
 <br clear="both">
 ### <strong>朱</strong>时茂丛珊北影节合体 梦回《牧马人》
 <img src="/images/hotnews/20260426_morning_26.webp" class="hotnews-img" alt="热搜配图">
-<p style="margin:0 0 4px 0;line-height:1.4;">近日，朱时茂丛珊亮相北影节闭幕红毯，两位《牧马人》主演再相聚！</p>
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，朱时茂丛珊亮相北影节闭幕红毯，两位《牧马人》主演再相聚！
+</p>
 <br clear="both">
 ### <strong>央</strong>视披露“深山救流浪女”摆拍细节
 <img src="/images/hotnews/20260426_morning_27.webp" class="hotnews-img" alt="热搜配图">
@@ -113,7 +131,8 @@
 <br clear="both">
 ### <strong>家</strong>属花80万捞人 对方收钱后失联
 <img src="/images/hotnews/20260426_morning_29.webp" class="hotnews-img" alt="热搜配图">
-<p style="margin:0 0 4px 0;line-height:1.4;">家属花80万捞人 对方收钱后失联</p>
+<p style="margin:0 0 4px 0;line-height:1.4;">家属花80万捞人 对方收钱后失联
+</p>
 <br clear="both">
 ### <strong>晚</strong>宴枪击案细节：30岁男子持霰弹枪
 <img src="/images/hotnews/20260426_morning_30.webp" class="hotnews-img" alt="热搜配图">
@@ -121,7 +140,8 @@
 <br clear="both">
 ### <strong>摊</strong>主回应女子逃单还抱走万元狗狗
 <img src="/images/hotnews/20260426_morning_31.webp" class="hotnews-img" alt="热搜配图">
-<p style="margin:0 0 4px 0;line-height:1.4;">摊主回应女子逃单还抱走万元狗狗</p>
+<p style="margin:0 0 4px 0;line-height:1.4;">摊主回应女子逃单还抱走万元狗狗
+</p>
 <br clear="both">
 ### <strong>张</strong>译段奕宏给于和伟颁奖
 <img src="/images/hotnews/20260426_morning_32.webp" class="hotnews-img" alt="热搜配图">
@@ -141,11 +161,13 @@
 <br clear="both">
 ### <strong>极</strong>危鸟类活体被催肥出售 已抓捕3人
 <img src="/images/hotnews/20260426_morning_36.webp" class="hotnews-img" alt="热搜配图">
-<p style="margin:0 0 4px 0;line-height:1.4;">极危鸟类活体被催肥出售 已抓捕3人</p>
+<p style="margin:0 0 4px 0;line-height:1.4;">极危鸟类活体被催肥出售 已抓捕3人
+</p>
 <br clear="both">
 ### <strong>杜</strong>特尔特被判反人类罪 律师质疑裁决
 <img src="/images/hotnews/20260426_morning_37.webp" class="hotnews-img" alt="热搜配图">
-<p style="margin:0 0 4px 0;line-height:1.4;">当地时间4月23日，国际刑事法院‌裁定菲律宾前总统‌杜特尔特‌涉嫌在2016至2022年总统任内主导的扫毒行动中犯下‌反人类罪‌，需对数十起命案负责。其律师尼克·考夫曼质疑裁决依据仅为认罪暴徒的减刑证词。‌</p>
+<p style="margin:0 0 4px 0;line-height:1.4;">当地时间4月23日，国际刑事法院‌裁定菲律宾前总统‌杜特尔特‌涉嫌在2016至2022年总统任内主导的扫毒行动中犯下‌反人类罪‌，需对数十起命案负责。其律师尼克·考夫曼质疑裁决依据仅为认罪暴徒的减刑证词。‌
+</p>
 <br clear="both">
 ### <strong>重</strong>度昏迷患者醒后首个心愿：想吃榴莲
 <img src="/images/hotnews/20260426_morning_38.webp" class="hotnews-img" alt="热搜配图">
@@ -153,7 +175,8 @@
 <br clear="both">
 ### <strong>在</strong>西藏拍到绝美“贴地彩虹”
 <img src="/images/hotnews/20260426_morning_39.webp" class="hotnews-img" alt="热搜配图">
-<p style="margin:0 0 4px 0;line-height:1.4;">近日，有网友分享在西藏拍到的绝美“贴地彩虹”！见者好运！</p>
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，有网友分享在西藏拍到的绝美“贴地彩虹”！见者好运！
+</p>
 <br clear="both">
 ### <strong>社</strong>保“第六险”缴费多少 享哪些待遇
 <img src="/images/hotnews/20260426_morning_40.webp" class="hotnews-img" alt="热搜配图">
@@ -181,7 +204,8 @@
 <br clear="both">
 ### <strong>夫</strong>妻在楼道养鸡双双重症肺炎住进ICU
 <img src="/images/hotnews/20260426_morning_46.webp" class="hotnews-img" alt="热搜配图">
-<p style="margin:0 0 4px 0;line-height:1.4;">夫妻在楼道养鸡双双重症肺炎住进ICU</p>
+<p style="margin:0 0 4px 0;line-height:1.4;">夫妻在楼道养鸡双双重症肺炎住进ICU
+</p>
 <br clear="both">
 ### <strong>比</strong>亚迪：正讨论进军F1可能性
 <img src="/images/hotnews/20260426_morning_47.webp" class="hotnews-img" alt="热搜配图">
@@ -189,14 +213,17 @@
 <br clear="both">
 ### <strong>洪</strong>秀柱谈自己国风穿搭出圈
 <img src="/images/hotnews/20260426_morning_48.webp" class="hotnews-img" alt="热搜配图">
-<p style="margin:0 0 4px 0;line-height:1.4;">近日，洪秀柱在上海一时尚活动中回应国风穿搭出圈，“我只是很自然地选择了我所认同的文化，我们两岸同文同种，文化同源，这种联结任何外力都割不断。那种心灵契合的情感联结，是任何政治语言都没有办法取代的。”</p>
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，洪秀柱在上海一时尚活动中回应国风穿搭出圈，“我只是很自然地选择了我所认同的文化，我们两岸同文同种，文化同源，这种联结任何外力都割不断。那种心灵契合的情感联结，是任何政治语言都没有办法取代的。”
+</p>
 <br clear="both">
 ### <strong>广</strong>交会客户压价 女孩全英文沉着应对
 <img src="/images/hotnews/20260426_morning_49.webp" class="hotnews-img" alt="热搜配图">
-<p style="margin:0 0 4px 0;line-height:1.4;">近日，广交会客户来电压价，一名12岁女孩全英文沉着应对，展示出超出年龄的商务谈判能力，逻辑清晰、表达在线。相关视频引发关注，网友：小小年纪，大方自信，未来可期！</p>
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，广交会客户来电压价，一名12岁女孩全英文沉着应对，展示出超出年龄的商务谈判能力，逻辑清晰、表达在线。相关视频引发关注，网友：小小年纪，大方自信，未来可期！
+</p>
 <br clear="both">
 ### <strong>伊</strong>朗最高领袖敦促海湾国家：保持警惕
 <img src="/images/hotnews/20260426_morning_50.webp" class="hotnews-img" alt="热搜配图">
-<p style="margin:0 0 4px 0;line-height:1.4;">伊朗最高领袖敦促海湾国家：保持警惕</p>
+<p style="margin:0 0 4px 0;line-height:1.4;">伊朗最高领袖敦促海湾国家：保持警惕
+</p>
 <br clear="both">
 
