@@ -130,3 +130,28 @@ html[data-theme="dark"] body #nav #blog-info .site-slogan {
 html[data-theme="dark"] #nav #blog-info .site-icon img {
   content: url(/images/dark-logo.jpg) !important;
 }
+
+/* ========================================
+   热搜晨报/晚报 文章配图：右浮动小图
+   ======================================== */
+.post-content .hotnews-img {
+  float: right;
+  width: 160px;
+  max-width: 40%;
+  height: auto;
+  border-radius: 6px;
+  margin: 0 0 8px 12px;
+  display: block;
+  object-fit: cover;
+}
+
+/* 每个 h3 标题前清除浮动，避免串行 */
+.post-content h3 {
+  clear: both;
+}
+
+@media (max-width: 480px) {
+  .post-content .hotnews-img {
+    width: 120px;
+  }
+}
