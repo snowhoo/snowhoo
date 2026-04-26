@@ -14,248 +14,252 @@ toc: true
 > 来源：互联网 | 采集时间：2026/4/21 08:00:27
 
 ### <strong>台</strong>青：不承认是中国人中秋就别放假
+<img src="/images/hotnews/20260421_morning_01.webp" class="hotnews-img" alt="热搜配图">
 台湾青年：我们过着中秋、端午这些中国节庆，如果不承认自己是中国人就别放这个假。
 
-![](/images/hotnews/20260421_morning_01.webp)
 
 ### <strong>日</strong>本发生7.7级地震
+<img src="/images/hotnews/20260421_morning_02.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260421_morning_02.webp)
+
 
 ### <strong>运</strong>-20B首次赴韩接迎志愿军英烈
+<img src="/images/hotnews/20260421_morning_03.webp" class="hotnews-img" alt="热搜配图">
 接英雄回家！4月20日13时许，中国空军一架运-20B军用大型运输机从华中某机场起飞，赴韩国执行接迎第十三批志愿军烈士遗骸回国的神圣任务。
 
-![](/images/hotnews/20260421_morning_03.webp)
 
 ### <strong>上</strong>午交的学费下午幼儿园关了
+<img src="/images/hotnews/20260421_morning_04.webp" class="hotnews-img" alt="热搜配图">
 去年11月，陵水大象妈妈幼儿园突然通知闭园，有家长称上午交钱，晚上就接到通知幼儿园关了。近日，经调查，负责人承认共负债800多万，有员工称被欠薪7个月，目前众人讨要工资学费已半年依旧无果。
 
-![](/images/hotnews/20260421_morning_04.webp)
 
 ### <strong>库</strong>克将卸任苹果CEO 特努斯接任
+<img src="/images/hotnews/20260421_morning_05.webp" class="hotnews-img" alt="热搜配图">
 当地时间周一，苹果官网宣布，在执掌公司近二十年后，蒂姆・库克将卸任首席执行官一职，并出任执行董事长，该任命自今年9月1日起生效。接替库克的是约翰・特努斯，他目前担任这家科技巨头的硬件工程高级副总裁，就任CEO后，特努斯将加入苹果董事会。
 
-![](/images/hotnews/20260421_morning_05.webp)
 
 ### <strong>伊</strong>朗最高领袖重申三项基本立场
+<img src="/images/hotnews/20260421_morning_06.webp" class="hotnews-img" alt="热搜配图">
 伊朗最高领袖穆杰塔巴·哈梅内伊20日重申包括要求“战争赔偿”在内的三项基本立场，强调将维护国家权益。
 
-![](/images/hotnews/20260421_morning_06.webp)
 
 ### <strong>这</strong>2种饮料混着喝 可能永久损伤大脑
+<img src="/images/hotnews/20260421_morning_07.webp" class="hotnews-img" alt="热搜配图">
 日常混搭饮料暗藏健康危机，三类危险搭配需警惕：酒配能量饮料易致酒精过量、造成不可逆脑损伤；咖啡叠加能量饮料易咖啡因超标，诱发心脏不适；酒混碳酸饮料会加速酒精吸收、损伤肠胃。专家提醒，饮料尽量单独饮用，不同品类饮用最好间隔1-2小时。
 
-![](/images/hotnews/20260421_morning_07.webp)
 
 ### <strong>2</strong>0岁女儿打赏主播挥霍近1700万元
+<img src="/images/hotnews/20260421_morning_08.webp" class="hotnews-img" alt="热搜配图">
 4月20日，河南郑州50岁朱先生带20岁女儿投案。其女中专肄业在自家公司管财务，2024年7月至2025年11月，挪用公司及父亲转账近1700万元打赏主播，致公司濒临破产，且拒不悔改，朱先生无奈求助法律惩戒教育。
 
-![](/images/hotnews/20260421_morning_08.webp)
 
 ### <strong>乌</strong>克兰进入破产倒计时
+<img src="/images/hotnews/20260421_morning_09.webp" class="hotnews-img" alt="热搜配图">
 近日，乌克兰财政部披露国库可支配资金仅剩127亿欧元，或仅能维持两个月运转，国家进入破产倒计时。
 
-![](/images/hotnews/20260421_morning_09.webp)
 
 ### <strong>近</strong>70款车集体降价
+<img src="/images/hotnews/20260421_morning_10.webp" class="hotnews-img" alt="热搜配图">
 汽车行业真的变天了！车企卖车不赚钱了？宝马旗舰，狂降30万，雅阁、威兰达，直接跌破14万。全行业近70款车型集体跳水，新能源车平均降价3.8万，燃油车更狠，力度冲到14.3%。
 
-![](/images/hotnews/20260421_morning_10.webp)
 
 ### <strong>天</strong>津滨海打车迈入无人时代不实
+<img src="/images/hotnews/20260421_morning_11.webp" class="hotnews-img" alt="热搜配图">
 近日，有视频称“天津滨海打车迈入无人时代”，经有关部门核实，天津滨海新区目前暂无无人驾驶出租汽车运营，网传信息不实。
 
-![](/images/hotnews/20260421_morning_11.webp)
 
 ### <strong>黄</strong>晓明晒图：一张含金量极高的合影
+<img src="/images/hotnews/20260421_morning_12.webp" class="hotnews-img" alt="热搜配图">
 4月19日晚，黄晓明在社交平台晒出一张五人合照，并配文“一张含金量极高的合影”，迅速引发全网热议。照片中，黄晓明与4位福州冠军林莉、林雨薇、李发彬、李雯雯一起竖大拇指，被网友称为“字面意义上含金量极高”。
 
-![](/images/hotnews/20260421_morning_12.webp)
 
 ### <strong>中</strong>国驻阿根廷使馆：强烈不满 坚决反对
+<img src="/images/hotnews/20260421_morning_13.webp" class="hotnews-img" alt="热搜配图">
 日前，美国驻阿根廷大使拉梅拉斯在萨尔塔接受采访时蓄意攻击抹黑中阿、中拉正常合作。中国驻阿根廷使馆回应：有关言论罔顾事实，充斥意识形态偏见，赤裸裸地反映出美方有关人士鼓噪阵营对抗、划分势力范围的冷战零和思维，中方对此表示强烈不满和坚决反对。
 
-![](/images/hotnews/20260421_morning_13.webp)
 
 ### <strong>华</strong>为星钻手镯表售价29999元
+<img src="/images/hotnews/20260421_morning_14.webp" class="hotnews-img" alt="热搜配图">
 作为华为超高端品牌非凡大师系列新品，华为超高端品牌非凡大师4月20日发布新品——华为WATCH 非凡大师 星钻绽放款。该款手表售价29999元，4月20日17:08开启预售，5月15日10:08正式开售。
 
-![](/images/hotnews/20260421_morning_14.webp)
 
 ### <strong>8</strong>岁男孩爬山识草预判山下藏金矿
+<img src="/images/hotnews/20260421_morning_15.webp" class="hotnews-img" alt="热搜配图">
 4月16日，8岁男孩孙典锋与家人爬山挖野菜时，发现大片问荆草和含云母的石块并推测山下有黄金，其父通过AI验证后结果高度吻合。目前，男孩父亲已上报相关部门。辽宁省地质勘查院专家表示，需结合多重地质特征分析，最终结论待专业检测。
 
-![](/images/hotnews/20260421_morning_15.webp)
 
 ### <strong>男</strong>子18万买二手保时捷被原车主拖走
+<img src="/images/hotnews/20260421_morning_16.webp" class="hotnews-img" alt="热搜配图">
 近日，杭州市民杨先生以18.35万元购买的二手保时捷帕拉梅拉，2月13日被自称租赁方的人员拖走。经查，该车2011年登记后历经至少6任车主，涉及经济纠纷，目前警方已立案调查。
 
-![](/images/hotnews/20260421_morning_16.webp)
 
 ### <strong>老</strong>人打赏花330万却交不起15元电费
+<img src="/images/hotnews/20260421_morning_17.webp" class="hotnews-img" alt="热搜配图">
 近日，王先生向新闻平台反映，其母70岁江阿婆半年内向网络主播打赏330万元，耗尽养老金及王先生代为保管的全部积蓄，导致家庭一度无力支付15元水电费。王先生为西部边陲支援人员，长期与母亲聚少离多。
 
-![](/images/hotnews/20260421_morning_17.webp)
 
 ### <strong>千</strong>万网红回应家中300万元物品被盗
+<img src="/images/hotnews/20260421_morning_18.webp" class="hotnews-img" alt="热搜配图">
 近日，拥有2300万粉丝的快手主播贺冬冬回应家中价值300万元的黄金、奢侈品包等物品被盗，“入职不到四个月司机干的。”据悉，盗窃者是司机邓某，其入职后通过主动示好获取信任，实施盗窃并签署退赔承诺书后失联。目前，贺冬冬已报警。
 
-![](/images/hotnews/20260421_morning_18.webp)
 
 ### <strong>中</strong>方：希望欧方不要低估中方坚定决心
+<img src="/images/hotnews/20260421_morning_19.webp" class="hotnews-img" alt="热搜配图">
 据商务部网站4月20日消息，商务部新闻发言人就欧盟《网络安全法》修订草案相关问题答记者问。并称如欧方执意据此成法，并歧视性对待中国企业，中方将不得不采取相应反制措施。希望欧方不要低估中方维护国家利益和企业合法权益，并阻止中欧经贸关系倒退的坚定决心。
 
-![](/images/hotnews/20260421_morning_19.webp)
 
 ### <strong>文</strong>班亚马全票当选年度最佳防守球员
+<img src="/images/hotnews/20260421_morning_20.webp" class="hotnews-img" alt="热搜配图">
 北京时间4月21日，NBA官方宣布，马刺队球员文班亚马全票当选年度最佳防守球员奖。本赛季，文班亚马场均出场29.2分钟拿到25分11.5篮板3.1助攻1抢断3.1盖帽。文班也连续第三年荣膺盖帽王。
 
-![](/images/hotnews/20260421_morning_20.webp)
 
 ### <strong>“</strong>青鸟”宣称发芽马铃薯可吃被痛批
+<img src="/images/hotnews/20260421_morning_21.webp" class="hotnews-img" alt="热搜配图">
 近日，台湾网络组织“青鸟”宣称发芽马铃薯可食用，遭国民党民代王鸿薇、医师苏一峰等痛批，指其传播不实信息。专家强调发芽马铃薯含致命毒素龙葵碱，误食可能导致呕吐、腹泻甚至死亡。
 
-![](/images/hotnews/20260421_morning_21.webp)
 
 ### <strong>雨</strong>果的名言要应验了？没那么简单
+<img src="/images/hotnews/20260421_morning_22.webp" class="hotnews-img" alt="热搜配图">
 “希望有一天法兰西能脱胎换骨、洗心革面，将不义之财归还被抢掠的中国。”这句话出自法国大文豪雨果。上周，法国国民议会全票通过一项法案，旨在简化法国在殖民时期掠夺所得文物的归还程序。雨果的名言要应验了？没那么简单。
 
-![](/images/hotnews/20260421_morning_22.webp)
 
 ### <strong>2</strong>名中国台湾游客在日本坠机身亡
+<img src="/images/hotnews/20260421_morning_23.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月18日，据日媒报道称，今年1月，熊本县阿苏市发生观光直升机坠入火山口的事故，机上两名中国台湾游客和一名日本机长至今下落不明，生还可能性极低。最新消息显示，当地相关部门已着手协调，计划动用配备无人机功能的重型机械进入火山口开展作业。
 
-![](/images/hotnews/20260421_morning_23.webp)
 
 ### <strong>中</strong>国男子从济州-上海邮轮坠海
+<img src="/images/hotnews/20260421_morning_24.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月20日，韩国济州西归浦市（Seogwipo）海洋警署发出消息，一艘由济州驶往上海的邮轮发生坠海事故，一名20多岁的中国籍男子不幸坠海，目前韩国海警正全力展开搜救。
 
-![](/images/hotnews/20260421_morning_24.webp)
 
 ### <strong>萌</strong>娃认错爹 从一楼追到二楼主打执着
+<img src="/images/hotnews/20260421_morning_25.webp" class="hotnews-img" alt="热搜配图">
 4月20日，浙江一女子分享视频，带着孩子坐着休息时，孩子将其他顾客错认成爸爸，从一楼追到二楼主打执着。
 
-![](/images/hotnews/20260421_morning_25.webp)
 
 ### <strong>一</strong>小学食堂员工疑把营养午餐带回家
+<img src="/images/hotnews/20260421_morning_26.webp" class="hotnews-img" alt="热搜配图">
 4月19日，网民发视频称广西陆川一小学食堂员工疑似多次将营养午餐带回家。事发学校校长20日回应，已接到反映并启动调查，该员工有时取用的是学生剩饭，是否涉及新餐品仍需核查。
 
-![](/images/hotnews/20260421_morning_26.webp)
 
 ### <strong>洪</strong>天明回应爸爸洪金宝暴瘦
+<img src="/images/hotnews/20260421_morning_27.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260421_morning_27.webp)
+
 
 ### <strong>美</strong>国启动史上规模最大关税退款
+<img src="/images/hotnews/20260421_morning_28.webp" class="hotnews-img" alt="热搜配图">
 美国东部时间4月20日，美国海关与边境保护局关税退款系统正式上线。此次退款源于美国最高法院今年2月裁定，美总统特朗普自2025年起依据《国际紧急经济权力法》征收的大规模关税违法，涉及金额约1660亿美元，覆盖33万家进口企业，这是美国历史上规模最大的关税退还行动。
 
-![](/images/hotnews/20260421_morning_28.webp)
 
 ### <strong>野</strong>马海子出现两无主背包 警方回应
+<img src="/images/hotnews/20260421_morning_29.webp" class="hotnews-img" alt="热搜配图">
 4月18日，有驴友在四川野马海子拍到两个无主背包和登山杖，驴友感觉异常，将拍到的视频发布于社交媒体，引发网友关注并建议报警。警方回应：系一对情侣所有，二人已安全下山。
 
-![](/images/hotnews/20260421_morning_29.webp)
 
 ### <strong>曝</strong>至少26艘涉伊朗船只突破美军封锁
+<img src="/images/hotnews/20260421_morning_30.webp" class="hotnews-img" alt="热搜配图">
 据英国方面20日消息，至少有26艘涉伊朗航运的船只突破美军封锁。据悉，自美军13日对进出伊朗港口的船只实施封锁以来，突破封锁的船只中包括11艘装载伊朗货物的油轮。
 
-![](/images/hotnews/20260421_morning_30.webp)
 
 ### <strong>起</strong>底“上万元手机直播间里只卖199”
+<img src="/images/hotnews/20260421_morning_31.webp" class="hotnews-img" alt="热搜配图">
 起底“网络直播间199元抢购上万元高端手机”诈骗套路。犯罪团伙伪装成可靠商家低价售卖高端手机，通过“群里粉丝才能抢福利”“平台抽成太高”等借口引流至私域群聊交易实施诈骗，彻底躲开平台监管和售后保障。
 
-![](/images/hotnews/20260421_morning_31.webp)
 
 ### <strong>抖</strong>音回应“字节净利下滑70%”
+<img src="/images/hotnews/20260421_morning_32.webp" class="hotnews-img" alt="热搜配图">
 针对“字节2025年净利下滑70%”的报道，4月20日午后，抖音集团副总裁李亮发文称，相关报道中关于字节净利润下降70%，是国际会计准则的数字，除了新兴业务投资增大，还有优先股和期权成本变动因素(不反映运营实质)。
 
-![](/images/hotnews/20260421_morning_32.webp)
 
 ### <strong>华</strong>为发布首款鸿蒙AI眼镜 2499元起售
+<img src="/images/hotnews/20260421_morning_33.webp" class="hotnews-img" alt="热搜配图">
 4月20日，华为发布首款AI眼镜，镜架重量35.5g。华为介绍，该款产品是业内首款支持HDR Vivid拍照的AI眼镜；依托小艺智能体，可带来AI实时视频交互体验。钛丝半框光学镜、经典全框光学镜售价2499元，经典全框太阳镜售价2899元。
 
-![](/images/hotnews/20260421_morning_33.webp)
 
 ### <strong>伊</strong>朗称美试图变谈判桌为投降桌
+<img src="/images/hotnews/20260421_morning_34.webp" class="hotnews-img" alt="热搜配图">
 伊朗伊斯兰议会议长卡利巴夫21日表示，美国总统特朗普试图通过封锁和违反停火协议，将谈判桌变成“投降桌”或为再度煽动战争寻找借口，但伊朗不接受胁迫。
 
-![](/images/hotnews/20260421_morning_34.webp)
 
 ### <strong>正</strong>直播NBA季后赛：猛龙vs骑士
+<img src="/images/hotnews/20260421_morning_35.webp" class="hotnews-img" alt="热搜配图">
 4月21日7:00直播NBA季后赛：猛龙vs骑士。
 
-![](/images/hotnews/20260421_morning_35.webp)
 
 ### <strong>杭</strong>州公办幼儿园能收1岁宝宝了
+<img src="/images/hotnews/20260421_morning_36.webp" class="hotnews-img" alt="热搜配图">
 4月20日，杭州市推进“托育教育一体化”新政新闻发布会，针对两岁以下的婴幼儿，杭州公办幼儿园托小班每月收费总体处于1000元至2000元之间不等。
 
-![](/images/hotnews/20260421_morning_36.webp)
 
 ### <strong>9</strong>问充电器“120W”商标
+<img src="/images/hotnews/20260421_morning_37.webp" class="hotnews-img" alt="热搜配图">
 近日，罗永浩在社交平台上质问：明显不合理的商标究竟是如何注册成功的。其“不合理”指的是市面上热销的“120W”充电器——包装上赫然印着“120W超级闪充”，实际功率却只有20W出头。据此，新京报记者发出9连问。
 
-![](/images/hotnews/20260421_morning_37.webp)
 
 ### <strong>法</strong>国检方传唤马斯克
+<img src="/images/hotnews/20260421_morning_38.webp" class="hotnews-img" alt="热搜配图">
 美国企业家埃隆·马斯克收到法国检方传唤，要求他20日在巴黎就其旗下社交媒体平台X的不当行为接受调查，包括该平台上未成年人色情图片的传播以及深度伪造内容的泛滥。
 
-![](/images/hotnews/20260421_morning_38.webp)
 
 ### <strong>一</strong>生爱看热闹的中国机器人
+<img src="/images/hotnews/20260421_morning_39.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260421_morning_39.webp)
+
 
 ### <strong>买</strong>一送N 螳螂标本孵出无数小螳螂
+<img src="/images/hotnews/20260421_morning_40.webp" class="hotnews-img" alt="热搜配图">
 近日，广东一家自然教育机构为给小朋友上课，购买螳螂卵鞘并制作了一个螳螂主题的标本盒。未料，螳螂卵鞘标本里的螳螂卵全部孵化了！
 
-![](/images/hotnews/20260421_morning_40.webp)
 
 ### <strong>停</strong>火期限将至 伊朗仍未点头赴会
+<img src="/images/hotnews/20260421_morning_41.webp" class="hotnews-img" alt="热搜配图">
 美国和伊朗于北京时间4月8日开始停火两周，此轮停火将于22日截止。截至目前，围绕美国与伊朗的第二轮会谈能否在停火协议结束前顺利举行，仍未出现明确进展。美国方面消息称“按计划要举行会谈”，但伊朗方面表示尚未决定是否参与谈判。
 
-![](/images/hotnews/20260421_morning_41.webp)
 
 ### <strong>高</strong>校回应禁止学生晚10点半后玩游戏
+<img src="/images/hotnews/20260421_morning_42.webp" class="hotnews-img" alt="热搜配图">
 近日，对于禁止学生晚10点半后玩游戏一事，南通大学回应称，该规定非强制，旨在保障学生休息，且老师仅在有喧哗时检查寝室并需敲门。
 
-![](/images/hotnews/20260421_morning_42.webp)
 
 ### <strong>伊</strong>方涉伊美谈判最新回应
+<img src="/images/hotnews/20260421_morning_43.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260421_morning_43.webp)
+
 
 ### <strong>演</strong>戏式直播鉴宝专盯老人
+<img src="/images/hotnews/20260421_morning_44.webp" class="hotnews-img" alt="热搜配图">
 号称免费鉴宝、高价回收，演戏式直播鉴宝专盯老人！山东禹城警方近期破获一起专坑老年人的直播鉴宝诈骗案，犯罪嫌疑人利用短视频引流、直播演戏等方式，诱骗老年人购买所谓公司股份卡，警方揭秘直播间里"精彩"演绎套路。
 
-![](/images/hotnews/20260421_morning_44.webp)
 
 ### <strong>网</strong>约车被撞 司机为“误工费”发愁
+<img src="/images/hotnews/20260421_morning_45.webp" class="hotnews-img" alt="热搜配图">
 近期，西安一网约车被撞，对方全责，但网约车司机杨师傅却为16天维修期的“误工费”发愁。杨师傅表示：肇事司机让杨师傅找保险解决，保险公司则认为“营运损失”属于间接损失不予赔付。
 
-![](/images/hotnews/20260421_morning_45.webp)
 
 ### <strong>伊</strong>朗官员：最高领袖完全健康
+<img src="/images/hotnews/20260421_morning_46.webp" class="hotnews-img" alt="热搜配图">
 当地时间20日，伊朗网络空间最高委员会成员扎尔加米在社交媒体上说，他确切知晓伊朗最高领袖穆杰塔巴·哈梅内伊完全健康。
 
-![](/images/hotnews/20260421_morning_46.webp)
 
 ### <strong>丁</strong>俊晖将战赵心童
+<img src="/images/hotnews/20260421_morning_47.webp" class="hotnews-img" alt="热搜配图">
 4月20日，在2026斯诺克世锦赛正赛首轮比赛中，中国球员丁俊晖以10∶5战胜吉尔伯特，晋级十六强。下一轮丁俊晖将对阵卫冕冠军赵心童。
 
-![](/images/hotnews/20260421_morning_47.webp)
 
 ### <strong>郑</strong>丽文最新发声：“台独”是死胡同
+<img src="/images/hotnews/20260421_morning_48.webp" class="hotnews-img" alt="热搜配图">
 4月20日，中国国民党主席郑丽文在采访中重申，“台独”是走不通的死胡同，强调“抗中”不仅无法“保台”，反而会危害台湾利益，并坦言自己青年时期曾受“台独”主张误导。
 
-![](/images/hotnews/20260421_morning_48.webp)
 
 ### <strong>美</strong>国枪杀8名儿童枪手系退役军人
+<img src="/images/hotnews/20260421_morning_49.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月19日，美国路易斯安那州什里夫波特市发生一起大规模枪击事件，导致8名年龄在1岁至14岁之间的儿童遇难。枪手作案后驾车逃离，最终被警方击毙。经调查，枪手系退役军人，案发前还曾带孩子吃汉堡。
 
-![](/images/hotnews/20260421_morning_49.webp)
 
 ### <strong>浙</strong>北县城造出千亿汽车城
+<img src="/images/hotnews/20260421_morning_50.webp" class="hotnews-img" alt="热搜配图">
 在长三角多个城市争相布局新能源汽车产业的激烈竞争中，并无传统汽车工业基础的浙北县城，试图“无中生有”造一座千亿级汽车之城，也给出了传统制造向新兴产业跃迁的县域样本。
 
-![](/images/hotnews/20260421_morning_50.webp)
 

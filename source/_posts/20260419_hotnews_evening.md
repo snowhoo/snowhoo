@@ -14,247 +14,252 @@ toc: true
 > 来源：互联网 | 采集时间：2026/4/19 20:00:24
 
 ### <strong>全</strong>球最大零食店开业3天就被挤停售
+<img src="/images/hotnews/20260419_evening_01.webp" class="hotnews-img" alt="热搜配图">
 4月17日，鸣鸣很忙集团旗下沉浸式零食体验空间“零食王国”在湖南长沙芙蓉广场正式开业，现场更是获得“全球最大零食店”吉尼斯世界纪录认证。然而其开业3天就因客流量太大被“挤停售”。
 
-![](/images/hotnews/20260419_evening_01.webp)
 
 ### <strong>内</strong>蒙古党委书记对俄远东车祸作批示
+<img src="/images/hotnews/20260419_evening_02.webp" class="hotnews-img" alt="热搜配图">
 俄罗斯远东外贝加尔边疆区18日发生大巴翻车事故，造成2名中国公民遇难，至少10名中国公民受伤。内蒙古自治区党委书记王伟中作出批示：速抢救受伤人员，安抚死亡人员家属，查明事���原因，妥处善后。
 
-![](/images/hotnews/20260419_evening_02.webp)
 
 ### <strong>高</strong>科技产品惊艳亮相消博会
+<img src="/images/hotnews/20260419_evening_03.webp" class="hotnews-img" alt="热搜配图">
 近日，在第六届中国国际消费品博览会现场，众多硬核高科技产品惊艳亮相。老外现场体验AI设备、机器人咖啡、飞行汽车，大赞中国创新活力！
 
-![](/images/hotnews/20260419_evening_03.webp)
 
 ### <strong>1</strong>2306三天拒绝出票105.6万张
+<img src="/images/hotnews/20260419_evening_04.webp" class="hotnews-img" alt="热搜配图">
 近日，“五一”假期火车票陆续开售，一些热门路线车票售卖火爆。记者从中国铁路12306技术中心了解到，铁路12306持续识别遏制恶意抢票行为，4月16日0时至18日24时的三天时间内，铁路12306共拒绝出票105.6万张。
 
-![](/images/hotnews/20260419_evening_04.webp)
 
 ### <strong>万</strong>达电影改名
+<img src="/images/hotnews/20260419_evening_05.webp" class="hotnews-img" alt="热搜配图">
 近日，万达电影股份有限公司发布“关于变更公司名称、证券简称暨完成工商变更登记的公告”。公告显示，万达电影变更后的公司名称为“儒意电影娱乐股份有限公司”，变更后的公司证券简称“儒意电影”，证券简称启用日期是2026年4月20日，公司证券代码“002739”保持不变。
 
-![](/images/hotnews/20260419_evening_05.webp)
 
 ### <strong>伊</strong>斯兰堡“红区”全面封控
+<img src="/images/hotnews/20260419_evening_06.webp" class="hotnews-img" alt="热搜配图">
 4月19日，巴基斯坦伊斯兰堡警方发布消息称，由于外国代表团抵达，伊斯兰堡的“红区”和扩展区域全面封控。
 
-![](/images/hotnews/20260419_evening_06.webp)
 
 ### <strong>自</strong>家孩子趴桌睡为何给别人捐躺椅
+<img src="/images/hotnews/20260419_evening_07.webp" class="hotnews-img" alt="热搜配图">
 近日，珠海市慈善总会发起号召城区学生用压岁钱为乡村孩子捐赠午睡桌椅的募捐活动，引发家长质疑城乡午休资源分配不公，家长认为“自家孩子都趴桌睡为何给别人捐躺椅”。慈善总会回应称，募捐推文未能充分兼顾城区学校同样存在的午休改善需求，已主动下架。
 
-![](/images/hotnews/20260419_evening_07.webp)
 
 ### <strong>山</strong>东一套195平米复式房1万元起拍
+<img src="/images/hotnews/20260419_evening_08.webp" class="hotnews-img" alt="热搜配图">
 近日，山东威海一套“复式195平米70年大产权”房在京东资产交易平台拍卖，起拍价仅为10088元。4月19日，拍卖公司工作人员回应记者称，该房产为住宅房拍卖，非“法拍房”，可随时过户，不动产权证上登记的建筑面积为97.94平方米，其余面积为赠送。
 
-![](/images/hotnews/20260419_evening_08.webp)
 
 ### <strong>“</strong>我不骗人只开超市 犯法吗”
+<img src="/images/hotnews/20260419_evening_09.webp" class="hotnews-img" alt="热搜配图">
 曹某明知境外园区是电信诈骗、敲诈勒索犯罪窝点，仍偷渡前往开设超市，为犯罪分子提供后勤保障和现金兑换，造成我国公民巨额损失。他自认“不直接骗人就不犯法”，实则构成诈骗、敲诈勒索和偷越国境罪，被上海浦东法院数罪并罚，判处有期徒刑四年十一个月，并处罚金七万元。
 
-![](/images/hotnews/20260419_evening_09.webp)
 
 ### <strong>程</strong>序员追不上机器人干脆开电瓶车跟
+<img src="/images/hotnews/20260419_evening_10.webp" class="hotnews-img" alt="热搜配图">
 4月19日，2026北京亦庄半程马拉松首次实现1.2万名人类跑者与300余台人形机器人同场竞技。部分机器人时速达10米/秒，测试时程序员追不上机器人，比赛中程序员干脆开电瓶车跟。网友：好消息！我的代码能跑了，坏消息！我跑不过我的代码。
 
-![](/images/hotnews/20260419_evening_10.webp)
 
 ### <strong>环</strong>保新规致蛋价上涨系谣言
+<img src="/images/hotnews/20260419_evening_11.webp" class="hotnews-img" alt="热搜配图">
 “蛋鸡环保新规4月落地、粪便直排最高罚100万元”“成本大涨蛋价也涨，散户末日来了”。近日，一些对环保规定的流言，给群众造成了一定的恐慌情绪。经核实，相关部门并没有出台所谓的“新规”。网传“环保新规推高养鸡成本致蛋价上涨”系谣言。
 
-![](/images/hotnews/20260419_evening_11.webp)
 
 ### <strong>巴</strong>基斯坦两大酒店通知住客离店
+<img src="/images/hotnews/20260419_evening_12.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260419_evening_12.webp)
+
 
 ### <strong>大</strong>风、沙尘、暴雨要来了
+<img src="/images/hotnews/20260419_evening_13.webp" class="hotnews-img" alt="热搜配图">
 4月19日，中央气象台发布了大风黄色预警、沙尘暴蓝色预警、强对流天气蓝色预警。预计未来三天（19日至21日），受较强冷空气影响，北方多大风天气，西北地区、华北等地将经历沙尘来袭。南方地区则会自西向东出现一轮降雨过程，部分地区有暴雨。
 
-![](/images/hotnews/20260419_evening_13.webp)
 
 ### <strong>越</strong>来越多年轻女性被肺癌“盯上”
+<img src="/images/hotnews/20260419_evening_14.webp" class="hotnews-img" alt="热搜配图">
 当前，肺癌已成中国女性第一大癌种——即便不吸烟、年纪轻，也可能被肺癌侵扰！专家支修益指出，无论是肺癌还是其他恶性肿瘤，都强调三级预防：远离致病因素；早筛，早发现、早干预；规范化诊疗，同时重视定期复查，预防复发及转移。
 
-![](/images/hotnews/20260419_evening_14.webp)
 
 ### <strong>东</strong>部战区舰艇编队过航横当水道
+<img src="/images/hotnews/20260419_evening_15.webp" class="hotnews-img" alt="热搜配图">
 东部战区新闻发言人徐承华陆军大校表示，4月19日，中国人民解放军东部战区组织133号舰艇编队过航横当水道，赴西太平洋海域开展演训活动，检验部队远海作战能力。这是根据年度计划组织的例行性训练，符合相关国际法和国际实践，不针对特定国家和目标。
 
-![](/images/hotnews/20260419_evening_15.webp)
 
 ### <strong>张</strong>雪机车热身赛再获第一
+<img src="/images/hotnews/20260419_evening_16.webp" class="hotnews-img" alt="热搜配图">
 张雪机车在荷兰正赛第二回合正赛前的热身赛中，以1分36秒840的单圈成绩再次强势斩获第一。
 
-![](/images/hotnews/20260419_evening_16.webp)
 
 ### <strong>刘</strong>德华罕见谈女儿 连说5个“没有”
+<img src="/images/hotnews/20260419_evening_17.webp" class="hotnews-img" alt="热搜配图">
 4月18日，刘德华在香港爱心马拉松活动上罕见谈及14岁女儿近况，被问及女儿是否恋爱时连说5个“没有”，并表态希望她18岁后再谈恋爱，目前暂无出国读书计划。
 
-![](/images/hotnews/20260419_evening_17.webp)
 
 ### <strong>新</strong>疆遭沙尘暴 数十米高沙墙扑面而来
+<img src="/images/hotnews/20260419_evening_18.webp" class="hotnews-img" alt="热搜配图">
 4月17日傍晚，新疆乌鲁木齐、昌吉、石河子等多地遭遇强沙尘暴，现场画面显示，数十米高的沙墙扑面而来、遮天蔽日，许多建筑物瞬间被覆盖。
 
-![](/images/hotnews/20260419_evening_18.webp)
 
 ### <strong>中</strong>国摧毁特大假酒网络
+<img src="/images/hotnews/20260419_evening_19.webp" class="hotnews-img" alt="热搜配图">
 4月19日，国家市场监督管理总局通报，在市场监管总局的统一协调下，山西、四川两省市场监管、公安部门联合行动，近日成功摧毁一个特大制售商标侵权和伪劣白酒的违法犯罪网络。
 
-![](/images/hotnews/20260419_evening_19.webp)
 
 ### <strong>重</strong>点中学高三学生涉特大偷渡案被抓
+<img src="/images/hotnews/20260419_evening_20.webp" class="hotnews-img" alt="热搜配图">
 央视披露广西破获特大偷渡案：境外蛇头“东东”（林辉）等68人落网，两条海上偷渡通道被斩断。警方发现，偷渡犯罪集团将黑手伸向未成年人，线上招募者中超四成为16至18岁青少年。一名长沙重点中学高三学生涉案被抓，其微信零钱超20万元。
 
-![](/images/hotnews/20260419_evening_20.webp)
 
 ### <strong>东</strong>北华北先别洗车
+<img src="/images/hotnews/20260419_evening_21.webp" class="hotnews-img" alt="热搜配图">
 中央气象台预计，4月19日开始，华北地区有扬沙或浮尘天气。紧接着沙尘可能继续向东南传输，还会影响东北。这次沙尘可能紧跟在降水之后，东北、华北不排除下泥雨或者出现“驴打滚”现象——先下雨再糊一层沙尘。总之，最近别洗车。
 
-![](/images/hotnews/20260419_evening_21.webp)
 
 ### <strong>故</strong>宫每年用60吨猪血镇邪？回应来了
+<img src="/images/hotnews/20260419_evening_22.webp" class="hotnews-img" alt="热搜配图">
 近日，故宫博物院研究馆员周乾在新书《坐在故宫屋檐下:图解���禁城五十问》中澄清，故宫木构件的地仗层使用猪血作为黏合剂，与砖灰、桐油等材料混合形成保护层，防止木材腐蚀，而非传言所称的“镇邪”用途。
 
-![](/images/hotnews/20260419_evening_22.webp)
 
 ### <strong>穿</strong>衣服的机器人参加半马被观众辣评
+<img src="/images/hotnews/20260419_evening_23.webp" class="hotnews-img" alt="热搜配图">
 4月19日，北京亦庄举办全球首场人形机器人半程马拉松，一参赛机器人身着队服或装饰性服装，被观众辣评：别人都光屁股，就你穿衣服。
 
-![](/images/hotnews/20260419_evening_23.webp)
 
 ### <strong>美</strong>国1年投1300万美元在中国搞渗透
+<img src="/images/hotnews/20260419_evening_24.webp" class="hotnews-img" alt="热搜配图">
 近日，惯于在世界各地搞阴谋颠覆、渗透破坏的非政府组织——美国国家民主基金会（NED）公布了其2025年年度报告，其中，针对中国的相关项目金额达到1300万美元。
 
-![](/images/hotnews/20260419_evening_24.webp)
 
 ### <strong>高</strong>中生集中选物化生 有班额超55人
+<img src="/images/hotnews/20260419_evening_25.webp" class="hotnews-img" alt="热搜配图">
 今年3月有网友反映，新邵一中高一平行班物化生班级超过湖南省规定的普通高中班额≤55人的标准。近日，校方已作出回应称：情况属实，学生集中选择物化生致教师不足，将采取措施。
 
-![](/images/hotnews/20260419_evening_25.webp)
 
 ### <strong>0</strong>0后“甜妹”扛大狙又美又飒
+<img src="/images/hotnews/20260419_evening_26.webp" class="hotnews-img" alt="热搜配图">
 你见过身高1米62、体重不过百的姑娘扛起十几公斤的12.7大狙吗？还能负重26公斤装备奔袭200米山路迅速锁定目标，700米外精准命中靶心。今天，一起走进又美又飒“狙击甜妹”00后刘江涛的故事。
 
-![](/images/hotnews/20260419_evening_26.webp)
 
 ### <strong>李</strong>小冉疑发文回应退出《浪姐》
+<img src="/images/hotnews/20260419_evening_27.webp" class="hotnews-img" alt="热搜配图">
 4月19日，“曝李小冉退出浪姐”冲上热搜，随后，李小冉发文回应：“努力赶上优秀的姐姐们。”
 
-![](/images/hotnews/20260419_evening_27.webp)
 
 ### <strong>“</strong>机器人坚强”拒绝人类救援挣扎冲线
+<img src="/images/hotnews/20260419_evening_28.webp" class="hotnews-img" alt="热搜配图">
 4月19日北京亦庄半程马拉松比赛现场，一机器人距终点仅200米时撞广告牌倒地，它拒绝人类抬担架救援，挣扎起身顺利冲线，堪称“机器人坚强”。
 
-![](/images/hotnews/20260419_evening_28.webp)
 
 ### <strong>何</strong>润东复刻名场面“关中王来了”
+<img src="/images/hotnews/20260419_evening_29.webp" class="hotnews-img" alt="热搜配图">
 4月18日，演员何润东在苏超赛事中身着复刻战甲，以《楚汉传奇》项羽造型巡场。随后在直播中重现剧中名台词“啊，是关中王来了”。
 
-![](/images/hotnews/20260419_evening_29.webp)
 
 ### <strong>演</strong>唱会结束女生和闺蜜打了个外卖车
+<img src="/images/hotnews/20260419_evening_30.webp" class="hotnews-img" alt="热搜配图">
 4月18日，广西南宁周杰伦演唱会结束后，一名女生与闺蜜因打不到车，灵机一动通过网约平台呼叫了外卖配送车作为交通工具返回。
 
-![](/images/hotnews/20260419_evening_30.webp)
 
 ### <strong>《</strong>八千里路云和月》老太爷演技封神
+<img src="/images/hotnews/20260419_evening_31.webp" class="hotnews-img" alt="热搜配图">
 在央视热播剧《八千里路云和月》中，71岁国家一级演员毕彦君凭借饰演的张老太爷成为全剧最大亮点，其表演被观众评价为“演技封神”，将乱世中坚守风骨的旧式文人刻画得入木三分。
 
-![](/images/hotnews/20260419_evening_31.webp)
 
 ### <strong>天</strong>工与宇树机器人激烈缠斗近两公里
+<img src="/images/hotnews/20260419_evening_32.webp" class="hotnews-img" alt="热搜配图">
 4月19日，北京亦庄半程马拉松赛道上，天工与宇树H1人形机器人展开近两公里激烈竞速，双方多次交替领先，机械关节高频摆动引发沿途观众惊呼。
 
-![](/images/hotnews/20260419_evening_32.webp)
 
 ### <strong>一</strong>天19.9元拎包入驻 日租工位走红
+<img src="/images/hotnews/20260419_evening_33.webp" class="hotnews-img" alt="热搜配图">
 在济南，共享办公的“日租模式”正悄然走红。随着AI浪潮兴起，“一人、一台电脑、一套人工智能工具”即可成立一家公司。在此背景下，济南不少写字楼精准捕捉到这一需求，推行“日租工位”，一天仅需19.9元。
 
-![](/images/hotnews/20260419_evening_33.webp)
 
 ### <strong>学</strong>生徒手爬椰子树10秒不到就登顶
+<img src="/images/hotnews/20260419_evening_34.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260419_evening_34.webp)
+
 
 ### <strong>蟒</strong>蛇爬进鸡笼吃鸡 吃饱后被卡住
+<img src="/images/hotnews/20260419_evening_35.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260419_evening_35.webp)
+
 
 ### <strong>男</strong>子在美摆摊卖磨刀器 月入1万美金
+<img src="/images/hotnews/20260419_evening_36.webp" class="hotnews-img" alt="热搜配图">
 近日，河南一男子在美国摆摊卖磨刀器走红。该男子称现在是全职摆摊，收入大概是六七千美元每个月，好的时候一个月卖了一万美元。
 
-![](/images/hotnews/20260419_evening_36.webp)
 
 ### <strong>2</strong>名小孩和救人者均溺水 男子连救3人
+<img src="/images/hotnews/20260419_evening_37.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260419_evening_37.webp)
+
 
 ### <strong>贺</strong>娇龙账号时隔100天更新
+<img src="/images/hotnews/20260419_evening_38.webp" class="hotnews-img" alt="热搜配图">
 4月19日，贺娇龙个人账号时隔100天更新，新疆维吾尔自治区农产品品牌建设与产销服务中心宣布启用新抖音账号“品味新疆·推荐官”，由一名“90后”清华毕业生接任推荐官，以延续贺娇龙推广新疆农产品的未竟事业。
 
-![](/images/hotnews/20260419_evening_38.webp)
 
 ### <strong>何</strong>润东来宿迁前一晚兴奋到失眠
+<img src="/images/hotnews/20260419_evening_39.webp" class="hotnews-img" alt="热搜配图">
 4月18日，演员何润东在宿迁举办的“苏超”足球赛中，以项羽造型亮相并助阵主队。19日，何润东接受采访透露，因为可以重扮14年前角色弥补未访项王故里的遗憾，来宿迁前一晚兴奋至失眠，现场化妆时特意遮盖黑眼圈。
 
-![](/images/hotnews/20260419_evening_39.webp)
 
 ### <strong>疯</strong>狂淘晶热！广州一大山遭人私挖水晶
+<img src="/images/hotnews/20260419_evening_40.webp" class="hotnews-img" alt="热搜配图">
 树根被刨空裸露、地表坑洼遍地……近日，多位广州市民在社交平台痛心发声，“暹岗大山都被毁成这样了”。而导致这一局面的，是此前在社交平台上意外走红的一股“淘晶热”。林业部门发声：涉嫌违法。
 
-![](/images/hotnews/20260419_evening_40.webp)
 
 ### <strong>湖</strong>北宜昌一车辆爆燃 现场多次爆炸
+<img src="/images/hotnews/20260419_evening_41.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260419_evening_41.webp)
+
 
 ### <strong>1</strong>4岁少年拉车门被拘9天 民警回应
+<img src="/images/hotnews/20260419_evening_42.webp" class="hotnews-img" alt="热搜配图">
 近日，盐城市盐都区一14岁少年王某拉车门盗窃车内上千元财物的事件引发社会关注。依据今年1月1日起施行的新修订治安管理处罚法，盐都警方依法对王某作出行政拘留九日的决定，并送进拘留所执行。办案民警介绍，新法实施后，年龄不再是肆意妄为的“护身符”。
 
-![](/images/hotnews/20260419_evening_42.webp)
 
 ### <strong>著</strong>名作家刘震云参加拜祖大典
+<img src="/images/hotnews/20260419_evening_43.webp" class="hotnews-img" alt="热搜配图">
 4月19日，茅盾文学奖得主刘震云作为嘉宾参加在河南郑州举行的丙午年黄帝故里拜祖大典，参与用印祈福仪式，现场展示“印落山河、万方同契”的传统文化内涵。
 
-![](/images/hotnews/20260419_evening_43.webp)
 
 ### <strong>韩</strong>警方就日本男子骚扰中国游客立案
+<img src="/images/hotnews/20260419_evening_44.webp" class="hotnews-img" alt="热搜配图">
 近日，中国女游客在韩国釜山住宿期间遭遇日籍男子恶意骚扰，韩国警方初期处置消极一事持续引发全网关注。4月19日，记者从当事人“知春hope”处获悉，目前案件已有明确进展，韩国警方已刑事立案，涉事者被警方限期返韩接受调查，可能在19日入境韩国。
 
-![](/images/hotnews/20260419_evening_44.webp)
 
 ### <strong>研</strong>究生坐6小时赢发呆比赛 高兴落泪
+<img src="/images/hotnews/20260419_evening_45.webp" class="hotnews-img" alt="热搜配图">
 4月18日，24岁女研究生在四川省眉山市丹棱幸福古村首届发呆大赛中，以端坐6小时不玩手机、不交谈、不笑且闭眼不超过10秒的表现夺冠，赛后落泪感慨“坚持一件事真的不容易”。
 
-![](/images/hotnews/20260419_evening_45.webp)
 
 ### <strong>一</strong>年时间从跌跌撞撞到超越人类纪录
+<img src="/images/hotnews/20260419_evening_46.webp" class="hotnews-img" alt="热搜配图">
 在2026年北京亦庄人形机器人半程马拉松中，机器人“闪电”以50分26秒的成绩刷新纪录，超越人类男子半马57分20秒的世界纪录。相较去年赛事，今年近四成机器人实现全自主运行，参赛队伍从20支扩至超百支。
 
-![](/images/hotnews/20260419_evening_46.webp)
 
 ### <strong>高</strong>端酒店减塑困局：禁不掉“六小件”
+<img src="/images/hotnews/20260419_evening_47.webp" class="hotnews-img" alt="热搜配图">
 近日，中国环境新闻工作者协会与公众环境研究中心联合发布了《酒店业一次性用品减量调查报告》。报告显示，星级酒店不主动提供一次性用品的比例整体低于非星级酒店。禁不掉“六小件”依然是高端酒店的减塑困局。
 
-![](/images/hotnews/20260419_evening_47.webp)
 
 ### <strong>法</strong>国要归还中国文物了？事情还很复杂
+<img src="/images/hotnews/20260419_evening_48.webp" class="hotnews-img" alt="热搜配图">
 法国国民议会4月13日通过法律草案，旨在简化1815年至1972年间非法获取文物的归还程序，覆盖中国流失文物如圆明园珍宝。这项制度变化，确实打开了一扇门，但要走过这扇门，并没有那么简单。
 
-![](/images/hotnews/20260419_evening_48.webp)
 
 ### <strong>荣</strong>耀机器人包揽半马前三 工程师回应
+<img src="/images/hotnews/20260419_evening_49.webp" class="hotnews-img" alt="热搜配图">
 4月19日，北京亦庄人形机器人半程马拉松激战正酣，荣耀机器人包揽“半马”前三。工程师回应：三台机器人在配置上大致相当，在技术路线上存在差异，是为了验证不同的方案��
 
-![](/images/hotnews/20260419_evening_49.webp)
 
 ### <strong>机</strong>器人跑得比人类还快有啥用
+<img src="/images/hotnews/20260419_evening_50.webp" class="hotnews-img" alt="热搜配图">
 4月19日，北京亦庄人形机器人半程马拉松比赛中，荣耀机器人以50分26秒的成绩夺冠，较人类半马世界纪录快6分54秒。机器人跑得比人类还快，到底有啥用？一起来看。
 
-![](/images/hotnews/20260419_evening_50.webp)
 

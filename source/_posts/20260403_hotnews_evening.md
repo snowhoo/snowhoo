@@ -14,246 +14,252 @@ toc: true
 > 来源：互联网 | 采集时间：2026/4/3 22:00:26
 
 ### <strong>马</strong>兴瑞被查
+<img src="/images/hotnews/20260403_evening_01.webp" class="hotnews-img" alt="热搜配图">
 中央政治局委员、中央农村工作领导小组副组长马兴瑞涉嫌严重违纪违法，目前正接受中央纪委国家监委纪律审查和监察调查。
 
-![](/images/hotnews/20260403_evening_01.webp)
 
 ### <strong>工</strong>信部提醒苹果用户：做好风险排查
+<img src="/images/hotnews/20260403_evening_02.webp" class="hotnews-img" alt="热搜配图">
 近日，工业和信息化部网络安全威胁和漏洞信息共享平台监测发现针对苹果终端设备的新型网络攻击，攻击者利用iOS 13.0至17.2.1系统漏洞，通过诱导用户访问恶意网页植入远程控制木马，可能导致信息窃取和设备受控。建议用户立即升级系统并避免点击可疑链接。
 
-![](/images/hotnews/20260403_evening_02.webp)
 
 ### <strong>智</strong>慧装备为农业打开发展新空间
+<img src="/images/hotnews/20260403_evening_03.webp" class="hotnews-img" alt="热搜配图">
 翻开“十五五”规划纲要，农业农村现代化图景愈发清晰。人工智能辅助下，核心品种育种周期缩短20%，一批突破性品种加速推广应用；一个个智慧农场里，卫星、多光谱无人机、环境传感器搭建起天空地一体化监测网络，实时感知作物长势，各类智能农机在AI大模型调度下分工有序、精耕细作，助推我国粮食产能迈上1.45万亿斤左右新台阶。
 
-![](/images/hotnews/20260403_evening_03.webp)
 
 ### <strong>美</strong>国博主中国游后抵达印度被惊呆
+<img src="/images/hotnews/20260403_evening_04.webp" class="hotnews-img" alt="热搜配图">
 近日，一位美国旅游博主发布视频，对比其在中国和印度的体验，称从井然有序的中国到混乱的印度如同“到了另一个星球”。他提到中国街道干净且无乞丐，而印度随处可见乞讨者。
 
-![](/images/hotnews/20260403_evening_04.webp)
 
 ### <strong>王</strong>楚钦逆转勒布伦 进八强成男单独苗
+<img src="/images/hotnews/20260403_evening_05.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260403_evening_05.webp)
+
 
 ### <strong>美</strong>战机飞行员或被伊朗军方俘虏
+<img src="/images/hotnews/20260403_evening_06.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260403_evening_06.webp)
+
 
 ### <strong>原</strong>来身份证不是全国统一的
+<img src="/images/hotnews/20260403_evening_07.webp" class="hotnews-img" alt="热搜配图">
 你知道吗？我们每个人都有的身份证并不是全国统一的。根据《中华人民共和国居民身份证法》有关规定，民族自治地方的自治机关根据本地区的实际情况，对居民身份证用汉字登记的内容，可以决定同时使用实行区域自治的民族的文字或者选用一种当地通用的文字。
 
-![](/images/hotnews/20260403_evening_07.webp)
 
 ### <strong>取</strong>消高速收费 连锁反应开始了
+<img src="/images/hotnews/20260403_evening_08.webp" class="hotnews-img" alt="热搜配图">
 近期，全国多地高速迎来取消收费潮，广州华南快速等首批老高速因收费期满即将免费，多地到期公路陆续回归公益，取消高速收费的连锁反应已开始。但受成本制约，高速全面免费短期内仍难实现。
 
-![](/images/hotnews/20260403_evening_08.webp)
 
 ### <strong>优</strong>思益：已无力售后 处于崩溃边缘
+<img src="/images/hotnews/20260403_evening_09.webp" class="hotnews-img" alt="热搜配图">
 4月3日，保健品品牌优思益通过官方声明承认，因多个账号被封停、公司处于非正常运营状态，已无力提供售后及客诉服务，整体运营濒临崩溃。该声明系对4月1日央视曝光其虚构海外产地事件的回应，称已配合监管部门调查并启动自查。
 
-![](/images/hotnews/20260403_evening_09.webp)
 
 ### <strong>为</strong>什么卫生纸非要压花
+<img src="/images/hotnews/20260403_evening_10.webp" class="hotnews-img" alt="热搜配图">
 卫生纸压花不只是美观，更有实用功能：通过凹凸结构固定多层纸防止分层破裂；提升纸张蓬松度，使用更舒适；增大孔隙增强吸水能力。好工艺会平衡蓬松度与韧性，兼顾好用与结实。
 
-![](/images/hotnews/20260403_evening_10.webp)
 
 ### <strong>高</strong>铁运行中开窗会被吸出去系误区
+<img src="/images/hotnews/20260403_evening_11.webp" class="hotnews-img" alt="热搜配图">
 针对“高铁开窗会把人吸出去”的谣言，真相是：高铁运行时车厢内外气压接近，没有巨大压差，即使开窗也不会把人“吸出”。
 
-![](/images/hotnews/20260403_evening_11.webp)
 
 ### <strong>亲</strong>人离世后微信QQ零钱怎么提取
+<img src="/images/hotnews/20260403_evening_12.webp" class="hotnews-img" alt="热搜配图">
 4月3日，腾讯客服宣布：已升级逝者微信QQ零钱资金继承专属服务，材料完备情况下，逝者零钱资金一般一到三个工作日、最快24小时可完成提取。以高效合规的服务和暖心的人文关怀，切实保障公民合法财产权益，打通数字资金遗产继承 “最后一公里”。
 
-![](/images/hotnews/20260403_evening_12.webp)
 
 ### <strong>范</strong>玮琪上台好紧张 开口跑调
+<img src="/images/hotnews/20260403_evening_13.webp" class="hotnews-img" alt="热搜配图">
 范玮琪《浪姐》直播太紧张了，开口就走调声音发抖，PK输给乌兰图雅。
 
-![](/images/hotnews/20260403_evening_13.webp)
 
 ### <strong>中</strong>国团队用猪精液制成抗癌眼药水
+<img src="/images/hotnews/20260403_evening_14.webp" class="hotnews-img" alt="热搜配图">
 3月27日，中国沈阳药科大学张宇教授团队在《科学·进展》发表研究，利用猪精液外泌体制成抗癌眼药水，穿透小鼠眼部屏障后实现97.65%的视网膜母细胞瘤抑制率，且未损伤视力。该技术受精子穿透生殖屏障的启发，获《自然》头版关注。
 
-![](/images/hotnews/20260403_evening_14.webp)
 
 ### <strong>代</strong>斯输给温峥嵘 观众喊黑幕
+<img src="/images/hotnews/20260403_evening_15.webp" class="hotnews-img" alt="热搜配图">
 浪姐7初舞台第一个黑幕出现了！温峥嵘和代斯PK，温峥嵘被指打感情牌，评委保送白给50票，现场还要做票，唱跳双拉跨，不知所谓的表演。代斯是目前为止第一个完整唱跳，这水平要是硬给淘汰了，台下观众有人喊黑幕！
 
-![](/images/hotnews/20260403_evening_15.webp)
 
 ### <strong>男</strong>子意外收到7年前捐赠退款
+<img src="/images/hotnews/20260403_evening_16.webp" class="hotnews-img" alt="热搜配图">
 近日，北京网友王先生意外收到7年前100元捐赠退款，当年受助者在渡过难关后，将26万余元全部善款原路返还给所有好心人，此举引发网友点赞，被称最真诚的感恩与诚信。
 
-![](/images/hotnews/20260403_evening_16.webp)
 
 ### <strong>清</strong>明节为啥不“属”农历“属”公历
+<img src="/images/hotnews/20260403_evening_17.webp" class="hotnews-img" alt="热搜配图">
 清明是二十四节气之一，而二十四节气属于阳历系统，它是中国人通过观察太阳周年运动，认知一年中时令、气候、物候等方面变化规律所形成的知识体系和社会实践。
 
-![](/images/hotnews/20260403_evening_17.webp)
 
 ### <strong>上</strong>海夫妇被假将军女儿骗走近半亿
+<img src="/images/hotnews/20260403_evening_18.webp" class="hotnews-img" alt="热搜配图">
 2025年4月，上海商人老谭夫妇向普陀警方报案称，被自称“将军女儿”的刘亚琴以名酒投资为名诈骗4900万元。刘亚琴通过租借豪宅、购买假奢侈品包装富豪身份，承诺45%回报率诱骗投资，后携款潜逃。目前，犯罪嫌疑人刘亚琴因涉嫌诈骗罪被检察机关依法批准逮捕。
 
-![](/images/hotnews/20260403_evening_18.webp)
 
 ### <strong>海</strong>南一沙滩出现搁浅巨型皇带鱼
+<img src="/images/hotnews/20260403_evening_19.webp" class="hotnews-img" alt="热搜配图">
 4月2日18时许，海南陵水清水湾沙滩出现一条搁浅皇带鱼，目测长度超3米，游客尝试将其拖回深水区未果。该鱼因濒临死亡且非保护动物，未报警处理。
 
-![](/images/hotnews/20260403_evening_19.webp)
 
 ### <strong>南</strong>京警方：1994年命案告破
+<img src="/images/hotnews/20260403_evening_20.webp" class="hotnews-img" alt="热搜配图">
 1994年8月12日，南京市雨花台区一水泥厂附近发生一起抢劫杀人案，两名嫌疑人作案后潜逃。2026年3月18日及20日，南京警方在安徽省旌德县先后抓获犯罪嫌疑人郑某某和范某某，终结这起长达32年的命案积案。
 
-![](/images/hotnews/20260403_evening_20.webp)
 
 ### <strong>伊</strong>朗发动“真实承诺4”第92波打击
+<img src="/images/hotnews/20260403_evening_21.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月3日，伊朗伊斯兰革命卫队称，在“真实承诺-4”第92波打击中，革命卫队发射弹道导弹和无人机，对该地区美军和以色列的雷达系统及海上设施进行了多次联合攻击。
 
-![](/images/hotnews/20260403_evening_21.webp)
 
 ### <strong>外</strong>交部驳斥美方言论：颠倒黑白
+<img src="/images/hotnews/20260403_evening_22.webp" class="hotnews-img" alt="热搜配图">
 针对美方在巴拿马港口问题上的不当言论，外交部毛宁明确驳斥，称其颠倒黑白、无中生有，指出美方反复置喙暴露其霸占运河的图谋，强调中方立场明确，将坚定维护自身正当权益，公道自在人心。
 
-![](/images/hotnews/20260403_evening_22.webp)
 
 ### <strong>国</strong>乒男线仅剩王楚钦
+<img src="/images/hotnews/20260403_evening_23.webp" class="hotnews-img" alt="热搜配图">
 2026年澳门乒乓球世界杯男单，国乒男队5人出战小组赛，最终仅王楚钦和温瑞博晋级16强。随着温瑞博在1/8决赛中不敌林昀儒，国乒男线仅剩王楚钦一人。
 
-![](/images/hotnews/20260403_evening_23.webp)
 
 ### <strong>新</strong>乡南太行一私家车坠崖 2人身亡
+<img src="/images/hotnews/20260403_evening_24.webp" class="hotnews-img" alt="热搜配图">
 4月3日，河南新乡辉县市南太行上午峪附近一辆私家车坠崖，造成车内两名女性死亡（一名约80岁老人和一名约30岁女性）。救援人员耗时约3小时将遗体抬出，初步判断事故因山路弯道陡峭导致车辆翻落。
 
-![](/images/hotnews/20260403_evening_24.webp)
 
 ### <strong>贵</strong>阳冰雹为啥形成“冰流成河”
+<img src="/images/hotnews/20260403_evening_25.webp" class="hotnews-img" alt="热搜配图">
 4月2日晚，贵州贵阳遭遇强对流天气，花溪、清镇等地大量冰雹倾泻而下宛如轰炸，城市街道被大量的冰雹覆盖，如同冬天雪后一般。提醒：及时关注天气，注意出行安全！
 
-![](/images/hotnews/20260403_evening_25.webp)
 
 ### <strong>莫</strong>氏鸡煲老板呼吁大家不要过来吃
+<img src="/images/hotnews/20260403_evening_26.webp" class="hotnews-img" alt="热搜配图">
 近日，广东顺德莫氏鸡煲因网红“刘雨鑫”的探店视频爆红后，莫氏鸡煲老板呼吁大家不要过来吃 ，直言“冰鲜鸡，不是新鲜杀的”。
 
-![](/images/hotnews/20260403_evening_26.webp)
 
 ### <strong>超</strong>2000名数学家抵制赴美参会
+<img src="/images/hotnews/20260403_evening_27.webp" class="hotnews-img" alt="热搜配图">
 近日，围绕2026年国际数学家大会会址的争议持续升温，2000多名学者公开呼吁将本届大会迁出美国。反对理由包括两个层面。其一是对赴美参会风险的担忧，其二则是对美国对外政策的批评。
 
-![](/images/hotnews/20260403_evening_27.webp)
 
 ### <strong>纽</strong>约突发枪击 七个月大女婴中弹死亡
+<img src="/images/hotnews/20260403_evening_28.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月1日下午，美国纽约布鲁克林区发生一起街头枪击案，一名坐在婴儿推车里的7个月大女婴被流弹击中，送医后不治身亡。警方初步调查显示，此案疑似与帮派冲突有关，女婴为无辜的被误伤者。
 
-![](/images/hotnews/20260403_evening_28.webp)
 
 ### <strong>医</strong>生：男性经常做家务能预防老年痴呆
+<img src="/images/hotnews/20260403_evening_29.webp" class="hotnews-img" alt="热搜配图">
 多项研究证实，男性经常做家务，能有效降低老年痴呆风险。医生表示，女性可以把家务活分给老公一部分，不仅可以有效促进夫妻间的关系，男性做家务还能预防高血压、心脑血管病、老年痴呆等疾病，很多家务活属于很精细的活，如打扫卫生、叠被子等，对手脚协调、脑神经有很好的帮助。
 
-![](/images/hotnews/20260403_evening_29.webp)
 
 ### <strong>美</strong>团、淘宝闪购、京东 接受行政指导
+<img src="/images/hotnews/20260403_evening_30.webp" class="hotnews-img" alt="热搜配图">
 4月2日，市监局召开行政指导会，要求美团、淘宝闪购、京东三大外卖平台尽快自查整改。新规6月1日实施，平台需落实五项食品安全责任，以节点倒排工期，严把准入与配送关，保障餐饮安全。
 
-![](/images/hotnews/20260403_evening_30.webp)
 
 ### <strong>老</strong>外“打飞的”来上海配眼镜
+<img src="/images/hotnews/20260403_evening_31.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260403_evening_31.webp)
+
 
 ### <strong>涉</strong>中东战事 中方再次发声
+<img src="/images/hotnews/20260403_evening_32.webp" class="hotnews-img" alt="热搜配图">
 中国常驻联合国代表傅聪2日在联合国同海合会合作问题安理会公开会上表示，国际社会应当充分尊重海合会国家历史文化传统，支持海合会国家加强战略自主，增强团结协作，探索符合本国国情的发展道路，反对任何国家干涉海合会国家内部事务。
 
-![](/images/hotnews/20260403_evening_32.webp)
 
 ### <strong>警</strong>惕！这些内容一旦拍摄发布就是泄密
+<img src="/images/hotnews/20260403_evening_33.webp" class="hotnews-img" alt="热搜配图">
 警惕！军用装备、涉密文件、禁拍要害区域，一旦拍摄发布就是泄密。多人因虚荣心、博流量偷拍泄密，均被依法严惩或处分。提醒：不该拍不拍、不该发不发，指尖泄密危害国家安全，必担法律责任。
 
-![](/images/hotnews/20260403_evening_33.webp)
 
 ### <strong>睡</strong>前三小时禁食有益心血管健康
+<img src="/images/hotnews/20260403_evening_34.webp" class="hotnews-img" alt="热搜配图">
 4月3日，《参考消息》刊发阿根廷布宜诺斯艾利斯经济新闻网文章《睡前三小时不进食：科学如何看待心血管健康？》。美国西北医学中心的一项新研究建议，睡前三小时不再进食可以降低夜间血压、改善血糖水平并促进心脏健康。
 
-![](/images/hotnews/20260403_evening_34.webp)
 
 ### <strong>乌</strong>兰图雅唱跳《站在草原望北京》
+<img src="/images/hotnews/20260403_evening_35.webp" class="hotnews-img" alt="热搜配图">
 4月3日，乌兰图雅在乘风2026初舞台唱跳《站在草原望北京》，像是在开演唱会，松弛感绝了，外套一脱变身性感辣妹。
 
-![](/images/hotnews/20260403_evening_35.webp)
 
 ### <strong>厄</strong>瓜多尔宣布该国多地进入紧急状态
+<img src="/images/hotnews/20260403_evening_36.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月2日，厄瓜多尔总统诺沃亚签署行政令，宣布该国多个省市进入为期60天的紧急状态。
 
-![](/images/hotnews/20260403_evening_36.webp)
 
 ### <strong>代</strong>斯跳舞一股女团味
+<img src="/images/hotnews/20260403_evening_37.webp" class="hotnews-img" alt="热搜配图">
 代斯在《乘风2026》的初舞台表现被广泛评价为稳定且极具爆发力，展现了超越预期的唱跳实力与舞台掌控力，完全符合女团概念！
 
-![](/images/hotnews/20260403_evening_37.webp)
 
 ### <strong>手</strong>机一按就出片 他们为啥偏要等3小时
+<img src="/images/hotnews/20260403_evening_38.webp" class="hotnews-img" alt="热搜配图">
 如今手机拍照即出，不少年轻人却甘愿等待3小时冲洗胶片。他们追求复古质感、延迟满足的仪式感与故事感，胶片还形成独特社群文化。慢节奏拍摄兼具疗愈效果，让人们在快时代找回生活温度。
 
-![](/images/hotnews/20260403_evening_38.webp)
 
 ### <strong>3</strong>岁女儿确诊孤独症父亲关掉公司陪伴
+<img src="/images/hotnews/20260403_evening_39.webp" class="hotnews-img" alt="热搜配图">
 重庆刘先生因3岁女儿确诊全面发育迟缓和中度自闭症，关闭经营的公司全职陪伴干预。刘先生表示，女儿是试管宝宝，差不多做了7年，她才到来，现通过赤脚行走等特殊训练已能识人、背三字经。
 
-![](/images/hotnews/20260403_evening_39.webp)
 
 ### <strong>“</strong>张雪的贵人不是我而是他自己”
+<img src="/images/hotnews/20260403_evening_40.webp" class="hotnews-img" alt="热搜配图">
 2006年10月，19岁的摩托车修理工张雪冒雨狂追采访车百余公里，以“年轻时不去拼，老了肯定后悔”的坚持打动记者易军拍摄。这段视频成为其职业转折点，2026年两人重逢时易军表示“张雪的贵人不是我而是他自己”，强调其成功源于自身拼搏。
 
-![](/images/hotnews/20260403_evening_40.webp)
 
 ### <strong>伊</strong>朗公开击落美军F35碎片照片
+<img src="/images/hotnews/20260403_evening_41.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260403_evening_41.webp)
+
 
 ### <strong>“</strong>00后”男子为逃离KPI辞职做守墓人
+<img src="/images/hotnews/20260403_evening_42.webp" class="hotnews-img" alt="热搜配图">
 曾从事销售工作的“00后”周周因不堪业绩压力，于2023年转行进入殡葬行业。他看到一位二次元女孩的特殊葬礼后，颠覆了对葬礼的刻板印象。后来他受托为一位母亲远在国外的小女孩祭拜，摒弃传统祭拜方式，用抱枕、小卡和贴纸布置墓碑。
 
-![](/images/hotnews/20260403_evening_42.webp)
 
 ### <strong>河</strong>南造出全球最薄易拉罐盖
+<img src="/images/hotnews/20260403_evening_43.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260403_evening_43.webp)
+
 
 ### <strong>烈</strong>士生前最后一件事是给战友买桃
+<img src="/images/hotnews/20260403_evening_44.webp" class="hotnews-img" alt="热搜配图">
 清明，烈士回家了。烈士焦月先在牺牲前一天为战友购买桃子，并感叹“今天吃得着，明天都不见得能不能吃到”。近期，通过北京房山与河北涞水两地退役军人事务局的协作，其与另一烈士陈华的安葬地终被确认，墓碑姓名误差（焦要先/陈花）得以纠正。
 
-![](/images/hotnews/20260403_evening_44.webp)
 
 ### <strong>霸</strong>王茶姬疑似被日本品牌抄袭
+<img src="/images/hotnews/20260403_evening_45.webp" class="hotnews-img" alt="热搜配图">
 4月3日，有网友反映，霸王茶姬（英文名：CHAGEE）疑似被一家名为“CHARMING”的日本奶茶品牌抄袭，该品牌的LOGO和菜单都与霸王茶姬颇为相似。霸王茶姬客服就疑似被抄袭一事回应媒体称，对相关问题非常重视，已将该问题详细记录。
 
-![](/images/hotnews/20260403_evening_45.webp)
 
 ### <strong>于</strong>谦关联公司被执行1431万
+<img src="/images/hotnews/20260403_evening_46.webp" class="hotnews-img" alt="热搜配图">
 近日，墨客行影业（北京）有限公司新增一则被执行人信息，执行标的1431万余元，执行法院为北京市第三中级人民法院。该公司成立于2019年1月，法定代表人赵仁鹏，经营范围包含电影摄制、组织文化艺术交流活动、影视策划、演出经纪等，由赵仁鹏、于谦等共同持股。
 
-![](/images/hotnews/20260403_evening_46.webp)
 
 ### <strong>女</strong>子走失25年腹中竟藏90斤巨瘤
+<img src="/images/hotnews/20260403_evening_47.webp" class="hotnews-img" alt="热搜配图">
 广西河池一女子历经25年流浪与失忆的坎坷，终于与家人重逢，可这份迟来的团圆，却被一场致命危机笼罩——她的肚子比足月产妇还要大上好几倍。今年3月初，医生成功从她体内切除重达45公斤的巨大卵巢肿瘤。4月2日，记者获悉，该女子已康复出院。
 
-![](/images/hotnews/20260403_evening_47.webp)
 
 ### <strong>爆</strong>火鸡煲店的鸡最多还能吃2个月
+<img src="/images/hotnews/20260403_evening_48.webp" class="hotnews-img" alt="热搜配图">
 近日，广东顺德莫氏鸡煲因网红探店爆火，老板拼命劝退仍挡不住食客热情，全家齐上阵仍忙不过来。“少东家”澄清不用冰冻鸡，直言自家养鸡场的鸡，按当前客流速度最多还能吃2个月，老板感慨累到没时间唱k散步。
 
-![](/images/hotnews/20260403_evening_48.webp)
 
 ### <strong>广</strong>西多名学校领导接连落马
+<img src="/images/hotnews/20260403_evening_49.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260403_evening_49.webp)
+
 
 ### <strong>温</strong>峥嵘垫音大到开出双声道
+<img src="/images/hotnews/20260403_evening_50.webp" class="hotnews-img" alt="热搜配图">
 4月3日《乘风2026》初舞台上，演员温峥嵘表演时因垫音轨与现场人声严重脱节，形成延迟回声与音量失衡的“双声道”效果，部分段落更出现节奏错位，被观众形容为“二重唱”技术事故。
 
-![](/images/hotnews/20260403_evening_50.webp)
 

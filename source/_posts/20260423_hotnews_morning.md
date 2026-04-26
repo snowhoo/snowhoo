@@ -14,248 +14,252 @@ toc: true
 > 来源：互联网 | 采集时间：2026/4/23 08:00:24
 
 ### <strong>王</strong>毅董军抵达柬埔寨 汪文斌迎接
+<img src="/images/hotnews/20260423_morning_01.webp" class="hotnews-img" alt="热搜配图">
 4月22日下午，中共中央政治局委员、外交部长王毅与国防部长董军抵达金边，出席中柬外长、防长“2+2”战略对话机制首次会议。中国驻柬埔寨大使汪文斌到机场迎接。此次访问为中方对柬埔寨、泰国、缅甸三国访问首站。
 
-![](/images/hotnews/20260423_morning_01.webp)
 
 ### <strong>开</strong>锁店被干成了板面店
+<img src="/images/hotnews/20260423_morning_02.webp" class="hotnews-img" alt="热搜配图">
 近日，成都一开锁老板闲来无事煮板面，却意外火出圈。他煮的面让许多来访者赞不绝口，开锁店被干成了板面店。
 
-![](/images/hotnews/20260423_morning_02.webp)
 
 ### <strong>人</strong>民永远铭记 祖国永远记得
+<img src="/images/hotnews/20260423_morning_03.webp" class="hotnews-img" alt="热搜配图">
 4月22日，第十三批在韩中国人民志愿军烈士遗骸回国。12位志愿军烈士英灵及146件遗物回到祖国怀抱。正如他们的老战友说的那样：“你们放心安息吧，我们继承你们的事业！”人民永远铭记，祖国永远记得。
 
-![](/images/hotnews/20260423_morning_03.webp)
 
 ### <strong>老</strong>百姓大药房等药店被查
+<img src="/images/hotnews/20260423_morning_04.webp" class="hotnews-img" alt="热搜配图">
 近日，湖南省医保局通报，老百姓大药房、养天和等部分药店被查出涉嫌违规使用医保资金，已被紧急约谈并开展现场检查。初步调查显示，10家涉事药店存在串换、代刷卡结算等问题，涉及医保职工个人账户资金3267.14元，暂未发现统筹基金违规使用情况。
 
-![](/images/hotnews/20260423_morning_04.webp)
 
 ### <strong>年</strong>赚近7亿 儿童“近视神药”火爆
+<img src="/images/hotnews/20260423_morning_05.webp" class="hotnews-img" alt="热搜配图">
 4月21日晚，兴齐眼药披露上年年报，全年实现营收24.73亿元；归母净利润6.96亿元。作为国内首款获批用于延缓儿童近视进展的眼用制剂，其0.01%硫酸阿托品滴眼液于2024年获批上市，今年初新增了0.02%和0.04%两个全球独有规格。
 
-![](/images/hotnews/20260423_morning_05.webp)
 
 ### <strong>官</strong>方回应���童疑发现金矿：有可能
+<img src="/images/hotnews/20260423_morning_06.webp" class="hotnews-img" alt="热搜配图">
 辽宁大连庄河市居民孙文阁称，4月16日，他与儿子在庄河市大营镇山体的断层处发现了问荆草和云母片，AI软件显示该地有99.9%的概率存在黄金，于是他们上报给了当地有关部门。辽宁省地质勘查院王海鹏了解情况后判断该地“大概率含金”。
 
-![](/images/hotnews/20260423_morning_06.webp)
 
 ### <strong>第</strong>4艘航母？海军宣传片主角名字亮了
+<img src="/images/hotnews/20260423_morning_07.webp" class="hotnews-img" alt="热搜配图">
 4月22日，人民海军发布宣传片《向大洋》，片中代表辽宁舰、山东舰、福建舰的“廖宁、单东、付健”出场后，一名叫“何剑”的新兵报到，引发众多网友猜测：难道是第四艘航空母舰？
 
-![](/images/hotnews/20260423_morning_07.webp)
 
 ### <strong>湖</strong>南卫视再次恭喜自己
+<img src="/images/hotnews/20260423_morning_08.webp" class="hotnews-img" alt="热搜配图">
 湖南卫视4月22日因2025年独播剧《国色芳华》持续创纪录，高调发起#湖南卫视再次恭喜自己#话题。该剧会员拉新1200万，广告及衍生收入超6.9亿元，并带动山东菏泽牡丹日销5万株，获央视认证文化出海标杆。
 
-![](/images/hotnews/20260423_morning_08.webp)
 
 ### <strong>朝</strong>鲜发声要求日本向中国道歉
+<img src="/images/hotnews/20260423_morning_09.webp" class="hotnews-img" alt="热搜配图">
 针对近期日本接连发生以中国驻日本大使馆为目标的恐怖威胁，朝鲜劳动党机关报《劳动新闻》22日刊发评论文章，对日本进行谴责。文章指出，从国际惯例与道义层面来看，日本理应对发生在本国境内、以中国大使馆为目标的犯罪事件予以承认、道歉、查明真相并惩处责任人。
 
-![](/images/hotnews/20260423_morning_09.webp)
 
 ### <strong>结</strong>婚前夕被父亲逼分手 儿子离家16年
+<img src="/images/hotnews/20260423_morning_10.webp" class="hotnews-img" alt="热搜配图">
 近日，河南郑州刘大爷因算命称儿子恋情“不长久”，逼其结婚前夕分手，儿子怒而离家16年。如今老人后悔不已，含泪道歉：“爸爸错了，以后尊重你。”
 
-![](/images/hotnews/20260423_morning_10.webp)
 
 ### <strong>收</strong>割未成熟小麦作青贮饲料不实
+<img src="/images/hotnews/20260423_morning_11.webp" class="hotnews-img" alt="热搜配图">
 近日，网传“小麦被割作青贮饲料，一亩给1500-2000元”系谣言，部分视频为AI生成或二次剪辑，已有造谣者被拘。
 
-![](/images/hotnews/20260423_morning_11.webp)
 
 ### <strong>1</strong>07岁“冻龄奶奶”不长斑无“三高”
+<img src="/images/hotnews/20260423_morning_12.webp" class="hotnews-img" alt="热搜配图">
 近日，浙江慈溪一位107岁“冻龄奶奶”因无“三高”、皮肤无斑且身体状态年轻引发关注，她分享健康秘诀，称长寿很简单：吃好、睡好、心态好。
 
-![](/images/hotnews/20260423_morning_12.webp)
 
 ### <strong>男</strong>子用了16年的学位证校方称从未授予
+<img src="/images/hotnews/20260423_morning_13.webp" class="hotnews-img" alt="热搜配图">
 近日，山东一男子反映其使用16年的学位证在求职时被认定“无效”。该男子称，自己2009年曾回校领取学位证，此后多年入职、转岗均顺利通过审核。但校方表示，其因在校受处分从未被授予学位，档案中无相关记录，也未在系统备案。
 
-![](/images/hotnews/20260423_morning_13.webp)
 
 ### <strong>医</strong>院专家号被“秒空”后却无人就诊
+<img src="/images/hotnews/20260423_morning_14.webp" class="hotnews-img" alt="热搜配图">
 系统显示专家号已约满，实际到诊率却不高，大量号源被占用后无人就诊。被“秒空”的医院专家号，到底去了哪里？4月22日，记者从上海市公安局获悉，闵行警方近日成功捣毁利用非法技术抢占、倒卖医院号源的犯罪团伙。
 
-![](/images/hotnews/20260423_morning_14.webp)
 
 ### <strong>没</strong>留照片、指纹、DNA的机场大盗被抓
+<img src="/images/hotnews/20260423_morning_15.webp" class="hotnews-img" alt="热搜配图">
 23年前，山西太原机场114盏引航灯被偷，造成200多万经济损失。团伙里其中一名嫌疑人作案后潜逃，他的名字在户籍档案中离奇消失。没留照片、指纹、DNA，案件一度陷入僵局。然而，一份23年前办案民警手写的笔录，为嫌疑人今日的落网埋下了关键伏笔 。
 
-![](/images/hotnews/20260423_morning_15.webp)
 
 ### <strong>午</strong>睡太久危险？��家回应
+<img src="/images/hotnews/20260423_morning_16.webp" class="hotnews-img" alt="热搜配图">
 午睡超1小时会增加健康风险？专家澄清：该结论源于观察性研究的统计学关联，并非绝对因果。长期、习惯性超长午睡（超过1小时）可能影响心血管和昼夜节律，但偶尔一次不必恐慌。健康午睡的关键在于适度、规律、适配：一般人群15-30分钟为宜；夜间睡眠不足者可适当延长至45分钟以内。
 
-![](/images/hotnews/20260423_morning_16.webp)
 
 ### <strong>员</strong>工称不涨工资干不了 2天后被离职
+<img src="/images/hotnews/20260423_morning_17.webp" class="hotnews-img" alt="热搜配图">
 因协商涨薪无果，员工一怒之下大喊：“不涨工资这活干不了！”两天后上班发现被公司公布已离职。该员工诉至法院，主张公司违法解除、索要赔偿金，缺乏事实与法律依据，法院不予支持。最终一审二审均判决：驳回其全部诉讼请求。
 
-![](/images/hotnews/20260423_morning_17.webp)
 
 ### <strong>民</strong>政局称20岁小伙养6弟妹系人设
+<img src="/images/hotnews/20260423_morning_18.webp" class="hotnews-img" alt="热搜配图">
 近日，湖南邵阳20岁小伙靠卖猪肉养6个弟弟妹妹的事受到广泛关注。4月22日，当地民政局工作人员回应称，他家名下有2、3间门市房，其中部分为全款购买，其账号中卖猪肉养6个弟妹的内容是人设。
 
-![](/images/hotnews/20260423_morning_18.webp)
 
 ### <strong>稀</strong>土公司副总向境外泄露7项国家秘密
+<img src="/images/hotnews/20260423_morning_19.webp" class="hotnews-img" alt="热搜配图">
 近日，国家安全部通报一起典型案件，某稀土公司副总经理为谋私利，在境外人员金钱利诱下，违规将我国稀土收储品类、数量、价格等7项机密级国家秘密泄露给境外企业。相关行为严重危害国家资源安全与产业链安全，涉案人员已被依法严惩。
 
-![](/images/hotnews/20260423_morning_19.webp)
 
 ### <strong>挪</strong>用1700万女孩曾向朋友借百万补漏
+<img src="/images/hotnews/20260423_morning_20.webp" class="hotnews-img" alt="热搜配图">
 近日，19岁女孩小梦挪用父亲公司1700万元用于直播打赏，事后曾向朋友借款百万试图补漏，导致公司资金链断裂。她悔恨不已，计划离开郑州重新开始。涉事MCN公司电话已转自动语音，警方正调查，暂未立案。​​​​
 
-![](/images/hotnews/20260423_morning_20.webp)
 
 ### <strong>中</strong>国空间站将迎来首位外籍航天员
+<img src="/images/hotnews/20260423_morning_21.webp" class="hotnews-img" alt="热搜配图">
 据中国载人航天工程办公室消息，中国载人航天工程首批外籍航天员选拔工作顺利完成，2名巴基斯坦籍候选对象最终入选。近日，他们将作为预备航天员来华参加训练，在完成各项训练并通过考核后，其中1人将以载荷专家身份参加飞行任务，成为首位进入中国空间站的外籍航天员。
 
-![](/images/hotnews/20260423_morning_21.webp)
 
 ### <strong>A</strong>C米兰球员被曝参加集体嫖娼派对
+<img src="/images/hotnews/20260423_morning_22.webp" class="hotnews-img" alt="热搜配图">
 近日，意大利AC米兰、国际米兰、尤文图斯等豪门俱乐部50至70名球员被曝参与由活动策划公司Ma.De组织的集体嫖娼派对，受害女性超100人，涉案金额达120万欧元。检方调查显示，该团伙以“赛后派对套餐”为幌子强迫女性卖淫，目前已逮捕4名嫌疑人。
 
-![](/images/hotnews/20260423_morning_22.webp)
 
 ### <strong>中</strong>央纪委国家监委通报
+<img src="/images/hotnews/20260423_morning_23.webp" class="hotnews-img" alt="热搜配图">
 4月23日，中央纪委国家监委通报显示，2026年第一季度全国纪检监察机关共接收信访举报96.8万件次，立案24.5万件（其中省部级干部30人），处分18.3万人（其中省部级56人），运用“四种形态”批评教育处理37.6万人次，坚持受贿行贿一起查，立案行贿人员9066人。
 
-![](/images/hotnews/20260423_morning_23.webp)
 
 ### <strong>1</strong>7岁男孩一碗螺蛳粉下肚胃破了个洞
+<img src="/images/hotnews/20260423_morning_24.webp" class="hotnews-img" alt="热搜配图">
 17岁男孩因长期熬夜、饮食不规律，常吃辛辣刺激食物，多次出现胃痛未在意，最终一碗螺蛳粉诱发胃穿孔。医生提醒：有胃溃疡、胃炎者需警惕高油高辣饮食，规律生活，出现剧烈腹痛立即就医。​​​​
 
-![](/images/hotnews/20260423_morning_24.webp)
 
 ### <strong>又</strong>是倒数第一 辽宁决心“翻身”
+<img src="/images/hotnews/20260423_morning_25.webp" class="hotnews-img" alt="热搜配图">
 今年一季度，辽宁固定资产投资同比下降20%，增速再次位列全国末位。为扭转颓势，辽宁将营商环境作为“生命线”工程，推出123条优化措施，并设立300亿元母基金培育新质生产力，引进京东、宁德时代等龙头企业，力求打一场投资“翻身仗”。
 
-![](/images/hotnews/20260423_morning_25.webp)
 
 ### <strong>远</strong>嫁女子在派出所痛哭 民警拥抱安慰
+<img src="/images/hotnews/20260423_morning_26.webp" class="hotnews-img" alt="热搜配图">
 近日，远嫁浙江嘉兴的王女士因家庭琐事与家人产生隔阂，无人倾诉情绪低落。她打电话给南湖大桥派出所，哭诉道“需要帮助”。女辅警朱婷将王女士带到派出所，王女士在朱婷怀里失声痛哭。两人相拥24分钟，王女士得以宣泄压抑情绪。
 
-![](/images/hotnews/20260423_morning_26.webp)
 
 ### <strong>司</strong>机关门致老人离世犯过失致死罪
+<img src="/images/hotnews/20260423_morning_27.webp" class="hotnews-img" alt="热搜配图">
 去年6月，公交车驾驶员程某在站点停靠过程中，因疏于观察，在一名88岁的老人还未上车时便按下了关门按键，导致老人的手及拐杖被车门夹住，后失去平衡摔倒，送医治疗5天后不治去世。近日，程某以犯过失致人死亡罪被判处有期徒刑一年三个月，缓刑一年六个月。
 
-![](/images/hotnews/20260423_morning_27.webp)
 
 ### <strong>南</strong>昌3死3伤窒息事故调查报告公布
+<img src="/images/hotnews/20260423_morning_28.webp" class="hotnews-img" alt="热搜配图">
 22日，江西省南昌市应急管理局发布《南昌进贤江西隆莱生物制药有限公司“12·31”较大窒息事故调查报告》。据调查报告，2025年12月31日22时25分许，位于南昌市进贤产业园的江西隆莱生物制药有限公司发生一起较大窒息事故，造成3人死亡、3人受伤。
 
-![](/images/hotnews/20260423_morning_28.webp)
 
 ### <strong>男</strong>子打探同乘女子隐私 司机多次打岔
+<img src="/images/hotnews/20260423_morning_29.webp" class="hotnews-img" alt="热搜配图">
 近日，一顺风车司机韩先生载客时，发现同车男子不断向女性乘客打探住址等隐私信息。韩先生多次故意打岔打断对话，并在男子下车后提醒女孩警惕。男子以取耳机为由要求转交女孩联系，被韩先生拒绝并坚持送交派出所。韩先生称，自己也有两个女儿，保护乘客安全是本能。​​​​
 
-![](/images/hotnews/20260423_morning_29.webp)
 
 ### <strong>驻</strong>日大使馆批日方严重违背人类良知
+<img src="/images/hotnews/20260423_morning_30.webp" class="hotnews-img" alt="热搜配图">
 日本领导人向靖国神社供奉祭品，我大使馆回应：日方此举公然为侵略历史翻案、为战争罪行洗白、为军国主义招魂，严重违背历史正义和人类良知。中方坚决反对、严厉谴责，已向日方提出严正交涉。​​​​
 
-![](/images/hotnews/20260423_morning_30.webp)
 
 ### <strong>“</strong>我要向人们揭露靖国神社的真相”
+<img src="/images/hotnews/20260423_morning_31.webp" class="hotnews-img" alt="热搜配图">
 4月22日，在靖国神社入口前，89岁的长谷川顺一对记者说：“这里掩盖着大量侵略历史，我要向人们揭露它的真相。”长谷川是一名侵华日军士兵的儿子，自2010年以来，他已带人参观靖国神社超过400次。
 
-![](/images/hotnews/20260423_morning_31.webp)
 
 ### <strong>肯</strong>德基的“番茄酱自由”没了
+<img src="/images/hotnews/20260423_morning_32.webp" class="hotnews-img" alt="热搜配图">
 近日，不少网友在社交媒体发文称，在肯德基多要蘸酱需要额外付费，有的网友表示其所在的区域多要番茄酱也需要付费。有肯德基店员表示，4月20日以后购买套餐里的免费蘸酱只能按量供给，超过套餐标准的部分，需要付费购买。
 
-![](/images/hotnews/20260423_morning_32.webp)
 
 ### <strong>男</strong>子为赚钱买81万银砖 3个月亏24万
+<img src="/images/hotnews/20260423_morning_33.webp" class="hotnews-img" alt="热搜配图">
 郑州一男子为赚钱于今年1月底在某金银回收店购买了两块共30公斤的银砖，每克单价约27元，总计花费81万余元。近期，随着银价回落，一块银砖价格已经下探到29万元。男子的两块银砖还砸在手中没法卖，三个月过去，已经赔了近24万。
 
-![](/images/hotnews/20260423_morning_33.webp)
 
 ### <strong>考</strong>研生人均1元拼网课 被判共同赔4万
+<img src="/images/hotnews/20260423_morning_34.webp" class="hotnews-img" alt="热搜配图">
 考研学生人均1元“拼单”购买盗版网课用于备考自用，考研课程老师发现后认为“拼课”行为构成侵权，将组织“拼课”学生诉至法院。近日，法院审结此案，一审判决组织“拼课”学生共同赔偿4万元。
 
-![](/images/hotnews/20260423_morning_34.webp)
 
 ### <strong>中</strong>国本土发现首块月球陨石有重要发现
+<img src="/images/hotnews/20260423_morning_35.webp" class="hotnews-img" alt="热搜配图">
 4月22日，自然资源部中国地质调查局公布“Pakepake005”最新研究成果，该陨石2024年发现于新疆塔克拉玛干沙漠。这块陨石揭示了月球两次关键地质事件，并发现一种月球新矿物。
 
-![](/images/hotnews/20260423_morning_35.webp)
 
 ### <strong>英</strong>雄航天员陈冬肩章已更为少将军衔
+<img src="/images/hotnews/20260423_morning_36.webp" class="hotnews-img" alt="热搜配图">
 英雄航天员陈冬近日在迎接在韩志愿军烈士遗骸仪式上亮相，肩章已更换为少将军衔。作为我国第二批航天员，他曾在轨时长超400天，现任航天员大队大队长、特级航天员。​​​​
 
-![](/images/hotnews/20260423_morning_36.webp)
 
 ### <strong>女</strong>子称配眼镜镜片装反 孩子近视暴涨
+<img src="/images/hotnews/20260423_morning_37.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260423_morning_37.webp)
+
 
 ### <strong>得</strong>物“中小学生穿搭”推荐被指擦边
+<img src="/images/hotnews/20260423_morning_38.webp" class="hotnews-img" alt="热搜配图">
 近日，河南郑州一家长反映在得物APP搜索“学生穿搭”时发现大量疑似擦边内容，包括衣着暴露、聚焦身体敏感部位的图片与视频，评论区出现“想和你谈恋爱”等不当言论，与中小学生身份明显不符。
 
-![](/images/hotnews/20260423_morning_38.webp)
 
 ### <strong>幼</strong>童反复咳血 气管内竟藏8厘米蚂蟥
+<img src="/images/hotnews/20260423_morning_39.webp" class="hotnews-img" alt="热搜配图">
 4月21日，云南临沧市人民医院从一名‌8岁患儿‌气管内成功取出‌8厘米活体蚂蟥‌。患儿此前反复咳血十余天，半年前曾从鼻腔取出蚂蟥。医生提醒避免直接饮用山泉水以防寄生虫感染。‌‌
 
-![](/images/hotnews/20260423_morning_39.webp)
 
 ### <strong>赖</strong>清德窜访非洲受挫
+<img src="/images/hotnews/20260423_morning_40.webp" class="hotnews-img" alt="热搜配图">
 赖清德窜访非洲受挫，4月22日中国国民党中常会郑丽文发言时反问：全世界有哪个国家支持“台独”？全世界都能接受“九二共识”，你为什么可以一意孤行？“抗中”不但没有办法保台，反而害台。
 
-![](/images/hotnews/20260423_morning_40.webp)
 
 ### <strong>成</strong>都一店主给鸟搭吊床
+<img src="/images/hotnews/20260423_morning_41.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260423_morning_41.webp)
+
 
 ### <strong>八</strong>旬夫妇守48年老旅店 价格15-40元
+<img src="/images/hotnews/20260423_morning_42.webp" class="hotnews-img" alt="热搜配图">
 日前，在浙江杭州萧山区临浦镇，一家由八旬夫妇守着的48年老旅店因定价低廉引发关注。旅馆共有15个房间，价格按房型和入住人数区分，从15元到40元不等，且多年来几乎没有变动。
 
-![](/images/hotnews/20260423_morning_42.webp)
 
 ### <strong>高</strong>三毕业合影理科班仅有两位女生
+<img src="/images/hotnews/20260423_morning_43.webp" class="hotnews-img" alt="热搜配图">
 4月21日，浙江绍兴某中学高三理科班拍摄毕业合影时，因全班仅有两位女生，校长主动邀请她们至队伍C位，与校领导并肩站立。
 
-![](/images/hotnews/20260423_morning_43.webp)
 
 ### <strong>寻</strong>人照美颜过度 墨女子失踪4天才找到
+<img src="/images/hotnews/20260423_morning_44.webp" class="hotnews-img" alt="热搜配图">
 近日，墨西哥一30岁女子格雷西亚于本月12日被报告失踪。家属报警后，警方在搜救委员会的协助下展开大规模搜寻，但四天后才找到。据搜救委员会透露，因为警方在发布寻人启事时用的照片，是经过较高度美颜的照片，以致本人与照片相差程度较大，这才没能及时找到她。
 
-![](/images/hotnews/20260423_morning_44.webp)
 
 ### <strong>妈</strong>妈吃鸡爪被卡喉 三个孩子紧急施救
+<img src="/images/hotnews/20260423_morning_45.webp" class="hotnews-img" alt="热搜配图">
 近日，广东一位妈妈吃鸡爪时不慎被骨头卡喉，三个孩子迅速察觉异常并上前施救，最终成功解除危险。
 
-![](/images/hotnews/20260423_morning_45.webp)
 
 ### <strong>奥</strong>斯卡影后自曝母亲枪杀父亲内情
+<img src="/images/hotnews/20260423_morning_46.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260423_morning_46.webp)
+
 
 ### <strong>华</strong>晨宇演唱会延期
+<img src="/images/hotnews/20260423_morning_47.webp" class="hotnews-img" alt="热搜配图">
 4月22日，华晨宇发文称演唱会延期，文中提到：跟大家说一声对不起，我们的火星乐园2.0因不可抗力延期。对我们来说，这可能是一次考验。也许现在还不是那个最好的时机，那就再等等，我们一起。
 
-![](/images/hotnews/20260423_morning_47.webp)
 
 ### <strong>女</strong>子自称空姐机舱闹事致航班延误
+<img src="/images/hotnews/20260423_morning_48.webp" class="hotnews-img" alt="热搜配图">
 4月22日，一架重庆飞往吉隆坡的亚洲航空D7809航班因乘客争执延误，一名自称空姐的中国籍女乘客因大声通话与邻座冲突，被劝离后导致多名中转乘客滞留吉隆坡并蒙受经济损失。
 
-![](/images/hotnews/20260423_morning_48.webp)
 
 ### <strong>人</strong>民海军77周岁生日快乐
+<img src="/images/hotnews/20260423_morning_49.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260423_morning_49.webp)
+
 
 ### <strong>台</strong>湾民心日趋求稳求和平
+<img src="/images/hotnews/20260423_morning_50.webp" class="hotnews-img" alt="热搜配图">
 台湾“民主文教基金会”4月20日公布“2026台湾生存战略民调”系列的第二篇，。民调显示，“台湾人在民调中更倾向于安稳、和平的选项。”岛内认为此次民调透露出一条重要共识——两岸唯有通过积极对话，台湾才可能有一个和平、稳定的未来。
 
-![](/images/hotnews/20260423_morning_50.webp)
 

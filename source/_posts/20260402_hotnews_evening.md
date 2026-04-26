@@ -14,244 +14,252 @@ toc: true
 > 来源：互联网 | 采集时间：2026/4/2 22:00:25
 
 ### <strong>三</strong>部门约谈抖音、淘天、小红书
+<img src="/images/hotnews/20260402_evening_01.webp" class="hotnews-img" alt="热搜配图">
 4月2日，国务院食安办、市场监管总局、海关总署对总台报道的跨境电商进口“优思益”保健品违规营销等问题涉及的抖音、淘天、小红书3家平台企业进行了约谈。
 
-![](/images/hotnews/20260402_evening_01.webp)
 
 ### <strong>“</strong>吹风机养生”火了 这几类人慎用
+<img src="/images/hotnews/20260402_evening_02.webp" class="hotnews-img" alt="热搜配图">
 近日，社交平台上掀起了一股“吹风机养生”热潮，引得不少网友跃跃欲试。但专家指出，一些特殊人群，尤其是老年人和儿童的皮肤娇嫩、脆弱，这些人群要格外注意。
 
-![](/images/hotnews/20260402_evening_02.webp)
 
 ### <strong>中</strong>国把数据中心搬进大海
+<img src="/images/hotnews/20260402_evening_03.webp" class="hotnews-img" alt="热搜配图">
 不久前，一个全新的海风直连海底数据中心在上海临港正式投入运营。据了解，临港海底数据中心海面以上高度有32米，总重1950吨。传统陆上数据中心需配备大规模服务器、机房，以及数量众多的制冷、配套与电力设备，在同等算力规模下，传统陆上数据中心的占地面积是它的近10倍。
 
-![](/images/hotnews/20260402_evening_03.webp)
 
 ### <strong>女</strong>子被骗10万不甘心 设局反钓骗子
+<img src="/images/hotnews/20260402_evening_04.webp" class="hotnews-img" alt="热搜配图">
 上海浦东瞿女士投资理财被骗10余万元后，不甘心损失，竟隐瞒警方、约骗子线下见面，还准备35万元现金假意追加投资试图“反钓”。警方紧急介入拦截，抓获取现嫌疑人，警方提醒：被骗后切勿私自行动，应立即报警。
 
-![](/images/hotnews/20260402_evening_04.webp)
 
 ### <strong>王</strong>艺迪战胜张本美和晋级8强
+<img src="/images/hotnews/20260402_evening_05.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260402_evening_05.webp)
+
 
 ### <strong>勾</strong>结男团司机卖艺人隐私 3人被抓
+<img src="/images/hotnews/20260402_evening_06.webp" class="hotnews-img" alt="热搜配图">
 近日，上海浦东警方成功破获了一起侵犯公民信息案件，某艺人团队的专职司机因对外兜售艺人隐私信息，3人被警方依法刑事拘留。
 
-![](/images/hotnews/20260402_evening_06.webp)
 
 ### <strong>伊</strong>朗一特种部队指挥官身亡
+<img src="/images/hotnews/20260402_evening_07.webp" class="hotnews-img" alt="热搜配图">
 据伊朗媒体4月2日报道，伊朗伊斯兰革命卫队特种部队一名高级指挥官在4月1日的一次袭击中身亡。
 
-![](/images/hotnews/20260402_evening_07.webp)
 
 ### <strong>“</strong>天网2026”行动正式启动
+<img src="/images/hotnews/20260402_evening_08.webp" class="hotnews-img" alt="热搜配图">
 4月2日，中央反腐败协调小组国际追逃追赃和跨境腐败治理工作办公室召开会议，学习贯彻二十届中央纪委五次全会精神，研究部署2026年反腐败国际追逃追赃和跨境腐败治理工作，启动“天网2026”行动。
 
-![](/images/hotnews/20260402_evening_08.webp)
 
 ### <strong>孙</strong>颖莎击败蒯曼晋级世界杯女单8强
+<img src="/images/hotnews/20260402_evening_09.webp" class="hotnews-img" alt="热搜配图">
 4月2日，澳门乒乓球世界杯女单1/8决赛，孙颖莎4比2逆转击败蒯曼，打进女单8强。
 
-![](/images/hotnews/20260402_evening_09.webp)
 
 ### <strong>海</strong>警被走私艇冲撞牺牲 执法画面公开
+<img src="/images/hotnews/20260402_evening_10.webp" class="hotnews-img" alt="热搜配图">
 2025年12月9日，广西防城港珍珠湾交东执勤点，刚刚结束13个小时夜间执勤的执法员谯禾林，在接到通报警勤后申请前往查缉，不幸被恶意减速急转的走私艇高速冲撞。经过55小时全力搜救后，12月11日下午，谯禾林确认壮烈牺牲，年仅25岁。
 
-![](/images/hotnews/20260402_evening_10.webp)
 
 ### <strong>“</strong>严查后排安全带新规出台”不实
+<img src="/images/hotnews/20260402_evening_11.webp" class="hotnews-img" alt="热搜配图">
 近日，网传“4月1日出台新规，全国严查后排安全带”不实，我国并未在该日出台相关全新法律规定。
 
-![](/images/hotnews/20260402_evening_11.webp)
 
 ### <strong>美</strong>股三大指数低开 特斯拉跌逾4%
+<img src="/images/hotnews/20260402_evening_12.webp" class="hotnews-img" alt="热搜配图">
 美股三大指数集体低开，道指跌1.34%，纳指跌1.66%，标普500指数跌1.21%。特斯拉跌逾4%，第一季度交付数据表现不佳。全球星涨逾11%，亚马逊正就收购该公司进行谈判。
 
-![](/images/hotnews/20260402_evening_12.webp)
 
 ### <strong>开</strong>国将军“极简墓地”仅一块圆石
+<img src="/images/hotnews/20260402_evening_13.webp" class="hotnews-img" alt="热搜配图">
 4月1日，威海市文登区天福山革命遗址内，开国少将张玉华的墓地仅由一块刻有姓名与生卒年份的圆石构成，骨灰按其遗愿撒于家乡。其外孙女郭然专程从南京前来祭奠，当地群众以昆嵛山石料自发立石纪念。
 
-![](/images/hotnews/20260402_evening_13.webp)
 
 ### <strong>国</strong>务院任免国家工作人员
+<img src="/images/hotnews/20260402_evening_14.webp" class="hotnews-img" alt="热搜配图">
 4月2日，国务院任免国家工作人员。任命常军红（女）为财政部部长助理；任命雷小武为国家统计局副局长；任命汪剑波为国家能源局副局长；任命姚来英为国家烟草专卖局局长。
 
-![](/images/hotnews/20260402_evening_14.webp)
 
 ### <strong>这</strong>个“铁疙瘩”竟然是国家一级文物
+<img src="/images/hotnews/20260402_evening_15.webp" class="hotnews-img" alt="热搜配图">
 在文登博物馆，有一枚浑身铁锈的铁疙瘩，长得像个大秤砣。本名叫秦权，也就是秦朝时的秤砣，这是目前所知最重的秦权。秦权是秦朝统一度量衡时由官府铸造的标准衡器。秦始皇一统天下后，“一法度衡石丈尺，车同轨，书同文”，秦权上的诏版文字就是秦始皇为统一度量衡标准而颁发的文告。
 
-![](/images/hotnews/20260402_evening_15.webp)
 
 ### <strong>伊</strong>朗实施“真实承诺4”第90波行动
+<img src="/images/hotnews/20260402_evening_16.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260402_evening_16.webp)
+
 
 ### <strong>男</strong>子在家突然失去意识倒地去世
+<img src="/images/hotnews/20260402_evening_17.webp" class="hotnews-img" alt="热搜配图">
 近日，广西一男子在家突然失去意识倒地去世，妻子立即上前抱住丈夫查看。妻子：他才43岁，我无法接受！
 
-![](/images/hotnews/20260402_evening_17.webp)
 
 ### <strong>警</strong>惕！南方暴雨北方大风要来了
+<img src="/images/hotnews/20260402_evening_18.webp" class="hotnews-img" alt="热搜配图">
 4月2日夜间，南方新一轮降雨过程将进入最强时段，大到暴雨范围扩大，局地有大暴雨，部分地区还将伴有强对流天气。北方则需要警惕大风、沙尘，部分地区阵风可达10级；沙尘到来前后，京津冀部分地区还可能出现降雨。
 
-![](/images/hotnews/20260402_evening_18.webp)
 
 ### <strong>蔡</strong>磊胜诉 所获赔偿全部捐出
+<img src="/images/hotnews/20260402_evening_19.webp" class="hotnews-img" alt="热搜配图">
 4月2日，渐冻症抗争者蔡磊诉许某、陈某网络侵权案一审胜诉，被法院认定构成名誉权侵权，判令停止侵权、公开道歉并赔偿。蔡磊表示赔偿非目的，所获赔偿将全部捐给贫困患者。他虽病情严重，仍坚持推动渐冻症药物研发。​​​​
 
-![](/images/hotnews/20260402_evening_19.webp)
 
 ### <strong>当</strong>父母老去“星星的孩子”何以安生
+<img src="/images/hotnews/20260402_evening_20.webp" class="hotnews-img" alt="热搜配图">
 随着首批确诊的孤独症人士步入中年，其父母逐渐老去，大龄孤独症群体面临职业教育与就业资源稀缺、托养机构不足等问题，多数依赖家庭支持。上海、安徽等地正探索覆盖该群体的社会服务体系，但公办托养床位紧张、专业服务缺口仍亟待解决。
 
-![](/images/hotnews/20260402_evening_20.webp)
 
 ### <strong>男</strong>子在青旅洗澡遭女保洁员闯入打扫
+<img src="/images/hotnews/20260402_evening_21.webp" class="hotnews-img" alt="热搜配图">
 4月2日，上海某青旅男性住客反映在男盥洗室淋浴时遭女性保洁员闯入，对方称“洗澡需穿衣服”。青旅回应称保洁仅在公共区域作业，因未招聘男保洁，将通过张贴告示提醒住客避开作业时间。
 
-![](/images/hotnews/20260402_evening_21.webp)
 
 ### <strong>男</strong>孩与猫狗同住感染弓蛔虫近乎失明
+<img src="/images/hotnews/20260402_evening_22.webp" class="hotnews-img" alt="热搜配图">
 据报道，14岁湖北男孩小宇因常与家中猫狗同吃同睡，双眼感染弓蛔虫幼虫近乎失明。医生：不可逆，延误治疗易致终身视力残疾。
 
-![](/images/hotnews/20260402_evening_22.webp)
 
 ### <strong>印</strong>度65岁大象死亡 生前被涂粉色颜料
+<img src="/images/hotnews/20260402_evening_23.webp" class="hotnews-img" alt="热搜配图">
 近日，印度拉贾斯坦邦一头65岁大象在被涂满粉色颜料两个月后死亡引发关注。涉事摄影师茱莉亚·布鲁列娃曾为拍摄将其全身染色并配合模特取景。尽管其称所用为天然有机颜料，当地森林部门已介入调查是否违法及与死亡是否相关。
 
-![](/images/hotnews/20260402_evening_23.webp)
 
 ### <strong>伊</strong>朗指控美使用新型导弹 致21人死亡
+<img src="/images/hotnews/20260402_evening_24.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月2日，伊朗外交部发言人巴加埃在个人社交媒体平台上发布消息，在谈及美国于2月28日在伊朗法尔斯省拉默尔德市体育馆发动的袭击时称，该袭击使用了新型弹道导弹，导致21名青少年运动员遇难。
 
-![](/images/hotnews/20260402_evening_24.webp)
 
 ### <strong>俄</strong>罗斯重新将28名日本人列为战犯
+<img src="/images/hotnews/20260402_evening_25.webp" class="hotnews-img" alt="热搜配图">
 俄罗斯外交部发言人扎哈罗娃4月1日表示，俄方近期重新将28名日本人认定为战犯，并批评日本新版教科书愚弄本国年轻一代，否认第二次世界大战结果。
 
-![](/images/hotnews/20260402_evening_25.webp)
 
 ### <strong>清</strong>明节假期出游注意！文旅部最新提示
+<img src="/images/hotnews/20260402_evening_26.webp" class="hotnews-img" alt="热搜配图">
 2026年清明假期将至，文旅部提醒游客：提前规划行程，关注天气与景区开放情况，不去无保障及高风险地区；强化出行、游玩安全，遵守交规与项目规范；严防火灾，遵守消防及森林防火规定；文明绿色出游，爱护环境文物，践行光盘行动，安全文明过节。
 
-![](/images/hotnews/20260402_evening_26.webp)
 
 ### <strong>这</strong>是来自全球的反战呼声
+<img src="/images/hotnews/20260402_evening_27.webp" class="hotnews-img" alt="热搜配图">
 自美国和以色列2月28日对伊朗发动军事行动以来，全球多地爆发游行集会，民众反对美以打击伊朗、呼吁停火止战的声音频频响起。
 
-![](/images/hotnews/20260402_evening_27.webp)
 
 ### <strong>向</strong>华强曝短剧投200万赚7000万
+<img src="/images/hotnews/20260402_evening_28.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260402_evening_28.webp)
+
 
 ### <strong>冠</strong>军车手德比斯谈为何选张雪机车
+<img src="/images/hotnews/20260402_evening_29.webp" class="hotnews-img" alt="热搜配图">
 当地时间3月29日，34岁法国老将德比斯驾驶张雪机车820RR-RS夺得WorldSSP葡萄牙站双冠。他表示选择中国品牌，因张雪极致热爱、专注顶级赛事，赛车性能出众、轻量化优势明显，且合作车队专业，三者结合助他圆梦巅峰。
 
-![](/images/hotnews/20260402_evening_29.webp)
 
 ### <strong>男</strong>子挖出亡父埋的31枚雷管上交警方
+<img src="/images/hotnews/20260402_evening_30.webp" class="hotnews-img" alt="热搜配图">
 近日，浙江台州齐先生整理亡父遗物时，按母亲模糊指引，在楼下花坛树下挖出31枚雷管，推测是父亲当年修路炸山洞遗留。这些雷管部分锈蚀仍有危险，齐先生立即将其上交派出所，民警对其行为给予肯定并妥善处置。
 
-![](/images/hotnews/20260402_evening_30.webp)
 
 ### <strong>李</strong>在明：韩国经济处于“战时状态”
+<img src="/images/hotnews/20260402_evening_31.webp" class="hotnews-img" alt="热搜配图">
 韩国总统李在明2日说，受中东局势影响，韩国经济当前处于“战时状态”。他敦促国会尽快通过补充预算案，以采取措施应对危机。
 
-![](/images/hotnews/20260402_evening_31.webp)
 
 ### <strong>上</strong>海6只军犬退役面向社会招募领养人
+<img src="/images/hotnews/20260402_evening_32.webp" class="hotnews-img" alt="热搜配图">
 近日，上海武警发布，机动第一支队6只军犬因犬龄增长达到服役年限即将光荣退役，首次面向社会公开招募领养人员。领养需满足合法身份、经济能力、固定住所等条件，有大型犬养护经验者优先。‌‌
 
-![](/images/hotnews/20260402_evening_32.webp)
 
 ### <strong>小</strong>猫头鹰意外进家 大哥当起临时保姆
+<img src="/images/hotnews/20260402_evening_33.webp" class="hotnews-img" alt="热搜配图">
 4月1日，贵州一只小猫头鹰意外闯入居民家中，一名男子充当临时保姆照顾幼鸟并已向相关部门报备。工作人员确认猫头鹰母亲就在附近，建议等待其自然飞走或由母鸟带回。
 
-![](/images/hotnews/20260402_evening_33.webp)
 
 ### <strong>美</strong>国重返月球为何只绕不登
+<img src="/images/hotnews/20260402_evening_34.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月1日，美国国家航空航天局发射“太空发射系统”执行阿耳忒弥斯2号，任务选择只绕月不着陆。专家指出，因深空环境极端危险，且相关技术中断多年需重新验证，新一代火箭与飞船尚无载人深空经验，绕月飞行是确保安全、逐步恢复能力的关键一步。
 
-![](/images/hotnews/20260402_evening_34.webp)
 
 ### <strong>这</strong>枚春季“顶流救命药”你吃对了吗
-“别人的春和景明，我的氯雷他定”，这句网络上的调侃，真是说到了2.5亿过敏星人的心坎里。氯雷他定作为春季过敏常用药，因缓解花粉飞絮引发的鼻炎、荨麻疹等症状成为“顶流救命药”，但需遵医嘱使用，避免长期自行服用。 
+<img src="/images/hotnews/20260402_evening_35.webp" class="hotnews-img" alt="热搜配图">
+“别人的春和景明，我的氯雷他定”，这句网络上的调侃，真是说到了2.5亿过敏星人的心坎里。氯雷他定作为春季过敏常用药，因缓解花粉飞絮引发的鼻炎、荨麻疹等症状成为“顶流救命药”，但需遵医嘱使用，避免长期自行服用。
 
-![](/images/hotnews/20260402_evening_35.webp)
 
 ### <strong>带</strong>货优思益的明星网红退赔标准不一
+<img src="/images/hotnews/20260402_evening_36.webp" class="hotnews-img" alt="热搜配图">
 4月1日，央视曝光优思益为假洋品牌，产地、故事、奖项均造假，多位明星网红曾代言带货。事发后相关人员退赔标准不一：部分全额退款，有的限时限未拆封，甚至仅退15%佣金。舆论呼吁压实主播责任，统一赔付标准，加强监管。
 
-![](/images/hotnews/20260402_evening_36.webp)
 
 ### <strong>王</strong>曼昱回应首局0比6逆转获胜
+<img src="/images/hotnews/20260402_evening_37.webp" class="hotnews-img" alt="热搜配图">
 王曼昱回应首局0-6逆转获胜，她直言对手发动非常快，一开始没跟上节奏，但在落后的情况下还是想办法把比分咬住。
 
-![](/images/hotnews/20260402_evening_37.webp)
 
 ### <strong>与</strong>辉同行曾卖优思益 销售额超千万
+<img src="/images/hotnews/20260402_evening_38.webp" class="hotnews-img" alt="热搜配图">
 4月1日，央视曝光澳洲“优思益”保健品虚构海外产地，实际为国内代工生产，其宣称的澳大利亚工厂地址实为汽修厂。头部直播间与辉同行曾带货该产品，销售额达1000万-2500万元，销量7.5万-10万单。事件发酵后，品牌方下架商品并配合调查，但与辉同行客服仅回应“问题已重点关注”，未提出具体售后方案。
 
-![](/images/hotnews/20260402_evening_38.webp)
 
 ### <strong>台</strong>胞半小时圆了家族200年寻根梦
+<img src="/images/hotnews/20260402_evening_39.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260402_evening_39.webp)
+
 
 ### <strong>张</strong>雪谈为何用自己名字命名摩托车
+<img src="/images/hotnews/20260402_evening_40.webp" class="hotnews-img" alt="热搜配图">
 近日，张雪在接受采访时表示，只要我的产品足够优秀，能拿下所有比赛的冠军，“名字”可能就是一个顶级符号。
 
-![](/images/hotnews/20260402_evening_40.webp)
 
 ### <strong>2</strong>026清明档电影片单发布
+<img src="/images/hotnews/20260402_evening_41.webp" class="hotnews-img" alt="热搜配图">
 4月2日，2026清明档电影片单在京发布，超过20部电影将在清明档上映。发布活动上，《我，许可》《阳光女子合唱团》《我的妈耶》《天才游戏》《蝴蝶楼·惊魂》等多部影片的主创到场进行影片推介。
 
-![](/images/hotnews/20260402_evening_41.webp)
 
 ### <strong>孩</strong>子这5种表现可能是孤独症
+<img src="/images/hotnews/20260402_evening_42.webp" class="hotnews-img" alt="热搜配图">
 4月2日，第19个“世界孤独症关注日”期间，专家指出孤独症谱系障碍早期表现为社交沟通障碍与刻板行为，需警惕“五不”信号：不（少）看（目光接触少）、不（少）应（对呼唤反应弱）、不（少）指（肢体表达缺失）、不（少）语（语言发育落后）、不当（刻板行为）。湖南中医药大学谢映医师强调，此为神经发育问题，需早识别干预。
 
-![](/images/hotnews/20260402_evening_42.webp)
 
 ### <strong>清</strong>明自驾出行这些时段易拥堵
+<img src="/images/hotnews/20260402_evening_43.webp" class="hotnews-img" alt="热搜配图">
 据交通运输部发布《2026年清明假期全国公路网运行研判分析报告》，预计清明假期，粤港澳大湾区和长三角地区高速公路在返程阶段通行压力较大；沈海高速广东段东港立交—霞湖、许广高速广东段五一立交—岗北分离式立交等为易拥堵缓行路段。
 
-![](/images/hotnews/20260402_evening_43.webp)
 
 ### <strong>《</strong>乘风2026》王俊凯担任送考人
+<img src="/images/hotnews/20260402_evening_44.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260402_evening_44.webp)
+
 
 ### <strong>今</strong>年蚊子为何提前出现了
+<img src="/images/hotnews/20260402_evening_45.webp" class="hotnews-img" alt="热搜配图">
 近日，话题#今年蚊子可能迎来史诗级加强#登上热搜，引发网友热议。今年蚊子为何提前出现了？专家表示：气温偏高，降雨频繁为蚊虫繁殖创造有利条件。
 
-![](/images/hotnews/20260402_evening_45.webp)
 
 ### <strong>中</strong>国在集成显示技术领域取得突破
+<img src="/images/hotnews/20260402_evening_46.webp" class="hotnews-img" alt="热搜配图">
 4月2日，福州大学联合闽都创新实验室在超高清集成显示技术领域取得突破，由李福山教授团队研发的面向AR/VR=的超高分辨率量子点显示技术发表于《自然》期刊。该技术通过纳米级精准印刷实现红绿蓝三色像素阵列，解决了微米尺度下颜色干扰和器件性能下降的行业难题。
 
-![](/images/hotnews/20260402_evening_46.webp)
 
 ### <strong>日</strong>本启动第19次核污染水排海
+<img src="/images/hotnews/20260402_evening_47.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260402_evening_47.webp)
+
 
 ### <strong>赴</strong>阿联酋旅游失联40天男子已回家
+<img src="/images/hotnews/20260402_evening_48.webp" class="hotnews-img" alt="热搜配图">
 4月2日，赴阿联酋旅游失联40天的男子刘瑜已安全回家。其因不熟悉当地法律，在街头搭帐篷露营被警方带走并失去联系，期间受中东局势影响多次延误回国。在中国驻阿联酋大使馆等多方协助下，刘瑜最终顺利返程与家人团聚。
 
-![](/images/hotnews/20260402_evening_48.webp)
 
 ### <strong>男</strong>子花粉过敏吃苹果后险窒息丧命
+<img src="/images/hotnews/20260402_evening_49.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260402_evening_49.webp)
+
 
 ### <strong>张</strong>雪伯父：想不到他能这么成功
+<img src="/images/hotnews/20260402_evening_50.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260402_evening_50.webp)
+
 

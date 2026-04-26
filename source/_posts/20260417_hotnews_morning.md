@@ -14,244 +14,252 @@ toc: true
 > 来源：互联网 | 采集时间：2026/4/17 08:00:23
 
 ### <strong>1</strong>40年来最强厄尔尼诺正在酝酿
+<img src="/images/hotnews/20260417_morning_01.webp" class="hotnews-img" alt="热搜配图">
 近日，多国气象机构研判，一场或达140年来最强级别的厄尔尼诺正在太平洋酝酿，叠加全球变暖，可能推动全球气温再创新高。
 
-![](/images/hotnews/20260417_morning_01.webp)
 
 ### <strong>赛</strong>里木湖冰推景观对我眼睛很好
+<img src="/images/hotnews/20260417_morning_02.webp" class="hotnews-img" alt="热搜配图">
 近日，新疆赛里木湖出现冰推奇观，纯净又治愈。网友：当瓦蓝蓝的天遇上清凌凌的水，赛里木湖冰推景观对我眼睛很好！
 
-![](/images/hotnews/20260417_morning_02.webp)
 
 ### <strong>在</strong>消博会上触摸消费市场新风向
+<img src="/images/hotnews/20260417_morning_03.webp" class="hotnews-img" alt="热搜配图">
 第六届中国国际消费品博览会正在海南举行。走进消博会场馆，来自60多个国家和地区的3400多个全球品牌齐聚，满眼都是“新、奇、特、酷”的消费精品，未来消费的新模样清晰可感、触手可及。
 
-![](/images/hotnews/20260417_morning_03.webp)
 
 ### <strong>银</strong>行为啥争着“上天”
+<img src="/images/hotnews/20260417_morning_04.webp" class="hotnews-img" alt="热搜配图">
 商业航天公司人士分析银行争相布局卫星的原因：一是借火箭发射提升品牌曝光，在行业竞争与数字化转型中强化公众认知；二是锁定商业航天高资金体量客户，开展结算、融资等金融业务深度合作；三是试水卫星遥感数据在金融风控中的应用，破解涉农、涉海等领域信息不对称难题。
 
-![](/images/hotnews/20260417_morning_04.webp)
 
 ### <strong>神</strong>21乘组圆满完成第3次出舱活动
+<img src="/images/hotnews/20260417_morning_05.webp" class="hotnews-img" alt="热搜配图">
 4月17日01时36分，经过约5.5小时的出舱活动，神舟二十一号乘组航天员密切协同，在空间站机械臂和地面科研人员的配合支持下，圆满完成空间碎片防护装置安装、舱外设备设施巡检等任务。出舱航天员张陆、武飞已安全返回问天实验舱，出舱活动取得圆满成功。
 
-![](/images/hotnews/20260417_morning_05.webp)
 
 ### <strong>伊</strong>总统：伊朗人民对美国完全失去信任
+<img src="/images/hotnews/20260417_morning_06.webp" class="hotnews-img" alt="热搜配图">
 当地时间16日，伊朗总统佩泽希齐扬会见巴基斯坦陆军参谋长穆尼尔，伊朗外长阿拉格齐出席。佩泽希齐扬表示，巴基斯坦在推动战争停火方面发挥了有效和负责任的作用。他同时强调，由于美国多次违约，伊朗人民对美国已完全失去信任。
 
-![](/images/hotnews/20260417_morning_06.webp)
 
 ### <strong>四</strong>川内江市资中县1小时内3次地震
+<img src="/images/hotnews/20260417_morning_07.webp" class="hotnews-img" alt="热搜配图">
 4月17日，四川内江市资中县一小时内发生三次地震。6时22分发生4.4级地震，震源深度7千米；6时56分发生4.0级地震，震源深度7千米；6时59分发生3.3级地震，震源深度6千米。
 
-![](/images/hotnews/20260417_morning_07.webp)
 
 ### <strong>美</strong>股收盘：百度涨超3%
+<img src="/images/hotnews/20260417_morning_08.webp" class="hotnews-img" alt="热搜配图">
 4月16日晚至17日早，随着以色列和黎巴嫩达成临时停火协议，标普500指数和纳斯达克综合指数再度创出历史新高。纳斯达克中国金龙指数周四收涨1.74%，连续第5个交易日走强。截至收盘，百度涨3.38%。
 
-![](/images/hotnews/20260417_morning_08.webp)
 
 ### <strong>1</strong>.5元收一张旧CT片？千万别卖
+<img src="/images/hotnews/20260417_morning_09.webp" class="hotnews-img" alt="热搜配图">
 近期，二手交易平台出现批量收购废旧医用胶片的情况，其主要用途为提炼银。非法提银多采用焚烧方式，会释放致癌物质、污染环境，危害健康。根据法规，废医用胶片属危险废物，无证处置将面临高额罚款甚至刑事责任。
 
-![](/images/hotnews/20260417_morning_09.webp)
 
 ### <strong>中</strong>国导弹驱逐舰首次亮相太平洋
+<img src="/images/hotnews/20260417_morning_10.webp" class="hotnews-img" alt="热搜配图">
 1980年5月18日，中国051型导弹驱逐舰济南舰在护航东风五号洲际导弹试射任务中首次亮相太平洋，成功打捞数据舱，标志着中国自主中型舰艇制造能力突破。
 
-![](/images/hotnews/20260417_morning_10.webp)
 
 ### <strong>造</strong>谣“天津突发8.8级地震”者被罚
+<img src="/images/hotnews/20260417_morning_11.webp" class="hotnews-img" alt="热搜配图">
 网民霍某某为博流量，用AI生成“天津8.8级地震”虚假文章及图片发布，引发恐慌，已被属地公安机关依法行政处罚。
 
-![](/images/hotnews/20260417_morning_11.webp)
 
 ### <strong>黄</strong>仁勋：芯片不是浓缩铀 卖中国咋了
+<img src="/images/hotnews/20260417_morning_12.webp" class="hotnews-img" alt="热搜配图">
 4月15日，英伟达CEO黄仁勋在播客采访中驳斥美国对华芯片出口限制，称“芯片不是浓缩铀”，认为过度管制将推高全球AI产业成本，同时呼吁中美加强AI安全领域对话。
 
-![](/images/hotnews/20260417_morning_12.webp)
 
 ### <strong>间</strong>谍策反中企员工致项目停工停产
+<img src="/images/hotnews/20260417_morning_13.webp" class="hotnews-img" alt="热搜配图">
 国家安全机关近日披露一起境外势力危害我国海外利益案件：某中资企业海外建厂期间，当地安全部门人员以交友、解决工作刁难为手段拉拢企业员工，窃取经营信息后对项目实施精准打压致停工停产，并协助本土公司低价收购项目。国安机关已依法处理涉案人员。
 
-![](/images/hotnews/20260417_morning_13.webp)
 
 ### <strong>5</strong>00元从树农处买走 十几万卖别墅区
+<img src="/images/hotnews/20260417_morning_14.webp" class="hotnews-img" alt="热搜配图">
 日前，一棵八十岁的柿树以500元从树农手中被收购，经过转手和重新包装营销后，最终以数万至十几万的高价出售给江苏南通的别墅区业主周琳。这条从黄土高原到江南庭院的运输链条近年来异常火爆，陕西礼泉一年有近千棵柿树被移栽。
 
-![](/images/hotnews/20260417_morning_14.webp)
 
 ### <strong>大</strong>疆Pocket 4发售
+<img src="/images/hotnews/20260417_morning_15.webp" class="hotnews-img" alt="热搜配图">
 4月16日晚间，大疆新一代口袋云台相机Osmo Pocket 4上市发售，其中标准版价格为2999元，全能套装价格为3799元。同时，大疆还预告了搭载双摄影像系统的Osmo Pocket 4P即将推出。
 
-![](/images/hotnews/20260417_morning_15.webp)
 
 ### <strong>女</strong>子利用7天无理由发泄心情牟利获刑
+<img src="/images/hotnews/20260417_morning_16.webp" class="hotnews-img" alt="热搜配图">
 近日，上海黄浦区法院以诈骗罪判处利用“七天无理由退货”规则调包退货的女子卢某有期徒刑六个月，并处罚金5000元。其半年内18次用20元仿品调包300元正品手机配件，涉案金额1万余元，退货时故意填写模糊地址，正品通过二手平台转卖。
 
-![](/images/hotnews/20260417_morning_16.webp)
 
 ### <strong>多</strong>地公积金告别“买房专属”
+<img src="/images/hotnews/20260417_morning_17.webp" class="hotnews-img" alt="热搜配图">
 近日，多地密集调整住房公积金政策，一季度相关举措已超60次，占房地产政策近四成。各地打破公积金“只用于买房”的限制，逐步拓展至物业费、租房、契税等日常居住支出领域。
 
-![](/images/hotnews/20260417_morning_17.webp)
 
 ### <strong>女</strong>子住酒店 晚上房门被陌生男子打开
+<img src="/images/hotnews/20260417_morning_18.webp" class="hotnews-img" alt="热搜配图">
 4月15日，周女士入住海口市秀英区一宸精品酒店时，夜间房门被一名陌生男子用另一房间房卡刷开。酒店称该男子为住客且看错房号，警方介入后实验证实涉事房卡可刷开周女士房门，双方未就补偿达成一致。
 
-![](/images/hotnews/20260417_morning_18.webp)
 
 ### <strong>陪</strong>91岁大爷玩手机月入5000
+<img src="/images/hotnews/20260417_morning_19.webp" class="hotnews-img" alt="热搜配图">
 近期，苏州36岁小伙因当“全职孙子”陪伴独居老人意外走红。他早八晚五，月入5000块，既不用端屎端尿、也不用擦身做饭，日常就是专职陪着91岁爷爷到公园遛弯、玩手机、听评弹，被网友直呼“神仙工作”。
 
-![](/images/hotnews/20260417_morning_19.webp)
 
 ### <strong>四</strong>川内江市资中县发生4.4级地震
+<img src="/images/hotnews/20260417_morning_20.webp" class="hotnews-img" alt="热搜配图">
 中国地震台网正式测定：4月17日6时22分，在四川内江市资中县（北纬29.65度，东经104.86度）发生4.4级地震，震源深度7千米。
 
-![](/images/hotnews/20260417_morning_20.webp)
 
 ### <strong>张</strong>豆豆和孙杨吵架后崩溃大哭
+<img src="/images/hotnews/20260417_morning_21.webp" class="hotnews-img" alt="热搜配图">
 在综艺《妻子的浪漫旅行》中，孙杨与张豆豆在大巴车上爆发争执，气氛瞬间紧张到窒息，张豆豆情绪崩溃当场大哭。
 
-![](/images/hotnews/20260417_morning_21.webp)
 
 ### <strong>伊</strong>朗披露击落美C-130细节
+<img src="/images/hotnews/20260417_morning_22.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月16日，伊朗军队总司令哈塔米首次披露伊斯法罕省伏击美军细节，称情报部门协同军民形成包围网，首轮攻击即击落一架C-130运输机。行动发生于4月5日，伊朗警方确认击落事件。
 
-![](/images/hotnews/20260417_morning_22.webp)
 
 ### <strong>1</strong>5时4分还没人上班 广西钦州通报
+<img src="/images/hotnews/20260417_morning_23.webp" class="hotnews-img" alt="热搜配图">
 4月14日15时4分，广西钦州市钦北区小董镇农业服务中心被曝无工作人员在岗，镇政府通报核实属实，已对相关人员批评教育并责令书面检讨，将完善AB岗制度提升服务质量。
 
-![](/images/hotnews/20260417_morning_23.webp)
 
 ### <strong>男</strong>子携机密叛逃 被村民抄铁铲拦住
+<img src="/images/hotnews/20260417_morning_24.webp" class="hotnews-img" alt="热搜配图">
 近日，边境村民老谢在田间发现一名形迹可疑男子，后者将藏有机密文件的背包隐匿草丛并试图越境，老谢抄起铁铲追赶并与之扭打，最终协助赶到的边防民警将其制服。经查，该男子系某单位核心涉密人员，被境外间谍重金收买窃密。
 
-![](/images/hotnews/20260417_morning_24.webp)
 
 ### <strong>4</strong>0多艘海军舰艇将与公众见面
+<img src="/images/hotnews/20260417_morning_25.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260417_morning_25.webp)
+
 
 ### <strong>停</strong>车场连点6次同意才能缴费
+<img src="/images/hotnews/20260417_morning_26.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260417_morning_26.webp)
+
 
 ### <strong>老</strong>师组织全班同学边吃火锅边看电影
+<img src="/images/hotnews/20260417_morning_27.webp" class="hotnews-img" alt="热搜配图">
 近日，安徽宣城一中学老师组织全班同学边吃火锅边看电影，学校回应称：学生表现优异，值得奖励。
 
-![](/images/hotnews/20260417_morning_27.webp)
 
 ### <strong>“</strong>最牛服务员”杨利娟回归海底捞
+<img src="/images/hotnews/20260417_morning_28.webp" class="hotnews-img" alt="热搜配图">
 4月15日，特海国际公告，杨利娟已辞任公司执行董事兼CEO，并将加入海底捞，统筹推动“红石榴计划”实施。
 
-![](/images/hotnews/20260417_morning_28.webp)
 
 ### <strong>七</strong>旬阿姨索要36万带孙费 儿子却喊冤
+<img src="/images/hotnews/20260417_morning_29.webp" class="hotnews-img" alt="热搜配图">
 上海七旬徐阿姨将儿子告上法庭，索要15年来垫付的36万余元“带孙费”，并称遭儿子家暴。儿子梁先生喊冤，辩称自己收入低且已尽责，最终经法院调解，梁先生支付母亲20万元补偿。
 
-![](/images/hotnews/20260417_morning_29.webp)
 
 ### <strong>起</strong>猛了 看到机器人交警在指挥交通
+<img src="/images/hotnews/20260417_morning_30.webp" class="hotnews-img" alt="热搜配图">
 近日，有网友在江苏无锡拍到机器人交警在路口指挥交通，这一“赛博交警”执勤的画面引发社会广泛关注。
 
-![](/images/hotnews/20260417_morning_30.webp)
 
 ### <strong>中</strong>国科学家造出“超级铜箔”
+<img src="/images/hotnews/20260417_morning_31.webp" class="hotnews-img" alt="热搜配图">
 中国科学院金属研究所团队研发出“超级铜箔”，破解了传统铜箔强度、导电性与热稳定性难以兼顾的“不可能三角”。该材料抗拉强度达900兆帕，导电率保持高纯铜的90%，且室温下性能稳定超半年，已具备工业化连续生产能力，有望提升手机、电动车等设备快充效率与安全性。
 
-![](/images/hotnews/20260417_morning_31.webp)
 
 ### <strong>女</strong>子手术11年后发现螺钉遗留体内
+<img src="/images/hotnews/20260417_morning_32.webp" class="hotnews-img" alt="热搜配图">
 2015年，江苏常州一名女子因左腿骨折接受手术植入钢板螺钉，2017年二次手术取出时医院称“清点无误”，但2025年另一医院检查发现螺钉遗留体内。院方承认医生个人失误，拒绝定性医疗事故，仅愿免费取出螺钉并赔偿4500元营养费。患者家属投诉后，卫健局介入调解达成新协议。
 
-![](/images/hotnews/20260417_morning_32.webp)
 
 ### <strong>外</strong>卖小哥被大爷索赔急哭 交警帮赔钱
+<img src="/images/hotnews/20260417_morning_33.webp" class="hotnews-img" alt="热搜配图">
 近日，石家庄市一名20多岁外卖小哥送餐时与一名大爷发生碰撞，大爷索赔600元致小哥崩溃哭诉“真的没有钱”。执勤交警自掏腰包扫码支付，未留联系方式离开，事件视频获社媒超20万点赞。
 
-![](/images/hotnews/20260417_morning_33.webp)
 
 ### <strong>一</strong>小区高空抛菜刀坠落儿童游乐区
+<img src="/images/hotnews/20260417_morning_34.webp" class="hotnews-img" alt="热搜配图">
 4月15日，成都中南樾府小区发生高空抛物事件，一把菜刀从8楼以上坠落至2、3栋间儿童游乐区。该小区此前也曾出现过高空抛物，目前物业、社区及警方已介入，警方正用刑侦手段调查。
 
-![](/images/hotnews/20260417_morning_34.webp)
 
 ### <strong>巴</strong>媒：中巴拟签百亿美元国防大单
+<img src="/images/hotnews/20260417_morning_35.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月13日，《伊斯兰堡时报》爆料称，巴基斯坦拟与中国签署一项“历史里程碑式”的国防采购协议，涉及价值120亿美元的隐形战机与防空导弹。
 
-![](/images/hotnews/20260417_morning_35.webp)
 
 ### <strong>售</strong>价40元 “最难喝饮料”又上新了
+<img src="/images/hotnews/20260417_morning_36.webp" class="hotnews-img" alt="热搜配图">
 4月16日，青岛啤酒旗下售价40元的崂山白花蛇草水在第六届消博会推出三款新品，延续此前被网友戏称为“最难喝饮料”的争议标签。实测显示新品含金银花与薄荷成分，口感较原版更易接受。
 
-![](/images/hotnews/20260417_morning_36.webp)
 
 ### <strong>退</strong>休矿工追讨千万股权 后续来了
+<img src="/images/hotnews/20260417_morning_37.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260417_morning_37.webp)
+
 
 ### <strong>2</strong>0位中国学者被美国拒绝入境
+<img src="/images/hotnews/20260417_morning_38.webp" class="hotnews-img" alt="热搜配图">
 4月16日，外交部领事司提醒，约20位中国学者持合法有效签证赴美观会，在西雅图机场遭美方无理盘查并被拒绝入境。外交部提醒拟赴美人员增强防范，避免从该机场入境，遇盘查冷静应对。
 
-![](/images/hotnews/20260417_morning_38.webp)
 
 ### <strong>伊</strong>朗武装部队：已做好全面防御准备
+<img src="/images/hotnews/20260417_morning_39.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月16日，巴基斯坦陆军参谋长穆尼尔在与伊朗武装部队哈塔姆·安比亚中央司令部司令阿卜杜拉希会面时，阿卜杜拉希强调称，“如果敌人心怀恶意，伊朗军队已经做好了全面防御的准备。”
 
-![](/images/hotnews/20260417_morning_39.webp)
 
 ### <strong>美</strong>国国防部长遭弹劾
+<img src="/images/hotnews/20260417_morning_40.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月15日，美国国会众议院民主党籍议员提交6项针对国防部长赫格塞思的弹劾条款，指控其犯有战争罪、滥用职权等严重不当行为。由于共和党在众议院占微弱多数，该动议通过可能性较低。
 
-![](/images/hotnews/20260417_morning_40.webp)
 
 ### <strong>2</strong>4岁小伙酒后吞下150片药险丧命
+<img src="/images/hotnews/20260417_morning_41.webp" class="hotnews-img" alt="热搜配图">
 近日，24岁男子酒后误吞150片药物，导致胃内形成“药石”并引发吸入性肺炎，血药浓度远超中毒阈值。经北京大学深圳医院多学科协作，通过胃镜操作清除药石，最终康复。
 
-![](/images/hotnews/20260417_morning_41.webp)
 
 ### <strong>借</strong>近百万买800克黄金寄“男友”
+<img src="/images/hotnews/20260417_morning_42.webp" class="hotnews-img" alt="热搜配图">
 4月8日，深圳宝安区李女士（化名）遭遇‌“杀猪盘”诈骗‌，向弟弟借款近‌100万元‌购买‌800余克黄金‌准备寄给网恋“军官男友”，被福永派出所民警吴汉波、南舒文上门拦截，经4小时劝阻后醒悟。‌‌
 
-![](/images/hotnews/20260417_morning_42.webp)
 
 ### <strong>官</strong>方通报山东一化工厂爆炸：无伤亡
+<img src="/images/hotnews/20260417_morning_43.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260417_morning_43.webp)
+
 
 ### <strong>厦</strong>门地铁车厢内一乘客手机起火
+<img src="/images/hotnews/20260417_morning_44.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260417_morning_44.webp)
+
 
 ### <strong>员</strong>工清扫后需舔地板？餐饮店回应
+<img src="/images/hotnews/20260417_morning_45.webp" class="hotnews-img" alt="热搜配图">
 近日有网友爆料，厦门翔安区一家大丰收脆鱼店要求员工清扫后舔地板并拍照上传，引发热议。涉事区域两家门店均回应无此规定，称去年仅店长为宣传舔过地板，相关部门也表示未收到相关投诉。
 
-![](/images/hotnews/20260417_morning_45.webp)
 
 ### <strong>转</strong>弯未让直行发生事故 车主反指责
+<img src="/images/hotnews/20260417_morning_46.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260417_morning_46.webp)
+
 
 ### <strong>1</strong>65年后法国终于回应雨果
+<img src="/images/hotnews/20260417_morning_47.webp" class="hotnews-img" alt="热搜配图">
 4月13日，法国国民议会通过一项新的“文物归还法案”，将简化法国掠夺所得文物的归还程序。当年，雨果在流亡中，写下对“两个强盗”洗劫圆明园的愤怒谴责，成为历史的长久回响。165年后，这位伟大文学家的勇气和良知，终于获得一个国家制度层面的回应。
 
-![](/images/hotnews/20260417_morning_47.webp)
 
 ### <strong>男</strong>子攀岩发生意外 倒挂崖壁头部受伤
+<img src="/images/hotnews/20260417_morning_48.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260417_morning_48.webp)
+
 
 ### <strong>男</strong>子为抄近路拆马路护栏被拘
+<img src="/images/hotnews/20260417_morning_49.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260417_morning_49.webp)
+
 
 ### <strong>小</strong>孩突然窜出马路 骑车小伙舍己护娃
+<img src="/images/hotnews/20260417_morning_50.webp" class="hotnews-img" alt="热搜配图">
 4月16日，广东东莞。小孩突然窜出马路，骑电动车小伙舍己护娃一个急刹自己摔倒，儿童未受伤。目击者称曾高声提醒，骑行者仅受轻微擦伤，事后获现场人员简单救治。
 
-![](/images/hotnews/20260417_morning_50.webp)
 

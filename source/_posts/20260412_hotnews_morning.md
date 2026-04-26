@@ -14,230 +14,252 @@ toc: true
 > 来源：互联网 | 采集时间：2026/4/12 08:00:23
 
 ### <strong>理</strong>想汽车：遭遇大量恶意拉踩 已报案
+<img src="/images/hotnews/20260412_morning_01.webp" class="hotnews-img" alt="热搜配图">
 4月11日，理想汽车董事长兼首席执行官李想控诉大量营销号雇黑水军进行拉踩，这属于反“内卷”规定中最恶劣的行为。当晚8点，理想汽车法务部发文：已完成全部取证工作，将通过向公安机关报案、向监督管理部门举报以及提起诉讼等一切法律途径，追究法律责任。
 
-![](/images/hotnews/20260412_morning_01.webp)
 
 ### <strong>恭</strong>喜那些洗袜子不翻面的人
+<img src="/images/hotnews/20260412_morning_02.webp" class="hotnews-img" alt="热搜配图">
 洗袜子的时候，要不要翻面清洗？这个问题很小，但其实是一个科学问题。来自日本的学者研究发现，洗涤过程中的洗涤剂和机械作用（摩擦与水流冲洗）足以穿透织物，清理掉内侧的污染物。而如果将袜子翻面洗，袜子外侧检测到的真菌反而会高于不翻面清洗。
 
-![](/images/hotnews/20260412_morning_02.webp)
 
 ### <strong>“</strong>在这些领域 中国独树一帜”
+<img src="/images/hotnews/20260412_morning_03.webp" class="hotnews-img" alt="热搜配图">
 意大利前总理普罗迪表示，中国在经济领域取得的成就中，最突出的是大规模发展新兴产业，尤其在电动汽车、电池、太阳能和风能等高新技术领域，中国独树一帜，尚无其他国家取得同等成就。
 
-![](/images/hotnews/20260412_morning_03.webp)
 
 ### <strong>多</strong>所师范高校密集调整院系专业
+<img src="/images/hotnews/20260412_morning_04.webp" class="hotnews-img" alt="热搜配图">
 近日，多所师范高校密集推进院系与专业调整，优化学科结构，加快转型发展。河北师范大学缩减本科专业并增设智能类方向，山东师范大学停招部分传统专业、布局人工智能等领域。多校新设工科及交叉学院，引入资源扩展办学空间，强化“师范+工科”发展路径，应对生源变化与教师需求转变。
 
-![](/images/hotnews/20260412_morning_04.webp)
 
 ### <strong>网</strong>约车司机车内卖现磨咖啡 滴滴回应
+<img src="/images/hotnews/20260412_morning_05.webp" class="hotnews-img" alt="热搜配图">
 10日，广东江门一名网约车司机在车内配备咖啡设备、明码标价售卖现磨咖啡的照片在社交平台引发热议。有人点赞创意，有人质疑是否合规。11日，滴滴平台相关工作人员明确回应记者，不建议这样做，“一旦被投诉，挣的钱还没有扣的多。”
 
-![](/images/hotnews/20260412_morning_05.webp)
 
 ### <strong>伊</strong>美第三轮谈判结束 存在严重分歧
+<img src="/images/hotnews/20260412_morning_06.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_06.webp)
+
 
 ### <strong>男</strong>子忘关车窗15分钟 回来时傻眼
+<img src="/images/hotnews/20260412_morning_07.webp" class="hotnews-img" alt="热搜配图">
 4月9日，杭州一男子因未关车窗仅15分钟，返回时发现数十只蜜蜂已在副驾驶位筑起拳头大小的蜂巢。消防员穿戴防蜂服，用密封袋和杀虫喷雾将蜂巢移除并转移至安全区域。
 
-![](/images/hotnews/20260412_morning_07.webp)
 
 ### <strong>男</strong>子针灸后四肢瘫痪 法院判赔241万
+<img src="/images/hotnews/20260412_morning_08.webp" class="hotnews-img" alt="热搜配图">
 52岁男子李某因腰疼于2023年9月1日、2日在某诊所针灸后，出现腰腿活动受限，经多家医院诊断为急性脑梗死、四肢瘫痪等。近日，���疆阿克苏地区中级人民法院二审判决诊所赔偿241万余元。
 
-![](/images/hotnews/20260412_morning_08.webp)
 
 ### <strong>小</strong>伙深夜敲冬瓜 收入好时月入十几万
+<img src="/images/hotnews/20260412_morning_09.webp" class="hotnews-img" alt="热搜配图">
 近日，江苏南通30岁小伙唐先生在海南从事瓜果代收，因深夜敲冬瓜辨别好坏走红网络。他凭听声和手感判断品质，准确率达98%-99%。因白天炎热、夜晚更安静便于辨别而选择夜间作业，旺季月收入可达十几万元，误判则自掏腰包赔偿。
 
-![](/images/hotnews/20260412_morning_09.webp)
 
 ### <strong>不</strong>做作 不假唱 不好听
+<img src="/images/hotnews/20260412_morning_10.webp" class="hotnews-img" alt="热搜配图">
 李小冉、王濛、唐艺昕《心愿便利贴》舞台，不假唱，不好听，不整齐，很真实，很甜美。
 
-![](/images/hotnews/20260412_morning_10.webp)
 
 ### <strong>“</strong>十万头猪拱进沙漠治沙”是假的
+<img src="/images/hotnews/20260412_morning_11.webp" class="hotnews-img" alt="热搜配图">
 “10万头猪正在内蒙古库布齐沙漠‘上班’。”4月9日，“十万头猪拱进沙漠治沙真成了”引发网友关注。鄂尔多斯市林业和草原局的一位工作人员辟谣：“这个是不属实的，我们去年已经（上报）让发布者删除了。”该名工作人员表示，目前并没有使用猪拱地的治沙方式。
 
-![](/images/hotnews/20260412_morning_11.webp)
 
 ### <strong>一</strong>再遭特朗普嘲讽 英首相：我受够了
+<img src="/images/hotnews/20260412_morning_12.webp" class="hotnews-img" alt="热搜配图">
 近日，英国首相斯塔默在采访中罕见宣泄失望直言“我受够了”，抱怨特朗普的举措致英国民众承受能源账单波动之苦，同时表示不会放弃与美国的紧密联系，但会拓展多元外交。
 
-![](/images/hotnews/20260412_morning_12.webp)
 
 ### <strong>美</strong>媒称数艘美海军舰船通过霍尔木兹
+<img src="/images/hotnews/20260412_morning_13.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_13.webp)
+
 
 ### <strong>伊</strong>美将举行第四轮谈判
+<img src="/images/hotnews/20260412_morning_14.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月12日，伊朗和美国的第三轮会谈结束，双方专家团队出席并再次交换了文本。伊朗政府在社交媒体上称，“尽管仍存在一些分歧，但谈判将继续”。伊美将举行第四轮谈判。
 
-![](/images/hotnews/20260412_morning_14.webp)
 
 ### <strong>西</strong>班牙的外交“转弯”是什么信号
+<img src="/images/hotnews/20260412_morning_15.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_15.webp)
+
 
 ### <strong>大</strong>货车高速别停后车救了一家五口
+<img src="/images/hotnews/20260412_morning_16.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_16.webp)
+
 
 ### <strong>中</strong>东局势紧张为什么塑料袋先受影响
+<img src="/images/hotnews/20260412_morning_17.webp" class="hotnews-img" alt="热搜配图">
 近来，中东局势持续紧张，推动全球原油价格一路上涨，导致塑料制品等行业受到巨大压力。原因是石油经过炼制和深加工，会分离出不同组分，转化为数千种化工原料，最终变成我们身边的各类产品，其中就包括塑料制品。
 
-![](/images/hotnews/20260412_morning_17.webp)
 
 ### <strong>老</strong>外扎堆成都公园相亲角
+<img src="/images/hotnews/20260412_morning_18.webp" class="hotnews-img" alt="热搜配图">
 近日，成都人民公园相亲角正吸引越来越多的“洋面孔”到访。他们驻足停留，举起手机翻译纸张上密集的文字信息，或与同伴低声交流，分享着惊讶与感悟。这片充满中式市井烟火气的婚恋社交地，已成为外国游客在蓉Citywalk的新晋热门点位。
 
-![](/images/hotnews/20260412_morning_18.webp)
 
 ### <strong>直</strong>播晕倒被辞退女主播发声
+<img src="/images/hotnews/20260412_morning_19.webp" class="hotnews-img" alt="热搜配图">
 近日，浙江一名24岁女主播在直播时晕倒被公司当场辞退，公司称她“不适合干这行”。涉事公司相关负责人称是“劝退”而非“辞退”，而女主播��应：自己晕倒后立马爬起，已入行两年，目前已申请赔偿。
 
-![](/images/hotnews/20260412_morning_19.webp)
 
 ### <strong>男</strong>子患肝癌离世 妹妹一人带五个娃
+<img src="/images/hotnews/20260412_morning_20.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_20.webp)
+
 
 ### <strong>海</strong>南30岁小伙深夜敲瓜成网红
+<img src="/images/hotnews/20260412_morning_21.webp" class="hotnews-img" alt="热搜配图">
 近日，一位海南30岁小伙深夜敲瓜成网红。据悉，当事人为江苏南通人，目前在海南从事冬瓜和南瓜的代收工作。他因通过敲击瓜果的声音判断品质而走红网络，被网友称为“冬瓜届的纪律委员”‌。
 
-![](/images/hotnews/20260412_morning_21.webp)
 
 ### <strong>请</strong>叫我常威！常州复仇成功
+<img src="/images/hotnews/20260412_morning_22.webp" class="hotnews-img" alt="热搜配图">
 常宝真的变常威了！2026苏超赛季揭幕战，常州队主场3:0复仇夺命书生南通队，似乎揭幕战就完成了整个赛季的KPI目标，追平上赛季的1胜战绩。
 
-![](/images/hotnews/20260412_morning_22.webp)
 
 ### <strong>女</strong>子花3万相亲被“优质男”骗走积蓄
+<img src="/images/hotnews/20260412_morning_23.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_23.webp)
+
 
 ### <strong>印</strong>度女子嫌丈夫皮肤黑雇凶将其杀死
+<img src="/images/hotnews/20260412_morning_24.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_24.webp)
+
 
 ### <strong>小</strong>区蛇鼠频出没 业主自嘲蛇鼠一窝
+<img src="/images/hotnews/20260412_morning_25.webp" class="hotnews-img" alt="热搜配图">
 4月11日，广东韶关一小区业主反映，近期小区内频繁出现蛇类爬入大堂，且老鼠多次闯入业主家中，居民自嘲“蛇鼠一窝”。
 
-![](/images/hotnews/20260412_morning_25.webp)
 
 ### <strong>日</strong>本一企业推出“活寄生虫”笔
+<img src="/images/hotnews/20260412_morning_26.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_26.webp)
+
 
 ### <strong>常</strong>州3-0南通
+<img src="/images/hotnews/20260412_morning_27.webp" class="hotnews-img" alt="热搜配图">
 北京时间4月11日，江苏省城市足球联赛，常州队主场对阵南通队。最终，常州队3-0战胜南通队。
 
-![](/images/hotnews/20260412_morning_27.webp)
 
 ### <strong>宇</strong>树H1人形机器人奔跑速度再破纪录
+<img src="/images/hotnews/20260412_morning_28.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_28.webp)
+
 
 ### <strong>伊</strong>朗称美国同意在黎巴嫩停火
+<img src="/images/hotnews/20260412_morning_29.webp" class="hotnews-img" alt="热搜配图">
 当地时间11日，记者从伊朗方面获悉，美国同意解冻伊朗资产，并同意在黎巴嫩停火。美国方面尚未发布相关消息。当天早前，美国白宫官员否认美国已同意解冻伊朗被冻结资产的消息。
 
-![](/images/hotnews/20260412_morning_29.webp)
 
 ### <strong>总</strong>说梦话梦游可能是得了帕金森病
+<img src="/images/hotnews/20260412_morning_30.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_30.webp)
+
 
 ### <strong>伊</strong>美谈判三大议题仍待解
+<img src="/images/hotnews/20260412_morning_31.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月12日，伊朗与美国在伊斯兰堡结束第三轮谈判，围绕霍尔木兹海峡管控、海外资产解冻及铀浓缩问题分歧突出。伊方坚持海峡控制权并要求解冻资金，美方强调航行自由及限制核能力。谈判期间美军行动、以色列持续打击相关势力，局势同步紧张升级。
 
-![](/images/hotnews/20260412_morning_31.webp)
 
 ### <strong>卫</strong>健委通报首批10起科研失信行为
+<img src="/images/hotnews/20260412_morning_32.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_32.webp)
+
 
 ### <strong>《</strong>心愿便利贴》像幼儿园文艺汇演
+<img src="/images/hotnews/20260412_morning_33.webp" class="hotnews-img" alt="热搜配图">
 近日，《乘风2026》一公舞台上，李小冉、唐艺昕、王濛表演的《心愿便利贴》意外成了搞笑舞台。三人唱得十分卖力，却像极了幼儿园文艺汇演。​​​​
 
-![](/images/hotnews/20260412_morning_33.webp)
 
 ### <strong>中</strong>国队晋级U20女足世界杯
+<img src="/images/hotnews/20260412_morning_34.webp" class="hotnews-img" alt="热搜配图">
 4月11日晚，中国队在2026年U20女足亚洲杯1/4决赛中击败乌兹别克斯坦队，晋级赛事四强的同时，获得了参加今年U20女足世界杯的资格。
 
-![](/images/hotnews/20260412_morning_34.webp)
 
 ### <strong>山</strong>东企业家花50万请乡亲免费看戏
+<img src="/images/hotnews/20260412_morning_35.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_35.webp)
+
 
 ### <strong>南</strong>通门将离谱失误送大礼
+<img src="/images/hotnews/20260412_morning_36.webp" class="hotnews-img" alt="热搜配图">
 在4月11日晚的2026年苏超揭幕战中，慢镜还原南通门将失误细节，解说调侃：“门将失误送大礼。”现场常州全队笑翻了。
 
-![](/images/hotnews/20260412_morning_36.webp)
 
 ### <strong>周</strong>深现场演唱苏超主题曲《热烈盛开》
+<img src="/images/hotnews/20260412_morning_37.webp" class="hotnews-img" alt="热搜配图">
 4月11日，2026苏超联赛燃情开赛，开幕式上周深现场首唱主题曲《热烈盛开》，让我们一起来欣赏吧！
 
-![](/images/hotnews/20260412_morning_37.webp)
 
 ### <strong>河</strong>南豫剧在山东表演 首日观众约6万
+<img src="/images/hotnews/20260412_morning_38.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_38.webp)
+
 
 ### <strong>国</strong>家疾控局推进重点虫媒传染病防控
+<img src="/images/hotnews/20260412_morning_39.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_39.webp)
+
 
 ### <strong>俄</strong>乌东正教复活节停火正式生效
+<img src="/images/hotnews/20260412_morning_40.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月11日下午，俄罗斯总统普京宣布的东正教复活节停火开始。停火于莫斯科时间11日16时（北京时间21时）生效，持续至12日24时（北京时间13日5时）结束。乌克兰总统泽连斯基曾表示乌方将采取对等停火。
 
-![](/images/hotnews/20260412_morning_40.webp)
 
 ### <strong>中</strong>疾控提醒：流脑进入高发季
+<img src="/images/hotnews/20260412_morning_41.webp" class="hotnews-img" alt="热搜配图">
 近日，国家卫生健康委召开“时令节气与健康”发布会，会上中国疾病预防控制中心研究员郑徽介绍，流脑是流行性脑脊髓膜炎的简称，冬春季高发。一旦出现突发高热、伴有剧烈头痛、频繁呕吐、精神萎靡，尤其是皮肤出现了压之不退的瘀点、瘀斑，应当立即就医，切勿在家中观察等待。
 
-![](/images/hotnews/20260412_morning_41.webp)
 
 ### <strong>女</strong>孩不慎摔坏标本 馆长暖心安抚
+<img src="/images/hotnews/20260412_morning_42.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_42.webp)
+
 
 ### <strong>六</strong>旬阿婆在公交车上摔伤谁之过
+<img src="/images/hotnews/20260412_morning_43.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_43.webp)
+
 
 ### <strong>捷</strong>龙三号运载火箭发射成功
+<img src="/images/hotnews/20260412_morning_44.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_44.webp)
+
 
 ### <strong>篮</strong>坛新秀年龄存疑 中国篮协核查
+<img src="/images/hotnews/20260412_morning_45.webp" class="hotnews-img" alt="热搜配图">
 4月11日，多家网络媒体、自媒体爆料称，国青球员李沂泽的外貌与一名参加过国内青少年赛事的名叫张涵泊的球员高度相似，注册出生日期相差两年，疑似是同一个人。对此，中国篮协称已经关注并展开调查。
 
-![](/images/hotnews/20260412_morning_45.webp)
 
 ### <strong>黄</strong>友政石洵瑶混双夺冠
+<img src="/images/hotnews/20260412_morning_46.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_46.webp)
+
 
 ### <strong>公</strong>交座椅损坏 乘客默默修复
+<img src="/images/hotnews/20260412_morning_47.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_47.webp)
+
 
 ### <strong>云</strong>南大理州洱源县发生3.7级地震
+<img src="/images/hotnews/20260412_morning_48.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_48.webp)
+
 
 ### <strong>西</strong>班牙一旅游大巴坠崖致1死27伤
+<img src="/images/hotnews/20260412_morning_49.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_49.webp)
+
 
 ### <strong>欧</strong>盟航空燃油三周后或系统性短缺
+<img src="/images/hotnews/20260412_morning_50.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260412_morning_50.webp)
+
 

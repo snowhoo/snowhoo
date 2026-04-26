@@ -14,243 +14,252 @@ toc: true
 > 来源：互联网 | 采集时间：2026/4/10 08:00:22
 
 ### <strong>普</strong>京宣布停火32小时 乌方跟进
+<img src="/images/hotnews/20260410_morning_01.webp" class="hotnews-img" alt="热搜配图">
 当地时间9日，据克里姆林宫消息，俄罗斯总统普京已宣布东正教复活节停火决定。停火时间从莫斯科时间4月11日16时起，持续至4月12日午夜。乌克兰总统泽连斯基随即表示：“我们已准备好采取对等举措。”
 
-![](/images/hotnews/20260410_morning_01.webp)
 
 ### <strong>9</strong>5后小伙在村里清淤引300万网友围观
+<img src="/images/hotnews/20260410_morning_02.webp" class="hotnews-img" alt="热搜配图">
 近日，广西95后小伙在村里清淤引300万网友围观。当事人：视频虽然短，但每次至少忙一天，也会在账号里分享自己的农村生活碎片。
 
-![](/images/hotnews/20260410_morning_02.webp)
 
 ### <strong>大</strong>雾、强对流天气等四预警齐发
+<img src="/images/hotnews/20260410_morning_03.webp" class="hotnews-img" alt="热搜配图">
 4月9日6时，中央气象台发布大雾、强对流天气黄色预警，暴雨、大风蓝色预警。
 
-![](/images/hotnews/20260410_morning_03.webp)
 
 ### <strong>杭</strong>州回应西湖连续一周撒7吨漂白粉
+<img src="/images/hotnews/20260410_morning_04.webp" class="hotnews-img" alt="热搜配图">
 4月9日，“杭州西湖将连续一周撒7吨漂白粉”的话题登上热搜，引发广泛关注。对此，杭州西湖风景名胜区管委会水域管理处做出回应：此次荷区清塘为延续近30年的常规养护作业。使用漂白粉经科学论证，对原生鱼类、鸟类几乎没有影响，全程生态安全可控。
 
-![](/images/hotnews/20260410_morning_04.webp)
 
 ### <strong>降</strong>至300元的降脂针被纳入医保
+<img src="/images/hotnews/20260410_morning_05.webp" class="hotnews-img" alt="热搜配图">
 近日，浙大二院内分泌科迎来降脂针咨询热，此前近2000元一支的降脂针，如今进口、国产产品均降至300元左右且被纳入医保，还新增半年一针的超长效款，吸引众多血脂偏高患者，医生提醒打针不能胡吃海喝且无暴瘦案例。
 
-![](/images/hotnews/20260410_morning_05.webp)
 
 ### <strong>伊</strong>朗最高领袖提出三点主张
+<img src="/images/hotnews/20260410_morning_06.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260410_morning_06.webp)
+
 
 ### <strong>为</strong>啥卫生纸非要压花 为了卖贵点吗
+<img src="/images/hotnews/20260410_morning_07.webp" class="hotnews-img" alt="热搜配图">
 卫生纸压花‌主要是因为压花工艺能固定多层纸张、提升蓬松度、增强吸水性。虽然不同图案的压花模具对纸的蓬松度会有一些影响，但对普通消费者来说没必要太过纠结，只管选择自己喜欢的图案就好啦。
 
-![](/images/hotnews/20260410_morning_07.webp)
 
 ### <strong>武</strong>汉大暴雨破纪录
+<img src="/images/hotnews/20260410_morning_08.webp" class="hotnews-img" alt="热搜配图">
 4月8日20时至9日15时，武汉国家站累计降雨量已达138毫米！不仅刷新当地4月单日降水量纪录，也继1990年4月29日（110.1毫米）之后打破了观测史上最早出现大暴雨的纪录。而从历年气象数据来看，武汉首场大暴雨通常要到5月才会出现。
 
-![](/images/hotnews/20260410_morning_08.webp)
 
 ### <strong>充</strong>电宝迎史上最严新规 旧宝还能用吗
+<img src="/images/hotnews/20260410_morning_09.webp" class="hotnews-img" alt="热搜配图">
 近期，我国首部移动电源强制性国家标准《移动电源安全技术规范》正式发布，该标准将于2027年4月1日起实施。标准实施后，只要此前购买并取得3C认证的合规产品，仍可正常使用。登机携带方面，符合民航容量规定的旧标产品依然可正常伴你飞行。只要充电宝未出现鼓包、严重变形或过热现象，目前无需强制更换。
 
-![](/images/hotnews/20260410_morning_09.webp)
 
 ### <strong>儿</strong>子3年前去世并被海葬老人毫不知情
+<img src="/images/hotnews/20260410_morning_10.webp" class="hotnews-img" alt="热搜配图">
 2017年7月，张先生因病去世。由于他的母亲已是高龄，一家人为了老人的身体状况着想，向老人隐瞒了张先生去世的消息。同年8月，张先生的妻子和女儿对其进行海葬。三年后老人得知儿子死讯后，将儿媳及孙女诉至法院，认为对方侵犯了她的祭奠权。
 
-![](/images/hotnews/20260410_morning_10.webp)
 
 ### <strong>人</strong>社部辟谣发放2026年度综合补贴
+<img src="/images/hotnews/20260410_morning_11.webp" class="hotnews-img" alt="热搜配图">
 网传“人社部发放2026年度综合补贴”为虚假信息，实为诈骗。人社部从未发放该补贴，提醒勿点链接、勿填个人信息。
 
-![](/images/hotnews/20260410_morning_11.webp)
 
 ### <strong>孟</strong>加拉暴发严重疫情 超百名儿童死亡
+<img src="/images/hotnews/20260410_morning_12.webp" class="hotnews-img" alt="热搜配图">
 近期，孟加拉国暴发麻疹疫情，病例数快速攀升，感染者以低龄儿童为主。据美联社4月7日报道，这场疫情在不到一个月的时间已致超100名儿童死亡。目前，该国政府已与联合国合作，启动儿童紧急疫苗接种工作，努力控制疫情蔓延。
 
-![](/images/hotnews/20260410_morning_12.webp)
 
 ### <strong>刘</strong>强东章泽天成立新公司“天强”
+<img src="/images/hotnews/20260410_morning_13.webp" class="hotnews-img" alt="热搜配图">
 公开信息显示，4月9日，宿迁天强企业管理有限公司成立，法定代表人为李瑞玉，注册资本为1000万元，经营范围包含企业管理、信息技术咨询服务、计算机软硬件及辅助设备批发等，由北京天强坤泰投资管理有限公司全资持股，后者由刘强东、章泽天共同持股。
 
-![](/images/hotnews/20260410_morning_13.webp)
 
 ### <strong>伊</strong>朗：通行霍尔木兹海峡需与伊方协调
+<img src="/images/hotnews/20260410_morning_14.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月9日，伊朗副外长哈提卜扎德在接受媒体采访时表示，霍尔木兹海峡目前仍保持开放状态，但受战事影响，通行仍存在一定技术性限制。原则上各方船只在不从事敌对行为的情况下均可通行，目前未发现相关风险迹象，但所有船只仍需遵守既有协调机制和限制条件。
 
-![](/images/hotnews/20260410_morning_14.webp)
 
 ### <strong>爱</strong>尔眼科医院院长被指猥亵销售经理
+<img src="/images/hotnews/20260410_morning_15.webp" class="hotnews-img" alt="热搜配图">
 近日，浙江杭州的林然（化名）反映，3月14日她代表公司参加客户杭州爱尔眼科医院的活动，遭院长潘某某猥亵。爱尔眼科总部监察部回应，潘某某已被停职调查，等待警方结果再做处理。目前，警方已行政立案。
 
-![](/images/hotnews/20260410_morning_15.webp)
 
 ### <strong>打</strong>赏近300万 主播竟是20岁孩子的妈
+<img src="/images/hotnews/20260410_morning_16.webp" class="hotnews-img" alt="热搜配图">
 近日，当事人余先生声称为一��主播打赏了近300万，谁知对方竟然有一个20岁的女儿！该男子表示：“本来是以结婚为目的（相处）的，现在觉得自己是个冤大头。”
 
-![](/images/hotnews/20260410_morning_16.webp)
 
 ### <strong>山</strong>西一生态环境局局长在办公室内离世
+<img src="/images/hotnews/20260410_morning_17.webp" class="hotnews-img" alt="热搜配图">
 据媒体报道，4月1日，山西朔州市生态环境局朔城分局党组书记、局长王志文在工作时突发疾病，不幸逝世，年仅49岁。
 
-![](/images/hotnews/20260410_morning_17.webp)
 
 ### <strong>美</strong>国公布最新月球背面照片
+<img src="/images/hotnews/20260410_morning_18.webp" class="hotnews-img" alt="热搜配图">
 美东时间4月7日，美国国家航空航天局（NASA）由四名宇航员组成的乘组从月球背面进行飞掠，看到了许多此前未被人类看到过的月背景象。NASA在官网发布了一组“历史性的照片”——宇航员在月球背面看到的地球升起、落下以及日食景象和月球背面细节。
 
-![](/images/hotnews/20260410_morning_18.webp)
 
 ### <strong>李</strong>纯吐槽自己妈妈没苦硬吃
+<img src="/images/hotnews/20260410_morning_19.webp" class="hotnews-img" alt="热搜配图">
 近日，演员李纯在节目中吐槽母亲“没苦硬吃”，指其过度节俭：拒绝子女安排的出游，坚持乘坐绿皮火车，且抵触高价护肤品，偏爱廉价三无产品。
 
-![](/images/hotnews/20260410_morning_19.webp)
 
 ### <strong>工</strong>地大叔中629万 兑奖时异常淡定
+<img src="/images/hotnews/20260410_morning_20.webp" class="hotnews-img" alt="热搜配图">
 4月6日，安徽一位工地大叔中得体彩大乐透一等奖，总奖金629万元，兑奖时全程异常淡定。彩票店老板朱女士称，大叔解释淡定因“在外20多年已没感觉”，领奖后还送了她一杯奶茶答谢。
 
-![](/images/hotnews/20260410_morning_20.webp)
 
 ### <strong>美</strong>股收盘：标普纳指连升七天
+<img src="/images/hotnews/20260410_morning_21.webp" class="hotnews-img" alt="热搜配图">
 4月9日，美股三大指数集体收升，其中标普和纳指连涨七天。截至收盘，标普500指数涨0.62%，报6824.66点；纳斯达克综合指数涨0.83%，报22822.42点，均连涨7个交易日。道琼斯指数涨0.58%，报48185.80点，年内由跌转涨。
 
-![](/images/hotnews/20260410_morning_21.webp)
 
 ### <strong>小</strong>偷9次乘同一邮轮度假式盗窃
+<img src="/images/hotnews/20260410_morning_22.webp" class="hotnews-img" alt="热搜配图">
 一男子邓某连续9次登上同一豪华邮轮，以“度假”为名实施盗窃，频繁出入洗手间将部分赃物藏于马桶水箱检修口，还通过行李箱转移赃物，涉案金额超30万元，目前已被检察机关提起公诉，赃物全部发还失主。
 
-![](/images/hotnews/20260410_morning_22.webp)
 
 ### <strong>女</strong>子将带有火星的垃圾倒入垃圾桶
+<img src="/images/hotnews/20260410_morning_23.webp" class="hotnews-img" alt="热搜配图">
 4月5日，江苏省镇江市一女子两次将带火星的垃圾倒入公共垃圾桶，未熄灭的火星被风吹至草坪引发火灾，火势蔓延导致周边4辆汽车烧毁。消防员十分钟内控制火势，现场无人员伤亡。
 
-![](/images/hotnews/20260410_morning_23.webp)
 
 ### <strong>离</strong>异父母均拒接孩子 司机当场怒斥
+<img src="/images/hotnews/20260410_morning_24.webp" class="hotnews-img" alt="热搜配图">
 4月9日，辽宁沈阳一名女孩被母亲送上网约车单独前往父亲处，父亲以“打麻将没时间”为由拒绝接收并强调“已离婚”，母亲随后也表示“有事不接”。网约车司机当场怒斥：这都什么家长，离婚不是弃养理由。
 
-![](/images/hotnews/20260410_morning_24.webp)
 
 ### <strong>女</strong>子带8万现金买手机 店长立即报警
+<img src="/images/hotnews/20260410_morning_25.webp" class="hotnews-img" alt="热搜配图">
 近日，黄山市某商场手机店内，一名女士携带8万元现金，执意要购买多部高端手机并当场寄给陌生人。店员察觉异常后立即报警，民警赶到劝导，得知女子遭遇投资理财诈骗，最终8万元被成功保住。
 
-![](/images/hotnews/20260410_morning_25.webp)
 
 ### <strong>2</strong>947人的投资群里2946人是“托”
+<img src="/images/hotnews/20260410_morning_26.webp" class="hotnews-img" alt="热搜配图">
 日前，岳西县的王先生被拉入一个名为“中信证券内部协作拉升226群”的投资群，群内成员多达2947人，表面看似热闹非凡，实则除王先生外，其余2946人均为诈骗分子伪装的“托”，最终王先生被骗了22万元。
 
-![](/images/hotnews/20260410_morning_26.webp)
 
 ### <strong>新</strong>生儿推崇“古法生育” 专家提醒
+<img src="/images/hotnews/20260410_morning_27.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260410_morning_27.webp)
+
 
 ### <strong>猫</strong>咪浑身带火冲进店铺求助
+<img src="/images/hotnews/20260410_morning_28.webp" class="hotnews-img" alt="热搜配图">
 4月8日，天津静海区店主王先生领养的猫咪浑身着火冲进其店内，王先生迅速用灭火器将火扑灭。小猫烧伤严重，无法进食，目前正在宠物医院接受治疗。王先生已报警，警方正就小猫着火原因展开调查。
 
-![](/images/hotnews/20260410_morning_28.webp)
 
 ### <strong>多</strong>位书记省长会见一位外企高管
+<img src="/images/hotnews/20260410_morning_29.webp" class="hotnews-img" alt="热搜配图">
 短短一个多月内，山东、辽宁、江苏三省份的省级党政一把手先后会见了同一位外企高管——沃尔玛中国总裁及首席执行官朱晓静。
 
-![](/images/hotnews/20260410_morning_29.webp)
 
 ### <strong>六</strong>旬老人绝经后又出血竟查出宫颈癌
+<img src="/images/hotnews/20260410_morning_30.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260410_morning_30.webp)
+
 
 ### <strong>母</strong>亲带孩子看病没钱吃饭求助店主
+<img src="/images/hotnews/20260410_morning_31.webp" class="hotnews-img" alt="热搜配图">
 近日，山东临沂沂阳县一名母亲带孩子看病没钱吃饭，进餐馆求助，老板二话不说端上饭菜，又塞给她现金。老板表示：人出门在外，谁还没个难处？
 
-![](/images/hotnews/20260410_morning_31.webp)
 
 ### <strong>张</strong>杰连开9场演唱会有空还打高尔夫
+<img src="/images/hotnews/20260410_morning_32.webp" class="hotnews-img" alt="热搜配图">
 4月9日，张杰发文称11天开9场演唱会，“其实不止，还有彩排，剩下时间打高尔夫，休息休息”，网友：这就是高能量人吗？羡慕了！
 
-![](/images/hotnews/20260410_morning_32.webp)
 
 ### <strong>打</strong>击伊朗期间美军消耗约760万杯咖啡
+<img src="/images/hotnews/20260410_morning_33.webp" class="hotnews-img" alt="热搜配图">
 据美国有线电视新闻网报道，美军参谋长联席会议主席丹·凯恩8日说，在伊朗战事中，美军消耗了超过95万加仑的咖啡、200万瓶能量饮料和“大量”尼古丁。
 
-![](/images/hotnews/20260410_morning_33.webp)
 
 ### <strong>特</strong>朗普要求以色列减少打击黎巴嫩
+<img src="/images/hotnews/20260410_morning_34.webp" class="hotnews-img" alt="热搜配图">
 美国全国广播公司新闻台9日援引美政府官员的话报道，美国总统特朗普要求以色列总理内塔尼亚胡减少对黎巴嫩的打击，以确保美伊谈判顺利进行。
 
-![](/images/hotnews/20260410_morning_34.webp)
 
 ### <strong>平</strong>台全额退还瘫痪女孩演唱会票
+<img src="/images/hotnews/20260410_morning_35.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260410_morning_35.webp)
+
 
 ### <strong>穆</strong>杰塔巴发文纪念伊朗已故最高领袖
+<img src="/images/hotnews/20260410_morning_36.webp" class="hotnews-img" alt="热搜配图">
 当地时间9日，伊朗最高领袖穆杰塔巴·哈梅内伊的社交媒体账号更新内容，发文纪念已故最高领袖阿里·哈梅内伊。文中写道：“值此革命领袖殉难四十日之际发布。”
 
-![](/images/hotnews/20260410_morning_36.webp)
 
 ### <strong>3</strong>名中国裁判入选世界杯裁判名单
+<img src="/images/hotnews/20260410_morning_37.webp" class="hotnews-img" alt="热搜配图">
 记者从中国足协等多个权威渠道确认，3名中国裁判马宁、傅明、周飞将参加2026美加墨世界杯执裁工作。其中，马宁以主裁判身份入选，周飞以助理裁判身份入选，傅明以视频助理裁判身份入选。
 
-![](/images/hotnews/20260410_morning_37.webp)
 
 ### <strong>直</strong>播销售超标电动自行车 12人被刑拘
+<img src="/images/hotnews/20260410_morning_38.webp" class="hotnews-img" alt="热搜配图">
 近日，深圳交警破获一起通过网络直播方式非法销售超标电动自行车案件，斩断一条超标电动自行车非法流通“黑链条”，共抓获涉案人员12名，包括涉案门店7人及厂家5人，均被刑事拘留。
 
-![](/images/hotnews/20260410_morning_38.webp)
 
 ### <strong>女</strong>子头痛硬扛7天昏迷确诊李斯特菌
+<img src="/images/hotnews/20260410_morning_39.webp" class="hotnews-img" alt="热搜配图">
 近日，湖南一名女子因突发头痛未加重视，以为只是劳累所致，简单服药后想硬扛过去。不料七天后陷入昏迷，送医时心脏已骤停，检查后确诊感染“冰箱杀手”李斯特菌。医生提醒：“李斯特菌可致脑膜炎，剩菜、冷切肉吃前务必加热5-10分钟。”
 
-![](/images/hotnews/20260410_morning_39.webp)
 
 ### <strong>郑</strong>丽文率中国国民党访问团参访上海
+<img src="/images/hotnews/20260410_morning_40.webp" class="hotnews-img" alt="热搜配图">
 中国国民党主席郑丽文率国民党访问团，继续在大陆的参访行程。8日至9日，访问团一行在上海多地参访，感受大陆高新科技与产业发展成就。
 
-![](/images/hotnews/20260410_morning_40.webp)
 
 ### <strong>5</strong>9岁梁实宣布参加第30次高考
+<img src="/images/hotnews/20260410_morning_41.webp" class="hotnews-img" alt="热搜配图">
 近日，“高考钉子户”梁实宣布参加第30次高考，目标550分，还是想考川大。其坦言：“一点含糊都没有，这次肯定超500分。”据悉，他第29次高考454分，距当年本科线差13分。
 
-![](/images/hotnews/20260410_morning_41.webp)
 
 ### <strong>男</strong>子脑出血身亡 家属起诉宾馆被驳回
+<img src="/images/hotnews/20260410_morning_42.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260410_morning_42.webp)
+
 
 ### <strong>长</strong>沙游客在厦门丢手机后点赞厦门
+<img src="/images/hotnews/20260410_morning_43.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260410_morning_43.webp)
+
 
 ### <strong>茅</strong>洲河水面出现大面积泡沫 官方回应
+<img src="/images/hotnews/20260410_morning_44.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260410_morning_44.webp)
+
 
 ### <strong>黎</strong>真主党向以发射约30枚火箭弹
+<img src="/images/hotnews/20260410_morning_45.webp" class="hotnews-img" alt="热搜配图">
 当地时间9日，据以色列国防军消息，黎巴嫩真主党自9日上午起向以色列北部地区发射了约30枚火箭弹。以色列国防军表示，火箭弹或被拦截，或落在无人区，目前尚无人员伤亡或财产损失报告。
 
-![](/images/hotnews/20260410_morning_45.webp)
 
 ### <strong>正</strong>直播NBA：凯尔特人vs尼克斯
+<img src="/images/hotnews/20260410_morning_46.webp" class="hotnews-img" alt="热搜配图">
 4月10日7:30，NBA直播：凯尔特人vs尼克斯。
 
-![](/images/hotnews/20260410_morning_46.webp)
 
 ### <strong>辽</strong>宁丹东公安连破三起陈年命案积案
+<img src="/images/hotnews/20260410_morning_47.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260410_morning_47.webp)
+
 
 ### <strong>大</strong>疆Pocket 4将于4月16日发布
+<img src="/images/hotnews/20260410_morning_48.webp" class="hotnews-img" alt="热搜配图">
 IT之家消息，大疆发文，宣布旗下 Osmo Pocket 4 系列运动相机将于 4 月 16 日 20:00 发布，产品主打“一寸万象、光影随行”。
 
-![](/images/hotnews/20260410_morning_48.webp)
 
 ### <strong>青</strong>海一牧民遭狼袭击受伤 警方回应
+<img src="/images/hotnews/20260410_morning_49.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260410_morning_49.webp)
+
 
 ### <strong>王</strong>毅同朝鲜外相崔善姬举行会谈
+<img src="/images/hotnews/20260410_morning_50.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月9日，中共中央政治局委员、外交部长王毅在平壤锦绣山迎宾馆同朝鲜外相崔善姬举行会谈。
 
-![](/images/hotnews/20260410_morning_50.webp)
 

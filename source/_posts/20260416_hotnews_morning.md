@@ -14,239 +14,252 @@ toc: true
 > 来源：互联网 | 采集时间：2026/4/16 08:00:24
 
 ### <strong>暴</strong>雨、大暴雨要来了
+<img src="/images/hotnews/20260416_morning_01.webp" class="hotnews-img" alt="热搜配图">
 中央气象台发布暴雨蓝色预警：预计，4月15日至16日，贵州中东部、湖南中部和西部、江西中部、福建西北部、广西东北部等地部分地区有大到暴雨，其中，湖南中部、江西中部等地局地有大暴雨；上述部分地区伴有短时强降水，局地有雷暴大风或冰雹等强对流天气。
 
-![](/images/hotnews/20260416_morning_01.webp)
 
 ### <strong>美</strong>国将退还超1万亿元关税
+<img src="/images/hotnews/20260416_morning_02.webp" class="hotnews-img" alt="热搜配图">
 美国特朗普政府计划于当地时间4月20日正式启动一个关税退款系统，用于向进口商退还1660亿美元（约合人民币1.13万亿元）的关税，这些关税在今年2月被美国最高法院裁定为“非法”。
 
-![](/images/hotnews/20260416_morning_02.webp)
 
 ### <strong>新</strong>的“之最”不断产生
+<img src="/images/hotnews/20260416_morning_03.webp" class="hotnews-img" alt="热搜配图">
 近期，在产业、科技、工程等领域，不少项目登顶“世界之最”“中国之最”：全球首次兆瓦级氢燃料航空涡桨发动机试飞、全球海拔最高槽式光热电站和我国水深最深的海上风电项目。新的“之最”不断产生，背后是“硬实力”的系统提升，得益于“大舞台”的需求驱动，更离不开登攀者的不懈奋斗。
 
-![](/images/hotnews/20260416_morning_03.webp)
 
 ### <strong>内</strong>蒙古一研究院1200元就能办院士证
+<img src="/images/hotnews/20260416_morning_04.webp" class="hotnews-img" alt="热搜配图">
 4月15日上午，记者报道了“内蒙古一文化研究院发通知称交1200元可获发‘院士’证”事件。当天下午，记者联系了内蒙古自治区文化和旅游厅，工作人员称，涉事单位内蒙古自治区北方文化研究院确实是厅管的社会组织，但对于该事件还不知情，会立即联系了解。
 
-![](/images/hotnews/20260416_morning_04.webp)
 
 ### <strong>永</strong>辉超市成功“追债”38亿
+<img src="/images/hotnews/20260416_morning_05.webp" class="hotnews-img" alt="热搜配图">
 2026年4月14日，永辉超市公告仲裁胜诉，大连御锦贸易需支付约38.6亿元，王健林等承担连带担保责任。这笔款项可助永辉覆盖亏损、改善现金流，而对本就负债较高的万达而言，将进一步加剧其资金与信用压力。
 
-![](/images/hotnews/20260416_morning_05.webp)
 
 ### <strong>伊</strong>朗至今尚未同意延长停火请求
+<img src="/images/hotnews/20260416_morning_06.webp" class="hotnews-img" alt="热搜配图">
 伊朗方面15日消息称，尽管美国提出了延长两周停火的请求，伊朗至今尚未同意该请求。伊朗方面认为，美国应当履行当前停火协议中的承诺，而不是请求延长停火，并应停止在谈判中提出过分要求。
 
-![](/images/hotnews/20260416_morning_06.webp)
 
 ### <strong>俄</strong>海军编队抵达湛江 码头响《喀秋莎》
- 由俄罗斯海军“完美”号、“凛冽”号护卫舰和“佩琴加”号中型油船组成的舰艇编队15日上午抵达广东湛江，开始为期5天的友好访问。中方举行了欢迎仪式，码头响起歌曲《喀秋莎》。
+<img src="/images/hotnews/20260416_morning_07.webp" class="hotnews-img" alt="热搜配图">
+由俄罗斯海军“完美”号、“凛冽”号护卫舰和“佩琴加”号中型油船组成的舰艇编队15日上午抵达广东湛江，开始为期5天的友好访问。中方举行了欢迎仪式，码头响起歌曲《喀秋莎》。
 
-![](/images/hotnews/20260416_morning_07.webp)
 
 ### <strong>小</strong>伙80万开面馆6天倒闭
+<img src="/images/hotnews/20260416_morning_08.webp" class="hotnews-img" alt="热搜配图">
 安徽小伙朱俊锋投入80万元在上海开羊肉面馆，仅经营6天便倒闭，亏损近60万元，还因此与结婚5年的妻子离婚，陷入人生低谷。后他沉淀复盘，送外卖两年后又投40万开包子店，如今经营向好，实现逆风翻盘。
 
-![](/images/hotnews/20260416_morning_08.webp)
 
 ### <strong>樊</strong>振东英文感谢球迷支持
+<img src="/images/hotnews/20260416_morning_09.webp" class="hotnews-img" alt="热搜配图">
 北京时间4月16日凌晨，乒乓球德甲联赛，萨尔布吕肯主场迎战云达不莱梅。此役，29岁的樊振东出场，拿下2分，帮助球队3-1取胜。赛后，球队为他举办了告别仪式。仪式上，樊振东用英文感谢球迷支持。
 
-![](/images/hotnews/20260416_morning_09.webp)
 
 ### <strong>多</strong>家银行密集停发信用卡
+<img src="/images/hotnews/20260416_morning_10.webp" class="hotnews-img" alt="热搜配图">
 近期，农行、民生、交行等多家银行密集停发信用卡，以联名卡、主题卡为主，主因是优化产品矩阵、IP授权到期等。同时信用卡发卡量连续三年下滑，2025年末降至6.96亿张，行业进入缩量精耕期。
 
-![](/images/hotnews/20260416_morning_10.webp)
 
 ### <strong>“</strong>重庆铜梁地震引发灾情”不实
+<img src="/images/hotnews/20260416_morning_11.webp" class="hotnews-img" alt="热搜配图">
 近日，有网民发布重庆市铜梁区地震相关内容，引发关注。经核查，网传配图、视频系移花接木、拼接剪辑而成，相关信息不实。
 
-![](/images/hotnews/20260416_morning_11.webp)
 
 ### <strong>女</strong>子投保两年后患癌遭拒赔 法院判了
+<img src="/images/hotnews/20260416_morning_12.webp" class="hotnews-img" alt="热搜配图">
 北京黄女士2022年8月投保50万元重疾险，2025年1月确诊肺腺癌后遭拒赔，法院终审认定保险公司未明确询问肿瘤家族史，判决赔付50万元并继续履行合同。
 
-![](/images/hotnews/20260416_morning_12.webp)
 
 ### <strong>今</strong>后线上线下买药将可“货比三家”
+<img src="/images/hotnews/20260416_morning_13.webp" class="hotnews-img" alt="热搜配图">
 近日，国务院办公厅印发《关于健全药品价格形成机制的若干意见》。4月15日，国家医保局副局长施子海在国新办发布会上表示，将通过全周期、全渠道、全领域改革，推动药价更加公开透明。其中，网上药店信息透明、比价便利，将常态化开展线上线下比价，让群众“货比三家”，看得明白、买得放心。
 
-![](/images/hotnews/20260416_morning_13.webp)
 
 ### <strong>图</strong>书馆里一岁宝宝被排队摸脸
+<img src="/images/hotnews/20260416_morning_14.webp" class="hotnews-img" alt="热搜配图">
 近日，在一家图书馆内，一位一岁宝宝被排队摸脸。小家伙全程睁着亮晶晶的 “星星眼”，呆萌又乖巧，模样可爱到犯规。
 
-![](/images/hotnews/20260416_morning_14.webp)
 
 ### <strong>尼</strong>格买提晒照片：别染发
+<img src="/images/hotnews/20260416_morning_15.webp" class="hotnews-img" alt="热搜配图">
 4月15日，主持人尼格买提晒出自己眼部肿胀的照片并配文：别染发。随后，尼格买提在评论区补充：去年的照片，当时染发剂过敏了。
 
-![](/images/hotnews/20260416_morning_15.webp)
 
 ### <strong>婴</strong>儿列车上哭闹20分钟 男子30秒哄好
+<img src="/images/hotnews/20260416_morning_16.webp" class="hotnews-img" alt="热搜配图">
 4月15日，甘肃一名儿童摄影师在高铁上见婴儿持续哭闹约20分钟，主动上前用专业技巧30秒将其哄睡，赢得乘客称赞。该男子表示只是把本事用在合适的地方，其举动缓解了车厢氛围。
 
-![](/images/hotnews/20260416_morning_16.webp)
 
 ### <strong>醉</strong>驾被警车追撞死人 家属起诉交警
+<img src="/images/hotnews/20260416_morning_17.webp" class="hotnews-img" alt="热搜配图">
 2025年一醉驾司机不配合查酒驾并逃逸，在被警车追的过程中与出租车相撞，又撞上电动车致骑车人身亡。事后，家属认为交警应担责已起诉。4月13日，家属的代理律师已与法院确认，现已立案。‌‌
 
-![](/images/hotnews/20260416_morning_17.webp)
 
 ### <strong>阿</strong>姨拔笋忘掉的衣服被竹子“穿走”
+<img src="/images/hotnews/20260416_morning_18.webp" class="hotnews-img" alt="热搜配图">
 近日，有网友分享视频称，一位阿姨在福建竹林挖笋时因体热脱下外套遗忘，数日后发现衣服被快速生长的竹子“穿走”，悬挂于约10米高处无法取下。
 
-![](/images/hotnews/20260416_morning_18.webp)
 
 ### <strong>法</strong>国全票通过“文物归还法案”
+<img src="/images/hotnews/20260416_morning_19.webp" class="hotnews-img" alt="热搜配图">
 4月13日，法国国民议会罕见地以170票赞成、0票反对，全票通过一项法案，将简化法国在殖民时期掠夺所得文物的归还程序。本次会议出席议员占总数的三分之一，尽管法国各政党对法案细节存在分歧，但所有出席议员均对法案投下赞成票。
 
-![](/images/hotnews/20260416_morning_19.webp)
 
 ### <strong>广</strong>东男子上厕所被浪掀海里漂流1小时
+<img src="/images/hotnews/20260416_morning_20.webp" class="hotnews-img" alt="热搜配图">
 4月15日，广东阳江一名男子在船上如厕时被巨浪卷入海中，套着泳圈漂流一小时后被钓友发现并救起，获救时已严重脱水，送医后无大碍。救人者：获救是真“命好”。
 
-![](/images/hotnews/20260416_morning_20.webp)
 
 ### <strong>别</strong>克全网寻找高速上挡风破碎私家车
+<img src="/images/hotnews/20260416_morning_21.webp" class="hotnews-img" alt="热搜配图">
 4月14日，上海网友在高速偶遇一辆黑色别克轿车后挡风玻璃碎裂，因车内贴有AED紧急取用标识，被网友推断是为救人遭破窗。次日别克官方全网寻找这位低调车主，承诺免费更换玻璃并赠送AED，暖心举动获网友点赞。
 
-![](/images/hotnews/20260416_morning_21.webp)
 
 ### <strong>中</strong>国宝妈重返阿联酋：物价涨太多
+<img src="/images/hotnews/20260416_morning_22.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260416_morning_22.webp)
+
 
 ### <strong>杨</strong>国福一门店称重 把斤按公斤算
+<img src="/images/hotnews/20260416_morning_23.webp" class="hotnews-img" alt="热搜配图">
 4月15日，北京西城。有顾客反映，在杨国福麻辣烫黄寺大街店用餐时，发现店家按公斤计价，但以斤的价格向顾客收费。该顾客一顿麻辣烫实付97.21元。门店工作人员回应称，可能是店员操作失误，已向顾客退款。经计量所检验，秤本身没有问题，出错订单不多。
 
-![](/images/hotnews/20260416_morning_23.webp)
 
 ### <strong>摄</strong>影师蹲守5天拍到竹笋冲破巨石
+<img src="/images/hotnews/20260416_morning_24.webp" class="hotnews-img" alt="热搜配图">
 近日，浙江武义摄影师楚过寒蹲守5天4夜拍摄竹笋从巨石缝隙中破土而出的延时视频，完整记录其顶破石块的过程。
 
-![](/images/hotnews/20260416_morning_24.webp)
 
 ### <strong>3</strong>1岁男子滑旱冰摔倒去世
+<img src="/images/hotnews/20260416_morning_25.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260416_morning_25.webp)
+
 
 ### <strong>9</strong>5后小伙用国产车抛飞载人飞机
+<img src="/images/hotnews/20260416_morning_26.webp" class="hotnews-img" alt="热搜配图">
 江西95后小伙布丁，深耕十年从制作航模到研发载人飞机，近日在湘西边城机场，借助国产极氪8X汽车的硬核动力，成功抛飞自己亲手制作的载人飞机，完成稳定性测试，用热爱与执着实现追梦突破。
 
-![](/images/hotnews/20260416_morning_26.webp)
 
 ### <strong>张</strong>雪计划骑摩托车飞越长江 网友劝阻
+<img src="/images/hotnews/20260416_morning_27.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260416_morning_27.webp)
+
 
 ### <strong>何</strong>润东说翻红后接到很多工作邀约
+<img src="/images/hotnews/20260416_morning_28.webp" class="hotnews-img" alt="热搜配图">
 据4月15日报道，娱乐圈上演了一出“考古翻红”的奇观。主角是何润东，而让他时隔多年重回流量中心的，竟是网友从12年前的《楚汉传奇》里挖出来的“硬核项羽”。这股突如其来的复古热潮，直接让这位51岁的演员迎来了事业“第二春”，资源多到让他自己都坦言“接到很多工作邀约”。
 
-![](/images/hotnews/20260416_morning_28.webp)
 
 ### <strong>塔</strong>克拉玛干沙漠种上了大片苜蓿
+<img src="/images/hotnews/20260416_morning_29.webp" class="hotnews-img" alt="热搜配图">
 近日，塔克拉玛干沙漠种上了大片苜蓿，一抹浓淡相间的绿色圆形图案格外醒目，这是建设者以大地为画布，以庄稼为颜料，绘就的一幅绿色“同心圆”。
 
-![](/images/hotnews/20260416_morning_29.webp)
 
 ### <strong>美</strong>伊停火延期变了又变 以黎边谈边打
+<img src="/images/hotnews/20260416_morning_30.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月15日，中东局势继续呈现胶着态势。美伊停火协议将于22日到期，双方均否认已就延长停火达成共识，巴基斯坦代表团赴伊持续斡旋，试图为下一轮谈判创造条件。以色列在与黎巴嫩展开谈判的同时，仍持续推进对黎真主党的军事行动，多重博弈让地区和平前景仍不明朗。
 
-![](/images/hotnews/20260416_morning_30.webp)
 
 ### <strong>卫</strong>健局回应女婴被秤砣砸中
+<img src="/images/hotnews/20260416_morning_31.webp" class="hotnews-img" alt="热搜配图">
 近日，南京市江浦街道社区卫生服务中心工作人员用杆秤称重时，铁秤砣滑落砸到新生儿，引发关注。4月15日，南京江北新区管理委员会卫生健康局工作人员告诉记者，卫健局已经陪同新生儿家长到医院检查，目前结果未见明显异常。
 
-![](/images/hotnews/20260416_morning_31.webp)
 
 ### <strong>2</strong>女子遭高压水枪狂喷官方将调查
+<img src="/images/hotnews/20260416_morning_32.webp" class="hotnews-img" alt="热搜配图">
 4月13日，云南西双版纳泼水节期间，两名女子在景洪市星光夜市遭多人用高压水枪围喷，尽管多次摆手拒绝仍被持续喷射。当地文旅部门已介入调查，称相关行为违反文明泼水规定。
 
-![](/images/hotnews/20260416_morning_32.webp)
 
 ### <strong>女</strong>子高速突发脑梗 踉跄下车挥手求助
+<img src="/images/hotnews/20260416_morning_33.webp" class="hotnews-img" alt="热搜配图">
 近日，浙江温州G1513温丽高速‌上一名女子突发‌脑梗‌，踉跄下车向过往车辆挥手求救。路过司机‌刘师傅‌将其送至收费站，与赶来的交警、医护人员合力送医。因救助及时，女子已无大碍。
 
-![](/images/hotnews/20260416_morning_33.webp)
 
 ### <strong>成</strong>都“玫瑰爷爷”花田被提前清空
+<img src="/images/hotnews/20260416_morning_34.webp" class="hotnews-img" alt="热搜配图">
 近日，四川成都。被网友亲切称为“玫瑰爷爷”的邓春伦和他的玫瑰花田在网络上悄然走红。游客不仅可以在花田里免费拍照，还能亲手体验采摘玫瑰的乐趣，1元1支，价格不贵。游客们热情高涨，原本预计能持续到4月底的玫瑰，如今已被采摘一空。
 
-![](/images/hotnews/20260416_morning_34.webp)
 
 ### <strong>小</strong>学生发现罂粟后 报警带警察扫毒
+<img src="/images/hotnews/20260416_morning_35.webp" class="hotnews-img" alt="热搜配图">
 近日，湖北宜昌3名小学生发现罂粟立即报警，警察赶到后，3人还主动给警察叔叔带路，并准确讲解罂粟的特征和成分协助“铲毒”。
 
-![](/images/hotnews/20260416_morning_35.webp)
 
 ### <strong>女</strong>子面部抽搐疼痛20年竟因一根血管
+<img src="/images/hotnews/20260416_morning_36.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260416_morning_36.webp)
+
 
 ### <strong>医</strong>生取舌癌男子手臂组织再造新舌头
+<img src="/images/hotnews/20260416_morning_37.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260416_morning_37.webp)
+
 
 ### <strong>环</strong>卫工捡到藏着30万现金的牛奶箱
+<img src="/images/hotnews/20260416_morning_38.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260416_morning_38.webp)
+
 
 ### <strong>5</strong>岁萌娃打拳尽显一代宗师范儿
+<img src="/images/hotnews/20260416_morning_39.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260416_morning_39.webp)
+
 
 ### <strong>广</strong>州一小区电梯从15层坠至负2层
+<img src="/images/hotnews/20260416_morning_40.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260416_morning_40.webp)
+
 
 ### <strong>博</strong>士执意要给骗子转77万元 警察拦截
+<img src="/images/hotnews/20260416_morning_41.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260416_morning_41.webp)
+
 
 ### <strong>8</strong>个月女婴误食花生米大小锡箔纸
+<img src="/images/hotnews/20260416_morning_42.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260416_morning_42.webp)
+
 
 ### <strong>如</strong>何避免“药店刺客” 医保局回应
+<img src="/images/hotnews/20260416_morning_43.webp" class="hotnews-img" alt="热搜配图">
 想避开高价“药店刺客”，国家医保局给出实用办法：使用官方医保药品比价小程序，输入药名就能一键比对附近定点药店的售价、库存，按价格排序挑选，买药更透明，不花冤枉钱。
 
-![](/images/hotnews/20260416_morning_43.webp)
 
 ### <strong>郑</strong>州一水库漂浮大量死鱼 原因待查
+<img src="/images/hotnews/20260416_morning_44.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260416_morning_44.webp)
+
 
 ### <strong>小</strong>区35套房突遭法院查封 业主发声
+<img src="/images/hotnews/20260416_morning_45.webp" class="hotnews-img" alt="热搜配图">
 4月14日，广西柳州大唐观邸小区35套已售房产因开发商广西三门江置业投资有限公司欠债被法院查封。多名业主称已全款购房并入住多年，但因未办理产权证被列入执行拍卖，引发维权关注。
 
-![](/images/hotnews/20260416_morning_45.webp)
 
 ### <strong>宠</strong>物医院回应给狗洗澡把狗吊死
+<img src="/images/hotnews/20260416_morning_46.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260416_morning_46.webp)
+
 
 ### <strong>政</strong>要密集访华 国际社会为何向东看
+<img src="/images/hotnews/20260416_morning_47.webp" class="hotnews-img" alt="热搜配图">
 进入4月，中国北京又一次成为令人瞩目的世界“会客厅”。这些国家政要密集访华不难看出，大多数国家更看重实务与实力，他们访华的重要目的之一，就是与中国发展经贸关系。
 
-![](/images/hotnews/20260416_morning_47.webp)
 
 ### <strong>万</strong>岁山武侠城大象露脚踝？景区回应
+<img src="/images/hotnews/20260416_morning_48.webp" class="hotnews-img" alt="热搜配图">
 
-![](/images/hotnews/20260416_morning_48.webp)
+
 
 ### <strong>匈</strong>牙利告别“欧盟刺头”时代
+<img src="/images/hotnews/20260416_morning_49.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月12日，匈牙利举行国会选举，执政16年的总理欧尔班承认败选。由毛焦尔·彼得领导的反对党蒂萨党预计赢得超三分之二议席，将组建新政府。毛焦尔表示将强力反腐、推行改革，并带领匈牙利回归欧盟与北约主流立场。
 
-![](/images/hotnews/20260416_morning_49.webp)
 
 ### <strong>伊</strong>方否认“原则上同意”延长停火
+<img src="/images/hotnews/20260416_morning_50.webp" class="hotnews-img" alt="热搜配图">
 当地时间15日，伊朗外交部发言人伊斯梅尔·巴加埃在新闻发布会上表示，截至目前，关于延长停火的任何猜测均未得到确认，磋商目前仅通过巴基斯坦调解人进行。
 
-![](/images/hotnews/20260416_morning_50.webp)
 
