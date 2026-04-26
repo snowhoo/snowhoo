@@ -272,14 +272,9 @@ function generatePostContent(newsItems, type) {
     if (item.localImg) {
       body += `<img src="${item.localImg}" class="hotnews-img" alt="热搜配图">\n`;
     }
-    if (item.desc) {
-      body += `<p style="margin:0 0 4px 0;line-height:1.4;">${item.desc}</p>\n`;
-    } else if (item.snippet) {
-      body += `<p style="margin:0 0 4px 0;line-height:1.4;">${item.snippet}</p>\n`;
-    } else {
-      body += `<p style="margin:0 0 4px 0;line-height:1.4;">${item.title}</p>\n`;
-    }
-    body += `<br clear="both">\n\n`;
+    const descText = (item.desc || item.snippet || item.title).replace(/\r/g, '');
+    body += `<p style="margin:0 0 4px 0;line-height:1.4;">${descText}</p>\n`;
+    body += `<br clear="both">\n`;
   });
 
   const frontmatter = {
