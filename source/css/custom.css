@@ -155,3 +155,106 @@ html[data-theme="dark"] #nav #blog-info .site-icon img {
     width: 120px;
   }
 }
+
+/* ========================================
+   访客幸运号浮动标签 - 首页右上方
+   ======================================== */
+
+#lucky-visitor-tag {
+  position: fixed;
+  top: 90px;
+  right: 20px;
+  z-index: 999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  cursor: default;
+  animation: lucky-float-in 0.6s ease-out;
+}
+
+@keyframes lucky-float-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+#lucky-visitor-tag .lucky-tag-inner {
+  background: linear-gradient(145deg, #fff9f0, #fff3e0);
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 20px rgba(255, 152, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 140px;
+}
+
+/* Emoji */
+#lucky-visitor-tag .lucky-emoji {
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* 信息区域 */
+#lucky-visitor-tag .lucky-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* 标签 */
+#lucky-visitor-tag .lucky-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e65100;
+  background: rgba(255, 152, 0, 0.12);
+  padding: 2px 8px;
+  border-radius: 10px;
+  line-height: 1.4;
+}
+
+/* 幸运号 */
+#lucky-visitor-tag .lucky-num {
+  font-size: 18px;
+  font-weight: 700;
+  color: #bf360c;
+  letter-spacing: -0.5px;
+}
+
+/* 来访次数 */
+#lucky-visitor-tag .lucky-count {
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+}
+
+/* 黑暗模式适配 */
+html[data-theme="dark"] #lucky-visitor-tag .lucky-tag-inner {
+  background: linear-gradient(145deg, #3e2723, #2d1f1a);
+  border-color: rgba(255, 152, 0, 0.2);
+  box-shadow: 0 4px 20px rgba(255, 152, 0, 0.1);
+}
+
+html[data-theme="dark"] #lucky-visitor-tag .lucky-badge {
+  color: #ffb74d;
+  background: rgba(255, 152, 0, 0.15);
+}
+
+html[data-theme="dark"] #lucky-visitor-tag .lucky-num {
+  color: #ffcc80;
+}
+
+html[data-theme="dark"] #lucky-visitor-tag .lucky-count {
+  color: #999;
+}
+
+/* 移动端隐藏（屏幕太小会遮挡内容） */
+@media (max-width: 900px) {
+  #lucky-visitor-tag {
+    display: none;
+  }
+}

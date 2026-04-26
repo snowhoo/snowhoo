@@ -107,7 +107,7 @@
   }
 
   // ========================
-  // 二、趣味访客统计
+  // 二、访客幸运号浮动标签（首页右上方）
   // ========================
 
   function getLuckyNum(visitorId) {
@@ -118,51 +118,62 @@
     return Math.abs(seed % 9000 + 1000); // 1000~9999
   }
 
-  function initVisitorCounter() {
-    var visitKey = 'snowhoo_visitor_id';
+  function isHomePage() {
+    // 判断是否首页
+    var path = window.location.pathname;
+    return path === '/' || path === '/index.html' || path === '' || path === '/page/';
+  }
+
+  function getVisitCount() {
     var countKey = 'snowhoo_visit_count';
+    return parseInt(localStorage.getItem(countKey) || '0', 10);
+  }
 
+  function initLuckyTag() {
+    if (!isHomePage()) return;
+
+    var visitKey = 'snowhoo_visitor_id';
     var visitorId = localStorage.getItem(visitKey);
-    if (!visitorId) {
-      visitorId = 'v_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-      localStorage.setItem(visitKey, visitorId);
-    }
+    if (!visitorId) return;
 
-    var count = parseInt(localStorage.getItem(countKey) || '0', 10) + 1;
-    localStorage.setItem(countKey, count);
-
+    var count = getVisitCount();
     var lucky = getLuckyNum(visitorId);
 
-    var milestone = '';
+    // 生成徽章文案
+    var badge = '';
+    var emoji = '🍀';
     if (count === 1) {
-      milestone = '🌟 首次见面，欢迎你！';
-    } else if (count === 5) {
-      milestone = '💫 你已是常客啦！';
-    } else if (count === 10) {
-      milestone = '🔥 十分熟悉了！';
-    } else if (count === 20) {
-      milestone = '🎉 资深读者！';
-    } else if (count === 50) {
-      milestone = '🏆 铁杆粉丝！';
-    } else if (count === 100) {
-      milestone = '👑 超级元老！';
+      badge = '首次见面';
+      emoji = '🌟';
+    } else if (count <= 5) {
+      badge = '常客';
+      emoji = '💫';
+    } else if (count <= 10) {
+      badge = '老粉';
+      emoji = '🔥';
+    } else if (count <= 20) {
+      badge = '资深';
+      emoji = '🎉';
+    } else if (count <= 50) {
+      badge = '铁粉';
+      emoji = '🏆';
+    } else {
+      badge = '元老';
+      emoji = '👑';
     }
 
-    var footer = document.getElementById('footer');
-    if (footer) {
-      var infoDiv = document.createElement('div');
-      infoDiv.id = 'snowhoo-visitor-info';
-      infoDiv.style.cssText =
-        'text-align:center;padding:8px 0;font-size:13px;color:var(--font-color);opacity:0.75;line-height:1.8;';
-      infoDiv.innerHTML =
-        '<span>你是第 <strong>' + count + '</strong> 次来到小红故事</span>';
-      if (milestone) {
-        infoDiv.innerHTML += '<br><span>' + milestone + '</span>';
-      }
-      infoDiv.innerHTML +=
-        '<br><span>幸运号码 <strong>' + lucky + '</strong>，收藏此号，可用于留言认领~</span>';
-      footer.insertBefore(infoDiv, footer.firstChild);
-    }
+    var tag = document.createElement('div');
+    tag.id = 'lucky-visitor-tag';
+    tag.innerHTML =
+      '<div class="lucky-tag-inner">' +
+        '<span class="lucky-emoji">' + emoji + '</span>' +
+        '<div class="lucky-info">' +
+          '<span class="lucky-badge">' + badge + '</span>' +
+          '<span class="lucky-num">#' + lucky + '</span>' +
+        '</div>' +
+        '<span class="lucky-count">第' + count + '次来访</span>' +
+      '</div>';
+    document.body.appendChild(tag);
   }
 
   // ========================
@@ -171,7 +182,7 @@
 
   function init() {
     showBanner();
-    initVisitorCounter();
+    initLuckyTag();
   }
 
   if (document.readyState === 'loading') {
