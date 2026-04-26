@@ -1,9 +1,9 @@
----
+﻿---
 title: I have decided to stick with love. Hate is too gre… —— Martin Luther King Jr.
 date: 2026-04-16 06:00:01
 updated: 2026-04-16 06:00:01
 categories:
-  - 正能量
+  - 每日正能量
 tags:
   - 名言
   - 正能量

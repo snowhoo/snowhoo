@@ -1,9 +1,9 @@
----
+﻿---
 title: Only a life lived for others is a life worthwhile. —— Albert Einstein
 date: 2026-04-18 06:00:01
 updated: 2026-04-18 06:00:01
 categories:
-  - 正能量
+  - 每日正能量
 tags:
   - 名言
   - 正能量

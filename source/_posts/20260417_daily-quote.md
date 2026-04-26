@@ -1,9 +1,9 @@
----
+﻿---
 title: The only limit to our realization of tomorrow is o… —— Franklin D. Roosevelt
 date: 2026-04-17 06:00:01
 updated: 2026-04-17 06:00:01
 categories:
-  - 正能量
+  - 每日正能量
 tags:
   - 名言
   - 正能量

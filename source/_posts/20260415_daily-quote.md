@@ -1,9 +1,9 @@
----
+﻿---
 title: Set your life on fire. Seek those who fan your fla… —— Rumi
 date: 2026-04-15 06:00:01
 updated: 2026-04-15 06:00:01
 categories:
-  - 正能量
+  - 每日正能量
 tags:
   - 名言
   - 正能量
