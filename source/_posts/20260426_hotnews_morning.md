@@ -1,7 +1,7 @@
-﻿---
+---
 title: 2026年04月26日 小红故事热搜晨报
-date: 2026-04-26 08:00:24
-updated: 2026-04-26 08:00:24
+date: 2026-04-26 04:31:48
+updated: 2026-04-26 04:31:48
 categories:
   - 新闻热搜
 tags:
@@ -11,247 +11,200 @@ cover: /images/hotnews-morning.svg
 toc: true
 ---
 
-> 来源：互联网 | 采集时间：2026/4/26 08:00:24
-
-### <strong>暴</strong>雨大暴雨上线 一直下到五一
-4月25日，全国大部地区降水稀少，气温回升。明天（26日）夜间起至29日，南方大部新一轮降水上线，5月1日短暂雨歇，但随后降雨再度来袭，持续到“五一”假期。临近假期出行，请提前留意天气变化。
+> 来源：互联网 | 采集时间：2026/4/26 12:31:48
 
 <img src="/images/hotnews/20260426_morning_01.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>男</strong>童疑发现金矿所在地加强保密管理
-近日，辽宁大连庄河市大营镇8岁男孩孙典锋随爸爸一起爬山挖野菜时，识别出可能指示地下有金矿的植物——问荆草。目前，当地已对该区域加强巡查与保密管理，同时向村民宣传矿产资源属于国家所有，任何私自勘查、开采行为都是违法的。
+### <strong>美</strong>国白宫记者晚宴发生枪击事件
+当地时间4月25日，美国白宫记者晚宴大厅发生枪击事件，枪手现已身亡。
 
 <img src="/images/hotnews/20260426_morning_02.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>普</strong>通人什么时候能用上6G
-尽管6G的研发前景广阔，但普通人真正用上消费级6G服务还需要一段时间。根据专家的预测，大概率要到2030年前后，6G才会开始进入消费市场，而要比较普遍地进入大众市场，可能还需要再往后延几年。
+### <strong>俞</strong>敏洪回应东方甄选主播集体离职
+近日，包括明明、天权在内的东方甄选主播集体离职。在4月25日的直播中，俞敏洪表示，已与四位主播进行深度、诚挚的沟通挽留，并表示四位主播均为陪伴平台成长的优秀员工，他们的离开是平台的损失。
 
 <img src="/images/hotnews/20260426_morning_03.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>青</strong>岛警方通报一道路立杆装满监控
-4月25日，青岛城阳公安分局通报称，针对网民反映的黑龙江中路与山河路交叉口立杆密集安装监控设备问题，经核查，两根立杆共装有18个摄像设备、24个补光设备，其中12个摄像设备、16个补光设备因老化停用未拆除，目前已清理完毕并致歉。
-
-<img src="/images/hotnews/20260426_morning_04.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>赵</strong>心童两阶段9-7领先丁俊晖
-当地时间4月24日，在英国谢菲尔德举行的2026世界斯诺克锦标赛八分之一决赛中，中国选手丁俊晖迎战同胞赵心童。第二阶段战罢，赵心童以9-7的比分暂时领先丁俊晖。第三阶段将于26日17时开始。
-
-<img src="/images/hotnews/20260426_morning_05.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>伊</strong>朗最高领袖敦促海湾国家：保持警惕
-
-<img src="/images/hotnews/20260426_morning_06.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>派</strong>出所副所长诱骗未成年人吸毒获刑
-2024年1月，南京六合区某派出所副所长马某为完成查处任务，勾结社会人员徐某等人，通过提供含依托咪酯的电子烟诱骗6名未成年人在宾馆吸食后查获。2026年4月，六合区法院一审以欺骗他人吸毒罪判处马某5年有期徒刑，徐某等三名涉案人员亦获刑。
-
-<img src="/images/hotnews/20260426_morning_07.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>多</strong>部门回应女老师两点一线脱单难
-近日，有网友在问政平台向四川攀枝花市的领导留言，称自己妹妹是高中老师，生活“两点一线”脱单难，希望政府牵头联合相关部门，搭建青年联谊交友平台，解决单身青年婚恋问题。25日，攀枝花市东区妇女联合会、攀枝花市总工会等多部门公开回复表示，已安排相关活动。
-
-<img src="/images/hotnews/20260426_morning_08.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>家</strong>属推昏迷病人在银行取款遭拒
-日前，河北邢台银行一网点拒绝昏迷病人家属代办取款引发争议。视频中，家属推着处于昏迷状态的病人前往网点取款被拒，银行工作人员称需确认本人自愿方可办理，双方就手续问题沟通引发争议。家属回应：确有此事，已经解决。
-
-<img src="/images/hotnews/20260426_morning_09.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>军</strong>港首次对公众开放 全阵容亮相
-4月23日，人民海军77周年纪念日，旅顺军港首次对公众开放，于4月23日至26日举办舰艇开放活动。跟随记者近距离触摸多型现代化战舰。看中国海军逐梦深蓝的底气与力量，宽体机库+双无人机平台054A全方位进化。
-
-<img src="/images/hotnews/20260426_morning_10.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>不</strong>是这些食品有毒 是伪科普有毒
-不是这些食品有毒，是伪科普有毒。中国互联网联合辟谣平台澄清：蜂蜜结晶是正常物理现象，可放心食用；黄曲霉毒素生成需特定条件，家用冰箱冷冻室低温下产生概率极低；味精高温分解的焦谷氨酸钠，无毒且不致癌。
-
-<img src="/images/hotnews/20260426_morning_11.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>得</strong>知胎儿色盲孕晚期女子崩溃想打胎
-近日，一名孕晚期女子因胎儿被诊断出色盲而情绪崩溃，拒绝产检并欲打胎，医生诊断其处于重度强迫症状态。
-
-<img src="/images/hotnews/20260426_morning_12.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>美</strong>国富豪非洲打猎被5头大象踩死
-近日，75岁美国富豪厄尼·多西奥在非洲加蓬共和国Lope-Okanda雨林狩猎时，因误入母象领地遭5头大象踩踏身亡。事发时他正猎捕黄背小羚羊，象群为保护幼象发动攻击，其向导重伤，霰弹枪未能抵御象群。
-
-<img src="/images/hotnews/20260426_morning_13.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>4</strong>名主播同日宣布离开东方甄选
-4月25日下午，东方甄选4名主播明明、天权、中灿、林林陆续在个人社交平台发长文宣布，离开东方甄选。他们均提到不适应过去几个月公司的变化，甚至还有人因此焦虑。同时，他们也都感谢了俞敏洪。另一知名主播YOYO在四名同事的评论区送上祝福。
-
-<img src="/images/hotnews/20260426_morning_14.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>这</strong>是“打赏”？这是“打劫”！
-近期，两则案例冲上热搜：平时节俭的70岁老人，把家里330余万元积蓄全打赏给了网络主播，最后连15块钱电费都交不起；20岁女子一年多打赏主播挥霍近1700万元，致父亲企业濒临破产。金额之大，令人震惊。这哪是“打赏”？简直是“打劫”！
-
-<img src="/images/hotnews/20260426_morning_15.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>南</strong>方多省电价为何突然飙升
-近期，我国南方区域电力现货市场迎来阶段性高电价。数据显示，4月1日至23日，南方区域现货日前均价达468元/兆瓦时，较3月上涨38%。电价为何多次上涨？来看记者调查。
-
-<img src="/images/hotnews/20260426_morning_16.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>1</strong>6岁高中生或发现日军侵华新罪证
-去年12月，江苏省徐州市沛县16岁高中生于聍鹏向侵华日军南京大屠杀遇难同胞纪念馆捐赠了两件日军侵华文物史料。近日，他又从多个渠道新发现了一批日军侵华相关历史资料。
-
-<img src="/images/hotnews/20260426_morning_17.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>社</strong>保“第六险”缴费多少 享哪些待遇
-长期护理保险（社保“第六险”）为所有职工和居民参保，5年左右费率逐步过渡至0.3%左右，提供生活照料及医疗护理服务。保障重点覆盖重度失能人员，实行分级评估与动态管理，并已在部分地区试点异地待遇服务。
-
-<img src="/images/hotnews/20260426_morning_18.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>伊</strong>朗代表团已离开巴基斯坦
-当地时间25日，记者获悉，伊朗代表团已离开巴基斯坦。
-
-<img src="/images/hotnews/20260426_morning_19.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>欧</strong>盟对俄制裁列单中国企业 中方回应
-4月25日，商务部新闻发言人表示，欧盟不顾中方多次交涉和反对，在第20轮对俄制裁中肆无忌惮列单中国企业，中方对此强烈不满、坚决反对。中方将采取必要措施，坚决维护中国企业的正当合法权益，一切后果将由欧方承担。
-
-<img src="/images/hotnews/20260426_morning_20.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>周</strong>杰伦购入澳洲百年庄园？公司回应
-4月25日，据报道，周杰伦疑似花费近5000万澳元，在澳大利亚墨尔本图拉克买下一处占地3000平方米的庄园豪宅。对此，周杰伦所属的公司杰威尔回应称：没有在澳洲置业打算，二人生活居住重心一直在中国台北。
-
-<img src="/images/hotnews/20260426_morning_21.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>刘</strong>诗诗北影节闭幕式出场如仙女下凡
-4月25日，北京国际电影节闭幕式上，刘诗诗以一袭米白色长裙亮相，仪态优雅、气质清冷，被观众和媒体称“仙女下凡”。
-
-<img src="/images/hotnews/20260426_morning_22.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>8</strong>1岁袁和平获北影节终身成就奖
-
-<img src="/images/hotnews/20260426_morning_23.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>“</strong>我还会再来 我喜欢中国！”
-第139届广交会开幕以来，境外采购商到会人数创历史新高。服务机器人、绿色智能家居等“中国智造”受热捧，多国客商点赞“中国创新”，表示“还会再来，喜欢中国！”展会对促进外贸、链接全球作用显著。​​​​
-
-<img src="/images/hotnews/20260426_morning_24.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>叶</strong>童一袭黑裙优雅亮相北影节闭幕式
-4月25日，叶童一袭黑裙亮相第十六届北京国际电影节闭幕式入场仪式，从容端庄，自带气场。
-
-<img src="/images/hotnews/20260426_morning_25.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>中</strong>企回应印尼镍矿新政：成本将暴涨
-近期，印尼政府调整镍矿计价公式，纳入铁、钴、铬等金属，致每吨湿法镍矿成本至少涨22美元。在印尼投资的中国企业正与当地政府沟通，希望调整成本计价，称投资时矿价低廉，产能建成后涨价挤压利润，呼吁保障产业链合理利润空间。
-
-<img src="/images/hotnews/20260426_morning_26.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>D</strong>eepSeek在等一个更大的爆点
-2025年初，DeepSeek用R1制造了一个“时刻”，让英伟达单日蒸发6000亿美元。一年多后，DeepSeek再次发布新旗舰，这一次叫V4。这次DeepSeek没炸市场，因为它在等一个更大的爆点。
-
-<img src="/images/hotnews/20260426_morning_27.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>老</strong>外学习“Chinglish”为哪般
-近期，海外社交媒体上出现外国博主主动学习使用中式英语的现象，如“I morning eat eggs”等表达。这类将中文语法重组英语的玩法被海外网友视为既有趣又简洁的社交语言，标志曾被视作错误的“Chinglish”完成身份逆转。
-
-<img src="/images/hotnews/20260426_morning_28.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>台</strong>名嘴霸气回怼民进党发言人破防质问
-近日，民进党发言人吴峥破防发问：“难道就因为我是台独就要打我吗？我被炸死就活该吗？”台湾名嘴侯汉廷霸气回怼：不然呢？这本来就是“台独”要付出的代价。
-
-<img src="/images/hotnews/20260426_morning_29.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>于</strong>和伟获北影节天坛奖最佳男主角
-4月25日，演员于和伟凭借电影《森中有林》获得第16届北影节天坛奖最佳男主角奖。他接过奖杯后表示：“我很喜欢这个故事，讲的是我家乡沈阳的故事，我是半个沈阳人，我了解这片土地上都有什么样的人。”最后，他激动地说：“我爱电影，我爱这个世界。”
-
-<img src="/images/hotnews/20260426_morning_30.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>者</strong>来女被淘汰
-4月25日晚，《乘风2026》二公结果引发争议。实力唱将者来女以33票垫底被淘汰，全场观众高喊“黑幕”，节目组紧急闭麦。
-
-<img src="/images/hotnews/20260426_morning_31.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>台</strong>媒：毛里求斯表态戳破台当局谎言
-据台湾“中时新闻网”4月24日报道，赖清德取消出访斯威士兰，民进党当局指称因塞舌尔、毛里求斯、马达加斯加受到压力而突然取消专机飞航许可。不过，毛里求斯方面向当地媒体称，从未批准过任何许可，这一说法与台湾当局说法有差距。
-
-<img src="/images/hotnews/20260426_morning_32.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>1</strong>名医生1分钟给3人“看病”26次
-近日，上海警方破获一起医保诈骗案。以邵某为首的团伙通过回收医保卡虚构就诊记录，生成虚假诊疗数据骗取药品，1名医生1分钟给3人“看病”26次，涉案药品价值超50万元。3月20日收网行动中，7名嫌疑人被采取刑事强制措施。
-
-<img src="/images/hotnews/20260426_morning_33.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>主</strong>播高价回收十字绣诈骗被刑拘
-
-<img src="/images/hotnews/20260426_morning_34.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>绍</strong>兴官方通报写错药量大妈吞42粒药
-
-<img src="/images/hotnews/20260426_morning_35.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>酿</strong>这“老酒”的是“稂”不是“粮”
-直播间热销的“年份老酒”实为酒精勾兑的假冒伪劣产品。造假分子以“五稂液”仿“五粮液”，玩文字游戏，利用生锈剂做旧包装，通过话术制造焦虑，诱导消费者。近期两省联合查处特大制售假冒名优白酒案，涉案超2.6亿元。酿这“老酒”的，正是“稂”不是“粮”。​​​​
-
-<img src="/images/hotnews/20260426_morning_36.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>丰</strong>县煎包苏超爆火 市民排队两小时
-4月25日晚，南通体育会展中心，“苏超”南通队与徐州队展开激烈交锋，场外的徐州丰县煎包也火出了圈，摊前一直排着长队，供不应求。一位南通市民说，排了两个小时的队，就想尝个鲜。老板说，截至晚上9点15分，已经卖出了四五千个煎包。
-
-<img src="/images/hotnews/20260426_morning_37.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>乔</strong>杉获北影节天坛奖最佳男配角
-4月25日晚，演员乔杉凭借电影《森中有林》获第16届北京国际电影节“天坛奖”最佳男配角。他幽默致谢称“看着台下艺术家听我讲话太过瘾”，并特别感谢妻子多年来不计回报地支持自己。
-
-<img src="/images/hotnews/20260426_morning_38.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>中</strong>国成功发射巴基斯坦PRSC-EO3卫星
-北京时间4月25日20时15分，我国在太原卫星发射中心使用长征六号运载火箭，成功将巴基斯坦PRSC-EO3卫星发射升空，卫星顺利进入预定轨道，发射任务取得圆满成功。此次是长征系列火箭第640次飞行。
-
-<img src="/images/hotnews/20260426_morning_39.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>航</strong>行警告：黄海部分海域进行实弹射击
-
-<img src="/images/hotnews/20260426_morning_40.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>阚</strong>清子：要看唱得好就去看《歌手》
-近日，演员阚清子在参与综艺《乘风2026》时回应节目定位，强调观众若追求演唱技巧应观看《歌手》，而该节目更注重参与者的态度表现。
-
-<img src="/images/hotnews/20260426_morning_41.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>印</strong>度族群冲突引发枪战致3人死亡
-印度曼尼普尔邦警方24日通报，该邦乌克鲁尔地区一村庄中两个族群当天发生枪战，造成3名男子死亡。
-
-<img src="/images/hotnews/20260426_morning_42.webp" class="hotnews-img" alt="热搜配图">
-
 ### <strong>首</strong>个、首次、首台 多领域硬核“上新”
 本周，从地质储氢技术创新到月壤新发现，从6G技术迈入新阶段到新能源汽车行业再升级，我国多领域实现突破硬核成果持续“上新”。
 
-<img src="/images/hotnews/20260426_morning_43.webp" class="hotnews-img" alt="热搜配图">
+<img src="/images/hotnews/20260426_morning_04.webp" class="hotnews-img" alt="热搜配图">
+### <strong>歼</strong>15挂弹起飞 硬刚外军航母编队
+2022年5月，张敏随辽宁舰执行远海任务。外军两个航母编队同时向东、南两个方向频繁派出舰机跟踪监视。面对外军的严重挑衅，张敏和战友挂弹起飞，死死“咬住”外军机，从高度8000米一直缠斗至2000米，最终成功驱离外军机。
 
-### <strong>河</strong>南教师在马来西亚街头救人
+<img src="/images/hotnews/20260426_morning_05.webp" class="hotnews-img" alt="热搜配图">
+### <strong>车</strong>边捡300元 上车发现38000元被偷
+近日，浙江绍兴一男子停车后确认锁好车门且钱款完好，之后在车旁捡到300元，凌晨开车门时却发现车内38000元现金被盗，副驾车门内侧有剐蹭痕迹，报警后得知，那300元是作案小偷遗落的。警方称，系2人凌晨连撬盗七八辆车作案，目前已将两人抓获。
+
+<img src="/images/hotnews/20260426_morning_06.webp" class="hotnews-img" alt="热搜配图">
+### <strong>因</strong>儿女未探望 老人高空扔下5箱红酒
+近日，湖北竹溪法院审结一案。住在某小区10楼的徐某因不满子女未在春节探望自己，为泄愤将子女存放在家的5箱红酒搬至窗台逐一抛下，抛物过程持续十几分钟，所幸无人受伤。法院最终判定徐某获刑六个月，缓刑一年，罚金2000元。
+
+<img src="/images/hotnews/20260426_morning_07.webp" class="hotnews-img" alt="热搜配图">
+### <strong>特</strong>朗普撤离枪击案现场时摔了一跤
+当地时间4月25日，美国白宫记者晚宴大厅发生枪击事件，特朗普撤离现场“摔了一跤”，被人群搀扶离开现场。
+
+<img src="/images/hotnews/20260426_morning_08.webp" class="hotnews-img" alt="热搜配图">
+### <strong>晚</strong>宴枪击现场细��曝光
+当地时间4月25日晚‌，美国华盛顿希尔顿酒店举行的‌白宫记者晚宴‌上发生枪击事件，美国总统特朗普被特勤局人员紧急护送撤离现场。现场细节已由多家主流媒体曝光：部长急撤、记者趴地，特朗普未伤将发布讲话。
+
+<img src="/images/hotnews/20260426_morning_09.webp" class="hotnews-img" alt="热搜配图">
+### <strong>家</strong>属推昏迷病人在银行取款遭拒
+日前，河北邢台银行一网点拒绝昏迷病人家属代办取款引发争议。视频中，家属推着处于昏迷状态的病人前往网点取款被拒，银行工作人员称需确认本人自愿方可办理，双方就手续问题沟通引发争议。家属回应：确有此事，已经解决。
+
+<img src="/images/hotnews/20260426_morning_10.webp" class="hotnews-img" alt="热搜配图">
+### <strong>丁</strong>俊晖爬上球台逗笑全场观众
+在2026年斯诺克世锦赛中国德比中，丁俊晖在第16局因击球不便试图爬上球台击球，这一非常规动作逗笑全场观众。
+
+<img src="/images/hotnews/20260426_morning_11.webp" class="hotnews-img" alt="热搜配图">
+### <strong>接</strong>种HPV疫苗会不育致癌是误区
+专家澄清“接种HPV疫苗会不育致癌”：HPV疫苗使用的是HPV的结构蛋白，制作成了病毒样的颗粒。打到人体以后，HPV疫苗只作为一种抗原来诱发身体产生抗体。这个抗体就可以抵御相应的HPV感染，因为它不含有核酸，不是真正的病毒，所以它不具备感染性，不具备致癌性，也不会引起不育的情况。
+
+<img src="/images/hotnews/20260426_morning_12.webp" class="hotnews-img" alt="热搜配图">
+### <strong>李</strong>小冉钟汉良16年前的剧翻红
+近日，李小冉钟汉良两人16年前主演的民国剧《来不及说我爱你》翻红，网友热议：当年主演扛剧靠演技，如今翻红靠底气。
+
+<img src="/images/hotnews/20260426_morning_13.webp" class="hotnews-img" alt="热搜配图">
+### <strong>多</strong>部门回应女老师两点一线脱单难
+近日，有网友在问政平台向四川攀枝花市的领导留言，称自己妹妹是高中老师，生活“两点一线”脱单难，希望政府牵头联合相关部门，搭建青年联谊交友平台，解决单身青年婚恋问题。25日，攀枝花市东区妇女联合会、攀枝花市总工会等多部门公开回复表示，已安排相关活动。
+
+<img src="/images/hotnews/20260426_morning_14.webp" class="hotnews-img" alt="热搜配图">
+### <strong>榴</strong>莲已经20多元一斤了
+近期，榴莲价格大幅跳水，多地金枕榴莲零售价跌至20多元一斤，天越热越便宜。商家：果型要圆，刺大肉就大。
+
+<img src="/images/hotnews/20260426_morning_15.webp" class="hotnews-img" alt="热搜配图">
+### <strong>东</strong>方甄选主播离职原因
+东方甄选主播离职潮持续扩大，截至目前，已有明明、天权、中灿、林林等人公开回应离职。离职原因：公司整体直播模式与运营风格彻底改变。
+
+<img src="/images/hotnews/20260426_morning_16.webp" class="hotnews-img" alt="热搜配图">
+### <strong>台</strong>胞打卡青岛：大陆厉害得像科幻片
+近日，多位台湾同胞来到山东青岛打卡各种景点并登上了人民海军舰艇。一路上，大家反复提及三个关键词——那也是从心底发出的声音：惊艳、骄傲、期待。有台胞说：“大陆已经这么厉害，像科幻片一样。”
+
+<img src="/images/hotnews/20260426_morning_17.webp" class="hotnews-img" alt="热搜配图">
+### <strong>特</strong>朗普发布枪手冲闯安检口瞬间录像
+当地时间4月25日晚，美国白宫记者晚宴发生枪击事件。美国总统特朗普发布枪手冲闯安检口瞬间录像：枪手携带多种武器，“跑出残影”。
+
+<img src="/images/hotnews/20260426_morning_18.webp" class="hotnews-img" alt="热搜配图">
+### <strong>1</strong>名医生1分钟给3人“看病”26次
+近日，上海警方破获一起医保诈骗案。以邵某为首的团伙通过回收医保卡虚构就诊记录，生成虚假诊疗数据骗取药品，1名医生1分钟给3人“看病”26次，涉案药品价值超50万元。3月20日收网行动中，7名嫌疑人被采取刑事强制措施。
+
+<img src="/images/hotnews/20260426_morning_19.webp" class="hotnews-img" alt="热搜配图">
+### <strong>因</strong>突发事件撤离晚宴后 特朗普发帖
+当地时间4月25日，美国白宫记者晚宴大厅发生枪击事件。美国总统特朗普撤离晚宴后发帖表示，已建议“让活动继续进行”，但他将完全听从执法部门的安排。无论最终决定如何，当晚的活动都将与原定计划大不相同。
+
+<img src="/images/hotnews/20260426_morning_20.webp" class="hotnews-img" alt="热搜配图">
+### <strong>浙</strong>江一对情侣在桥洞内被困 消防救援
+4月21日凌晨1点，浙江金华兰溪市消防救援指挥中心接到报警，某大桥桥洞内发现有2人被困。被困的是一对情侣，当晚两人因感情纠纷发生争执，女生情绪上头翻越护栏，直接坠落到下方的桥墩平台；男生情急之下，从大桥的拱圈结构硬爬下去，结果两人双双被困，男方最终选择报警求助。
+
+<img src="/images/hotnews/20260426_morning_21.webp" class="hotnews-img" alt="热搜配图">
+### <strong>这</strong>些东西千万别顺手放冰箱
+这些东西千万别顺手放冰箱！近日北京市西城区消防救援支队发布视频提醒，瓶装带有果汁果肉的液体、带有气体的饮品等储存时都需注意，以防爆裂喷溅。
+
+<img src="/images/hotnews/20260426_morning_22.webp" class="hotnews-img" alt="热搜配图">
+### <strong>塑</strong>料价格暴涨
+近期，霍尔木兹海峡运输受阻，波及全球石化产业链，塑料生产的重要原材料石脑油价格水涨船高。美国化工巨头陶氏化学（DOW）已于4月宣布将聚乙烯价格每磅上调30美分（涨幅约60%），并计划5月再次提价。‌‌
+
+<img src="/images/hotnews/20260426_morning_23.webp" class="hotnews-img" alt="热搜配图">
+### <strong>央</strong>视曝光掺假黄金
+近期，有消费者和黄金回收商家反馈买到了掺铼的“假黄金”，如何分辨黄金是否掺铼？央视曝光：二者密度相近，常规方法难以鉴别。专家提醒，选购黄金优先选择正规品牌门店，疑似假货可送至专业机构检测鉴别。
+
+<img src="/images/hotnews/20260426_morning_24.webp" class="hotnews-img" alt="热搜配图">
+### <strong>煎</strong>饼摊位被挡 获全网撑腰
+日前，有网友发帖，一名男老板的煎饼摊紧贴在一名女老板的煎饼摊前方，几乎完全挡住了她的经营空间。帖子迅速引发众多网友关注，很多网友为女老板打抱不平。如今，受到全网撑腰的这个煎饼摊前队伍越排越长。
+
+<img src="/images/hotnews/20260426_morning_25.webp" class="hotnews-img" alt="热搜配图">
+### <strong>中</strong>纪委周末“打虎”
+4月25日，据中央纪委国家监委网站消息，中国科学院科技创新发展中心党委副书记、主任伍浩涉嫌严重违纪违法，目前正接受中央纪委国家监委纪律审查和监察调查。
+
+<img src="/images/hotnews/20260426_morning_26.webp" class="hotnews-img" alt="热搜配图">
+### <strong>朱</strong>时茂丛珊北影节合体 梦回《牧马人》
+近日，朱时茂丛珊亮相北影节闭幕红毯，两位《牧马人》主演再相聚！
+
+<img src="/images/hotnews/20260426_morning_27.webp" class="hotnews-img" alt="热搜配图">
+### <strong>央</strong>视披露“深山救流浪女”摆拍细节
+央视披露“深山救流浪女”摆拍细节：该事件是多人合谋、分工明确的虚假摆拍。刻意营造一个人迹罕至、天寒地冻又带有“边境危险、女子受虐”的氛围环境，引导网民关注评论。核心目的，是以悲情的这种话题引起社会的共鸣，吸引流量后直播带货变现。
+
+<img src="/images/hotnews/20260426_morning_28.webp" class="hotnews-img" alt="热搜配图">
+### <strong>8</strong>1岁袁和平获北影节终身成就奖
+4月25日，‌袁和平‌在第十六届北京国际电影节闭幕式上获颁终身成就奖。袁华、吴京、张晋等一众功夫巨星到场致敬。81岁的他在获奖感言中表示：“我不是81岁，我是18岁”，并强调将继续为电影业打拼。
+
+<img src="/images/hotnews/20260426_morning_29.webp" class="hotnews-img" alt="热搜配图">
+### <strong>家</strong>属花80万捞人 对方收钱后失联
+
+<img src="/images/hotnews/20260426_morning_30.webp" class="hotnews-img" alt="热搜配图">
+### <strong>晚</strong>宴枪击案细节：30岁男子持霰弹枪
+当地时间4月25日，据一名美国联邦调查局官员所说，当天有持霰弹枪者试图突破白宫记者协会晚宴安保，嫌犯还向特勤局特工开枪，特工无恙。
+
+<img src="/images/hotnews/20260426_morning_31.webp" class="hotnews-img" alt="热搜配图">
+### <strong>摊</strong>主回应女子逃单还抱走万元狗狗
+
+<img src="/images/hotnews/20260426_morning_32.webp" class="hotnews-img" alt="热搜配图">
+### <strong>张</strong>译段奕宏给于和伟颁奖
+4月25日晚，第十六届北京国际电影节天坛奖颁奖典礼举行，演员于和伟凭借《森中有林》获得天坛奖最佳男主角。演员张译、段奕宏为于和伟颁奖。
+
+<img src="/images/hotnews/20260426_morning_33.webp" class="hotnews-img" alt="热搜配图">
+### <strong>枪</strong>击嫌疑人携多件武器 致1人伤
+当地时间25日，美国总统特朗普在白宫新闻发布会上说，白宫记者协会晚宴上的枪击事件嫌疑人来自加利福尼亚州。他说，嫌疑人当时携带了多件武器，强闯安全检查关卡，后被特勤局人员抓获。枪击事件导致一名人员中弹，受伤人员目前情况良好。
+
+<img src="/images/hotnews/20260426_morning_34.webp" class="hotnews-img" alt="热搜配图">
+### <strong>中</strong>国成功发射一颗巴基斯坦卫星
+北京时间2026年4月25日20时15分，我国在太原卫星发射中心使用长征六号运载火箭，成功将巴基斯坦PRSC-EO3卫星发射升空，卫星顺利进入预定轨道，发射任务取得圆满成功。
+
+<img src="/images/hotnews/20260426_morning_35.webp" class="hotnews-img" alt="热搜配图">
+### <strong>神</strong>马股份被立案调查
+4月24日，神马股份发布公告，宣布近日收到中国证监会《立案告知书》。因公司存在信息披露违法违规嫌疑，依据《中华人民共和国证券法》《中华人民共和国行政处罚法》等相关法律法规，证监会已决定对其立案。
+
+<img src="/images/hotnews/20260426_morning_36.webp" class="hotnews-img" alt="热搜配图">
+### <strong>极</strong>危鸟类活体被催肥出售 已抓捕3人
+
+<img src="/images/hotnews/20260426_morning_37.webp" class="hotnews-img" alt="热搜配图">
+### <strong>杜</strong>特尔特被判反人类罪 律师质疑裁决
+当地时间4月23日，国际刑事法院‌裁定菲律宾前总统‌杜特尔特‌涉嫌在2016至2022年总统任内主导的扫毒行动中犯下‌反人类罪‌，需对数十起命案负责。其律师尼克·考夫曼质疑裁决依据仅为认罪暴徒的减刑证词。‌
+
+<img src="/images/hotnews/20260426_morning_38.webp" class="hotnews-img" alt="热搜配图">
+### <strong>重</strong>度昏迷患者醒后首个心愿：想吃榴莲
+近日，临沂市康复医院一重度昏迷患者梁女士苏醒，她的首个心愿是“想吃榴莲”，医护人员听到后，自掏腰包买下一颗榴莲，把这份香甜送到了病床前。
+
+<img src="/images/hotnews/20260426_morning_39.webp" class="hotnews-img" alt="热搜配图">
+### <strong>在</strong>西藏拍到绝美“贴地彩虹”
+近日，有网友分享在西藏拍到的绝美“贴地彩虹”！见者好运！
+
+<img src="/images/hotnews/20260426_morning_40.webp" class="hotnews-img" alt="热搜配图">
+### <strong>社</strong>保“第六险”缴费多少 享哪些待遇
+长期护理保险（社保“第六险”）为所有职工和居民参保，5年左右费率逐步过渡至0.3%左右，提供生活照料及医疗护理服务。保障重点覆盖重度失能人员，实行分级评估与动态管理，并已在部分地区试点异地待遇服务。
+
+<img src="/images/hotnews/20260426_morning_41.webp" class="hotnews-img" alt="热搜配图">
+### <strong>1</strong>2306“最强大脑”是这位“铁娘子”
+24日，北京人民大会堂举行“时代楷模”单杏花同志先进事迹报告会。单杏花，中国铁道科学研究院集团有限公司首席研究员、铁路12306技术中心总工程师。2024年12月，中宣部授予她“时代楷模”称号。网友则形象地称她为12306的“最强大脑”“铁娘子”。
+
+<img src="/images/hotnews/20260426_morning_42.webp" class="hotnews-img" alt="热搜配图">
+### <strong>为</strong>抢拍日出C位 泰山多游客大打出手
+4月25日，多名网友发帖称，有人在泰山风景区为了占位置拍日出，多名游客发生推搡扭打，现场“人仰马翻”。景区回应：公安机关正在处理中。
+
+<img src="/images/hotnews/20260426_morning_43.webp" class="hotnews-img" alt="热搜配图">
+### <strong>刷</strong>短视频为啥停不下来
+夜深了，工作了一整天躺在床上，明明知道该放下手机休息，却怎么也停不下来，还是一条接一条地刷着短视频。这样的场景，你是不是再熟悉不过？这种现象，经济学里称为“价值悖论”——对你有用的东西，不一定能让你作出选择；让你作出选择的，往往是当下让你更满足的东西。
 
 <img src="/images/hotnews/20260426_morning_44.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>河</strong>南郸城一戏台搭在麦地唱戏
+### <strong>造</strong>谣雷军被堵车里维权 一人被拘10日
+4月26日，小米公司发言人发文称，网络用户李某华在微信群中捏造、散布有关我司及我司创始人雷军先生的谣言。我司报警后，公安机关迅速调查并抓获造谣人。目前，李某华已被依法处以行政拘留十日。此前，李某华在微信群内造谣“雷军在某服务区被车主围堵维权”。
 
 <img src="/images/hotnews/20260426_morning_45.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>这</strong>座江南小城何以成为“德企之乡”
-江苏太仓，一座80万人口的县级市，聚集了超过560家德国企业，其中制造业德企数量约占全国的十分之一。为何这座江南小城会成为中国的“德企之乡”？跟随记者走进太仓的企业、工厂、商会，探寻太仓30多年对德合作历程及背后的故事。
+### <strong>“</strong>航母等军舰不可能宅在家里”
+日前，中国海军052D型驱逐舰包头舰编队穿越横当水道等国际航道赴西太平洋训练。军事专家指出此类远海训练符合国际法，任何军舰包括驱逐舰、护卫舰、航母，都不可能宅在自己的家里，它要到远海大洋进行锤炼，这样才能提高海军海上防御作战的能力。
 
 <img src="/images/hotnews/20260426_morning_46.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>托</strong>管班面包车后备箱疑站俩孩子
-近日，有网友反映，江苏南京一托管班接学生时，疑因车内满座，让部分学生站在后备箱处，引发关注。视频中，一辆“苏A”牌照的黑色商务面包车后方，一名身着“智杰”字样马甲的成年女子正关闭后备箱门，车辆右侧还有孩子上车。
+### <strong>夫</strong>妻在楼道养鸡双双重症肺炎住进ICU
 
 <img src="/images/hotnews/20260426_morning_47.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>苏</strong>超再现名场面 全场合唱《歌唱祖国》
+### <strong>比</strong>亚迪：正讨论进军F1可能性
+2026北京车展期间，比亚迪副总裁李柯接受了sportmediaset.mediaset.it的采访，在采访中她表示，比亚迪确实正在考虑进军F1，并已和多梅尼卡利进行了联系。
 
 <img src="/images/hotnews/20260426_morning_48.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>欧</strong>尔班：将不担任匈牙利国会议员职务
-匈牙利总理欧尔班当地时间25日表示，未来他将不担任国会议员职务，而是应青民盟主席团提议，继续作为青民盟主席发挥重组其阵营的作用。
+### <strong>洪</strong>秀柱谈自己国风穿搭出圈
+近日，洪秀柱在上海一时尚活动中回应国风穿搭出圈，“我只是很自然地选择了我所认同的文化，我们两岸同文同种，文化同源，这种联结任何外力都割不断。那种心灵契合的情感联结，是任何政治语言都没有办法取代的。”
 
 <img src="/images/hotnews/20260426_morning_49.webp" class="hotnews-img" alt="热搜配图">
-
-### <strong>仍</strong>有谈判窗口？伊朗外长将再次访巴
-当地时间4月25日，伊朗外长阿拉格齐率领的代表团结束对巴基斯坦的访问。随后，特朗普宣布取消美国代表原定访问巴基斯坦的行程。不过，阿拉格齐在结束对阿曼的访问并在前往俄罗斯之前，计划再次访问巴基斯坦。
+### <strong>广</strong>交会客户压价 女孩全英文沉着应对
+近日，广交会客户来电压价，一名12岁女孩全英文沉着应对，展示出超出年龄的商务谈判能力，逻辑清晰、表达在线。相关视频引发关注，网友：小小年纪，大方自信，未来可期！
 
 <img src="/images/hotnews/20260426_morning_50.webp" class="hotnews-img" alt="热搜配图">
+### <strong>伊</strong>朗最高领袖敦促海湾国家：保持警惕
 
