@@ -266,11 +266,12 @@ function generatePostContent(newsItems, type) {
   newsItems.forEach((item, i) => {
     const firstChar = item.title.charAt(0);
     const restTitle = item.title.slice(1);
-    // 有图片则先插入（空行隔开，确保Markdown正确解析标题）
-    if (item.localImg) {
-      body += `<img src="${item.localImg}" class="hotnews-img" alt="热搜配图">\n\n`;
-    }
+    // 先写标题（占整行）
     body += `### <strong>${firstChar}</strong>${restTitle}\n`;
+    // 再写图片+描述（图片在描述右边浮动）
+    if (item.localImg) {
+      body += `<img src="${item.localImg}" class="hotnews-img" alt="热搜配图">\n`;
+    }
     if (item.desc) {
       body += `${item.desc}\n`;
     } else if (item.snippet) {

@@ -13,9 +13,8 @@ toc: true
 
 > 来源：互联网 | 采集时间：2026/4/26 12:31:48
 
-<img src="/images/hotnews/20260426_morning_01.webp" class="hotnews-img" alt="热搜配图">
-
 ### <strong>美</strong>国白宫记者晚宴发生枪击事件
+<img src="/images/hotnews/20260426_morning_01.webp" class="hotnews-img" alt="热搜配图">
 当地时间4月25日，美国白宫记者晚宴大厅发生枪击事件，枪手现已身亡。
 
 <img src="/images/hotnews/20260426_morning_02.webp" class="hotnews-img" alt="热搜配图">
@@ -157,19 +156,17 @@ toc: true
 
 ### <strong>家</strong>属花80万捞人 对方收钱后失联
 
-<img src="/images/hotnews/20260426_morning_30.webp" class="hotnews-img" alt="热搜配图">
-
 ### <strong>晚</strong>宴枪击案细节：30岁男子持霰弹枪
 当地时间4月25日，据一名美国联邦调查局官员所说，当天有持霰弹枪者试图突破白宫记者协会晚宴安保，嫌犯还向特勤局特工开枪，特工无恙。
+<img src="/images/hotnews/20260426_morning_30.webp" class="hotnews-img" alt="热搜配图">
 
 <img src="/images/hotnews/20260426_morning_31.webp" class="hotnews-img" alt="热搜配图">
 
 ### <strong>摊</strong>主回应女子逃单还抱走万元狗狗
 
-<img src="/images/hotnews/20260426_morning_32.webp" class="hotnews-img" alt="热搜配图">
-
 ### <strong>张</strong>译段奕宏给于和伟颁奖
 4月25日晚，第十六届北京国际电影节天坛奖颁奖典礼举行，演员于和伟凭借《森中有林》获得天坛奖最佳男主角。演员张译、段奕宏为于和伟颁奖。
+<img src="/images/hotnews/20260426_morning_32.webp" class="hotnews-img" alt="热搜配图">
 
 <img src="/images/hotnews/20260426_morning_33.webp" class="hotnews-img" alt="热搜配图">
 
@@ -190,10 +187,9 @@ toc: true
 
 ### <strong>极</strong>危鸟类活体被催肥出售 已抓捕3人
 
-<img src="/images/hotnews/20260426_morning_37.webp" class="hotnews-img" alt="热搜配图">
-
 ### <strong>杜</strong>特尔特被判反人类罪 律师质疑裁决
 当地时间4月23日，国际刑事法院‌裁定菲律宾前总统‌杜特尔特‌涉嫌在2016至2022年总统任内主导的扫毒行动中犯下‌反人类罪‌，需对数十起命案负责。其律师尼克·考夫曼质疑裁决依据仅为认罪暴徒的减刑证词。‌
+<img src="/images/hotnews/20260426_morning_37.webp" class="hotnews-img" alt="热搜配图">
 
 <img src="/images/hotnews/20260426_morning_38.webp" class="hotnews-img" alt="热搜配图">
 
@@ -239,10 +235,9 @@ toc: true
 
 ### <strong>夫</strong>妻在楼道养鸡双双重症肺炎住进ICU
 
-<img src="/images/hotnews/20260426_morning_47.webp" class="hotnews-img" alt="热搜配图">
-
 ### <strong>比</strong>亚迪：正讨论进军F1可能性
 2026北京车展期间，比亚迪副总裁李柯接受了sportmediaset.mediaset.it的采访，在采访中她表示，比亚迪确实正在考虑进军F1，并已和多梅尼卡利进行了联系。
+<img src="/images/hotnews/20260426_morning_47.webp" class="hotnews-img" alt="热搜配图">
 
 <img src="/images/hotnews/20260426_morning_48.webp" class="hotnews-img" alt="热搜配图">
 
