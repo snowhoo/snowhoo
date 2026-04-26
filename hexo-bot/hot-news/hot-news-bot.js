@@ -274,7 +274,6 @@ function generatePostContent(newsItems, type) {
     }
     const descText = (item.desc || item.snippet || item.title).replace(/\r/g, '');
     body += `<p style="margin:0 0 4px 0;line-height:1.4;">${descText}</p>\n`;
-    body += `<br clear="both">\n`;
   });
 
   const frontmatter = {
