@@ -266,8 +266,6 @@ function generatePostContent(newsItems, type) {
   newsItems.forEach((item, i) => {
     const firstChar = item.title.charAt(0);
     const restTitle = item.title.slice(1);
-    // 每个条目添加清除浮动
-    body += `<div class="hotnews-item">\n`;
     // 标题
     body += `### <strong>${firstChar}</strong>${restTitle}\n`;
     // 图片+描述
@@ -281,7 +279,7 @@ function generatePostContent(newsItems, type) {
     } else {
       body += `<p style="margin:0 0 4px 0;line-height:1.4;">${item.title}</p>\n`;
     }
-    body += `</div>\n`;
+    body += `<br clear="both">\n\n`;
   });
 
   const frontmatter = {
