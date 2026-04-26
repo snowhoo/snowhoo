@@ -273,12 +273,12 @@ function generatePostContent(newsItems, type) {
       body += `<img src="${item.localImg}" class="hotnews-img" alt="热搜配图">\n`;
     }
     if (item.desc) {
-      body += `${item.desc}\n`;
+      body += `<p style="margin:0 0 4px 0;line-height:1.4;">${item.desc}</p>\n`;
     } else if (item.snippet) {
-      body += `${item.snippet}\n`;
+      body += `<p style="margin:0 0 4px 0;line-height:1.4;">${item.snippet}</p>\n`;
     } else {
       // 没有内容时复制标题
-      body += `${item.title}\n`;
+      body += `<p style="margin:0 0 4px 0;line-height:1.4;">${item.title}</p>\n`;
     }
     body += `\n`;
   });
