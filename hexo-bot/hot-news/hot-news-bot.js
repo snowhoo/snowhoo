@@ -266,9 +266,11 @@ function generatePostContent(newsItems, type) {
   newsItems.forEach((item, i) => {
     const firstChar = item.title.charAt(0);
     const restTitle = item.title.slice(1);
-    // 先写标题（占整行）
+    // 每个条目添加清除浮动
+    body += `<div class="hotnews-item">\n`;
+    // 标题
     body += `### <strong>${firstChar}</strong>${restTitle}\n`;
-    // 再写图片+描述（图片在描述右边浮动）
+    // 图片+描述
     if (item.localImg) {
       body += `<img src="${item.localImg}" class="hotnews-img" alt="热搜配图">\n`;
     }
@@ -277,10 +279,9 @@ function generatePostContent(newsItems, type) {
     } else if (item.snippet) {
       body += `<p style="margin:0 0 4px 0;line-height:1.4;">${item.snippet}</p>\n`;
     } else {
-      // 没有内容时复制标题
       body += `<p style="margin:0 0 4px 0;line-height:1.4;">${item.title}</p>\n`;
     }
-    body += `\n`;
+    body += `</div>\n`;
   });
 
   const frontmatter = {
