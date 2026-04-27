@@ -213,8 +213,8 @@ function htmlToMarkdown(html, attachments, imgDir) {
 
   // 16. 清理图片周围的格式标记（**![xxx](url)** → ![xxx](url)）
   processedHtml = processedHtml.replace(/\*{1,3}(!\[[^\]]*\]\([^)]+\))\*{1,3}/g, '$1');
-  // 清理空的格式标记（**** 或 *** 或 ** 等）
-  processedHtml = processedHtml.replace(/\*{2,}/g, '');
+  // 清理空的格式标记（连续 ** 但中间没有文字的情况，如行首或行尾残留的 ****）
+  processedHtml = processedHtml.replace(/(?<!\*)\*{4,}(?!\*)/g, '');
 
   return { markdown: processedHtml, savedImgs };
 }
