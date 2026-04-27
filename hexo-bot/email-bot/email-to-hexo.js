@@ -117,9 +117,24 @@ function htmlToMarkdown(html, attachments, imgDir) {
     return items + '\n';
   });
 
-  // 7. 转换加粗、斜体
-  processedHtml = processedHtml.replace(/<(strong|b)[^>]*>([\s\S]*?)<\/(strong|b)>/gi, '**$2**');
-  processedHtml = processedHtml.replace(/<(em|i)[^>]*>([\s\S]*?)<\/(em|i)>/gi, '*$2*');
+  // 7. 转换加粗、斜体（压缩内部空白，避免 ** 被拆到多行导致渲染失败）
+  processedHtml = processedHtml.replace(/<(strong|b)[^>]*>([\s\S]*?)<\/(strong|b)>/gi, (m, tag, c) => {
+    const inner = c.replace(/\s+/g, ' ').trim();
+    return inner ? `**${inner}**` : '';
+  });
+  processedHtml = processedHtml.replace(/<(em|i)[^>]*>([\s\S]*?)<\/(em|i)>/gi, (m, tag, c) => {
+    const inner = c.replace(/\s+/g, ' ').trim();
+    return inner ? `*${inner}*` : '';
+  });
+  // 处理 <u> 下划线 + <s>/<del>/<strike> 删除线
+  processedHtml = processedHtml.replace(/<u[^>]*>([\s\S]*?)<\/u>/gi, (m, c) => {
+    const inner = c.replace(/\s+/g, ' ').trim();
+    return inner ? `++${inner}++` : '';
+  });
+  processedHtml = processedHtml.replace(/<(s|del|strike)[^>]*>([\s\S]*?)<\/(s|del|strike)>/gi, (m, tag, c) => {
+    const inner = c.replace(/\s+/g, ' ').trim();
+    return inner ? `~~${inner}~~` : '';
+  });
 
   // 8. 转换链接
   processedHtml = processedHtml.replace(/<a[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, '[$2]($1)');
@@ -196,6 +211,11 @@ function htmlToMarkdown(html, attachments, imgDir) {
   processedHtml = processedHtml.replace(/__IMG_CID_\d+__/g, '');
   processedHtml = processedHtml.replace(/__IMG_BASE64_\d+__/g, '');
 
+  // 16. 清理图片周围的格式标记（**![xxx](url)** → ![xxx](url)）
+  processedHtml = processedHtml.replace(/\*{1,3}(!\[[^\]]*\]\([^)]+\))\*{1,3}/g, '$1');
+  // 清理空的格式标记（**** 或 *** 或 ** 等）
+  processedHtml = processedHtml.replace(/\*{2,}/g, '');
+
   return { markdown: processedHtml, savedImgs };
 }
 
@@ -258,6 +278,9 @@ async function parseEmail(subject, body, html, attachments) {
     content = body.trim();
   }
 
+  // 移除正文中的 @hexo 命令标记
+  content = content.replace(/^@hexo\s*/im, '').trim();
+
   // 正文第一行 # → 取标题（只有主题没有标题时才从正文取）
   const bMatch = content.match(/^#\s*(.+?)(?:\n|$)/);
   if (bMatch && !title) {
@@ -274,10 +297,11 @@ async function parseEmail(subject, body, html, attachments) {
     content = content.replace(/\[草稿\]/gi, '').trim();
   }
 
-  // 标签（从正文提取 #xxx）
-  const tagMatches = content.match(/#([^\s#\[\]]+)/g) || [];
-  tags = tagMatches.map(t => t.replace('#', '').trim());
-  content = content.replace(/#([^\s#\[\]]+)/g, '').trim();
+  // 标签（从正文提取 #xxx，但排除 Markdown 标题 # 标题）
+  // 只匹配独立的 #tag 格式：前面不是行首，且 tag 内容不含中文句号等标点
+  const tagMatches = content.match(/(?<!^)#([^\s#\[\]]+)/gm) || [];
+  tags = tagMatches.map(t => t.replace('#', '').trim()).filter(t => t && !/[。！？，、；：]/.test(t)); // 排除含中文标点的假标签
+  content = content.replace(/(?<!^)#([^\s#\[\]]+)/g, '').trim();
 
   // 分类
   const catMatch = content.match(/\[(?:cat|category)[:：]\s*([^\]]+)\]/i);
