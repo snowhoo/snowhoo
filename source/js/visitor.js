@@ -130,7 +130,7 @@
   }
 
   function initLuckyTag() {
-    if (!isHomePage()) return;
+    // 不再限制首页，每页都显示
 
     var visitKey = 'snowhoo_visitor_id';
     var countKey = 'snowhoo_visit_count';
