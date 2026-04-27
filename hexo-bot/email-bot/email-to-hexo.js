@@ -89,9 +89,20 @@ function htmlToMarkdown(html, attachments, imgDir) {
     return `__IMG_BASE64_${base64ImgIndex - 1}__`;
   });
 
+  // 提前移除 <style> 和 <script>，避免内容混入后续格式转换
+  processedHtml = processedHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+  processedHtml = processedHtml.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+  processedHtml = processedHtml.replace(/<!--[\s\S]*?-->/g, '');
+
   // 外部图片
-  processedHtml = processedHtml.replace(/<img[^>]*src=["'](https?:\/\/[^"']+)["'][^>]*alt=["']([^"']*)["'][^>]*>/gi, '![$3]($1)');
+  processedHtml = processedHtml.replace(/<img[^>]*src=["'](https?:\/\/[^"']+)["'][^>]*alt=["']([^"']*)["'][^>]*>/gi, '![$2]($1)');
   processedHtml = processedHtml.replace(/<img[^>]*src=["'](https?:\/\/[^"']+)["'][^>]*>/gi, '![]($1)');
+
+  // 3b. 预处理：将含 line-through style 的标签内容包裹 <del>，后续统一转换
+  processedHtml = processedHtml.replace(/<(\w+)([^>]*)style=["'][^"']*text-decoration[^"']*line-through[^"']*["']([^>]*)>([\s\S]*?)<\/\1>/gi, (m, tag, pre, post, c) => {
+    const inner = c.trim();
+    return inner ? `<del>${inner}</del>` : '';
+  });
 
   // 4. 转换标题
   processedHtml = processedHtml.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, (m, c) => '# ' + c.trim() + '\n\n');
@@ -126,7 +137,7 @@ function htmlToMarkdown(html, attachments, imgDir) {
   });
   processedHtml = processedHtml.replace(/<u[^>]*>([\s\S]*?)<\/u>/gi, (m, c) => {
     const inner = c.replace(/\s+/g, ' ').trim();
-    return inner ? `++${inner}++` : '';
+    return inner || '';
   });
   processedHtml = processedHtml.replace(/<(s|del|strike)[^>]*>([\s\S]*?)<\/(s|del|strike)>/gi, (m, tag, c) => {
     const inner = c.replace(/\s+/g, ' ').trim();
@@ -146,11 +157,8 @@ function htmlToMarkdown(html, attachments, imgDir) {
   processedHtml = processedHtml.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (m, c) => '```\n' + c.trim() + '\n```\n\n');
   processedHtml = processedHtml.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, '`$1`');
 
-  // 11. 移除其他 HTML 标签
+  // 11. 移除其他 HTML 标签（style/script/comment 已提前移除）
   processedHtml = processedHtml
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<[^>]+>/g, '');
 
   // 12. 清理 HTML 实体
@@ -207,6 +215,23 @@ function htmlToMarkdown(html, attachments, imgDir) {
   // 16. 清理图片周围的格式标记
   processedHtml = processedHtml.replace(/\*{1,3}(!\[[^\]]*\]\([^)]+\))\*{1,3}/g, '$1');
   processedHtml = processedHtml.replace(/(?<!\*)\*{4,}(?!\*)/g, '');
+
+  // 17. 后处理：清理嵌套/空格式标记
+  // 移除空的格式标记（如 ****、~~~~、** ** 等）
+  processedHtml = processedHtml.replace(/\*{2,}\s*\*{2,}/g, '');
+  processedHtml = processedHtml.replace(/~{2,}\s*~{2,}/g, '');
+  // 清理删除线内只有空白或无实质内容的情况
+  processedHtml = processedHtml.replace(/~~[\s]*~~/g, '');
+  // 清理残留的 ++ 标记（下划线旧语法残留）
+  processedHtml = processedHtml.replace(/\+\+([\s\S]*?)\+\+/g, '$1');
+  // 清理交叉嵌套：~~**text**~~ 或 **~~text~~** 是合法的，但 ~~**~~ 或类似空嵌套要清理
+  processedHtml = processedHtml.replace(/~~\*{1,3}~~/g, '');
+  processedHtml = processedHtml.replace(/\*{1,3}~~\*{1,3}/g, '');
+  // 再次清理多余空白
+  processedHtml = processedHtml
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 
   return { markdown: processedHtml, savedImgs };
 }
@@ -280,9 +305,10 @@ async function parseEmail(subject, body, html, attachments) {
     content = content.replace(/\[草稿\]/gi, '').trim();
   }
 
-  const tagMatches = content.match(/(?<!^)#([^\s#\[\]]+)/gm) || [];
+  // hashtag 提取：仅匹配前面有空格的 #标签（避免误匹配行首 Markdown 标题）
+  const tagMatches = content.match(/(?<=\s)#([^\s#\[\]]+)/gm) || [];
   tags = tagMatches.map(t => t.replace('#', '').trim()).filter(t => t && !/[。！？，、；：]/.test(t));
-  content = content.replace(/(?<!^)#([^\s#\[\]]+)/g, '').trim();
+  content = content.replace(/(?<=\s)#([^\s#\[\]]+)/g, '').trim();
 
   const catMatch = content.match(/\[(?:cat|category)[:：]\s*([^\]]+)\]/i);
   if (catMatch) {
