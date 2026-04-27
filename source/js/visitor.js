@@ -152,7 +152,7 @@
     var badge = '';
     var emoji = '🍀';
     if (count === 1) {
-      badge = '首次见面';
+      badge = '初次见面';
       emoji = '🌟';
     } else if (count <= 5) {
       badge = '常客';
@@ -177,10 +177,9 @@
       '<div class="lucky-tag-inner">' +
         '<span class="lucky-emoji">' + emoji + '</span>' +
         '<div class="lucky-info">' +
-          '<span class="lucky-badge">' + badge + '</span>' +
-          '<span class="lucky-num">#' + lucky + '</span>' +
+          '<div class="lucky-row1"><span class="lucky-badge">' + badge + '</span><span class="lucky-readers">读友</span><span class="lucky-count">第' + count + '次来访</span></div>' +
+          '<div class="lucky-row2"><span class="lucky-num">幸运号 #' + lucky + '</span><span class="lucky-lottery">留言可抽奖！</span></div>' +
         '</div>' +
-        '<span class="lucky-count">第' + count + '次来访</span>' +
       '</div>';
     document.body.appendChild(tag);
   }
