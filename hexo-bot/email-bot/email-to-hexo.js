@@ -370,19 +370,8 @@ async function triggerDeploy(filename) {
       console.log('[backup] [info] force pushed to remote source branch');
     }
 
-    const genOut = await runCmd('npx hexo generate ' + hexoArgs.join(' '), { timeout: 120000 });
-    if (!genOut.includes('Generated') && genOut.includes('ERROR')) {
-      console.error('[deploy] [error] generate failed:', genOut.slice(-200));
-      return;
-    }
-    console.log('[deploy] [info] generate done, starting deploy...');
-
-    const depOut = await runCmd('npx hexo deploy ' + hexoArgs.join(' '), { timeout: 120000 });
-    if (depOut.includes('Deploy done')) {
-      console.log('[deploy] [done] article published successfully!');
-    } else {
-      console.log('[deploy] [done] deploy finished (check site for result)');
-    }
+    // 已改用 GitHub Actions 自动构建部署，只需 push 到 source 分支即可
+    console.log('[deploy] [done] source pushed, GitHub Actions will build & deploy automatically');
   } catch (e) {
     console.error('[error]', e.message);
   }

@@ -336,50 +336,40 @@ function runCmd(cmd, opts = {}) {
   });
 }
 
-// ========== 执行 hexo generate + deploy（先备份） ==========
+// ========== 执行部署（推送到 source 分支，由 GitHub Actions 自动构建发布） ==========
 async function deploy(type) {
-  console.log('[deploy] 开始生成并部署...');
+  console.log('[deploy] 开始部署...');
   const hexoDir = 'D:/hexo';
   try {
-    // Step 1: Git 备份
+    // Step 1: Git add 新文章和图片
     await runCmd('git add source/_posts/ source/images/hotnews/', { cwd: hexoDir, timeout: 30000 });
-    
+
     // 纯 ASCII commit message
     const commitMsg = type === '晨报' ? 'post-daily-hotnews-morning' : 'post-daily-hotnews-evening';
     const commitOut = await runCmd(`git commit -m "${commitMsg}"`, { cwd: hexoDir, timeout: 30000 });
-    
+
     if (commitOut.includes('nothing to commit')) {
-      console.log('[backup] [info] no changes to commit');
+      console.log('[deploy] no changes to commit');
     } else {
-      console.log('[backup] [info] committed to source branch');
+      console.log('[deploy] committed to source branch');
     }
 
-    // Step 2: Git push with force fallback
+    // Step 2: Git push to source branch（GitHub Actions 自动触发构建和部署）
     let pushOut;
     try {
       pushOut = await runCmd('git push origin source', { cwd: hexoDir, timeout: 60000 });
-      console.log('[backup] [info] pushed to remote source branch');
+      console.log('[deploy] pushed to remote source branch');
     } catch (e) {
-      console.log('[backup] [info] normal push failed, trying force push...');
-      pushOut = await runCmd('git push origin source --force', { cwd: hexoDir, timeout: 60000 });
-      console.log('[backup] [info] force pushed to remote source branch');
+      console.log('[deploy] normal push failed, trying force push...');
+      try {
+        pushOut = await runCmd('git push origin source --force', { cwd: hexoDir, timeout: 60000 });
+        console.log('[deploy] force pushed to remote source branch');
+      } catch (e2) {
+        console.error('[error] push failed:', e2.message);
+      }
     }
 
-    // Step 3: Hexo generate
-    const genOut = await runCmd('hexo generate', { cwd: hexoDir, timeout: 120000 });
-    if (genOut.includes('Generated') || !genOut.includes('ERROR')) {
-      console.log('[deploy] [info] generate done, starting deploy...');
-      
-      // Step 4: Hexo deploy
-      const depOut = await runCmd('hexo deploy', { cwd: hexoDir, timeout: 120000 });
-      if (depOut.includes('Deploy done')) {
-        console.log('[done] hot news article published successfully!');
-      } else {
-        console.error('[error] deploy may have failed:', depOut.slice(-300));
-      }
-    } else {
-      console.error('[error] hexo generate failed');
-    }
+    console.log('[done] source pushed, GitHub Actions will build & deploy automatically');
   } catch (e) {
     console.error('[error]', e.message);
   }

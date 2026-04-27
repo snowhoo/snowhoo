@@ -457,26 +457,8 @@ async function deploy() {
     log('[git] push failed: ' + r.out.slice(-200));
   }
 
-  // Step 4: hexo clean
-  r = await spawnWithTimeout(
-    'cmd', ['/c', 'hexo clean'],
-    { cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
-    60, 'hexo clean'
-  );
-  log('[hexo] clean: code=' + r.code);
-
-  // Step 5: hexo generate + deploy
-  r = await spawnWithTimeout(
-    'cmd', ['/c', 'hexo generate && hexo deploy'],
-    { cwd: hexoDir, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
-    120, 'hexo deploy'
-  );
-  log('[hexo] deploy: code=' + r.code + ' | ' + r.out.slice(0, 150));
-  if (r.out.includes('Deploy done') || r.out.includes('To github')) {
-    log('[done] hexo deploy finished');
-  } else {
-    log('[warn] hexo deploy output unexpected: ' + r.out.slice(-100));
-  }
+  // 已改用 GitHub Actions 自动构建部署，只需 push 到 source 分支即可
+  log('[deploy] source pushed, GitHub Actions will build & deploy automatically');
   log('[deploy] ========== 部署完成 ==========');
 }
 
