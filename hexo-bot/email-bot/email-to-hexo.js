@@ -1,9 +1,9 @@
-/**
- * Hexo 邮件发布服务
- * 监听 9187541@qq.com 收件箱，自动将邮件内容发布到 Hexo
+﻿/**
+ * Hexo 邮件发布服务 - IMAP IDLE 常驻模式
+ * 监听 9187541@qq.com 收件箱，实时接收新邮件并发布到 Hexo
  *
  * 用法: node email-to-hexo.js
- * 建议配合 Windows 任务计划程序，每 1-2 分钟执行一次
+ * 常驻运行，Windows 任务计划作为守护进程
  */
 // 只输出带 [xxx] 标签的日志，其他全部静默
 const _origLog = console.log;
@@ -27,6 +27,177 @@ const yaml = require('js-yaml');
 const dayjs = require('dayjs');
 const { spawn } = require('child_process');
 const sharp = require('sharp');
+
+// ─── HTML 转 Markdown（保留图片位置和格式）────────────────────────────────
+function htmlToMarkdown(html, attachments, imgDir) {
+  // 1. 处理内嵌图片 (cid:xxx → 附件)
+  const cidMap = {};
+  const savedImgs = [];
+
+  if (attachments && attachments.length > 0) {
+    attachments.forEach((att, i) => {
+      if (att.contentId) {
+        cidMap[att.contentId] = { att, index: i };
+      }
+    });
+  }
+
+  // 2. 替换 <img src="cid:xxx"> 为占位符，后续处理
+  let processedHtml = html.replace(/<img[^>]*src=["']cid:([^"']+)["'][^>]*>/gi, (match, cid) => {
+    const cidClean = cid.replace(/[<>]/g, '');
+    const info = cidMap[cidClean];
+    if (info) {
+      // 找到对应附件，标记位置
+      return `__IMG_CID_${info.index}__`;
+    }
+    return match; // 未找到对应附件，保留原样
+  });
+
+  // 3. 处理 base64 内嵌图片 (data:image/xxx;base64,...)
+  let base64ImgIndex = 1000; // 从 1000 开始编号，避免和 cid 图片冲突
+  processedHtml = processedHtml.replace(/<img[^>]*src=["']data:image\/(png|jpeg|jpg|gif|webp);base64,([^"']+)["'][^>]*alt=["']([^"']*)["'][^>]*>/gi, (match, ext, base64Data, alt) => {
+    if (!imgDir) return '';
+    const imgBuffer = Buffer.from(base64Data, 'base64');
+    const name = `${dayjs().format('YYYYMMDDHHmmss')}-b${base64ImgIndex}.jpg`;
+    const filepath = path.join(imgDir, name);
+    try {
+      sharp(imgBuffer)
+        .resize(1200, null, { withoutEnlargement: true })
+        .jpeg({ quality: 85, progressive: true })
+        .toFile(filepath);
+    } catch (_) {
+      fs.writeFileSync(filepath, imgBuffer);
+    }
+    savedImgs.push({ index: base64ImgIndex, name, markdown: `![${alt || name}](/images/email-attachments/${name})` });
+    base64ImgIndex++;
+    return `__IMG_BASE64_${base64ImgIndex - 1}__`;
+  });
+  // 无 alt 的 base64 图片
+  processedHtml = processedHtml.replace(/<img[^>]*src=["']data:image\/(png|jpeg|jpg|gif|webp);base64,([^"']+)["'][^>]*>/gi, (match, ext, base64Data) => {
+    if (!imgDir) return '';
+    const imgBuffer = Buffer.from(base64Data, 'base64');
+    const name = `${dayjs().format('YYYYMMDDHHmmss')}-b${base64ImgIndex}.jpg`;
+    const filepath = path.join(imgDir, name);
+    try {
+      sharp(imgBuffer)
+        .resize(1200, null, { withoutEnlargement: true })
+        .jpeg({ quality: 85, progressive: true })
+        .toFile(filepath);
+    } catch (_) {
+      fs.writeFileSync(filepath, imgBuffer);
+    }
+    savedImgs.push({ index: base64ImgIndex, name, markdown: `![${name}](/images/email-attachments/${name})` });
+    base64ImgIndex++;
+    return `__IMG_BASE64_${base64ImgIndex - 1}__`;
+  });
+
+  // 3. 处理其他 <img src="http..."> 外部图片，保留链接
+  processedHtml = processedHtml.replace(/<img[^>]*src=["'](https?:\/\/[^"']+)["'][^>]*alt=["']([^"']*)["'][^>]*>/gi, '![$3]($1)');
+  processedHtml = processedHtml.replace(/<img[^>]*src=["'](https?:\/\/[^"']+)["'][^>]*>/gi, '![]($1)');
+
+  // 4. 转换标题
+  processedHtml = processedHtml.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, (m, c) => '# ' + c.trim() + '\n\n');
+  processedHtml = processedHtml.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, (m, c) => '## ' + c.trim() + '\n\n');
+  processedHtml = processedHtml.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, (m, c) => '### ' + c.trim() + '\n\n');
+  processedHtml = processedHtml.replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, (m, c) => '#### ' + c.trim() + '\n\n');
+
+  // 5. 转换段落和换行
+  processedHtml = processedHtml.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, (m, c) => c.trim() + '\n\n');
+  processedHtml = processedHtml.replace(/<br\s*\/?>/gi, '\n');
+  processedHtml = processedHtml.replace(/<div[^>]*>([\s\S]*?)<\/div>/gi, (m, c) => c.trim() + '\n\n');
+
+  // 6. 转换列表
+  processedHtml = processedHtml.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (m, c) => {
+    const items = c.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (mi, mc) => '- ' + mc.trim() + '\n');
+    return items + '\n';
+  });
+  processedHtml = processedHtml.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (m, c) => {
+    let idx = 1;
+    const items = c.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (mi, mc) => idx++ + '. ' + mc.trim() + '\n');
+    return items + '\n';
+  });
+
+  // 7. 转换加粗、斜体
+  processedHtml = processedHtml.replace(/<(strong|b)[^>]*>([\s\S]*?)<\/(strong|b)>/gi, '**$2**');
+  processedHtml = processedHtml.replace(/<(em|i)[^>]*>([\s\S]*?)<\/(em|i)>/gi, '*$2*');
+
+  // 8. 转换链接
+  processedHtml = processedHtml.replace(/<a[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, '[$2]($1)');
+
+  // 9. 转换引用
+  processedHtml = processedHtml.replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, (m, c) => {
+    const lines = c.trim().split('\n');
+    return lines.map(l => '> ' + l.trim()).join('\n') + '\n\n';
+  });
+
+  // 10. 转换代码块
+  processedHtml = processedHtml.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (m, c) => '```\n' + c.trim() + '\n```\n\n');
+  processedHtml = processedHtml.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, '`$1`');
+
+  // 11. 移除其他 HTML 标签
+  processedHtml = processedHtml
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<[^>]+>/g, '');
+
+  // 12. 清理 HTML 实体
+  processedHtml = processedHtml
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(code));
+
+  // 13. 清理多余空白
+  processedHtml = processedHtml
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  // 14. 处理图片占位符 → 实际图片
+  // 保存图片并生成 Markdown
+  if (attachments && attachments.length > 0 && imgDir) {
+    attachments.forEach((att, i) => {
+      if (!att.contentId && !['jpg','jpeg','png','gif','webp','bmp'].includes((att.filename || '').split('.').pop().toLowerCase())) {
+        return; // 非图片附件跳过
+      }
+      const ext = 'jpg';
+      const name = `${dayjs().format('YYYYMMDDHHmmss')}-${i}.${ext}`;
+      const filepath = path.join(imgDir, name);
+
+      try {
+        sharp(att.content)
+          .resize(1200, null, { withoutEnlargement: true })
+          .jpeg({ quality: 85, progressive: true })
+          .toFile(filepath);
+      } catch (_) {
+        fs.writeFileSync(filepath, att.content);
+      }
+
+      att.savedName = name;
+      savedImgs.push({ index: i, name, markdown: `![${att.filename || name}](/images/email-attachments/${name})` });
+    });
+  }
+
+  // 替换占位符为实际图片 Markdown
+  savedImgs.forEach(img => {
+    if (img.index >= 1000) {
+      // base64 图片占位符
+      processedHtml = processedHtml.replace(`__IMG_BASE64_${img.index}__`, img.markdown);
+    } else {
+      // cid 图片占位符
+      processedHtml = processedHtml.replace(`__IMG_CID_${img.index}__`, img.markdown);
+    }
+  });
+
+  // 15. 移除残留的占位符（未匹配的 cid/base64）
+  processedHtml = processedHtml.replace(/__IMG_CID_\d+__/g, '');
+  processedHtml = processedHtml.replace(/__IMG_BASE64_\d+__/g, '');
+
+  return { markdown: processedHtml, savedImgs };
+}
 
 // ─── 配置 ───────────────────────────────────────────────────────────────────
 const HEXO_PATH = 'D:/hexo';
@@ -59,9 +230,9 @@ function saveProcessedUIDs(uids) {
 });
 
 // ─── 解析邮件 ─────────────────────────────────────────────────────────────
-async function parseEmail(subject, body, attachments) {
+async function parseEmail(subject, body, html, attachments) {
   let title = null;
-  let content = body.trim();
+  let content = '';
   let tags = [];
   let categories = [];
   let draft = false;
@@ -70,12 +241,29 @@ async function parseEmail(subject, body, attachments) {
   const sMatch = subject.match(/^#\s*(.+)/);
   if (sMatch) title = sMatch[1].trim();
 
+  // 图片保存目录
+  const imgDir = path.join(HEXO_PATH, 'source', 'images', 'email-attachments');
+  if (!fs.existsSync(imgDir)) fs.mkdirSync(imgDir, { recursive: true });
+
+  // 优先使用 HTML 正文（保留格式和图片位置）
+  if (html && html.trim()) {
+    const result = htmlToMarkdown(html, attachments, imgDir);
+    content = result.markdown;
+    // 保存图片信息用于封面
+    if (result.savedImgs && result.savedImgs.length > 0) {
+      attachments[0].savedName = result.savedImgs[0].name;
+    }
+  } else if (body && body.trim()) {
+    // 纯文本正文
+    content = body.trim();
+  }
+
   // 正文第一行 # → 取标题（只有主题没有标题时才从正文取）
   const bMatch = content.match(/^#\s*(.+?)(?:\n|$)/);
   if (bMatch && !title) {
     title = bMatch[1].trim();
     const afterStrip = content.slice(bMatch[0].length).trim();
-    if (afterStrip) content = afterStrip; // 只有剥离后还有内容才剥离
+    if (afterStrip) content = afterStrip;
   }
 
   if (!title) title = dayjs().format('YYYY-MM-DD HH:mm');
@@ -86,7 +274,7 @@ async function parseEmail(subject, body, attachments) {
     content = content.replace(/\[草稿\]/gi, '').trim();
   }
 
-  // 标签
+  // 标签（从正文提取 #xxx）
   const tagMatches = content.match(/#([^\s#\[\]]+)/g) || [];
   tags = tagMatches.map(t => t.replace('#', '').trim());
   content = content.replace(/#([^\s#\[\]]+)/g, '').trim();
@@ -98,38 +286,8 @@ async function parseEmail(subject, body, attachments) {
     content = content.replace(catMatch[0], '').trim();
   }
 
-  // 图片附件 → 压缩后保存并转为 Markdown 图片
-  if (attachments && attachments.length > 0) {
-    const imgMd = await Promise.all(attachments.map(async (att, i) => {
-      const ext = 'jpg'; // 统一转为 jpg
-      const name = `${dayjs().format('YYYYMMDDHHmmss')}-${i}.${ext}`;
-      const imgDir = path.join(HEXO_PATH, 'source', 'images', 'email-attachments');
-      if (!fs.existsSync(imgDir)) fs.mkdirSync(imgDir, { recursive: true });
-      const filepath = path.join(imgDir, name);
-      const origSize = att.content.length;
-      try {
-        await sharp(att.content)
-          .resize(1200, null, { withoutEnlargement: true })
-          .jpeg({ quality: 85, progressive: true })
-          .toFile(filepath);
-        const newSize = fs.statSync(filepath).size;
-        console.log(`[img] 保存图片: /images/email-attachments/${name} (${Math.round(origSize/1024)}KB → ${Math.round(newSize/1024)}KB，省${Math.round((1-newSize/origSize)*100)}%)`);
-      } catch (_) {
-        // 压缩失败则直接写入原图
-        fs.writeFileSync(filepath, att.content);
-        console.log(`[img] 保存图片(未压缩): /images/email-attachments/${name}`);
-      }
-      att.savedName = name;
-      return `![${att.filename || name}](/images/email-attachments/${name})`;
-    }));
-    const imgMarkdown = imgMd.join('\n\n');
-    content = content ? content + '\n\n' + imgMarkdown : imgMarkdown;
-  }
-
-  // 正文 ≈ 标题，且有图片 → 保留正文（正文是用户输入的，图片+文字都保留）
-
   // 提取封面图（第一张图片作为文章封面）
-  const cover = (attachments && attachments.length > 0)
+  const cover = (attachments && attachments.length > 0 && attachments[0].savedName)
     ? '/images/email-attachments/' + attachments[0].savedName
     : '';
 
@@ -262,29 +420,105 @@ async function sendReceipt(toEmail, title, draft) {
 
 // ─── 判断文章是否已发布（文件名含标题关键词即视为已发布）───────────
 function isAlreadyPublished(title) {
+  // 注意：不同邮件可以有相同标题，这里只做文件名匹配的简单检查
+  // 主要去重依赖 UID 过滤，此函数作为备用保护
   if (!title || !title.trim()) return false;
-  // 用标题关键词比对文件名（文件名虽不含标题，但旧文章文件名含标题）
-  const key = title.replace(/[^\w\u4e00-\u9fa5]/g, '').slice(0, 10).toLowerCase();
-  if (key.length < 4) return false;  // 标题太短直接放过
+  const cleanTitle = title.trim().toLowerCase();
+  if (cleanTitle.length < 2) return false;
   const files = fs.readdirSync(HEXO_SOURCE);
   return files.some(f => {
-    const fn = f.replace(/[^\w\u4e00-\u9fa5]/g, '').toLowerCase();
-    return fn.includes(key);
+    if (!f.endsWith('.md')) return false;
+    try {
+      const content = fs.readFileSync(path.join(HEXO_SOURCE, f), 'utf8');
+      const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
+      if (!fmMatch) return false;
+      const fm = yaml.load(fmMatch[1]);
+      if (fm && fm.title && fm.title.toLowerCase().trim() === cleanTitle) {
+        return true;
+      }
+    } catch (_) {}
+    return false;
   });
 }
 
-// ─── 主逻辑 ───────────────────────────────────────────────────────────────
-async function processEmails() {
-  // 加载已处理 UID，防止同一封邮件被重复发布
-  const processedUIDs = loadProcessedUIDs();
-  let newUIDs = new Set();
+// ─── 处理单封邮件 ───────────────────────────────────────────────────────────
+async function handleOneEmail(client, uid, processedUIDs) {
+  try {
+    // 已处理过的 UID 直接跳过
+    if (processedUIDs.has(String(uid))) {
+      return;
+    }
 
-  // 纯空函数 logger，彻底关闭 imapflow 所有调试输出
+    // 获取邮件内容
+    const raw = await client.fetchOne(uid, { source: true });
+    const em = await simpleParser(raw.source);
+
+    const from = em.from?.value?.[0]?.address || 'unknown';
+    let subject = em.subject || '(无主题)';
+    let body = em.text || '';
+    let html = em.html || '';
+
+    const attachments = (em.attachments || []).filter(att => {
+      const ext = (att.filename || '').split('.').pop().toLowerCase();
+      return ['jpg','jpeg','png','gif','webp','bmp'].includes(ext) || att.contentId;
+    });
+
+    // 发件人白名单
+    if (ALLOWED_SENDERS.length && !ALLOWED_SENDERS.includes(from)) {
+      console.log(`[skip] 发件人不在白名单: ${from}`);
+      return;
+    }
+
+    // 主题必须以 @hexo 开头
+    const cleanSubject = subject.replace(/^(转发|Re|RE|FW|Fwd|Re:)\s*:\s*/i, '').trim();
+    if (!/^@hexo\b/i.test(cleanSubject)) {
+      console.log(`[skip] 非博客邮件: ${subject.slice(0, 40)}`);
+      return;
+    }
+
+    subject = cleanSubject.replace(/^@hexo\s*/i, '');
+
+    const emailParsed = await parseEmail(subject, body, html, attachments);
+
+    console.log(`[recv] 来自: ${from} | 主题: ${subject.slice(0, 50)}`);
+
+    const { filename, draft } = savePost(emailParsed);
+
+    console.log(`[post] ✅ ${draft ? '草稿' : '发布'}: ${filename}.md`);
+    console.log(`       标题: ${emailParsed.title} | 标签: ${JSON.stringify(emailParsed.tags)}`);
+
+    await sendReceipt(from, filename, draft);
+
+    // 记录 UID
+    processedUIDs.add(String(uid));
+    saveProcessedUIDs(processedUIDs);
+
+    if (!draft && AUTO_DEPLOY) await triggerDeploy(filename);
+
+    // 标记已读
+    await client.messageFlagsAdd(uid, ['\\Seen']);
+
+  } catch (err) {
+    if (err.message.includes('文件已存在')) {
+      console.log(`[skip] 文件冲突，标记已读: ${err.message}`);
+      await client.messageFlagsAdd(uid, ['\\Seen']);
+    } else {
+      console.error(`[error] UID=${uid}: ${err.message}`);
+    }
+  }
+}
+
+// ─── 主逻辑（IDLE 常驻模式）──────────────────────────────────────────────────────
+async function startEmailListener() {
+  const processedUIDs = loadProcessedUIDs();
+
+  // 静默 logger
   const noop = () => {};
   const silentLogger = {
     fatal: noop, error: noop, warn: noop, info: noop,
     debug: noop, trace: noop, child: () => silentLogger,
   };
+
   const client = new ImapFlow({
     host: 'imap.qq.com',
     port: 993,
@@ -293,149 +527,91 @@ async function processEmails() {
     logger: silentLogger,
   });
 
-  let connected = false;
-  try {
-    await client.connect();
-    connected = true;
+  // ─── 事件监听：新邮件到达 ───────────────────────────────────────────────
+  client.on('exists', async (info) => {
+    console.log(`[${dayjs().format('HH:mm:ss')}] 收到新邮件通知，UID: ${info.uid}`);
     const lock = await client.getMailboxLock('INBOX');
-
     try {
-      // 不依赖 IMAP 时间过滤，改用手动过滤邮件发送时间
-      const nowLocal = new Date();
-      const sinceLocal = new Date(nowLocal.getTime() - 35 * 60 * 1000);
-      console.log(`[debug] 窗口: ${sinceLocal.toLocaleTimeString('zh-CN')} ~ ${nowLocal.toLocaleTimeString('zh-CN')} (CST)`);
-      // IMAP search 改为搜索今天所有邮件，由应用层做时间过滤
-      const todayStart = new Date(nowLocal); todayStart.setHours(0, 0, 0, 0);
-      const uids = await client.search({ since: todayStart });
-
-      if (!uids.length) {
-        console.log(`[${dayjs().format('HH:mm:ss')}] 暂无新邮件`);
-        return;
-      }
-
-      console.log(`[${dayjs().format('HH:mm:ss')}] 发现 ${uids.length} 封邮件（近35分钟）`);
-
-      for (const uid of uids) {
-        let skip = false;
-        let skipReason = '';
-
-        try {
-          // 先拿邮件时间，判断是否在 35 分钟窗口内
-          const { envelope } = await client.fetchOne(uid, { envelope: true });
-          const msgDate = new Date(envelope.date);
-
-          // 已处理过的 UID 直接跳过
-          if (processedUIDs.has(String(uid))) {
-            continue;
-          }
-
-          if (isNaN(msgDate.getTime()) || msgDate < sinceLocal) {
-            console.log(`[debug] ${envelope.subject?.slice(0, 30)} 发送于 ${msgDate.toLocaleTimeString('zh-CN')}，超出窗口`);
-            continue;
-          }
-
-          // 在窗口内，再拿完整内容
-          const raw = await client.fetchOne(uid, { source: true });
-          const em = await simpleParser(raw.source);
-
-          const from = em.from?.value?.[0]?.address || 'unknown';
-          let subject = em.subject || '(无主题)';
-          // 优先用纯文本，文本为空时从 HTML 正文提取（去除标签）
-          let body = em.text || '';
-          if (!body.trim() && em.html) {
-            // 提取 body 标签内的纯文本内容，清洗 HTML/CSS/注释
-            const bodyMatch = em.html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-            const rawHtml = bodyMatch ? bodyMatch[1] : em.html;
-            body = rawHtml
-              .replace(/<!--[\s\S]*?-->/g, '')   // 移除 HTML 注释
-              .replace(/-->[\s\S]*?(?=<|$)/g, '') // 移除残留的 --> 及后续内容
-              .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // 移除 style 标签
-              .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // 移除 script 标签
-              .replace(/<style[^>]*\/?>/gi, '') // 移除孤立的 style 标签
-              .replace(/<[^>]+>/g, ' ')         // 移除所有标签 → 生成纯文本
-              .replace(/\{[^}]*\}/g, ' ')       // 移除 CSS 片段如 .class{...}（纯文本中已无用）
-              .replace(/&nbsp;/gi, ' ')
-              .replace(/&amp;/gi, '&')
-              .replace(/&lt;/gi, '<')
-              .replace(/&gt;/gi, '>')
-              .replace(/&quot;/gi, '"')
-              .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(code))
-              // 不再移除 #xxx，因为正文已有纯文本，不再是 CSS
-              .replace(/\s+/g, ' ').trim();
-            console.log(`[debug] HTML正文: ${JSON.stringify(body.slice(0, 80))}`);
-          }
-          const attachments = (em.attachments || []).filter(att => {
-            const ext = (att.filename || '').split('.').pop().toLowerCase();
-            return ['jpg','jpeg','png','gif','webp','bmp'].includes(ext);
-          });
-
-          // 发件人白名单
-          if (ALLOWED_SENDERS.length && !ALLOWED_SENDERS.includes(from)) {
-            skip = true; skipReason = '发件人不在白名单'; skipReason += ': ' + from;
-          }
-
-          // 主题必须以 @hexo 开头（去掉转发/RE/FW等常见前缀）
-          const cleanSubject = subject.replace(/^(转发|Re|RE|FW|Fwd|Re:)\s*:\s*/i, '').trim();
-          if (!skip && !/^@hexo\b/i.test(cleanSubject)) {
-            skip = true; skipReason = '非博客邮件（主题不含 @hexo）';
-          }
-
-          if (skip) {
-            console.log(`[skip] ${skipReason}: ${subject.slice(0, 40)}`);
-            continue;
-          }
-
-          // 去掉 @hexo 前缀（用干净主题）
-          subject = cleanSubject.replace(/^@hexo\s*/i, '');
-
-          // 先解析出真正标题（可能来自正文第一行的 # 标题）
-          const emailParsed = await parseEmail(subject, body, attachments);
-
-          // 用解析后的标题比对是否已发布
-          if (isAlreadyPublished(emailParsed.title)) {
-            console.log(`[skip] 已发布过，跳过: ${emailParsed.title}`);
-            continue;
-          }
-
-          console.log(`[recv] 来自: ${from} | 主题: ${subject.slice(0, 50)}`);
-
-          const { filename, draft } = savePost(emailParsed);
-
-          console.log(`[post] ✅ ${draft ? '草稿' : '发布'}: ${filename}.md`);
-          console.log(`       标题: ${emailParsed.title} | 标签: ${JSON.stringify(emailParsed.tags)}`);
-
-          await sendReceipt(from, filename, draft);
-
-          // 立即记录 UID，防止脚本中途崩溃导致重复处理
-          newUIDs.add(String(uid));
-          const allProcessed = new Set([...processedUIDs, ...newUIDs]);
-          saveProcessedUIDs(allProcessed);
-
-          if (!draft && AUTO_DEPLOY) await triggerDeploy(filename);
-
-          // 全部成功后才标记已读
-          await client.messageFlagsAdd(uid, ['\\Seen']);
-
-        } catch (err) {
-          // 文件已存在（极罕见，随机后缀已避免）
-          if (err.message.includes('文件已存在')) {
-            console.log(`[skip] 文件冲突，标记已读: ${err.message}`);
-            await client.messageFlagsAdd(uid, ['\\Seen']);
-            continue;
-          }
-          // 其他错误不标记已读，下次重试
-          console.error(`[error] UID=${uid}: ${err.message}`);
-        }
-      }
+      await handleOneEmail(client, info.uid, processedUIDs);
     } finally {
       lock.release();
     }
-  } catch (err) {
-    console.error(`[error] ${err.message}`);
-  } finally {
-    if (connected) {
-      try { await client.close(); } catch (_) {}
+  });
+
+  // ─── 事件监听：连接断开 ───────────────────────────────────────────────
+  client.on('close', async () => {
+    console.log(`[${dayjs().format('HH:mm:ss')}] 连接断开，尝试重连...`);
+    await reconnect(client, processedUIDs);
+  });
+
+  client.on('error', async (err) => {
+    console.error(`[error] IMAP 错误: ${err.message}`);
+    if (!client.connected) {
+      console.log(`[${dayjs().format('HH:mm:ss')}] 连接异常，尝试重连...`);
+      await reconnect(client, processedUIDs);
     }
+  });
+
+  // ─── 启动连接 ───────────────────────────────────────────────────────────
+  try {
+    await client.connect();
+    const lock = await client.getMailboxLock('INBOX');
+    lock.release();
+
+    // 重连后检查漏处理的邮件（回扫 5 分钟）
+    await checkMissedEmails(client, processedUIDs);
+
+    console.log(`[${dayjs().format('HH:mm:ss')}] 进入 IDLE 模式，等待新邮件...`);
+    await client.idle();
+
+  } catch (err) {
+    console.error(`[error] 启动失败: ${err.message}`);
+    throw err;
+  }
+}
+
+// ─── 重连 ───────────────────────────────────────────────────────────────────
+async function reconnect(client, processedUIDs) {
+  let attempts = 0;
+  const maxAttempts = 5;
+
+  while (attempts < maxAttempts) {
+    attempts++;
+    try {
+      await new Promise(r => setTimeout(r, 5000)); // 等待 5 秒
+      await client.connect();
+      const lock = await client.getMailboxLock('INBOX');
+      lock.release();
+
+      console.log(`[${dayjs().format('HH:mm:ss')}] 重连成功`);
+
+      // 检查漏处理的邮件
+      await checkMissedEmails(client, processedUIDs);
+
+      await client.idle();
+      return;
+
+    } catch (err) {
+      console.error(`[error] 重连失败 (第 ${attempts} 次): ${err.message}`);
+    }
+  }
+
+  console.error(`[error] 重连失败 ${maxAttempts} 次，退出`);
+  process.exit(1);
+}
+
+// ─── 检查漏处理的邮件（重连时回扫 5 分钟）──────────────────────────────────────
+async function checkMissedEmails(client, processedUIDs) {
+  const nowLocal = new Date();
+  const sinceLocal = new Date(nowLocal.getTime() - 5 * 60 * 1000); // 5 分钟
+
+  const uids = await client.search({ since: sinceLocal });
+  if (!uids.length) return;
+
+  console.log(`[${dayjs().format('HH:mm:ss')}] 回扫 ${uids.length} 封邮件（5分钟内）`);
+
+  for (const uid of uids) {
+    await handleOneEmail(client, uid, processedUIDs);
   }
 }
 
@@ -443,7 +619,11 @@ async function processEmails() {
 console.log('========================================');
 console.log('  Hexo 邮件发布服务已启动');
 console.log('  收件箱: 9187541@qq.com');
+console.log('  模式: IMAP IDLE 常驻监听');
 console.log('  文章目录: D:\\hexo\\source\\_posts');
 console.log('========================================');
 
-processEmails();
+startEmailListener().catch(err => {
+  console.error(`[error] 服务启动失败: ${err.message}`);
+  process.exit(1);
+});

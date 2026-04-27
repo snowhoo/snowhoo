@@ -22,7 +22,7 @@ while ($true) {
 
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = "node"
-    $psi.Arguments = "D:\hexo\hexo-bot\email-to-hexo.js"
+    $psi.Arguments = "D:\hexo\hexo-bot\email-bot\email-to-hexo.js"
     $psi.WorkingDirectory = "D:\hexo\hexo-bot"
     $psi.UseShellExecute = $false
     $psi.CreateNoWindow = $true
