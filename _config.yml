@@ -102,12 +102,12 @@ theme: butterfly
 ## jacman
 ##landscape
 
-# Deployment
+# Deployment (disabled - use GitHub Actions instead)
 ## Docs: https://hexo.io/docs/one-command-deployment
-deploy:
-  type: git
-  repository: git@github.com:snowhoo/snowhoo.git
-  branch: main
+# deploy:
+#   type: git
+#   repository: git@github.com:snowhoo/snowhoo.git
+#   branch: main
 
 # Sitemap
 sitemap:
