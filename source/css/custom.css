@@ -157,6 +157,26 @@ html[data-theme="dark"] #nav #blog-info .site-icon img {
 }
 
 /* ========================================
+   邮件发布文章配图：右浮动小图
+   ======================================== */
+.post-content .email-img {
+  float: left;
+  width: 200px;
+  max-width: 45%;
+  height: auto;
+  border-radius: 8px;
+  margin: 0 14px 10px 0;
+  display: block;
+  object-fit: cover;
+}
+
+@media (max-width: 480px) {
+  .post-content .email-img {
+    width: 140px;
+  }
+}
+
+/* ========================================
    访客幸运号浮动标签 - 首页右上方
    ======================================== */
 

@@ -67,7 +67,7 @@ function htmlToMarkdown(html, attachments, imgDir) {
     } catch (_) {
       fs.writeFileSync(filepath, imgBuffer);
     }
-    savedImgs.push({ index: base64ImgIndex, name, markdown: `![${alt || name}](/images/email-attachments/${name})` });
+    savedImgs.push({ index: base64ImgIndex, name, html: `<img src="/images/email-attachments/${name}" class="email-img" alt="${alt || name}">` });
     base64ImgIndex++;
     return `__IMG_BASE64_${base64ImgIndex - 1}__`;
   });
@@ -84,7 +84,7 @@ function htmlToMarkdown(html, attachments, imgDir) {
     } catch (_) {
       fs.writeFileSync(filepath, imgBuffer);
     }
-    savedImgs.push({ index: base64ImgIndex, name, markdown: `![${name}](/images/email-attachments/${name})` });
+    savedImgs.push({ index: base64ImgIndex, name, html: `<img src="/images/email-attachments/${name}" class="email-img" alt="${name}">` });
     base64ImgIndex++;
     return `__IMG_BASE64_${base64ImgIndex - 1}__`;
   });
@@ -94,15 +94,9 @@ function htmlToMarkdown(html, attachments, imgDir) {
   processedHtml = processedHtml.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
   processedHtml = processedHtml.replace(/<!--[\s\S]*?-->/g, '');
 
-  // 外部图片
-  processedHtml = processedHtml.replace(/<img[^>]*src=["'](https?:\/\/[^"']+)["'][^>]*alt=["']([^"']*)["'][^>]*>/gi, '![$2]($1)');
-  processedHtml = processedHtml.replace(/<img[^>]*src=["'](https?:\/\/[^"']+)["'][^>]*>/gi, '![]($1)');
-
-  // 3b. 预处理：将含 line-through style 的标签内容包裹 <del>，后续统一转换
-  processedHtml = processedHtml.replace(/<(\w+)([^>]*)style=["'][^"']*text-decoration[^"']*line-through[^"']*["']([^>]*)>([\s\S]*?)<\/\1>/gi, (m, tag, pre, post, c) => {
-    const inner = c.trim();
-    return inner ? `<del>${inner}</del>` : '';
-  });
+  // 外部图片 → 保留为 HTML img 标签（加 email-img 类，左浮动让文字在右边）
+  processedHtml = processedHtml.replace(/<img[^>]*src=["'](https?:\/\/[^"']+)["'][^>]*alt=["']([^"']*)["'][^>]*>/gi, '<img src="$1" class="email-img" alt="$2">');
+  processedHtml = processedHtml.replace(/<img[^>]*src=["'](https?:\/\/[^"']+)["'][^>]*>/gi, '<img src="$1" class="email-img">');
 
   // 4. 转换标题
   processedHtml = processedHtml.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, (m, c) => '# ' + c.trim() + '\n\n');
@@ -126,22 +120,10 @@ function htmlToMarkdown(html, attachments, imgDir) {
     return items + '\n';
   });
 
-  // 7. 转换加粗、斜体
+  // 7. 只转换加粗（简化：去掉斜体/删除线/下划线）
   processedHtml = processedHtml.replace(/<(strong|b)[^>]*>([\s\S]*?)<\/(strong|b)>/gi, (m, tag, c) => {
     const inner = c.replace(/\s+/g, ' ').trim();
     return inner ? `**${inner}**` : '';
-  });
-  processedHtml = processedHtml.replace(/<(em|i)[^>]*>([\s\S]*?)<\/(em|i)>/gi, (m, tag, c) => {
-    const inner = c.replace(/\s+/g, ' ').trim();
-    return inner ? `*${inner}*` : '';
-  });
-  processedHtml = processedHtml.replace(/<u[^>]*>([\s\S]*?)<\/u>/gi, (m, c) => {
-    const inner = c.replace(/\s+/g, ' ').trim();
-    return inner || '';
-  });
-  processedHtml = processedHtml.replace(/<(s|del|strike)[^>]*>([\s\S]*?)<\/(s|del|strike)>/gi, (m, tag, c) => {
-    const inner = c.replace(/\s+/g, ' ').trim();
-    return inner ? `~~${inner}~~` : '';
   });
 
   // 8. 转换链接
@@ -157,9 +139,17 @@ function htmlToMarkdown(html, attachments, imgDir) {
   processedHtml = processedHtml.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (m, c) => '```\n' + c.trim() + '\n```\n\n');
   processedHtml = processedHtml.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, '`$1`');
 
-  // 11. 移除其他 HTML 标签（style/script/comment 已提前移除）
-  processedHtml = processedHtml
-    .replace(/<[^>]+>/g, '');
+  // 11. 移除其他 HTML 标签（保留 email-img 图片标签）
+  const emailImgPlaceholders = [];
+  processedHtml = processedHtml.replace(/<img[^>]*class="email-img"[^>]*>/gi, (match) => {
+    const idx = emailImgPlaceholders.length;
+    emailImgPlaceholders.push(match);
+    return `__EMAIL_IMG_${idx}__`;
+  });
+  processedHtml = processedHtml.replace(/<[^>]+>/g, '');
+  emailImgPlaceholders.forEach((img, idx) => {
+    processedHtml = processedHtml.replace(`__EMAIL_IMG_${idx}__`, img);
+  });
 
   // 12. 清理 HTML 实体
   processedHtml = processedHtml
@@ -195,16 +185,16 @@ function htmlToMarkdown(html, attachments, imgDir) {
       }
 
       att.savedName = name;
-      savedImgs.push({ index: i, name, markdown: `![${att.filename || name}](/images/email-attachments/${name})` });
+      savedImgs.push({ index: i, name, html: `<img src="/images/email-attachments/${name}" class="email-img" alt="${att.filename || name}">` });
     });
   }
 
-  // 替换占位符为实际图片 Markdown
+  // 替换占位符为实际图片 HTML
   savedImgs.forEach(img => {
     if (img.index >= 1000) {
-      processedHtml = processedHtml.replace(`__IMG_BASE64_${img.index}__`, img.markdown);
+      processedHtml = processedHtml.replace(`__IMG_BASE64_${img.index}__`, img.html);
     } else {
-      processedHtml = processedHtml.replace(`__IMG_CID_${img.index}__`, img.markdown);
+      processedHtml = processedHtml.replace(`__IMG_CID_${img.index}__`, img.html);
     }
   });
 
@@ -213,21 +203,11 @@ function htmlToMarkdown(html, attachments, imgDir) {
   processedHtml = processedHtml.replace(/__IMG_BASE64_\d+__/g, '');
 
   // 16. 清理图片周围的格式标记
-  processedHtml = processedHtml.replace(/\*{1,3}(!\[[^\]]*\]\([^)]+\))\*{1,3}/g, '$1');
-  processedHtml = processedHtml.replace(/(?<!\*)\*{4,}(?!\*)/g, '');
+  processedHtml = processedHtml.replace(/\*{1,2}(<img[^>]*class="email-img"[^>]*>)\*{1,2}/g, '$1');
+  processedHtml = processedHtml.replace(/\*{4,}/g, '');
 
-  // 17. 后处理：清理嵌套/空格式标记
-  // 移除空的格式标记（如 ****、~~~~、** ** 等）
-  processedHtml = processedHtml.replace(/\*{2,}\s*\*{2,}/g, '');
-  processedHtml = processedHtml.replace(/~{2,}\s*~{2,}/g, '');
-  // 清理删除线内只有空白或无实质内容的情况
-  processedHtml = processedHtml.replace(/~~[\s]*~~/g, '');
-  // 清理残留的 ++ 标记（下划线旧语法残留）
-  processedHtml = processedHtml.replace(/\+\+([\s\S]*?)\+\+/g, '$1');
-  // 清理交叉嵌套：~~**text**~~ 或 **~~text~~** 是合法的，但 ~~**~~ 或类似空嵌套要清理
-  processedHtml = processedHtml.replace(/~~\*{1,3}~~/g, '');
-  processedHtml = processedHtml.replace(/\*{1,3}~~\*{1,3}/g, '');
-  // 再次清理多余空白
+  // 17. 清理空的粗体标记
+  processedHtml = processedHtml.replace(/\*\*\s*\*\*/g, '');
   processedHtml = processedHtml
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
