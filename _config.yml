@@ -112,3 +112,9 @@ theme: butterfly
 # Sitemap
 sitemap:
   path: sitemap.xml
+
+# 文章加密（会员/密码保护）
+encrypt:
+  enable: true
+  default_abstract: 这是一篇加密文章，请输入密码后阅读。
+  default_message: 请输入密码
