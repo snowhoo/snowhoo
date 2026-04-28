@@ -270,3 +270,16 @@ html[data-theme="dark"] #lucky-visitor-tag .lucky-count {
     display: none;
   }
 } */
+
+/* ========================================
+   文章卡片统一 2px 边框（置顶帖由模板内联样式覆盖）
+   ======================================== */
+
+.recent-post-item {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+html[data-theme="dark"] .recent-post-item {
+  border-color: #3a3a3a;
+}

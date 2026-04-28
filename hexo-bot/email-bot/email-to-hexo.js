@@ -125,6 +125,15 @@ function convertHtmlToMarkdown(html, attachments, imgDir) {
     replacement: (content) => `<u>${content}</u>`
   });
 
+  // 5d. 保留字体和字体大小标签：<font>, <span>
+  td.addRule('fontAndSpan', {
+    filter: ['font', 'span'],
+    replacement: (content, node) => {
+      // 返回原始 HTML，保留属性和内容
+      return node.outerHTML;
+    }
+  });
+
   // 4b. 预处理：强制移除 style/script/注释（Turndown 不完全清理）
   processedHtml = processedHtml
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
@@ -242,11 +251,12 @@ async function parseEmail(subject, body, html, attachments) {
 
   content = content.replace(/^@hexo\s*/im, '').trim();
 
-  const bMatch = content.match(/^#\s*(.+?)(?:\n|$)/);
-  if (bMatch && !title) {
-    title = bMatch[1].trim();
+  const bMatch = content.match(/^\s*#\s*(.+?)(?:\n|$)/);
+  if (bMatch) {
+    const matchedTitle = bMatch[1].trim();
+    if (!title) title = matchedTitle;
     const afterStrip = content.slice(bMatch[0].length).trim();
-    if (afterStrip) content = afterStrip;
+    content = afterStrip;
   }
 
   if (!title) title = dayjs().format('YYYY-MM-DD HH:mm');
