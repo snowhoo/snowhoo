@@ -70,21 +70,21 @@
   <rect x="0" y="395" width="1300" height="5" fill="url(#accent)"/>
 
   <!-- 名言文字 -->
-  <text x="650" y="174.8"
+  <text x="650" y="182"
         font-family="'Microsoft YaHei', 'PingFang SC', 'SimHei', 'Arial', sans-serif"
-        font-size="64" fill="#1a1a2e" text-anchor="middle" font-weight="900"
+        font-size="46" fill="#1a1a2e" text-anchor="middle" font-weight="900"
         dominant-baseline="auto" filter="url(#textBg)">
-      <tspan x="600" dy="0">The roots of education are</tspan>
-      <tspan x="600" dy="84">bitter, but the fruit is sweet.</tspan>
+      <tspan x="650" dy="0" text-anchor="middle">The roots of education are bitter,</tspan>
+      <tspan x="650" dy="60" text-anchor="middle">but the fruit is sweet.</tspan>
   </text>
 
   <!-- 分隔线 -->
-  <rect x="390" y="362.8" width="520" height="3" rx="1.5" fill="url(#accent)" opacity="0.75"/>
+  <rect x="390" y="322" width="520" height="3" rx="1.5" fill="url(#accent)" opacity="0.75"/>
 
   <!-- 作者名 -->
-  <text x="650" y="414.8"
+  <text x="650" y="362"
         font-family="'Microsoft YaHei', 'PingFang SC', 'SimHei', 'Arial', sans-serif"
-        font-size="42" fill="#e94560" text-anchor="middle" font-weight="700"
+        font-size="30" fill="#e94560" text-anchor="middle" font-weight="700"
         letter-spacing="5" filter="url(#textBg)">—— Aristotle</text>
 
   <!-- 右下角标签 -->
