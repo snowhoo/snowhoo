@@ -124,14 +124,6 @@ html[data-theme="dark"] body #nav #blog-info .site-slogan {
 /* Prev/Next 样式已移至 _config.butterfly.yml 统一管理 */
 
 /* ========================================
-   黑暗模式 Logo 切换
-   ======================================== */
-
-html[data-theme="dark"] #nav #blog-info .site-icon img {
-  content: url(/images/dark-logo.jpg) !important;
-}
-
-/* ========================================
    热搜晨报/晚报 文章配图：右浮动小图
    ======================================== */
 .post-content .hotnews-img {

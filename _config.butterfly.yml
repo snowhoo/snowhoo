@@ -593,6 +593,33 @@ inject:
   bottom:
     - |
       <script>
+      // 黑暗模式 Logo 切换 - 使用 butterfly 主题的 themeChange 接口
+      (function(){
+        var lightLogo = '/images/logo.png';
+        var darkLogo = '/images/dark-logo.jpg';
+        var logoImg = document.querySelector('#nav #blog-info img.site-icon');
+
+        var switchLogo = function(mode) {
+          if (!logoImg) return;
+          if (mode === 'dark') {
+            logoImg.src = darkLogo;
+          } else {
+            logoImg.src = lightLogo;
+          }
+        };
+
+        // 页面加载时：根据当前主题设置 logo
+        var currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        switchLogo(currentTheme);
+
+        // 注册主题切换回调（支持 PJAX 刷新）
+        if (window.btf && window.btf.addGlobalFn) {
+          window.btf.addGlobalFn('themeChange', switchLogo, 'darkLogo');
+        }
+      })();
+      </script>
+    - |
+      <script>
       (function(){
       var bp = document.createElement('script');
       var curProtocol = window.location.protocol.split(':')[0];
