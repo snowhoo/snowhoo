@@ -32,6 +32,14 @@ const TurndownService = require('turndown');
 // ─── HTML 转 Markdown（Turndown 驱动，保留图片位置和格式）──────────────────
 function convertHtmlToMarkdown(html, attachments, imgDir) {
   const savedImgs = [];
+  // 用内容 hash 做去重，相同内容的图只存一份
+  const contentHashMap = new Map(); // hash → { name, html }
+
+  // 计算图片内容的短 hash（取 MD5 前 8 位）
+  function imgHash(buf) {
+    const crypto = require('crypto');
+    return crypto.createHash('md5').update(buf).digest('hex').slice(0, 8);
+  }
 
   // 1. 建立 cid → 附件索引
   const cidMap = {};
@@ -57,15 +65,25 @@ function convertHtmlToMarkdown(html, attachments, imgDir) {
     (match, ext, data) => {
       if (!imgDir) return '';
       const buf = Buffer.from(data, 'base64');
-      const imgIdx = base64Idx; // 捕获当前索引，用于后续替换
+      const hash = imgHash(buf);
+      const imgIdx = base64Idx;
+      // 相同内容已存过 → 复用，不再重复保存
+      if (contentHashMap.has(hash)) {
+        const existing = contentHashMap.get(hash);
+        savedImgs.push({ index: imgIdx, name: existing.name,
+          html: existing.html.replace(/class="email-img"/, 'class="email-img"') });
+        base64Idx++;
+        return `__IMG_BASE64_${imgIdx}__`;
+      }
       const name = `${dayjs().format('YYYYMMDDHHmmss')}-b${imgIdx}.jpg`;
       const fp = path.join(imgDir, name);
       try {
         sharp(buf).resize(1200, null, { withoutEnlargement: true })
           .jpeg({ quality: 85, progressive: true }).toFile(fp);
       } catch (_) { fs.writeFileSync(fp, buf); }
-      savedImgs.push({ index: imgIdx, name,
-        html: `<img src="/images/email-attachments/${name}" class="email-img" alt="${name}">` });
+      const imgHtml = `<img src="/images/email-attachments/${name}" class="email-img" alt="${name}">`;
+      contentHashMap.set(hash, { name, html: imgHtml });
+      savedImgs.push({ index: imgIdx, name, html: imgHtml });
       base64Idx++;
       return `__IMG_BASE64_${imgIdx}__`;
     }
@@ -113,48 +131,47 @@ function convertHtmlToMarkdown(html, attachments, imgDir) {
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<!--[\s\S]*?-->/g, '');
 
-  // 5d. 【关键修复】在 Turndown 处理之前，先把占位符替换为 <img> 标签
-  //    因为 Turndown 会把 __xxx__ 中的下划线转义为 \\_，导致后置替换失败
-  //    占位符此时已是 HTML 中的文本节点，直接替换为 <img> 标签即可
-  savedImgs.forEach(img => {
-    const placeholder = img.index >= 1000
-      ? `__IMG_BASE64_${img.index}__`
-      : `__IMG_CID_${img.index}__`;
-    processedHtml = processedHtml.replace(placeholder, img.html);
-  });
-
-  // 6. 处理 cid 附件：仅当该附件尚未被保存（step 5d 已处理过）时才保存
-  //    封面图 = savedImgs[0]，如果第一个是 base64 图，cover 直接用它，不重复保存
+  // 6. 处理 cid 附件：保存到磁盘（基于内容 hash 去重），并写入 savedImgs
   if (attachments && attachments.length > 0 && imgDir) {
     attachments.forEach((att, i) => {
       if (!att.contentId) return;
       const ext = (att.filename || 'img').split('.').pop().toLowerCase();
       if (!['jpg','jpeg','png','gif','webp','bmp'].includes(ext)) return;
-      // 如果该附件的 savedName 已在 step 5d 中被设置（通过 savedImgs[index]），
-      // 说明 HTML 内容已引用此图，直接复用文件名，不重复保存
-      const alreadySaved = savedImgs.some(img => img.index === i);
-      if (alreadySaved) {
-        // 从 savedImgs 中找对应的条目，设置 att.savedName
-        const existing = savedImgs.find(img => img.index === i);
+      const hash = imgHash(att.content);
+      if (contentHashMap.has(hash)) {
+        const existing = contentHashMap.get(hash);
         att.savedName = existing.name;
+        savedImgs.push({ index: i, name: existing.name,
+          html: existing.html.replace(/alt="[^"]*"/, `alt="${att.filename || existing.name}"`) });
         return;
       }
-      // 确实需要保存（cid 附件不在 HTML 内容中的罕见情况）
       const name = `${dayjs().format('YYYYMMDDHHmmss')}-${i}.jpg`;
       const fp = path.join(imgDir, name);
       try {
         sharp(att.content).resize(1200, null, { withoutEnlargement: true })
           .jpeg({ quality: 85, progressive: true }).toFile(fp);
       } catch (_) { fs.writeFileSync(fp, att.content); }
+      const imgHtml = `<img src="/images/email-attachments/${name}" class="email-img" alt="${att.filename || name}">`;
+      contentHashMap.set(hash, { name, html: imgHtml });
       att.savedName = name;
-      savedImgs.push({ index: i, name,
-        html: `<img src="/images/email-attachments/${name}" class="email-img" alt="${att.filename || name}">` });
+      savedImgs.push({ index: i, name, html: imgHtml });
     });
   }
 
   let markdown = td.turndown(processedHtml);
 
-  // 7. 清理残留占位符和多余空行
+  // 5d. 在 markdown 层面把占位符替换回 <img> 标签
+  //    Turndown 会把 __xxx__ 中的下划线转义为 \_，所以要同时匹配转义和未转义版本
+  savedImgs.forEach(img => {
+    const ph = img.index >= 1000
+      ? `__IMG_BASE64_${img.index}__`
+      : `__IMG_CID_${img.index}__`;
+    const escaped = ph.replace(/_/g, '\\_');
+    markdown = markdown.replace(escaped, img.html);
+    if (markdown.includes(ph)) markdown = markdown.replace(ph, img.html);
+  });
+
+  // 6. 清理残留占位符和多余空行
   markdown = markdown
     .replace(/__IMG_(CID|BASE64)_\d+__/g, '')
     .replace(/\*{4,}/g, '')

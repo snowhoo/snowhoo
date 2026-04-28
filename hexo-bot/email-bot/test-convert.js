@@ -14,6 +14,12 @@ const sharp = require(path.join(BASE, 'node_modules', 'sharp'));
 // ── 核心转换逻辑（与 email-to-hexo.js 保持同步）────────────────────────────
 function convertHtmlToMarkdown(html, attachments, imgDir) {
   const savedImgs = [];
+  const contentHashMap = new Map(); // hash → { name, html }
+
+  const crypto = require('crypto');
+  function imgHash(buf) {
+    return crypto.createHash('md5').update(buf).digest('hex').slice(0, 8);
+  }
 
   const cidMap = {};
   if (attachments && attachments.length > 0) {
@@ -36,15 +42,23 @@ function convertHtmlToMarkdown(html, attachments, imgDir) {
     (match, ext, data) => {
       if (!imgDir) return '';
       const buf = Buffer.from(data, 'base64');
+      const hash = imgHash(buf);
       const imgIdx = base64Idx;
+      if (contentHashMap.has(hash)) {
+        const existing = contentHashMap.get(hash);
+        savedImgs.push({ index: imgIdx, name: existing.name, html: existing.html });
+        base64Idx++;
+        return `__IMG_BASE64_${imgIdx}__`;
+      }
       const name = `${dayjs().format('YYYYMMDDHHmmss')}-b${imgIdx}.jpg`;
       const fp = path.join(imgDir, name);
       try {
         sharp(buf).resize(1200, null, { withoutEnlargement: true })
           .jpeg({ quality: 85, progressive: true }).toFile(fp);
       } catch (_) { fs.writeFileSync(fp, buf); }
-      savedImgs.push({ index: imgIdx, name,
-        html: `<img src="/images/email-attachments/${name}" class="email-img" alt="${name}">` });
+      const imgHtml = `<img src="/images/email-attachments/${name}" class="email-img" alt="${name}">`;
+      contentHashMap.set(hash, { name, html: imgHtml });
+      savedImgs.push({ index: imgIdx, name, html: imgHtml });
       base64Idx++;
       return `__IMG_BASE64_${imgIdx}__`;
     }
@@ -70,39 +84,51 @@ function convertHtmlToMarkdown(html, attachments, imgDir) {
     replacement: (content) => `<u>${content}</u>`
   });
 
-  // 4b. 预处理：强制移除 style/script/注释
+  // 预处理：强制移除 style/script/注释
   processedHtml = processedHtml
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<!--[\s\S]*?-->/g, '');
 
-  // 5d. 【关键修复】在 Turndown 处理之前，先把占位符替换为 <img> 标签
-  savedImgs.forEach(img => {
-    const placeholder = img.index >= 1000
-      ? `__IMG_BASE64_${img.index}__`
-      : `__IMG_CID_${img.index}__`;
-    processedHtml = processedHtml.replace(placeholder, img.html);
-  });
-
-  // 6. 处理 cid 附件：保存到 imgDir 并追加到 savedImgs
+  // cid 附件：基于内容 hash 去重（必须在 turndown 之前执行，以填充 savedImgs）
   if (attachments && attachments.length > 0 && imgDir) {
     attachments.forEach((att, i) => {
       if (!att.contentId) return;
       const ext = (att.filename || 'img').split('.').pop().toLowerCase();
       if (!['jpg','jpeg','png','gif','webp','bmp'].includes(ext)) return;
+      const hash = imgHash(att.content);
+      if (contentHashMap.has(hash)) {
+        const existing = contentHashMap.get(hash);
+        att.savedName = existing.name;
+        savedImgs.push({ index: i, name: existing.name,
+          html: existing.html.replace(/alt="[^"]*"/, `alt="${att.filename || existing.name}"`) });
+        return;
+      }
       const name = `${dayjs().format('YYYYMMDDHHmmss')}-${i}.jpg`;
       const fp = path.join(imgDir, name);
       try {
         sharp(att.content).resize(1200, null, { withoutEnlargement: true })
           .jpeg({ quality: 85, progressive: true }).toFile(fp);
       } catch (_) { fs.writeFileSync(fp, att.content); }
+      const imgHtml = `<img src="/images/email-attachments/${name}" class="email-img" alt="${att.filename || name}">`;
+      contentHashMap.set(hash, { name, html: imgHtml });
       att.savedName = name;
-      savedImgs.push({ index: i, name,
-        html: `<img src="/images/email-attachments/${name}" class="email-img" alt="${att.filename || name}">` });
+      savedImgs.push({ index: i, name, html: imgHtml });
     });
   }
 
   let markdown = td.turndown(processedHtml);
+
+  // 在 markdown 层面把占位符替换回 <img> 标签
+  // Turndown 会把 __xxx__ 中的下划线转义为 \_，所以要同时匹配转义和未转义版本
+  savedImgs.forEach(img => {
+    const ph = img.index >= 1000
+      ? `__IMG_BASE64_${img.index}__`
+      : `__IMG_CID_${img.index}__`;
+    const escaped = ph.replace(/_/g, '\\_');
+    markdown = markdown.replace(escaped, img.html);
+    if (markdown.includes(ph)) markdown = markdown.replace(ph, img.html);
+  });
 
   markdown = markdown
     .replace(/__IMG_(CID|BASE64)_\d+__/g, '')
