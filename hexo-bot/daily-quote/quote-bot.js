@@ -162,7 +162,7 @@ function generateCoverSvg(quote, author, outputPath) {
   const startY = 200 - totalH / 2 + lineH * 0.7;
 
   const tspanLines = lines.map((l, i) =>
-    `      <tspan x="650" dy="${i === 0 ? 0 : lineH}">${escapeXml(l)}</tspan>`
+    `      <tspan x="650" dy="${i === 0 ? 0 : lineH}" text-anchor="middle">${escapeXml(l)}</tspan>`
   ).join('\n');
 
   const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
