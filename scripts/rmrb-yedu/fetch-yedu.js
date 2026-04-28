@@ -508,14 +508,59 @@ async function main() {
       }
     }
 
-    // 最后兜底：直接用第一个结果
-    if (!targetArticle && articles.length > 0) {
-      targetArticle = articles[0];
-      log(`⚠️ 未找到今日文章，使用最新结果: "${targetArticle.title}"`);
+    // 找不到今天的，逐一拜访夜读候选文章，找最新的（不再随便取第一条）
+    if (!targetArticle) {
+      // 先收集所有人民日报官微的夜读候选
+      const nightReadCandidates = [];
+      for (const a of articles) {
+        const isOfficial = a.account.includes('人民日报') && !a.account.includes('人民夜读') && !a.account.includes('人民日报夜读') &&
+          (a.account === '人民日报' || a.account.includes('rmrb') || a.url.includes('rmrb'));
+        const isFromOfficial = a.account === '人民日报' || a.url.includes('__biz=') && a.url.toLowerCase().includes('rmrb');
+        const isNightRead = a.title.includes('夜读') || a.title.includes('【夜读】');
+        if ((isOfficial || isFromOfficial) && isNightRead) {
+          nightReadCandidates.push(a);
+        }
+      }
+
+      // 没有官微候选时，退一步用任意夜读
+      const candidates = nightReadCandidates.length > 0 ? nightReadCandidates : articles.filter(a =>
+        a.title.includes('夜读') || a.title.includes('【夜读】')
+      );
+
+      if (candidates.length > 0) {
+        log(`⚠️ 未找到今日文章，逐一检查 ${Math.min(5, candidates.length)} 篇夜读候选...`);
+        let bestArticle = null;
+        let bestDateStr = '';
+        let bestContent = null;
+
+        for (const candidate of candidates.slice(0, 5)) {
+          try {
+            const content = await fetchArticleContent(page, candidate.url);
+            if (content.error) continue;
+            const dateMatch = content.date.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+            if (dateMatch) {
+              const d = `${dateMatch[1]}${String(parseInt(dateMatch[2])).padStart(2,'0')}${String(parseInt(dateMatch[3])).padStart(2,'0')}`;
+              log(`  候选 "${(content.title||'').substring(0,30)}" → ${d}`);
+              if (d > bestDateStr) {
+                bestDateStr = d;
+                bestArticle = candidate;
+                bestContent = content;
+              }
+            }
+          } catch (e) {
+            // 个别文章打不开，跳过
+          }
+        }
+
+        if (bestArticle) {
+          targetArticle = bestArticle;
+          log(`✅ 使用最新夜读: "${(bestContent||{}).title||'未知'}" (${bestDateStr})`);
+        }
+      }
     }
 
     if (!targetArticle) {
-      log('❌ 未找到可用文章');
+      log('❌ 未找到任何夜读文章');
       await browser.close();
       process.exit(1);
     }
@@ -529,37 +574,32 @@ async function main() {
       process.exit(1);
     }
 
-    // 验证文章是否确实是今天的
+    // 验证文章发布日期，用于文件命名
+    let publishDate = today; // 默认用今天
     const articleDateMatch = article.date.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
     if (articleDateMatch) {
       const artYear = articleDateMatch[1];
       const artMonth = String(parseInt(articleDateMatch[2])).padStart(2, '0');
       const artDay = String(parseInt(articleDateMatch[3])).padStart(2, '0');
-      const artDateStr = `${artYear}${artMonth}${artDay}`;
-      
-      if (artDateStr !== today.dateStr) {
-        log(`⚠️ 文章日期(${artDateStr})与今天(${today.dateStr})不符，不生成文章`);
-        log('ℹ️ 可能是今天的夜读尚未被搜狗索引，请稍后再试');
-        await browser.close();
-        process.exit(0); // 正常退出（不是错误，只是今天还没有）
-      }
+      publishDate = { year: artYear, month: artMonth, day: artDay, dateStr: `${artYear}${artMonth}${artDay}`, fullDateStr: `${artYear}年${artMonth}月${artDay}日` };
+      log(`📅 文章真实发布日期: ${publishDate.fullDateStr}`);
     } else {
-      log(`⚠️ 无法解析文章日期 "${article.date}"，仍尝试生成`);
+      log(`⚠️ 无法解析文章日期 "${article.date}"，使用今天日期`);
     }
 
     // Step 4: 下载图片
-    const downloadedNames = await downloadImages(article.images, today, page);
+    const downloadedNames = await downloadImages(article.images, publishDate, page);
 
     // Step 5: 生成 Markdown
-    const { markdownBody } = articleToMarkdown(article, today);
+    const { markdownBody } = articleToMarkdown(article, publishDate);
 
     // Step 6: 写入 Hexo 文章
-    const result = writeHexoPost(article, markdownBody, today, downloadedNames);
+    const result = writeHexoPost(article, markdownBody, publishDate, downloadedNames);
 
     // Step 7: Git commit & push
     log('');
     log('========== 提交部署 ==========');
-    gitCommitAndPush(article, today);
+    gitCommitAndPush(article, publishDate);
 
     log('');
     log(`========== 完成 ==========`);
