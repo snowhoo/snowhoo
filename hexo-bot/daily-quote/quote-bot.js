@@ -153,16 +153,16 @@ function generateCoverSvg(quote, author, outputPath) {
   }
 
   // 中英文统一字体大小，按视觉宽度换行
-  const fontSize = 64;
+  const fontSize = 46;
   // 中文字符宽度约等于2个英文字符宽度，所以英文每行字符数应该是中文的2倍
-  const maxChars = isEnglish ? 32 : 16;
+  const maxChars = isEnglish ? 36 : 18;
   const lines = wrapText(quote, maxChars, isEnglish);
-  const lineH = fontSize + 20;
+  const lineH = fontSize + 14;
   const totalH = lines.length * lineH;
   const startY = 200 - totalH / 2 + lineH * 0.7;
 
   const tspanLines = lines.map((l, i) =>
-    `      <tspan x="600" dy="${i === 0 ? 0 : lineH}">${escapeXml(l)}</tspan>`
+    `      <tspan x="650" dy="${i === 0 ? 0 : lineH}">${escapeXml(l)}</tspan>`
   ).join('\n');
 
   const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -248,9 +248,9 @@ ${tspanLines}
   <rect x="390" y="${startY + totalH + 20}" width="520" height="3" rx="1.5" fill="url(#accent)" opacity="0.75"/>
 
   <!-- 作者名 -->
-  <text x="650" y="${startY + totalH + 72}"
+  <text x="650" y="${startY + totalH + 60}"
         font-family="'Microsoft YaHei', 'PingFang SC', 'SimHei', 'Arial', sans-serif"
-        font-size="42" fill="${scheme.accent1}" text-anchor="middle" font-weight="700"
+        font-size="30" fill="${scheme.accent1}" text-anchor="middle" font-weight="700"
         letter-spacing="5" filter="url(#textBg)">—— ${escapeXml(author)}</text>
 
   <!-- 右下角标签 -->
