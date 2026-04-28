@@ -596,7 +596,7 @@ inject:
       // 黑暗模式 Logo 切换 - 使用 butterfly 主题的 themeChange 接口
       (function(){
         var lightLogo = '/images/logo.png';
-        var darkLogo = '/images/dark-logo.jpg';
+        var darkLogo = '/images/dark_logo.png';
         var logoImg = document.querySelector('#nav #blog-info img.site-icon');
 
         var switchLogo = function(mode) {

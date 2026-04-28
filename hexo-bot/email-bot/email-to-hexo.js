@@ -178,6 +178,8 @@ function convertHtmlToMarkdown(html, attachments, imgDir) {
     .replace(/\*\*\s?\*\*/g, '')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
+    // 修复：atx 标题缺少 # 与文字之间的空格（如 #测试 → # 测试）
+    .replace(/^(#{1,6})([^\s#])/gm, '$1 $2')
     .trim();
 
   return { markdown, savedImgs };
