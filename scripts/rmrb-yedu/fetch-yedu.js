@@ -130,27 +130,44 @@ async function fetchArticleContent(page, articleUrl) {
     const date = dateEl ? dateEl.textContent.trim() : '';
     const paragraphs = [];
     const images = [];
+    const seenTexts = new Set();
 
-    // 遍历段落和内联元素
-    const walker = (node) => {
+    // 递归遍历节点，按文档顺序提取文本和图片
+    function walk(node, depth = 0) {
+      if (depth > 30) return; // 防止过深
+      
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.textContent.trim();
-        if (text && text.length > 1) {
+        if (text && text.length > 1 && !seenTexts.has(text.substring(0, 40))) {
+          seenTexts.add(text.substring(0, 40));
           paragraphs.push({ type: 'text', content: text });
         }
         return;
       }
+
       if (node.nodeType === Node.ELEMENT_NODE) {
         const tag = node.tagName.toLowerCase();
+        const style = (node.getAttribute('style') || '').toLowerCase();
         
-        // 图片
+        // 跳过隐藏元素
+        if (style.includes('display:none') || style.includes('visibility:hidden') || 
+            style.includes('opacity:0') || node.hidden) {
+          return;
+        }
+
+        // 跳过视频、音频、iframe、脚本、样式
+        if (['video', 'audio', 'iframe', 'script', 'style', 'noscript', 'br', 'hr'].includes(tag)) {
+          return;
+        }
+
+        // 图片处理
         if (tag === 'img') {
           const src = node.getAttribute('data-src') || node.src || '';
-          if (src && !src.includes('icon') && !src.includes('emoji') && !src.includes('avatar')) {
+          if (src && !src.includes('icon') && !src.includes('emoji') && !src.includes('avatar') && !src.includes('logo')) {
+            const w = parseInt(node.getAttribute('data-w') || node.getAttribute('width') || '0');
+            const h = parseInt(node.getAttribute('data-h') || node.getAttribute('height') || '0');
             // 过滤小图标
-            const w = parseInt(node.getAttribute('data-w') || '0');
-            const h = parseInt(node.getAttribute('data-h') || '0');
-            if ((!w && !h) || (w > 100 && h > 100)) {
+            if ((w === 0 && h === 0) || (w >= 200 || h >= 200)) {
               images.push(src);
               paragraphs.push({ type: 'image', src: src });
             }
@@ -158,43 +175,27 @@ async function fetchArticleContent(page, articleUrl) {
           return;
         }
 
-        // span, p, section, div 中的文本
-        if (['p', 'section', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'strong', 'em', 'blockquote'].includes(tag)) {
-          // 检查是否包含图片
-          const imgs = node.querySelectorAll('img');
-          if (imgs.length > 0) {
-            imgs.forEach(img => {
-              const src = img.getAttribute('data-src') || img.src || '';
-              if (src && !src.includes('icon') && !src.includes('emoji')) {
-                images.push(src);
-                paragraphs.push({ type: 'image', src: src });
-              }
-            });
+        // 检查元素内是否只有一张大图（带图注）
+        const directImgs = node.querySelectorAll(':scope > img');
+        if (directImgs.length === 1) {
+          const img = directImgs[0];
+          const imgSrc = img.getAttribute('data-src') || img.src || '';
+          const dataW = parseInt(img.getAttribute('data-w') || '200');
+          if (imgSrc && dataW >= 200 && !imgSrc.includes('emoji') && !imgSrc.includes('icon')) {
+            images.push(imgSrc);
+            paragraphs.push({ type: 'image', src: imgSrc });
+            return;
           }
-          
-          // 获取纯文本
-          const text = node.textContent.trim();
-          if (text && text.length > 2) {
-            // 避免与子节点重复
-            const hasChildTextNodes = Array.from(node.childNodes).some(
-              c => c.nodeType === Node.TEXT_NODE && c.textContent.trim().length > 1
-            );
-            if (hasChildTextNodes || node.children.length === 0) {
-              const isBold = tag === 'strong' || tag === 'h1' || tag === 'h2' || tag === 'h3' || tag === 'h4';
-              paragraphs.push({ type: 'text', content: text, bold: isBold });
-            }
-          }
-          return;
         }
 
-        // 递归处理子元素
+        // 递归处理子节点
         for (const child of node.childNodes) {
-          walker(child);
+          walk(child, depth + 1);
         }
       }
-    };
+    }
 
-    walker(contentEl);
+    walk(contentEl);
 
     return { title, author, date, paragraphs, images };
   });
@@ -526,6 +527,24 @@ async function main() {
       log(`❌ 抓取失败: ${article.error}`);
       await browser.close();
       process.exit(1);
+    }
+
+    // 验证文章是否确实是今天的
+    const articleDateMatch = article.date.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+    if (articleDateMatch) {
+      const artYear = articleDateMatch[1];
+      const artMonth = String(parseInt(articleDateMatch[2])).padStart(2, '0');
+      const artDay = String(parseInt(articleDateMatch[3])).padStart(2, '0');
+      const artDateStr = `${artYear}${artMonth}${artDay}`;
+      
+      if (artDateStr !== today.dateStr) {
+        log(`⚠️ 文章日期(${artDateStr})与今天(${today.dateStr})不符，不生成文章`);
+        log('ℹ️ 可能是今天的夜读尚未被搜狗索引，请稍后再试');
+        await browser.close();
+        process.exit(0); // 正常退出（不是错误，只是今天还没有）
+      }
+    } else {
+      log(`⚠️ 无法解析文章日期 "${article.date}"，仍尝试生成`);
     }
 
     // Step 4: 下载图片
