@@ -27,193 +27,143 @@ const yaml = require('js-yaml');
 const dayjs = require('dayjs');
 const { spawn } = require('child_process');
 const sharp = require('sharp');
+const TurndownService = require('turndown');
 
-// ─── HTML 转 Markdown（保留图片位置和格式）────────────────────────────────
-function htmlToMarkdown(html, attachments, imgDir) {
-  // 1. 处理内嵌图片 (cid:xxx → 附件)
-  const cidMap = {};
+// ─── HTML 转 Markdown（Turndown 驱动，保留图片位置和格式）──────────────────
+function convertHtmlToMarkdown(html, attachments, imgDir) {
   const savedImgs = [];
 
+  // 1. 建立 cid → 附件索引
+  const cidMap = {};
   if (attachments && attachments.length > 0) {
     attachments.forEach((att, i) => {
-      if (att.contentId) {
-        cidMap[att.contentId] = { att, index: i };
-      }
+      if (att.contentId) cidMap[att.contentId] = { att, index: i };
     });
   }
 
-  // 2. 替换 <img src="cid:xxx"> 为占位符，后续处理
-  let processedHtml = html.replace(/<img[^>]*src=["']cid:([^"']+)["'][^>]*>/gi, (match, cid) => {
-    const cidClean = cid.replace(/[<>]/g, '');
-    const info = cidMap[cidClean];
-    if (info) {
-      return `__IMG_CID_${info.index}__`;
+  // 2. 把 <img src="cid:xxx"> 替换为占位符
+  let processedHtml = html.replace(
+    /<img[^>]*src=["']cid:([^"']+)["'][^>]*>/gi,
+    (match, cid) => {
+      const info = cidMap[cid.replace(/[<>]/g, '')];
+      return info ? `__IMG_CID_${info.index}__` : match;
     }
-    return match;
-  });
+  );
 
-  // 3. 处理 base64 内嵌图片 (data:image/xxx;base64,...)
-  let base64ImgIndex = 1000;
-  processedHtml = processedHtml.replace(/<img[^>]*src=["']data:image\/(png|jpeg|jpg|gif|webp);base64,([^"']+)["'][^>]*alt=["']([^"']*)["'][^>]*>/gi, (match, ext, base64Data, alt) => {
-    if (!imgDir) return '';
-    const imgBuffer = Buffer.from(base64Data, 'base64');
-    const name = `${dayjs().format('YYYYMMDDHHmmss')}-b${base64ImgIndex}.jpg`;
-    const filepath = path.join(imgDir, name);
-    try {
-      sharp(imgBuffer)
-        .resize(1200, null, { withoutEnlargement: true })
-        .jpeg({ quality: 85, progressive: true })
-        .toFile(filepath);
-    } catch (_) {
-      fs.writeFileSync(filepath, imgBuffer);
+  // 3. 处理 base64 内嵌图片：提取、存文件、替换占位符
+  let base64Idx = 1000;
+  processedHtml = processedHtml.replace(
+    /<img[^>]*src=["']data:image\/(png|jpeg|jpg|gif|webp);base64,([^"']+)["'][^>]*>/gi,
+    (match, ext, data) => {
+      if (!imgDir) return '';
+      const buf = Buffer.from(data, 'base64');
+      const imgIdx = base64Idx; // 捕获当前索引，用于后续替换
+      const name = `${dayjs().format('YYYYMMDDHHmmss')}-b${imgIdx}.jpg`;
+      const fp = path.join(imgDir, name);
+      try {
+        sharp(buf).resize(1200, null, { withoutEnlargement: true })
+          .jpeg({ quality: 85, progressive: true }).toFile(fp);
+      } catch (_) { fs.writeFileSync(fp, buf); }
+      savedImgs.push({ index: imgIdx, name,
+        html: `<img src="/images/email-attachments/${name}" class="email-img" alt="${name}">` });
+      base64Idx++;
+      return `__IMG_BASE64_${imgIdx}__`;
     }
-    savedImgs.push({ index: base64ImgIndex, name, html: `<img src="/images/email-attachments/${name}" class="email-img" alt="${alt || name}">` });
-    base64ImgIndex++;
-    return `__IMG_BASE64_${base64ImgIndex - 1}__`;
+  );
+
+  // 4. 配置 Turndown：把图片转回 <img class="email-img"> 以保留浮动布局
+  const td = new TurndownService({
+    headingStyle: 'atx',
+    codeBlockStyle: 'fenced',
+    bulletListMarker: '-',
   });
-  processedHtml = processedHtml.replace(/<img[^>]*src=["']data:image\/(png|jpeg|jpg|gif|webp);base64,([^"']+)["'][^>]*>/gi, (match, ext, base64Data) => {
-    if (!imgDir) return '';
-    const imgBuffer = Buffer.from(base64Data, 'base64');
-    const name = `${dayjs().format('YYYYMMDDHHmmss')}-b${base64ImgIndex}.jpg`;
-    const filepath = path.join(imgDir, name);
-    try {
-      sharp(imgBuffer)
-        .resize(1200, null, { withoutEnlargement: true })
-        .jpeg({ quality: 85, progressive: true })
-        .toFile(filepath);
-    } catch (_) {
-      fs.writeFileSync(filepath, imgBuffer);
+
+  // 5. 外部图片：Turndown 生成 ![alt](url)，这里转回 <img class="email-img">
+  td.addRule('externalImages', {
+    filter: 'img',
+    replacement: (content, node) => {
+      const src = node.getAttribute('src') || '';
+      const alt = node.getAttribute('alt') || '';
+      // 已是 /images/email-attachments/ 路径（cid/base64 已预处理）→ 保留
+      if (src.startsWith('/images/email-attachments/')) {
+        return `<img src="${src}" class="email-img" alt="${alt}">`;
+      }
+      // 外部 URL → 加 email-img 类（文字浮动在右边）
+      return `<img src="${src}" class="email-img" alt="${alt}">`;
     }
-    savedImgs.push({ index: base64ImgIndex, name, html: `<img src="/images/email-attachments/${name}" class="email-img" alt="${name}">` });
-    base64ImgIndex++;
-    return `__IMG_BASE64_${base64ImgIndex - 1}__`;
   });
 
-  // 提前移除 <style> 和 <script>，避免内容混入后续格式转换
-  processedHtml = processedHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-  processedHtml = processedHtml.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-  processedHtml = processedHtml.replace(/<!--[\s\S]*?-->/g, '');
-
-  // 外部图片 → 保留为 HTML img 标签（加 email-img 类，左浮动让文字在右边）
-  processedHtml = processedHtml.replace(/<img[^>]*src=["'](https?:\/\/[^"']+)["'][^>]*alt=["']([^"']*)["'][^>]*>/gi, '<img src="$1" class="email-img" alt="$2">');
-  processedHtml = processedHtml.replace(/<img[^>]*src=["'](https?:\/\/[^"']+)["'][^>]*>/gi, '<img src="$1" class="email-img">');
-
-  // 4. 转换标题
-  processedHtml = processedHtml.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, (m, c) => '# ' + c.trim() + '\n\n');
-  processedHtml = processedHtml.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, (m, c) => '## ' + c.trim() + '\n\n');
-  processedHtml = processedHtml.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, (m, c) => '### ' + c.trim() + '\n\n');
-  processedHtml = processedHtml.replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, (m, c) => '#### ' + c.trim() + '\n\n');
-
-  // 5. 转换段落和换行
-  processedHtml = processedHtml.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, (m, c) => c.trim() + '\n\n');
-  processedHtml = processedHtml.replace(/<br\s*\/?>/gi, '\n');
-  processedHtml = processedHtml.replace(/<div[^>]*>([\s\S]*?)<\/div>/gi, (m, c) => c.trim() + '\n\n');
-
-  // 6. 转换列表
-  processedHtml = processedHtml.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (m, c) => {
-    const items = c.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (mi, mc) => '- ' + mc.trim() + '\n');
-    return items + '\n';
-  });
-  processedHtml = processedHtml.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (m, c) => {
-    let idx = 1;
-    const items = c.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (mi, mc) => idx++ + '. ' + mc.trim() + '\n');
-    return items + '\n';
+  // 5b. 支持删除线：<del>/<s>/<strike> → ~~text~~
+  ['del', 's', 'strike'].forEach(tag => {
+    td.addRule(`strike${tag}`, {
+      filter: tag,
+      replacement: (content) => `~~${content}~~`
+    });
   });
 
-  // 7. 只转换加粗（简化：去掉斜体/删除线/下划线）
-  processedHtml = processedHtml.replace(/<(strong|b)[^>]*>([\s\S]*?)<\/(strong|b)>/gi, (m, tag, c) => {
-    const inner = c.replace(/\s+/g, ' ').trim();
-    return inner ? `**${inner}**` : '';
+  // 5c. 支持下划线：<u> → <u>（HTML 原始输出，Hexo 渲染器会透传）
+  td.addRule('underline', {
+    filter: 'u',
+    replacement: (content) => `<u>${content}</u>`
   });
 
-  // 8. 转换链接
-  processedHtml = processedHtml.replace(/<a[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, '[$2]($1)');
-
-  // 9. 转换引用
-  processedHtml = processedHtml.replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, (m, c) => {
-    const lines = c.trim().split('\n');
-    return lines.map(l => '> ' + l.trim()).join('\n') + '\n\n';
-  });
-
-  // 10. 转换代码块
-  processedHtml = processedHtml.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (m, c) => '```\n' + c.trim() + '\n```\n\n');
-  processedHtml = processedHtml.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, '`$1`');
-
-  // 11. 移除其他 HTML 标签（保留 email-img 图片标签）
-  const emailImgPlaceholders = [];
-  processedHtml = processedHtml.replace(/<img[^>]*class="email-img"[^>]*>/gi, (match) => {
-    const idx = emailImgPlaceholders.length;
-    emailImgPlaceholders.push(match);
-    return `__EMAIL_IMG_${idx}__`;
-  });
-  processedHtml = processedHtml.replace(/<[^>]+>/g, '');
-  emailImgPlaceholders.forEach((img, idx) => {
-    processedHtml = processedHtml.replace(`__EMAIL_IMG_${idx}__`, img);
-  });
-
-  // 12. 清理 HTML 实体
+  // 4b. 预处理：强制移除 style/script/注释（Turndown 不完全清理）
   processedHtml = processedHtml
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(code));
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<!--[\s\S]*?-->/g, '');
 
-  // 13. 清理多余空白
-  processedHtml = processedHtml
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+  // 5d. 【关键修复】在 Turndown 处理之前，先把占位符替换为 <img> 标签
+  //    因为 Turndown 会把 __xxx__ 中的下划线转义为 \\_，导致后置替换失败
+  //    占位符此时已是 HTML 中的文本节点，直接替换为 <img> 标签即可
+  savedImgs.forEach(img => {
+    const placeholder = img.index >= 1000
+      ? `__IMG_BASE64_${img.index}__`
+      : `__IMG_CID_${img.index}__`;
+    processedHtml = processedHtml.replace(placeholder, img.html);
+  });
 
-  // 14. 处理图片占位符 → 实际图片
+  // 6. 处理 cid 附件：仅当该附件尚未被保存（step 5d 已处理过）时才保存
+  //    封面图 = savedImgs[0]，如果第一个是 base64 图，cover 直接用它，不重复保存
   if (attachments && attachments.length > 0 && imgDir) {
     attachments.forEach((att, i) => {
-      if (!att.contentId && !['jpg','jpeg','png','gif','webp','bmp'].includes((att.filename || '').split('.').pop().toLowerCase())) {
+      if (!att.contentId) return;
+      const ext = (att.filename || 'img').split('.').pop().toLowerCase();
+      if (!['jpg','jpeg','png','gif','webp','bmp'].includes(ext)) return;
+      // 如果该附件的 savedName 已在 step 5d 中被设置（通过 savedImgs[index]），
+      // 说明 HTML 内容已引用此图，直接复用文件名，不重复保存
+      const alreadySaved = savedImgs.some(img => img.index === i);
+      if (alreadySaved) {
+        // 从 savedImgs 中找对应的条目，设置 att.savedName
+        const existing = savedImgs.find(img => img.index === i);
+        att.savedName = existing.name;
         return;
       }
+      // 确实需要保存（cid 附件不在 HTML 内容中的罕见情况）
       const name = `${dayjs().format('YYYYMMDDHHmmss')}-${i}.jpg`;
-      const filepath = path.join(imgDir, name);
-
+      const fp = path.join(imgDir, name);
       try {
-        sharp(att.content)
-          .resize(1200, null, { withoutEnlargement: true })
-          .jpeg({ quality: 85, progressive: true })
-          .toFile(filepath);
-      } catch (_) {
-        fs.writeFileSync(filepath, att.content);
-      }
-
+        sharp(att.content).resize(1200, null, { withoutEnlargement: true })
+          .jpeg({ quality: 85, progressive: true }).toFile(fp);
+      } catch (_) { fs.writeFileSync(fp, att.content); }
       att.savedName = name;
-      savedImgs.push({ index: i, name, html: `<img src="/images/email-attachments/${name}" class="email-img" alt="${att.filename || name}">` });
+      savedImgs.push({ index: i, name,
+        html: `<img src="/images/email-attachments/${name}" class="email-img" alt="${att.filename || name}">` });
     });
   }
 
-  // 替换占位符为实际图片 HTML
-  savedImgs.forEach(img => {
-    if (img.index >= 1000) {
-      processedHtml = processedHtml.replace(`__IMG_BASE64_${img.index}__`, img.html);
-    } else {
-      processedHtml = processedHtml.replace(`__IMG_CID_${img.index}__`, img.html);
-    }
-  });
+  let markdown = td.turndown(processedHtml);
 
-  // 15. 移除残留的占位符
-  processedHtml = processedHtml.replace(/__IMG_CID_\d+__/g, '');
-  processedHtml = processedHtml.replace(/__IMG_BASE64_\d+__/g, '');
-
-  // 16. 清理图片周围的格式标记
-  processedHtml = processedHtml.replace(/\*{1,2}(<img[^>]*class="email-img"[^>]*>)\*{1,2}/g, '$1');
-  processedHtml = processedHtml.replace(/\*{4,}/g, '');
-
-  // 17. 清理空的粗体标记
-  processedHtml = processedHtml.replace(/\*\*\s*\*\*/g, '');
-  processedHtml = processedHtml
+  // 7. 清理残留占位符和多余空行
+  markdown = markdown
+    .replace(/__IMG_(CID|BASE64)_\d+__/g, '')
+    .replace(/\*{4,}/g, '')
+    .replace(/\*\*\s?\*\*/g, '')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 
-  return { markdown: processedHtml, savedImgs };
+  return { markdown, savedImgs };
 }
 
 // ─── 配置 ───────────────────────────────────────────────────────────────────
@@ -252,6 +202,7 @@ async function parseEmail(subject, body, html, attachments) {
   let tags = [];
   let categories = [];
   let draft = false;
+  let cover = '';
 
   const sMatch = subject.match(/^#\s*(.+)/);
   if (sMatch) title = sMatch[1].trim();
@@ -260,10 +211,11 @@ async function parseEmail(subject, body, html, attachments) {
   if (!fs.existsSync(imgDir)) fs.mkdirSync(imgDir, { recursive: true });
 
   if (html && html.trim()) {
-    const result = htmlToMarkdown(html, attachments, imgDir);
+    const result = convertHtmlToMarkdown(html, attachments, imgDir);
     content = result.markdown;
+    // 封面图直接取 HTML 内容中第一张图（savedImgs[0]），不重复保存
     if (result.savedImgs && result.savedImgs.length > 0) {
-      attachments[0].savedName = result.savedImgs[0].name;
+      cover = '/images/email-attachments/' + result.savedImgs[0].name;
     }
   } else if (body && body.trim()) {
     content = body.trim();
@@ -295,10 +247,6 @@ async function parseEmail(subject, body, html, attachments) {
     categories = catMatch[1].split(/[,，]/).map(s => s.trim()).filter(Boolean);
     content = content.replace(catMatch[0], '').trim();
   }
-
-  const cover = (attachments && attachments.length > 0 && attachments[0].savedName)
-    ? '/images/email-attachments/' + attachments[0].savedName
-    : '';
 
   return { title, content, tags, categories, draft, cover };
 }
