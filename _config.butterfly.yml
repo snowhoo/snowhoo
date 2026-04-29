@@ -353,11 +353,22 @@ share:
 # --------------------------------------
 
 comments:
-  use:
+  use: Waline
   text: true
   lazyload: false
-  count: false
-  card_post_count: false
+  count: true
+  card_post_count: true
+
+# Waline 评论系统配置
+# 部署完成后填入你的 serverURL
+waline:
+  serverURL: https://waline-deploy-alpha.vercel.app
+  bg: false
+  pageview: true
+  emoji:
+    - https://unpkg.com/@waline/emojis@1.1.0/bilibili
+  locale:
+    placeholder: 说点什么吧...
 
 # --------------------------------------
 # Analysis
