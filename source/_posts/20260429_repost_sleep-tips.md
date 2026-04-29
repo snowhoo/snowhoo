@@ -9,14 +9,12 @@ tags:
   - 健康
   - 人民日报
   - 生活小贴士
-cover: /images/repost/20260429_repost_sleep-tips.jpg
+cover: /images/repost/20260429_body_3.jpg
 toc: true
 comments: true
 ---
 
 > 原文来源：[人民日报](https://mp.weixin.qq.com/s/eEgeTisqQBxQTACNnYvmCg) | 转载仅供分享
-
-![封面图](/images/repost/20260429_repost_sleep-tips.jpg)
 
 你有没有想过
 
@@ -30,7 +28,7 @@ comments: true
 
 有网友认同博主的观点，也有网友表示无奈，还有人表示跟洗漱时间没关系，该熬还是熬。
 
-![提前洗漱话题配图](/images/repost/20260429_body_1.jpg)
+![提前洗漱话题配图](/images/repost/20260429_body_3.jpg)
 
 ---
 
@@ -76,7 +74,7 @@ comments: true
 
 这是因为手机屏幕发出的蓝光提高了人们的警觉性，从而导致入睡时间增长。
 
-![睡前放下手机配图](/images/repost/20260429_body_3.jpg)
+![睡前放下手机配图](/images/repost/20260429_body_1.jpg)
 
 ---
 
