@@ -23,8 +23,13 @@ const GIT_BRANCH = 'source';
 const HIGHLIGHT_COLORS = ['#e74c3c', '#e67e22', '#27ae60', '#2980b9', '#8e44ad', '#16a085'];
 
 // ============ 工具函数 ============
-function getToday() {
-  const now = new Date();
+function getToday(dateOverride) {
+  let now;
+  if (dateOverride && /^(\d{4})(\d{2})(\d{2})$/.test(dateOverride)) {
+    now = new Date(RegExp.$1, parseInt(RegExp.$2) - 1, RegExp.$3);
+  } else {
+    now = new Date();
+  }
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, '0');
   const d = String(now.getDate()).padStart(2, '0');
@@ -106,6 +111,10 @@ async function searchWechatArticles(page, keyword) {
   });
 
   log(`找到 ${articles.length} 个搜索结果`);
+  // 调试：打印每个结果的日期
+  articles.forEach((a, i) => {
+    log(`  [${i}] ${a.account} | ${a.date} | ${a.title.substring(0, 40)}`);
+  });
   return articles;
 }
 
@@ -431,6 +440,11 @@ function isTodayArticle(article, today) {
     return true;
   }
 
+  // "昨天"只在日期覆盖模式下匹配（覆盖的日期正好比当前日期早1天）
+  if (dateStr.includes('昨天') && process.argv.includes('--date')) {
+    return true;
+  }
+
   // 标题可能包含日期信息
   const title = article.title || '';
   if (title.includes(today.dateStr) || title.includes(`${today.month}${today.day}`)) {
@@ -441,8 +455,21 @@ function isTodayArticle(article, today) {
 }
 
 // ============ 主流程 ============
+// 解析命令行参数中的日期覆盖
+function parseDateOverride() {
+  const dateIdx = process.argv.indexOf('--date');
+  if (dateIdx >= 0 && dateIdx + 1 < process.argv.length) {
+    return process.argv[dateIdx + 1];
+  }
+  return null;
+}
+
 async function main() {
-  const today = getToday();
+  const dateOverride = parseDateOverride();
+  const today = getToday(dateOverride);
+  if (dateOverride) {
+    log(`[覆盖模式] 使用指定日期: ${today.fullDateStr}`);
+  }
 
   // 检查今天是否已经抓取过（避免定时重试重复发文）
   const postPattern = `${today.year}${today.month}${today.day}_rmrb-yedu`;
