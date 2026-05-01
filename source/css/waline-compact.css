@@ -69,7 +69,24 @@ hr.custom-hr {
 /* 编辑器区域 - 极限压缩 */
 .wl-editor {
   min-height: 24px !important;
-  margin: 2px 0 !important;
+  margin: 2px 0 2px 0 !important;
+  padding-left: 0 !important;
+}
+
+/* 让评论输入框与上方"网址"字段左对齐 */
+.wl-editor-wrap,
+.wl-panel .wl-editor {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+.wl-info {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+/* 网址输入框对齐 */
+.wl-info input[name="link"],
+.wl-info .wl-link {
+  margin-left: 0 !important;
 }
 
 .wl-editor textarea {
