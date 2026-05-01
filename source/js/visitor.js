@@ -79,12 +79,12 @@
         fbanner.style.backgroundSize = 'cover';
         fbanner.style.backgroundPosition = 'center';
         fbanner.style.backgroundRepeat = 'no-repeat';
+        var fp = f.date.split('-');
+        var datePrefix = parseInt(fp[1],10) + '月' + parseInt(fp[2],10) + '日';
         fbanner.innerHTML =
           '<div class="st-banner-inner" style="border-color:' + f.color + '20' + ';">' +
-          '<span class="st-icon">🎉</span>' +
-          '<span class="st-name" style="color:' + f.color + ';">' + f.name + '</span>' +
+          '<span class="st-name" style="color:' + f.color + ';">今天是' + datePrefix + '，' + f.name + '</span>' +
           '<span class="st-desc" style="color:#555;">' + f.desc + '</span>' +
-          '<span class="st-icon">🎉</span>' +
           '</div>';
         target.insertBefore(fbanner, target.firstChild);
         return;
