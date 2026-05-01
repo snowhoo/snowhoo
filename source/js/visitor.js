@@ -42,18 +42,18 @@
 
   // 2026 年主要节日
   var FESTIVALS_2026 = [
-    { date: '2026-01-01', name: '元旦', desc: '新年第一天，愿你万事胜意', color: '#e74c3c', bgGrad: 'linear-gradient(135deg,#fdf2f2,#fce4e4)' },
-    { date: '2026-02-14', name: '情人节', desc: '愿有情人终成眷属', color: '#e91e63', bgGrad: 'linear-gradient(135deg,#fce4ec,#f8bbd0)' },
-    { date: '2026-02-17', name: '春节', desc: '恭贺新禧，万事如意！', color: '#c41e3a', bgGrad: 'linear-gradient(135deg,#fff5f5,#ffe0e0)' },
-    { date: '2026-03-03', name: '元宵节', desc: '灯火阑珊处，花市灯如昼', color: '#e67e22', bgGrad: 'linear-gradient(135deg,#fff8f0,#ffe8cc)' },
-    { date: '2026-04-05', name: '清明节', desc: '清明时节雨纷纷，路上行人欲断魂', color: '#6ab04c', bgGrad: 'linear-gradient(135deg,#f0fdf4,#d8f3dc)' },
-    { date: '2026-05-01', name: '劳动节', desc: '致敬每一位劳动者，节日快乐', color: '#c0392b', bgGrad: 'linear-gradient(135deg,#fff5f5,#ffcdd2)' },
-    { date: '2026-05-31', name: '端午节', desc: '粽叶飘香，端午安康', color: '#27ae60', bgGrad: 'linear-gradient(135deg,#f0fdf4,#c8e6c9)' },
-    { date: '2026-08-19', name: '七夕节', desc: '金风玉露一相逢，便胜却人间无数', color: '#c0392b', bgGrad: 'linear-gradient(135deg,#fff5f5,#ffcdd2)' },
-    { date: '2026-10-01', name: '国庆节', desc: '祝祖国繁荣昌盛！', color: '#c41e3a', bgGrad: 'linear-gradient(135deg,#fff5f5,#ffebee)' },
-    { date: '2026-10-08', name: '中秋节', desc: '但愿人长久，千里共婵娟', color: '#e67e22', bgGrad: 'linear-gradient(135deg,#fff8f0,#ffe0b2)' },
-    { date: '2026-10-25', name: '重阳节', desc: '九九重阳，登高望远', color: '#d35400', bgGrad: 'linear-gradient(135deg,#fef9f0,#fdebd0)' },
-    { date: '2026-12-25', name: '圣诞节', desc: 'Merry Christmas! 圣诞快乐', color: '#27ae60', bgGrad: 'linear-gradient(135deg,#f0fdf4,#c8e6c9)' },
+    { date: '2026-01-01', name: '元旦', desc: '新年第一天，愿你万事胜意', color: '#e74c3c', bgImg: '/images/banner/yuandan-bg.png' },
+    { date: '2026-02-14', name: '情人节', desc: '愿有情人终成眷属', color: '#e91e63', bgImg: '/images/banner/qingren-bg.png' },
+    { date: '2026-02-17', name: '春节', desc: '恭贺新禧，万事如意！', color: '#c41e3a', bgImg: '/images/banner/chunjie-bg.png' },
+    { date: '2026-03-03', name: '元宵节', desc: '灯火阑珊处，花市灯如昼', color: '#e67e22', bgImg: '/images/banner/yuanxiao-bg.png' },
+    { date: '2026-04-05', name: '清明节', desc: '清明时节雨纷纷，路上行人欲断魂', color: '#6ab04c', bgImg: '/images/banner/qingming-bg.png' },
+    { date: '2026-05-01', name: '劳动节', desc: '致敬每一位劳动者，节日快乐', color: '#c0392b', bgImg: '/images/banner/laodong-bg.png' },
+    { date: '2026-05-31', name: '端午节', desc: '粽叶飘香，端午安康', color: '#27ae60', bgImg: '/images/banner/duanwu-bg.png' },
+    { date: '2026-08-19', name: '七夕节', desc: '金风玉露一相逢，便胜却人间无数', color: '#c0392b', bgImg: '/images/banner/qixi-bg.png' },
+    { date: '2026-10-01', name: '国庆节', desc: '祝祖国繁荣昌盛！', color: '#c41e3a', bgImg: '/images/banner/guoqing-bg.png' },
+    { date: '2026-10-08', name: '中秋节', desc: '但愿人长久，千里共婵娟', color: '#e67e22', bgImg: '/images/banner/zhongqiu-bg.png' },
+    { date: '2026-10-25', name: '重阳节', desc: '九九重阳，登高望远', color: '#d35400', bgImg: '/images/banner/chongyang-bg.png' },
+    { date: '2026-12-25', name: '圣诞节', desc: 'Merry Christmas! 圣诞快乐', color: '#27ae60', bgImg: '/images/banner/shengdan-bg.png' },
   ];
 
   function getTodayStr() {
@@ -75,11 +75,11 @@
         var fbanner = document.createElement('div');
         fbanner.id = 'solar-term-banner';
         fbanner.className = 'festival-banner';
-        fbanner.style.background = f.bgGrad;
+        fbanner.style.backgroundImage = 'url(' + f.bgImg + ')';
         fbanner.innerHTML =
-          '<div class="st-banner-inner" style="background:' + f.bgGrad + ';border-color:' + f.color + '20' + ';">' +
+          '<div class="st-banner-inner" style="border-color:' + f.color + '20' + ';">' +
           '<span class="st-icon">🎉</span>' +
-          '<span class="st-name" style="color:' + f.color + ';border-color:' + f.color + ';">' + f.name + '</span>' +
+          '<span class="st-name" style="color:' + f.color + ';">' + f.name + '</span>' +
           '<span class="st-desc" style="color:#555;">' + f.desc + '</span>' +
           '<span class="st-icon">🎉</span>' +
           '</div>';
