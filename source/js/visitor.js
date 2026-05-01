@@ -75,6 +75,7 @@
         var fbanner = document.createElement('div');
         fbanner.id = 'solar-term-banner';
         fbanner.className = 'festival-banner';
+        fbanner.style.background = f.bgGrad;
         fbanner.innerHTML =
           '<div class="st-banner-inner" style="background:' + f.bgGrad + ';border-color:' + f.color + '20' + ';">' +
           '<span class="st-icon">🎉</span>' +
