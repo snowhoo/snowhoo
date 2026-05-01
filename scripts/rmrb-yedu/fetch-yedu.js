@@ -278,7 +278,7 @@ function articleToMarkdown(article, today) {
     } else if (p.type === 'image') {
       imgIndex++;
       const imgName = `${today.dateStr}_yedu_${String(imgIndex).padStart(2, '0')}.jpg`;
-      markdownBody += `\n![人民日报夜读配图](/images/yedu/${imgName})\n\n`;
+      markdownBody += `\n![夜读配图](/images/yedu/${imgName})\n\n`;
     }
   }
 
@@ -287,7 +287,7 @@ function articleToMarkdown(article, today) {
 
   // 添加来源说明
   const sourceTime = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
-  markdownBody += `\n> 来源：人民日报微信公众号 | 采集时间：${sourceTime}\n`;
+  markdownBody += `\n> 来源：微信公众号 | 采集时间：${sourceTime}\n`;
 
   return { markdownBody, images, mergedParagraphs };
 }
@@ -348,7 +348,7 @@ function writeHexoPost(article, markdownBody, today, downloadedNames) {
     .trim();
 
   if (!cleanTitle) {
-    cleanTitle = `人民日报夜读 - ${today.fullDateStr}`;
+    cleanTitle = `夜读 - ${today.fullDateStr}`;
   }
 
   // 封面图：优先第一张下载的图，否则默认
