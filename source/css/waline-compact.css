@@ -164,13 +164,12 @@ hr.custom-hr {
   display: none !important;
 }
 
-/* 隐藏评论区所有 a.wl-action 连接图标 */
+/* 隐藏评论区所有 a.wl-action 连接图标（Markdown提示等） */
 a.wl-action,
-.wl-action a,
-.wl-card a[class*="action"],
-.wl-reply a[class*="action"],
-.wl-operations a,
-.wl-card .wl-operation {
+a.wl-action[aria-label*="Markdown"],
+.wl-action[title*="Markdown"],
+.wl-editor-toolbar a.wl-action,
+.wl-panel a.wl-action {
   display: none !important;
 }
 
