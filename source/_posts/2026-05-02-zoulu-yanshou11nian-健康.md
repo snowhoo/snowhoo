@@ -8,7 +8,7 @@ tags:
 categories:
   - 转载
 description: 走路是"长寿药"又添新证据！每天走够11000步，或可将寿命延长11年。
-cover: /images/article-health-walking/wechatmp-img-1777653617735-1fb94b8f.jpg
+cover: /images/article-health-walking/cover-walking.jpg
 sticky: 0
 ---
 
