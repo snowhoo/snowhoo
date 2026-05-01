@@ -1,5 +1,19 @@
 /* ===== Waline 评论界面极限纵向压缩 ===== */
 
+/* 删除评论顶部蓝色虚线分割条 */
+#post-comment {
+  border-top: none !important;
+}
+
+#post-comment::before,
+#post-comment::after {
+  display: none !important;
+}
+
+#post-comment .comment-head::before {
+  display: none !important;
+}
+
 /* 隐藏编辑器左侧图标链接 */
 .wl-editor .wl-icon {
   display: none !important;
