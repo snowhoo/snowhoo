@@ -1,0 +1,156 @@
+/* ===== Waline 评论界面重度纵向压缩 ===== */
+
+/* 全局容器 */
+.wl-panel {
+  padding: 5px !important;
+}
+
+/* 评论卡片 - 核心压缩 */
+.wl-card {
+  padding: 5px 0 !important;
+  margin-bottom: 2px !important;
+  line-height: 1.4 !important;
+}
+
+/* 编辑器区域 - 极度压缩 */
+.wl-editor {
+  min-height: 50px !important;
+  margin: 5px 0 !important;
+}
+
+.wl-editor textarea {
+  min-height: 50px !important;
+  height: 50px !important;
+  padding: 5px 8px !important;
+  line-height: 1.4 !important;
+}
+
+/* 评论内容 */
+.wl-content {
+  margin: 2px 0 !important;
+  line-height: 1.4 !important;
+}
+
+.wl-content p {
+  margin: 2px 0 !important;
+}
+
+/* 用户信息栏 */
+.wl-meta {
+  margin-bottom: 2px !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+}
+
+.wl-nick {
+  font-size: 12px !important;
+}
+
+/* 头像 */
+.wl-avatar {
+  width: 28px !important;
+  height: 28px !important;
+  margin-right: 6px !important;
+}
+
+/* 按钮操作栏 */
+.wl-reaction, 
+.wl-operations {
+  margin-top: 2px !important;
+  padding: 0 !important;
+}
+
+.wl-operation {
+  font-size: 12px !important;
+  padding: 2px 5px !important;
+}
+
+/* 回复框 */
+.wl-reply {
+  margin-top: 3px !important;
+  padding-left: 15px !important;
+}
+
+/* 分隔线 */
+.wl-divider {
+  margin: 5px 0 !important;
+}
+
+/* 评论列表 */
+.wl-cards {
+  margin-top: 3px !important;
+}
+
+/* 标题 */
+.wl-header {
+  margin-bottom: 5px !important;
+}
+
+.wl-head {
+  font-size: 16px !important;
+  margin-bottom: 3px !important;
+}
+
+/* 提交按钮 */
+.wl-btn {
+  padding: 5px 15px !important;
+  font-size: 13px !important;
+}
+
+/* 页码 */
+.wl-pagination {
+  margin-top: 5px !important;
+  padding-top: 5px !important;
+}
+
+/* 个人信息面板 */
+.wl-profile {
+  padding: 5px !important;
+}
+
+.wl-profile-ul {
+  margin: 3px 0 !important;
+}
+
+/* 隐藏不必要元素 */
+.wl-sort-active {
+  display: none !important;
+}
+
+/* 时间显示缩小 */
+.wl-time {
+  font-size: 11px !important;
+}
+
+/* 徽章缩小 */
+.wl-badge {
+  font-size: 10px !important;
+  padding: 1px 4px !important;
+}
+
+/* 评论区整体外边距压缩 */
+#post-comment {
+  margin-top: 10px !important;
+}
+
+/* 评论标题 */
+#post-comment .comment-head {
+  margin-bottom: 5px !important;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .wl-card {
+    padding: 4px 0 !important;
+  }
+  
+  .wl-avatar {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  
+  .wl-editor textarea {
+    min-height: 45px !important;
+    height: 45px !important;
+  }
+}
