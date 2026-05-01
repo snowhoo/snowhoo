@@ -2,6 +2,9 @@
 /* v4 - 删除顶部蓝色分割线，隐藏编辑器工具栏图标 */
 
 /* 删除评论区顶部蓝色虚线分割条 */
+hr.custom-hr {
+  display: none !important;
+}
 #post-comment {
   border-top: none !important;
   border: none !important;
