@@ -161,6 +161,12 @@
   display: none !important;
 }
 
+/* 隐藏评论卡片中的操作链接（回复、编辑等） */
+.wl-card a.wl-action,
+.wl-reply a.wl-action {
+  display: none !important;
+}
+
 /* 时间显示缩小 */
 .wl-time {
   font-size: 10px !important;
