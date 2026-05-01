@@ -17,8 +17,22 @@ if errorlevel 1 (
   exit /b 1
 )
 
-:: 2. 创建Hexo文章并部署
+:: 确保 node 在 PATH 中（计划任务兼容）
+set PATH=C:\PROGRA~1\nodejs;%PATH%
+
+:: 2. 创建 Hexo 文章
+cd /d "D:\hexo\hexo-bot\holiday-publish"
+node create-holiday-post.js "%HOLIDAY%"
+if errorlevel 1 (
+  echo 文章创建失败
+  exit /b 1
+)
+
+:: 3. 提交并推送到 GitHub
+echo 正在提交并推送...
 cd /d "D:\hexo"
-hexo generate && hexo deploy
+git add source\_posts\*.md
+git commit -m "auto: %HOLIDAY% festival post"
+git push origin source
 
 echo [%date% %time%] 任务完成

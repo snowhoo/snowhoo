@@ -6,7 +6,7 @@ param(
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
-$holidaysFile = "C:\Users\Administrator\BoClaw\workspace\holidays.json"
+$holidaysFile = Join-Path $PSScriptRoot "holidays.json"
 $holidays = Get-Content $holidaysFile -Raw -Encoding UTF8 | ConvertFrom-Json
 
 $apiUrl = "https://api.siliconflow.cn/v1/images/generations"
