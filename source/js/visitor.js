@@ -47,7 +47,7 @@
     { date: '2026-02-17', name: '春节', desc: '恭贺新禧，万事如意！', color: '#c41e3a', bgGrad: 'linear-gradient(135deg,#fff5f5,#ffe0e0)' },
     { date: '2026-03-03', name: '元宵节', desc: '灯火阑珊处，花市灯如昼', color: '#e67e22', bgGrad: 'linear-gradient(135deg,#fff8f0,#ffe8cc)' },
     { date: '2026-04-05', name: '清明节', desc: '清明时节雨纷纷，路上行人欲断魂', color: '#6ab04c', bgGrad: 'linear-gradient(135deg,#f0fdf4,#d8f3dc)' },
-    { date: '2026-05-01', name: '劳动节', desc: '致敬每一位劳动者，节日快乐', color: '#2980b9', bgGrad: 'linear-gradient(135deg,#ebf5fb,#d6eaf8)' },
+    { date: '2026-05-01', name: '劳动节', desc: '致敬每一位劳动者，节日快乐', color: '#c0392b', bgGrad: 'linear-gradient(135deg,#fff5f5,#ffcdd2)' },
     { date: '2026-05-31', name: '端午节', desc: '粽叶飘香，端午安康', color: '#27ae60', bgGrad: 'linear-gradient(135deg,#f0fdf4,#c8e6c9)' },
     { date: '2026-08-19', name: '七夕节', desc: '金风玉露一相逢，便胜却人间无数', color: '#c0392b', bgGrad: 'linear-gradient(135deg,#fff5f5,#ffcdd2)' },
     { date: '2026-10-01', name: '国庆节', desc: '祝祖国繁荣昌盛！', color: '#c41e3a', bgGrad: 'linear-gradient(135deg,#fff5f5,#ffebee)' },

@@ -364,23 +364,22 @@ title: ${cleanTitle}
 date: ${dateTimeStr}
 updated: ${dateTimeStr}
 categories:
-  - 人民日报夜读
+  - 夜读
 tags:
   - 夜读
   - 美文
-  - 人民日报
   - 晚安
 cover: ${cover}
 toc: true
 ---
 
-> 🏮 **人民日报 · 夜读** | ${today.fullDateStr}
+> 🏮 **夜读** | ${today.fullDateStr}
 
 ${markdownBody}
 
 ---
 
-📮 本文内容来源于《人民日报》微信公众号每日夜读栏目，版权归原作者所有。
+📮 本文内容来源于微信公众号每日夜读栏目，版权归原作者所有。
 
 🌙 晚安，好梦。
 `;
@@ -401,7 +400,7 @@ function gitCommitAndPush(article, today) {
     log('Git add...');
     execSync('git add -A', { cwd, encoding: 'utf-8', timeout: 30000 });
 
-    const commitMsg = `[夜读] ${article.title || `人民日报夜读 ${today.fullDateStr}`}`;
+    const commitMsg = `[夜读] ${article.title || `夜读 ${today.fullDateStr}`}`;
     log(`Git commit: "${commitMsg}"`);
     execSync(`git commit -m "${commitMsg.replace(/"/g, '\\"')}"`, { cwd, encoding: 'utf-8', timeout: 30000 });
 
