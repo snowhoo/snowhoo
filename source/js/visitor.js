@@ -76,6 +76,9 @@
         fbanner.id = 'solar-term-banner';
         fbanner.className = 'festival-banner';
         fbanner.style.backgroundImage = 'url(' + f.bgImg + ')';
+        fbanner.style.backgroundSize = 'cover';
+        fbanner.style.backgroundPosition = 'center';
+        fbanner.style.backgroundRepeat = 'no-repeat';
         fbanner.innerHTML =
           '<div class="st-banner-inner" style="border-color:' + f.color + '20' + ';">' +
           '<span class="st-icon">🎉</span>' +
