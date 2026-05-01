@@ -25,7 +25,7 @@ const coverPath = path.join(coverDir, coverFile);
 const hasCover = fs.existsSync(coverPath);
 
 const coverBlock = hasCover
-  ? `\n{% image ${coverFile}, 节日封面 %}\n`
+  ? `\n![节日封面](/images/holidays/${coverFile})\n`
   : '';
 
 const mdContent = `---
