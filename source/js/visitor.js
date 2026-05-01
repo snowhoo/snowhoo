@@ -177,6 +177,8 @@
 
     var tag = document.createElement('div');
     tag.id = 'lucky-visitor-tag';
+    tag.style.cursor = 'pointer';
+    tag.onclick = function() { window.location.href = 'https://snowhoo.net/guestbook/'; };
     tag.innerHTML =
       '<div class="lucky-tag-inner">' +
         '<span class="lucky-emoji">' + emoji + '</span>' +
