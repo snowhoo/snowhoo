@@ -161,9 +161,13 @@
   display: none !important;
 }
 
-/* 隐藏评论卡片中的操作链接（回复、编辑等） */
-.wl-card a.wl-action,
-.wl-reply a.wl-action {
+/* 隐藏评论区所有 a.wl-action 连接图标 */
+a.wl-action,
+.wl-action a,
+.wl-card a[class*="action"],
+.wl-reply a[class*="action"],
+.wl-operations a,
+.wl-card .wl-operation {
   display: none !important;
 }
 
