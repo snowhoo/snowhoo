@@ -1,5 +1,5 @@
 /* ===== Waline 评论界面极限纵向压缩 ===== */
-/* v2 - 删除顶部蓝色分割线 */
+/* v3 - 删除顶部蓝色分割线，隐藏编辑器工具栏图标 */
 
 /* 删除评论顶部蓝色虚线分割条 */
 #post-comment {
@@ -11,12 +11,28 @@
   display: none !important;
 }
 
-#post-comment .comment-head::before {
+#post-comment .comment-head::before,
+#post-comment .comment-head::after {
   display: none !important;
 }
 
-/* 隐藏编辑器左侧图标链接 */
-.wl-editor .wl-icon {
+/* 隐藏 Waline 内部的分割线/边框 */
+.wl-header {
+  border-bottom: none !important;
+}
+
+.wl-header hr,
+#post-comment hr {
+  display: none !important;
+}
+
+/* 隐藏编辑器左侧所有工具栏图标按钮 */
+.wl-editor-toolbar {
+  display: none !important;
+}
+
+/* 或者只隐藏图标，保留按钮 - 如果上面不生效用这个 */
+.wl-editor .wl-editor-toolbar .wl-action {
   display: none !important;
 }
 
