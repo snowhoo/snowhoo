@@ -36,7 +36,7 @@ tags:
   - ${name}
   - 传统文化
 categories:
-  - 节日文化
+  - 节日
 description: ${description} — ${date}
 cover: /images/holidays/${coverFile}
 sticky: 0
