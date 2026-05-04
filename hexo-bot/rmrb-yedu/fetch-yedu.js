@@ -11,6 +11,7 @@
  */
 
 const { chromium } = require('playwright');
+const Jimp = require('jimp');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -23,6 +24,110 @@ const GIT_BRANCH = 'source';
 const HIGHLIGHT_COLORS = ['#e74c3c', '#e67e22', '#27ae60', '#2980b9', '#8e44ad', '#16a085'];
 
 // ============ 工具函数 ============
+// ============ 生成封面图 ============
+async function generateCoverImage(paragraphs, today) {
+  // 提取第一段或金句作为封面文字
+  let quote = '';
+  for (const p of paragraphs) {
+    if (p.type === 'text' && p.content.length > 10 && p.content.length < 200) {
+      quote = p.content;
+      break;
+    }
+  }
+  
+  if (!quote) {
+    quote = '晚安，好梦';
+  }
+  
+  // 截取前50字
+  if (quote.length > 50) {
+    quote = quote.substring(0, 50) + '...';
+  }
+  
+  // 温暖的配色方案
+  const bgColors = [
+    { r: 255, g: 182, b: 193 }, // 浅粉
+    { r: 255, g: 218, b: 185 }, // 桃色
+    { r: 230, g: 230, b: 250 }, // 淡紫
+    { r: 255, g: 250, b: 205 }, // 浅黄
+    { r: 240, g: 255, b: 240 }, // 薄荷
+  ];
+  
+  const color = bgColors[Math.floor(Math.random() * bgColors.length)];
+  
+  try {
+    // 创建图片 (800 x 450)
+    const image = new Jimp(800, 450);
+    
+    // 填充渐变背景
+    for (let y = 0; y < 450; y++) {
+      for (let x = 0; x < 800; x++) {
+        // 简单渐变：从上到下颜色变深
+        const factor = y / 450;
+        const r = Math.floor(color.r * (1 - factor * 0.3));
+        const g = Math.floor(color.g * (1 - factor * 0.3));
+        const b = Math.floor(color.b * (1 - factor * 0.3));
+        image.setPixelColor(Jimp.rgbaToInt(r, g, b, 255), x, y);
+      }
+    }
+    
+    // 添加装饰圆
+    const circleColor = Jimp.rgbaToInt(255, 255, 255, 40);
+    for (let i = 0; i < 5; i++) {
+      const cx = 100 + Math.random() * 600;
+      const cy = 50 + Math.random() * 350;
+      const radius = 20 + Math.random() * 40;
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          if (dx * dx + dy * dy <= radius * radius) {
+            const px = Math.floor(cx + dx);
+            const py = Math.floor(cy + dy);
+            if (px >= 0 && px < 800 && py >= 0 && py < 450) {
+              image.setPixelColor(circleColor, px, py);
+            }
+          }
+        }
+      }
+    }
+    
+    // 添加文字（使用内置字体）
+    const font = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
+    
+    // 日期
+    const dateText = `${today.year}/${today.month}/${today.day}`;
+    image.print(font, 40, 40, dateText);
+    
+    // 金句（分两行）
+    const quoteFont = await Jimp.loadFont(Jimp.FONT_SANS_24_WHITE);
+    const lines = [];
+    let currentLine = '';
+    for (const char of quote) {
+      if (currentLine.length >= 18) {
+        lines.push(currentLine);
+        currentLine = '';
+      }
+      currentLine += char;
+    }
+    if (currentLine) lines.push(currentLine);
+    
+    const quoteY = 200;
+    lines.slice(0, 2).forEach((line, i) => {
+      image.print(quoteFont, 40, quoteY + i * 40, line);
+    });
+    
+    // 保存图片
+    const imgName = `${today.dateStr}_yedu_00.jpg`;
+    const imgPath = path.join(COVER_DIR, imgName);
+    await image.writeAsync(imgPath);
+    
+    log(`✅ 生成封面图: ${imgName}`);
+    return imgName;
+  } catch (err) {
+    log(`❌ 生成封面图失败: ${err.message}`);
+    return null;
+  }
+}
+
 function getToday(dateOverride) {
   let now;
   if (dateOverride && /^(\d{4})(\d{2})(\d{2})$/.test(dateOverride)) {
@@ -46,11 +151,8 @@ function log(msg) {
 }
 
 // ============ 核心：搜狗微信搜索 + 文章抓取 ============
-async function searchWechatArticles(page, keyword) {
-  log(`搜索关键词: "${keyword}"`);
-
-  // 直接用 URL 参数搜索（最可靠的方式）
-  const searchUrl = `https://weixin.sogou.com/weixin?type=2&query=${encodeURIComponent(keyword)}&ie=utf8`;
+async function searchWechatArticles(page, keyword, customUrl) {
+  const searchUrl = customUrl || `https://weixin.sogou.com/weixin?type=2&query=${encodeURIComponent(keyword)}&ie=utf8`;
   log(`搜索URL: ${searchUrl}`);
   await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
   await sleep(3000);
@@ -298,12 +400,18 @@ async function fetchArticleContent(page, articleUrl) {
 }
 
 // ============ Markdown 生成 ============
-function articleToMarkdown(article, today) {
+function articleToMarkdown(article, today, downloadedNames = []) {
   const { paragraphs, images } = article;
 
   // 过滤和合并段落
   const mergedParagraphs = [];
   let currentText = '';
+
+  // 如果有下载的图片，在正文开头插入封面图
+  if (downloadedNames.length > 0) {
+    const coverPath = `/images/yedu/${downloadedNames[0]}`;
+    mergedParagraphs.push({ type: 'image', src: coverPath });
+  }
 
   for (const p of paragraphs) {
     if (p.type === 'text') {
@@ -329,15 +437,26 @@ function articleToMarkdown(article, today) {
       mergedParagraphs.push({ type: 'image', src: p.src });
     }
   }
+  
+  // 最后一段也加上
   if (currentText.trim()) {
     mergedParagraphs.push({ type: 'text', content: currentText.trim() });
   }
+
+  // 过滤掉包含"人民日报"的段落（避免重复/转载标识）
+  const filteredParagraphs = mergedParagraphs.filter(p => {
+    if (p.type === 'text') {
+      // 跳过包含人民日报的段落
+      return !p.content.includes('人民日报');
+    }
+    return true;
+  });
 
   // 生成 Markdown 正文
   let markdownBody = '';
   let imgIndex = 0;
 
-  for (const p of mergedParagraphs) {
+  for (const p of filteredParagraphs) {
     if (p.type === 'text') {
       // 处理文本：高亮每段首句
       const sentences = p.content.split('\n').filter(s => s.trim());
@@ -420,11 +539,13 @@ function writeHexoPost(article, markdownBody, today, downloadedNames) {
     fs.mkdirSync(POSTS_DIR, { recursive: true });
   }
 
-  // 清理标题，移除可能的前缀标记
+  // 清理标题，移除可能的前缀标记和"人民日报"字样
   let cleanTitle = article.title
     .replace(/^【夜读】/, '')
     .replace(/^夜读[丨\|\/]/, '')
     .replace(/^夜读\s*/, '')
+    .replace(/^人民日报[：:\s]*/i, '')
+    .replace(/^人民日报\s*/i, '')
     .trim();
 
   if (!cleanTitle) {
@@ -586,9 +707,11 @@ async function main() {
     // Step 1: 搜狗微信搜索（关键词包含日期，提高命中率）
     const keyword = `人民日报${parseInt(today.month)}月${parseInt(today.day)}日夜读`;
     log(`搜索关键词: "${keyword}"`);
-    log(`搜索URL: https://weixin.sogou.com/weixin?type=2&query=${encodeURIComponent(keyword)}&ie=utf8`);
+    // 使用完整的搜索参数，提高命中率
+    const searchUrl = `https://weixin.sogou.com/weixin?type=2&s_from=input&query=${encodeURIComponent(keyword)}&ie=utf8&_sug_=y`;
+    log(`搜索URL: ${searchUrl}`);
     
-    let articles = await searchWechatArticles(page, keyword);
+    let articles = await searchWechatArticles(page, keyword, searchUrl);
     
     // 如果微信搜索没找到，尝试普通搜狗搜索
     if (articles.length === 0) {
@@ -684,10 +807,18 @@ async function main() {
     }
 
     // Step 4: 下载图片
-    const downloadedNames = await downloadImages(article.images, today, page);
+    let downloadedNames = await downloadImages(article.images, today, page);
+    
+    // 如果没有下载到图片，生成封面图
+    if (downloadedNames.length === 0 && article.paragraphs.length > 0) {
+      const generatedImg = await generateCoverImage(article.paragraphs, today);
+      if (generatedImg) {
+        downloadedNames = [generatedImg];
+      }
+    }
 
     // Step 5: 生成 Markdown
-    const { markdownBody } = articleToMarkdown(article, today);
+    const { markdownBody } = articleToMarkdown(article, today, downloadedNames);
 
     // Step 6: 写入 Hexo 文章
     const result = writeHexoPost(article, markdownBody, today, downloadedNames);
