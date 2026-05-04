@@ -1,43 +1,37 @@
-name: Deploy Hexo to GitHub Pages
+name: Hexo Deploy
 
 on:
   push:
     branches:
-      - source
+      - source  # 源码分支
+  workflow_dispatch:  # 支持手动触发
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
         with:
-          ref: source
-          fetch-depth: 0
+          ref: source  # 检出源码分支
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: ''
+          cache: 'npm'
 
       - name: Install dependencies
-        run: |
-          npm install -g hexo-cli
-          npm install
+        run: npm install
 
-      - name: Build Hexo
-        run: |
-          npx hexo clean
-          npx hexo generate
+      - name: Generate static files
+        run: npm run build
 
       - name: Deploy to main branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
-          publish_branch: main
+          publish_branch: main  # 部署到 main 分支
           cname: snowhoo.net
-          user_name: github-actions[bot]
-          user_email: github-actions[bot]@users.noreply.github.com
-          full_commit_message: Deploy Hexo site to main
