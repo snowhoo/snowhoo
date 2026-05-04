@@ -1,0 +1,984 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>小红故事 - 一九七九年，春天</title><meta name="author" content="小红叔"><meta name="copyright" content="小红叔"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="小红故事 - 记录生活中的点滴感悟与美好时光，分享个人成长、旅行风景、人生思考">
+<meta property="og:type" content="website">
+<meta property="og:title" content="小红故事">
+<meta property="og:url" content="https://snowhoo.net/page/2/index.html">
+<meta property="og:site_name" content="小红故事">
+<meta property="og:description" content="小红故事 - 记录生活中的点滴感悟与美好时光，分享个人成长、旅行风景、人生思考">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://snowhoo.net/images/profile_PIC.jpg">
+<meta property="article:author" content="小红叔">
+<meta property="article:tag" content="小红故事, snowhoo, 个人博客, 生活随笔, 成长记录, 旅行故事">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://snowhoo.net/images/profile_PIC.jpg"><script type="application/ld+json"></script><link rel="shortcut icon" href="/images/favicon.ico"><link rel="canonical" href="https://snowhoo.net/page/2/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.3"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"pagination":{"enable":true,"hitsPerPage":8},"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.12.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '小红故事',
+  isHighlightShrink: false,
+  isToc: false,
+  pageType: 'home'
+}</script><link rel='stylesheet' href='/css/waline-compact.css'><style>/* 文章封面左侧小缩略图 80×80 */#recent-posts .recent-post-item{display:flex!important;flex-direction:row!important;align-items:stretch!important;height:auto!important}#recent-posts .recent-post-item .post_cover{width:100px!important;min-width:100px!important;height:100px!important;min-height:100px!important;max-height:100px!important;flex-shrink:0!important;order:0!important;padding:6px!important;box-sizing:border-box!important;border-radius:8px!important;overflow:hidden!important;display:flex!important;align-items:center!important;justify-content:center!important}#recent-posts .recent-post-item .post_cover.right{order:0!important}#recent-posts .recent-post-item .post_cover .post-bg{width:80px!important;height:80px!important;object-fit:cover!important;border-radius:4px!important}#recent-posts .recent-post-item:hover .post-bg{transform:none!important}#recent-posts .recent-post-item>.recent-post-info{flex:1!important;min-width:0!important;padding:12px 16px!important;width:auto!important;display:flex!important;flex-direction:column!important;justify-content:center!important}#recent-posts .recent-post-item .recent-post-info .article-title{font-size:1em!important;font-weight:700!important;line-height:1.3!important;margin:0!important}#recent-posts .recent-post-item .recent-post-info .article-meta-wrap{margin:2px 0!important;font-size:.8em!important}#recent-posts .recent-post-item .recent-post-info .content{font-size:.85em!important;line-height:1.4!important}@media(max-width:768px){#recent-posts .recent-post-item{flex-direction:column!important}#recent-posts .recent-post-item .post_cover{width:100%!important;min-width:100%!important;height:auto!important;min-height:auto!important;max-height:none!important;padding:0!important;order:0!important;display:block!important;border-radius:0!important}#recent-posts .recent-post-item .post_cover .post-bg{width:100%!important;height:120px!important;object-fit:cover!important;display:block!important;border-radius:0!important}#recent-posts .recent-post-item .recent-post-info{flex:1!important;padding:10px 12px!important;width:100%!important;justify-content:flex-start!important}#recent-posts .recent-post-item .recent-post-info .article-title{font-size:.95em!important;font-weight:700!important;-webkit-line-clamp:2!important}#recent-posts .recent-post-item .recent-post-info .content{-webkit-line-clamp:2!important}}/* 文章正文标题字号缩小 - 提高优先级覆盖主题默认样式 */ #post-info .post-title{font-size:1.1rem!important;font-weight:700!important} #article-container h1{font-size:1.1rem!important;font-weight:700!important} #article-container h2{font-size:1.0rem!important;font-weight:700!important} #article-container h3{font-size:0.9rem!important;font-weight:700!important} .post-content h1{font-size:1.1rem!important;font-weight:700!important} .post-content h2{font-size:1.0rem!important;font-weight:700!important} .post-content h3{font-size:0.9rem!important;font-weight:700!important}/* 热搜标题首字放大加粗 */.post-content h3 strong{font-size:1.5em!important;font-weight:700!important}/* Related Articles完整样式 */.relatedPosts{margin-top:0!important;padding-top:0!important;padding-bottom:0!important}.relatedPosts-list{display:flex!important;flex-wrap:wrap!important}.relatedPosts .pagination-related{height:75px!important;min-height:75px!important;overflow:visible!important;display:flex!important;align-items:center!important;width:calc(50% - 6px)!important;position:relative!important}.relatedPosts .pagination-related .cover{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;z-index:0!important}.relatedPosts .pagination-related .info{overflow:visible!important;display:flex!important;align-items:flex-start!important;justify-content:flex-start!important;width:100%!important;position:relative!important;z-index:1!important}.relatedPosts .pagination-related .info .info-1,.relatedPosts .pagination-related .info .info-2{position:static!important;transform:none!important;top:auto!important;left:auto!important;padding:0 20px!important;box-sizing:border-box!important;opacity:1!important;width:auto!important}.relatedPosts .pagination-related .info .info-1{transition:opacity .3s!important}.relatedPosts .pagination-related:hover .info .info-1{opacity:0!important}.relatedPosts .pagination-related .info .info-2{position:absolute!important;top:0!important;left:0!important;right:0!important;width:100%!important;height:100%!important;opacity:0!important;transition:opacity .3s!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;overflow:hidden!important}.relatedPosts .pagination-related:hover .info .info-2{opacity:1!important}.relatedPosts .pagination-related .info .info-2 .info-item-1{width:100%!important;-webkit-line-clamp:2!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;overflow:hidden!important}.relatedPosts .pagination-related .info .info-1 .info-item-1,.relatedPosts .pagination-related .info .info-2 .info-item-1{font-size:1em!important;font-weight:700!important}.relatedPosts .pagination-related .info .info-1 .info-item-2{font-size:0.85em!important}.relatedPosts .pagination-related .info{text-align:left!important}@media(max-width:768px){.relatedPosts .pagination-related{width:calc(50% - 4px)!important}.relatedPosts .pagination-related+.pagination-related{margin-top:0!important}.relatedPosts .pagination-related .info{font-size:0.8em!important}}@media(max-width:600px){.relatedPosts .pagination-related{width:calc(100% - 4px)!important}.relatedPosts .pagination-related+.pagination-related{margin-top:4px!important}}/* Prev/Next样式 */nav#pagination.pagination-post{margin-top:0!important;padding-top:0!important;padding-bottom:0!important;display:flex!important;flex-wrap:wrap!important;gap:4px!important}nav#pagination.pagination-post a.pagination-related{height:75px!important;min-height:75px!important;overflow:visible!important;display:flex!important;align-items:center!important;width:calc(50% - 2px)!important;position:relative!important}nav#pagination.pagination-post a.pagination-related .cover{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;z-index:0!important}nav#pagination.pagination-post a.pagination-related .info{overflow:visible!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;width:100%!important;position:relative!important;z-index:1!important}nav#pagination.pagination-post a.pagination-related:hover .info .info-1{opacity:0!important}nav#pagination.pagination-post a.pagination-related:hover .info .info-2{opacity:1!important}nav#pagination.pagination-post a.pagination-related .info{text-align:left!important}@media(max-width:768px){nav#pagination.pagination-post{flex-direction:row!important;flex-wrap:nowrap!important;gap:4px!important}nav#pagination.pagination-post a.pagination-related{width:calc(50% - 2px)!important;height:60px!important;min-height:60px!important}}/* LOGO样式 */#nav .nav-site-title{padding:0!important;display:flex!important;align-items:center!important}#nav #blog-info .site-icon{margin:0!important;padding:0!important;height:55px!important;vertical-align:top!important;display:inline-block!important}@media(max-width:768px){.sticky-bar,.sticky-bar *{color:#ffffff!important;fill:#ffffff!important;text-shadow:none!important;opacity:1!important;height:24px!important;font-size:11px!important}.sticky-bar{width:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important}}@media(min-width:769px){#recent-posts .recent-post-item.is-sticky{flex-wrap:wrap!important}#recent-posts .recent-post-item.is-sticky .post_cover{order:1!important}#recent-posts .recent-post-item.is-sticky .recent-post-info{order:2!important}#recent-posts .recent-post-item.is-sticky .sticky-bar{order:3!important;flex-basis:100%!important;width:100%!important;box-sizing:border-box!important;padding:4px 10px!important;height:24px!important;font-size:11px!important;display:flex!important;align-items:center!important;justify-content:center!important;color:#ffffff!important}#recent-posts .recent-post-item.is-sticky .sticky-bar *{color:#ffffff!important}}/* LOGO 右边的标语-红色渐变背景 */.site-slogan{display:inline-block!important;margin-left:1em!important;font-size:12px!important;font-weight:normal!important;white-space:nowrap!important;vertical-align:middle!important;padding:4px 14px!important;border-radius:16px!important}html[data-theme=light] .site-slogan{background:linear-gradient(135deg,#c41e3a,#8b0000)!important;color:#fff!important}html[data-theme=dark] .site-slogan{background:linear-gradient(135deg,#9a1b30,#5c0011)!important;color:#fff!important}/* LOGO显示优化 */#nav #blog-info .site-icon{height:55px!important;width:auto!important;object-fit:contain!important}#nav #blog-info .nav-site-title{display:inline-flex!important;align-items:center!important}/* 首页文章列表紧凑 */#recent-posts .recent-post-item{margin-bottom:4px!important}#recent-posts .recent-post-info{padding:6px 10px!important}#recent-posts .article-meta-wrap{margin:0!important;font-size:.75em!important}#recent-posts .article-title{margin-bottom:0!important;line-height:1.15!important;font-size:.95em!important}/* 侧边栏紧凑 */.aside-content .card-widget{margin-bottom:6px!important}/* 整体布局紧凑 */#home #recent-posts{padding:4px 20px!important}/* 热搜晨报/晚报：图片右浮动+防止覆盖 */.post-content .hotnews-img{float:right!important;width:160px!important;max-width:40%!important;height:auto!important;border-radius:6px!important;margin:0 0 0 12px!important;padding:0!important;border:0!important;background:none!important;vertical-align:top!important}.post-content .hotnews-item{clear:both!important;overflow:hidden!important}.post-content h3{clear:both!important}@media(max-width:480px){.post-content .hotnews-img{width:120px!important}}/* ========== 节气横幅 ========== */#solar-term-banner{width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;text-align:center;padding:70px 16px 0 16px;box-sizing:border-box;margin-bottom:8px;background-color:#f8f9fa;background-position:center;background-size:cover;background-repeat:no-repeat;border-radius:0}html[data-theme=dark] #solar-term-banner{background-color:#1a2a1a}#solar-term-banner .st-banner-inner{display:inline-flex;align-items:center;gap:12px;font-size:14px;flex-wrap:wrap;justify-content:center}#solar-term-banner .st-icon{font-size:16px;opacity:0.8}#solar-term-banner .st-name{font-weight:700;font-size:16px;letter-spacing:2px}html[data-theme=dark] #solar-term-banner .st-name{}#solar-term-banner .st-desc{color:#555;font-style:italic}html[data-theme=dark] #solar-term-banner .st-desc{color:#a5d6a7}@media(max-width:480px){#solar-term-banner .st-desc{display:none}#solar-term-banner{padding-top:62px}}/* 节日横幅暗色适配 */html[data-theme=dark] #solar-term-banner.festival-banner .st-desc{color:#ccc}/* 顶部header占位：恢复默认高度，避免内容被导航栏遮挡 *//* 文章卡片统一2px边框（置顶帖由模板内联样式覆盖）*/.recent-post-item{border:2px solid #e0e0e0;border-radius:8px}html[data-theme=dark] .recent-post-item{border-color:#3a3a3a}</style><meta name="generator" content="Hexo 8.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/images/profile_PIC.jpg" onerror="this.onerror=null;this.src='/images/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">192</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/guestbook/"><i class="fa-fw fas fa-comments"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-top-img fixed" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><img class="site-icon" src="/images/logo.png" alt="Logo"><span class="site-slogan">一九七九年，春天</span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/guestbook/"><i class="fa-fw fas fa-comments"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友情链接</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><h1 class="title-seo">小红故事</h1></header><main class="layout" id="content-inner"><div class="recent-posts nc" id="recent-posts"><div class="recent-post-items"><div class="recent-post-item"><div class="post_cover left"><a href="/2026/04/30/20260430-rmrb-yedu/" title="夜读｜朋友间最好的状态是什么样的"><img class="post-bg" src="/images/yedu/20260430_yedu_01.jpg" onerror="this.onerror=null;this.src='/images/404.jpg'" alt="夜读｜朋友间最好的状态是什么样的"></a></div><div class="recent-post-info"><a class="article-title" href="/2026/04/30/20260430-rmrb-yedu/" title="夜读｜朋友间最好的状态是什么样的">夜读｜朋友间最好的状态是什么样的</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-30T14:00:00.000Z" title="发表于 2026-04-30 22:00:00">2026-04-30</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-04-30T14:00:00.000Z" title="更新于 2026-04-30 22:00:00">2026-04-30</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E5%A4%9C%E8%AF%BB/">夜读</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E5%A4%9C%E8%AF%BB/">夜读</a><span class="article-meta-link">•</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E7%BE%8E%E6%96%87/">美文</a><span class="article-meta-link">•</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%99%9A%E5%AE%89/">晚安</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2026/04/30/20260430-rmrb-yedu/#post-comment"><span class="waline-comment-count" data-path="/2026/04/30/20260430-rmrb-yedu/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content"> 🏮 夜读 | 2026年04月30日  人这一生，遇见的人千千万， 可真正能走进心里、长久相伴的朋友，少之又少。 好的友情，从来都不用刻意讨好， 也不用时刻联系、勉强维系， 舒服自在，彼此懂得，便是最好的模样。 我们都在各自的生活里奔波忙碌， 为生活奔波，为梦想前行， 即便许久不见、不常聊天， 心里也始终留有对方的位置， 这份牵挂，从不因距离而改变  —————— 摘自｜夜读 #朋友间最...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2026/04/30/20260430153008lyfr/" title="近朱者赤，近墨者黑，近AI者猝！"><img class="post-bg" src="/images/email-attachments/20260430153008-b1000.jpg" onerror="this.onerror=null;this.src='/images/404.jpg'" alt="近朱者赤，近墨者黑，近AI者猝！"></a></div><div class="recent-post-info"><a class="article-title" href="/2026/04/30/20260430153008lyfr/" title="近朱者赤，近墨者黑，近AI者猝！">近朱者赤，近墨者黑，近AI者猝！</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-30T07:30:08.000Z" title="发表于 2026-04-30 15:30:08">2026-04-30</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-04-30T07:30:08.000Z" title="更新于 2026-04-30 15:30:08">2026-04-30</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2026/04/30/20260430153008lyfr/#post-comment"><span class="waline-comment-count" data-path="/2026/04/30/20260430153008lyfr/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content">近朱者赤，近墨者黑，近AI者猝！ 事情是这样的，最近我一直在和AI打交道，让它帮我发布文章、修改博客和为博客增加插件等。  然而让人崩溃的是，所有的美好犹如蒲公英般，风一吹就都散了…… 伪装成专家的实习生。 问他事情无所不知，答得头头是道，专业又有深度。 可办起事情，总将简单问题复杂化，复杂问题又说的轻而易举。往往办一件事情，在回复完美解决后，依旧问题一堆，甚至把以前正常的都给破坏了，最要命...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/2026/04/30/20260430-hotnews-morning/" title="2026年04月30日 小红故事热搜晨报"><img class="post-bg" src="/images/hotnews-morning.svg" onerror="this.onerror=null;this.src='/images/404.jpg'" alt="2026年04月30日 小红故事热搜晨报"></a></div><div class="recent-post-info"><a class="article-title" href="/2026/04/30/20260430-hotnews-morning/" title="2026年04月30日 小红故事热搜晨报">2026年04月30日 小红故事热搜晨报</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-30T00:00:25.000Z" title="发表于 2026-04-30 08:00:25">2026-04-30</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-04-30T00:00:25.000Z" title="更新于 2026-04-30 08:00:25">2026-04-30</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%96%B0%E9%97%BB%E7%83%AD%E6%90%9C/">新闻热搜</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E7%83%AD%E6%90%9C/">热搜</a><span class="article-meta-link">•</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E4%BB%8A%E6%97%A5%E8%A6%81%E9%97%BB/">今日要闻</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2026/04/30/20260430-hotnews-morning/#post-comment"><span class="waline-comment-count" data-path="/2026/04/30/20260430-hotnews-morning/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content"> 来源：互联网 | 采集时间：2026/4/30 08:00:25   中国一季度GDP十强城市出炉  4月29日，随着南京发布一季度经济数据，GDP十强城市数据全部出炉，位次也已经落定。从位次来看，广州超过重庆，重回第四的位置；从GDP增速来看，除了重庆之外，其余全部高于全国增速，而且普遍增速较高，广州以高于全国1个百分点的速度位居第一。  特朗普：乌克兰在军事上已被击败  当地时间4月2...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2026/04/29/20260430-daily-quote/" title="Success is getting what you want. Happiness is wan… —— Dale Carnegie"><img class="post-bg" src="/images/quotes/20260430_quote-cover.svg" onerror="this.onerror=null;this.src='/images/404.jpg'" alt="Success is getting what you want. Happiness is wan… —— Dale Carnegie"></a></div><div class="recent-post-info"><a class="article-title" href="/2026/04/29/20260430-daily-quote/" title="Success is getting what you want. Happiness is wan… —— Dale Carnegie">Success is getting what you want. Happiness is wan… —— Dale Carnegie</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-29T22:00:01.000Z" title="发表于 2026-04-30 06:00:01">2026-04-30</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-04-29T22:00:01.000Z" title="更新于 2026-04-30 06:00:01">2026-04-30</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%AF%8F%E6%97%A5%E6%AD%A3%E8%83%BD%E9%87%8F/">每日正能量</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E5%90%8D%E8%A8%80/">名言</a><span class="article-meta-link">•</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%AD%A3%E8%83%BD%E9%87%8F/">正能量</a><span class="article-meta-link">•</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E5%8A%B1%E5%BF%97/">励志</a><span class="article-meta-link">•</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%97%A9%E5%AE%89/">早安</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2026/04/29/20260430-daily-quote/#post-comment"><span class="waline-comment-count" data-path="/2026/04/29/20260430-daily-quote/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content"> 每日正能量 · 2026-04-30 06:00:01  Success is getting what you want. Happiness is wanting what you get.  出处： Attributed ✨ Pursue Your Dreams with Courage 🌅 新的一天，从一句正能量开始。愿你今天心情愉快，万事顺意。 </div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/2026/04/29/20260429213006djjl/" title="敬请期待"><img class="post-bg" src="/images/email-attachments/20260429213006-b1000.jpg" onerror="this.onerror=null;this.src='/images/404.jpg'" alt="敬请期待"></a></div><div class="recent-post-info"><a class="article-title" href="/2026/04/29/20260429213006djjl/" title="敬请期待">敬请期待</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-29T13:30:06.000Z" title="发表于 2026-04-29 21:30:06">2026-04-29</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-04-29T13:30:06.000Z" title="更新于 2026-04-29 21:30:06">2026-04-29</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2026/04/29/20260429213006djjl/#post-comment"><span class="waline-comment-count" data-path="/2026/04/29/20260429213006djjl/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content"> 评论系统目前正在调试中，可能暂时不能正常工作，争取在5.1前完成调试，敬请期待！ </div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2026/04/29/20260429-repost-sleep-tips/" title="今天起，建议晚上提前洗漱！"><img class="post-bg" src="/images/repost/20260429_body_3.jpg" onerror="this.onerror=null;this.src='/images/404.jpg'" alt="今天起，建议晚上提前洗漱！"></a></div><div class="recent-post-info"><a class="article-title" href="/2026/04/29/20260429-repost-sleep-tips/" title="今天起，建议晚上提前洗漱！">今天起，建议晚上提前洗漱！</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-29T05:45:00.000Z" title="发表于 2026-04-29 13:45:00">2026-04-29</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-04-29T06:25:00.000Z" title="更新于 2026-04-29 14:25:00">2026-04-29</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E8%BD%AC%E8%BD%BD/">转载</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E5%81%A5%E5%BA%B7/">健康</a><span class="article-meta-link">•</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E7%9D%A1%E7%9C%A0/">睡眠</a><span class="article-meta-link">•</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E4%BA%BA%E6%B0%91%E6%97%A5%E6%8A%A5/">人民日报</a><span class="article-meta-link">•</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E7%94%9F%E6%B4%BB%E5%B0%8F%E8%B4%B4%E5%A3%AB/">生活小贴士</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2026/04/29/20260429-repost-sleep-tips/#post-comment"><span class="waline-comment-count" data-path="/2026/04/29/20260429-repost-sleep-tips/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content"> 原文来源：人民日报 | 转载仅供分享  你有没有想过 长期晚睡是因为洗漱时间？ 近日 话题**“建议晚上提前洗漱”**登上热搜  一博主发帖称，之前总拖着洗漱，结果越熬越晚。试了晚上9点左右提前洗漱，心理上直接进入&quot;睡前模式&quot;，再也不用在&quot;要不要洗漱&quot;上内耗了。  有网友认同博主的观点，也有网友表示无奈，还有人表示跟洗漱时间没关系，该熬还是熬。   ...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/2026/04/29/20260429-hotnews-morning/" title="2026年04月29日 小红故事热搜晨报"><img class="post-bg" src="/images/hotnews-morning.svg" onerror="this.onerror=null;this.src='/images/404.jpg'" alt="2026年04月29日 小红故事热搜晨报"></a></div><div class="recent-post-info"><a class="article-title" href="/2026/04/29/20260429-hotnews-morning/" title="2026年04月29日 小红故事热搜晨报">2026年04月29日 小红故事热搜晨报</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-29T00:00:28.000Z" title="发表于 2026-04-29 08:00:28">2026-04-29</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-04-29T00:00:28.000Z" title="更新于 2026-04-29 08:00:28">2026-04-29</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%96%B0%E9%97%BB%E7%83%AD%E6%90%9C/">新闻热搜</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E7%83%AD%E6%90%9C/">热搜</a><span class="article-meta-link">•</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E4%BB%8A%E6%97%A5%E8%A6%81%E9%97%BB/">今日要闻</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2026/04/29/20260429-hotnews-morning/#post-comment"><span class="waline-comment-count" data-path="/2026/04/29/20260429-hotnews-morning/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content"> 来源：互联网 | 采集时间：2026/4/29 08:00:28   微信朋友圈悄悄更新了  近期，不少网友发现iOS版微信更新后，朋友圈页面排版迎来调整。文字移至配图上方，发布日期样式改动，页面右上角新增朋友圈相册入口，支持按“年”“月”“日”切换查看。腾讯客服回应，此次属于界面展示优化，后续将持续完善用户浏览体验。  凤冠冰箱贴一年半销售300万件  4月28日，在国新办举行的国务院政...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2026/04/28/20260429-daily-quote/" title="If a man will begin with certainties, he shall end… —— Francis Bacon"><img class="post-bg" src="/images/quotes/20260429_quote-cover.svg" onerror="this.onerror=null;this.src='/images/404.jpg'" alt="If a man will begin with certainties, he shall end… —— Francis Bacon"></a></div><div class="recent-post-info"><a class="article-title" href="/2026/04/28/20260429-daily-quote/" title="If a man will begin with certainties, he shall end… —— Francis Bacon">If a man will begin with certainties, he shall end… —— Francis Bacon</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-28T22:00:01.000Z" title="发表于 2026-04-29 06:00:01">2026-04-29</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-04-28T22:00:01.000Z" title="更新于 2026-04-29 06:00:01">2026-04-29</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%AF%8F%E6%97%A5%E6%AD%A3%E8%83%BD%E9%87%8F/">每日正能量</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E5%90%8D%E8%A8%80/">名言</a><span class="article-meta-link">•</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%AD%A3%E8%83%BD%E9%87%8F/">正能量</a><span class="article-meta-link">•</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E5%8A%B1%E5%BF%97/">励志</a><span class="article-meta-link">•</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%97%A9%E5%AE%89/">早安</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2026/04/28/20260429-daily-quote/#post-comment"><span class="waline-comment-count" data-path="/2026/04/28/20260429-daily-quote/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content"> 每日正能量 · 2026-04-29 06:00:01  If a man will begin with certainties, he shall end in doubts; but if he will be content to begin with doubts, he shall end in certainties.  出处： 《The Advancement of Lea...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/2026/04/28/20260429000004y2a3/" title="每日夜读 coming soon"><img class="post-bg" src="/images/email-attachments/20260429000003-b1000.jpg" onerror="this.onerror=null;this.src='/images/404.jpg'" alt="每日夜读 coming soon"></a></div><div class="recent-post-info"><a class="article-title" href="/2026/04/28/20260429000004y2a3/" title="每日夜读 coming soon">每日夜读 coming soon</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-28T16:00:04.000Z" title="发表于 2026-04-29 00:00:04">2026-04-29</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-04-28T16:00:04.000Z" title="更新于 2026-04-29 00:00:04">2026-04-29</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2026/04/28/20260429000004y2a3/#post-comment"><span class="waline-comment-count" data-path="/2026/04/28/20260429000004y2a3/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content"> 每日暖心的夜读文章即将与大家见面。 同时为了让博客内容更精炼，觉得目前热搜晨报的资讯量已然足够，考虑再三，决定暂停现有的热搜晚报。 希望即将上线的每晚温暖人心的正能量夜读文章，助你进入甜美的梦乡，让第二日能量爆棚，活力满满！😀 </div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2026/04/28/20260428-hotnews-evening/" title="2026年04月28日 小红故事热搜晚报"><img class="post-bg" src="/images/hotnews-evening.svg" onerror="this.onerror=null;this.src='/images/404.jpg'" alt="2026年04月28日 小红故事热搜晚报"></a></div><div class="recent-post-info"><a class="article-title" href="/2026/04/28/20260428-hotnews-evening/" title="2026年04月28日 小红故事热搜晚报">2026年04月28日 小红故事热搜晚报</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-28T12:00:29.000Z" title="发表于 2026-04-28 20:00:29">2026-04-28</time><span class="article-meta-separator">|</span><i class="fas fa-history"></i><span class="article-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-04-28T12:00:29.000Z" title="更新于 2026-04-28 20:00:29">2026-04-28</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/%E6%96%B0%E9%97%BB%E7%83%AD%E6%90%9C/">新闻热搜</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E7%83%AD%E6%90%9C/">热搜</a><span class="article-meta-link">•</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%99%9A%E9%97%B4%E9%80%9F%E9%80%92/">晚间速递</a></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-comments"></i><a href="/2026/04/28/20260428-hotnews-evening/#post-comment"><span class="waline-comment-count" data-path="/2026/04/28/20260428-hotnews-evening/"><i class="fa-solid fa-spinner fa-spin"></i></span></a><span class="article-meta-label"> 条评论</span></span></div><div class="content"> 来源：互联网 | 采集时间：2026/4/28 20:00:29   中共中央政治局：深入整治内卷式竞争  4月28日，中共中央政治局召开会议，分析研究当前经济形势和经济工作。会议强调，要加快建设现代化产业体系，保持制造业合理比重。纵深推进全国统一大市场建设，深入整治“内卷式”竞争。全面实施“人工智能+”行动，发展智能经济新形态，完善人工智能治理。  羽衣甘蓝涨疯了  近日，山姆上线羽衣甘...</div></div></div></div><nav id="pagination"><div class="pagination"><a class="extend prev" rel="prev" href="/"><i class="fas fa-chevron-left fa-fw"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/#content-inner">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/20/#content-inner">20</a><a class="extend next" rel="next" href="/page/3/#content-inner"><i class="fas fa-chevron-right fa-fw"></i></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/images/profile_PIC.jpg" onerror="this.onerror=null;this.src='/images/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">小红叔</div><div class="author-info-description">1979年，那是一个春天……</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">192</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">79</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/snowhoo"><i class="fab fa-github"></i><span>我的 Github</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/snowhoo" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:9187541@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a><a class="social-icon" href="http://wpa.qq.com/msgrd?v=3&amp;uin=9187541&amp;site=qq&amp;menu=yes" target="_blank" title="QQ"><i class="fab fa-qq" style="color: #4a7dbe;"></i></a><a class="social-icon" href="https://weibo.com/snowhoo" target="_blank" title="weibo"><i class="fab fa-weibo" style="color: #be514a;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">《我在八王之乱当卧底》已在番茄连载，每晚 22:00 左右加更，欢迎大家阅读！</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/05/04/20260504145818xrof/" title="test">test</a><time datetime="2026-05-04T06:58:18.000Z" title="发表于 2026-05-04 14:58:18">2026-05-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/04/Qingnianjie-%E9%9D%92%E5%B9%B4%E8%8A%82/" title="青年节｜青春由磨砺而出彩，人生因奋斗而升华"><img src="/images/holidays/holiday-Qingnianjie-cover.webp" onerror="this.onerror=null;this.src='/images/404.jpg'" alt="青年节｜青春由磨砺而出彩，人生因奋斗而升华"/></a><div class="content"><a class="title" href="/2026/05/04/Qingnianjie-%E9%9D%92%E5%B9%B4%E8%8A%82/" title="青年节｜青春由磨砺而出彩，人生因奋斗而升华">青年节｜青春由磨砺而出彩，人生因奋斗而升华</a><time datetime="2026-05-04T00:00:00.000Z" title="发表于 2026-05-04 08:00:00">2026-05-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/05/02/20260502-hotnews-morning/" title="2026年05月02日 小红故事热搜晨报"><img src="/images/hotnews-morning.svg" onerror="this.onerror=null;this.src='/images/404.jpg'" alt="2026年05月02日 小红故事热搜晨报"/></a><div class="content"><a class="title" href="/2026/05/02/20260502-hotnews-morning/" title="2026年05月02日 小红故事热搜晨报">2026年05月02日 小红故事热搜晨报</a><time datetime="2026-05-02T00:00:25.000Z" title="发表于 2026-05-02 08:00:25">2026-05-02</time></div></div></div></div><div class="card-widget card-categories"><div class="item-headline">
+            <i class="fas fa-folder-open"></i>
+            <span>分类</span>
+            
+          </div>
+          <ul class="card-category-list" id="aside-cat-list">
+            <li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E5%A4%9C%E8%AF%BB/"><span class="card-category-list-name">夜读</span><span class="card-category-list-count">2</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%96%B0%E9%97%BB%E7%83%AD%E6%90%9C/"><span class="card-category-list-name">新闻热搜</span><span class="card-category-list-count">70</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%97%A0%E7%95%8C%E4%B9%8B%E7%95%8C/"><span class="card-category-list-name">无界之界</span><span class="card-category-list-count">8</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E6%AF%8F%E6%97%A5%E6%AD%A3%E8%83%BD%E9%87%8F/"><span class="card-category-list-name">每日正能量</span><span class="card-category-list-count">23</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E8%8A%82%E6%97%A5/"><span class="card-category-list-name">节日</span><span class="card-category-list-count">8</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E8%8A%82%E6%B0%94/"><span class="card-category-list-name">节气</span><span class="card-category-list-count">32</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E8%BD%AC%E8%BD%BD/"><span class="card-category-list-name">转载</span><span class="card-category-list-count">2</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E9%87%8E%E7%8C%AB%E9%98%BF%E7%93%9C/"><span class="card-category-list-name">野猫阿瓜</span><span class="card-category-list-count">1</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E9%9A%8F%E7%AC%94/"><span class="card-category-list-name">随笔</span><span class="card-category-list-count">42</span></a></li>
+          </ul></div><div class="card-widget card-tags"><div class="item-headline"><i class="fas fa-tags"></i><span>标签</span></div><div class="card-tag-cloud"><a href="/tags/%E9%9D%92%E5%B9%B4%E8%8A%82/" style="font-size: 1.1em; color: #999">青年节</a> <a href="/tags/%E4%B8%AD%E7%A7%8B/" style="font-size: 1.1em; color: #999">中秋</a> <a href="/tags/%E5%A4%9C%E8%AF%BB/" style="font-size: 1.5em; color: #99a9bf">夜读</a> <a href="/tags/%E5%85%BB%E7%94%9F/" style="font-size: 1.1em; color: #999">养生</a> <a href="/tags/%E5%B0%8F%E5%AF%92/" style="font-size: 1.5em; color: #99a9bf">小寒</a> <a href="/tags/%E6%8B%9C%E5%B9%B4/" style="font-size: 1.1em; color: #999">拜年</a> <a href="/tags/%E6%98%A5%E7%A5%AD/" style="font-size: 1.1em; color: #999">春祭</a> <a href="/tags/%E6%99%9A%E5%AE%89/" style="font-size: 1.5em; color: #99a9bf">晚安</a> <a href="/tags/%E5%A5%B3%E6%80%A7/" style="font-size: 1.1em; color: #999">女性</a> <a href="/tags/%E7%AB%8B%E7%A7%8B/" style="font-size: 1.1em; color: #999">立秋</a> <a href="/tags/%E7%94%9F%E6%B4%BB/" style="font-size: 1.1em; color: #999">生活</a> <a href="/tags/%E8%8A%B1%E7%81%AF/" style="font-size: 1.1em; color: #999">花灯</a> <a href="/tags/%E7%94%9F%E6%B4%BB%E5%B0%8F%E8%B4%B4%E5%A3%AB/" style="font-size: 1.1em; color: #999">生活小贴士</a> <a href="/tags/%E9%B8%A1%E6%B1%A4/" style="font-size: 1.1em; color: #999">鸡汤</a> <a href="/tags/%E6%98%A5%E8%8A%82/" style="font-size: 1.1em; color: #999">春节</a> <a href="/tags/%E5%B0%8F%E6%BB%A1/" style="font-size: 1.1em; color: #999">小满</a> <a href="/tags/%E7%AB%8B%E5%86%AC/" style="font-size: 1.1em; color: #999">立冬</a> <a href="/tags/%E9%A3%8E%E6%99%AF/" style="font-size: 1.1em; color: #999">风景</a> <a href="/tags/%E5%B0%8A%E9%87%8D/" style="font-size: 1.1em; color: #999">尊重</a> <a href="/tags/%E7%BA%A2%E5%8C%85/" style="font-size: 1.1em; color: #999">红包</a></div></div><div class="card-widget card-archives">
+    <div class="item-headline">
+      <i class="fas fa-archive"></i>
+      <span>归档</span>
+      <a class="card-more-btn" href="/archives/"
+            title="查看更多">
+            <i class="fas fa-angle-right"></i>
+          </a>
+    </div>
+  
+    <ul class="card-archive-list">
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/05/">
+            <span class="card-archive-list-date">
+              2026 年 05 月
+            </span>
+            <span class="card-archive-list-count">8</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/04/">
+            <span class="card-archive-list-date">
+              2026 年 04 月
+            </span>
+            <span class="card-archive-list-count">91</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/03/">
+            <span class="card-archive-list-date">
+              2026 年 03 月
+            </span>
+            <span class="card-archive-list-count">18</span>
+          </a>
+        </li>
+      
+        <li class="card-archive-list-item">
+          <a class="card-archive-list-link" href="/archives/2026/02/">
+            <span class="card-archive-list-date">
+              2026 年 02 月
+            </span>
+            <span class="card-archive-list-count">7</span>
+          </a>
+        </li>
+      
+    </ul>
+  </div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站信息</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">192</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">321.6k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总浏览量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2026-05-04T07:42:20.158Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 小红叔</span></div><div class="footer_custom_text">小红故事 | SnowHoo.NET</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.3"></script><script src="/js/main.js?v=5.5.3"></script><script src="/js/tw_cn.js?v=5.5.3"></script><div class="js-pjax"><script>(() => {
+  async function loadWaline () {
+    try {
+      const eleGroup = document.querySelectorAll('#recent-posts .waline-comment-count')
+      const keyArray = Array.from(eleGroup).map(i => i.getAttribute('data-path'))
+
+      const res = await fetch(`https://waline.snowhoo.net/api/comment?type=count&url=${keyArray}`, { method: 'GET' })
+      const result = await res.json()
+      
+      result.data.forEach((count, index) => {
+        eleGroup[index].textContent = count
+      })
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  window.pjax ? loadWaline() : window.addEventListener('load', loadWaline)
+})()</script></div><script>
+// 黑暗模式 Logo 切换 - 使用 butterfly 主题的 themeChange 接口
+(function(){
+  var lightLogo = '/images/logo.png';
+  var darkLogo = '/images/dark_logo.png';
+  var logoImg = document.querySelector('#nav #blog-info img.site-icon');
+
+  var switchLogo = function(mode) {
+    if (!logoImg) return;
+    if (mode === 'dark') {
+      logoImg.src = darkLogo;
+    } else {
+      logoImg.src = lightLogo;
+    }
+  };
+
+  // 页面加载时：根据当前主题设置 logo
+  var currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  switchLogo(currentTheme);
+
+  // 注册主题切换回调（支持 PJAX 刷新）
+  if (window.btf && window.btf.addGlobalFn) {
+    window.btf.addGlobalFn('themeChange', switchLogo, 'darkLogo');
+  }
+})();
+</script>
+<script>
+(function(){
+var bp = document.createElement('script');
+var curProtocol = window.location.protocol.split(':')[0];
+if (curProtocol === 'https') {
+bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+} else {
+bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+}
+var s = document.getElementsByTagName("script")[0];
+s.parentNode.insertBefore(bp, s);
+})();
+</script>
+<style>
+/* ========== 语音播报功能样式 ========== */
+.tts-inline-wrapper {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.tts-btn-inline {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(238, 90, 90, 0.3);
+  color: white;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.tts-btn-inline:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(238, 90, 90, 0.4);
+}
+.tts-btn-inline.playing {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(78, 205, 196, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(78, 205, 196, 0); }
+}
+.tts-controls-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: rgba(255,255,255,0.9);
+  padding: 4px 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+.tts-player-wrapper:hover .tts-controls-inline,
+.tts-controls-inline.active {
+  opacity: 1;
+}
+.tts-status-inline {
+  font-size: 12px;
+  color: #666;
+  min-width: 60px;
+}
+.tts-rate-inline {
+  font-size: 11px;
+  padding: 2px 6px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+  color: #333;
+}
+.tts-rate-inline:hover {
+  background: #f0f0f0;
+}
+.tts-stop-inline {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.tts-stop-inline:hover {
+  background: #ee5a5a;
+}
+/* 文章页面标题布局 - 按钮浮动在标题头部 */
+.post-title, #article-container h1 {
+  position: relative !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+/* 播放按钮绝对定位，浮动在标题头部左侧，不占布局空间 */
+.tts-inline-wrapper {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 10;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+/* 为浮动按钮留出空间，避免与标题文字重叠 */
+.post-title, #article-container h1 {
+  padding-left: 36px !important;
+}
+/* 虚拟按钮 - 不支持的浏览器显示 */
+.tts-btn-dummy {
+  background: #ccc;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: not-allowed;
+  color: #999;
+  font-size: 12px;
+  opacity: 0.6;
+  flex-shrink: 0;
+  position: relative;
+}
+.tts-btn-dummy:hover::after {
+  content: '当前浏览器不支持TTS朗读功能';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+/* ========== 文章卡片与顶部导航栏间距减少 ========== */
+.layout, #page {
+  padding-top: 5px !important;
+}
+.recent-post-item:first-child {
+  margin-top: 0 !important;
+}
+
+/* ========== 正文页文章头部间距 ========== */
+.post-header {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  margin-bottom: 4px !important;
+}
+.post-title, #article-container h1 {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  margin-bottom: 4px !important;
+}
+
+/* ========== 标题和播放按钮顶部空间缩小 ========== */
+.tts-inline-wrapper {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* ========== 调试：显示边框帮助识别间距来源（需要时取消注释）========== */
+/*
+#article-container,
+#article-container *,
+.post-header,
+.post-meta,
+.post-content,
+.post-body,
+.sponsor,
+.post-tags,
+.relatedPosts,
+#comments {
+  border: 1px solid rgba(255,0,0,0.3) !important;
+}
+*/
+
+/* ========== 调整文章卡片四周内边距 ========== */
+/* 内容最外层容器 */
+main#content-inner.layout,
+#content-inner,
+.layout #content-inner {
+  padding: 4px 8px !important;
+}
+/* 文章主体容器 - 弹性缩放：大屏宽、小屏窄 */
+#post,
+.post-block {
+  padding: 20px 30px !important;
+  margin: 0 !important;
+}
+/* 竖屏/小屏：减少内边距 */
+@media screen and (max-width: 768px) {
+  #post,
+  .post-block {
+    padding: 8px 12px !important;
+  }
+}
+/* 中等屏幕 */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  #post,
+  .post-block {
+    padding: 15px 20px !important;
+  }
+}
+/* 文章内容区域 */
+.post-content,
+#article-container {
+  padding: 2px 4px !important;
+  margin: 0 !important;
+}
+/* 文章文字内容行间距 */
+#post .post-content,
+#post .article-content,
+#article-container .post-content,
+#article-container .article-content {
+  line-height: 2.0 !important;
+}
+/* 首页右侧边栏所有模块行间距，与左侧文章保持一致 */
+/* sticky_layout 内部所有 div */
+.sticky-layout div,
+.sticky-layout span,
+.sticky-layout p {
+  line-height: 1.8 !important;
+}
+/* 公告模块内部所有元素 */
+.card-announcement div,
+.card-announcement span,
+.card-announcement p,
+.card-announcement .announcement_content,
+.card-announcement .announcement_content div,
+.card-announcement .announcement_content p {
+  line-height: 1.8 !important;
+}
+/* 站长信息（Website Info）- 行间距大一点 */
+.card-info,
+.card-info div,
+.card-info span,
+.card-info p {
+  line-height: 2.0 !important;
+}
+/* 其他边栏模块 - 强力覆盖所有文本元素 */
+/* 标签云 */
+.card-tags,
+.card-tags .card-tag-cloud,
+.card-tags .card-tag-cloud a,
+.card-tags div,
+.card-tags span,
+.card-tags p,
+.card-tags li {
+  line-height: 1.8 !important;
+}
+/* 分类 */
+.card-categories,
+.card-categories .category-list,
+.card-categories .category-list li,
+.card-categories .category-list a,
+.card-categories div,
+.card-categories span,
+.card-categories p,
+.card-categories li {
+  line-height: 1.8 !important;
+}
+/* 归档 */
+.card-archives,
+.card-archives .archive-list,
+.card-archives .archive-list li,
+.card-archives .archive-list a,
+.card-archives div,
+.card-archives span,
+.card-archives p,
+.card-archives li {
+  line-height: 1.8 !important;
+}
+/* 最新文章 */
+.card-recent-post,
+.card-recent-post .aside-list,
+.card-recent-post .aside-list-item,
+.card-recent-post .aside-list-item .content,
+.card-recent-post .aside-list-item .title,
+.card-recent-post div,
+.card-recent-post span,
+.card-recent-post p {
+  line-height: 1.8 !important;
+}
+/* 文章卡片最外层容器 */
+.post,
+.card-widget .post,
+.layout .post,
+.post article,
+article.post {
+  padding: 2px 4px !important;
+}
+
+/* ========== 文章头部：标题区域紧凑 ========== */
+.post-header,
+.article-header {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  margin-bottom: 6px !important;
+  padding-bottom: 0 !important;
+}
+
+/* ========== 元数据（来源、作者等）适当留白 ========== */
+.post-meta,
+.post-meta-wrap,
+.article-meta-wrap,
+.post-info,
+.article-meta,
+.meta,
+#post-info {
+  margin: 12px 0 !important;
+  padding: 8px 0 !important;
+  line-height: 1.6 !important;
+}
+.post-meta *,
+.article-meta * {
+  margin: 0 4px !important;
+  padding: 0 !important;
+}
+
+/* ========== 分享按钮与 Sponsor 之间留白 10px ========== */
+/* 分享按钮下方 */
+.post-share,
+#post .post-share,
+#share,
+.share-wrap,
+.post-share-wrap {
+  margin-bottom: 10px !important;
+}
+/* Sponsor 上方 */
+.sponsor,
+.sponsor-wrap,
+.post-sponsor,
+.reward-wrap,
+.reward,
+#sponsor {
+  margin-top: 10px !important;
+  padding-top: 0 !important;
+  margin-bottom: 12px !important;
+}
+
+/* ========== 减少文章内容所有元素间距 ========== */
+.post-content,
+.article-content {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.post-content > *,
+.article-content > * {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  margin-bottom: 4px !important;
+  padding-bottom: 0 !important;
+}
+.post-content p,
+.article-content p {
+  margin-bottom: 4px !important;
+  line-height: 1.4 !important;
+}
+
+/* ========== 减少 Sponsor 上方间距 ========== */
+.sponsor,
+.sponsor-wrap,
+.post-sponsor,
+.reward-wrap,
+.reward,
+#sponsor {
+  margin-top: 2px !important;
+  padding-top: 0 !important;
+  margin-bottom: 2px !important;
+}
+
+/* ========== 减少版权声明间距 ========== */
+.post-copyright,
+.copyright-wrap,
+.article-copyright,
+#copyright {
+  margin-top: 2px !important;
+  padding: 4px 8px !important;
+}
+
+/* ========== 减少标签区域间距 ========== */
+.post-tags,
+.tag-wrap,
+.article-tags,
+#post-tags {
+  margin-top: 2px !important;
+  padding-top: 0 !important;
+  margin-bottom: 2px !important;
+}
+
+/* ========== 减少上下篇文章导航间距 ========== */
+#pagination,
+.pagination-post,
+.post-nav,
+#post-nav {
+  margin-top: 2px !important;
+  padding-top: 0 !important;
+}
+
+/* ========== 减少相关文章区域间距 ========== */
+.relatedPosts,
+.related-posts,
+#related-posts {
+  margin-top: 2px !important;
+  padding-top: 0 !important;
+}
+
+/* ========== 减少评论区上方间距 ========== */
+#comments,
+.comments-wrap,
+#comment {
+  margin-top: 2px !important;
+  padding-top: 0 !important;
+}
+
+/* ========== 通用：强制减少所有 div 和 section 的上下 margin ========== */
+#post > div,
+#post > section,
+.post > div,
+.post > section,
+#article-container > div,
+#article-container > section {
+  margin-top: 1px !important;
+  margin-bottom: 1px !important;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 延迟初始化，确保页面完全加载
+  setTimeout(function() {
+    initTTSPlayer();
+  }, 500);
+});
+
+function initTTSPlayer() {
+  // 检查是否在文章页面
+  const postEl = document.getElementById('post');
+  const articleEl = document.getElementById('article-container');
+  const isPostPage = postEl !== null || articleEl !== null;
+  if (!isPostPage) {
+    console.log('[TTS] Not a post page, exiting');
+    return;
+  }
+
+  // 获取文章标题元素
+  const titleEl = document.querySelector('#post h1, .post-title, #article-container h1, article h1');
+  if (!titleEl) {
+    console.log('[TTS] Title element not found');
+    return;
+  }
+
+  // 创建行内包装器
+  const wrapper = document.createElement('span');
+  wrapper.className = 'tts-inline-wrapper';
+
+  // 检查浏览器是否支持语音合成
+  const isTTSSupported = 'speechSynthesis' in window;
+
+  if (isTTSSupported) {
+    // 支持 TTS，创建真实按钮
+    wrapper.innerHTML = `
+      <button class="tts-btn-inline" id="tts-btn" title="朗读文章">
+        <i class="fas fa-volume-up"></i>
+      </button>
+      <div class="tts-controls-inline" id="tts-controls">
+        <span class="tts-status-inline" id="tts-status">就绪</span>
+        <select class="tts-rate-inline" id="tts-rate" title="语速">
+          <option value="0.7">慢</option>
+          <option value="1" selected>正常</option>
+          <option value="1.3">快</option>
+        </select>
+        <button class="tts-stop-inline" id="tts-stop" title="停止">停止</button>
+      </div>
+    `;
+  } else {
+    // 不支持 TTS，创建灰色虚拟按钮
+    wrapper.innerHTML = `
+      <button class="tts-btn-dummy" id="tts-dummy" disabled title="当前浏览器不支持TTS朗读功能">
+        <i class="fas fa-volume-mute"></i>
+      </button>
+    `;
+  }
+
+  // 插入到标题内部最前面（与标题文字同一行）
+  titleEl.insertBefore(wrapper, titleEl.firstChild);
+
+  // 如果支持 TTS，初始化播放器
+  if (isTTSSupported) {
+    console.log('[TTS] Initializing TTS player...');
+    new TTSPlayer();
+  } else {
+    console.log('[TTS] Browser does not support TTS');
+  }
+}
+
+class TTSPlayer {
+  constructor() {
+    this.synth = window.speechSynthesis;
+    this.utterance = null;
+    this.isPlaying = false;
+    this.isPaused = false;
+    this.btn = document.getElementById('tts-btn');
+    this.controls = document.getElementById('tts-controls');
+    this.status = document.getElementById('tts-status');
+    this.rateSelect = document.getElementById('tts-rate');
+    this.stopBtn = document.getElementById('tts-stop');
+
+    this.bindEvents();
+  }
+
+  bindEvents() {
+    this.btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // 阻止冒泡，避免立即触发 document 点击
+      this.toggle();
+    });
+    this.stopBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.stop();
+    });
+    this.rateSelect.addEventListener('change', () => {
+      if (this.isPlaying) {
+        this.stop();
+        this.play();
+      }
+    });
+    this.controls.addEventListener('click', (e) => {
+      e.stopPropagation(); // 点击控件区域不隐藏
+    });
+
+    // 页面离开时停止播放
+    window.addEventListener('beforeunload', () => this.stop());
+
+    // 点击空白处隐藏控件
+    document.addEventListener('click', () => {
+      if (this.controls.classList.contains('active') && !this.isPlaying) {
+        this.controls.classList.remove('active');
+      }
+    });
+  }
+
+  getArticleText() {
+    // 获取文章内容，排除不需要朗读的元素
+    const article = document.querySelector('#article-container, .post-content, article');
+    if (!article) return '';
+
+    // 克隆节点以避免修改原内容
+    const clone = article.cloneNode(true);
+
+    // 移除不需要朗读的元素
+    const excludeSelectors = ['.code-block', 'pre', 'code', 'script', 'style', '.copyright', '.share', '.relatedPosts', 'img', 'iframe'];
+    excludeSelectors.forEach(selector => {
+      const elements = clone.querySelectorAll(selector);
+      elements.forEach(el => el.remove());
+    });
+
+    // 获取纯文本
+    let text = clone.textContent || clone.innerText || '';
+
+    // 清理文本
+    text = text.replace(/\s+/g, ' ').trim();
+
+    // 限制长度
+    if (text.length > 5000) {
+      text = text.substring(0, 5000) + '...（内容过长，已截断）';
+    }
+
+    return text;
+  }
+
+  play() {
+    const text = this.getArticleText();
+    if (!text) {
+      this.status.textContent = '无内容';
+      return;
+    }
+
+    // 取消之前的朗读
+    this.synth.cancel();
+
+    this.utterance = new SpeechSynthesisUtterance(text);
+
+    // 设置语言为中文
+    this.utterance.lang = 'zh-CN';
+
+    // 设置语速
+    this.utterance.rate = parseFloat(this.rateSelect.value);
+
+    // 尝试设置中文语音
+    const voices = this.synth.getVoices();
+    const zhVoice = voices.find(v => v.lang.includes('zh') || v.lang.includes('CN'));
+    if (zhVoice) {
+      this.utterance.voice = zhVoice;
+    }
+
+    // 事件监听
+    this.utterance.onstart = () => {
+      this.isPlaying = true;
+      this.isPaused = false;
+      this.btn.classList.add('playing');
+      this.btn.innerHTML = '<i class="fas fa-pause"></i>';
+      this.status.textContent = '朗读中...';
+      this.controls.classList.add('active');
+      // 2秒后自动隐藏控件（播放中不改变状态的话）
+      clearTimeout(this._hideTimer);
+      this._hideTimer = setTimeout(() => {
+        if (this.isPlaying && !this.isPaused) {
+          this.controls.classList.remove('active');
+        }
+      }, 2000);
+    };
+
+    this.utterance.onend = () => {
+      this.isPlaying = false;
+      this.isPaused = false;
+      this.btn.classList.remove('playing');
+      this.btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+      this.status.textContent = '完成';
+      setTimeout(() => {
+        this.controls.classList.remove('active');
+        this.status.textContent = '就绪';
+      }, 2000);
+    };
+
+    this.utterance.onerror = (e) => {
+      console.error('[TTS] Error:', e);
+      this.isPlaying = false;
+      this.btn.classList.remove('playing');
+      this.btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+      this.status.textContent = '错误';
+    };
+
+    this.synth.speak(this.utterance);
+  }
+
+  pause() {
+    if (this.synth.speaking && !this.synth.paused) {
+      this.synth.pause();
+      this.isPaused = true;
+      this.btn.innerHTML = '<i class="fas fa-play"></i>';
+      this.status.textContent = '已暂停';
+    }
+  }
+
+  resume() {
+    if (this.synth.paused) {
+      this.synth.resume();
+      this.isPaused = false;
+      this.btn.innerHTML = '<i class="fas fa-pause"></i>';
+      this.status.textContent = '朗读中...';
+    }
+  }
+
+  stop() {
+    this.synth.cancel();
+    this.isPlaying = false;
+    this.isPaused = false;
+    this.btn.classList.remove('playing');
+    this.btn.innerHTML = '<i class="fas fa-volume-up"></i>';
+    this.status.textContent = '就绪';
+    this.controls.classList.remove('active');
+  }
+
+  toggle() {
+    if (!this.isPlaying) {
+      this.play();
+    } else if (this.isPaused) {
+      this.resume();
+    } else {
+      this.pause();
+    }
+  }
+}
+</script>
+<style>
+#lucky-visitor-tag{position:fixed;top:125px;right:13px;z-index:999;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;cursor:pointer;animation:lucky-float-in .6s ease-out}@keyframes lucky-float-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}#lucky-visitor-tag .lucky-tag-inner{background:rgba(255,248,230,.75);border:1px solid rgba(255,152,0,.3);border-radius:12px;padding:12px 14px;box-shadow:0 4px 20px rgba(255,152,0,.12);display:flex;align-items:center;gap:10px;min-width:160px}#lucky-visitor-tag .lucky-emoji{font-size:24px;line-height:1}#lucky-visitor-tag .lucky-info{display:flex;flex-direction:column;align-items:flex-start;gap:3px}#lucky-visitor-tag .lucky-row1,#lucky-visitor-tag .lucky-row2{display:flex;align-items:center;gap:6px;flex-wrap:wrap}#lucky-visitor-tag .lucky-badge{font-size:12px;font-weight:700;color:#e65100;line-height:1.4}#lucky-visitor-tag .lucky-readers{font-size:12px;font-weight:600;color:#e65100;line-height:1.4}#lucky-visitor-tag .lucky-count{font-size:11px;color:#888;line-height:1.4}#lucky-visitor-tag .lucky-num{font-size:13px;font-weight:700;color:#bf360c}#lucky-visitor-tag .lucky-lottery{font-size:12px;color:#c41e3a;font-weight:600}html[data-theme=dark]#lucky-visitor-tag .lucky-tag-inner{background:rgba(62,39,35,.75);border-color:rgba(255,152,0,.2);box-shadow:0 4px 20px rgba(255,152,0,.1)}html[data-theme=dark]#lucky-visitor-tag .lucky-badge,html[data-theme=dark]#lucky-visitor-tag .lucky-readers{color:#ffb74d}html[data-theme=dark]#lucky-visitor-tag .lucky-count{color:#999}html[data-theme=dark]#lucky-visitor-tag .lucky-num{color:#ffcc80}html[data-theme=dark]#lucky-visitor-tag .lucky-lottery{color:#ff8a80}
+</style>
+<script src="/js/visitor.js" defer></script><script src="/js/waline-avatar-fix.js" defer></script><script>
+// Waline 默认头像设置为中性神秘人图案
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    // 设置 Waline 默认头像为 mp (Mystery Person)
+    if (window.Waline) {
+      window.Waline.instance = null;
+    }
+  }, 100);
+});
+// 通过 CSS 强制覆盖默认头像
+document.addEventListener('DOMContentLoaded', function() {
+  var style = document.createElement('style');
+  style.textContent = '\
+    /* 默认头像：中性灰色轮廓 */\
+    .wl-avatar[src*="avatar.php"],\
+    .wl-avatar[src*="gravatar"],\
+    img.wl-avatar[src=""] {\
+      background: #9ca3af !important;\
+      background-image: url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23666\'%3E%3Ccircle cx=\'12\' cy=\'8\' r=\'4\'/%3E%3Cpath d=\'M4 20c0-4 4-6 8-6s8 2 8 6\'/%3E%3C/svg%3E") !important;\
+      background-size: cover !important;\
+      background-position: center !important;\
+    }\
+    /* 访客评论默认头像 */\
+    .wl-user-id-0 .wl-avatar,\
+    .wl-card[data-id=""] .wl-avatar,\
+    .wl-avatar:not([src*="gravatar"]):not([src*="cravatar"]):not([src*="mp="]) {\
+      background: #9ca3af !important;\
+      background-image: url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%23666\'%3E%3Ccircle cx=\'12\' cy=\'8\' r=\'4\'/%3E%3Cpath d=\'M4 20c0-4 4-6 8-6s8 2 8 6\'/%3E%3C/svg%3E") !important;\
+      background-size: cover !important;\
+      background-position: center !important;\
+    }\
+  ';
+  document.head.appendChild(style);
+});
+</script>
+<script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="false"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><i class="fas fa-spinner fa-pulse" id="loading-status" hidden="hidden"></i><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="local-search-input"><input placeholder="搜索文章" type="text"/></div><hr/><div id="local-search-results"></div><div class="ais-Pagination" id="local-search-pagination" style="display:none;"><ul class="ais-Pagination-list"></ul></div><div id="local-search-stats"></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=5.5.3"></script></div><!-- 置顶文章色条随机颜色--><script>(function() {
+  var colors = [
+    {main: '#ff4444', light: '#ff6b6b'}, // 红
+    {main: '#ff8800', light: '#ffaa33'}, // 橙
+    {main: '#ffcc00', light: '#ffdd44'}, // 黄
+    {main: '#44cc44', light: '#66dd66'}, // 绿
+    {main: '#00cccc', light: '#33dddd'}, // 青
+    {main: '#4488ff', light: '#66aaff'}, // 蓝
+    {main: '#aa44ff', light: '#bb66ff'}  // 紫
+  ];
+  var bars = document.querySelectorAll('.sticky-bar');
+  bars.forEach(function(bar) {
+    var color = colors[Math.floor(Math.random() * colors.length)];
+    bar.style.setProperty('--sticky-color', color.main);
+    bar.style.setProperty('--sticky-color-light', color.light);
+  });
+})();</script></div></body></html>
