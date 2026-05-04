@@ -1,0 +1,265 @@
+---
+title: 2026年03月29日 小红故事热搜晚报
+date: 2026-03-29 22:54:50
+updated: 2026-03-29 22:54:50
+categories:
+  - 新闻热搜
+tags:
+  - 热搜
+  - 晚间速递
+cover: /images/hotnews-evening.svg
+toc: true
+---
+
+> 来源：互联网 | 采集时间：2026/3/29 22:54:50
+
+### <strong>手</strong>机发烫可能是正在被窃密
+<img src="/images/hotnews/20260329_01.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">如果手机莫名其妙发烫，这可能是你的手机正在被窃密者操纵着进行远程实时监控，即使手机关机，窃密行为也没有停止。除此之外，窃密者还能通过“木马”病毒，盗取手机里的通讯录、通话记录、短信、照片等全部隐私信息。</p>
+
+
+### <strong>儿</strong>子一家去世 老人骑行30年治愈自己
+<img src="/images/hotnews/20260329_02.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">90岁老人张爷爷骑行30年治愈自己，其儿子一家三口因车祸遇难、老伴哭瞎后次年离世，他用车轮一寸一寸缝合余生。</p>
+
+
+### <strong>他</strong>们一笑 全场哭了
+<img src="/images/hotnews/20260329_03.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">一部《沉默的荣耀》让我们永远记住了“东海小组”四位英雄——吴石、朱枫、陈宝仓、聂曦，他们心系家国，含笑奔赴刑场，却未曾留下一张并肩而立的合影。3月29日，在郑州举办的2026中国网络媒体论坛现场，神奇的AI跨越76年为四位烈士补上了第一张合影。尘封黑白旧照化为鲜活的彩色影像，他们，眉目含笑，神采奕奕，4位先烈后人，红了眼眶。</p>
+
+
+### <strong>小</strong>时候流行的“屁股针”消失了吗
+<img src="/images/hotnews/20260329_04.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">屁股针并没有消失，只是需要的场景变少了。最重要的一个原因是，随着现代药物的发展，能够口服起效的药物比之前多了，能够吃药解决问题，谁还愿意去挨一针呢？此外，随着肥胖问题的日益加重，人们的皮下脂肪层厚度随之增加，这给打屁股针带来了麻烦。</p>
+
+
+### <strong>孩</strong>子凌晨偷拿平板玩2小时再放回去
+<img src="/images/hotnews/20260329_05.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月28日，江西一名孩子趁家长熟睡后，凌晨3点偷拿平板玩耍至5点并放回原位。家长表示，自己经常守到凌晨也守不住孩子，天天熬夜身体也吃不消。</p>
+
+
+### <strong>摆</strong>拍“打网约车遭司机辱骂”者被罚
+<img src="/images/hotnews/20260329_06.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，有网民发布“女子打一口价网约车遭司机辱骂”相关视频，经扩散传播，引发不少网民谴责司机，质疑网约车服务质量、从业人员规范等。经查，网民自导自演虚构场景，剪辑后以“网约车司机”身份发布网络。警方已对其予以行政处罚，并依法关停其相关网络账号。</p>
+
+
+### <strong>伊</strong>朗新最高领袖为何发声少 专家分析
+<img src="/images/hotnews/20260329_07.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">美以伊冲突爆发以来，伊朗新任最高领袖穆杰塔巴始终未露面，相关个人信息极少，总统佩泽希齐扬、外长阿拉格齐、议会议长卡利巴夫则频频发声。专家认为，这既是战时保障穆杰塔巴安全的需要，也与外界传言其在袭击中受伤、以及他一贯低调的作风有关。</p>
+
+
+### <strong>国</strong>产杀癌核药实现量产
+<img src="/images/hotnews/20260329_08.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">据报道，中国散裂中子源的科学家们成功实现了阿尔法同位素的居里级量产。锕-225、镭-223我们自己能造了，把癌症治疗的“核武器”掌握在自己手里。这意味着稳定供应，意味着成本大幅下降，癌症患者多了一份希望。</p>
+
+
+### <strong>内</strong>存条价格崩了
+<img src="/images/hotnews/20260329_09.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">持续疯狂的内存市场终于迎来了降温。从上周开始，市场的内存条价格出现断崖式下跌，市场普遍认为前期囤积内存的大户正在抛售，但因为价格仍处于高位，终端消费市场的承接力度十分有限。</p>
+
+
+### <strong>身</strong>份证号的“X”到底咋读
+<img src="/images/hotnews/20260329_10.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">身份证号码最后那个奇怪的 “X” ，它怎么读？它背后的秘密是什么？对于它的发音，在我们生活中，似乎没有人在意，“Ⅹ”表示的是罗马数字“10”，读作shí最为妥当。</p>
+
+
+### <strong>宁</strong>波一女孩接迷药传单晕倒系谣言
+<img src="/images/hotnews/20260329_11.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，网传宁波一女孩接迷药传单后晕倒，经警方调查证实为谣言。传单未检出违禁成分，女子晕倒或与其贫血有关。警方澄清事实，提醒市民不信谣不传谣，遇可疑情况及时报警。</p>
+
+
+### <strong>大</strong>学生暴瘦50斤后送医被切除器官
+<img src="/images/hotnews/20260329_12.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，20岁女大学生小陈突发剧痛被紧急送医，经检查，医生为她实施了微创的腹腔镜下胆囊切除手术。据悉，小陈从去年开始“极端减肥”，完全不吃主食，还吃减肥药，半年暴瘦50斤。</p>
+
+
+### <strong>被</strong>困隧道列车乘客：多人疑晕厥送医
+<img src="/images/hotnews/20260329_13.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月29日下午，桂林北至珠海方向的D3665次列车，被困在佛山至广州南站之间的一条隧道3个多小时，车厢内全部停电。列车滞留期间，有多名乘客疑似晕厥，当地有多辆救护车赶到，将这些乘客送往医院救治。</p>
+
+
+### <strong>“</strong>周末情侣”为啥愈发普遍
+<img src="/images/hotnews/20260329_14.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">白天在写字楼上班、晚上独居的年轻人越来越多选择周末情侣模式，工作日通过消息视频维系，仅周末相聚。主因包括异地职业发展需求、传统同居时间经济成本过高，以及对亲密关系中自主空间的追求。</p>
+
+
+### <strong>夫</strong>妻房产留给长子长孙遭两女儿反对
+<img src="/images/hotnews/20260329_15.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">深圳一对夫妻去世后，其共同房产继承引发子女纠纷。长子黄某甲持母亲沈某的录音录像遗嘱主张继承房产，孙子黄某乙持爷爷黄某的自书遗嘱主张继承50%份额，两女儿黄某丙、黄某丁反对。法院判决：录音录像遗嘱因无见证人无效，自书遗嘱有效。</p>
+
+
+### <strong>雀</strong>巢12吨巧克力被盗
+<img src="/images/hotnews/20260329_16.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">当地时间3月28日，欧洲食品巨头雀巢披露，一辆运输12吨KitKat巧克力的卡车被盗，整车货物失踪。这辆载有413,793根新系列巧克力棒的卡车原本从意大利中部出发，计划向欧洲各地配送。目前，车辆及其货物仍下落不明。</p>
+
+
+### <strong>D</strong>eepSeek“崩了”
+<img src="/images/hotnews/20260329_17.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月29日，有网友在社交平台反映DeepSeek“崩了”。进入新对话后，页面信息显示“服务器繁忙，请稍后重试”。</p>
+
+
+### <strong>村</strong>民办白事酒席老外误当成饭店
+<img src="/images/hotnews/20260329_18.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，湖南永州，美国一网红误将村民的白事灵棚当作餐厅，试图进入用餐。双方语言不通，仅靠肢体交流，最终友好互动。</p>
+
+
+### <strong>新</strong>人用小时候照片当订婚迎宾牌
+<img src="/images/hotnews/20260329_19.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，一对新人在订婚现场，将两人小时候的照片拼接做成迎宾牌。网友纷纷表示：这样的迎宾牌很有意义。</p>
+
+
+### <strong>伊</strong>朗公布击毁美军E-3预警机卫星图
+<img src="/images/hotnews/20260329_20.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>李</strong>荣浩四连问单依纯
+<img src="/images/hotnews/20260329_21.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月29日，李荣浩就单依纯的道歉再发文，晒出中国著作权协会确认未授权的邮件及己方无授权的说明，连发四问质问单依纯演唱《李白》的立场、权利、角度与心态，称要追究其明目张胆的侵权违法行为，绝不允许被糊弄。</p>
+
+
+### <strong>单</strong>依纯向李荣浩道歉
+<img src="/images/hotnews/20260329_22.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月29日，单依纯就李荣浩此前喊话发文回应，称刚结束彩排正在了解情况，理解李荣浩的心情，先诚恳致歉。表示会和团队尽快厘清状况答复大家，强调深知版权重要性，同时感谢李荣浩创作的《李白》给予自己力量与温度，再次致歉。</p>
+
+
+### <strong>中</strong>国将在长江水下开高铁
+<img src="/images/hotnews/20260329_23.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">长江水下89米处，世界最大直径高铁盾构机正在这里加速掘进。站在这台盾构机的内部，可以看到，它足足有五层楼的高度，这个大块头，将要打通一条14公里长的江底隧道，让高铁顺利穿越长江。</p>
+
+
+### <strong>1</strong>米85的小学生开口要一套宝可梦卡
+<img src="/images/hotnews/20260329_24.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，一名小学生提前问妈妈预定六一礼物，直言想要一套宝可梦卡，他一米八五的身高与儿童节愿望形成反差，网友：这大体格竟然才12岁，还要过六一儿童节。</p>
+
+
+### <strong>九</strong>寨沟震后首次拍到野生大熊猫
+<img src="/images/hotnews/20260329_25.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月29日，九寨沟自然保护区震后首次实拍到野生大熊猫活体影像。这只大熊猫压低身子穿越栈道护栏，专业人员推测其年龄为2至3岁，体重约50千克。</p>
+
+
+### <strong>李</strong>荣浩公开指责单依纯：强行侵权
+<img src="/images/hotnews/20260329_26.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月29日，歌手李荣浩发文喊话单依纯，称其在李荣浩方已婉拒翻唱授权的情况下，仍擅自侵权演唱《李白》。李荣浩晒出音著协邮件，证实未授予任何第三方相关授权。</p>
+
+
+### <strong>广</strong>汽去年卖了172万辆车亏近88亿元
+<img src="/images/hotnews/20260329_27.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月27日，老牌车企广汽集团发布2025年年报，公司经营业绩连续两年出现下滑，录得归母净亏损87.84亿元，并首次出现全年亏损。销量方面，广汽集团全年汽车产销为174.44万辆和172.15万辆，分别同比下降8.98%和14.06%。</p>
+
+
+### <strong>“</strong>你在欧洲看不到这样的山”
+<img src="/images/hotnews/20260329_28.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">走遍欧洲的旅行博主Luke O'Farrell在贵州沿河乌江峡谷游览时感叹：“你在欧洲看不到这样的山”，称其喀斯特地貌与烟雨景观具有独特的神秘感。</p>
+
+
+### <strong>湖</strong>南一村发生地陷：农田下陷道路断层
+<img src="/images/hotnews/20260329_29.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月28日，湖南汝城堆山村村民反映，村内有农田和道路出现较大面积地陷，致返村的道路被交通管制。记者从大坪镇政府获悉，已有省内专家到场勘测地陷原因，已给村民开通另一条回村道路，相关处置工作正在进行。</p>
+
+
+### <strong>母</strong>亲隐瞒近40岁女儿已婚骗17万彩礼
+<img src="/images/hotnews/20260329_30.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">湖北女子朱某因对外负债，竟利用40岁已婚女儿骗婚还债，她谎称女儿丈夫去世，安排其与他人“订婚”，骗取相亲男子17万元彩礼。据悉，朱某和其女儿均被判刑。</p>
+
+
+### <strong>伊</strong>朗发动“真实承诺4”第86波行动
+<img src="/images/hotnews/20260329_31.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">当地时间29日，伊朗伊斯兰革命卫队发布公告，发动“真实承诺-4”第86波行动，在此次行动的第一阶段，位于维多利亚、阿里夫詹和阿尔哈杰美军基地的空中作战与无人机基础设施以及弹药库遭到了导弹和无人机的打击。</p>
+
+
+### <strong>美</strong>以伊战事时间线
+<img src="/images/hotnews/20260329_32.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月29日，美国和以色列对伊朗发动的军事打击进入第30天。美以与伊朗继续相互打击，中东地区局势持续紧张。一起来看2月28日以来美以伊战事时间线。</p>
+
+
+### <strong>伊</strong>朗议长：美国假装谈判暗谋进攻
+<img src="/images/hotnews/20260329_33.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">据伊朗媒体29日报道，伊朗伊斯兰议会议长卡利巴夫说，美国一边公开释放谈判信号，一边暗中策划地面进攻，还抛出所谓结束战事的“15点计划”，试图实现其在战争中没法达成的目标。</p>
+
+
+### <strong>“</strong>是的 别人不敢欺负咱了”
+<img src="/images/hotnews/20260329_34.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">“是不是有了航母，别人就不敢欺负咱们了？”1999 年，5岁的陈虞文因使馆被炸事件，将140元零花钱捐给国家助力造航母。2026年3月29日，他在论坛上重温往事，而中国已迈入三航母时代，他的航母梦终得实现，倍感自豪。</p>
+
+
+### <strong>国</strong>乒出席澳门世界杯晚宴
+<img src="/images/hotnews/20260329_35.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月29日，国乒出席澳门世界杯晚宴！孙颖莎瘦了，王楚钦休闲装亮相清爽帅气，王曼昱迪亚兹热聊。</p>
+
+
+### <strong>广</strong>州场演唱会遇暴雨 薛之谦宣布退票
+<img src="/images/hotnews/20260329_36.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月29日晚，薛之谦“万兽之王”巡回演唱会广州站第六场因突降大雨，开场约一小时后部分灯光、荧光棒接收设备故障。薛之谦当场宣布本场演出免费，歌迷可后续全额退票，外地歌迷还可凭凭证退机酒；也可选择保留票根观看下一场，或兑换其他城市巡演场次。</p>
+
+
+### <strong>焦</strong>裕禄女儿与“扮演者”李雪健同框
+<img src="/images/hotnews/20260329_37.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，2026中国网络媒体论坛上的温暖一幕引发关注。焦裕禄女儿焦守云与焦裕禄扮演者李雪健相遇，两只手紧握，像极了父亲握着女儿。</p>
+
+
+### <strong>晚</strong>上听坏消息打击更小
+<img src="/images/hotnews/20260329_38.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">日本北海道大学研究发现，晚上听到坏消息时人体承受打击的程度较轻。原因在于人体皮质醇水平在昼夜间的自然波动，晚间人体对负面信息的生理反应更为平缓。</p>
+
+
+### <strong>伊</strong>朗：正实时监控“林肯”号航母
+<img src="/images/hotnews/20260329_39.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">伊朗海军司令沙赫拉姆·伊兰尼当地时间29日表示，伊朗正实时监控美国“林肯”号航母编队的位置、动向以及其向该地区国家提出的请求。一旦“林肯”号航母编队进入伊朗的射程，伊朗将发射导弹。</p>
+
+
+### <strong>马</strong>杜罗社媒更新：我们很好
+<img src="/images/hotnews/20260329_40.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>7</strong>2岁老人骑行140公里看孙子
+<img src="/images/hotnews/20260329_41.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，一位72岁老人凌晨骑行12小时，从河北到天津看孙子：凌晨4点出发，带着路上吃的面包，大概骑了140公里，家人都又惊又喜。</p>
+
+
+### <strong>1</strong>.99元就能买1斤猪肉
+<img src="/images/hotnews/20260329_42.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，不少地方的猪肉价格都出现了“跳水”现象。一位来自沈阳的消费者表示，当地一家超市推出秒杀活动，优惠下来特价猪腿肉低至1.99元/斤，每人限购3斤。</p>
+
+
+### <strong>警</strong>号重启！“061193”欢迎归队
+<img src="/images/hotnews/20260329_43.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月25日，宜都市公安局举行因公牺牲民警付晓华“警号重启”仪式。时隔4年后，付晓华的警号“061193”重新启用，挂在他的女儿——新警付丹琳胸前。</p>
+
+
+### <strong>伊</strong>朗：核问题非美国与伊朗核心问题
+<img src="/images/hotnews/20260329_44.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">当地时间3月29日，伊朗方面消息称，伊朗陆军发言人穆罕默德·阿克拉米尼亚表示，美国与伊朗间的核心问题绝非核问题，而是伊朗的主权与独立问题。</p>
+
+
+### <strong>李</strong>荣浩喊话单依纯侵权 律师解读
+<img src="/images/hotnews/20260329_45.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月29日，李荣浩发文指责单依纯未获授权，在商演中擅自改编演唱《李白》，并晒出音著协邮件佐证。随后，单依纯火速发文致歉。律师解读，未经许可表演他人作品构成侵权，歌手与主办方需视情形承担相应法律责任，最高可处罚款25万元。</p>
+
+
+### <strong>台</strong>��热议：无人、无人还是无人
+<img src="/images/hotnews/20260329_46.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，解放军集中展示无人艇编队、无人机蜂群、机器狼群等无人作战装备，引发台媒热议：无人、无人还是无人。多家台媒密集报道其作战性能，认为大陆无人技术发展迅速，正推动战争形态向智能化、无人化加速演进。</p>
+
+
+### <strong>男</strong>子便秘3天后用力排便时心梗倒地
+<img src="/images/hotnews/20260329_47.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>2</strong>名小孩哥背迷路幼童走3公里寻家人
+<img src="/images/hotnews/20260329_48.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，苏州昆山一名幼童不慎走丢，俩“小孩哥”背起他找妈妈。“别怕，哥哥送你回家”，近三公里的路他们一路护送。最终，在警方的联系下，孩子顺利与家人团聚。</p>
+
+
+### <strong>贵</strong>州一景区突降冰雹 如石头般大小
+<img src="/images/hotnews/20260329_49.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">3月29日，贵州荔波县小七孔景区遇强对流天气，降下如石头般大小的冰雹。有游客用纸壳遮挡头部躲避，部分区域树叶被冰雹击落一地。景区工作人员回应称，冰雹持续一段时间后已停止，目前景区正常开放，未接到游客受伤送医的报告。</p>
+
+
+### <strong>小</strong>猴遇扮装美猴王难辨真假
+<img src="/images/hotnews/20260329_50.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，一只小猴子与装扮成美猴王的人相遇，经过眼神确认，小猴子将其视为真正的美猴王！</p>
+
+

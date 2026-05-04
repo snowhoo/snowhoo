@@ -1,0 +1,262 @@
+---
+title: 2026年04月08日 小红故事热搜晨报
+date: 2026-04-08 08:00:23
+updated: 2026-04-08 08:00:23
+categories:
+  - 新闻热搜
+tags:
+  - 热搜
+  - 今日要闻
+cover: /images/hotnews-morning.svg
+toc: true
+---
+
+> 来源：互联网 | 采集时间：2026/4/8 08:00:23
+
+### <strong>广</strong>州宋代遗迹挖出“手臂长”生蚝壳
+<img src="/images/hotnews/20260408_morning_01.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，广州高第街古城遗迹考古发现宋"手臂长"生蚝壳，其尺寸远超现代常见生蚝，反映了当时以海产品为主的肉食补充方式。‌‌</p>
+
+
+### <strong>时</strong>速300！郑丽文体验大陆高铁速度
+<img src="/images/hotnews/20260408_morning_02.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">中国国民党主席郑丽文4月7日下午抵达大陆首日，便搭乘上了上海到南京的城际高铁，亲身体验大陆高铁速度。时隔21年再度访陆，她见证大陆从无高铁到建成世界第一规模高铁网，沪宁段最快仅1小时20分，时速可达350公里。</p>
+
+
+### <strong>盘</strong>点清明假日消费新亮点
+<img src="/images/hotnews/20260408_morning_03.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">旺盛人流穿行于神州大地，喧闹烟火升腾于古街新城，消费活力释放于繁华市井……2026年清明假期，天南海北被奔赴与热爱所点亮，流动的生机与欢歌勾勒出蓬勃向上的假日消费图景，一个生动、饱满的中国于春日中走来。</p>
+
+
+### <strong>社</strong>保基金理事会：坚决拥护党中央决定
+<img src="/images/hotnews/20260408_morning_04.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>市</strong>监回应海河牛奶直播间被指涉黄
+<img src="/images/hotnews/20260408_morning_05.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，海河牛奶旗舰店直播间因主播言论涉及性暗示、性交易及不雅动作被举报。4月7日，天津市滨海新区市监局回应：已收到相关反映，业务科室正在核实处理。</p>
+
+
+### <strong>伊</strong>朗接受巴基斯坦提出的停火提议
+<img src="/images/hotnews/20260408_morning_06.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">伊朗最高国家安全委员会当地时间8日凌晨发表声明称，根据最高领袖的建议和最高国家安全委员会批准，接受巴基斯坦提出的停火提议。</p>
+
+
+### <strong>中</strong>老年人的“膝盖保卫战”
+<img src="/images/hotnews/20260408_morning_07.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">据统计，我国60岁以上人群中，超半数患有不同程度的膝关节骨性关节炎，且女性发病率高于男性。骨性关节炎成为中老年人膝盖疼痛的首要原因。今天，我们一起来了解膝关节骨性关节炎的病因，学习科学的应对方法，打响这场“膝盖保卫战”。</p>
+
+
+### <strong>晚</strong>饭一个改变 身体指标轻松变好
+<img src="/images/hotnews/20260408_morning_08.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">2026年1月，国际期刊《英国医学杂志》子刊《英国医学杂志-医学》发表的一项研究发现，把晚餐在下午5点前吃完，能显著改善代谢效果。</p>
+
+
+### <strong>河</strong>南游客买的牡丹是断头花？市集回应
+<img src="/images/hotnews/20260408_morning_09.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">清明假期，一游客专程赴洛阳游玩，在状元市集购买牡丹回家后发现是用牙签拼接的断头花。此事引发关注，市集运营方称正核实情况并联系发帖人，洛阳市西工区市监局也已安排人员前往现场调查。</p>
+
+
+### <strong>总</strong>是特别累？可能是蛋白质没吃够
+<img src="/images/hotnews/20260408_morning_10.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">长期疲劳可能与‌蛋白质摄入不足‌有关。2026年国民营养健康指导委员会提出“减油、增豆、加奶”饮食建议，强调优质蛋白对维持身体机能的关键作用，缺乏时易引发脱发、免疫力下降等症状。‌‌</p>
+
+
+### <strong>“</strong>囤词元能暴富”是骗局
+<img src="/images/hotnews/20260408_morning_11.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">词元是AI处理信息的最小单元，应用广泛但存安全隐患，需认清其非投资属性，规范使用并遵守法规。</p>
+
+
+### <strong>伊</strong>朗媒体：特朗普让步 同意停火两周
+<img src="/images/hotnews/20260408_morning_12.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">伊朗塔斯尼姆通讯社8日报道说，美国总统特朗普作出让步，他在社交媒体上发文称，已收到伊朗提出的10点建议，他同意暂停对伊朗的轰炸和攻击，为期两周。</p>
+
+
+### <strong>伊</strong>美谈判将于10日在伊斯兰堡开始
+<img src="/images/hotnews/20260408_morning_13.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>联</strong>合国警告特朗普政府
+<img src="/images/hotnews/20260408_morning_14.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">当地时间4月7日，央视记者获悉，联合国秘书长发言人迪雅里克称，联合国秘书长古特雷斯已向特朗普政府发出警告，根据国际法规定，攻击伊朗民用基础设施是被禁止的。</p>
+
+
+### <strong>伊</strong>朗民众组成人链保护发电厂桥梁
+<img src="/images/hotnews/20260408_morning_15.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">据伊朗方面7日消息，在距离美国总统特朗普的所谓“最终期限”不到半天之际，伊朗民众开始在一些发电厂和桥梁附近聚集，组成“人链”，保护这些伊朗关键基础设施。</p>
+
+
+### <strong>4</strong>1.1℃热破纪录 海南岛成“烸南岛”
+<img src="/images/hotnews/20260408_morning_16.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月7日，海南岛北侧的澄迈、海口、临高、儋州、屯昌、白沙、昌江最高气温均超过38℃，其中海南澄迈今天14点10分气温更是高达41.1℃，打破当地4月上旬最高气温纪录。</p>
+
+
+### <strong>邓</strong>超回应“瘦成男大”
+<img src="/images/hotnews/20260408_morning_17.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，邓超回应瘦成男大了：刚得到“男大”的称号就变成“老大难”了，我都快50岁了。</p>
+
+
+### <strong>黄</strong>一鸣被限高 被执行55万
+<img src="/images/hotnews/20260408_morning_18.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，黄一鸣因未按执行通知书指定的期间履行生效法律文书确定的给付义务，被杭州六只猪科技有限公司申请限制高消费。今年2月，黄一鸣已因此案被执行55万余元。此前黄一鸣曾直播吐槽前公司很坑，老板利用她没钱养孩子的心理，和她签署带违约金的合同。</p>
+
+
+### <strong>第</strong>一针逆龄基因治疗已经注射进人体
+<img src="/images/hotnews/20260408_morning_19.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">2026年3月，研究衰老30年的哈佛大学遗传学教授大卫·辛克莱（David Sinclair）对外分享，首个人体逆龄基因治疗临床试验，第一位受试者已经开始接受注射。</p>
+
+
+### <strong>珠</strong>海公交雨天车内喷水 回应：正排查
+<img src="/images/hotnews/20260408_morning_20.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月4日，网友反映珠海公交雨天出现车厢漏水、喷水情况。4月5日珠海公交集团回应，系地板密封胶老化开裂，已及时维修恢复运营，无重大安全事故。公司正全面排查整改，严禁车辆带病运行，承诺妥善处理乘客相关损失。</p>
+
+
+### <strong>华</strong>晨宇的民宿定价3块钱
+<img src="/images/hotnews/20260408_morning_21.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，华晨宇在云南抚仙湖畔投资打造了一家名为“温暖的房子”的主题民宿，其定价确为3元，入住资格需要通过其演唱会门票抽奖获得‌。‌‌</p>
+
+
+### <strong>大</strong>学生西湖边当陪拍日赚1800
+<img src="/images/hotnews/20260408_morning_22.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">清明假期西湖客流量激增，‌浙传大四学生小高‌作为兼职陪拍师，4月4日从早8点至晚8点完成4单，日收入达‌1800元‌，其定价为单人100元/小时、双人180元/小时，包含底片全送及精修服务。‌‌</p>
+
+
+### <strong>7</strong>人3盆米饭收费78元 商家回应
+<img src="/images/hotnews/20260408_morning_23.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月6日，游客反映在陕西华阴陈聚德炒牛肉店消费，7人共439元，其中3盆米饭78元。更令人费解的是，结算单上米饭的计价单位混乱，出现“1克”“1盅”等标注。4月7日，饭店工作人员回应称，小份米饭3元，游客要求大盆，每盆约盛8小碗，用五常大米和矿泉水蒸制，所以收费26元。</p>
+
+
+### <strong>中</strong>国代表：不能给使用武力开通行证
+<img src="/images/hotnews/20260408_morning_24.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">中国常驻联合国代表傅聪7日在安理会表决后的解释性发言中表示，安理会的行动应着眼于缓局降温，而不能给未经授权的军事行动披上合法外衣，不能给使用武力开通行证，更不能进一步激化矛盾、火上浇油导致冲突升级。</p>
+
+
+### <strong>白</strong>宫官员称以色列已同意临时停火
+<img src="/images/hotnews/20260408_morning_25.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">据美国方面7日消息，白宫官员表示，以色列也已同意临时停火。美国总统特朗普当天在社交媒体平台发文称：“我同意暂停对伊朗的轰炸和袭击行动，为期两周。”</p>
+
+
+### <strong>俄</strong>称世界能源市场已发生重大变化
+<img src="/images/hotnews/20260408_morning_26.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">俄罗斯总统新闻秘书佩斯科夫7日说，世界能源市场“已发生重大变化”。俄罗斯总理米舒斯京当天说，在中东危机引发的动荡时期，全球市场正重新将俄罗斯视为可靠供应方。</p>
+
+
+### <strong>女</strong>子爬树拍照压垮樱花树
+<img src="/images/hotnews/20260408_morning_27.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月6日下午，有网友发视频反映，上海顾村公园一女子为了拍照攀爬樱花树，导致整株树木被压垮。该事件引发广泛关注，公园称已将树木扶正，当地回应：警方已介入，正寻找爬树女子。</p>
+
+
+### <strong>郑</strong>丽文大陆行未来5天参访三地
+<img src="/images/hotnews/20260408_morning_28.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">中国国民党主席郑丽文率中国国民党访问团4月7日中午抵达上海虹桥机场，开启大陆参访行程。这是中国国民党主席时隔10年再次正式访问大陆，备受岛内外高度关注。郑丽文一行4月7日到12日将参访江苏、上海与北京三地。</p>
+
+
+### <strong>《</strong>浪姐》取消直播后被喊话退钱
+<img src="/images/hotnews/20260408_morning_29.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月7日，综艺《乘风2026》因取消一公小考直播改为录播引发观众不满，大量网友要求退还会员费及直播费用。节目组称后续将逐步以录播替代直播，但未直接回应退费诉求。</p>
+
+
+### <strong>1</strong>00多岁的斑鳖“苏苏”现身
+<img src="/images/hotnews/20260408_morning_30.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，苏州上方山森林动物世界的斑鳖“苏苏”罕见现身，这只100多岁的斑鳖是中国境内仅存的一只，被列为国家一级重点保护野生动物，全球已知仅存2只，比大熊猫更为珍稀，游客纷纷感叹“太幸运了”。</p>
+
+
+### <strong>房</strong>地产高薪退潮：千万年薪销声匿迹
+<img src="/images/hotnews/20260408_morning_32.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近期，上市房企2025年年报集中发布，多家已经披露高管薪酬的房企数据显示：曾经动辄千万年薪的“打工皇帝”几近销声匿迹，而能够稳定发放百万级薪酬的房企已属少数。与此同时，那些仍处于信用风险之中、利润大幅塌陷的房企，其高管薪酬持续下探，部分知名房企高管的年薪已降至普通职场水平。</p>
+### <strong>老</strong>师带学生看“19岁的张雪”视频
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，一位老师在课堂上播放“19岁的张雪”相关视频。老师：自己看得热泪盈眶，也想让学生们看看什么叫坚持，什么叫热爱。</p>
+
+
+### <strong>羊</strong>圈旁水库美景成打卡景点1人收3元
+<img src="/images/hotnews/20260408_morning_33.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">河南济源克井镇河口水库旁一扇铁门因推开后呈现水库与青山相映的美景成为网红打卡点，游客推门行为曾导致户主羊圈内羊只走失。为维持秩序，户主实行临时收费（节假日一人3元、两人5元）。当地政府提醒该区域为未开发景区，存在安全隐患，不建议前往。</p>
+
+
+### <strong>伊</strong>朗哈尔克岛遭袭
+<img src="/images/hotnews/20260408_morning_34.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">当地时间7日，自伊朗方面获悉，伊朗哈尔克岛遭到袭击，并传出多次爆炸声。</p>
+
+
+### <strong>4</strong>月10日起新规为货车司机撑腰
+<img src="/images/hotnews/20260408_morning_35.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月10日，《互联网平台价格行为规则》正式施行，为货车司机撑腰。新规禁止平台低价倾销、诱导压价、大数据杀熟，要求明码标价、规范收费，遏制物流低价内卷，保障司机合理收益与公平交易权，推动行业良性发展。</p>
+
+
+### <strong>长</strong>期早餐搭配不当或增加慢病风险
+<img src="/images/hotnews/20260408_morning_36.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">一日之计在于晨，早餐作为一天中的第一餐，其重要性常被忽视。长沙泰和医院临床营养科专家指出，当前不少居民存在不吃早餐或早餐结构单一、营养失衡的情况，长期如此可能增加糖尿病、肥胖、心血管疾病及消化系统疾病的风险。</p>
+
+
+### <strong>美</strong>以袭击导致伊朗多段公路关闭
+<img src="/images/hotnews/20260408_morning_37.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">据伊朗方面7日消息，美国和以色列当日发动的袭击造成伊朗多段公路关闭。伊朗东阿塞拜疆省有关部门7日发布公告称，美以袭击了大不里士至德黑兰公路上的一处检查站，受此影响，大不里士到赞詹的公路也中断通行。</p>
+
+
+### <strong>男</strong>子表演水上杂技 出淤泥而半染
+<img src="/images/hotnews/20260408_morning_38.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，河北一男子在众人面前高调上演水上“杂技”，最后一个动作“出淤泥而半染”，竟一头扎进水里满脸泥巴。网友：前面有多帅，后面就有多好笑。</p>
+
+
+### <strong>实</strong>探家电涨价传闻虚实
+<img src="/images/hotnews/20260408_morning_39.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日网传多家主流家电品牌4月起因原材料涨价将调价，涨幅5%-20%，个别空调机型达30%。记者走访上海卖场发现终端暂未涨价，销售人员多称后续将上调。格力明确表态不涨价，券商分析成本传导滞后，库存可缓冲压力。</p>
+
+
+### <strong>街</strong>道回应市民过斑马线头发会竖起
+<img src="/images/hotnews/20260408_morning_40.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>当</strong>地回应老人在绿化带扎篱笆种菜
+<img src="/images/hotnews/20260408_morning_41.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>伊</strong>朗议会议长：愿为伊朗献身
+<img src="/images/hotnews/20260408_morning_42.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">当地时间7日，伊朗议会议长卡利巴夫在社交媒体上宣布，加入“为伊朗献身”活动。在其报名表的留言栏中，卡利巴夫写道：“凡以威胁或投降示意指向我国者，其手指必将被斩断。”</p>
+
+
+### <strong>伊</strong>朗警告将打击美及其盟友基础设施
+<img src="/images/hotnews/20260408_morning_43.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">伊朗伊斯兰革命卫队当地时间7日发表声明警告邻国说，“克制已结束”，称其将打击美国及其盟友的基础设施，并威胁在未来数年内切断美国及其盟友在本地区的石油和天然气供应。</p>
+
+
+### <strong>伊</strong>朗发动“真实承诺4”第99轮行动
+<img src="/images/hotnews/20260408_morning_44.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>赵</strong>心童称喜欢“赵公子”这个绰号
+<img src="/images/hotnews/20260408_morning_45.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，赵心童在专访中明确表示，喜欢球迷所起的绰号“赵公子”，认为该称谓与其球风和人处世风格较为契合，相较另一绰号“中国火箭”更具独特性。</p>
+
+
+### <strong>男</strong>子失踪358天 家属悬赏10万寻线索
+<img src="/images/hotnews/20260408_morning_46.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>成</strong>都熊猫基地饲养员为大熊猫爬树
+<img src="/images/hotnews/20260408_morning_47.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>陈</strong>赫曝《爱情公寓》每天拍16个小时
+<img src="/images/hotnews/20260408_morning_48.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，陈赫在节目中自曝拍摄《爱情公寓》时每天工作16小时，称高强度拍摄是新人演员的必要锻炼，当下吃苦能为未来职业发展奠定基础。</p>
+
+
+### <strong>正</strong>直播NBA：热火vs猛龙
+<img src="/images/hotnews/20260408_morning_49.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>U</strong>20女足亚洲杯中国战胜泰国晋级8强
+<img src="/images/hotnews/20260408_morning_50.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">北京时间7日晚，2026亚足联U20女足亚洲杯A组第三轮比赛在泰国举行，中国女足1比0战胜泰国女足，取得小组赛三连胜。此前的两轮小组赛，中国女足分别以3比0战胜越南女足、2比0战胜孟加拉国女足，提前锁定出线资格。</p>
+
+

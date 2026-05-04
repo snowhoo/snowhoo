@@ -1,0 +1,285 @@
+/* ========================================
+   文章封面样式 + 色条
+
+   宽度 <= 768px：大图模式 + 色条
+   宽度 > 768px：小图模式（不应用样式）
+   ======================================== */
+
+/* 置顶帖边框 - 由模板动态生成，颜色与色条一致 */
+
+/* ========================================
+   手机端（宽度 <= 768px）：大图模式 + 色条
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* 色条样式 */
+  .sticky-bar,
+  .sticky-bar span,
+  .sticky-bar * {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 24px !important;
+    line-height: 24px !important;
+    text-align: center !important;
+    font-size: 11px !important;
+    font-weight: bold !important;
+    color: #ffffff !important;
+    background-color: inherit !important;
+    z-index: 10 !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* 强制白色文字 */
+  html body .sticky-bar {
+    color: #ffffff !important;
+  }
+  html body .sticky-bar,
+  html body .recent-post-item .sticky-bar {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+  }
+}
+
+/* ========================================
+   桌面端（宽度 > 768px）：小图模式，不应用样式
+   ======================================== */
+
+@media (min-width: 769px) {
+  /* 保持主题默认，不做任何修改 */
+}
+
+/* ========================================
+   文章正文标题字号缩小
+   ======================================== */
+
+.post-content h1 { font-size: 1.4em !important; }
+.post-content h2 { font-size: 1.2em !important; }
+.post-content h3 { font-size: 1.0em !important; }
+
+/* ========================================
+   LOGO 显示优化 - 标语垂直居中
+   ======================================== */
+
+/* LOGO 图片高度 */
+#nav #blog-info .site-icon {
+  height: 55px !important;
+  width: auto !important;
+  object-fit: contain !important;
+}
+
+/* LOGO + 标语容器：flexbox 垂直居中 */
+html body #nav #blog-info a.nav-site-title {
+  display: -webkit-flex !important;
+  display: -moz-flex !important;
+  display: -ms-flexbox !important;
+  display: flex !important;
+  -webkit-align-items: center !important;
+  -moz-align-items: center !important;
+  -ms-flex-align: center !important;
+  align-items: center !important;
+  -webkit-flex-direction: row !important;
+  -moz-flex-direction: row !important;
+  -ms-flex-direction: row !important;
+  flex-direction: row !important;
+}
+
+/* 标语样式 - 红色渐变背景 */
+html body #nav #blog-info a.nav-site-title .site-slogan {
+  display: inline-block !important;
+  margin-left: 1em !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  white-space: nowrap !important;
+  vertical-align: middle !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+}
+
+/* 亮色模式：鲜红到深红渐变 */
+html[data-theme="light"] body #nav #blog-info .site-slogan {
+  background: linear-gradient(135deg, #c41e3a, #8b0000) !important;
+  color: #ffffff !important;
+}
+
+/* 黑暗模式：暗红到酒红渐变 */
+html[data-theme="dark"] body #nav #blog-info .site-slogan {
+  background: linear-gradient(135deg, #9a1b30, #5c0011) !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 768px) {
+  #nav #blog-info .site-slogan {
+    display: none !important;
+  }
+}
+
+/* Prev/Next 样式已移至 _config.butterfly.yml 统一管理 */
+
+/* ========================================
+   热搜晨报/晚报 文章配图：右浮动小图
+   ======================================== */
+.post-content .hotnews-img {
+  float: right;
+  width: 160px;
+  max-width: 40%;
+  height: auto;
+  border-radius: 6px;
+  margin: 0 0 8px 12px;
+  display: block;
+  object-fit: cover;
+}
+
+/* 每个 h3 标题前清除浮动，避免串行 */
+.post-content h3 {
+  clear: both;
+}
+
+@media (max-width: 480px) {
+  .post-content .hotnews-img {
+    width: 120px;
+  }
+}
+
+/* ========================================
+   邮件发布文章配图：右浮动小图
+   ======================================== */
+.post-content .email-img {
+  float: left;
+  width: 200px;
+  max-width: 45%;
+  height: auto;
+  border-radius: 8px;
+  margin: 0 14px 10px 0;
+  display: block;
+  object-fit: cover;
+}
+
+@media (max-width: 480px) {
+  .post-content .email-img {
+    width: 140px;
+  }
+}
+
+/* ========================================
+   访客幸运号浮动标签 - 首页右上方
+   ======================================== */
+
+#lucky-visitor-tag {
+  position: fixed;
+  top: 90px;
+  right: 20px;
+  z-index: 999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  cursor: default;
+  animation: lucky-float-in 0.6s ease-out;
+}
+
+@keyframes lucky-float-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+#lucky-visitor-tag .lucky-tag-inner {
+  background: linear-gradient(145deg, #fff9f0, #fff3e0);
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 20px rgba(255, 152, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 140px;
+}
+
+/* Emoji */
+#lucky-visitor-tag .lucky-emoji {
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* 信息区域 */
+#lucky-visitor-tag .lucky-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* 标签 */
+#lucky-visitor-tag .lucky-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e65100;
+  background: rgba(255, 152, 0, 0.12);
+  padding: 2px 8px;
+  border-radius: 10px;
+  line-height: 1.4;
+}
+
+/* 幸运号 */
+#lucky-visitor-tag .lucky-num {
+  font-size: 18px;
+  font-weight: 700;
+  color: #bf360c;
+  letter-spacing: -0.5px;
+}
+
+/* 来访次数 */
+#lucky-visitor-tag .lucky-count {
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+}
+
+/* 黑暗模式适配 */
+html[data-theme="dark"] #lucky-visitor-tag .lucky-tag-inner {
+  background: linear-gradient(145deg, #3e2723, #2d1f1a);
+  border-color: rgba(255, 152, 0, 0.2);
+  box-shadow: 0 4px 20px rgba(255, 152, 0, 0.1);
+}
+
+html[data-theme="dark"] #lucky-visitor-tag .lucky-badge {
+  color: #ffb74d;
+  background: rgba(255, 152, 0, 0.15);
+}
+
+html[data-theme="dark"] #lucky-visitor-tag .lucky-num {
+  color: #ffcc80;
+}
+
+html[data-theme="dark"] #lucky-visitor-tag .lucky-count {
+  color: #999;
+}
+
+/* 移动端隐藏（屏幕太小会遮挡内容） */
+/* @media (max-width: 900px) {
+  #lucky-visitor-tag {
+    display: none;
+  }
+} */
+
+/* ========================================
+   文章卡片统一 2px 边框（置顶帖由模板内联样式覆盖）
+   ======================================== */
+
+.recent-post-item {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+html[data-theme="dark"] .recent-post-item {
+  border-color: #3a3a3a;
+}

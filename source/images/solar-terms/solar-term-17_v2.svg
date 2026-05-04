@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1300" height="400" viewBox="0 0 1300 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe0b2"/>
+      <stop offset="35%" stop-color="#ffcc80"/>
+      <stop offset="70%" stop-color="#fff3e0"/>
+      <stop offset="100%" stop-color="#fff8e1"/>
+    </linearGradient>
+    <filter id="softShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#bf360c" flood-opacity="0.15"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff9c4" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#fff9c4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 天空背景 -->
+  <rect width="1300" height="400" fill="url(#sky)" rx="16"/>
+
+  <!-- 远景大圆装饰 -->
+  <circle cx="1267.5" cy="20" r="100" fill="#fff" opacity="0.08"/>
+  <circle cx="32.5" cy="390" r="70" fill="#fff" opacity="0.06"/>
+
+  <!-- 节气专属场景 -->
+  
+    <!-- 深秋远山 -->
+    <path d="M0 285 Q200 258 400 272 Q600 245 800 260 L800 400 L0 400Z" fill="#ff8a65" opacity="0.55"/>
+    <!-- 枫林 -->
+    <path d="M0 320 Q200 295 400 308 Q600 288 800 300 L800 400 L0 400Z" fill="#f4511e" opacity="0.65"/>
+    <!-- 枫叶 -->
+    
+      <path d="M25 295 L30 290 L35 295 L30 300Z" fill="#ffa000" opacity="0.6" transform="rotate(0,30,295)"/>
+    
+      <path d="M67 310 L72 305 L77 310 L72 315Z" fill="#ffa000" opacity="0.6799999999999999" transform="rotate(43,72,310)"/>
+    
+      <path d="M109 325 L114 320 L119 325 L114 330Z" fill="#ffa000" opacity="0.76" transform="rotate(86,114,325)"/>
+    
+      <path d="M121 340 L126 335 L131 340 L126 345Z" fill="#ffa000" opacity="0.84" transform="rotate(129,126,340)"/>
+    
+      <path d="M163 355 L168 350 L173 355 L168 360Z" fill="#ffa000" opacity="0.9199999999999999" transform="rotate(172,168,355)"/>
+    
+      <path d="M205 295 L210 290 L215 295 L210 300Z" fill="#ffa000" opacity="0.6" transform="rotate(215,210,295)"/>
+    
+      <path d="M217 310 L222 305 L227 310 L222 315Z" fill="#ffa000" opacity="0.6799999999999999" transform="rotate(258,222,310)"/>
+    
+      <path d="M259 325 L264 320 L269 325 L264 330Z" fill="#ffa000" opacity="0.76" transform="rotate(301,264,325)"/>
+    
+      <path d="M301 340 L306 335 L311 340 L306 345Z" fill="#ffa000" opacity="0.84" transform="rotate(344,306,340)"/>
+    
+      <path d="M313 355 L318 350 L323 355 L318 360Z" fill="#ffa000" opacity="0.9199999999999999" transform="rotate(387,318,355)"/>
+    
+      <path d="M355 295 L360 290 L365 295 L360 300Z" fill="#ffa000" opacity="0.6" transform="rotate(430,360,295)"/>
+    
+      <path d="M397 310 L402 305 L407 310 L402 315Z" fill="#ffa000" opacity="0.6799999999999999" transform="rotate(473,402,310)"/>
+    
+      <path d="M409 325 L414 320 L419 325 L414 330Z" fill="#ffa000" opacity="0.76" transform="rotate(516,414,325)"/>
+    
+      <path d="M451 340 L456 335 L461 340 L456 345Z" fill="#ffa000" opacity="0.84" transform="rotate(559,456,340)"/>
+    
+      <path d="M493 355 L498 350 L503 355 L498 360Z" fill="#ffa000" opacity="0.9199999999999999" transform="rotate(602,498,355)"/>
+    
+      <path d="M505 295 L510 290 L515 295 L510 300Z" fill="#ffa000" opacity="0.6" transform="rotate(645,510,295)"/>
+    
+      <path d="M547 310 L552 305 L557 310 L552 315Z" fill="#ffa000" opacity="0.6799999999999999" transform="rotate(688,552,310)"/>
+    
+      <path d="M589 325 L594 320 L599 325 L594 330Z" fill="#ffa000" opacity="0.76" transform="rotate(731,594,325)"/>
+    
+      <path d="M601 340 L606 335 L611 340 L606 345Z" fill="#ffa000" opacity="0.84" transform="rotate(774,606,340)"/>
+    
+      <path d="M643 355 L648 350 L653 355 L648 360Z" fill="#ffa000" opacity="0.9199999999999999" transform="rotate(817,648,355)"/>
+    
+      <path d="M685 295 L690 290 L695 295 L690 300Z" fill="#ffa000" opacity="0.6" transform="rotate(860,690,295)"/>
+    
+      <path d="M697 310 L702 305 L707 310 L702 315Z" fill="#ffa000" opacity="0.6799999999999999" transform="rotate(903,702,310)"/>
+    
+      <path d="M739 325 L744 320 L749 325 L744 330Z" fill="#ffa000" opacity="0.76" transform="rotate(946,744,325)"/>
+    
+      <path d="M781 340 L786 335 L791 340 L786 345Z" fill="#ffa000" opacity="0.84" transform="rotate(989,786,340)"/>
+    
+    <!-- 寒露珠 -->
+    
+      <circle cx="48.75" cy="350" r="2.5" fill="#e3f2fd" opacity="0.5"/>
+      <circle cx="48.75" cy="350" r="1.2" fill="#fff" opacity="0.7"/>
+    
+      <circle cx="126.75" cy="362" r="3.7" fill="#e3f2fd" opacity="0.6"/>
+      <circle cx="126.75" cy="362" r="2" fill="#fff" opacity="0.7799999999999999"/>
+    
+      <circle cx="204.75" cy="374" r="4.9" fill="#e3f2fd" opacity="0.7"/>
+      <circle cx="204.75" cy="374" r="1.2" fill="#fff" opacity="0.86"/>
+    
+      <circle cx="282.75" cy="386" r="2.5" fill="#e3f2fd" opacity="0.8"/>
+      <circle cx="282.75" cy="386" r="2" fill="#fff" opacity="0.7"/>
+    
+      <circle cx="360.75" cy="350" r="3.7" fill="#e3f2fd" opacity="0.5"/>
+      <circle cx="360.75" cy="350" r="1.2" fill="#fff" opacity="0.7799999999999999"/>
+    
+      <circle cx="438.75" cy="362" r="4.9" fill="#e3f2fd" opacity="0.6"/>
+      <circle cx="438.75" cy="362" r="2" fill="#fff" opacity="0.86"/>
+    
+      <circle cx="516.75" cy="374" r="2.5" fill="#e3f2fd" opacity="0.7"/>
+      <circle cx="516.75" cy="374" r="1.2" fill="#fff" opacity="0.7"/>
+    
+      <circle cx="594.75" cy="386" r="3.7" fill="#e3f2fd" opacity="0.8"/>
+      <circle cx="594.75" cy="386" r="2" fill="#fff" opacity="0.7799999999999999"/>
+    
+      <circle cx="672.75" cy="350" r="4.9" fill="#e3f2fd" opacity="0.5"/>
+      <circle cx="672.75" cy="350" r="1.2" fill="#fff" opacity="0.86"/>
+    
+      <circle cx="750.75" cy="362" r="2.5" fill="#e3f2fd" opacity="0.6"/>
+      <circle cx="750.75" cy="362" r="2" fill="#fff" opacity="0.7"/>
+    
+      <circle cx="828.75" cy="374" r="3.7" fill="#e3f2fd" opacity="0.7"/>
+      <circle cx="828.75" cy="374" r="1.2" fill="#fff" opacity="0.7799999999999999"/>
+    
+      <circle cx="906.75" cy="386" r="4.9" fill="#e3f2fd" opacity="0.8"/>
+      <circle cx="906.75" cy="386" r="2" fill="#fff" opacity="0.86"/>
+    
+      <circle cx="984.75" cy="350" r="2.5" fill="#e3f2fd" opacity="0.5"/>
+      <circle cx="984.75" cy="350" r="1.2" fill="#fff" opacity="0.7"/>
+    
+      <circle cx="1062.75" cy="362" r="3.7" fill="#e3f2fd" opacity="0.6"/>
+      <circle cx="1062.75" cy="362" r="2" fill="#fff" opacity="0.7799999999999999"/>
+    
+      <circle cx="1140.75" cy="374" r="4.9" fill="#e3f2fd" opacity="0.7"/>
+      <circle cx="1140.75" cy="374" r="1.2" fill="#fff" opacity="0.86"/>
+    
+      <circle cx="1218.75" cy="386" r="2.5" fill="#e3f2fd" opacity="0.8"/>
+      <circle cx="1218.75" cy="386" r="2" fill="#fff" opacity="0.7"/>
+    
+    <!-- 菊花 -->
+    
+      <circle cx="162.5" cy="340" r="8" fill="#fdd835" opacity="0.7"/>
+      <circle cx="162.5" cy="340" r="4" fill="#ffa000" opacity="0.9"/>
+    
+      <circle cx="373.75" cy="360" r="11" fill="#fdd835" opacity="0.85"/>
+      <circle cx="373.75" cy="360" r="6" fill="#ffa000" opacity="0.9"/>
+    
+      <circle cx="585.0" cy="340" r="8" fill="#fdd835" opacity="0.7"/>
+      <circle cx="585.0" cy="340" r="4" fill="#ffa000" opacity="0.9"/>
+    
+      <circle cx="796.25" cy="360" r="11" fill="#fdd835" opacity="0.85"/>
+      <circle cx="796.25" cy="360" r="6" fill="#ffa000" opacity="0.9"/>
+    
+      <circle cx="1007.5" cy="340" r="8" fill="#fdd835" opacity="0.7"/>
+      <circle cx="1007.5" cy="340" r="4" fill="#ffa000" opacity="0.9"/>
+    
+    <!-- 秋雁 -->
+    <path d="M650 200 Q665 193 680 198 Q665 196 650 200Z" fill="#f4511e"/>
+    <circle cx="1053.0" cy="197" r="2.5" fill="#f4511e"/>
+  
+
+  <!-- 底部渐变遮罩 -->
+  <rect x="0.0" y="320" width="1300" height="80" fill="url(#sky)" opacity="0.3" rx="0"/>
+
+  <!-- 标题区背景 -->
+  <rect x="406.25" y="130" width="300" height="160" fill="#fff" opacity="0.18" rx="12"/>
+
+  <!-- 主标题 -->
+  <text x="1056.25" y="208" text-anchor="middle" font-size="80" font-weight="bold"
+    fill="#bf360c" font-family="'Noto Serif SC', 'SimHei', 'STKaiti', serif"
+    filter="url(#softShadow)" letter-spacing="8">寒露</text>
+
+  <!-- 拼音 -->
+  <text x="1056.25" y="246" text-anchor="middle" font-size="20"
+    fill="#bf360c" opacity="0.7"
+    font-family="Arial, sans-serif" letter-spacing="6">Hánlù</text>
+
+  <!-- 分隔线 -->
+  <line x1="350" y1="265" x2="450" y2="265" stroke="#bf360c" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- 日期 -->
+  <text x="1056.25" y="287" text-anchor="middle" font-size="15"
+    fill="#bf360c" opacity="0.65"
+    font-family="'Noto Sans SC', Arial, sans-serif">10月08日 · 二十四节气</text>
+
+  <!-- 底部关键词 -->
+  <text x="1056.25" y="378" text-anchor="middle" font-size="13"
+    fill="#bf360c" opacity="0.5"
+    font-family="'Noto Sans SC', Arial, sans-serif">露寒  ·  红叶  ·  深秋  ·  霜降</text>
+</svg>

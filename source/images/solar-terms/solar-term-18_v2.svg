@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1300" height="400" viewBox="0 0 1300 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe0b2"/>
+      <stop offset="35%" stop-color="#ffcc80"/>
+      <stop offset="70%" stop-color="#fff3e0"/>
+      <stop offset="100%" stop-color="#fff8e1"/>
+    </linearGradient>
+    <filter id="softShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#bf360c" flood-opacity="0.15"/>
+    </filter>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff9c4" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#fff9c4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 天空背景 -->
+  <rect width="1300" height="400" fill="url(#sky)" rx="16"/>
+
+  <!-- 远景大圆装饰 -->
+  <circle cx="1267.5" cy="20" r="100" fill="#fff" opacity="0.08"/>
+  <circle cx="32.5" cy="390" r="70" fill="#fff" opacity="0.06"/>
+
+  <!-- 节气专属场景 -->
+  
+    <!-- 霜降山景 -->
+    <path d="M0 290 Q200 265 400 278 Q600 250 800 265 L800 400 L0 400Z" fill="#ff8a65" opacity="0.5"/>
+    <!-- 霜冻地面 -->
+    <path d="M0 360 Q200 340 400 350 Q600 335 800 345 L800 400 L0 400Z" fill="#bf360c" opacity="0.7"/>
+    <!-- 霜花 -->
+    
+      <circle cx="32.5" cy="340" r="1.5" fill="#e3f2fd" opacity="0.3"/>
+    
+      <circle cx="74.75" cy="352" r="2.3" fill="#e3f2fd" opacity="0.42"/>
+    
+      <circle cx="117.0" cy="364" r="3.1" fill="#e3f2fd" opacity="0.54"/>
+    
+      <circle cx="159.25" cy="376" r="1.5" fill="#e3f2fd" opacity="0.6599999999999999"/>
+    
+      <circle cx="201.5" cy="388" r="2.3" fill="#e3f2fd" opacity="0.78"/>
+    
+      <circle cx="243.75" cy="340" r="3.1" fill="#e3f2fd" opacity="0.3"/>
+    
+      <circle cx="286.0" cy="352" r="1.5" fill="#e3f2fd" opacity="0.42"/>
+    
+      <circle cx="328.25" cy="364" r="2.3" fill="#e3f2fd" opacity="0.54"/>
+    
+      <circle cx="370.5" cy="376" r="3.1" fill="#e3f2fd" opacity="0.6599999999999999"/>
+    
+      <circle cx="412.75" cy="388" r="1.5" fill="#e3f2fd" opacity="0.78"/>
+    
+      <circle cx="455.0" cy="340" r="2.3" fill="#e3f2fd" opacity="0.3"/>
+    
+      <circle cx="497.25" cy="352" r="3.1" fill="#e3f2fd" opacity="0.42"/>
+    
+      <circle cx="539.5" cy="364" r="1.5" fill="#e3f2fd" opacity="0.54"/>
+    
+      <circle cx="581.75" cy="376" r="2.3" fill="#e3f2fd" opacity="0.6599999999999999"/>
+    
+      <circle cx="624.0" cy="388" r="3.1" fill="#e3f2fd" opacity="0.78"/>
+    
+      <circle cx="666.25" cy="340" r="1.5" fill="#e3f2fd" opacity="0.3"/>
+    
+      <circle cx="708.5" cy="352" r="2.3" fill="#e3f2fd" opacity="0.42"/>
+    
+      <circle cx="750.75" cy="364" r="3.1" fill="#e3f2fd" opacity="0.54"/>
+    
+      <circle cx="793.0" cy="376" r="1.5" fill="#e3f2fd" opacity="0.6599999999999999"/>
+    
+      <circle cx="835.25" cy="388" r="2.3" fill="#e3f2fd" opacity="0.78"/>
+    
+      <circle cx="877.5" cy="340" r="3.1" fill="#e3f2fd" opacity="0.3"/>
+    
+      <circle cx="919.75" cy="352" r="1.5" fill="#e3f2fd" opacity="0.42"/>
+    
+      <circle cx="962.0" cy="364" r="2.3" fill="#e3f2fd" opacity="0.54"/>
+    
+      <circle cx="1004.25" cy="376" r="3.1" fill="#e3f2fd" opacity="0.6599999999999999"/>
+    
+      <circle cx="1046.5" cy="388" r="1.5" fill="#e3f2fd" opacity="0.78"/>
+    
+      <circle cx="1088.75" cy="340" r="2.3" fill="#e3f2fd" opacity="0.3"/>
+    
+      <circle cx="1131.0" cy="352" r="3.1" fill="#e3f2fd" opacity="0.42"/>
+    
+      <circle cx="1173.25" cy="364" r="1.5" fill="#e3f2fd" opacity="0.54"/>
+    
+      <circle cx="1215.5" cy="376" r="2.3" fill="#e3f2fd" opacity="0.6599999999999999"/>
+    
+      <circle cx="1257.75" cy="388" r="3.1" fill="#e3f2fd" opacity="0.78"/>
+    
+    <!-- 红叶 -->
+    
+      <ellipse cx="65.0" cy="355" rx="6" ry="3.5" fill="#ffa000" opacity="0.65" transform="rotate(0,40,355)"/>
+    
+      <ellipse cx="152.75" cy="373" rx="6" ry="3.5" fill="#ffa000" opacity="0.73" transform="rotate(47,94,373)"/>
+    
+      <ellipse cx="240.5" cy="391" rx="6" ry="3.5" fill="#ffa000" opacity="0.81" transform="rotate(94,148,391)"/>
+    
+      <ellipse cx="328.25" cy="355" rx="6" ry="3.5" fill="#ffa000" opacity="0.89" transform="rotate(141,202,355)"/>
+    
+      <ellipse cx="416.0" cy="373" rx="6" ry="3.5" fill="#ffa000" opacity="0.65" transform="rotate(188,256,373)"/>
+    
+      <ellipse cx="503.75" cy="391" rx="6" ry="3.5" fill="#ffa000" opacity="0.73" transform="rotate(235,310,391)"/>
+    
+      <ellipse cx="591.5" cy="355" rx="6" ry="3.5" fill="#ffa000" opacity="0.81" transform="rotate(282,364,355)"/>
+    
+      <ellipse cx="679.25" cy="373" rx="6" ry="3.5" fill="#ffa000" opacity="0.89" transform="rotate(329,418,373)"/>
+    
+      <ellipse cx="767.0" cy="391" rx="6" ry="3.5" fill="#ffa000" opacity="0.65" transform="rotate(376,472,391)"/>
+    
+      <ellipse cx="854.75" cy="355" rx="6" ry="3.5" fill="#ffa000" opacity="0.73" transform="rotate(423,526,355)"/>
+    
+      <ellipse cx="942.5" cy="373" rx="6" ry="3.5" fill="#ffa000" opacity="0.81" transform="rotate(470,580,373)"/>
+    
+      <ellipse cx="1030.25" cy="391" rx="6" ry="3.5" fill="#ffa000" opacity="0.89" transform="rotate(517,634,391)"/>
+    
+      <ellipse cx="1118.0" cy="355" rx="6" ry="3.5" fill="#ffa000" opacity="0.65" transform="rotate(564,688,355)"/>
+    
+      <ellipse cx="1205.75" cy="373" rx="6" ry="3.5" fill="#ffa000" opacity="0.73" transform="rotate(611,742,373)"/>
+    
+    <!-- 霜叶上的霜 -->
+    
+      <ellipse cx="97.5" cy="350" rx="4" ry="2" fill="#fff" opacity="0.4"/>
+    
+      <ellipse cx="243.75" cy="362" rx="6" ry="3" fill="#fff" opacity="0.55"/>
+    
+      <ellipse cx="390.0" cy="374" rx="4" ry="2" fill="#fff" opacity="0.7"/>
+    
+      <ellipse cx="536.25" cy="350" rx="6" ry="3" fill="#fff" opacity="0.4"/>
+    
+      <ellipse cx="682.5" cy="362" rx="4" ry="2" fill="#fff" opacity="0.55"/>
+    
+      <ellipse cx="828.75" cy="374" rx="6" ry="3" fill="#fff" opacity="0.7"/>
+    
+      <ellipse cx="975.0" cy="350" rx="4" ry="2" fill="#fff" opacity="0.4"/>
+    
+      <ellipse cx="1121.25" cy="362" rx="6" ry="3" fill="#fff" opacity="0.55"/>
+    
+    <!-- 柿子 -->
+    <path d="M500 400 Q495 365 515 340 Q535 315 520 290" stroke="#5d4037" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <circle cx="820.62" cy="300" r="10" fill="#ff8f00" opacity="0.95"/>
+    <circle cx="845.0" cy="292" r="9" fill="#ffa000" opacity="0.95"/>
+    <circle cx="869.38" cy="285" r="8" fill="#ff8f00" opacity="0.9"/>
+    <circle cx="836.88" cy="308" r="8.5" fill="#ffa000" opacity="0.9"/>
+    <!-- 晚秋雁 -->
+    <path d="M200 200 Q215 193 230 198 Q215 196 200 200Z" fill="#f4511e"/>
+    <circle cx="321.75" cy="197" r="2.5" fill="#f4511e"/>
+    <path d="M250 190 Q265 183 280 188 Q265 186 250 190Z" fill="#ff8a65"/>
+    <circle cx="403.0" cy="187" r="2.5" fill="#ff8a65"/>
+  
+
+  <!-- 底部渐变遮罩 -->
+  <rect x="0.0" y="320" width="1300" height="80" fill="url(#sky)" opacity="0.3" rx="0"/>
+
+  <!-- 标题区背景 -->
+  <rect x="406.25" y="130" width="300" height="160" fill="#fff" opacity="0.18" rx="12"/>
+
+  <!-- 主标题 -->
+  <text x="1056.25" y="208" text-anchor="middle" font-size="80" font-weight="bold"
+    fill="#bf360c" font-family="'Noto Serif SC', 'SimHei', 'STKaiti', serif"
+    filter="url(#softShadow)" letter-spacing="8">霜降</text>
+
+  <!-- 拼音 -->
+  <text x="1056.25" y="246" text-anchor="middle" font-size="20"
+    fill="#bf360c" opacity="0.7"
+    font-family="Arial, sans-serif" letter-spacing="6">Shuāngjiàng</text>
+
+  <!-- 分隔线 -->
+  <line x1="350" y1="265" x2="450" y2="265" stroke="#bf360c" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- 日期 -->
+  <text x="1056.25" y="287" text-anchor="middle" font-size="15"
+    fill="#bf360c" opacity="0.65"
+    font-family="'Noto Sans SC', Arial, sans-serif">10月23日 · 二十四节气</text>
+
+  <!-- 底部关键词 -->
+  <text x="1056.25" y="378" text-anchor="middle" font-size="13"
+    fill="#bf360c" opacity="0.5"
+    font-family="'Noto Sans SC', Arial, sans-serif">初霜  ·  秋末  ·  赏菊  ·  冬临</text>
+</svg>

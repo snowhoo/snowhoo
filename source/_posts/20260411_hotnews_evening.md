@@ -1,0 +1,265 @@
+---
+title: 2026年04月11日 小红故事热搜晚报
+date: 2026-04-11 20:00:24
+updated: 2026-04-11 20:00:24
+categories:
+  - 新闻热搜
+tags:
+  - 热搜
+  - 晚间速递
+cover: /images/hotnews-evening.svg
+toc: true
+---
+
+> 来源：互联网 | 采集时间：2026/4/11 20:00:24
+
+### <strong>小</strong>米正式调价
+<img src="/images/hotnews/20260411_evening_01.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月11日，小米宣布受全球存储芯片等关键零部件价格飙升影响，今天起，调整部分在售机型建议零售价。据悉，此次调整涉及三款机型：REDMI K90 Pro Max全系上调200元、Turbo 5/5 Max取消新春特惠、512G版本保留200元补贴。</p>
+
+
+### <strong>老</strong>夫妻捡到铁疙瘩上交 竟是国宝
+<img src="/images/hotnews/20260411_evening_02.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>多</strong>项首次、突破！各领域成果密集上新
+<img src="/images/hotnews/20260411_evening_03.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">本周，我国在船舶、航天、量子材料等多个领域解锁新成就。大国重器、大国工程密集上新，多方面创新高、考察成果丰硕。创新前进步履不停，新速度、新高度、新进度！硬核中国“新”，未来，无限可期！</p>
+
+
+### <strong>李</strong>想朋友圈飙脏话 疑炮轰东风日产
+<img src="/images/hotnews/20260411_evening_04.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月11日，理想汽车CEO李想在社交媒体上发文称，某日系品牌大量雇佣营销号对理想产品进行“拉踩”，并使用大量空白账号的黑水军捏造虚假信息，攻占产品评论区，严重影响公司正常经营。此番言论被外界认为疑似直接指向东风日产。​​​​</p>
+
+
+### <strong>苏</strong>超揭幕战！常州vs南通
+<img src="/images/hotnews/20260411_evening_05.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>8</strong>7岁老人摔倒后在地上躺了一整夜
+<img src="/images/hotnews/20260411_evening_06.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，河南一网友发布了一段监控视频，内容显示其87岁的姥姥摔倒后疼得站不起来，从外面慢慢爬回屋里，在冰冷地上躺了一整夜。外孙心痛发声：“当时我要是知道，那该多好啊。”</p>
+
+
+### <strong>导</strong>演温成林因突发心梗抢救无效去世
+<img src="/images/hotnews/20260411_evening_07.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月11日，中广联电视剧导演委员会发布讣告，称中国广电联合会电视剧导演专业委员会会员、北京电视艺术中心导演温成林先生，于2026年4月10日上午11:31分因突发心梗抢救无效，不幸逝世，享年62岁。</p>
+
+
+### <strong>报</strong>警电话全是哭声 民警赶到当场傻眼
+<img src="/images/hotnews/20260411_evening_08.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，杭州民警接到报警，电话中全是小孩哭声。到场后发现两名小朋友因自行车倒地发生争执，一个哭得伤心，一个满脸不服。民警耐心调解，教育孩子不能动手，最终两人握手言和。</p>
+
+
+### <strong>女</strong>子从日本背回244本淫秽漫画获刑
+<img src="/images/hotnews/20260411_evening_09.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，一起走私淫秽物品案宣判，被告人汪某因以牟利为目的，走私244本淫秽书刊入境，被法院判处有期徒刑一年六个月，缓刑二年。据悉，汪某于2024年9月的一天由日本东京飞往北京，抵达后试图选择无申报通道通关，但行李数量和行为异常引起海关关员警觉。</p>
+
+
+### <strong>巴</strong>方：伊朗提出伊美谈判前提条件
+<img src="/images/hotnews/20260411_evening_10.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">巴基斯坦消息人士表示，伊朗谈判代表团11日在与巴基斯坦总理夏巴兹的会见中，提出伊朗和美国谈判的前提条件。伊方提出的条件包括完全控制霍尔木兹海峡、解冻所有伊朗海外资产和账户、美方支付伊朗重建费用但美国公司不能参与投标、立即停止所有袭击尤其是针对黎巴嫩的袭击、允许伊朗使用民用核能等。</p>
+
+
+### <strong>“</strong>十万头猪拱进沙漠治沙”是假的
+<img src="/images/hotnews/20260411_evening_11.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">“10万头猪正在内蒙古库布齐沙漠‘上班’。”4月9日，“十万头猪拱进沙漠治沙真成了”引发网友关注。鄂尔多斯市林业和草原局的一位工作人员辟谣：“这个是不属实的，我们去年已经（上报）让发布者删除了。”该名工作人员表示，目前并没有使用猪拱地的治沙方式。</p>
+
+
+### <strong>伊</strong>朗消息人士：美同意解冻伊海外资产
+<img src="/images/hotnews/20260411_evening_12.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月11日，有伊朗消息人士表示，美国已同意解冻伊朗“在卡塔尔和其他国家银行的被冻结资产”，伊朗将这视为达成持久和平协议的信号，资产解冻与霍尔木兹海峡安全通航“直接相关”。</p>
+
+
+### <strong>上</strong>海3人开着豪车偷早餐车
+<img src="/images/hotnews/20260411_evening_13.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，上海三名嫌疑人驾驶豪车，凌晨撬盗路边早餐车，窃取财物。警方迅速破案，三人因涉嫌盗窃罪已被刑事拘留。网友调侃：这下吃上“免费饭”了。​​​​</p>
+
+
+### <strong>张</strong>靓颖连发“五问”：我真是服了
+<img src="/images/hotnews/20260411_evening_14.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月11日，歌手张靓颖发文怒斥工作人员擅自将未发行的歌曲版本上传至公共平台，称其行为侵权违法，破坏行业风气，登上热搜。她连发多问，表达对同行不尊重心血行为的愤怒与不解。网友纷纷支持维权。​​​​</p>
+
+
+### <strong>叶</strong>一茜：我没有给05超女丢脸
+<img src="/images/hotnews/20260411_evening_15.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月11日，《乘风2026》见面会，叶一茜回应一公舞台表演，称自己当时有点跑调，“没有给05超女丢脸”。《乘风2026》一公舞台叶一茜担任队长，最终获得881乘风值，全员成功晋级。</p>
+
+
+### <strong>美</strong>副总统万斯与巴基斯坦总理会谈
+<img src="/images/hotnews/20260411_evening_16.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>黎</strong>巴嫩遭袭惨状令记者不知从何拍起
+<img src="/images/hotnews/20260411_evening_17.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月8日，以色列对黎巴嫩多地发动大规模空袭，多位摄影记者当天奔赴黎巴嫩不同遭袭地点，现场惨状令他们震惊不已，大火肆虐、死伤众多。有摄影师回忆说，袭击范围之广远超预期，众多区域遭重创，根本难以确切统计具体哪些地方遭到了袭击，根本无法拍摄到所有被轰炸的地方。</p>
+
+
+### <strong>伊</strong>方：若“以色列优先” 谈判将无果
+<img src="/images/hotnews/20260411_evening_18.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月11日，伊朗第一副总统阿雷夫发文说，如果伊朗与“美国优先”的美方代表谈判，很可能达成一项对双方乃至世界都有利的协议。然而，如果面对的是“以色列优先”的美方代表，那么就不会达成任何协议，“我们将不可避免地比以往更加坚决地继续自卫，而世界也将付出更大代价”。</p>
+
+
+### <strong>演</strong>员吕严加葱花被拒 遇见小面致歉
+<img src="/images/hotnews/20260411_evening_19.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，演员吕严称在广州白云机场“遇见小面”门店就餐时，想在柜台加葱花遭到服务人员拒绝，引发网友关注。4月11日，品牌方发布致歉信，称该员工回应违反公司规定，重申并强调服务规范：顾客提出额外添加小料的任何需求，门店必须积极满足，不得拒绝。</p>
+
+
+### <strong>美</strong>军空军基地遭伊朗袭击画面曝光
+<img src="/images/hotnews/20260411_evening_20.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">当地时间4月10日，卡塔尔方面首次公布了其境内美军乌代德空军基地遭伊朗袭击后的画面，基地内的AN/FPS-132雷达（“铺路爪”）以及用于追踪弹道导弹的相关设备严重受损。</p>
+
+
+### <strong>为</strong>什么微辣都在各辣各的
+<img src="/images/hotnews/20260411_evening_21.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">“微辣”的辣度因人而异，因菜而异，更因表达方式模糊而不精确。每个人对辣的耐受度不同，不同菜肴的辣椒素释放方式各异，而“微辣”本身作为自然语言，缺乏统一量化标准，导致体验如同开盲盒。要真正统一辣度，或许需要像度量衡一样引入科学参数。​​​​</p>
+
+
+### <strong>初</strong>三女生最多一次带20份早饭到校
+<img src="/images/hotnews/20260411_evening_22.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">小陈就读于绍兴一所寄宿制学校，是班里独一份的走读生，而这份“唯一”，让她意外解锁了“野生外卖员”的新身份。从初三开学至今，小陈硬生生把自己做成了班里的“顶流”，最多一次，接到过20个订单。</p>
+
+
+### <strong>舞</strong>剧《红楼梦》导演质疑《浪姐》抄袭
+<img src="/images/hotnews/20260411_evening_23.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月10日晚，热门综艺《乘风2026》迎来首次公演直播，江苏大剧院原创民族舞剧《红楼梦》导演李超于当晚在社交平台发文，质疑该节目相关内容抄袭，认为其是东拼西凑的呈现，还指出《游园》被改编得如同春游。</p>
+
+
+### <strong>巴</strong>总理同伊朗谈判代表团的会见已结束
+<img src="/images/hotnews/20260411_evening_24.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">消息人士表示，巴基斯坦总理夏巴兹11日同伊朗谈判代表团的会见已结束。伊朗谈判代表团于当地时间11日凌晨抵达伊斯兰堡，美国谈判代表团于当地时间11日上午抵达。</p>
+
+
+### <strong>“</strong>汉堡馒头减肥法”火了
+<img src="/images/hotnews/20260411_evening_25.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，演员张维伊分享的“汉堡馒头减肥法”走红。核心操作是：早餐黑咖啡加水煮蛋，午餐两个汉堡，晚餐两个馒头。医生表示，该方法有用但可能引起便秘，建议再加一斤蔬菜以均衡营养；营养师则指出，短期极限方法只适合应急，健康减脂需养成可持续的生活习惯。​​​​</p>
+
+
+### <strong>团</strong>伙制售掺假黄金 72家金店被骗
+<img src="/images/hotnews/20260411_evening_26.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>扬</strong>州vs苏州
+<img src="/images/hotnews/20260411_evening_27.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月11日，2026江苏省城市足球联赛第一周：扬州vs苏州。</p>
+
+
+### <strong>美</strong>国强烈反对后 英国暂缓“还岛”
+<img src="/images/hotnews/20260411_evening_28.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>《</strong>老友记》演员吸毒致死案主犯获刑15年
+<img src="/images/hotnews/20260411_evening_29.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">当地时间4月8日，检方公布了绰号“K粉(氯胺酮)女王”的毒贩贾斯温·桑加的判决。作为知名美剧《老友记》演员马修·佩里过量吸毒致死案的主要被告，她因向这名演员提供致命药物而导致其在2023年丧生。据悉，检方要求判处桑加15年监禁。</p>
+
+
+### <strong>美</strong>元兑人民币一年贬值6%
+<img src="/images/hotnews/20260411_evening_30.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>郑</strong>丽文参访中关村 难掩激动之情
+<img src="/images/hotnews/20260411_evening_31.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>收</strong>神秘礼物 郑丽文惊喜到表情失控
+<img src="/images/hotnews/20260411_evening_32.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月11日，中国国民党主席郑丽文大陆行第5天，一大早，郑丽文一身休闲装束到访中关村。在参访过程，接待企业送给郑丽文一双机器手，郑丽文惊喜得表情失控。</p>
+
+
+### <strong>O</strong>penAI CEO住所遭燃烧瓶袭击
+<img src="/images/hotnews/20260411_evening_33.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">据美国开放人工智能研究中心（OpenAI）表示，该公司首席执行官萨姆·奥尔特曼位于加利福尼亚州旧金山的住所当地时间10日遭到燃烧瓶袭击，事件未造成人员受伤。与此同时，警方宣布已拘捕一名涉案嫌疑人。事后，奥尔特曼本人也在个人博客上发文回应此事。</p>
+
+
+### <strong>郑</strong>丽文参访故宫 游客高喊两岸一家亲
+<img src="/images/hotnews/20260411_evening_34.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，郑丽文率团参访大陆一事备受瞩目。4月11日，郑丽文参访故宫，现场游客有高喊：“两岸一家亲”“我是厦门的，欢迎回来。”这种真情流露， 瞬间点燃现场气氛。</p>
+
+
+### <strong>赵</strong>子琪被《浪姐》淘汰后直播落泪
+<img src="/images/hotnews/20260411_evening_35.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月10日，《浪姐》一公上半场播出，孙怡组败给了阚清子组，因此组内票数最低的赵子琪被淘汰。赵子琪被淘汰后当晚便进行了直播，直播中赵子琪落泪并自曝推了戏来上节目。</p>
+
+
+### <strong>山</strong>西49岁局长在办公室突发疾病离世
+<img src="/images/hotnews/20260411_evening_36.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月1日，山西朔州市生态环境局朔城分局党组书记、局长王志文在工作时突发疾病，不幸离世，年仅49岁。4月9日，该局工作人员告诉记者，王志文是在办公室离世的，去世前一天，还在夜间巡查涉煤企业污染防治措施落实情况，直至深夜。</p>
+
+
+### <strong>朋</strong>友圈光鲜的实况图可能是1元买的
+<img src="/images/hotnews/20260411_evening_37.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">在购物平台与二手交易平台上，“实况图片”早已成为明码标价的公开商品，价格大多集中在1元至8元，成本较低。单个网盘链接往往包含上千张实况照，内容覆盖国内外旅游风景、日常美食，还有高尔夫、滑雪等运动实拍，画面自然随性，和普通人分享的日常动态几乎没有差别。</p>
+
+
+### <strong>辛</strong>芷蕾有新身份
+<img src="/images/hotnews/20260411_evening_38.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月10日，第20届“中法文化之春”艺术节新闻发布会在北京举行，中国演员辛芷蕾担任本届艺术节宣传大使。她表示：“中法文化之春”不仅是多样艺术的展示平台，同时也发挥着桥梁作用，让两国更好地了解彼此的文化艺术和生活方式。</p>
+
+
+### <strong>无</strong>锡vs镇江
+<img src="/images/hotnews/20260411_evening_39.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月11日，2026江苏省城市足球联赛第一周：无锡vs镇江。</p>
+
+
+### <strong>父</strong>子失散36年 父亲看照片一眼认出
+<img src="/images/hotnews/20260411_evening_40.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>游</strong>客手拿大刀滑落砸伤演员 景区回应
+<img src="/images/hotnews/20260411_evening_41.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月10日，河南开封清明上河园景区内，一名饰演“金将军”的演员在与游客互动时，游客手中的道具大刀意外滑落，砸中演员头部致其受伤。景区回应称，受伤演员已于11日正常演出。演员本人表示，游客是误伤，所幸没有伤到游客，自己已去打了破伤风针。</p>
+
+
+### <strong>莫</strong>氏鸡煲老板娘称早20年火会拼命赚
+<img src="/images/hotnews/20260411_evening_42.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，顺德莫氏鸡煲意外爆火，顾客凌晨排队，当地连夜修路拓宽道路，店铺短暂停业后恢复营业。老板娘坦言如今生活忙碌疲惫，十分怀念此前悠闲日子。她称若早火二十年定会拼命赚钱，如今已到年纪，本想再做一两年便回乡养老，反倒希望生意能清淡些。</p>
+
+
+### <strong>野</strong>生母狼“拖家带口”下山待产
+<img src="/images/hotnews/20260411_evening_43.webp" class="hotnews-img" alt="热搜配图">
+
+
+
+### <strong>“</strong>几块钱的单子哪有人命重要”
+<img src="/images/hotnews/20260411_evening_44.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月10日，湖北武汉一辆小车侧翻冒烟，一外卖小哥看到后，不顾危险钻入车内将人救出。事发当时小哥手里有两个外卖单子，最后卡点送到，他说：“几块钱的单子哪有救人重要。”</p>
+
+
+### <strong>莫</strong>氏鸡煲老板娘心疼老莫
+<img src="/images/hotnews/20260411_evening_45.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月11日，广东佛山。记者采访到莫氏鸡煲老板娘，她表示，如果这波流量早十年二十年，他们会拼会去赚，但现在年纪大了，本打算再做一两年就回老家种菜养鸡。“你看，10天前的他和现在的他，真的不一样。这样日子不好过，他憔悴了很多，天天这么熬。”​​​​</p>
+
+
+### <strong>带</strong>57万购房款赶高铁下车忘拿了
+<img src="/images/hotnews/20260411_evening_46.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月9日，旅客杨先生携带57万元购房款乘坐高铁，下车时因匆忙将行李箱遗忘在列车上。乘警与列车长发现巨额现金后，通过12306工单联系到紧张得语无伦次的失主。经跨站列车接力，当天下午行李箱被安全送回北京南站，杨先生顺利取回。铁路警方提醒旅客出行注意清点行李。​​​​</p>
+
+
+### <strong>张</strong>靓颖怒斥工作人员泄露未发行作品
+<img src="/images/hotnews/20260411_evening_47.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月11日，歌手张靓颖公开谴责承斯音乐工作室工作人员擅自泄露其未完成混音的未发行歌曲《加码》，并质问工作室是否知道“在歌手及版权公司未允许的情况下，把未发行的作品版本发到公共平台上是侵权以及违法的吗？”</p>
+
+
+### <strong>连</strong>云港vs盐城
+<img src="/images/hotnews/20260411_evening_48.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">4月11日，2026江苏省城市足球联赛第一周：连云港vs盐城。</p>
+
+
+### <strong>连</strong>续十年用Excel记录体检救了自己
+<img src="/images/hotnews/20260411_evening_49.webp" class="hotnews-img" alt="热搜配图">
+<p style="margin:0 0 4px 0;line-height:1.4;">近日，浙江大学医学院附属第一医院分享了一起健康管理的典型案例。林女士（化名）曾因一个坚持了十年的习惯——用Excel表格记录每一次乳腺检查数据，让她及时发现、确诊了乳腺癌，并实现早手术、早康复。林女士表示，回头看，很感谢那个“爱较真”的自己。</p>
+
+
+### <strong>好</strong>想来100%果汁配料表首位是水
+<img src="/images/hotnews/20260411_evening_50.webp" class="hotnews-img" alt="热搜配图">
+
+
+

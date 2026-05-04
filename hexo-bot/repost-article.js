@@ -1,0 +1,148 @@
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+const sharp = require('sharp');
+
+const article = {
+  title: '今天起，建议晚上提前洗漱！',
+  sourceUrl: 'https://mp.weixin.qq.com/s/eEgeTisqQBxQTACNnYvmCg',
+  date: '2026-04-29',
+  categories: ['健康生活', '转载分享'],
+  tags: ['睡眠', '健康', '人民日报', '生活小贴士']
+};
+
+const articleBody = `> 原文来源：[人民日报](https://mp.weixin.qq.com/s/eEgeTisqQBxQTACNnYvmCg) | 转载仅供分享
+
+你有没有想过，长期晚睡是因为洗漱时间？
+
+近日，话题"建议晚上提前洗漱"登上热搜。一博主发帖称，之前总拖着洗漱，结果越熬越晚。试了晚上9点左右提前洗漱，心理上直接进入"睡前模式"，再也不用在"要不要洗漱"上内耗了。
+
+## 提前洗漱真的能让人早睡吗？
+
+### 生理层面
+
+洗漱时血管扩张，体表温度升高，洗漱后身体开始散热，体温下降。而人体在自然入睡过程中，核心体温本身就是下降的，洗漱后的体温下降过程，正好模拟了这一生理信号，告诉大脑："该睡觉了"。
+
+同时，体温下降有助于褪黑素的分泌，从而产生困意。洗干净身体、换上舒适的睡衣，这种清爽感会直接降低焦虑水平，让人更容易放松下来。
+
+### 心理层面
+
+这属于行为心理学中的经典条件反射。如果你每天都是"洗漱—上床—关灯—睡觉"，长期坚持下来，大脑会将这些动作与"睡眠"建立强关联。
+
+当你开始洗漱时，大脑会自动从"工作/娱乐模式"切换到"休息模式"，降低心理上的兴奋度。
+
+## 如何拥有深度睡眠？试试这两招！
+
+### 三个助眠运动
+
+睡前运动几分钟，多睡半小时。2024年《英国医学杂志在线·体育与运动医学》发表的一项研究发现：在睡前4小时内，多做这3个运动动作，可以显著延长睡眠时间。一次只需3分钟，每隔30分钟进行一次，可使当晚睡眠时间延长近30分钟。
+
+- **深蹲**：模仿坐椅子的动作，膝盖不超过脚尖。
+- **提踵**：站立抬起后脚跟，使小腿肌肉收缩，然后脚跟慢慢回到地面。
+- **提膝展髋**：站立膝盖抬高，直腿髋关节伸展。
+
+### 睡前放下手机
+
+一项睡眠数据调查发现：睡前刷8分钟手机，大脑持续兴奋1小时。睡前玩手机8分钟后，平均入睡时间需1小时。
+
+这是因为手机屏幕发出的蓝光提高了人们的警觉性，从而导致入睡时间增长。
+
+## 小结
+
+其实，早睡的核心从来不是"强迫自己入睡"，而是通过一系列温和的行为让身体和大脑自然地从"忙碌模式"切换到"休息模式"，减少内耗，缓解疲惫。
+
+提前洗漱是一个很好的起点，再搭配简单实用的晚间休息方法，长期坚持下来，你会发现入睡不再是一件痛苦的事。拥有安稳的睡眠，也能让第二天的自己更有精神，更能感受到生活的温暖与幸福。
+
+今晚就试试吧，祝你睡个安稳舒适的好觉~
+
+> 来源：人民日报微信综合北京发布、青春北京、中国大学生在线、健康时报
+`;
+
+function generateCoverSVG() {
+  return '<svg width="1300" height="400" xmlns="http://www.w3.org/2000/svg">' +
+  '<defs>' +
+    '<linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">' +
+      '<stop offset="0%" stop-color="#0f6e56"/>' +
+      '<stop offset="50%" stop-color="#3b6d11"/>' +
+      '<stop offset="100%" stop-color="#0a2a1a"/>' +
+    '</linearGradient>' +
+    '<radialGradient id="glow" cx="50%" cy="40%" r="50%">' +
+      '<stop offset="0%" stop-color="#1d9e75" stop-opacity="0.3"/>' +
+      '<stop offset="100%" stop-color="#1d9e75" stop-opacity="0"/>' +
+    '</radialGradient>' +
+  '</defs>' +
+  '<rect width="1300" height="400" fill="url(#bg)"/>' +
+  '<rect width="1300" height="400" fill="url(#glow)"/>' +
+  '<rect x="0" y="0" width="1300" height="4" fill="#1d9e75"/>' +
+  '<text x="650" y="155" text-anchor="middle" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="52" font-weight="bold" fill="#ffffff" letter-spacing="6">' +
+    '转载分享' +
+  '</text>' +
+  '<text x="650" y="225" text-anchor="middle" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="34" fill="#a0f0d0" letter-spacing="3">' +
+    '人民日报 · 健康生活' +
+  '</text>' +
+  '<rect x="430" y="268" width="440" height="2.5" rx="1.25" fill="#1d9e75"/>' +
+  '<text x="650" y="345" text-anchor="middle" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="18" fill="#668877">' +
+    '健康生活 · 转载分享' +
+  '</text>' +
+  '</svg>';
+}
+
+async function main() {
+  const hexoPath = 'D:/hexo';
+  const postsDir = path.join(hexoPath, 'source/_posts');
+  const dateStr = article.date.replace(/-/g, '');
+  const filename = dateStr + '_repost_sleep-tips.md';
+  const filepath = path.join(postsDir, filename);
+
+  if (fs.existsSync(filepath)) {
+    console.log('[skip] 文章已存在:', filename);
+    return;
+  }
+
+  // 1. 生成封面图
+  console.log('[cover] 生成封面图...');
+  const coverDir = path.join(hexoPath, 'source/images/repost');
+  fs.mkdirSync(coverDir, { recursive: true });
+  const coverPath = path.join(coverDir, dateStr + '_repost_sleep-tips.jpg');
+  await sharp(Buffer.from(generateCoverSVG()))
+    .jpeg({ quality: 90 })
+    .toFile(coverPath);
+  console.log('[cover] 已生成:', coverPath);
+
+  // 2. 写 Markdown 文章
+  const now = new Date();
+  const isoNow = now.toISOString();
+  const lines = [
+    '---',
+    'title: ' + article.title,
+    'date: ' + isoNow,
+    'updated: ' + isoNow,
+    'categories:',
+    '  - ' + article.categories.join('\n  - '),
+    'tags:',
+    '  - ' + article.tags.join('\n  - '),
+    'cover: /images/repost/' + dateStr + '_repost_sleep-tips.jpg',
+    'toc: true',
+    'comments: true',
+    '---\n',
+    articleBody
+  ];
+  const frontmatter = lines.join('\n');
+
+  fs.mkdirSync(postsDir, { recursive: true });
+  fs.writeFileSync(filepath, frontmatter, 'utf8');
+  console.log('[post] 已创建文章:', filename);
+
+  // 3. Git 推送
+  console.log('[git] 开始提交...');
+  try {
+    execSync('git add source/_posts/ source/images/repost/', { cwd: hexoPath, stdio: 'inherit' });
+    execSync('git commit -m "repost: ' + article.title.replace(/"/g, '') + '"', { cwd: hexoPath, stdio: 'inherit' });
+    execSync('git push origin source', { cwd: hexoPath, stdio: 'inherit' });
+    console.log('[done] 已推送到 GitHub，GitHub Actions 将自动部署');
+  } catch (e) {
+    console.error('[error] Git 操作失败:', e.message);
+  }
+}
+
+main().catch(function(e) { console.error('[error]', e.message); });

@@ -1,0 +1,25 @@
+{
+  "name": "hexo-qq-bot",
+  "version": "1.0.0",
+  "description": "QQ 机器人 - 接收手机文章自动发布到 Hexo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "deploy": "node deploy.js",
+    "pub": "node pub.js"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "dayjs": "^1.11.10",
+    "gray-matter": "^4.0.3",
+    "imapflow": "^1.2.18",
+    "js-yaml": "^4.1.0",
+    "lunar": "^2.0.0",
+    "mailparser": "^3.9.6",
+    "nodemailer": "^8.0.4",
+    "oicq": "^2.3.1",
+    "sharp": "^0.34.5",
+    "solar2lunar": "^2.0.5",
+    "ws": "^8.16.0"
+  }
+}

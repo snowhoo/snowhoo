@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="400" viewBox="0 0 1300 400">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fefce8"/>
+      <stop offset="40%" stop-color="#fef9c3"/>
+      <stop offset="100%" stop-color="#fef08a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ca8a04"/>
+      <stop offset="100%" stop-color="#eab308"/>
+    </linearGradient>
+    <linearGradient id="mtn1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#92400e" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#92400e" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="mtn2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b45309" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#b45309" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="moon" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#fef08a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="textBg">
+      <feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#000000" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="1300" height="400" fill="url(#bg)"/>
+
+  <!-- 水墨山峦 -->
+  <path d="M-50 400 L162 254 L358 400 Z" fill="url(#mtn1)" opacity="0.6"/>
+  <path d="M200 400 L438 222 L638 400 Z" fill="url(#mtn1)" opacity="0.6"/>
+  <path d="M538 400 L845 191 L1133 400 Z" fill="url(#mtn1)" opacity="0.6"/>
+  <path d="M900 400 L1200 241 L1300 400 Z" fill="url(#mtn1)" opacity="0.6"/>
+  <path d="M-50 400 L96 305 L338 400 Z" fill="url(#mtn2)" opacity="0.6"/>
+  <path d="M746 400 L977 293 L1200 400 Z" fill="url(#mtn2)" opacity="0.6"/>
+
+  <!-- 月亮光晕 -->
+  <circle cx="1025" cy="76" r="51" fill="url(#moon)"/>
+  <circle cx="1025" cy="76" r="24" fill="#fef08a" opacity="0.15"/>
+
+  <!-- 飞鸟 -->
+  <path d="M200 95 Q210 89 220 95 Q230 89 240 95" stroke="#92400e" stroke-width="1.5" fill="none" opacity="0.35"/>
+  <path d="M260 82 Q268 77 276 82 Q284 77 292 82" stroke="#92400e" stroke-width="1.5" fill="none" opacity="0.28"/>
+
+  <!-- 云雾 -->
+  <ellipse cx="867" cy="127" rx="150" ry="19" fill="#ffffff" opacity="0.16"/>
+  <ellipse cx="433" cy="114" rx="120" ry="16" fill="#ffffff" opacity="0.13"/>
+
+  <!-- 松树剪影 -->
+  <g opacity="0.18" fill="#78350f">
+    <rect x="1141" y="267" width="5" height="133"/>
+    <ellipse cx="1143" cy="260" rx="32" ry="22"/>
+    <ellipse cx="1143" cy="241" rx="24" ry="18"/>
+    <ellipse cx="1143" cy="225" rx="16" ry="13"/>
+  </g>
+  <g opacity="0.14" fill="#78350f">
+    <rect x="1195" y="286" width="4" height="114"/>
+    <ellipse cx="1197" cy="279" rx="25" ry="18"/>
+    <ellipse cx="1197" cy="263" rx="19" ry="14"/>
+  </g>
+
+  <!-- 顶部渐变条 -->
+  <rect x="0" y="0" width="1300" height="5" fill="url(#accent)"/>
+
+  <!-- 底部渐变条 -->
+  <rect x="0" y="395" width="1300" height="5" fill="url(#accent)"/>
+
+  <!-- 名言文字 -->
+  <text x="650" y="152"
+        font-family="'Microsoft YaHei', 'PingFang SC', 'SimHei', 'Arial', sans-serif"
+        font-size="46" fill="#451a03" text-anchor="middle" font-weight="900"
+        dominant-baseline="auto" filter="url(#textBg)">
+      <tspan x="650" dy="0" text-anchor="middle">Happiness is not something ready</tspan>
+      <tspan x="650" dy="60" text-anchor="middle">made. It comes from your own</tspan>
+      <tspan x="650" dy="60" text-anchor="middle">actions.</tspan>
+  </text>
+
+  <!-- 分隔线 -->
+  <rect x="390" y="352" width="520" height="3" rx="1.5" fill="url(#accent)" opacity="0.75"/>
+
+  <!-- 作者名 -->
+  <text x="650" y="392"
+        font-family="'Microsoft YaHei', 'PingFang SC', 'SimHei', 'Arial', sans-serif"
+        font-size="30" fill="#ca8a04" text-anchor="middle" font-weight="700"
+        letter-spacing="5" filter="url(#textBg)">—— Dalai Lama</text>
+
+  <!-- 右下角标签 -->
+  <rect x="520" y="360" width="260" height="28" rx="14" fill="url(#accent)" opacity="0.88"/>
+  <text x="650" y="381"
+        font-family="'Microsoft YaHei', sans-serif"
+        font-size="16" fill="#ffffff" text-anchor="middle" font-weight="500">每日正能量</text>
+</svg>
