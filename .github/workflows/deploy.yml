@@ -24,13 +24,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd hexo-bot && npm install
           npm install -g hexo-cli
+          cd hexo-bot && npm install
 
       - name: Build Hexo
         run: |
-          hexo clean
-          hexo generate
+          npx hexo clean
+          npx hexo generate
 
       - name: Deploy to main branch
         uses: peaceiris/actions-gh-pages@v3
