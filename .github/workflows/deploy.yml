@@ -25,6 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           npm install -g hexo-cli
+          npm install
           cd hexo-bot && npm install
 
       - name: Build Hexo
