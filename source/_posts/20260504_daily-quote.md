@@ -1,7 +1,7 @@
----
+﻿---
 title: Be thankful for what you have; you'll end up havin… —— Oprah Winfrey
-date: 2026-05-04 21:31:14
-updated: 2026-05-04 21:31:14
+date: 2026-05-04 6:00:14
+updated: 2026-05-04 6:00:14
 categories:
   - 每日正能量
 tags:
@@ -14,7 +14,7 @@ cover: /images/quotes/20260504_quote-cover.svg
 
 ![每日正能量](/images/quotes/20260504_quote-cover.svg)
 
-**每日正能量 · 2026-05-04 21:31:14**
+**每日正能量 · 2026-05-04 6:00:14**
 
 > Be thankful for what you have; you'll end up having more.
 
