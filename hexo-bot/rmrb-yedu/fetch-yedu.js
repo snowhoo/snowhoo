@@ -39,9 +39,9 @@ async function generateCoverImage(paragraphs, today) {
     quote = '晚安，好梦';
   }
   
-  // 截取前50字
-  if (quote.length > 50) {
-    quote = quote.substring(0, 50) + '...';
+  // 截取前40字
+  if (quote.length > 40) {
+    quote = quote.substring(0, 40) + '...';
   }
   
   // 温暖的配色方案
@@ -62,7 +62,6 @@ async function generateCoverImage(paragraphs, today) {
     // 填充渐变背景
     for (let y = 0; y < 450; y++) {
       for (let x = 0; x < 800; x++) {
-        // 简单渐变：从上到下颜色变深
         const factor = y / 450;
         const r = Math.floor(color.r * (1 - factor * 0.3));
         const g = Math.floor(color.g * (1 - factor * 0.3));
@@ -72,11 +71,11 @@ async function generateCoverImage(paragraphs, today) {
     }
     
     // 添加装饰圆
-    const circleColor = Jimp.rgbaToInt(255, 255, 255, 40);
-    for (let i = 0; i < 5; i++) {
+    const circleColor = Jimp.rgbaToInt(255, 255, 255, 30);
+    for (let i = 0; i < 8; i++) {
       const cx = 100 + Math.random() * 600;
       const cy = 50 + Math.random() * 350;
-      const radius = 20 + Math.random() * 40;
+      const radius = 15 + Math.random() * 35;
       for (let dy = -radius; dy <= radius; dy++) {
         for (let dx = -radius; dx <= radius; dx++) {
           if (dx * dx + dy * dy <= radius * radius) {
@@ -90,37 +89,17 @@ async function generateCoverImage(paragraphs, today) {
       }
     }
     
-    // 添加文字（使用内置字体）
-    const font = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
+    // 安装字体并添加文字
+    await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE).then(async (font) => {
+      image.print(font, 40, 60, `${today.year}/${today.month}/${today.day}`);
+    }).catch(() => {});
     
-    // 日期
-    const dateText = `${today.year}/${today.month}/${today.day}`;
-    image.print(font, 40, 40, dateText);
-    
-    // 金句（分两行）
-    const quoteFont = await Jimp.loadFont(Jimp.FONT_SANS_24_WHITE);
-    const lines = [];
-    let currentLine = '';
-    for (const char of quote) {
-      if (currentLine.length >= 18) {
-        lines.push(currentLine);
-        currentLine = '';
-      }
-      currentLine += char;
-    }
-    if (currentLine) lines.push(currentLine);
-    
-    const quoteY = 200;
-    lines.slice(0, 2).forEach((line, i) => {
-      image.print(quoteFont, 40, quoteY + i * 40, line);
-    });
-    
-    // 保存图片
+    // 保存图片（先保存不带文字的版本）
     const imgName = `${today.dateStr}_yedu_00.jpg`;
     const imgPath = path.join(COVER_DIR, imgName);
     await image.writeAsync(imgPath);
     
-    log(`✅ 生成封面图: ${imgName}`);
+    log(`✅ 生成封面图: ${imgName} (文字待添加)`);
     return imgName;
   } catch (err) {
     log(`❌ 生成封面图失败: ${err.message}`);
