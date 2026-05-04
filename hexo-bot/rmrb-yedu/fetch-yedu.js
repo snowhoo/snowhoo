@@ -65,6 +65,39 @@ async function searchWechatArticles(page, keyword) {
   // 解析搜索结果
   const articles = await page.evaluate(() => {
     const items = [];
+    
+    // 辅助函数：从 s2 元素中提取真实日期
+    function extractDate(s2El) {
+      if (!s2El) return '';
+      
+      // 方法1：直接取 textContent（如果 timeConvert 已经执行）
+      let text = s2El.textContent.trim();
+      if (text && !text.includes('document.write') && !text.includes('timeConvert')) {
+        return text;
+      }
+      
+      // 方法2：从 innerHTML 中提取时间戳
+      const html = s2El.innerHTML || '';
+      const match = html.match(/timeConvert\('(\d+)'\)/);
+      if (match) {
+        const timestamp = parseInt(match[1]) * 1000; // 转为毫秒
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 60) return `${diffMins}分钟前`;
+        if (diffHours < 24) return `${diffHours}小时前`;
+        if (diffDays === 1) return '1天前';
+        if (diffDays === 2) return '2天前';
+        return `${date.getMonth()+1}月${date.getDate()}日`;
+      }
+      
+      return text || '';
+    }
+    
     // 搜狗微信搜索结果 - 尝试多种选择器
     let listItems = document.querySelectorAll('.news-list2 li');
     if (listItems.length === 0) {
@@ -83,7 +116,7 @@ async function searchWechatArticles(page, keyword) {
         items.push({
           title: a.textContent.trim().substring(0, 100),
           url: a.href,
-          date: dateEl ? dateEl.textContent.trim() : '',
+          date: dateEl ? extractDate(dateEl) : '',
           account: '',
           description: '',
         });
@@ -92,7 +125,8 @@ async function searchWechatArticles(page, keyword) {
     }
     listItems.forEach(li => {
       const titleEl = li.querySelector('.txt-box h3 a');
-      const accountEl = li.querySelector('.s-p a, .account');
+      // 尝试多种选择器提取公众号名称
+      const accountEl = li.querySelector('.s-p a, .account, .wx-account, [class*="account"], [class*="source"]');
       const dateEl = li.querySelector('.s2');
       const linkEl = li.querySelector('.txt-box h3 a');
       const descEl = li.querySelector('.txt-info');
@@ -101,8 +135,8 @@ async function searchWechatArticles(page, keyword) {
         items.push({
           title: titleEl.textContent.trim(),
           url: linkEl.href,
-          account: accountEl ? accountEl.textContent.trim() : '',
-          date: dateEl ? dateEl.textContent.trim() : '',
+          account: accountEl ? accountEl.textContent.trim() : li.textContent.match(/来自\s*(.+?)\s*[·•]/)?.[1] || '',
+          date: dateEl ? extractDate(dateEl) : '',
           description: descEl ? descEl.textContent.trim() : '',
         });
       }
@@ -115,6 +149,52 @@ async function searchWechatArticles(page, keyword) {
   articles.forEach((a, i) => {
     log(`  [${i}] ${a.account} | ${a.date} | ${a.title.substring(0, 40)}`);
   });
+  return articles;
+}
+
+// ============ 普通搜狗搜索（备选方案）============
+async function searchSogouWeb(page, keyword) {
+  const url = `https://www.sogou.com/web?query=${encodeURIComponent(keyword)}&ie=utf8`;
+  log(`普通搜狗搜索URL: ${url}`);
+  
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await sleep(3000);
+  
+  const pageTitle = await page.title();
+  log(`页面标题: ${pageTitle}`);
+  
+  const articles = await page.evaluate(() => {
+    const items = [];
+    
+    // 普通搜狗的搜索结果选择器
+    const results = document.querySelectorAll('.vrwrap, .rb, .results .vr');
+    
+    results.forEach(item => {
+      // 找标题链接
+      const titleEl = item.querySelector('h3 a, .vr-title a, .pt a, a[href*="mp.weixin.qq.com"]');
+      // 找发布时间
+      const summaryEl = item.querySelector('.ft, .str_info, .summary');
+      const accountEl = item.querySelector('.source, .sitename, [class*="account"]');
+      
+      if (titleEl && titleEl.href && titleEl.href.includes('mp.weixin.qq.com')) {
+        items.push({
+          title: titleEl.textContent.trim(),
+          url: titleEl.href,
+          account: accountEl ? accountEl.textContent.trim() : '',
+          date: summaryEl ? summaryEl.textContent.trim().substring(0, 50) : '',
+          description: summaryEl ? summaryEl.textContent.trim() : '',
+        });
+      }
+    });
+    
+    return items;
+  });
+  
+  log(`普通搜狗找到 ${articles.length} 个微信公众号文章`);
+  articles.forEach((a, i) => {
+    log(`  [${i}] ${a.account} | ${a.date} | ${a.title.substring(0, 40)}`);
+  });
+  
   return articles;
 }
 
@@ -503,8 +583,18 @@ async function main() {
 
     const page = await context.newPage();
 
-    // Step 1: 搜狗微信搜索
-    const articles = await searchWechatArticles(page, '人民日报夜读');
+    // Step 1: 搜狗微信搜索（关键词包含日期，提高命中率）
+    const keyword = `人民日报${parseInt(today.month)}月${parseInt(today.day)}日夜读`;
+    log(`搜索关键词: "${keyword}"`);
+    log(`搜索URL: https://weixin.sogou.com/weixin?type=2&query=${encodeURIComponent(keyword)}&ie=utf8`);
+    
+    let articles = await searchWechatArticles(page, keyword);
+    
+    // 如果微信搜索没找到，尝试普通搜狗搜索
+    if (articles.length === 0) {
+      log('⚠️ 微信搜索无结果，尝试普通搜狗搜索...');
+      articles = await searchSogouWeb(page, keyword);
+    }
     
     if (articles.length === 0) {
       log('❌ 未找到任何搜索结果');
@@ -512,33 +602,56 @@ async function main() {
       process.exit(1);
     }
 
-    // Step 2: 筛选人民日报官方账号的今日文章
+    // Step 2: 筛选今日夜读文章，按来源优先级选择
     let targetArticle = null;
     
-    // 优先找"人民日报"官方账号的当天文章
+    // 权威公众号白名单
+    const trustedAccounts = [
+      '人民日报', '央视新闻', '新华社', '光明日报', '中国日报',
+      '解放军报', '经济日报', '人民网', '新华网', '人民日报评论',
+      '央视一套', '新闻联播'
+    ];
+    
+    // 收集所有今日夜读文章（不限来源）
+    const todayNightReads = [];
     for (const a of articles) {
-      const isOfficial = a.account.includes('人民日报') && !a.account.includes('人民夜读') && !a.account.includes('人民日报夜读') &&
-        (a.account === '人民日报' || a.account.includes('rmrb') || a.url.includes('rmrb'));
-      const isFromOfficial = a.account === '人民日报' || a.url.includes('__biz=') && a.url.toLowerCase().includes('rmrb');
+      const isNightRead = a.title.includes('夜读') || a.title.includes('【夜读】');
       const isToday = isTodayArticle(a, today);
-
-      if ((isOfficial || isFromOfficial) && isToday) {
-        targetArticle = a;
-        log(`✅ 找到人民日报官微今日文章: "${a.title}"`);
-        break;
+      if (isNightRead && isToday) {
+        todayNightReads.push(a);
       }
     }
-
-    // 如果没找到官方账号的，退一步找任意包含"夜读"的当天文章
-    if (!targetArticle) {
-      for (const a of articles) {
-        const isNightRead = a.title.includes('夜读') || a.title.includes('【夜读】');
-        const isToday = isTodayArticle(a, today);
-        if (isNightRead && isToday) {
+    
+    log(`✅ 找到 ${todayNightReads.length} 篇今日夜读文章`);
+    
+    if (todayNightReads.length > 0) {
+      // 优先级1: 人民日报官微
+      for (const a of todayNightReads) {
+        const isOfficial = a.account.includes('人民日报') && !a.account.includes('人民夜读') && !a.account.includes('人民日报夜读') &&
+          (a.account === '人民日报' || a.account.includes('rmrb') || a.url.includes('rmrb'));
+        if (isOfficial) {
           targetArticle = a;
-          log(`⚠️ 未找到人民日报官微，使用替代来源: "${a.account}" - "${a.title}"`);
+          log(`✅ 找到人民日报官微今日文章: "${a.title}"`);
           break;
         }
+      }
+      
+      // 优先级2: 权威公众号
+      if (!targetArticle) {
+        for (const a of todayNightReads) {
+          const isTrusted = trustedAccounts.some(t => a.account.includes(t));
+          if (isTrusted) {
+            targetArticle = a;
+            log(`⚠️ 使用权威来源 "${a.account}": "${a.title}"`);
+            break;
+          }
+        }
+      }
+      
+      // 优先级3: 任意来源
+      if (!targetArticle) {
+        targetArticle = todayNightReads[0];
+        log(`⚠️ 使用替代来源: "${targetArticle.account}" - "${targetArticle.title}"`);
       }
     }
 
