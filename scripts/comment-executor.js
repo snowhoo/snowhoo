@@ -116,6 +116,9 @@ async function runExecutor() {
   console.log('[CommentExecutor] 执行完成');
 }
 
-runExecutor()
-  .then(() => process.exit(0))
-  .catch(() => process.exit(1));
+// ============== 只在直接运行时执行（不被 hexo 自动加载时执行）==============
+if (require.main === module) {
+  runExecutor()
+    .then(() => process.exit(0))
+    .catch(() => process.exit(1));
+}
