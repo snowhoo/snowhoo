@@ -66,27 +66,26 @@
 
   function showBanner() {
     var today = getTodayStr();
-    var target = document.getElementById('body-wrap') || document.body;
+    // 操作已存在于 #page-header 中的占位 div
+    var banner = document.getElementById('solar-term-banner');
+    if (!banner) return;
 
     // 优先检查节日（节日优先于节气）
     for (var i = 0; i < FESTIVALS_2026.length; i++) {
       var f = FESTIVALS_2026[i];
       if (f.date === today) {
-        var fbanner = document.createElement('div');
-        fbanner.id = 'solar-term-banner';
-        fbanner.className = 'festival-banner';
-        fbanner.style.backgroundImage = 'url(' + f.bgImg + ')';
-        fbanner.style.backgroundSize = 'cover';
-        fbanner.style.backgroundPosition = 'center';
-        fbanner.style.backgroundRepeat = 'no-repeat';
+        banner.className = 'festival-banner';
+        banner.style.backgroundImage = 'url(' + f.bgImg + ')';
+        banner.style.backgroundSize = 'cover';
+        banner.style.backgroundPosition = 'center';
+        banner.style.backgroundRepeat = 'no-repeat';
         var fp = f.date.split('-');
         var datePrefix = parseInt(fp[1],10) + '月' + parseInt(fp[2],10) + '日';
-        fbanner.innerHTML =
+        banner.innerHTML =
           '<div class="st-banner-inner" style="border-color:' + f.color + '20' + ';">' +
           '<span class="st-name" style="color:' + f.color + ';">今天是' + datePrefix + '，' + f.name + '</span>' +
           '<span class="st-desc" style="color:#555;">' + f.desc + '</span>' +
           '</div>';
-        target.insertBefore(fbanner, target.firstChild);
         return;
       }
     }
@@ -95,19 +94,21 @@
     for (var j = 0; j < SOLAR_TERMS_2026.length; j++) {
       var st = SOLAR_TERMS_2026[j];
       if (st.date === today) {
-        var sbanner = document.createElement('div');
-        sbanner.id = 'solar-term-banner';
-        sbanner.innerHTML =
+        banner.className = '';
+        banner.style.backgroundImage = '';
+        banner.innerHTML =
           '<div class="st-banner-inner">' +
           '<span class="st-icon">🌿</span>' +
           '<span class="st-name">今日 ' + st.name + '</span>' +
           '<span class="st-desc">' + st.desc + '</span>' +
           '<span class="st-icon">🌿</span>' +
           '</div>';
-        target.insertBefore(sbanner, target.firstChild);
         return;
       }
     }
+
+    // 今日无节日/节气，隐藏横幅
+    banner.style.display = 'none';
   }
 
   // ========================
