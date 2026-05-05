@@ -27,6 +27,8 @@ if !theme.disable_top_img && page.top_img !== false
     - headerClassName = globalPageType === 'home' ? 'full_page' : globalPageType === 'post' ? 'post-bg' : 'not-home-page'
 
 header#page-header(class=`${headerClassName + isFixedClass}` style=bg_img)
+  // 节日/节气横幅（由 visitor.js 动态填充，absolute 定位在 nav 下方）
+  #solar-term-banner
   include ./nav.pug
   if top_img !== false
     if globalPageType === 'post'
