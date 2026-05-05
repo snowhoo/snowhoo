@@ -1,0 +1,38 @@
+#article-nav
+  h4
+    font-size: 1.2rem
+
+  clearfix()
+  @media mq-normal
+    margin: block-margin 0
+
+.article-nav-link-wrap
+  display: block
+  box-sizing: border-box
+  margin-top: block-margin
+  padding: 0 12px
+  text-align: center
+  text-decoration: none
+  @media mq-normal
+    width: 50%
+    margin-top: 0
+    &:last-child
+      border-left: 1px dashed color-grey
+
+#article-nav-newer
+  @media mq-normal
+    float: left
+
+#article-nav-older
+  @media mq-normal
+    float: right
+
+.article-nav-caption
+  text-transform: uppercase
+  letter-spacing: 1px
+
+.article-nav-title
+  color: color-grey
+  margin-top: 0.5rem
+  &:hover
+    text-decoration: underline

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<%- partial('commons/head') %>
+<body>
+  <div id="container">
+    <div id="wrap">
+      <%- partial('commons/header') %>
+      <%- body %>
+      <%- partial('commons/footer', null, {cache: !config.relative_link}) %>
+    </div>
+    <%- partial('commons/mobile-nav', null, {cache: !config.relative_link}) %>
+  </div>
+</body>
+</html>

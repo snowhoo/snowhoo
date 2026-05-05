@@ -1,0 +1,23 @@
+@media mq-mobile
+  #mobile-nav
+    visibility: visible
+    position: absolute
+    top: 0
+    left: 0
+    width: mobile-nav-width
+    height: 100%
+    background: mobile-nav-background-color
+
+    .mobile-nav-link
+      display: block
+      color: mobile-nav-color
+      text-decoration: none
+      padding: 12px 24px
+      font-weight: bold
+
+      &:hover
+        opacity: 0.4
+
+@media mq-nonmobile
+  #mobile-nav
+    visibility: hidden

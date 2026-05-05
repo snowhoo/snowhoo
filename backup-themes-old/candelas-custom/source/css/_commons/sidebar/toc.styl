@@ -1,0 +1,63 @@
+$padding-pace = 16px
+
+.post-toc
+  &:after
+    content: '.'
+    visibility: hidden
+
+.toc-wrap
+  margin: block-margin 0
+
+  .toc-title
+    @extend $block-caption
+
+  .toc
+    @extend $block
+    padding: 10px
+    position: relative
+
+    &:before
+      content: ''
+      position: absolute
+      top: 0
+      left: 20px
+      bottom: 0
+      width: 2px
+      background-color: card-title-color
+      opacity: .2
+
+  .toc-link
+    position: relative
+    display: block
+    text-decoration: none
+    color: card-text-color
+    overflow: hidden
+    text-overflow: ellipsis
+    white-space: nowrap
+
+    &:hover
+      background-color: main-background-color
+
+  .toc-link-active
+    color: card-highlight-color
+    background-color: main-background-color
+
+    &:before
+      background-color: card-highlight-color
+
+for num in 3...5
+  $index = num - 3
+  .toc-level-{num}
+    .toc-link
+      padding: 4px 0 4px $padding-pace * ($index + 1) + 10px
+
+    .toc-link:before
+      content: ''
+      position: absolute
+      top: 50%
+      left: 8px + $padding-pace * $index
+      margin-top: -3px + $index
+      width: 6px - 2 * $index
+      height: 6px - 2 * $index
+      background-color: card-title-color
+      border-radius: 50%

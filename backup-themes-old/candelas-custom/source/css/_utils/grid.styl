@@ -1,0 +1,36 @@
+/////////////////
+// Semantic.gs // for Stylus: http://learnboost.github.com/stylus/
+/////////////////
+
+// Utility function — you should never need to modify this
+gridsystem-width(columns)
+  (column-width + gutter-width) * columns
+
+// Set @total-width to 100% for a fluid layout
+total-width = 100%
+
+//////////
+// GRID //
+//////////
+
+body
+  clearfix()
+  width: 100%
+
+row(columns)
+  clearfix()
+  display: block
+  width: total-width * ((gutter-width + gridsystem-width(columns)) / gridsystem-width(columns))
+  margin: 0 total-width * (((gutter-width * .5) / gridsystem-width(columns)) * -1)
+
+column(x, columns)
+  display: inline
+  float: left
+  width: total-width * ((((gutter-width + column-width) * x) - gutter-width) / gridsystem-width(columns))
+  margin: 0 total-width * ((gutter-width * .5) / gridsystem-width(columns))
+
+push(offset = 1, columns)
+  margin-left: total-width * (((gutter-width + column-width) * offset) / gridsystem-width(columns))
+
+pull(offset = 1, columns)
+  margin-right: total-width * (((gutter-width + column-width) * offset) / gridsystem-width(columns))

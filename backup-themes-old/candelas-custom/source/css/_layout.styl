@@ -1,0 +1,61 @@
+main-column = 11
+sidebar-column = 3
+toc-column = 2
+column-width = 100px
+gutter-width = 30px
+
+.index-outer
+.post-outer
+.page-outer
+  clearfix()
+  margin: 0 auto
+  padding: 0 gutter-width
+
+.index-outer
+.page-outer
+  min-height: "calc(100vh - %s)" % (cover-height + footer-height)
+
+.post-outer
+  min-height: "calc(100vh - %s)" % footer-height
+
+.index-outer
+  max-width: (column-width + gutter-width) * (main-column + sidebar-column) + gutter-width
+
+.index-main
+  @media mq-normal
+    column(main-column, (main-column + sidebar-column))
+
+.index-sidebar
+  @media mq-normal
+    column(sidebar-column, (main-column + sidebar-column))
+
+.post-outer
+  max-width: (column-width + gutter-width) * (main-column + sidebar-column + toc-column) + gutter-width
+
+.post-main
+  @media mq-normal
+    column(main-column, (main-column + sidebar-column + toc-column))
+
+.post-toc
+  @media mq-normal
+    column(toc-column, (main-column + sidebar-column + toc-column))
+
+.post-sidebar
+  @media mq-normal
+    column(sidebar-column, (main-column + sidebar-column + toc-column))
+
+.page-outer
+  max-width: (column-width + gutter-width) * (main-column) + gutter-width
+
+.page-main
+  @media mq-normal
+    column(main-column, main-column)
+
+.left, .alignleft
+  float: left
+
+.right, .alignright
+  float: right
+
+.clear
+  clear: both
