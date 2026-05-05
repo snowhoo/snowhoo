@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 人民日报夜读抓取脚本
  * 用法: node fetch-yedu.js
  * 
@@ -24,82 +24,155 @@ const GIT_BRANCH = 'source';
 const HIGHLIGHT_COLORS = ['#e74c3c', '#e67e22', '#27ae60', '#2980b9', '#8e44ad', '#16a085'];
 
 // ============ 工具函数 ============
-// ============ 生成封面图 ============
-async function generateCoverImage(paragraphs, today) {
-  // 提取第一段或金句作为封面文字
+// ============ 生成封面图（Playwright 渲染 + 系统楷体） ============
+async function generateCoverImage(paragraphs, today, page) {
+  // 提取标题或金句作为封面文字（优先用文章标题）
   let quote = '';
+
+  // 先尝试找第一段有意义的内容
   for (const p of paragraphs) {
-    if (p.type === 'text' && p.content.length > 10 && p.content.length < 200) {
-      quote = p.content;
-      break;
+    if (p.type === 'text' && p.content.length > 2 && p.content.length < 100) {
+      const cleaned = p.content.trim();
+      if (!cleaned.includes('人民日报') && !cleaned.includes('关注') && !cleaned.includes('分享')) {
+        quote = cleaned;
+        break;
+      }
     }
   }
-  
+
+  // 如果没找到合适的段落，用文章第一段
+  if (!quote && paragraphs.length > 0) {
+    const firstText = paragraphs.find(p => p.type === 'text');
+    if (firstText) {
+      quote = firstText.content.trim().substring(0, 14);
+    }
+  }
+
   if (!quote) {
-    quote = '晚安，好梦';
+    quote = '夜读';
   }
-  
-  // 截取前40字
-  if (quote.length > 40) {
-    quote = quote.substring(0, 40) + '...';
+
+  // 截取到合适长度（楷体字号大，最多14个字符视觉效果最佳）
+  if (quote.length > 14) {
+    quote = quote.substring(0, 14);
   }
-  
-  // 温暖的配色方案
-  const bgColors = [
-    { r: 255, g: 182, b: 193 }, // 浅粉
-    { r: 255, g: 218, b: 185 }, // 桃色
-    { r: 230, g: 230, b: 250 }, // 淡紫
-    { r: 255, g: 250, b: 205 }, // 浅黄
-    { r: 240, g: 255, b: 240 }, // 薄荷
+
+  // 温暖治愈的背景色（每次随机选一款）
+  const warmBgs = [
+    'linear-gradient(135deg, #fdf6e3 0%, #f5e6ca 40%, #edd5b3 100%)',
+    'linear-gradient(135deg, #fce8e8 0%, #f9dcd4 40%, #f2c5b8 100%)',
+    'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 40%, #a5d6a7 100%)',
+    'linear-gradient(135deg, #fff8e1 0%, #ffe082 40%, #ffd54f 60%, #ffca28 100%)',
+    'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 40%, #ce93d8 100%)',
   ];
-  
-  const color = bgColors[Math.floor(Math.random() * bgColors.length)];
-  
+  const bg = warmBgs[Math.floor(Math.random() * warmBgs.length)];
+
+  // 构造 HTML（使用系统楷体，无需加载字体文件）
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1280px;
+    height: 720px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: ${bg};
+    position: relative;
+  }
+  .deco-circle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .deco1 {
+    width: 260px;
+    height: 260px;
+    top: -60px;
+    right: 80px;
+    background: rgba(255,255,255,0.18);
+  }
+  .deco2 {
+    width: 180px;
+    height: 180px;
+    bottom: 40px;
+    left: 60px;
+    background: rgba(255,255,255,0.15);
+  }
+  .deco3 {
+    width: 120px;
+    height: 120px;
+    top: 80px;
+    left: 200px;
+    background: rgba(255,255,255,0.12);
+  }
+  .title {
+    font-family: 'KaiTi', 'STKaiti', 'FangSong', serif;
+    font-size: 88px;
+    color: #3e2723;
+    letter-spacing: 12px;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.08);
+    line-height: 1.4;
+    text-align: center;
+    padding: 0 60px;
+  }
+  .divider {
+    width: 80px;
+    height: 2px;
+    background: #795548;
+    opacity: 0.3;
+    margin-top: 36px;
+    border-radius: 1px;
+  }
+  .date {
+    font-family: 'KaiTi', 'STKaiti', serif;
+    font-size: 32px;
+    color: #795548;
+    margin-top: 48px;
+    letter-spacing: 4px;
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+  <div class="deco-circle deco1"></div>
+  <div class="deco-circle deco2"></div>
+  <div class="deco-circle deco3"></div>
+  <div class="title">${quote}</div>
+  <div class="divider"></div>
+  <div class="date">${today.year}.${today.month}.${today.day}　夜读</div>
+</body>
+</html>`;
+
   try {
-    // 创建图片 (800 x 450)
-    const image = new Jimp(800, 450);
-    
-    // 填充渐变背景
-    for (let y = 0; y < 450; y++) {
-      for (let x = 0; x < 800; x++) {
-        const factor = y / 450;
-        const r = Math.floor(color.r * (1 - factor * 0.3));
-        const g = Math.floor(color.g * (1 - factor * 0.3));
-        const b = Math.floor(color.b * (1 - factor * 0.3));
-        image.setPixelColor(Jimp.rgbaToInt(r, g, b, 255), x, y);
-      }
-    }
-    
-    // 添加装饰圆
-    const circleColor = Jimp.rgbaToInt(255, 255, 255, 30);
-    for (let i = 0; i < 8; i++) {
-      const cx = 100 + Math.random() * 600;
-      const cy = 50 + Math.random() * 350;
-      const radius = 15 + Math.random() * 35;
-      for (let dy = -radius; dy <= radius; dy++) {
-        for (let dx = -radius; dx <= radius; dx++) {
-          if (dx * dx + dy * dy <= radius * radius) {
-            const px = Math.floor(cx + dx);
-            const py = Math.floor(cy + dy);
-            if (px >= 0 && px < 800 && py >= 0 && py < 450) {
-              image.setPixelColor(circleColor, px, py);
-            }
-          }
-        }
-      }
-    }
-    
-    // 安装字体并添加文字
-    await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE).then(async (font) => {
-      image.print(font, 40, 60, `${today.year}/${today.month}/${today.day}`);
-    }).catch(() => {});
-    
-    // 保存图片（先保存不带文字的版本）
+    // 将 HTML 写入临时文件（用 file:// 协议加载，Playwright 可访问系统字体）
+    const tmpHtmlPath = path.join(COVER_DIR, `${today.dateStr}_cover_tmp.html`);
+    fs.writeFileSync(tmpHtmlPath, html, 'utf-8');
+
+    // 用 file:// 协议加载
+    const fileUrl = `file:///${tmpHtmlPath.replace(/\\/g, '/')}`;
+    await page.goto(fileUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+
+    // 短暂等待渲染完成
+    await new Promise(r => setTimeout(r, 1000));
+
+    // 截图保存（16:9 = 1280×720）
     const imgName = `${today.dateStr}_yedu_00.jpg`;
     const imgPath = path.join(COVER_DIR, imgName);
-    await image.writeAsync(imgPath);
-    
-    log(`✅ 生成封面图: ${imgName} (文字待添加)`);
+    await page.screenshot({
+      path: imgPath,
+      clip: { x: 0, y: 0, width: 1280, height: 720 }
+    });
+
+    // 删除临时 HTML
+    try { fs.unlinkSync(tmpHtmlPath); } catch (_) {}
+
+    log(`✅ 生成封面图: ${imgName}（楷体渲染，1280×720）`);
     return imgName;
   } catch (err) {
     log(`❌ 生成封面图失败: ${err.message}`);
@@ -788,15 +861,17 @@ async function main() {
     // Step 4: 下载图片
     let downloadedNames = await downloadImages(article.images, today, page);
     
-    // 如果没有下载到图片，生成封面图
+    // 如果没有下载到图片，生成封面图（需传入 page）
     if (downloadedNames.length === 0 && article.paragraphs.length > 0) {
-      const generatedImg = await generateCoverImage(article.paragraphs, today);
+      const generatedImg = await generateCoverImage(article.paragraphs, today, page);
       if (generatedImg) {
         downloadedNames = [generatedImg];
       }
     }
 
     // Step 5: 生成 Markdown
+    log(`DEBUG: downloadedNames = ${JSON.stringify(downloadedNames)}`);
+    log(`DEBUG: article.images.length = ${article.images.length}`);
     const { markdownBody } = articleToMarkdown(article, today, downloadedNames);
 
     // Step 6: 写入 Hexo 文章
@@ -827,3 +902,4 @@ async function main() {
 }
 
 main();
+
