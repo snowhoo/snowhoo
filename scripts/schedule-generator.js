@@ -143,29 +143,50 @@ function createWindowsTask(hour, minute, taskIndex) {
     dateStr = tomorrow.toISOString().split('T')[0];
   }
 
-  // 日期格式必须是 yyyy/mm/dd
   const dateParts = dateStr.split('-');
   const formattedDate = dateParts[0] + '/' + dateParts[1] + '/' + dateParts[2];
 
   const taskFullName = 'Snowhoo_AutoComment_' + taskIndex;
   const nodeExe = 'C:\\Program Files\\nodejs\\node.exe';
 
-  const schtasksCmd = 'schtasks /create /tn "' + taskFullName + '" /tr "\\"' + nodeExe + '" "' + EXECUTOR_SCRIPT + '" --taskIndex=' + taskIndex + '"\\" /sc once /sd ' + formattedDate + ' /st ' + timeStr + ' /f';
-
   console.log('[ScheduleGenerator] 创建计划任务: ' + taskFullName + ' 于 ' + dateStr + ' ' + timeStr);
 
   try {
-    const output = execSync(schtasksCmd, { encoding: 'utf8', windowsHide: true });
-    console.log('[ScheduleGenerator] ✓ 任务创建成功');
-    return true;
-  } catch (e) {
-    const errMsg = (e.stderr || e.stdout || e.message || '').trim();
-    if (errMsg && !errMsg.includes('成功')) {
-      console.log('[ScheduleGenerator] ✗ 任务创建失败: ' + errMsg);
-    } else {
-      console.log('[ScheduleGenerator] ✓ 任务创建成功');
+    // 写一个临时的 PowerShell 脚本文件
+    const psFile = path.join(__dirname, '_temp_task_' + taskIndex + '.ps1');
+    const psContent = [
+      '$ErrorActionPreference = "Stop"',
+      'try {',
+      '  Unregister-ScheduledTask -TaskName "' + taskFullName + '" -Confirm:$false -ErrorAction SilentlyContinue',
+      '  $act = New-ScheduledTaskAction -Execute "' + nodeExe + '" -Argument "\\"' + EXECUTOR_SCRIPT + '\\" --taskIndex=' + taskIndex + '"',
+      '  $trig = New-ScheduledTaskTrigger -Once -At "' + formattedDate + ' ' + timeStr + '"',
+      '  Register-ScheduledTask -TaskName "' + taskFullName + '" -Action $act -Trigger $trig -Description "Auto Comment ' + taskIndex + '" | Out-Null',
+      '  Write-Output "OK"',
+      '} catch {',
+      '  Write-Output ("ERR: " + $_.Exception.Message)',
+      '  exit 1',
+      '}',
+      'exit 0'
+    ].join('\n');
+
+    fs.writeFileSync(psFile, '\ufeff' + psContent, 'utf8');
+
+    try {
+      const output = execSync('powershell -ExecutionPolicy Bypass -NoProfile -File "' + psFile + '"', { encoding: 'utf8', windowsHide: true, timeout: 15000 });
+      const outStr = (output || '').toString();
+      if (outStr.includes('OK')) {
+        console.log('[ScheduleGenerator] 任务创建成功');
+        return true;
+      }
+      console.log('[ScheduleGenerator] 任务创建失败: ' + outStr.trim());
+      return false;
+    } finally {
+      try { fs.unlinkSync(psFile); } catch(e) {}
     }
-    return true;
+  } catch (e) {
+    const errMsg = ((e.stderr || e.stdout || e.message || '').toString() || '').trim();
+    console.log('[ScheduleGenerator] 任务创建失败: ' + (errMsg || '未知错误'));
+    return false;
   }
 }
 
