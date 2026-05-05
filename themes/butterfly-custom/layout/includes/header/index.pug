@@ -1,0 +1,85 @@
+-
+  const returnTopImg = img => img !== false ? img || theme.default_top_img : false
+  const isFixedClass = theme.nav.fixed ? ' fixed' : ''
+  var top_img = false
+  let headerClassName = 'not-top-img'
+  var bg_img = ''
+
+if !theme.disable_top_img && page.top_img !== false
+  case globalPageType
+    when 'post'
+      - top_img = page.top_img || page.cover || theme.default_top_img
+    when 'page'
+      - top_img = page.top_img || theme.default_top_img
+    when 'tag'
+      - top_img = theme.tag_per_img && theme.tag_per_img[page.tag] || returnTopImg(theme.tag_img)
+    when 'category'
+      - top_img = theme.category_per_img && theme.category_per_img[page.category] || returnTopImg(theme.category_img)
+    when 'home'
+      - top_img = returnTopImg(theme.index_img)
+    when 'archive'
+      - top_img = returnTopImg(theme.archive_img)
+    default
+      - top_img = page.top_img || theme.default_top_img
+
+  if top_img !== false
+    - bg_img = getBgPath(top_img)
+    - headerClassName = globalPageType === 'home' ? 'full_page' : globalPageType === 'post' ? 'post-bg' : 'not-home-page'
+
+header#page-header(class=`${headerClassName + isFixedClass}`)
+  // 导航栏主体（固定在最上方）
+  nav#nav
+    span#blog-info
+      a.nav-site-title(href=url_for('/'))
+        if theme.nav.logo
+          img.site-icon(src=url_for(theme.nav.logo) alt='Logo')
+        if theme.nav.display_title
+          span.site-name=config.title
+        span.site-slogan 一九七九年，春天
+      if globalPageType === 'post' && theme.nav.display_post_title
+        a.nav-page-title(href=url_for('/'))
+          span.site-name=(page.title || config.title)
+          span.site-name
+            i.fa-solid.fa-circle-arrow-left
+            span= '  ' + _p('post.back_to_home')
+
+    #menus
+      if theme.search.use
+        #search-button
+          span.site-page.social-icon.search
+            i.fas.fa-search.fa-fw
+            span= ' ' + _p('search.title')
+      if theme.menu
+        != partial('includes/header/menu_item', {}, {cache: true})
+
+        #toggle-menu
+          span.site-page
+            i.fas.fa-bars.fa-fw
+
+  // 横幅横条 - 放在导航栏内部，作为第二行
+  if top_img !== false
+    #header-banner(style=bg_img)
+
+  // 首页时显示网站信息
+  if top_img !== false
+    if globalPageType === 'post'
+      include ./post-info.pug
+    else if globalPageType === 'home'
+      #site-info
+        h1#site-title=config.title
+        if theme.subtitle.enable
+          - var loadSubJs = true
+          #site-subtitle
+            span#subtitle
+        if theme.social
+          #site_social_icons
+            !=partial('includes/header/social', {}, {cache: true})
+      #scroll-down
+        i.fas.fa-angle-down.scroll-down-effects
+    else
+      #page-site-info
+        h1#site-title=page.title || page.tag || page.category
+  else
+    //- improve seo
+    if globalPageType !== 'post'
+      h1.title-seo=page.title || page.tag || page.category || config.title
