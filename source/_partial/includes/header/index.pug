@@ -28,6 +28,8 @@ if !theme.disable_top_img && page.top_img !== false
 
 header#page-header(class=`${headerClassName + isFixedClass}` style=bg_img)
   include ./nav.pug
+  // 节日/节气横幅（由 visitor.js 动态填充内容，显示在导航下方）
+  #solar-term-banner
   if top_img !== false
     if globalPageType === 'post'
       include ./post-info.pug

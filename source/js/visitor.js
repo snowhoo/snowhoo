@@ -80,6 +80,8 @@
         banner.style.backgroundSize = 'cover';
         banner.style.backgroundPosition = 'center';
         banner.style.backgroundRepeat = 'no-repeat';
+        // 移动到 body 根节点，避免父元素层叠上下文限制 fixed 定位
+        document.body.appendChild(banner);
         var fp = f.date.split('-');
         var datePrefix = parseInt(fp[1],10) + '月' + parseInt(fp[2],10) + '日';
         banner.innerHTML =
@@ -98,6 +100,8 @@
         banner.className = '';
         banner.style.display = 'block';
         banner.style.backgroundImage = '';
+        // 移动到 body 根节点，避免父元素层叠上下文限制 fixed 定位
+        document.body.appendChild(banner);
         banner.innerHTML =
           '<div class="st-banner-inner">' +
           '<span class="st-icon">🌿</span>' +
