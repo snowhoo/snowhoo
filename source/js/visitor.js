@@ -75,6 +75,7 @@
       var f = FESTIVALS_2026[i];
       if (f.date === today) {
         banner.className = 'festival-banner';
+        banner.style.display = 'block';
         banner.style.backgroundImage = 'url(' + f.bgImg + ')';
         banner.style.backgroundSize = 'cover';
         banner.style.backgroundPosition = 'center';
@@ -95,6 +96,7 @@
       var st = SOLAR_TERMS_2026[j];
       if (st.date === today) {
         banner.className = '';
+        banner.style.display = 'block';
         banner.style.backgroundImage = '';
         banner.innerHTML =
           '<div class="st-banner-inner">' +
