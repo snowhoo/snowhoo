@@ -24,7 +24,7 @@ const GIT_BRANCH = 'source';
 const HIGHLIGHT_COLORS = ['#e74c3c', '#e67e22', '#27ae60', '#2980b9', '#8e44ad', '#16a085'];
 
 // ============ 工具函数 ============
-// ============ 生成封面图（Playwright 渲染 + 系统楷体） ============
+// ============ 生成封面图（Playwright 渲染 + 系统楷体 + SVG装饰） ============
 async function generateCoverImage(paragraphs, today, page) {
   // 提取标题或金句作为封面文字（优先用文章标题）
   let quote = '';
@@ -59,13 +59,156 @@ async function generateCoverImage(paragraphs, today, page) {
 
   // 温暖治愈的背景色（每次随机选一款）
   const warmBgs = [
-    'linear-gradient(135deg, #fdf6e3 0%, #f5e6ca 40%, #edd5b3 100%)',
-    'linear-gradient(135deg, #fce8e8 0%, #f9dcd4 40%, #f2c5b8 100%)',
-    'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 40%, #a5d6a7 100%)',
-    'linear-gradient(135deg, #fff8e1 0%, #ffe082 40%, #ffd54f 60%, #ffca28 100%)',
-    'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 40%, #ce93d8 100%)',
+    { bg: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)', text: '#f5e6ca', accent: '#e94560', name: '夜空蓝' },
+    { bg: 'linear-gradient(180deg, #2d1b33 0%, #4a1942 50%, #6b2d5c 100%)', text: '#f8e8f0', accent: '#c9a0dc', name: '浪漫紫' },
+    { bg: 'linear-gradient(180deg, #1e3c2f 0%, #2d5a3f 50%, #3d7a5f 100%)', text: '#e8f5e9', accent: '#81c784', name: '森林绿' },
+    { bg: 'linear-gradient(180deg, #1a2a3a 0%, #2a4a5a 50%, #3a6a7a 100%)', text: '#e0f7fa', accent: '#4dd0e1', name: '湖光蓝' },
+    { bg: 'linear-gradient(180deg, #3d2b1f 0%, #5d4a3a 50%, #7d6a5a 100%)', text: '#fff3e0', accent: '#ffb74d', name: '暖木棕' },
   ];
-  const bg = warmBgs[Math.floor(Math.random() * warmBgs.length)];
+  const theme = warmBgs[Math.floor(Math.random() * warmBgs.length)];
+
+  // ========== SVG装饰元素（随机选2-3个）==========
+  // 定义所有可用的装饰元素
+  const allDecorations = [
+    // 月亮
+    {
+      id: 'moon',
+      svg: `<ellipse cx="1050" cy="120" rx="60" ry="60" fill="${theme.text}" opacity="0.9"/>
+            <ellipse cx="1080" cy="105" rx="50" ry="50" fill="${theme.bg.split(' ')[2]}" opacity="0.95"/>`,
+      pos: '覆盖层'
+    },
+    // 星星
+    {
+      id: 'stars',
+      svg: `<circle cx="200" cy="80" r="3" fill="${theme.text}" opacity="0.8"/>
+            <circle cx="350" cy="150" r="2" fill="${theme.text}" opacity="0.6"/>
+            <circle cx="900" cy="200" r="2.5" fill="${theme.text}" opacity="0.7"/>
+            <circle cx="1100" cy="300" r="2" fill="${theme.text}" opacity="0.5"/>
+            <circle cx="150" cy="250" r="1.5" fill="${theme.text}" opacity="0.6"/>`,
+      pos: '散布'
+    },
+    // 远山剪影
+    {
+      id: 'mountains',
+      svg: `<path d="M0,720 L0,500 Q150,350 300,500 Q450,300 600,450 Q750,350 900,480 Q1050,380 1280,520 L1280,720 Z" fill="${theme.bg.split(' ')[2]}" opacity="0.6"/>`,
+      pos: '底部'
+    },
+    // 近山剪影
+    {
+      id: 'mountains_near',
+      svg: `<path d="M0,720 L0,580 Q200,480 400,560 Q600,450 800,550 Q1000,480 1280,580 L1280,720 Z" fill="${theme.bg.split(' ')[2]}" opacity="0.8"/>`,
+      pos: '底部'
+    },
+    // 草地
+    {
+      id: 'grass',
+      svg: `<rect x="0" y="650" width="1280" height="70" fill="${theme.bg.split(' ')[2]}" opacity="0.5"/>
+            <ellipse cx="200" cy="665" rx="150" ry="40" fill="#4a7c59" opacity="0.3"/>
+            <ellipse cx="600" cy="670" rx="200" ry="35" fill="#5a8c69" opacity="0.3"/>
+            <ellipse cx="1000" cy="668" rx="180" ry="38" fill="#4a7c59" opacity="0.3"/>`,
+      pos: '底部'
+    },
+    // 花朵
+    {
+      id: 'flowers',
+      svg: `<g opacity="0.6">
+              <circle cx="150" cy="620" r="8" fill="${theme.accent}"/>
+              <circle cx="145" cy="615" r="3" fill="#fff" opacity="0.7"/>
+              <circle cx="280" cy="640" r="6" fill="${theme.accent}"/>
+              <circle cx="277" cy="636" r="2" fill="#fff" opacity="0.7"/>
+              <circle cx="500" cy="630" r="7" fill="${theme.accent}"/>
+              <circle cx="496" cy="626" r="2.5" fill="#fff" opacity="0.7"/>
+              <circle cx="800" cy="645" r="6" fill="${theme.accent}"/>
+              <circle cx="797" cy="641" r="2" fill="#fff" opacity="0.7"/>
+              <circle cx="1050" cy="635" r="8" fill="${theme.accent}"/>
+              <circle cx="1045" cy="630" r="3" fill="#fff" opacity="0.7"/>
+            </g>`,
+      pos: '底部'
+    },
+    // 路灯
+    {
+      id: 'lamp',
+      svg: `<g transform="translate(1100, 350)">
+              <rect x="-4" y="0" width="8" height="320" fill="#3a3a4a" opacity="0.7"/>
+              <ellipse cx="0" cy="-10" rx="30" ry="15" fill="#ffd54f" opacity="0.8"/>
+              <ellipse cx="0" cy="0" rx="20" ry="8" fill="#fff9c4" opacity="0.9"/>
+              <ellipse cx="0" cy="50" rx="100" ry="60" fill="#ffd54f" opacity="0.1"/>
+            </g>`,
+      pos: '右侧'
+    },
+    // 江河/水面
+    {
+      id: 'river',
+      svg: `<path d="M0,680 Q320,650 640,680 Q960,710 1280,680 L1280,720 L0,720 Z" fill="${theme.text}" opacity="0.15"/>
+            <path d="M0,690 Q320,670 640,690 Q960,710 1280,690" stroke="${theme.text}" stroke-width="1" fill="none" opacity="0.2"/>`,
+      pos: '底部'
+    },
+    // 书架
+    {
+      id: 'bookshelf',
+      svg: `<g transform="translate(50, 200)" opacity="0.4">
+              <rect x="0" y="0" width="120" height="200" fill="#5d4037" rx="3"/>
+              <rect x="5" y="10" width="110" height="8" fill="#3e2723"/>
+              <rect x="5" y="40" width="25" height="50" fill="#c62828"/>
+              <rect x="32" y="45" width="20" height="45" fill="#1565c0"/>
+              <rect x="54" y="42" width="28" height="48" fill="#2e7d32"/>
+              <rect x="84" y="48" width="22" height="42" fill="#f57c00"/>
+              <rect x="5" y="110" width="30" height="45" fill="#6a1b9a"/>
+              <rect x="37" y="105" width="25" height="50" fill="#00838f"/>
+              <rect x="64" y="112" width="20" height="43" fill="#ad1457"/>
+              <rect x="86" y="108" width="26" height="47" fill="#4527a0"/>
+              <rect x="5" y="175" width="110" height="8" fill="#3e2723"/>
+            </g>`,
+      pos: '左侧'
+    },
+    // 书桌
+    {
+      id: 'desk',
+      svg: `<g transform="translate(900, 500)" opacity="0.5">
+              <rect x="0" y="0" width="200" height="10" fill="#5d4037" rx="2"/>
+              <rect x="10" y="10" width="8" height="100" fill="#4e342e"/>
+              <rect x="182" y="10" width="8" height="100" fill="#4e342e"/>
+              <rect x="30" y="20" width="60" height="40" fill="#3e2723" rx="2"/>
+              <ellipse cx="100" cy="10" rx="15" ry="3" fill="#81c784" opacity="0.8"/>
+            </g>`,
+      pos: '右下'
+    },
+    // 窗户（夜空感）
+    {
+      id: 'window',
+      svg: `<g transform="translate(100, 80)" opacity="0.3">
+              <rect x="0" y="0" width="80" height="120" fill="none" stroke="${theme.text}" stroke-width="4" rx="5"/>
+              <line x1="40" y1="0" x2="40" y2="120" stroke="${theme.text}" stroke-width="2"/>
+              <line x1="0" y1="60" x2="80" y2="60" stroke="${theme.text}" stroke-width="2"/>
+            </g>`,
+      pos: '左'
+    },
+    // 小溪
+    {
+      id: 'stream',
+      svg: `<path d="M-50,700 Q200,680 400,700 Q600,720 800,700 Q1000,680 1330,700" 
+            stroke="${theme.text}" stroke-width="15" fill="none" opacity="0.1" stroke-linecap="round"/>
+            <path d="M-50,700 Q200,680 400,700 Q600,720 800,700 Q1000,680 1330,700" 
+            stroke="${theme.text}" stroke-width="3" fill="none" opacity="0.2" stroke-linecap="round"/>`,
+      pos: '底部'
+    },
+    // 人物剪影
+    {
+      id: 'person',
+      svg: `<g transform="translate(300, 480)" opacity="0.25">
+              <ellipse cx="0" cy="-70" rx="18" ry="22" fill="#1a1a2e"/>
+              <path d="M-25,-45 Q-30,-10 -20,30 L-15,80 L-5,80 L0,40 L5,80 L15,80 L20,30 Q30,-10 25,-45 Q0,-55 -25,-45" fill="#1a1a2e"/>
+            </g>`,
+      pos: '中间'
+    },
+  ];
+
+  // 随机选择2-3个装饰元素
+  const shuffled = allDecorations.sort(() => Math.random() - 0.5);
+  const selectedDecos = shuffled.slice(0, 2 + Math.floor(Math.random() * 2)); // 随机2或3个
+
+  // 构建装饰元素SVG
+  const decoSvg = selectedDecos.map(d => d.svg).join('\n');
 
   // 构造 HTML（使用系统楷体，无需加载字体文件）
   const html = `<!DOCTYPE html>
@@ -82,7 +225,7 @@ async function generateCoverImage(paragraphs, today, page) {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: ${bg};
+    background: ${theme.bg};
     position: relative;
   }
   .deco-circle {
@@ -95,47 +238,62 @@ async function generateCoverImage(paragraphs, today, page) {
     height: 260px;
     top: -60px;
     right: 80px;
-    background: rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.08);
   }
   .deco2 {
     width: 180px;
     height: 180px;
     bottom: 40px;
     left: 60px;
-    background: rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.06);
   }
   .deco3 {
     width: 120px;
     height: 120px;
     top: 80px;
     left: 200px;
-    background: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
   }
   .title {
     font-family: 'KaiTi', 'STKaiti', 'FangSong', serif;
     font-size: 88px;
-    color: #3e2723;
+    color: ${theme.text};
     letter-spacing: 12px;
-    text-shadow: 2px 2px 8px rgba(0,0,0,0.08);
+    text-shadow: 2px 2px 12px rgba(0,0,0,0.3);
     line-height: 1.4;
     text-align: center;
     padding: 0 60px;
+    position: relative;
+    z-index: 10;
   }
   .divider {
     width: 80px;
     height: 2px;
-    background: #795548;
-    opacity: 0.3;
+    background: ${theme.accent};
+    opacity: 0.6;
     margin-top: 36px;
     border-radius: 1px;
+    position: relative;
+    z-index: 10;
   }
   .date {
     font-family: 'KaiTi', 'STKaiti', serif;
     font-size: 32px;
-    color: #795548;
+    color: ${theme.text};
     margin-top: 48px;
     letter-spacing: 4px;
-    opacity: 0.7;
+    opacity: 0.8;
+    position: relative;
+    z-index: 10;
+  }
+  .deco-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
   }
 </style>
 </head>
@@ -143,6 +301,9 @@ async function generateCoverImage(paragraphs, today, page) {
   <div class="deco-circle deco1"></div>
   <div class="deco-circle deco2"></div>
   <div class="deco-circle deco3"></div>
+  <svg class="deco-svg" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid slice">
+    ${decoSvg}
+  </svg>
   <div class="title">${quote}</div>
   <div class="divider"></div>
   <div class="date">${today.year}.${today.month}.${today.day}　夜读</div>
@@ -172,7 +333,7 @@ async function generateCoverImage(paragraphs, today, page) {
     // 删除临时 HTML
     try { fs.unlinkSync(tmpHtmlPath); } catch (_) {}
 
-    log(`✅ 生成封面图: ${imgName}（楷体渲染，1280×720）`);
+    log(`✅ 生成封面图: ${imgName}（${theme.name}主题，SVG装饰，楷体渲染，1280×720）`);
     return imgName;
   } catch (err) {
     log(`❌ 生成封面图失败: ${err.message}`);
