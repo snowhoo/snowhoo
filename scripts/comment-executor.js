@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 const https = require('https');
 
 const SCHEDULE_FILE = path.join(__dirname, 'daily-comment-schedule.json');
@@ -108,12 +109,29 @@ async function runExecutor() {
     try {
       const result = await postComment(task.comment, task.nickname, task.article.path);
       console.log('[CommentExecutor] ✓ 成功 (ID: ' + (result.data ? result.data.objectId : 'N/A') + ')');
+      // 发评论成功后删除对应的 Windows 计划任务
+      deleteScheduledTask(task.index);
     } catch (err) {
       console.log('[CommentExecutor] ✗ 失败: ' + err.message);
     }
   }
 
   console.log('[CommentExecutor] 执行完成');
+}
+
+// ============== 删除 Windows 计划任务 ==============
+function deleteScheduledTask(taskIndex) {
+  const taskName = 'AutoPost_Task_' + taskIndex;
+  const taskPath = '\\Hexo-Bot\\';
+  try {
+    execSync('powershell -ExecutionPolicy Bypass -NoProfile -Command "Unregister-ScheduledTask -TaskName \`"' + taskName + '\`" -TaskPath \`"' + taskPath + '\`" -Confirm:\$false -ErrorAction SilentlyContinue"', {
+      windowsHide: true,
+      timeout: 10000
+    });
+    console.log('[CommentExecutor] 已清理计划任务: Hexo-Bot\\' + taskName);
+  } catch (e) {
+    // 忽略删除失败（任务可能已不存在）
+  }
 }
 
 // ============== 只在直接运行时执行（不被 hexo 自动加载时执行）==============
