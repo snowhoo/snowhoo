@@ -257,7 +257,7 @@ function getAllArticles() {
       const dateParts = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
       if (dateParts) {
         const [, year, month, day] = dateParts;
-        const titlePart = file.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace('.md', '');
+        const titlePart = file.replace('.md', '').replace(' ', '-');
         articlePath = `/${year}/${month}/${day}/${titlePart}/`;
       } else {
         articlePath = '/articles/' + file.replace('.md', '') + '/';
