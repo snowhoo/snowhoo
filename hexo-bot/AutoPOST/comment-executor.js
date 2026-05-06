@@ -123,14 +123,19 @@ async function runExecutor() {
 function deleteScheduledTask(taskIndex) {
   const taskName = 'AutoPost_Task_' + taskIndex;
   const taskPath = '\\Hexo-Bot\\';
+  const psScript = [
+    'Unregister-ScheduledTask -TaskName "' + taskName + '" -TaskPath "' + taskPath + '" -Confirm:$false -ErrorAction SilentlyContinue',
+    'Write-Output "deleted"'
+  ].join('; ');
   try {
-    execSync('powershell -ExecutionPolicy Bypass -NoProfile -Command "Unregister-ScheduledTask -TaskName \`"' + taskName + '\`" -TaskPath \`"' + taskPath + '\`" -Confirm:\$false -ErrorAction SilentlyContinue"', {
+    const output = execSync('powershell -ExecutionPolicy Bypass -NoProfile -Command "' + psScript.replace(/"/g, '\\"') + '"', {
+      encoding: 'utf8',
       windowsHide: true,
       timeout: 10000
     });
     console.log('[CommentExecutor] 已清理计划任务: Hexo-Bot\\' + taskName);
   } catch (e) {
-    // 忽略删除失败（任务可能已不存在）
+    // ignore — task may not exist
   }
 }
 

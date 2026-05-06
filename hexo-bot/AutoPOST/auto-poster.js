@@ -251,14 +251,24 @@ function getAllArticles() {
     const permalink = frontMatter.permalink;
 
     if (permalink) {
-      articlePath = permalink.replace(/^https?:\/\/[^/]+/, '').replace(/^\/+/, '/');
+      articlePath = permalink.replace(/^https?:\/\/[^/]+/, '').replace(/^\/+/) === permalink
+        ? permalink
+        : '/' + permalink.replace(/^https?:\/\/[^/]+/, '').replace(/^\/+/, '');
+      articlePath = articlePath.replace(/^https?:\/\/[^/]+/, '').replace(/^\/+/, '/');
     } else {
       const dateStr = frontMatter.date || '';
       const dateParts = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
       if (dateParts) {
         const [, year, month, day] = dateParts;
-        const titlePart = file.replace('.md', '').replace(' ', '-');
-        articlePath = `/${year}/${month}/${day}/${titlePart}/`;
+        // 用 frontmatter 的实际 title 转 slug，不用文件名
+        const fmTitle = frontMatter.title || '';
+        const slugTitle = fmTitle
+          .toLowerCase()
+          .replace(/[^\w\u4e00-\u9fff]+/g, '-')
+          .replace(/^-|-$/g, '');
+        // 同时处理文件名作为兜底，确保空格变横杠
+        const fileSlug = file.replace('.md', '').replace(/\s+/g, '-');
+        articlePath = '/' + year + '/' + month + '/' + day + '/' + (slugTitle || fileSlug) + '/';
       } else {
         articlePath = '/articles/' + file.replace('.md', '') + '/';
       }
@@ -361,18 +371,12 @@ function createWindowsTask(hour, minute, second, taskIndex) {
   const psFile = path.join(__dirname, '_temp_task_' + taskIndex + '.ps1');
   const psContent = [
     '$ErrorActionPreference = "Stop"',
-    'try {',
-    '  Unregister-ScheduledTask -TaskName "' + taskName + '" -TaskPath "\\' + TASK_FOLDER + '\\" -Confirm:$false -ErrorAction SilentlyContinue',
-    '  $act = New-ScheduledTaskAction -Execute "' + nodeExe + '" -Argument "\\"' + EXECUTOR_SCRIPT + '\\" --taskIndex=' + taskIndex + '"',
-    '  $trig = New-ScheduledTaskTrigger -Once -At "' + formattedDate + ' ' + timeStr + '"',
-    '  $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries',
-    '  Register-ScheduledTask -TaskName "' + taskName + '" -TaskPath "\\' + TASK_FOLDER + '\\" -Action $act -Trigger $trig -Settings $settings -Description "Hexo AutoPost ' + taskIndex + '" | Out-Null',
-    '  Write-Output "OK"',
-    '} catch {',
-    '  Write-Output ("ERR: " + $_.Exception.Message)',
-    '  exit 1',
-    '}',
-    'exit 0'
+    '$act = New-ScheduledTaskAction -Execute "' + nodeExe.replace('\\', '\\\\') + '" -Argument "' + EXECUTOR_SCRIPT.replace('\\', '\\\\') + ' --taskIndex=' + taskIndex + '"',
+    '$trig = New-ScheduledTaskTrigger -Once -At "' + formattedDate + ' ' + timeStr + '"',
+    '$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries',
+    'Unregister-ScheduledTask -TaskName "' + taskName + '" -TaskPath "\\' + TASK_FOLDER + '\\" -Confirm:$false -ErrorAction SilentlyContinue',
+    'Register-ScheduledTask -TaskName "' + taskName + '" -TaskPath "\\' + TASK_FOLDER + '\\" -Action $act -Trigger $trig -Settings $settings -Description "Hexo AutoPost ' + taskIndex + '" | Out-Null',
+    'Write-Output "OK"'
   ].join('\n');
 
   fs.writeFileSync(psFile, '\ufeff' + psContent, 'utf8');
