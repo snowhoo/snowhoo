@@ -7,7 +7,7 @@ categories:
 tags:
   - 热搜
   - 今日要闻
-cover: /images/hotnews-morning.svg
+cover: /images/hotnews/20260506_morning_01.webp
 toc: true
 ---
 
