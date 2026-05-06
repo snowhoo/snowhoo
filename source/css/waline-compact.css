@@ -1,19 +1,20 @@
 /* ===== Waline 评论界面极限纵向压缩 ===== */
 /* v5 - 添加中性简约默认头像 */
 
-/* 设置默认头像为中性神秘人图案（mp） */
+/* 设置默认头像为中性神秘人图案（mp）
+ * 注：已改用 _config.butterfly.yml 中的 avatar: 'mp' 配置，此处 CSS 覆盖已失效（content:url 对 img 标签无效），故注释掉
 .wl-avatar[src*="avatar"],
 .wl-avatar[src=""],
 .wl-avatar:not([src]) {
   content: url('https://cravatar.cn/avatar/?d=mp&s=80') !important;
 }
 
-/* 默认头像覆盖 */
+/* 默认头像覆盖
 .wl-avatar {
   background: none !important;
 }
 
-/* 对于没有设置头像的评论者，使用中性默认头像 */
+/* 对于没有设置头像的评论者，使用中性默认头像
 .v[data-v-xxx] .wl-user[data-v-xxx] .wl-avatar:not([src*="gravatar"]):not([src*="cravatar"]),
 .v[data-v-xxx] .wl-user[data-v-xxx] .wl-avatar[src=""],
 .v[data-v-xxx] .wl-user[data-v-xxx] .wl-avatar[src*="avatar.php"] {
@@ -22,6 +23,7 @@
   background-position: center !important;
   background-repeat: no-repeat !important;
 }
+*/
 
 /* 删除评论区顶部蓝色虚线分割条 */
 hr.custom-hr {
