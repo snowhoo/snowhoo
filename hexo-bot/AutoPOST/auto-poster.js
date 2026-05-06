@@ -16,7 +16,7 @@ const { execSync } = require('child_process');
 // ============== 路径配置 ==============
 const POSTS_DIR = path.join(__dirname, '../../source/_posts');
 const SCHEDULE_FILE = path.join(__dirname, 'daily-comment-schedule.json');
-const EXECUTOR_SCRIPT = path.join(__dirname, '../comment-executor.js');
+const EXECUTOR_SCRIPT = path.join(__dirname, 'comment-executor.js');
 const TASK_FOLDER = 'Hexo-Bot';
 
 // ============== 昵称生成 ==============
