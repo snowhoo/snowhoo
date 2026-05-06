@@ -276,15 +276,25 @@ function generatePostContent(newsItems, type) {
     body += `<p style="margin:0 0 4px 0;line-height:1.4;">${descText}</p>\n`;
   });
 
+  // 封面：优先取第一条有图片的热搜作为封面图，没有则用固定 SVG
+  const firstWithImg = newsItems.find(item => item.localImg);
+  const coverImg = firstWithImg ? firstWithImg.localImg : (type === '晨报' ? '/images/hotnews-morning.svg' : '/images/hotnews-evening.svg');
+
   const frontmatter = {
     title,
     date: now,
     updated: now,
     categories: ['新闻热搜'],
     tags: ['热搜', type === '晨报' ? '今日要闻' : '晚间速递'],
-    cover: type === '晨报' ? '/images/hotnews-morning.svg' : '/images/hotnews-evening.svg',
+    cover: coverImg,
     toc: true,
   };
+
+  if (firstWithImg) {
+    console.log(`[news] 文章封面使用: ${firstWithImg.title} -> ${coverImg}`);
+  } else {
+    console.log(`[news] 文章封面使用固定SVG: ${coverImg}`);
+  }
 
   const fm = `---\n${Object.entries(frontmatter).map(([k, v]) => {
     if (Array.isArray(v)) return `${k}:\n${v.map(x => `  - ${x}`).join('\n')}`;
