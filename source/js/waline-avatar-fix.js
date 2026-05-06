@@ -1,51 +1,47 @@
-/* ===== Waline 头像强制替换为灰色 mp ===== */
-/* 强制所有评论头像显示 Cravatar 的灰色神秘人图案，不显示个性化头像 */
+/* ===== Waline 头像覆盖：只改默认蓝色mm为灰色mp ===== */
 (function() {
-  // 替换函数：把所有头像换成灰色 mp
-  function replaceAvatars() {
-    var avatars = document.querySelectorAll('.wl-avatar');
-    for (var i = 0; i < avatars.length; i++) {
-      var img = avatars[i];
-      // 统一替换为 Cravatar 灰色 mp 头像
-      img.src = 'https://cravatar.cn/avatar/?d=mp&s=80';
-      img.removeAttribute('srcset');
-    }
-  }
+  var MP_AVATAR = 'https://cravatar.cn/avatar/?d=mp&s=80';
 
-  // 初始替换（等 Waline 渲染完）
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-      setTimeout(replaceAvatars, 500);
-    });
-  } else {
-    setTimeout(replaceAvatars, 500);
-  }
-
-  // 观察新评论（无限滚动加载）
-  var observer = new MutationObserver(function(mutations) {
-    for (var i = 0; i < mutations.length; i++) {
-      var added = mutations[i].addedNodes;
-      for (var j = 0; j < added.length; j++) {
-        var node = added[j];
-        if (node.nodeType === 1) { // Element node
-          var imgs = node.querySelectorAll ? node.querySelectorAll('.wl-avatar') : [];
-          for (var k = 0; k < imgs.length; k++) {
-            imgs[k].src = 'https://cravatar.cn/avatar/?d=mp&s=80';
-            imgs[k].removeAttribute('srcset');
-          }
-          // 也有可能这个节点本身就是头像
-          if (node.classList && node.classList.contains('wl-avatar')) {
-            node.src = 'https://cravatar.cn/avatar/?d=mp&s=80';
-            node.removeAttribute('srcset');
-          }
-        }
+  function replaceDefaultAvatars() {
+    // 查找所有评论区的 img 标签（更宽泛的匹配）
+    var allImgs = document.querySelectorAll('#post-comment img, .wl-cards img, .wl-comment img');
+    
+    for (var i = 0; i < allImgs.length; i++) {
+      var img = allImgs[i];
+      var src = img.src || '';
+      
+      // 只处理来自头像服务的图片（gravatar/cravatar）
+      if (src.indexOf('gravatar') === -1 && src.indexOf('cravatar') === -1) continue;
+      
+      // 判断是否是默认蓝色头像（d=mm 或无 d 参数的默认情况）
+      // 如果 URL 里有 d=mm，说明是默认蓝色头像，需要替换
+      // 如果用户有自己的 Gravatar，URL 里 d= 应该是其他值或没有 d=
+      if (src.indexOf('d=mm') !== -1) {
+        img.src = MP_AVATAR;
+        img.removeAttribute('srcset');
       }
+      // 如果 URL 里完全没有 d= 参数（用户设置了自定义头像但没指定默认值）
+      // 这种情况下保持原样，不替换
     }
+  }
+
+  // 页面加载后等待 Waline 渲染
+  function init() {
+    // 延迟 1 秒等 Waline 完全渲染
+    setTimeout(replaceDefaultAvatars, 1000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // 监听评论区动态加载（新评论、翻页等）
+  var observer = new MutationObserver(function(mutations) {
+    setTimeout(replaceDefaultAvatars, 500);
   });
 
-  // 监听评论区容器
-  var commentEl = document.getElementById('post-comment') || document.querySelector('.wl-container');
-  if (commentEl) {
-    observer.observe(commentEl, { childList: true, subtree: true });
-  }
+  var target = document.getElementById('post-comment') || document.querySelector('.wl-container') || document.body;
+  observer.observe(target, { childList: true, subtree: true });
 })();
