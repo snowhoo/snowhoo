@@ -103,12 +103,37 @@ function getAllArticles() {
       }
     });
 
+    // 优先用 frontmatter 中的 permalink，否则用 date + title 计算
+    let articlePath;
+    const permalink = frontMatter.permalink;
+
+    if (permalink) {
+      // 去掉协议和域名，保留路径部分
+      articlePath = permalink.replace(/^https?:\/\/[^/]+/, '').replace(/^\/+/, '/');
+    } else {
+      // 用 date 和 title 按 Hexo permalink 格式计算
+      // permalink: :year/:month/:day/:title/  + trailing_html: true
+      const dateStr = frontMatter.date || '';
+      const dateParts = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (dateParts) {
+        const [, year, month, day] = dateParts;
+        // 去掉文件名中的日期前缀，用剩余部分作为 title
+        const titlePart = file.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace('.md', '');
+        // 路径格式: /年/月/日/标题/
+        articlePath = `/${year}/${month}/${day}/${titlePart}/`;
+      } else {
+        // 没有日期时，用纯 slug
+        articlePath = '/articles/' + file.replace('.md', '') + '/';
+      }
+    }
+
     const slug = file.replace('.md', '');
     articles.push({
       slug,
       title: frontMatter.title || '无标题',
       tags: frontMatter.tags ? frontMatter.tags.split(',').map(t => t.trim()) : [],
-      categories: frontMatter.categories ? frontMatter.categories.split(',').map(c => c.trim()) : []
+      categories: frontMatter.categories ? frontMatter.categories.split(',').map(c => c.trim()) : [],
+      path: articlePath
     });
   }
   return articles;
@@ -236,7 +261,7 @@ function runScheduleGenerator() {
       article: {
         slug: article.slug,
         title: article.title,
-        path: '/articles/' + article.slug + '.html'
+        path: article.path
       },
       nickname: nickname,
       comment: comment
