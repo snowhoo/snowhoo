@@ -100,7 +100,7 @@ function findArticleUrl(article, cache) {
 
   // 方法3: 回退到旧路径
   if (article.path && article.path.startsWith('/')) {
-    return 'https://snowhoo.net' + article.path + (article.path.endsWith('/') ? '' : '/');
+    return article.path.endsWith('/') ? article.path : article.path + '/';
   }
   return null;
 }
