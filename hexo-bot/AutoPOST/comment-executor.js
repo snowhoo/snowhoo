@@ -150,15 +150,15 @@ function postComment(comment, nickname, url) {
 
 function deleteScheduledTask(taskIndex) {
   const taskName = 'AutoPost_Task_' + taskIndex;
-  const taskPath = 'Hexo-Bot/';
-  const psScript = 'Unregister-ScheduledTask -TaskName "' + taskName + '" -TaskPath "' + taskPath + '" -Confirm:$false -ErrorAction SilentlyContinue; Write-Output deleted';
+  const taskPath = '\\Hexo-Bot\\';
+  const cmd = 'schtasks /Delete /TN "' + taskPath + taskName + '" /F';
   try {
-    execSync('powershell -ExecutionPolicy Bypass -NoProfile -Command "' + psScript.replace(/"/g, '\\"') + '"', {
+    execSync(cmd, {
       encoding: 'utf8',
       windowsHide: true,
       timeout: 10000
     });
-    console.log('[CommentExecutor] 已清理计划任务: Hexo-Bot/' + taskName);
+    console.log('[CommentExecutor] 已清理计划任务: ' + taskPath + taskName);
   } catch (e) {
     // ignore
   }
