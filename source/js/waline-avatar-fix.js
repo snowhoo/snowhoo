@@ -9,11 +9,10 @@
       var img = avatars[i];
       var src = img.src || '';
       
-      // 只处理 Libravatar/Gravatar/Cravatar，不动 QQ 头像
-      if ((src.indexOf('libravatar') !== -1 || 
-           src.indexOf('gravatar') !== -1 || 
-           src.indexOf('cravatar') !== -1) &&
-          src.indexOf('qlogo') === -1) {
+      // 只处理 Libravatar/Gravatar/Cravatar
+      if (src.indexOf('libravatar') !== -1 || 
+          src.indexOf('gravatar') !== -1 || 
+          src.indexOf('cravatar') !== -1) {
         img.src = GREY_MP;
         img.removeAttribute('srcset');
       }
