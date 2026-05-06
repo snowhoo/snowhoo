@@ -269,6 +269,10 @@ function getAllArticles() {
     // 提取正文（去掉 frontmatter）
     const bodyContent = content.slice(match[0].length).trim();
 
+    // 过滤"热搜""新闻"分类
+    const fmText = (frontMatter.tags || '') + ' ' + (frontMatter.categories || '');
+    if (/热搜|新闻/.test(fmText)) continue;
+
     articles.push({
       slug,
       title: frontMatter.title || '无标题',
