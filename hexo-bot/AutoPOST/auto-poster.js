@@ -344,16 +344,7 @@ function generateRandomTimes(count) {
 
 // ============== 创建 Windows 计划任务 ==============
 function createWindowsTask(hour, minute, second, taskIndex) {
-  const today = new Date();
-  const now = today.getHours() * 3600 + today.getMinutes() * 60 + today.getSeconds();
-  const scheduledSeconds = hour * 3600 + minute * 60 + second;
-
-  let dateStr = today.toISOString().split('T')[0];
-  if (scheduledSeconds <= now) {
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    dateStr = tomorrow.toISOString().split('T')[0];
-  }
+  let dateStr = (new Date()).toISOString().split('T')[0];
 
   const timeStr = hour.toString().padStart(2, '0') + ':' +
                   minute.toString().padStart(2, '0') + ':' +
