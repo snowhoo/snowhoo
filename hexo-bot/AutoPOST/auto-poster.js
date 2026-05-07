@@ -12,12 +12,14 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const https = require('https');
 
 // ============== 路径配置 ==============
 const POSTS_DIR = path.join(__dirname, '../../source/_posts');
 const SCHEDULE_FILE = path.join(__dirname, 'daily-comment-schedule.json');
 const EXECUTOR_SCRIPT = path.join(__dirname, 'comment-executor.js');
 const TASK_FOLDER = 'Hexo-Bot';
+const SITEMAP_URL = 'https://snowhoo.net/sitemap.xml';
 
 // ============== 昵称生成 ==============
 function generateNickname() {
@@ -344,7 +346,7 @@ function generateRandomTimes(count) {
 
 // ============== 创建 Windows 计划任务 ==============
 function createWindowsTask(hour, minute, second, taskIndex) {
-  let dateStr = (new Date()).toISOString().split('T')[0];
+  let dateStr = new Date().toLocaleString('zh-CN', {timeZone: 'Asia/Shanghai'}).split(' ')[0].replace(/\//g, '-');
 
   const timeStr = hour.toString().padStart(2, '0') + ':' +
                   minute.toString().padStart(2, '0') + ':' +
@@ -352,7 +354,7 @@ function createWindowsTask(hour, minute, second, taskIndex) {
 
   // 格式: YYYY/MM/DD HH:MM:SS
   const dateParts = dateStr.split('-');
-  const formattedDate = dateParts[0] + '/' + dateParts[1] + '/' + dateParts[2];
+  const formattedDate = dateParts[0] + '/' + dateParts[1].padStart(2, '0') + '/' + dateParts[2].padStart(2, '0');
 
   const taskName = 'AutoPost_Task_' + taskIndex;
   const nodeExe = 'C:\\Program Files\\nodejs\\node.exe';
@@ -395,32 +397,92 @@ function createWindowsTask(hour, minute, second, taskIndex) {
 }
 
 // ============== 主流程 ==============
-function runAutoPoster() {
+// ============== 从 Sitemap 获取已发布文章的 URL 映射 ==============
+function fetchPublishedArticles() {
+  return new Promise((resolve, reject) => {
+    console.log('[AutoPoster] 正在从网络获取 Sitemap...');
+    https.get(SITEMAP_URL, (res) => {
+      let d = '';
+      res.on('data', chunk => d += chunk);
+      res.on('end', () => {
+        const locs = d.match(/<loc>[^<]*<\/loc>/gi) || [];
+        const published = [];
+        locs.forEach(l => {
+          const m = l.match(/https:\/\/snowhoo\.net\/(\d+\/\d+\/\d+\/[^/]+)\//);
+          if (m) {
+            const fullPath = '/' + m[1] + '/';
+            const slugMatch = m[1].match(/[^/]+$/);
+            if (slugMatch) {
+              published.push({ slug: slugMatch[0], url: fullPath });
+            }
+          }
+        });
+        console.log('[AutoPoster] Sitemap 已发布文章: ' + published.length + ' 篇');
+        resolve(published);
+      });
+    }).on('error', reject);
+  });
+}
+
+// ============== 主流程 ==============
+async function runAutoPoster() {
   console.log('[AutoPoster] ========== Hexo 自动评论发布器 ==========');
   console.log('[AutoPoster] 执行时间: ' + new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }));
 
-  // 1. 读取文章
-  const articles = getAllArticles();
-  console.log('[AutoPoster] 共找到 ' + articles.length + ' 篇文章');
+  // 0. 获取已发布文章的 URL 映射
+  const publishedArticles = await fetchPublishedArticles();
+  const publishedSlugSet = new Set(publishedArticles.map(p => p.slug));
+  const urlMap = {};
+  publishedArticles.forEach(p => { urlMap[p.slug] = p.url; });
 
-  if (articles.length < 3) {
-    console.log('[AutoPoster] 文章数量不足，需要至少 3 篇');
+  // 1. 读取本地文章
+  const allArticles = getAllArticles();
+  console.log('[AutoPoster] 本地共 ' + allArticles.length + ' 篇文章');
+
+  if (allArticles.length < 3) {
+    console.log('[AutoPoster] 文章数量不足');
     return;
   }
 
-  // 2. 随机选 3 篇
-  const selectedArticles = pickRandom(articles, 3);
+  // 2. 过滤：只保留 sitemap 里已发布的文章（slug 精确或互换匹配）
+  const availableArticles = allArticles.filter(article => {
+    const slugVariants = [
+      article.slug,
+      article.slug.replace(/_/g, '-'),
+      article.slug.replace(/-/g, '_')
+    ];
+    return slugVariants.some(v => publishedSlugSet.has(v));
+  });
 
-  // 3. 生成 3 个随机时间（06:00-23:00，精确到秒）
+  console.log('[AutoPoster] 已发布文章（可选用）: ' + availableArticles.length + ' 篇');
+
+  // 3. 从已发布文章中随机选 3 篇（不足时使用全部）
+  const selectedArticles = availableArticles.length >= 3
+    ? pickRandom(availableArticles, 3)
+    : pickRandom(allArticles, 3);
+
+  // 4. 生成 3 个随机时间（06:00-23:00，精确到秒）
   const randomTimes = generateRandomTimes(3);
 
-  // 4. 构建 schedule
+  // 5. 构建 schedule，path 使用 sitemap 里的实际 URL
   const schedule = [];
   for (let i = 0; i < 3; i++) {
     const article = selectedArticles[i];
     const time = randomTimes[i];
     const nickname = generateNickname();
     const comment = generateComment(article);
+
+    // 查找 sitemap 中的实际 URL
+    const slugVariants = [
+      article.slug,
+      article.slug.replace(/_/g, '-'),
+      article.slug.replace(/-/g, '_')
+    ];
+    let actualUrl = null;
+    for (const v of slugVariants) {
+      if (urlMap[v]) { actualUrl = urlMap[v]; break; }
+    }
+    const articlePath = actualUrl || article.path;
 
     schedule.push({
       index: i + 1,
@@ -431,27 +493,28 @@ function runAutoPoster() {
       article: {
         slug: article.slug,
         title: article.title,
-        path: article.path
+        path: articlePath
       },
       nickname: nickname,
       comment: comment
     });
 
+    const srcTag = actualUrl ? ' [sitemap]' : ' [fallback-local]';
     console.log('[AutoPoster] 计划' + (i + 1) + ': ' + time.label + ' - 《' + article.title + '》');
-    console.log('[AutoPoster]   路径: ' + article.path);
+    console.log('[AutoPoster]   路径: ' + articlePath + srcTag);
     console.log('[AutoPoster]   昵称: ' + nickname + ' | 评论: ' + comment);
   }
 
-  // 5. 写入计划文件
+  // 6. 写入计划文件
+  const dateStr = new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Shanghai' }).split(' ')[0];
   fs.writeFileSync(SCHEDULE_FILE, JSON.stringify({
-    date: new Date().toISOString().split('T')[0],
+    date: dateStr,
     generatedAt: new Date().toISOString(),
     schedule: schedule
   }, null, 2), 'utf-8');
-
   console.log('[AutoPoster] 计划已写入: ' + SCHEDULE_FILE);
 
-  // 6. 创建 Windows 计划任务
+  // 7. 清理旧任务，创建新任务
   console.log('[AutoPoster] --- 创建 Windows 计划任务 ---');
   for (let i = 0; i < 3; i++) {
     createWindowsTask(schedule[i].hour, schedule[i].minute, schedule[i].second, i + 1);
