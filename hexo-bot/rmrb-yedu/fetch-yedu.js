@@ -754,11 +754,14 @@ function writeHexoPost(article, markdownBody, today, downloadedNames) {
 
   // 清理标题，移除可能的前缀标记和"人民日报"字样
   let cleanTitle = article.title
-    .replace(/^【夜读】/, '')
-    .replace(/^夜读[丨\|\/]/, '')
-    .replace(/^夜读\s*/, '')
-    .replace(/^人民日报[：:\s]*/i, '')
-    .replace(/^人民日报\s*/i, '')
+    .replace(/人民日报[：:\s]*/gi, '')
+.replace(/人民日报/g, '')
+
+//.replace(/^【夜读】/, '')
+    //.replace(/^夜读[丨\|\/]/, '')
+    //.replace(/^夜读\s*/, '')
+   // .replace(/^人民日报[：:\s]*/i, '')
+  //  .replace(/^人民日报\s*/i, '')
     .trim();
 
   if (!cleanTitle) {
