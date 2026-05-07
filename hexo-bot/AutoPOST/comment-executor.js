@@ -1,114 +1,19 @@
-﻿const fs = require('fs');
+/**
+ * Hexo 评论执行器
+ * 职责极简：读取 schedule 中预生成的数据，直接发往 Waline
+ * 所有逻辑（sitemap 抓取、文章选择、URL 解析、评论生成）已在 auto-poster.js 中完成
+ */
+
+const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const https = require('https');
 
 const SCHEDULE_FILE = path.join(__dirname, 'daily-comment-schedule.json');
-const SITEMAP_URL = 'https://snowhoo.net/sitemap.xml';
-const CACHE_FILE = path.join(__dirname, 'sitemap-cache.json');
-const CACHE_MAX_AGE = 4 * 60 * 60 * 1000; // 4小时
-
-// ============== Sitemap 获取 & 缓存 ==============
-
-async function fetchSitemap() {
-  // 1. 尝试从本地缓存加载
-  if (fs.existsSync(CACHE_FILE)) {
-    try {
-      const cache = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8'));
-      if (Date.now() - cache.fetchedAt < CACHE_MAX_AGE) {
-        console.log('[Sitemap] 从本地缓存加载 (' + Math.round(cache.urlMap.length / 3) + ' 条)');
-        return cache;
-      }
-    } catch (e) {
-      // 缓存损坏，重新获取
-    }
-  }
-
-  // 2. 从网络获取
-  console.log('[Sitemap] 正在从网络获取...');
-  const response = await fetch(SITEMAP_URL);
-  if (!response.ok) {
-    throw new Error('Sitemap fetch failed: ' + response.status);
-  }
-  const xmlText = await response.text();
-
-  const urlMap = [];
-  const locMatches = xmlText.matchAll(/<loc>([^<]+)<\/loc>/gi);
-  for (const match of locMatches) {
-    const loc = match[1].trim();
-    if (loc.includes('/index.html') || loc.includes('生成文章') || loc.includes('tags/index') || loc.includes('categories/index') || loc.includes('link/index') || loc.includes('guestbook/index') || loc.includes('about/index') || loc.includes('robots.txt')) {
-      continue;
-    }
-    try {
-      const urlObj = new URL(loc);
-      const pathPart = urlObj.pathname;
-      const cleanPath = pathPart.endsWith('/') ? pathPart.slice(0, -1) : pathPart;
-      const parts = cleanPath.split('/');
-      const slug = parts[parts.length - 1];
-      if (slug) {
-        urlMap.push({ slug, url: cleanPath });
-        urlMap.push({ slug: slug.replace(/_/g, '-'), url: cleanPath });
-        urlMap.push({ slug: slug.replace(/-/g, '_'), url: cleanPath });
-      }
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  const uniqueCount = Math.round(urlMap.length / 3);
-  console.log('[Sitemap] 解析完成，共 ' + uniqueCount + ' 条文章');
-
-  // 3. 保存本地缓存
-  const cache = { urlMap, fetchedAt: Date.now() };
-  try {
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(cache), 'utf8');
-    console.log('[Sitemap] 已缓存到本地');
-  } catch (e) {
-    console.log('[Sitemap] 缓存写入失败: ' + e.message);
-  }
-
-  return cache;
-}
-
-function findArticleUrl(article, cache) {
-  const urlMap = cache.urlMap;
-
-  // 方法1: slug 精确匹配（三种变体）
-  const slugVariants = [article.slug, article.slug.replace(/_/g, '-'), article.slug.replace(/-/g, '_')];
-  for (const item of urlMap) {
-    if (slugVariants.includes(item.slug)) {
-      return item.url.endsWith("/") ? item.url : item.url + "/";
-    }
-  }
-
-  // 方法2: 标题关键词部分匹配
-  const titleWords = article.title
-    .replace(/[^a-zA-Z0-9\s-]/g, ' ')
-    .trim()
-    .split(/\s+/)
-    .filter(w => w.length > 4)
-    .map(w => w.toLowerCase());
-
-  for (const item of urlMap) {
-    const slugLower = item.slug.toLowerCase();
-    const match = titleWords.some(w => slugLower.includes(w) || (w.length > 4 && slugLower.includes(w.split('-')[0])));
-    if (match) {
-      console.log('[Sitemap] 标题匹配: ' + item.slug + ' <- ' + article.title.substring(0, 40));
-      return item.url.endsWith("/") ? item.url : item.url + "/";
-    }
-  }
-
-  // 方法3: 回退到旧路径
-  if (article.path && article.path.startsWith('/')) {
-    return article.path.endsWith('/') ? article.path : article.path + '/';
-  }
-  return null;
-}
 
 // ============== 评论发布 ==============
-
 function postComment(comment, nickname, url) {
   return new Promise((resolve, reject) => {
+    const https = require('https');
     const postData = JSON.stringify({ comment, nick: nickname, url });
     const options = {
       hostname: 'waline.snowhoo.net',
@@ -147,7 +52,6 @@ function postComment(comment, nickname, url) {
 }
 
 // ============== 删除 Windows 计划任务 ==============
-
 function deleteScheduledTask(taskIndex) {
   const taskName = 'AutoPost_Task_' + taskIndex;
   const taskPath = '\\Hexo-Bot\\';
@@ -160,12 +64,11 @@ function deleteScheduledTask(taskIndex) {
     });
     console.log('[CommentExecutor] 已清理计划任务: ' + taskPath + taskName);
   } catch (e) {
-    // ignore
+    // 任务可能已自动删除，忽略错误
   }
 }
 
 // ============== 主流程 ==============
-
 async function runExecutor() {
   console.log('[CommentExecutor] 开始执行评论发布...');
   console.log('[CommentExecutor] 执行时间: ' + new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }));
@@ -186,6 +89,7 @@ async function runExecutor() {
   const tasks = scheduleData.schedule;
   console.log('[CommentExecutor] 今日计划共 ' + tasks.length + ' 条评论');
 
+  // 解析 --taskIndex 参数
   const args = process.argv.slice(2);
   let taskIndex = null;
   for (const arg of args) {
@@ -205,27 +109,16 @@ async function runExecutor() {
     return;
   }
 
-  // 获取 sitemap（本地缓存优先）
-  let cache = null;
-  try {
-    cache = await fetchSitemap();
-  } catch (err) {
-    console.log('[CommentExecutor] Sitemap 获取失败，使用旧路径: ' + err.message);
-  }
-
+  // 执行每条预生成的评论
   for (const task of tasksToRun) {
-    const correctUrl = cache ? findArticleUrl(task.article, cache) : null;
-    const finalUrl = correctUrl || ('https://snowhoo.net' + task.article.path);
-
     console.log('[CommentExecutor] [' + task.index + '/' + tasks.length + ']');
-    console.log('[CommentExecutor] 文章: 《' + task.article.title + '》');
-    console.log('[CommentExecutor] 旧路径: ' + task.article.path);
-    console.log('[CommentExecutor] 解析路径: ' + finalUrl);
-    console.log('[CommentExecutor] 昵称: ' + task.nickname + ' | 评论: ' + task.comment);
+    console.log('[CommentExecutor] URL: ' + task.url);
+    console.log('[CommentExecutor] 昵称: ' + task.nick + ' | 评论: ' + task.comment);
 
     try {
-      const result = await postComment(task.comment, task.nickname, finalUrl);
-      console.log('[CommentExecutor] 成功 (ID: ' + (result.data ? result.data.objectId : 'N/A') + ')');
+      const result = await postComment(task.comment, task.nick, task.url);
+      const commentId = result.data ? result.data.objectId : 'N/A';
+      console.log('[CommentExecutor] 成功 (ID: ' + commentId + ')');
       deleteScheduledTask(task.index);
     } catch (err) {
       console.log('[CommentExecutor] 失败: ' + err.message);
@@ -235,8 +128,7 @@ async function runExecutor() {
   console.log('[CommentExecutor] 执行完成');
 }
 
-// ============== 直接运行时执行 ==============
-
+// ============== 入口 ==============
 if (require.main === module) {
   runExecutor()
     .then(() => process.exit(0))
@@ -246,4 +138,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { runExecutor, fetchSitemap, findArticleUrl };
+module.exports = { runExecutor };

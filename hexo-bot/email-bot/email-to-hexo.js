@@ -1,6 +1,6 @@
 /**
  * Hexo 邮件发布服务 - 轮询模式
- * 每 30 分钟由 Windows 任务计划触发，检索 1 小时内的新邮件并发布到 Hexo
+ * 每 30 分钟由 Windows 任务计划触发，检索最近10小时内的新邮件并发布到 Hexo
  * 处理完直接退出，不常驻
  *
  * 用法: node email-to-hexo.js
@@ -472,8 +472,8 @@ async function run() {
     const lock = await client.getMailboxLock('INBOX');
 
     try {
-      // 检索 1 小时内的邮件
-      const since = new Date(Date.now() - 60 * 60 * 1000);
+      // 检索最近10小时的新邮件
+      const since = new Date(Date.now() - 10 * 60 * 60 * 1000);
       const uids = await client.search({ since });
 
       if (!uids.length) {
