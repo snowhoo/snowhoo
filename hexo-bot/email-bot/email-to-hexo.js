@@ -189,6 +189,8 @@ function convertHtmlToMarkdown(html, attachments, imgDir) {
     .replace(/\n{3,}/g, '\n\n')
     // 修复：atx 标题缺少 # 与文字之间的空格（如 #测试 → # 测试）
     .replace(/^(#{1,6})([^\s#])/gm, '$1 $2')
+    // 修复：正文内容中的 literal \-（反斜杠+连字符）还原为纯 -
+    .replace(/\\-/g, '-')
     .trim();
 
   return { markdown, savedImgs };
@@ -273,7 +275,7 @@ async function parseEmail(subject, body, html, attachments) {
 
   const catMatch = content.match(/\[(?:cat|category)[:：]\s*([^\]]+)\]/i);
   if (catMatch) {
-    categories = catMatch[1].split(/[,，]/).map(s => s.trim()).filter(Boolean);
+    categories = catMatch[1].split(/[,，]/).map(s => s.trim().replace(/[\u2000-\u200f\u2028-\u202f\ufeff]/g, '')).filter(Boolean);
     content = content.replace(catMatch[0], '').trim();
   }
 
@@ -293,7 +295,7 @@ function buildPostContent(parsed) {
     ...(parsed.categories.length ? { categories: parsed.categories } : {}),
     comments: true,
   };
-  const fmStr = yaml.dump(cleanFM);
+  const fmStr = yaml.dump(cleanFM, { forceQuotes: false });
   return { filename, content: `---\n${fmStr}---\n\n${parsed.content}\n` };
 }
 
@@ -432,10 +434,11 @@ async function handleOneEmail(client, uid, processedUIDs) {
 
     await sendReceipt(from, filename, draft);
 
+    if (!draft && AUTO_DEPLOY) await triggerDeploy(filename);
+
+    // ⚠️ 只有所有步骤（写入文件→发邮件→发布）全部成功后才标记为已处理
     processedUIDs.add(String(uid));
     saveProcessedUIDs(processedUIDs);
-
-    if (!draft && AUTO_DEPLOY) await triggerDeploy(filename);
 
     await client.messageFlagsAdd(uid, ['\\Seen']);
 
