@@ -180,6 +180,7 @@
 
     var tag = document.createElement('div');
     tag.id = 'lucky-visitor-tag';
+    tag.classList.add('expanded');
     tag.style.cursor = 'pointer';
     tag.onclick = function() { window.location.href = 'https://snowhoo.net/guestbook/'; };
     tag.innerHTML =
@@ -189,8 +190,40 @@
           '<div class="lucky-row1"><span class="lucky-badge">' + badge + '</span><span class="lucky-readers">读友</span><span class="lucky-count">第' + count + '次来访</span></div>' +
           '<div class="lucky-row2"><span class="lucky-num">幸运号 #' + lucky + '</span><span class="lucky-lottery">留言可抽奖！</span></div>' +
         '</div>' +
-      '</div>';
+      '</div>' +
+      '<div class="lucky-collapsed-icon">' + emoji + '</div>';
     document.body.appendChild(tag);
+
+    // ── 自动收起逻辑 ──────────────────────────────────────
+    var panel = tag;
+    var COLLAPSE_DELAY = 3000;
+    var collapseTimer = null;
+
+    function collapsePanel() {
+      panel.classList.remove('expanded');
+      panel.classList.add('collapsed');
+    }
+
+    function resetCollapseTimer() {
+      clearTimeout(collapseTimer);
+      panel.classList.remove('collapsed');
+      panel.classList.add('expanded');
+      collapseTimer = setTimeout(collapsePanel, COLLAPSE_DELAY);
+    }
+
+    collapseTimer = setTimeout(collapsePanel, COLLAPSE_DELAY);
+
+    tag.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (tag.classList.contains('collapsed')) {
+        // 收起状态 → 展开
+        resetCollapseTimer();
+      } else {
+        // 展开状态 → 跳转留言板
+        window.location.href = 'https://snowhoo.net/guestbook/';
+      }
+    });
   }
 
   // ========================
