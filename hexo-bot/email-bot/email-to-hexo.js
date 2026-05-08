@@ -293,7 +293,7 @@ function buildPostContent(parsed) {
     ...(parsed.categories.length ? { categories: parsed.categories } : {}),
     comments: true,
   };
-  const fmStr = yaml.dump(cleanFM, { allowUnescape: true });
+  const fmStr = yaml.dump(cleanFM);
   return { filename, content: `---\n${fmStr}---\n\n${parsed.content}\n` };
 }
 
