@@ -180,6 +180,7 @@ html[data-theme="dark"] body #nav #blog-info .site-slogan {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   cursor: default;
   animation: lucky-float-in 0.6s ease-out;
+  direction: rtl;
 }
 
 @keyframes lucky-float-in {
@@ -194,7 +195,7 @@ html[data-theme="dark"] body #nav #blog-info .site-slogan {
 }
 
 #lucky-visitor-tag .lucky-tag-inner {
-  background: linear-gradient(145deg, #fff9f0, #fff3e0);
+  background: linear-gradient(145deg, rgba(255,249,240,0.90), rgba(255,243,224,0.90));
   border: 1px solid rgba(255, 152, 0, 0.3);
   border-radius: 12px;
   padding: 12px 14px;
@@ -296,8 +297,12 @@ html[data-theme="dark"] #lucky-visitor-tag .lucky-count {
   display: none;
   font-size: 22px;
   line-height: 1;
-  padding: 6px;
+  padding: 8px 10px;
   text-align: center;
+  background: linear-gradient(145deg, rgba(255,249,240,0.90), rgba(255,243,224,0.90));
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(255, 152, 0, 0.15);
 }
 
 #lucky-visitor-tag.collapsed .lucky-emoji {
