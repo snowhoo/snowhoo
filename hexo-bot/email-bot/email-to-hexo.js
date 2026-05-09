@@ -216,7 +216,10 @@ function loadProcessedUIDs() {
 }
 function saveProcessedUIDs(uids) {
   try {
-    fs.writeFileSync(UID_CACHE_FILE, JSON.stringify([...uids]), 'utf8');
+    // 只保留最近 20 个 UID（UID 单调递增，越大越新）
+    const sorted = [...uids].map(Number).sort((a, b) => b - a);
+    const keep = new Set(sorted.slice(0, 20).map(String));
+    fs.writeFileSync(UID_CACHE_FILE, JSON.stringify([...keep]), 'utf8');
   } catch (_) {}
 }
 
@@ -391,9 +394,13 @@ async function sendReceipt(toEmail, title, draft) {
 }
 
 // ─── 处理单封邮件 ───────────────────────────────────────────────────────────
+// 新 UID 记录（每轮重新收集，本轮全部成功后再写入文件）
+let newProcessedUIDs = new Set();
+
 async function handleOneEmail(client, uid, processedUIDs) {
   try {
-    if (processedUIDs.has(String(uid))) {
+    // 去重检查：同时检查文件中的UID（processedUIDs）和本轮已处理的UID（newProcessedUIDs）
+    if (processedUIDs.has(String(uid)) || newProcessedUIDs.has(String(uid))) {
       return;
     }
 
@@ -436,14 +443,15 @@ async function handleOneEmail(client, uid, processedUIDs) {
 
     if (!draft && AUTO_DEPLOY) await triggerDeploy(filename);
 
-    // ⚠️ 只有所有步骤（写入文件→发邮件→发布）全部成功后才标记为已处理
-    processedUIDs.add(String(uid));
-    saveProcessedUIDs(processedUIDs);
+    // ⚠️ 标记新处理成功的 UID（内存中收集，等本轮全部跑完再统一写入文件）
+    newProcessedUIDs.add(String(uid));
 
     await client.messageFlagsAdd(uid, ['\\Seen']);
 
   } catch (err) {
+    // savePost 失败时不要标记 UID 为 DONE，否则下次不会重试
     if (err.message.includes('文件已存在')) {
+      newProcessedUIDs.add(String(uid));
       console.log(`[skip] 文件冲突，标记已读: ${err.message}`);
       await client.messageFlagsAdd(uid, ['\\Seen']);
     } else {
@@ -480,17 +488,23 @@ async function run() {
       const uids = await client.search({ since });
 
       if (!uids.length) {
-        console.log('[暂无] 1小时内无新邮件');
+        console.log('[暂无] 10小时内无新邮件');
         return;
       }
 
-      console.log(`[扫描] 发现 ${uids.length} 封邮件（1小时内）`);
+      console.log(`[扫描] 发现 ${uids.length} 封邮件（10小时内）`);
 
       let processed = 0;
       for (const uid of uids) {
         await handleOneEmail(client, uid, processedUIDs);
-        // 已处理的 UID 不会重复处理，这里只统计尝试数
         processed++;
+      }
+
+      // 本轮所有邮件处理完毕后，将新成功的 UID 合并写入文件（只保留最近 20 个）
+      if (newProcessedUIDs.size > 0) {
+        newProcessedUIDs.forEach(uid => processedUIDs.add(uid));
+        saveProcessedUIDs(processedUIDs);
+        newProcessedUIDs.clear();
       }
 
       console.log(`[done] 扫描完成，检查 ${processed} 封`);
