@@ -1496,7 +1496,7 @@ inject:
         if (document.querySelector('.news-shortcut-card')) return;
 
         var card = document.createElement('a');
-        card.href = '/search/';
+        card.href = '/news/';
         card.className = 'news-shortcut-card';
         card.innerHTML = '' +
           '<span class="news-shortcut-icon">📰</span>' +
