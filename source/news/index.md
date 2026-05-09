@@ -8,11 +8,6 @@ description: 聚合22个平台的实时热点新闻
 <link rel="stylesheet" href="/css/news-page.css">
 
 <div class="news-page">
-  <div class="news-header">
-    <h1>📰 新闻速递</h1>
-    <p class="news-subtitle">22个平台实时热点 · 点击平台切换 · 每30分钟自动更新</p>
-  </div>
-
   <div class="platform-tabs" id="platform-tabs">
     <button class="tab-btn active" data-platform="baidu">百度</button>
     <button class="tab-btn" data-platform="weibo">微博</button>
@@ -56,18 +51,6 @@ description: 聚合22个平台的实时热点新闻
   max-width: 900px;
   margin: 0 auto;
   padding: 20px;
-}
-.news-header {
-  text-align: center;
-  margin-bottom: 24px;
-}
-.news-header h1 {
-  margin: 0 0 8px 0;
-}
-.news-subtitle {
-  color: #888;
-  font-size: 14px;
-  margin: 0;
 }
 .platform-tabs {
   display: flex;
