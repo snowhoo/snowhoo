@@ -294,13 +294,16 @@ function buildPostContent(parsed) {
     comments: true,
   };
   const fmStr = yaml.dump(cleanFM, { forceQuotes: false });
-  const rawContent = "---\n" + fmStr + "---\n\n" + parsed.content + "\n";
-  const divider = rawContent.indexOf("\n\n");
-  const fmBlock = rawContent.slice(0, divider).replace(/\\$/gm, "");
-  const bodyBlock = rawContent.slice(divider).replace(/^\\/, "");
-  return { filename, content: fmBlock + bodyBlock };
+  // 字符串拼接，避免模板字符串边界问题
+  const raw = '---\n' + fmStr + '---\n\n' + parsed.content + '\n';
+  const dividerIdx = raw.indexOf('\n\n');
+  // dividerIdx 是第一个 \n 的位置，body 从 dividerIdx + 2 开始（跳过 \n\n）
+  const fmBlock = raw.slice(0, dividerIdx).replace(/\\$/gm, '');
+  const bodyWithNewline = raw.slice(dividerIdx + 2);
+  // 去掉 body 开头可能的反斜杠（可能是分类标签处理残留）
+  const body = bodyWithNewline.replace(/^\\/, '');
+  return { filename, content: fmBlock + body };
 }
-
 function savePost(parsed) {
   const { filename, content } = buildPostContent(parsed);
   const dir = parsed.draft ? HEXO_DRAFTS : HEXO_SOURCE;
