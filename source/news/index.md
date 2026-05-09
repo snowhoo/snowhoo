@@ -1,4 +1,4 @@
----
+﻿---
 title: 新闻速递
 date: 2026-05-09 10:45:00
 type: news
@@ -51,7 +51,7 @@ description: 聚合22个平台的实时热点新闻
 .news-page {
   max-width: 900px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 10px;
 }
 .platform-tabs {
   display: flex;

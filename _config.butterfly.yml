@@ -1374,8 +1374,8 @@ inject:
     - <script src="/js/waline-avatar-fix.js" defer></script>
     - |
       <style>
-      /* ========== 首页新闻速递快捷入口卡片（与节日节气横幅同位置） ========== */
-      #home .news-shortcut-card {
+      /* ========== 首页新闻速递快捷入口卡片（导航下方，常驻显示） ========== */
+      .news-shortcut-card {
         display: flex;
         width: 100%;
         max-width: 1100px;
@@ -1387,9 +1387,11 @@ inject:
         box-shadow: 0 4px 16px rgba(196, 30, 58, 0.3);
         text-decoration: none;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+        z-index: 1;
       }
-      #home .news-shortcut-card:active,
-      #home .news-shortcut-card:hover {
+      .news-shortcut-card:active,
+      .news-shortcut-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
       }
@@ -1431,7 +1433,7 @@ inject:
         color: rgba(255,255,255,0.7);
         flex-shrink: 0;
       }
-      html[data-theme=dark] #home .news-shortcut-card {
+      html[data-theme=dark] .news-shortcut-card {
         background: linear-gradient(135deg, #9a1b30 0%, #5c0011 100%);
         box-shadow: 0 4px 16px rgba(154, 27, 48, 0.35);
       }
@@ -1441,7 +1443,7 @@ inject:
       }
       /* 手机端适配 */
       @media (max-width: 768px) {
-        #home .news-shortcut-card {
+        .news-shortcut-card {
           margin: 6px 16px 0 16px;
           border-radius: 10px;
         }
@@ -1464,13 +1466,13 @@ inject:
       </style>
       <script>
       document.addEventListener('DOMContentLoaded', function() {
-        // 在 #home 容器内的文章列表之前插入新闻快捷卡片
+        // 插入到 #solar-term-banner 之后（导航下方），若无 banner 则插入到 #home 顶部
+        var banner = document.getElementById('solar-term-banner');
         var homeContainer = document.querySelector('#home');
-        var recentPosts = document.querySelector('#home #recent-posts');
-        if (!homeContainer || !recentPosts) return;
+        var recentPosts = homeContainer ? document.querySelector('#home #recent-posts') : null;
 
         // 检查是否已存在（避免 PJAX 重复插入）
-        if (homeContainer.querySelector('.news-shortcut-card')) return;
+        if (document.querySelector('.news-shortcut-card')) return;
 
         var card = document.createElement('a');
         card.href = '/search/';
@@ -1486,7 +1488,12 @@ inject:
             '</div>' +
             '<span class="news-shortcut-arrow">›</span>' +
           '</div>';
-        homeContainer.insertBefore(card, recentPosts);
+
+        if (banner) {
+          banner.insertAdjacentElement('afterend', card);
+        } else if (homeContainer && recentPosts) {
+          homeContainer.insertBefore(card, recentPosts);
+        }
       });
       </script>
 
