@@ -1,27 +1,41 @@
 ---
-title: 热搜速览
+title: 新闻速递
 date: 2026-05-09 10:45:00
 type: news
-description: 聚合多个平台的实时热点新闻
+description: 聚合22个平台的实时热点新闻
 ---
 
 <link rel="stylesheet" href="/css/news-page.css">
 
 <div class="news-page">
   <div class="news-header">
-    <h1>🔥 热搜速览</h1>
-    <p class="news-subtitle">聚合多个平台的实时热点新闻 · 每30分钟自动更新</p>
+    <h1>📰 新闻速递</h1>
+    <p class="news-subtitle">22个平台实时热点 · 点击平台切换 · 每30分钟自动更新</p>
   </div>
 
-  <div class="platform-tabs">
-    <button class="tab-btn active" data-platform="baidu">百度热搜</button>
-    <button class="tab-btn" data-platform="weibo">微博热搜</button>
-    <button class="tab-btn" data-platform="zhihu">知乎热榜</button>
-    <button class="tab-btn" data-platform="bilibili">B站热榜</button>
+  <div class="platform-tabs" id="platform-tabs">
+    <button class="tab-btn active" data-platform="baidu">百度</button>
+    <button class="tab-btn" data-platform="weibo">微博</button>
+    <button class="tab-btn" data-platform="zhihu">知乎</button>
+    <button class="tab-btn" data-platform="bilibili">B站</button>
     <button class="tab-btn" data-platform="github">GitHub</button>
     <button class="tab-btn" data-platform="hackernews">HN</button>
     <button class="tab-btn" data-platform="juejin">掘金</button>
     <button class="tab-btn" data-platform="douyin">抖音</button>
+    <button class="tab-btn" data-platform="kuaishou">快手</button>
+    <button class="tab-btn" data-platform="toutiao">头条</button>
+    <button class="tab-btn" data-platform="36kr">36氪</button>
+    <button class="tab-btn" data-platform="xueqiu">雪球</button>
+    <button class="tab-btn" data-platform="cls">财联社</button>
+    <button class="tab-btn" data-platform="tencent">腾讯</button>
+    <button class="tab-btn" data-platform="sohu">搜狐</button>
+    <button class="tab-btn" data-platform="163">网易</button>
+    <button class="tab-btn" data-platform="ifeng">凤凰</button>
+    <button class="tab-btn" data-platform="sina">新浪</button>
+    <button class="tab-btn" data-platform="wx">微信</button>
+    <button class="tab-btn" data-platform="cnn">CNN</button>
+    <button class="tab-btn" data-platform="bbc">BBC</button>
+    <button class="tab-btn" data-platform="reuters">路透</button>
   </div>
 
   <div class="news-content" id="news-container">
@@ -57,19 +71,35 @@ description: 聚合多个平台的实时热点新闻
 }
 .platform-tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  overflow-x: auto;
+  gap: 6px;
+  padding-bottom: 8px;
   margin-bottom: 20px;
-  justify-content: center;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+}
+.platform-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+.platform-tabs::-webkit-scrollbar-track {
+  background: transparent;
+}
+.platform-tabs::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 2px;
 }
 .tab-btn {
-  padding: 8px 16px;
+  padding: 6px 12px;
   border: 1px solid #ddd;
-  border-radius: 20px;
+  border-radius: 16px;
   background: #f8f9fa;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   transition: all 0.2s;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .tab-btn:hover {
   background: #e9ecef;
@@ -123,7 +153,7 @@ html[data-theme=dark] .tab-btn.active {
   padding: 12px 0;
   border-bottom: 1px solid #eee;
 }
-html[data-theme=dark] .news-item {
+html[data-theme] .news-item {
   border-bottom-color: #333;
 }
 .news-item:last-child {
@@ -223,6 +253,10 @@ html[data-theme=dark] .news-rank {
   .news-title {
     font-size: 15px;
   }
+  .tab-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
 }
 </style>
 
@@ -235,20 +269,8 @@ html[data-theme=dark] .news-rank {
   
   let currentPlatform = 'baidu';
   
-  // Platform display names
-  const platformNames = {
-    baidu: '百度热搜',
-    weibo: '微博热搜', 
-    zhihu: '知乎热榜',
-    bilibili: 'B站热榜',
-    github: 'GitHub Trending',
-    hackernews: 'Hacker News',
-    juejin: '掘金热榜',
-    douyin: '抖音热榜'
-  };
-  
   // Hot threshold (top N items get hot tag)
-  const HOT_THRESHOLD = 5;
+  const HOT_THRESHOLD = 3;
   
   function showLoading() {
     container.innerHTML = '<div class="loading"><span class="loading-icon">🔄</span><span>加载中...</span></div>';
@@ -258,50 +280,10 @@ html[data-theme=dark] .news-rank {
     container.innerHTML = '<div class="error-msg"><p>❌ ' + msg + '</p><button class="retry-btn" onclick="location.reload()">重试</button></div>';
   }
   
-  function formatTime(timestamp) {
-    const d = new Date(timestamp * 1000);
-    return d.toLocaleString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-  }
-  
-  function renderNews(data) {
-    if (!data || !data.data || data.data.length === 0) {
-      showError('暂无数据');
-      return;
-    }
-    
-    const items = data.data;
-    let html = '<ul class="news-list">';
-    
-    items.forEach((item, index) => {
-      const rank = index + 1;
-      const isHot = rank <= HOT_THRESHOLD;
-      const hotTag = isHot ? '<span class="news-hot-tag">🔥</span>' : '';
-      const title = item.title || '无标题';
-      const url = item.url || '#';
-      const desc = item.desc || '';
-      const score = item.score ? formatScore(item.score) : '';
-      
-      html += `
-        <li class="news-item${isHot ? ' hot' : ''}">
-          <span class="news-rank">${rank}</span>
-          <div class="news-info">
-            <h3 class="news-title">
-              <a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(title)}${hotTag}</a>
-            </h3>
-            ${desc ? '<p class="news-desc">' + escapeHtml(desc) + '</p>' : ''}
-            ${score ? '<div class="news-meta">热度: ' + escapeHtml(score) + '</div>' : ''}
-          </div>
-        </li>
-      `;
-    });
-    
-    html += '</ul>';
-    container.innerHTML = html;
-    
-    // Update timestamp
-    if (lastUpdate) {
-      lastUpdate.textContent = '更新时间: ' + new Date().toLocaleString('zh-CN');
-    }
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
   
   function formatScore(score) {
@@ -311,17 +293,49 @@ html[data-theme=dark] .news-rank {
     return n.toLocaleString();
   }
   
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+  function renderNews(data) {
+    if (!data || !data.data || data.data.length === 0) {
+      showError('暂无数据，请稍后重试');
+      return;
+    }
+    
+    const items = data.data;
+    let html = '<ul class="news-list">';
+    
+    items.forEach(function(item, index) {
+      const rank = index + 1;
+      const isHot = rank <= HOT_THRESHOLD;
+      const hotTag = isHot ? '<span class="news-hot-tag">🔥</span>' : '';
+      const title = item.title || '无标题';
+      const url = item.url || '#';
+      const desc = item.desc || '';
+      const score = item.score ? formatScore(item.score) : '';
+      
+      html +=
+        '<li class="news-item' + (isHot ? ' hot' : '') + '">' +
+          '<span class="news-rank">' + rank + '</span>' +
+          '<div class="news-info">' +
+            '<h3 class="news-title">' +
+              '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + escapeHtml(title) + '</a>' + hotTag +
+            '</h3>' +
+            (desc ? '<p class="news-desc">' + escapeHtml(desc) + '</p>' : '') +
+            (score ? '<div class="news-meta">热度: ' + escapeHtml(score) + '</div>' : '') +
+          '</div>' +
+        '</li>';
+    });
+    
+    html += '</ul>';
+    container.innerHTML = html;
+    
+    if (lastUpdate) {
+      lastUpdate.textContent = '更新时间: ' + new Date().toLocaleString('zh-CN');
+    }
   }
   
   async function fetchNews(platform) {
     showLoading();
     
     try {
-      // Use no-cors mode for cross-origin API call
       const url = API_BASE + '?platform=' + platform;
       const response = await fetch(url, {
         method: 'GET',
@@ -336,18 +350,17 @@ html[data-theme=dark] .news-rank {
       renderNews(data);
     } catch (err) {
       console.error('Fetch error:', err);
-      // Try JSONP approach or show error
       showError('加载失败，请稍后重试');
     }
   }
   
   // Tab switching
-  tabBtns.forEach(btn => {
+  tabBtns.forEach(function(btn) {
     btn.addEventListener('click', function() {
       const platform = this.dataset.platform;
       if (platform === currentPlatform) return;
       
-      tabBtns.forEach(b => b.classList.remove('active'));
+      tabBtns.forEach(function(b) { b.classList.remove('active'); });
       this.classList.add('active');
       currentPlatform = platform;
       
