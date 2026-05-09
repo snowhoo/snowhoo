@@ -1408,7 +1408,7 @@ inject:
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 40px;
+        padding: 0 20px;
         height: 48px;
         color: #fff;
         width: 100%;
@@ -1465,7 +1465,7 @@ inject:
       /* 手机端适配 */
       @media (max-width: 768px) {
         .news-shortcut-card {
-          margin: 6px 0 0 0;
+          margin: 3px 0 0 0;
         }
         .news-shortcut-inner {
           padding: 0 20px;
