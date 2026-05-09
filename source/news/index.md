@@ -17,20 +17,7 @@ description: 聚合22个平台的实时热点新闻
     <button class="tab-btn" data-platform="hackernews">HN</button>
     <button class="tab-btn" data-platform="juejin">掘金</button>
     <button class="tab-btn" data-platform="douyin">抖音</button>
-    <button class="tab-btn" data-platform="kuaishou">快手</button>
-    <button class="tab-btn" data-platform="toutiao">头条</button>
-    <button class="tab-btn" data-platform="36kr">36氪</button>
-    <button class="tab-btn" data-platform="xueqiu">雪球</button>
-    <button class="tab-btn" data-platform="cls">财联社</button>
-    <button class="tab-btn" data-platform="tencent">腾讯</button>
-    <button class="tab-btn" data-platform="sohu">搜狐</button>
-    <button class="tab-btn" data-platform="163">网易</button>
-    <button class="tab-btn" data-platform="ifeng">凤凰</button>
-    <button class="tab-btn" data-platform="sina">新浪</button>
-    <button class="tab-btn" data-platform="wx">微信</button>
-    <button class="tab-btn" data-platform="cnn">CNN</button>
-    <button class="tab-btn" data-platform="bbc">BBC</button>
-    <button class="tab-btn" data-platform="reuters">路透</button>
+
   </div>
 
   <div class="news-content" id="news-container">
@@ -132,27 +119,24 @@ html[data-theme=dark] .tab-btn.active {
 .news-item {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #eee;
-}
-html[data-theme] .news-item {
-  border-bottom-color: #333;
+  gap: 10px;
+  padding: 6px 0;
 }
 .news-item:last-child {
   border-bottom: none;
 }
 .news-rank {
-  min-width: 32px;
-  height: 32px;
-  line-height: 32px;
+  min-width: 22px;
+  height: 22px;
+  line-height: 22px;
   text-align: center;
   background: #f0f0f0;
   border-radius: 50%;
   font-weight: bold;
-  font-size: 14px;
+  font-size: 12px;
   color: #666;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 html[data-theme=dark] .news-rank {
   background: #3a3a3a;
@@ -167,9 +151,9 @@ html[data-theme=dark] .news-rank {
   min-width: 0;
 }
 .news-title {
-  font-size: 16px;
-  line-height: 1.4;
-  margin: 0 0 4px 0;
+  font-size: 15px;
+  line-height: 1.35;
+  margin: 0;
   word-break: break-word;
 }
 .news-title a {
