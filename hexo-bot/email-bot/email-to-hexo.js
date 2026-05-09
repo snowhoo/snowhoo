@@ -294,7 +294,11 @@ function buildPostContent(parsed) {
     comments: true,
   };
   const fmStr = yaml.dump(cleanFM, { forceQuotes: false });
-  return { filename, content: `---\n${fmStr}---\n\n${parsed.content}\n` };
+  const rawContent = "---\n" + fmStr + "---\n\n" + parsed.content + "\n";
+  const divider = rawContent.indexOf("\n\n");
+  const fmBlock = rawContent.slice(0, divider).replace(/\\$/gm, "");
+  const bodyBlock = rawContent.slice(divider).replace(/^\\/, "");
+  return { filename, content: fmBlock + bodyBlock };
 }
 
 function savePost(parsed) {
