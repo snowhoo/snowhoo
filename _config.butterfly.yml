@@ -1378,10 +1378,9 @@ inject:
       .news-shortcut-card {
         display: flex;
         align-items: center;
-        width: min(1100px, 100%);
+        width: 100%;
         margin: 12px auto 0 auto;
-        padding: 0;
-        border-radius: 10px;
+        border-radius: 0;
         overflow: hidden;
         background-image: url('https://picsum.photos/seed/newsbg/1200/120');
         background-size: cover;
@@ -1409,12 +1408,15 @@ inject:
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 20px;
-        height: 52px;
+        padding: 0 40px;
+        height: 48px;
         color: #fff;
         width: 100%;
+        max-width: 1100px;
+        margin: 0 auto;
         position: relative;
         z-index: 1;
+        box-sizing: border-box;
       }
       .news-shortcut-icon {
         font-size: 24px;
@@ -1425,8 +1427,9 @@ inject:
       }
       .news-shortcut-text {
         display: flex;
-        flex-direction: column;
-        gap: 0;
+        flex-direction: row;
+        align-items: baseline;
+        gap: 8px;
         flex: 1;
         margin-left: 12px;
         position: relative;
@@ -1437,13 +1440,13 @@ inject:
         font-weight: 700;
         letter-spacing: 1px;
         color: #fff;
-        line-height: 1.3;
+        line-height: 1;
+        white-space: nowrap;
       }
       .news-shortcut-desc {
-        font-size: 11px;
+        font-size: 12px;
         color: rgba(255,255,255,0.8);
-        line-height: 1.3;
-        margin-top: 1px;
+        line-height: 1;
       }
       .news-shortcut-arrow {
         font-size: 18px;
@@ -1462,13 +1465,11 @@ inject:
       /* 手机端适配 */
       @media (max-width: 768px) {
         .news-shortcut-card {
-          margin: 6px 16px 0 16px;
-          height: 46px;
-          border-radius: 8px;
+          margin: 6px 0 0 0;
         }
         .news-shortcut-inner {
-          padding: 0 14px;
-          height: 46px;
+          padding: 0 20px;
+          height: 44px;
         }
         .news-shortcut-icon {
           font-size: 20px;
@@ -1477,7 +1478,7 @@ inject:
           font-size: 13px;
         }
         .news-shortcut-desc {
-          font-size: 10px;
+          font-size: 11px;
         }
         .news-shortcut-arrow {
           font-size: 16px;
