@@ -166,6 +166,7 @@ html[data-theme=dark] .news-rank {
 }
 .news-title {
   font-size: 15px;
+  font-weight: 400;
   line-height: 1.35;
   margin: 0;
   word-break: break-word;
@@ -180,6 +181,7 @@ html[data-theme=dark] .news-rank {
 }
 .news-desc {
   font-size: 13px;
+  font-weight: 400;
   color: #888;
   margin: 0;
   line-height: 1.4;
@@ -190,6 +192,7 @@ html[data-theme=dark] .news-rank {
 }
 .news-meta {
   font-size: 12px;
+  font-weight: 400;
   color: #aaa;
   margin-top: 4px;
 }
