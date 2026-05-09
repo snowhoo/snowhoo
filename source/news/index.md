@@ -11,12 +11,26 @@ description: 聚合22个平台的实时热点新闻
   <div class="platform-tabs" id="platform-tabs">
     <button class="tab-btn active" data-platform="baidu">百度</button>
     <button class="tab-btn" data-platform="weibo">微博</button>
+    <button class="tab-btn" data-platform="36kr">36氪</button>
     <button class="tab-btn" data-platform="zhihu">知乎</button>
+    <button class="tab-btn" data-platform="douban">豆瓣</button>
+    <button class="tab-btn" data-platform="tieba">贴吧</button>
     <button class="tab-btn" data-platform="bilibili">B站</button>
+    <button class="tab-btn" data-platform="hupu">虎扑</button>
+    <button class="tab-btn" data-platform="douyin">抖音</button>
+    <button class="tab-btn" data-platform="v2ex">V2EX</button>
+    <button class="tab-btn" data-platform="juejin">掘金</button>
+    <button class="tab-btn" data-platform="tenxunwang">腾讯网</button>
+    <button class="tab-btn" data-platform="shaoshupai">少帅派</button>
+    <button class="tab-btn" data-platform="jinritoutiao">今日头条</button>
+    <button class="tab-btn" data-platform="52pojie">吾爱破解</button>
+    <button class="tab-btn" data-platform="stackoverflow">Stack Overflow</button>
     <button class="tab-btn" data-platform="github">GitHub</button>
     <button class="tab-btn" data-platform="hackernews">HN</button>
-    <button class="tab-btn" data-platform="juejin">掘金</button>
-    <button class="tab-btn" data-platform="douyin">抖音</button>
+    <button class="tab-btn" data-platform="sina_finance">新浪财经</button>
+    <button class="tab-btn" data-platform="eastmoney">东方财富</button>
+    <button class="tab-btn" data-platform="xueqiu">雪球</button>
+    <button class="tab-btn" data-platform="cls">财联社</button>
 
   </div>
 
@@ -271,6 +285,7 @@ html[data-theme=dark] .news-rank {
     
     items.forEach(function(item, index) {
       const rank = index + 1;
+      const isHot = rank <= HOT_THRESHOLD;
       const hotTag = '';
       const title = item.title || '无标题';
       const url = item.url || '#';
@@ -278,7 +293,7 @@ html[data-theme=dark] .news-rank {
       const score = item.score ? formatScore(item.score) : '';
       
       html +=
-        '<li class="news-item' + (rank <= HOT_THRESHOLD ? ' hot' : '') + '">' +
+        '<li class="news-item' + (isHot ? ' hot' : '') + '">' +
           '<span class="news-rank">' + rank + '</span>' +
           '<div class="news-info">' +
             '<h3 class="news-title">' +
