@@ -220,7 +220,7 @@ function saveProcessedUIDs(uids) {
     const sorted = [...uids].map(Number).sort((a, b) => b - a);
     const keep = new Set(sorted.slice(0, 20).map(String));
     fs.writeFileSync(UID_CACHE_FILE, JSON.stringify([...keep]), 'utf8');
-  } catch (_) {}
+  } catch (err) { console.error(`[error] saveProcessedUIDs写入失败: ${err.message}`); }
 }
 
 // ─── 目录初始化 ───────────────────────────────────────────────────────────
@@ -451,6 +451,7 @@ async function handleOneEmail(client, uid, processedUIDs) {
   } catch (err) {
     if (err.message.includes('文件已存在')) {
       newProcessedUIDs.add(String(uid));
+      saveProcessedUIDs(newProcessedUIDs);  // 立即持久化，避免崩溃丢失
       console.log(`[skip] 文件冲突，标记已读: ${err.message}`);
     } else {
       console.error(`[error] UID=${uid} fetch/parse/save失败: ${err.message}`);
@@ -479,6 +480,7 @@ async function handleOneEmail(client, uid, processedUIDs) {
   // postSaved=true 说明文章已生成，记录 UID（防止本轮重复或下次重复处理）
   if (postSaved) {
     newProcessedUIDs.add(String(uid));
+    saveProcessedUIDs(newProcessedUIDs);  // 立即持久化，避免崩溃丢失
   }
   await client.messageFlagsAdd(uid, ['\\Seen']).catch(() => {});
 }
