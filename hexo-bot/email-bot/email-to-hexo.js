@@ -398,16 +398,22 @@ async function sendReceipt(toEmail, title, draft) {
 let newProcessedUIDs = new Set();
 
 async function handleOneEmail(client, uid, processedUIDs) {
-  try {
-    // 去重检查：同时检查文件中的UID（processedUIDs）和本轮已处理的UID（newProcessedUIDs）
-    if (processedUIDs.has(String(uid)) || newProcessedUIDs.has(String(uid))) {
-      return;
-    }
+  // 去重检查：同时检查文件中的UID和本轮已处理的UID
+  if (processedUIDs.has(String(uid)) || newProcessedUIDs.has(String(uid))) {
+    return;
+  }
 
+  let postSaved = false;
+  let filename = '';
+  let draft = false;
+  let from = 'unknown';
+
+  // 第一层：捕获 fetch/parse/save 阶段的错误（这些阶段不该抛到外层）
+  try {
     const raw = await client.fetchOne(uid, { source: true });
     const em = await simpleParser(raw.source);
 
-    const from = em.from?.value?.[0]?.address || 'unknown';
+    from = em.from?.value?.[0]?.address || 'unknown';
     let subject = em.subject || '(无主题)';
     let body = em.text || '';
     let html = em.html || '';
@@ -434,30 +440,47 @@ async function handleOneEmail(client, uid, processedUIDs) {
 
     console.log(`[recv] 来自: ${from} | 主题: ${subject.slice(0, 50)}`);
 
-    const { filename, draft } = savePost(emailParsed);
+    const result = savePost(emailParsed);
+    filename = result.filename;
+    draft = result.draft;
+    postSaved = true;
 
-    console.log(`[post] ✅ ${draft ? '草稿' : '发布'}: ${filename}.md`);
+    console.log(`[post] \u2705 ${draft ? '草稿' : '发布'}: ${filename}.md`);
     console.log(`       标题: ${emailParsed.title} | 标签: ${JSON.stringify(emailParsed.tags)}`);
 
-    await sendReceipt(from, filename, draft);
-
-    if (!draft && AUTO_DEPLOY) await triggerDeploy(filename);
-
-    // ⚠️ 标记新处理成功的 UID（内存中收集，等本轮全部跑完再统一写入文件）
-    newProcessedUIDs.add(String(uid));
-
-    await client.messageFlagsAdd(uid, ['\\Seen']);
-
   } catch (err) {
-    // savePost 失败时不要标记 UID 为 DONE，否则下次不会重试
     if (err.message.includes('文件已存在')) {
       newProcessedUIDs.add(String(uid));
       console.log(`[skip] 文件冲突，标记已读: ${err.message}`);
-      await client.messageFlagsAdd(uid, ['\\Seen']);
     } else {
-      console.error(`[error] UID=${uid}: ${err.message}`);
+      console.error(`[error] UID=${uid} fetch/parse/save失败: ${err.message}`);
+    }
+    await client.messageFlagsAdd(uid, ['\\Seen']).catch(() => {});
+    return;
+  }
+
+  // 第二层：sendReceipt / triggerDeploy 报错不应该阻止 UID 记录
+  try {
+    await sendReceipt(from, filename, draft);
+  } catch (err) {
+    console.error(`[error] 回执发送失败: ${err.message}`);
+  }
+
+  if (!draft && AUTO_DEPLOY) {
+    try {
+      await triggerDeploy(filename);
+    } catch (err) {
+      console.error(`[error] deploy失败: ${err.message}`);
     }
   }
+
+  // ⚠️ finally 逻辑：确保 UID 一定被记录，不管中途是否有报错
+  // postSaved=false 说明 savePost 就失败了，不记录 UID（下次重试）
+  // postSaved=true 说明文章已生成，记录 UID（防止本轮重复或下次重复处理）
+  if (postSaved) {
+    newProcessedUIDs.add(String(uid));
+  }
+  await client.messageFlagsAdd(uid, ['\\Seen']).catch(() => {});
 }
 
 // ─── 主逻辑（轮询模式：连接 → 检索 → 处理 → 退出）───────────────────────────
@@ -501,9 +524,10 @@ async function run() {
       }
 
       // 本轮所有邮件处理完毕后，将新成功的 UID 合并写入文件（只保留最近 20 个）
+      // 必须用新 Set 而非修改原 processedUIDs（它是被引用传进来的，内部顺序会被打乱）
       if (newProcessedUIDs.size > 0) {
-        newProcessedUIDs.forEach(uid => processedUIDs.add(uid));
-        saveProcessedUIDs(processedUIDs);
+        const merged = new Set([...processedUIDs, ...newProcessedUIDs]);
+        saveProcessedUIDs(merged);
         newProcessedUIDs.clear();
       }
 
