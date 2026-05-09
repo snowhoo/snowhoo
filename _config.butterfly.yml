@@ -112,7 +112,7 @@ subtitle:
       - 小红在亿万竞争者中脱颖而出
       - 并坚强的存活了下来
       - 于是新的生命故事由此拉开序幕
-      - ……
+      - ......
 
 index_layout: 3
 
@@ -196,7 +196,7 @@ aside:
     category: true
   card_author:
     enable: true
-    description: 一九七九年，春天
+    description: 一九七九年,春天
     button:
       enable: true
       icon: fab fa-github
@@ -204,7 +204,7 @@ aside:
       link: https://github.com/snowhoo
   card_announcement:
     enable: true
-    content: 《我在八王之乱当卧底》已在番茄连载，每晚 22:00 左右加更，欢迎大家阅读！
+    content: 《我在八王之乱当卧底》已在番茄连载,每晚 22:00 左右加更,欢迎大家阅读!
   card_recent_post:
     enable: true
     limit: 3
@@ -402,7 +402,7 @@ waline:
     logout: 退出
     admin: 博主
     word: 留言/评论
-    noComment: 还没有留言，快来抢沙发吧！
+    noComment: 还没有留言,快来抢沙发吧!
     preview: 预览
     emoji: 表情
     uploadImage: 上传图片
@@ -647,9 +647,9 @@ inject:
 #article-container h3{font-size:0.9rem!important;font-weight:700!important}
 .post-content h1{font-size:1.1rem!important;font-weight:700!important}
 .post-content h2{font-size:1.0rem!important;font-weight:700!important}
-.post-content h3{font-size:0.9rem!important;font-weight:700!important}/* 热搜标题首字放大加粗 */.post-content h3 strong{font-size:1.5em!important;font-weight:700!important}/* Related Articles完整样式 */.relatedPosts{margin-top:0!important;padding-top:0!important;padding-bottom:0!important}.relatedPosts-list{display:flex!important;flex-wrap:wrap!important}.relatedPosts .pagination-related{height:75px!important;min-height:75px!important;overflow:visible!important;display:flex!important;align-items:center!important;width:calc(50% - 6px)!important;position:relative!important}.relatedPosts .pagination-related .cover{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;z-index:0!important}.relatedPosts .pagination-related .info{overflow:visible!important;display:flex!important;align-items:flex-start!important;justify-content:flex-start!important;width:100%!important;position:relative!important;z-index:1!important}.relatedPosts .pagination-related .info .info-1,.relatedPosts .pagination-related .info .info-2{position:static!important;transform:none!important;top:auto!important;left:auto!important;padding:0 20px!important;box-sizing:border-box!important;opacity:1!important;width:auto!important}.relatedPosts .pagination-related .info .info-1{transition:opacity .3s!important}.relatedPosts .pagination-related:hover .info .info-1{opacity:0!important}.relatedPosts .pagination-related .info .info-2{position:absolute!important;top:0!important;left:0!important;right:0!important;width:100%!important;height:100%!important;opacity:0!important;transition:opacity .3s!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;overflow:hidden!important}.relatedPosts .pagination-related:hover .info .info-2{opacity:1!important}.relatedPosts .pagination-related .info .info-2 .info-item-1{width:100%!important;-webkit-line-clamp:2!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;overflow:hidden!important}.relatedPosts .pagination-related .info .info-1 .info-item-1,.relatedPosts .pagination-related .info .info-2 .info-item-1{font-size:1em!important;font-weight:700!important}.relatedPosts .pagination-related .info .info-1 .info-item-2{font-size:0.85em!important}.relatedPosts .pagination-related .info{text-align:left!important}@media(max-width:768px){.relatedPosts .pagination-related{width:calc(50% - 4px)!important}.relatedPosts .pagination-related+.pagination-related{margin-top:0!important}.relatedPosts .pagination-related .info{font-size:0.8em!important}}@media(max-width:600px){.relatedPosts .pagination-related{width:calc(100% - 4px)!important}.relatedPosts .pagination-related+.pagination-related{margin-top:4px!important}}/* Prev/Next样式 */nav#pagination.pagination-post{margin-top:0!important;padding-top:0!important;padding-bottom:0!important;display:flex!important;flex-wrap:wrap!important;gap:4px!important}nav#pagination.pagination-post a.pagination-related{height:75px!important;min-height:75px!important;overflow:visible!important;display:flex!important;align-items:center!important;width:calc(50% - 2px)!important;position:relative!important}nav#pagination.pagination-post a.pagination-related .cover{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;z-index:0!important}nav#pagination.pagination-post a.pagination-related .info{overflow:visible!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;width:100%!important;position:relative!important;z-index:1!important}nav#pagination.pagination-post a.pagination-related:hover .info .info-1{opacity:0!important}nav#pagination.pagination-post a.pagination-related:hover .info .info-2{opacity:1!important}nav#pagination.pagination-post a.pagination-related .info{text-align:left!important}@media(max-width:768px){nav#pagination.pagination-post{flex-direction:row!important;flex-wrap:nowrap!important;gap:4px!important}nav#pagination.pagination-post a.pagination-related{width:calc(50% - 2px)!important;height:60px!important;min-height:60px!important}}/* LOGO样式 */#nav .nav-site-title{padding:0!important;display:flex!important;align-items:center!important}#nav #blog-info .site-icon{margin:0!important;padding:0!important;height:55px!important;vertical-align:top!important;display:inline-block!important}@media(max-width:768px){.sticky-bar,.sticky-bar *{color:#ffffff!important;fill:#ffffff!important;text-shadow:none!important;opacity:1!important;height:24px!important;font-size:11px!important}.sticky-bar{width:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important}}@media(min-width:769px){#recent-posts .recent-post-item.is-sticky{flex-wrap:wrap!important}#recent-posts .recent-post-item.is-sticky .post_cover{order:1!important}#recent-posts .recent-post-item.is-sticky .recent-post-info{order:2!important}#recent-posts .recent-post-item.is-sticky .sticky-bar{order:3!important;flex-basis:100%!important;width:100%!important;box-sizing:border-box!important;padding:4px 10px!important;height:24px!important;font-size:11px!important;display:flex!important;align-items:center!important;justify-content:center!important;color:#ffffff!important}#recent-posts .recent-post-item.is-sticky .sticky-bar *{color:#ffffff!important}}/* LOGO 右边的标语-红色渐变背景 */.site-slogan{display:inline-block!important;margin-left:1em!important;font-size:12px!important;font-weight:normal!important;white-space:nowrap!important;vertical-align:middle!important;padding:4px 14px!important;border-radius:16px!important}html[data-theme=light] .site-slogan{background:linear-gradient(135deg,#c41e3a,#8b0000)!important;color:#fff!important}html[data-theme=dark] .site-slogan{background:linear-gradient(135deg,#9a1b30,#5c0011)!important;color:#fff!important}/* LOGO显示优化 */#nav #blog-info .site-icon{height:55px!important;width:auto!important;object-fit:contain!important}#nav #blog-info .nav-site-title{display:inline-flex!important;align-items:center!important}/* 首页文章列表紧凑 */#recent-posts .recent-post-item{margin-bottom:4px!important}#recent-posts .recent-post-info{padding:6px 10px!important}#recent-posts .article-meta-wrap{margin:0!important;font-size:.75em!important}#recent-posts .article-title{margin-bottom:0!important;line-height:1.15!important;font-size:.95em!important}/* 侧边栏紧凑 */.aside-content .card-widget{margin-bottom:6px!important}/* 整体布局紧凑 */#home #recent-posts{padding:4px 20px!important}/* 热搜晨报/晚报：图片右浮动+防止覆盖 */.post-content .hotnews-img{float:right!important;width:160px!important;max-width:40%!important;height:auto!important;border-radius:6px!important;margin:0 0 0 12px!important;padding:0!important;border:0!important;background:none!important;vertical-align:top!important}.post-content .hotnews-item{clear:both!important;overflow:hidden!important}.post-content h3{clear:both!important}@media(max-width:480px){.post-content .hotnews-img{width:120px!important}}/* ========== 节气/节日横幅（位于导航下方） ========== */
-/* 横幅在body自然流内，位于header（即固定导航）下方 */
-#solar-term-banner{display:none;width:100%;text-align:center;padding:8px 16px;box-sizing:border-box;background-color:#f8f9fa}html[data-theme=dark] #solar-term-banner{background-color:#1a2a1a}#solar-term-banner .st-banner-inner{display:inline-flex;align-items:center;gap:12px;font-size:14px;flex-wrap:wrap;justify-content:center}#solar-term-banner .st-icon{font-size:16px;opacity:0.8}#solar-term-banner .st-name{font-weight:700;font-size:16px;letter-spacing:2px}#solar-term-banner .st-desc{color:#555;font-style:italic}html[data-theme=dark] #solar-term-banner .st-desc{color:#a5d6a7}@media(max-width:480px){#solar-term-banner .st-desc{display:none}}/* 节日横幅暗色适配 */html[data-theme=dark] #solar-term-banner.festival-banner .st-desc{color:#ccc}/* 节日/节气的背景图样式 */#solar-term-banner.festival-banner{background-size:cover;background-position:center;background-repeat:no-repeat;padding:12px 16px}#solar-term-banner.festival-banner .st-banner-inner{background:rgba(255,255,255,0.85);padding:8px 20px;border-radius:24px}html[data-theme=dark] #solar-term-banner.festival-banner .st-banner-inner{background:rgba(0,0,0,0.6)}/* 文章卡片统一2px边框（置顶帖由模板内联样式覆盖）*/.recent-post-item{border:2px solid #e0e0e0;border-radius:8px}html[data-theme=dark] .recent-post-item{border-color:#3a3a3a}</style>"
+.post-content h3{font-size:0.9rem!important;font-weight:700!important}/* 热搜标题首字放大加粗 */.post-content h3 strong{font-size:1.5em!important;font-weight:700!important}/* Related Articles完整样式 */.relatedPosts{margin-top:0!important;padding-top:0!important;padding-bottom:0!important}.relatedPosts-list{display:flex!important;flex-wrap:wrap!important}.relatedPosts .pagination-related{height:75px!important;min-height:75px!important;overflow:visible!important;display:flex!important;align-items:center!important;width:calc(50% - 6px)!important;position:relative!important}.relatedPosts .pagination-related .cover{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;z-index:0!important}.relatedPosts .pagination-related .info{overflow:visible!important;display:flex!important;align-items:flex-start!important;justify-content:flex-start!important;width:100%!important;position:relative!important;z-index:1!important}.relatedPosts .pagination-related .info .info-1,.relatedPosts .pagination-related .info .info-2{position:static!important;transform:none!important;top:auto!important;left:auto!important;padding:0 20px!important;box-sizing:border-box!important;opacity:1!important;width:auto!important}.relatedPosts .pagination-related .info .info-1{transition:opacity .3s!important}.relatedPosts .pagination-related:hover .info .info-1{opacity:0!important}.relatedPosts .pagination-related .info .info-2{position:absolute!important;top:0!important;left:0!important;right:0!important;width:100%!important;height:100%!important;opacity:0!important;transition:opacity .3s!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:flex-start!important;overflow:hidden!important}.relatedPosts .pagination-related:hover .info .info-2{opacity:1!important}.relatedPosts .pagination-related .info .info-2 .info-item-1{width:100%!important;-webkit-line-clamp:2!important;display:-webkit-box!important;-webkit-box-orient:vertical!important;overflow:hidden!important}.relatedPosts .pagination-related .info .info-1 .info-item-1,.relatedPosts .pagination-related .info .info-2 .info-item-1{font-size:1em!important;font-weight:700!important}.relatedPosts .pagination-related .info .info-1 .info-item-2{font-size:0.85em!important}.relatedPosts .pagination-related .info{text-align:left!important}@media(max-width:768px){.relatedPosts .pagination-related{width:calc(50% - 4px)!important}.relatedPosts .pagination-related+.pagination-related{margin-top:0!important}.relatedPosts .pagination-related .info{font-size:0.8em!important}}@media(max-width:600px){.relatedPosts .pagination-related{width:calc(100% - 4px)!important}.relatedPosts .pagination-related+.pagination-related{margin-top:4px!important}}/* Prev/Next样式 */nav#pagination.pagination-post{margin-top:0!important;padding-top:0!important;padding-bottom:0!important;display:flex!important;flex-wrap:wrap!important;gap:4px!important}nav#pagination.pagination-post a.pagination-related{height:75px!important;min-height:75px!important;overflow:visible!important;display:flex!important;align-items:center!important;width:calc(50% - 2px)!important;position:relative!important}nav#pagination.pagination-post a.pagination-related .cover{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:100%!important;z-index:0!important}nav#pagination.pagination-post a.pagination-related .info{overflow:visible!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;width:100%!important;position:relative!important;z-index:1!important}nav#pagination.pagination-post a.pagination-related:hover .info .info-1{opacity:0!important}nav#pagination.pagination-post a.pagination-related:hover .info .info-2{opacity:1!important}nav#pagination.pagination-post a.pagination-related .info{text-align:left!important}@media(max-width:768px){nav#pagination.pagination-post{flex-direction:row!important;flex-wrap:nowrap!important;gap:4px!important}nav#pagination.pagination-post a.pagination-related{width:calc(50% - 2px)!important;height:60px!important;min-height:60px!important}}/* LOGO样式 */#nav .nav-site-title{padding:0!important;display:flex!important;align-items:center!important}#nav #blog-info .site-icon{margin:0!important;padding:0!important;height:55px!important;vertical-align:top!important;display:inline-block!important}@media(max-width:768px){.sticky-bar,.sticky-bar *{color:#ffffff!important;fill:#ffffff!important;text-shadow:none!important;opacity:1!important;height:24px!important;font-size:11px!important}.sticky-bar{width:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important}}@media(min-width:769px){#recent-posts .recent-post-item.is-sticky{flex-wrap:wrap!important}#recent-posts .recent-post-item.is-sticky .post_cover{order:1!important}#recent-posts .recent-post-item.is-sticky .recent-post-info{order:2!important}#recent-posts .recent-post-item.is-sticky .sticky-bar{order:3!important;flex-basis:100%!important;width:100%!important;box-sizing:border-box!important;padding:4px 10px!important;height:24px!important;font-size:11px!important;display:flex!important;align-items:center!important;justify-content:center!important;color:#ffffff!important}#recent-posts .recent-post-item.is-sticky .sticky-bar *{color:#ffffff!important}}/* LOGO 右边的标语-红色渐变背景 */.site-slogan{display:inline-block!important;margin-left:1em!important;font-size:12px!important;font-weight:normal!important;white-space:nowrap!important;vertical-align:middle!important;padding:4px 14px!important;border-radius:16px!important}html[data-theme=light] .site-slogan{background:linear-gradient(135deg,#c41e3a,#8b0000)!important;color:#fff!important}html[data-theme=dark] .site-slogan{background:linear-gradient(135deg,#9a1b30,#5c0011)!important;color:#fff!important}/* LOGO显示优化 */#nav #blog-info .site-icon{height:55px!important;width:auto!important;object-fit:contain!important}#nav #blog-info .nav-site-title{display:inline-flex!important;align-items:center!important}/* 首页文章列表紧凑 */#recent-posts .recent-post-item{margin-bottom:4px!important}#recent-posts .recent-post-info{padding:6px 10px!important}#recent-posts .article-meta-wrap{margin:0!important;font-size:.75em!important}#recent-posts .article-title{margin-bottom:0!important;line-height:1.15!important;font-size:.95em!important}/* 侧边栏紧凑 */.aside-content .card-widget{margin-bottom:6px!important}/* 整体布局紧凑 */#home #recent-posts{padding:4px 20px!important}/* 热搜晨报/晚报:图片右浮动+防止覆盖 */.post-content .hotnews-img{float:right!important;width:160px!important;max-width:40%!important;height:auto!important;border-radius:6px!important;margin:0 0 0 12px!important;padding:0!important;border:0!important;background:none!important;vertical-align:top!important}.post-content .hotnews-item{clear:both!important;overflow:hidden!important}.post-content h3{clear:both!important}@media(max-width:480px){.post-content .hotnews-img{width:120px!important}}/* ========== 节气/节日横幅(位于导航下方) ========== */
+/* 横幅在body自然流内,位于header(即固定导航)下方 */
+#solar-term-banner{display:none;width:100%;text-align:center;padding:8px 16px;box-sizing:border-box;background-color:#f8f9fa}html[data-theme=dark] #solar-term-banner{background-color:#1a2a1a}#solar-term-banner .st-banner-inner{display:inline-flex;align-items:center;gap:12px;font-size:14px;flex-wrap:wrap;justify-content:center}#solar-term-banner .st-icon{font-size:16px;opacity:0.8}#solar-term-banner .st-name{font-weight:700;font-size:16px;letter-spacing:2px}#solar-term-banner .st-desc{color:#555;font-style:italic}html[data-theme=dark] #solar-term-banner .st-desc{color:#a5d6a7}@media(max-width:480px){#solar-term-banner .st-desc{display:none}}/* 节日横幅暗色适配 */html[data-theme=dark] #solar-term-banner.festival-banner .st-desc{color:#ccc}/* 节日/节气的背景图样式 */#solar-term-banner.festival-banner{background-size:cover;background-position:center;background-repeat:no-repeat;padding:12px 16px}#solar-term-banner.festival-banner .st-banner-inner{background:rgba(255,255,255,0.85);padding:8px 20px;border-radius:24px}html[data-theme=dark] #solar-term-banner.festival-banner .st-banner-inner{background:rgba(0,0,0,0.6)}/* 文章卡片统一2px边框(置顶帖由模板内联样式覆盖)*/.recent-post-item{border:2px solid #e0e0e0;border-radius:8px}html[data-theme=dark] .recent-post-item{border-color:#3a3a3a}</style>"
   bottom:
     - |
       <script>
@@ -668,11 +668,11 @@ inject:
           }
         };
 
-        // 页面加载时：根据当前主题设置 logo
+        // 页面加载时:根据当前主题设置 logo
         var currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
         switchLogo(currentTheme);
 
-        // 注册主题切换回调（支持 PJAX 刷新）
+        // 注册主题切换回调(支持 PJAX 刷新)
         if (window.btf && window.btf.addGlobalFn) {
           window.btf.addGlobalFn('themeChange', switchLogo, 'darkLogo');
         }
@@ -779,7 +779,7 @@ inject:
         margin-top: 0 !important;
         padding-top: 0 !important;
       }
-      /* 播放按钮绝对定位，浮动在标题头部左侧，不占布局空间 */
+      /* 播放按钮绝对定位,浮动在标题头部左侧,不占布局空间 */
       .tts-inline-wrapper {
         position: absolute !important;
         top: 0 !important;
@@ -788,7 +788,7 @@ inject:
         display: inline-flex !important;
         align-items: center !important;
       }
-      /* 为浮动按钮留出空间，避免与标题文字重叠 */
+      /* 为浮动按钮留出空间,避免与标题文字重叠 */
       .post-title, #article-container h1 {
         padding-left: 36px !important;
       }
@@ -851,7 +851,7 @@ inject:
         padding: 0 !important;
       }
 
-      /* ========== 调试：显示边框帮助识别间距来源（需要时取消注释）========== */
+      /* ========== 调试:显示边框帮助识别间距来源(需要时取消注释)========== */
       /*
       #article-container,
       #article-container *,
@@ -874,13 +874,13 @@ inject:
       .layout #content-inner {
         padding: 4px 8px !important;
       }
-      /* 文章主体容器 - 弹性缩放：大屏宽、小屏窄 */
+      /* 文章主体容器 - 弹性缩放:大屏宽、小屏窄 */
       #post,
       .post-block {
         padding: 20px 30px !important;
         margin: 0 !important;
       }
-      /* 竖屏/小屏：减少内边距 */
+      /* 竖屏/小屏:减少内边距 */
       @media screen and (max-width: 768px) {
         #post,
         .post-block {
@@ -907,7 +907,7 @@ inject:
       #article-container .article-content {
         line-height: 2.0 !important;
       }
-      /* 首页右侧边栏所有模块行间距，与左侧文章保持一致 */
+      /* 首页右侧边栏所有模块行间距,与左侧文章保持一致 */
       /* sticky_layout 内部所有 div */
       .sticky-layout div,
       .sticky-layout span,
@@ -923,7 +923,7 @@ inject:
       .card-announcement .announcement_content p {
         line-height: 1.8 !important;
       }
-      /* 站长信息（Website Info）- 行间距大一点 */
+      /* 站长信息(Website Info)- 行间距大一点 */
       .card-info,
       .card-info div,
       .card-info span,
@@ -983,7 +983,7 @@ inject:
         padding: 2px 4px !important;
       }
 
-      /* ========== 文章头部：标题区域紧凑 ========== */
+      /* ========== 文章头部:标题区域紧凑 ========== */
       .post-header,
       .article-header {
         margin-top: 0 !important;
@@ -992,7 +992,7 @@ inject:
         padding-bottom: 0 !important;
       }
 
-      /* ========== 元数据（来源、作者等）适当留白 ========== */
+      /* ========== 元数据(来源、作者等)适当留白 ========== */
       .post-meta,
       .post-meta-wrap,
       .article-meta-wrap,
@@ -1106,7 +1106,7 @@ inject:
         padding-top: 0 !important;
       }
 
-      /* ========== 通用：强制减少所有 div 和 section 的上下 margin ========== */
+      /* ========== 通用:强制减少所有 div 和 section 的上下 margin ========== */
       #post > div,
       #post > section,
       .post > div,
@@ -1119,7 +1119,7 @@ inject:
       </style>
       <script>
       document.addEventListener('DOMContentLoaded', function() {
-        // 延迟初始化，确保页面完全加载
+        // 延迟初始化,确保页面完全加载
         setTimeout(function() {
           initTTSPlayer();
         }, 500);
@@ -1150,7 +1150,7 @@ inject:
         const isTTSSupported = 'speechSynthesis' in window;
 
         if (isTTSSupported) {
-          // 支持 TTS，创建真实按钮
+          // 支持 TTS,创建真实按钮
           wrapper.innerHTML = `
             <button class="tts-btn-inline" id="tts-btn" title="朗读文章">
               <i class="fas fa-volume-up"></i>
@@ -1166,7 +1166,7 @@ inject:
             </div>
           `;
         } else {
-          // 不支持 TTS，创建灰色虚拟按钮
+          // 不支持 TTS,创建灰色虚拟按钮
           wrapper.innerHTML = `
             <button class="tts-btn-dummy" id="tts-dummy" disabled title="当前浏览器不支持TTS朗读功能">
               <i class="fas fa-volume-mute"></i>
@@ -1174,10 +1174,10 @@ inject:
           `;
         }
 
-        // 插入到标题内部最前面（与标题文字同一行）
+        // 插入到标题内部最前面(与标题文字同一行)
         titleEl.insertBefore(wrapper, titleEl.firstChild);
 
-        // 如果支持 TTS，初始化播放器
+        // 如果支持 TTS,初始化播放器
         if (isTTSSupported) {
           console.log('[TTS] Initializing TTS player...');
           new TTSPlayer();
@@ -1203,7 +1203,7 @@ inject:
 
         bindEvents() {
           this.btn.addEventListener('click', (e) => {
-            e.stopPropagation(); // 阻止冒泡，避免立即触发 document 点击
+            e.stopPropagation(); // 阻止冒泡,避免立即触发 document 点击
             this.toggle();
           });
           this.stopBtn.addEventListener('click', (e) => {
@@ -1232,7 +1232,7 @@ inject:
         }
 
         getArticleText() {
-          // 获取文章内容，排除不需要朗读的元素
+          // 获取文章内容,排除不需要朗读的元素
           const article = document.querySelector('#article-container, .post-content, article');
           if (!article) return '';
 
@@ -1254,7 +1254,7 @@ inject:
 
           // 限制长度
           if (text.length > 5000) {
-            text = text.substring(0, 5000) + '...（内容过长，已截断）';
+            text = text.substring(0, 5000) + '...(内容过长,已截断)';
           }
 
           return text;
@@ -1293,7 +1293,7 @@ inject:
             this.btn.innerHTML = '<i class="fas fa-pause"></i>';
             this.status.textContent = '朗读中...';
             this.controls.classList.add('active');
-            // 2秒后自动隐藏控件（播放中不改变状态的话）
+            // 2秒后自动隐藏控件(播放中不改变状态的话)
             clearTimeout(this._hideTimer);
             this._hideTimer = setTimeout(() => {
               if (this.isPlaying && !this.isPaused) {
@@ -1374,68 +1374,86 @@ inject:
     - <script src="/js/waline-avatar-fix.js" defer></script>
     - |
       <style>
-      /* ========== 首页新闻速递快捷入口卡片（导航下方，常驻显示） ========== */
+      /* ========== 首页新闻速递快捷入口卡片（导航下方，与文章列表同宽） ========== */
       .news-shortcut-card {
         display: flex;
-        width: 100%;
-        max-width: 1100px;
+        align-items: center;
+        width: min(1100px, 100%);
         margin: 12px auto 0 auto;
         padding: 0;
-        border-radius: 12px;
+        border-radius: 10px;
         overflow: hidden;
-        background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
-        box-shadow: 0 4px 16px rgba(196, 30, 58, 0.3);
+        background-image: url('https://picsum.photos/seed/newsbg/1200/120');
+        background-size: cover;
+        background-position: center;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
         text-decoration: none;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         position: relative;
         z-index: 1;
       }
+      /* 背景半透明遮罩，确保文字可读 */
+      .news-shortcut-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(196,30,58,0.82) 0%, rgba(139,0,0,0.88) 100%);
+        z-index: 0;
+      }
       .news-shortcut-card:active,
       .news-shortcut-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.2);
       }
       .news-shortcut-inner {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 14px 20px;
+        padding: 0 20px;
+        height: 52px;
         color: #fff;
         width: 100%;
-      }
-      .news-shortcut-left {
-        display: flex;
-        align-items: center;
-        gap: 14px;
+        position: relative;
+        z-index: 1;
       }
       .news-shortcut-icon {
-        font-size: 28px;
+        font-size: 24px;
         opacity: 0.95;
         flex-shrink: 0;
+        position: relative;
+        z-index: 1;
       }
       .news-shortcut-text {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 0;
+        flex: 1;
+        margin-left: 12px;
+        position: relative;
+        z-index: 1;
       }
       .news-shortcut-title {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 700;
         letter-spacing: 1px;
         color: #fff;
+        line-height: 1.3;
       }
       .news-shortcut-desc {
-        font-size: 12px;
+        font-size: 11px;
         color: rgba(255,255,255,0.8);
+        line-height: 1.3;
+        margin-top: 1px;
       }
       .news-shortcut-arrow {
-        font-size: 20px;
+        font-size: 18px;
         color: rgba(255,255,255,0.7);
         flex-shrink: 0;
+        position: relative;
+        z-index: 1;
       }
-      html[data-theme=dark] .news-shortcut-card {
-        background: linear-gradient(135deg, #9a1b30 0%, #5c0011 100%);
-        box-shadow: 0 4px 16px rgba(154, 27, 48, 0.35);
+      html[data-theme=dark] .news-shortcut-card::before {
+        background: linear-gradient(135deg, rgba(154,27,48,0.85) 0%, rgba(92,0,17,0.90) 100%);
       }
       html[data-theme=dark] .news-shortcut-desc,
       html[data-theme=dark] .news-shortcut-arrow {
@@ -1445,49 +1463,47 @@ inject:
       @media (max-width: 768px) {
         .news-shortcut-card {
           margin: 6px 16px 0 16px;
-          border-radius: 10px;
+          height: 46px;
+          border-radius: 8px;
         }
         .news-shortcut-inner {
-          padding: 12px 16px;
+          padding: 0 14px;
+          height: 46px;
         }
         .news-shortcut-icon {
-          font-size: 24px;
+          font-size: 20px;
         }
         .news-shortcut-title {
-          font-size: 15px;
+          font-size: 13px;
         }
         .news-shortcut-desc {
-          font-size: 11px;
+          font-size: 10px;
         }
         .news-shortcut-arrow {
-          font-size: 18px;
+          font-size: 16px;
         }
       }
       </style>
       <script>
       document.addEventListener('DOMContentLoaded', function() {
-        // 插入到 #solar-term-banner 之后（导航下方），若无 banner 则插入到 #home 顶部
+        // 插入到 #solar-term-banner 之后(导航下方),若无 banner 则插入到 #home 顶部
         var banner = document.getElementById('solar-term-banner');
         var homeContainer = document.querySelector('#home');
         var recentPosts = homeContainer ? document.querySelector('#home #recent-posts') : null;
 
-        // 检查是否已存在（避免 PJAX 重复插入）
+        // 检查是否已存在(避免 PJAX 重复插入)
         if (document.querySelector('.news-shortcut-card')) return;
 
         var card = document.createElement('a');
         card.href = '/search/';
         card.className = 'news-shortcut-card';
         card.innerHTML = '' +
-          '<div class="news-shortcut-inner">' +
-            '<div class="news-shortcut-left">' +
-              '<span class="news-shortcut-icon">📰</span>' +
-              '<div class="news-shortcut-text">' +
-                '<span class="news-shortcut-title">新闻速递</span>' +
-                '<span class="news-shortcut-desc">实时热点 · 多平台聚合</span>' +
-              '</div>' +
-            '</div>' +
-            '<span class="news-shortcut-arrow">›</span>' +
-          '</div>';
+          '<span class="news-shortcut-icon">📰</span>' +
+          '<div class="news-shortcut-text">' +
+            '<span class="news-shortcut-title">新闻速递</span>' +
+            '<span class="news-shortcut-desc">实时热点 · 多平台聚合</span>' +
+          '</div>' +
+          '<span class="news-shortcut-arrow">›</span>';
 
         if (banner) {
           banner.insertAdjacentElement('afterend', card);
