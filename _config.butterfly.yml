@@ -1372,6 +1372,109 @@ inject:
       </style>
     - <script src="/js/visitor.js" defer></script>
     - <script src="/js/waline-avatar-fix.js" defer></script>
+    - |
+      <style>
+      /* ========== 手机首页新闻速递快捷入口卡片 ========== */
+      @media screen and (max-width: 768px) {
+        #home .news-shortcut-card {
+          display: flex !important;
+        }
+      }
+      @media screen and (min-width: 769px) {
+        #home .news-shortcut-card {
+          display: none !important;
+        }
+      }
+      /* 卡片容器 */
+      #home .news-shortcut-card {
+        display: none;
+        margin: 8px 20px 0 20px;
+        padding: 0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
+        box-shadow: 0 4px 16px rgba(196, 30, 58, 0.35);
+        text-decoration: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      #home .news-shortcut-card:active,
+      #home .news-shortcut-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(196, 30, 58, 0.45);
+      }
+      .news-shortcut-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        color: #fff;
+      }
+      .news-shortcut-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .news-shortcut-icon {
+        font-size: 28px;
+        opacity: 0.95;
+        flex-shrink: 0;
+      }
+      .news-shortcut-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .news-shortcut-title {
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: #fff;
+      }
+      .news-shortcut-desc {
+        font-size: 11px;
+        color: rgba(255,255,255,0.8);
+      }
+      .news-shortcut-arrow {
+        font-size: 18px;
+        color: rgba(255,255,255,0.7);
+        flex-shrink: 0;
+      }
+      html[data-theme=dark] #home .news-shortcut-card {
+        background: linear-gradient(135deg, #9a1b30 0%, #5c0011 100%);
+        box-shadow: 0 4px 16px rgba(154, 27, 48, 0.4);
+      }
+      html[data-theme=dark] .news-shortcut-desc,
+      html[data-theme=dark] .news-shortcut-arrow {
+        color: rgba(255,255,255,0.6);
+      }
+      </style>
+      <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // 在 #home 容器内的文章列表之前插入新闻快捷卡片
+        var homeContainer = document.querySelector('#home');
+        var recentPosts = document.querySelector('#home #recent-posts');
+        if (!homeContainer || !recentPosts) return;
+
+        // 检查是否已存在（避免 PJAX 重复插入）
+        if (homeContainer.querySelector('.news-shortcut-card')) return;
+
+        var card = document.createElement('a');
+        card.href = '/search/';
+        card.className = 'news-shortcut-card';
+        card.innerHTML = '' +
+          '<div class="news-shortcut-inner">' +
+            '<div class="news-shortcut-left">' +
+              '<span class="news-shortcut-icon">📰</span>' +
+              '<div class="news-shortcut-text">' +
+                '<span class="news-shortcut-title">新闻速递</span>' +
+                '<span class="news-shortcut-desc">实时热点 · 多平台聚合</span>' +
+              '</div>' +
+            '</div>' +
+            '<span class="news-shortcut-arrow">›</span>' +
+          '</div>';
+        homeContainer.insertBefore(card, recentPosts);
+      });
+      </script>
 
 # CDN Settings
 CDN:
