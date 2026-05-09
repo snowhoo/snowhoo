@@ -1374,45 +1374,37 @@ inject:
     - <script src="/js/waline-avatar-fix.js" defer></script>
     - |
       <style>
-      /* ========== 手机首页新闻速递快捷入口卡片 ========== */
-      @media screen and (max-width: 768px) {
-        #home .news-shortcut-card {
-          display: flex !important;
-        }
-      }
-      @media screen and (min-width: 769px) {
-        #home .news-shortcut-card {
-          display: none !important;
-        }
-      }
-      /* 卡片容器 */
+      /* ========== 首页新闻速递快捷入口卡片（与节日节气横幅同位置） ========== */
       #home .news-shortcut-card {
-        display: none;
-        margin: 8px 20px 0 20px;
+        display: flex;
+        width: 100%;
+        max-width: 1100px;
+        margin: 12px auto 0 auto;
         padding: 0;
         border-radius: 12px;
         overflow: hidden;
         background: linear-gradient(135deg, #c41e3a 0%, #8b0000 100%);
-        box-shadow: 0 4px 16px rgba(196, 30, 58, 0.35);
+        box-shadow: 0 4px 16px rgba(196, 30, 58, 0.3);
         text-decoration: none;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
       #home .news-shortcut-card:active,
       #home .news-shortcut-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(196, 30, 58, 0.45);
+        box-shadow: 0 6px 20px rgba(196, 30, 58, 0.4);
       }
       .news-shortcut-inner {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 14px 18px;
+        padding: 14px 20px;
         color: #fff;
+        width: 100%;
       }
       .news-shortcut-left {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
       }
       .news-shortcut-icon {
         font-size: 28px;
@@ -1431,21 +1423,43 @@ inject:
         color: #fff;
       }
       .news-shortcut-desc {
-        font-size: 11px;
+        font-size: 12px;
         color: rgba(255,255,255,0.8);
       }
       .news-shortcut-arrow {
-        font-size: 18px;
+        font-size: 20px;
         color: rgba(255,255,255,0.7);
         flex-shrink: 0;
       }
       html[data-theme=dark] #home .news-shortcut-card {
         background: linear-gradient(135deg, #9a1b30 0%, #5c0011 100%);
-        box-shadow: 0 4px 16px rgba(154, 27, 48, 0.4);
+        box-shadow: 0 4px 16px rgba(154, 27, 48, 0.35);
       }
       html[data-theme=dark] .news-shortcut-desc,
       html[data-theme=dark] .news-shortcut-arrow {
         color: rgba(255,255,255,0.6);
+      }
+      /* 手机端适配 */
+      @media (max-width: 768px) {
+        #home .news-shortcut-card {
+          margin: 6px 16px 0 16px;
+          border-radius: 10px;
+        }
+        .news-shortcut-inner {
+          padding: 12px 16px;
+        }
+        .news-shortcut-icon {
+          font-size: 24px;
+        }
+        .news-shortcut-title {
+          font-size: 15px;
+        }
+        .news-shortcut-desc {
+          font-size: 11px;
+        }
+        .news-shortcut-arrow {
+          font-size: 18px;
+        }
       }
       </style>
       <script>
