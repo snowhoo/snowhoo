@@ -1374,12 +1374,12 @@ inject:
     - <script src="/js/waline-avatar-fix.js" defer></script>
     - |
       <style>
-      /* ========== 首页新闻速递快捷入口卡片（导航下方，与文章列表同宽） ========== */
+      /* ========== 首页新闻速递快捷入口卡片（导航下方） ========== */
       .news-shortcut-card {
         display: flex;
         align-items: center;
         width: 100%;
-        margin: 12px auto 0 auto;
+        margin: 0 auto 0 auto;
         border-radius: 0;
         overflow: hidden;
         background-image: url('https://picsum.photos/seed/newsbg/1200/120');
