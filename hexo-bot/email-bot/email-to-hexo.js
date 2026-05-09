@@ -204,23 +204,18 @@ const AUTO_DEPLOY = true;
 
 const ALLOWED_SENDERS = []; // 空 = 处理所有发件人邮件
 
-// ─── 已处理邮件 UID 记录（防止重复推送）─────────────────────────────────
-const UID_CACHE_FILE = path.join(__dirname, 'processed-uids.json');
-function loadProcessedUIDs() {
-  try {
-    if (fs.existsSync(UID_CACHE_FILE)) {
-      return new Set(JSON.parse(fs.readFileSync(UID_CACHE_FILE, 'utf8')));
-    }
-  } catch (_) {}
-  return new Set();
+// ─── 已处理邮件 UID 记录（lock 目录，防止重复推送）────────────────────────
+const LOCK_DIR = path.join(__dirname, 'lock');
+if (!fs.existsSync(LOCK_DIR)) fs.mkdirSync(LOCK_DIR, { recursive: true });
+
+function isUIDProcessed(uid) {
+  return fs.existsSync(path.join(LOCK_DIR, `${uid}.lock`));
 }
-function saveProcessedUIDs(uids) {
+
+function markUIDProcessed(uid) {
   try {
-    // 只保留最近 20 个 UID（UID 单调递增，越大越新）
-    const sorted = [...uids].map(Number).sort((a, b) => b - a);
-    const keep = new Set(sorted.slice(0, 20).map(String));
-    fs.writeFileSync(UID_CACHE_FILE, JSON.stringify([...keep]), 'utf8');
-  } catch (err) { console.error(`[error] saveProcessedUIDs写入失败: ${err.message}`); }
+    fs.writeFileSync(path.join(LOCK_DIR, `${uid}.lock`), '', 'utf8');
+  } catch (err) { console.error(`[error] markUID写入失败: ${err.message}`); }
 }
 
 // ─── 目录初始化 ───────────────────────────────────────────────────────────
@@ -394,12 +389,10 @@ async function sendReceipt(toEmail, title, draft) {
 }
 
 // ─── 处理单封邮件 ───────────────────────────────────────────────────────────
-// 新 UID 记录（每轮重新收集，本轮全部成功后再写入文件）
-let newProcessedUIDs = new Set();
-
-async function handleOneEmail(client, uid, processedUIDs) {
-  // 去重检查：同时检查文件中的UID和本轮已处理的UID
-  if (processedUIDs.has(String(uid)) || newProcessedUIDs.has(String(uid))) {
+async function handleOneEmail(client, uid) {
+  // 去重：检查 lock/ 目录中是否有对应 .lock 文件
+  if (isUIDProcessed(uid)) {
+    console.log(`[skip] UID=${uid} 已处理，跳过`);
     return;
   }
 
@@ -450,9 +443,8 @@ async function handleOneEmail(client, uid, processedUIDs) {
 
   } catch (err) {
     if (err.message.includes('文件已存在')) {
-      newProcessedUIDs.add(String(uid));
-      saveProcessedUIDs(newProcessedUIDs);  // 立即持久化，避免崩溃丢失
-      console.log(`[skip] 文件冲突，标记已读: ${err.message}`);
+      markUIDProcessed(uid);  // 文件已存在说明处理过，记入 lock
+      console.log(`[skip] 文件冲突，已标记: ${err.message}`);
     } else {
       console.error(`[error] UID=${uid} fetch/parse/save失败: ${err.message}`);
     }
@@ -479,16 +471,13 @@ async function handleOneEmail(client, uid, processedUIDs) {
   // postSaved=false 说明 savePost 就失败了，不记录 UID（下次重试）
   // postSaved=true 说明文章已生成，记录 UID（防止本轮重复或下次重复处理）
   if (postSaved) {
-    newProcessedUIDs.add(String(uid));
-    saveProcessedUIDs(newProcessedUIDs);  // 立即持久化，避免崩溃丢失
+    markUIDProcessed(uid);
   }
   await client.messageFlagsAdd(uid, ['\\Seen']).catch(() => {});
 }
 
 // ─── 主逻辑（轮询模式：连接 → 检索 → 处理 → 退出）───────────────────────────
 async function run() {
-  const processedUIDs = loadProcessedUIDs();
-
   const noop = () => {};
   const silentLogger = {
     fatal: noop, error: noop, warn: noop, info: noop,
@@ -521,16 +510,8 @@ async function run() {
 
       let processed = 0;
       for (const uid of uids) {
-        await handleOneEmail(client, uid, processedUIDs);
+        await handleOneEmail(client, uid);
         processed++;
-      }
-
-      // 本轮所有邮件处理完毕后，将新成功的 UID 合并写入文件（只保留最近 20 个）
-      // 必须用新 Set 而非修改原 processedUIDs（它是被引用传进来的，内部顺序会被打乱）
-      if (newProcessedUIDs.size > 0) {
-        const merged = new Set([...processedUIDs, ...newProcessedUIDs]);
-        saveProcessedUIDs(merged);
-        newProcessedUIDs.clear();
       }
 
       console.log(`[done] 扫描完成，检查 ${processed} 封`);
