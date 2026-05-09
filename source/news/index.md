@@ -49,9 +49,9 @@ description: 聚合22个平台的实时热点新闻
 
 <style>
 .news-page {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 10px 16px;
+  padding: 10px 8px;
 }
 .platform-tabs {
   display: flex;
@@ -228,7 +228,7 @@ html[data-theme=dark] .news-rank {
 }
 @media (max-width: 600px) {
   .news-page {
-    padding: 12px 12px;
+    padding: 12px 8px;
   }
   .news-title {
     font-size: 14px;
