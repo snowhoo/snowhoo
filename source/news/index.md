@@ -49,9 +49,9 @@ description: 聚合22个平台的实时热点新闻
 
 <style>
 .news-page {
-  max-width: 900px;
+  max-width: 800px;
   margin: 0 auto;
-  padding: 10px;
+  padding: 10px 16px;
 }
 .platform-tabs {
   display: flex;
@@ -146,7 +146,6 @@ html[data-theme=dark] .tab-btn.active {
   text-align: center;
   background: #f0f0f0;
   border-radius: 50%;
-  font-weight: bold;
   font-size: 12px;
   color: #666;
   flex-shrink: 0;
@@ -229,10 +228,10 @@ html[data-theme=dark] .news-rank {
 }
 @media (max-width: 600px) {
   .news-page {
-    padding: 12px;
+    padding: 12px 12px;
   }
   .news-title {
-    font-size: 15px;
+    font-size: 14px;
   }
   .tab-btn {
     padding: 5px 10px;
