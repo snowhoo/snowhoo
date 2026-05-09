@@ -271,15 +271,14 @@ html[data-theme=dark] .news-rank {
     
     items.forEach(function(item, index) {
       const rank = index + 1;
-      const isHot = rank <= HOT_THRESHOLD;
-      const hotTag = isHot ? '<span class="news-hot-tag">🔥</span>' : '';
+      const hotTag = '';
       const title = item.title || '无标题';
       const url = item.url || '#';
       const desc = item.desc || '';
       const score = item.score ? formatScore(item.score) : '';
       
       html +=
-        '<li class="news-item' + (isHot ? ' hot' : '') + '">' +
+        '<li class="news-item' + (rank <= HOT_THRESHOLD ? ' hot' : '') + '">' +
           '<span class="news-rank">' + rank + '</span>' +
           '<div class="news-info">' +
             '<h3 class="news-title">' +
