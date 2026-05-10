@@ -1378,7 +1378,10 @@ inject:
       /* 上部32px纯图片区（无蒙版）+ 下部16px滚动文字区（透明背景） */
       .news-shortcut-card {
         display: block;
-        width: 100%;
+        width: min(1100px, 100%);
+        margin: 0 auto;
+        background-size: cover;
+        background-position: center;
         margin: 0 auto 0 auto;
         border-radius: 0;
         overflow: hidden;
