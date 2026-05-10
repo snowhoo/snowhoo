@@ -165,7 +165,7 @@ html[data-theme=dark] .news-rank {
 }
 .news-title {
   font-size: 15px;
-  //font-weight: 400;
+  font-weight: 400;
   line-height: 1.2;
   margin: 0;
   word-break: break-word;
@@ -298,7 +298,7 @@ html[data-theme=dark] .news-rank {
         '<li class="news-item' + (isHot ? ' hot' : '') + '">' +
           '<span class="news-rank">' + rank + '</span>' +
           '<div class="news-info">' +
-            '<h1 class="news-title">' +
+            '<h3 class="news-title">' +
               '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + escapeHtml(title) + '</a>' + hotTag +
             '</h3>' +
             (desc ? '<p class="news-desc">' + escapeHtml(desc) + '</p>' : '') +
