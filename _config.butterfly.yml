@@ -1462,6 +1462,7 @@ inject:
       <script>
       document.addEventListener('DOMContentLoaded', function() {
         var banner = document.getElementById('solar-term-banner');
+        var contentInner = document.querySelector('#content-inner');
         var homeContainer = document.querySelector('#home');
         var recentPosts = homeContainer ? document.querySelector('#home #recent-posts') : null;
 
@@ -1483,8 +1484,8 @@ inject:
 
         if (banner) {
           banner.insertAdjacentElement('afterend', wrapper);
-        } else if (homeContainer && recentPosts) {
-          homeContainer.insertBefore(wrapper, recentPosts);
+        } else if (contentInner && homeContainer) {
+          contentInner.insertBefore(wrapper, homeContainer);
         }
       });
       </script>
