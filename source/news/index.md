@@ -139,6 +139,12 @@ html[data-theme=dark] .tab-btn.active {
 .news-item:last-child {
   border-bottom: none;
 }
+div:first-child:not(.nc) {
+  -webkit-align-self: flex-start;
+  align-self: flex-start;
+  -ms-flex-item-align: start;
+  padding: 12px 12px;
+}
 .news-rank {
   min-width: 22px;
   height: 22px;
