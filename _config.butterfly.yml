@@ -1498,7 +1498,7 @@ inject:
         card.href = '/news/';
         card.className = 'news-shortcut-card';
        // card.innerHTML = '' +  '<div class="news-shortcut-text">' +  '<span class="news-shortcut-title">新闻速递</span>' +  '<span class="news-shortcut-desc">实时热点 · 多平台聚合</span>' +  '</div>' ;
- card.innerHTML = ' ' 
+ card.innerHTML ='<div class="news-shortcut-text"><span class="news-shortcut-title"> </span></div>' ;
         if (banner) {
           banner.insertAdjacentElement('afterend', card);
         } else if (homeContainer && recentPosts) {
