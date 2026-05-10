@@ -42,7 +42,7 @@ description: 聚合22个平台的实时热点新闻
   </div>
 
   <div class="news-footer">
-    <p>数据来源：热点速览 API  <span id="last-update"></span></p>
+    <p>数源：热点速览  <span id="last-update"></span></p>
   </div>
 </div>
 
@@ -133,8 +133,8 @@ html[data-theme=dark] .tab-btn.active {
 .news-item {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 6px 0;
+  gap: 6px;
+  padding: 0 0;
 }
 .news-item:last-child {
   border-bottom: none;
@@ -166,7 +166,7 @@ html[data-theme=dark] .news-rank {
 .news-title {
   font-size: 15px;
   //font-weight: 400;
-  line-height: 1.35;
+  line-height: 1.2;
   margin: 0;
   word-break: break-word;
 }
@@ -183,7 +183,7 @@ html[data-theme=dark] .news-rank {
   //font-weight: 400;
   color: #888;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.2;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -206,8 +206,8 @@ html[data-theme=dark] .news-rank {
 }
 .news-footer {
   text-align: center;
-  margin-top: 30px;
-  padding-top: 20px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid #eee;
   color: #888;
   font-size: 13px;
@@ -231,14 +231,14 @@ html[data-theme=dark] .news-rank {
 }
 @media (max-width: 600px) {
   .news-page {
-    padding: 12px 6px;
+    padding: 6px 6px;
   }
   .tab-btn {
     padding: 4px 6px;
     font-size: 11px;
   }
   .news-title {
-    font-size: 14px;
+    font-size: 13px;
   }
 }
 </style>
