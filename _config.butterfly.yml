@@ -1382,7 +1382,7 @@ inject:
         margin: 0 auto 0 auto;
         border-radius: 0;
         overflow: hidden;
-        background-image: url('https://picsum.photos/seed/newsbg/1200/120');
+        background-image: url('/images/banner/news-bg.jpg');
         background-size: cover;
         background-position: center;
         box-shadow: 0 4px 16px rgba(0,0,0,0.15);
@@ -1497,12 +1497,7 @@ inject:
         var card = document.createElement('a');
         card.href = '/news/';
         card.className = 'news-shortcut-card';
-        card.innerHTML = '' +
-          '<div class="news-shortcut-text">' +
-            '<span class="news-shortcut-title">新闻速递</span>' +
-            '<span class="news-shortcut-desc">实时热点 · 多平台聚合</span>' +
-          '</div>' +
-          '<span class="news-shortcut-arrow">›</span>';
+       // card.innerHTML = '' +  '<div class="news-shortcut-text">' +  '<span class="news-shortcut-title">新闻速递</span>' +  '<span class="news-shortcut-desc">实时热点 · 多平台聚合</span>' +  '</div>' ;
 
         if (banner) {
           banner.insertAdjacentElement('afterend', card);
