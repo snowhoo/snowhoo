@@ -47,6 +47,9 @@ description: 聚合22个平台的实时热点新闻
 </div>
 
 <style>
+
+#article-container h3{font-size:1.0rem!important;font-weight:400!important}
+
 .news-page {
   max-width: 900px;
   margin: 0 auto;
