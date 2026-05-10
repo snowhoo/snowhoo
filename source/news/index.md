@@ -42,8 +42,7 @@ description: 聚合22个平台的实时热点新闻
   </div>
 
   <div class="news-footer">
-    <p>数据来源：<a href="https://news.orz.ai/" target="_blank">热点速览 API</a> · 
-    <span id="last-update"></span></p>
+    <p>数据来源：热点速览 API  <span id="last-update"></span></p>
   </div>
 </div>
 
@@ -57,8 +56,8 @@ description: 聚合22个平台的实时热点新闻
   display: flex;
   overflow-x: auto;
   gap: 6px;
-  padding-bottom: 8px;
-  margin-bottom: 20px;
+  padding-bottom: 5px;
+  margin-bottom: 5px;
   scrollbar-width: thin;
   scrollbar-color: #ccc transparent;
   -webkit-overflow-scrolling: touch;
@@ -81,7 +80,7 @@ description: 聚合22个平台的实时热点新闻
   background: #f8f9fa;
   cursor: pointer;
   font-size: 13px;
-  font-weight: 400;
+  //font-weight: 400;
   transition: all 0.2s;
   flex-shrink: 0;
   white-space: nowrap;
@@ -113,13 +112,13 @@ html[data-theme=dark] .tab-btn.active {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 60px;
+  gap: 6px;
+  padding: 20px;
   color: #888;
   font-size: 16px;
 }
 .loading-icon {
-  font-size: 24px;
+  font-size: 22px;
   animation: spin 1s linear infinite;
 }
 @keyframes spin {
@@ -166,7 +165,7 @@ html[data-theme=dark] .news-rank {
 }
 .news-title {
   font-size: 15px;
-  font-weight: 400;
+  //font-weight: 400;
   line-height: 1.35;
   margin: 0;
   word-break: break-word;
@@ -181,7 +180,7 @@ html[data-theme=dark] .news-rank {
 }
 .news-desc {
   font-size: 13px;
-  font-weight: 400;
+  //font-weight: 400;
   color: #888;
   margin: 0;
   line-height: 1.4;
@@ -192,7 +191,7 @@ html[data-theme=dark] .news-rank {
 }
 .news-meta {
   font-size: 12px;
-  font-weight: 400;
+  //font-weight: 400;
   color: #aaa;
   margin-top: 4px;
 }
