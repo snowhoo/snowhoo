@@ -1480,11 +1480,13 @@ inject:
             '</div>' +
           '</div>';
 
-        // 节日横幅移到 #content-inner 最前面，新闻卡片紧随其后
+        // 确保横幅在最前面、新闻卡片紧跟其后（上下排列，永远不横排）
         if (banner && contentInner) {
+          // 先把横幅移到 contentInner 最前面
           var refNode = contentInner.firstChild;
           contentInner.insertBefore(banner, refNode);
-          contentInner.insertBefore(wrapper, banner.nextSibling);
+          // 再把新闻卡片插到横幅正下方（永远在 banner 之后）
+          banner.insertAdjacentElement('afterend', wrapper);
         }
       });
       </script>
