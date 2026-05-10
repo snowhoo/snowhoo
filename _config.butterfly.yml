@@ -1478,12 +1478,13 @@ inject:
                 '<a href="/news/" style="text-decoration:none;color:inherit">📰 新闻速递 · 实时热点聚合</a>' +
               '</span>' +
             '</div>' +
-          '</div><br>';
+          '</div>';
 
-        // 节日横幅已在 page-header 里（由 visitor.js 控制），
-        // 卡片直接插入 #content-inner 最前面（banner 之后）
-        if (contentInner) {
-          contentInner.insertBefore(wrapper, contentInner.firstChild);
+        // 节日横幅移到 #content-inner 最前面，新闻卡片紧随其后
+        if (banner && contentInner) {
+          var refNode = contentInner.firstChild;
+          contentInner.insertBefore(banner, refNode);
+          contentInner.insertBefore(wrapper, banner.nextSibling);
         }
       });
       </script>
