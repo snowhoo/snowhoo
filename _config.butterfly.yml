@@ -1427,18 +1427,6 @@ inject:
         text-decoration: none;
         color: inherit;
       }
-      .news-scrolling-text a::before {
-        content: '←';
-        margin-right: 8px;
-        flex-shrink: 0;
-        font-size: 12px;
-      }
-      .news-scrolling-text a::after {
-        content: '→';
-        margin-left: 8px;
-        flex-shrink: 0;
-        font-size: 12px;
-      }
       @keyframes marquee {
         0%   { transform: translateX(-100%); }
         100% { transform: translateX(100%); }
