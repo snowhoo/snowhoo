@@ -166,8 +166,8 @@ html[data-theme=dark] .news-rank {
   flex: 1;
   min-width: 0;
 }
-.news-title h3 {
-  font-weight: 400;
+.news-title h3, .news-title h3 a {
+  font-weight: 400 !important;
 }
 .news-title {
   font-size: 15px;
