@@ -1379,6 +1379,7 @@ inject:
       .news-shortcut-card {
         display: block;
         width: 100%;
+        flex-shrink: 0;
         margin: 0 auto 0 auto;
         border-radius: 0;
         overflow: hidden;
@@ -1464,7 +1465,7 @@ inject:
         var banner = document.getElementById('solar-term-banner');
         var contentInner = document.querySelector('#content-inner');
 
-        // 插入新闻卡片（卡片在前，banner 在后）
+        // 确保横幅在最前面、新闻卡片紧随其后（banner → card → 文章列表）
         if (document.querySelector('.news-upper')) return;
 
         var wrapper = document.createElement('a');
