@@ -1421,12 +1421,27 @@ inject:
         font-size: 12px;
         line-height: 1;
       }
-      .news-scrolling-text .news-title {
-        font-weight: normal;
+      .news-scrolling-text a {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+      }
+      .news-scrolling-text a::before {
+        content: '←';
+        margin-right: 8px;
+        flex-shrink: 0;
+        font-size: 12px;
+      }
+      .news-scrolling-text a::after {
+        content: '→';
+        margin-left: 8px;
+        flex-shrink: 0;
+        font-size: 12px;
       }
       @keyframes marquee {
-        0%   { transform: translateX(100%); }
-        100% { transform: translateX(-100%); }
+        0%   { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
       }
       html[data-theme=dark] .news-scrolling-text {
         color: #ccc;
@@ -1465,17 +1480,16 @@ inject:
         // 检查是否已存在(避免 PJAX 重复插入)
         if (document.querySelector('.news-upper')) return;
 
-        var wrapper = document.createElement('div');
+        var wrapper = document.createElement('a');
+        wrapper.href = '/news/';
         wrapper.className = 'news-shortcut-card';
         wrapper.innerHTML = 
           '<div class="news-upper"></div>' +
           '<div class="news-scrolling">' +
             '<div class="news-scrolling-inner">' +
-              '<a href="/news/" style="text-decoration:none;color:inherit">' +
-                '<span class="news-scrolling-text">' +
-                  '<span class="news-title">📰 新闻速递 · 实时热点聚合 →</span>' +
-                '</span>' +
-              '</a>' +
+              '<span class="news-scrolling-text">' +
+                '<a href="/news/" style="text-decoration:none;color:inherit">📰 新闻速递 · 实时热点聚合</a>' +
+              '</span>' +
             '</div>' +
           '</div>';
 
