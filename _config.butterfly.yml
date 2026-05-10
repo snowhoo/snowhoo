@@ -1463,10 +1463,17 @@ inject:
       document.addEventListener('DOMContentLoaded', function() {
         var banner = document.getElementById('solar-term-banner');
         var contentInner = document.querySelector('#content-inner');
+
+        // 将 banner 和新闻卡片都放入 #content-inner，banner 在前，卡片在后
         var homeContainer = document.querySelector('#home');
         var recentPosts = homeContainer ? document.querySelector('#home #recent-posts') : null;
 
-        // 检查是否已存在(避免 PJAX 重复插入)
+        // 移动 #solar-term-banner 到 #content-inner 内（如果它存在且可见）
+        if (banner && banner.style.display !== 'none' && contentInner) {
+          contentInner.insertBefore(banner, contentInner.firstChild);
+        }
+
+        // 插入新闻卡片（banner 移走后，firstChild 就是 banner 或原来的第一个元素）
         if (document.querySelector('.news-upper')) return;
 
         var wrapper = document.createElement('a');
@@ -1484,8 +1491,6 @@ inject:
 
         if (contentInner) {
           contentInner.insertBefore(wrapper, contentInner.firstChild);
-        } else if (banner) {
-          banner.insertAdjacentElement('afterend', wrapper);
         }
       });
       </script>
