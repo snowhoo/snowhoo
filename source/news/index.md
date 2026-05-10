@@ -298,7 +298,7 @@ html[data-theme=dark] .news-rank {
         '<li class="news-item' + (isHot ? ' hot' : '') + '">' +
           '<span class="news-rank">' + rank + '</span>' +
           '<div class="news-info">' +
-            '<h3 class="news-title">' +
+            '<h1 class="news-title">' +
               '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' + escapeHtml(title) + '</a>' + hotTag +
             '</h3>' +
             (desc ? '<p class="news-desc">' + escapeHtml(desc) + '</p>' : '') +
