@@ -1390,13 +1390,14 @@ inject:
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         position: relative;
         z-index: 1;
+        height: 24px;
       }
-      /* 背景半透明遮罩，确保文字可读 */
+      /* 背景半透明遮罩，提高透明度确保文字可读 */
       .news-shortcut-card::before {
         content: '';
         position: absolute;
         inset: 0;
-        background: linear-gradient(135deg, rgba(196,30,58,0.82) 0%, rgba(139,0,0,0.88) 100%);
+        background: linear-gradient(135deg, rgba(196,30,58,0.55) 0%, rgba(139,0,0,0.65) 100%);
         z-index: 0;
       }
       .news-shortcut-card:active,
@@ -1409,7 +1410,7 @@ inject:
         align-items: center;
         justify-content: space-between;
         padding: 0 12px;
-        height: 48px;
+        height: 24px;
         color: #fff;
         width: 100%;
         max-width: 1100px;
@@ -1419,7 +1420,7 @@ inject:
         box-sizing: border-box;
       }
       .news-shortcut-icon {
-        font-size: 24px;
+        font-size: 16px;
         opacity: 0.95;
         flex-shrink: 0;
         position: relative;
@@ -1434,16 +1435,30 @@ inject:
         margin-left: 12px;
         position: relative;
         z-index: 1;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+      @keyframes marquee {
+        0%   { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+      .news-shortcut-text > span {
+        display: inline-block;
+        animation: marquee 10s linear infinite;
+      }
+      .news-marquee {
+        display: inline-block;
+        animation: marquee 8s linear infinite;
       }
       .news-shortcut-title {
-        font-size: 14px;
+        font-size: 13px;
         letter-spacing: 1px;
         color: #fff;
         line-height: 1;
         white-space: nowrap;
       }
       .news-shortcut-desc {
-        font-size: 12px;
+        font-size: 11px;
         color: rgba(255,255,255,0.8);
         line-height: 1;
       }
@@ -1455,7 +1470,7 @@ inject:
         z-index: 1;
       }
       html[data-theme=dark] .news-shortcut-card::before {
-        background: linear-gradient(135deg, rgba(154,27,48,0.85) 0%, rgba(92,0,17,0.90) 100%);
+        background: linear-gradient(135deg, rgba(154,27,48,0.45) 0%, rgba(92,0,17,0.55) 100%);
       }
       html[data-theme=dark] .news-shortcut-desc,
       html[data-theme=dark] .news-shortcut-arrow {
@@ -1468,19 +1483,19 @@ inject:
         }
         .news-shortcut-inner {
           padding: 0 12px;
-          height: 44px;
+          height: 24px;
         }
         .news-shortcut-icon {
-          font-size: 20px;
+          font-size: 14px;
         }
         .news-shortcut-title {
-          font-size: 13px;
+          font-size: 12px;
         }
         .news-shortcut-desc {
-          font-size: 11px;
+          font-size: 10px;
         }
         .news-shortcut-arrow {
-          font-size: 16px;
+          font-size: 14px;
         }
       }
       </style>
@@ -1497,7 +1512,7 @@ inject:
         var card = document.createElement('a');
         card.href = '/news/';
         card.className = 'news-shortcut-card';
-       card.innerHTML = '' +  '<div class="news-shortcut-text">' +  '<span class="news-shortcut-title">新闻速递</span>' +  '<span class="news-shortcut-desc">实时热点 · 多平台聚合</span>' +  '</div>' ;
+       card.innerHTML = '<div class="news-shortcut-text"><span class="news-marquee"><span class="news-shortcut-title">新闻速递</span> <span class="news-shortcut-desc">实时热点 · 多平台聚合</span></span></div>';
  
         if (banner) {
           banner.insertAdjacentElement('afterend', card);
