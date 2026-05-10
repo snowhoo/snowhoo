@@ -1378,10 +1378,7 @@ inject:
       /* 上部32px纯图片区（无蒙版）+ 下部16px滚动文字区（透明背景） */
       .news-shortcut-card {
         display: block;
-        width: min(1100px, 100%);
-        margin: 0 auto;
-        background-size: cover;
-        background-position: center;
+        width: 100%;
         margin: 0 auto 0 auto;
         border-radius: 0;
         overflow: hidden;
@@ -1485,10 +1482,10 @@ inject:
             '</div>' +
           '</div>';
 
-        if (banner) {
+        if (contentInner) {
+          contentInner.insertBefore(wrapper, contentInner.firstChild);
+        } else if (banner) {
           banner.insertAdjacentElement('afterend', wrapper);
-        } else if (contentInner && homeContainer) {
-          contentInner.insertBefore(wrapper, homeContainer);
         }
       });
       </script>
