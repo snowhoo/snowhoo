@@ -1374,147 +1374,115 @@ inject:
     - <script src="/js/waline-avatar-fix.js" defer></script>
     - |
       <style>
-      /* ========== 首页新闻速递快捷入口卡片（导航下方） ========== */
+      /* ========== 首页新闻速递快捷入口卡片（导航下方）- 双区域设计 ========== */
+      /* 上部32px纯图片区（无蒙版）+ 下部16px滚动文字区（透明背景） */
       .news-shortcut-card {
-        display: flex;
-        align-items: center;
+        display: block;
         width: 100%;
         margin: 0 auto 0 auto;
         border-radius: 0;
         overflow: hidden;
+        text-decoration: none;
+        transition: transform 0.2s ease;
+        position: relative;
+        z-index: 1;
+      }
+      /* 上部图片区域 32px，无蒙版，显示背景图原貌 */
+      .news-upper {
+        height: 32px;
         background-image: url('/images/banner/news-bg.jpg');
         background-size: cover;
         background-position: center;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-        text-decoration: none;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
         position: relative;
         z-index: 1;
-        height: 28px;
       }
-      /* 背景半透明遮罩，提高透明度确保文字可读 */
-      .news-shortcut-card::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(135deg, rgba(196,30,58,0.35) 0%, rgba(139,0,0,0.45) 100%);
-        z-index: 0;
+      /* 下部滚动文字区域 16px，透明背景 */
+      .news-scrolling {
+        height: 16px;
+        background: transparent;
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
       }
-      .news-shortcut-card:active,
-      .news-shortcut-card:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba(0,0,0,0.2);
-      }
-      .news-shortcut-inner {
+      .news-scrolling-inner {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        height: 16px;
         padding: 0 12px;
-        height: 28px;
-        color: #fff;
-        width: 100%;
         max-width: 1100px;
         margin: 0 auto;
-        position: relative;
-        z-index: 1;
         box-sizing: border-box;
       }
-      .news-shortcut-icon {
-        font-size: 16px;
-        opacity: 0.95;
-        flex-shrink: 0;
-        position: relative;
-        z-index: 1;
-      }
-      .news-shortcut-text {
-        display: flex;
-        flex-direction: row;
-        align-items: baseline;
-        gap: 8px;
-        flex: 1;
-        margin-left: 12px;
-        position: relative;
-        z-index: 1;
-        overflow: hidden;
+      .news-scrolling-text {
+        display: inline-block;
         white-space: nowrap;
+        animation: marquee 12s linear infinite;
+        color: #333;
+        font-size: 12px;
+        line-height: 1;
+      }
+      .news-scrolling-text .news-title {
+        font-weight: normal;
       }
       @keyframes marquee {
         0%   { transform: translateX(100%); }
         100% { transform: translateX(-100%); }
       }
-      .news-shortcut-text > span,
-      .news-marquee {
-        display: inline-block;
-        animation: marquee 10s linear infinite;
+      html[data-theme=dark] .news-scrolling-text {
+        color: #ccc;
       }
-      .news-shortcut-title {
-        font-size: 13px;
-        letter-spacing: 1px;
-        color: #fff;
-        line-height: 1;
-        white-space: nowrap;
-      }
-      .news-shortcut-desc {
-        font-size: 11px;
-        color: rgba(255,255,255,0.8);
-        line-height: 1;
-      }
-      .news-shortcut-arrow {
-        font-size: 18px;
-        color: rgba(255,255,255,0.7);
-        flex-shrink: 0;
-        position: relative;
-        z-index: 1;
-      }
-      html[data-theme=dark] .news-shortcut-card::before {
-        background: linear-gradient(135deg, rgba(154,27,48,0.45) 0%, rgba(92,0,17,0.55) 100%);
-      }
-      html[data-theme=dark] .news-shortcut-desc,
-      html[data-theme=dark] .news-shortcut-arrow {
-        color: rgba(255,255,255,0.6);
+      /* hover效果 */
+      .news-shortcut-card:active,
+      .news-shortcut-card:hover {
+        transform: translateY(-1px);
       }
       /* 手机端适配 */
       @media (max-width: 768px) {
         .news-shortcut-card {
           margin: 3px 0 0 0;
         }
-        .news-shortcut-inner {
-          padding: 0 12px;
+        .news-upper {
           height: 28px;
         }
-        .news-shortcut-icon {
-          font-size: 14px;
+        .news-scrolling {
+          height: 14px;
         }
-        .news-shortcut-title {
-          font-size: 12px;
+        .news-scrolling-inner {
+          padding: 0 10px;
+          height: 14px;
         }
-        .news-shortcut-desc {
-          font-size: 10px;
-        }
-        .news-shortcut-arrow {
-          font-size: 14px;
+        .news-scrolling-text {
+          font-size: 11px;
         }
       }
       </style>
       <script>
       document.addEventListener('DOMContentLoaded', function() {
-        // 插入到 #solar-term-banner 之后(导航下方),若无 banner 则插入到 #home 顶部
         var banner = document.getElementById('solar-term-banner');
         var homeContainer = document.querySelector('#home');
         var recentPosts = homeContainer ? document.querySelector('#home #recent-posts') : null;
 
         // 检查是否已存在(避免 PJAX 重复插入)
-        if (document.querySelector('.news-shortcut-card')) return;
+        if (document.querySelector('.news-upper')) return;
 
-        var card = document.createElement('a');
-        card.href = '/news/';
-        card.className = 'news-shortcut-card';
-       card.innerHTML = '<div class="news-shortcut-text"><span class="news-marquee"><span class="news-shortcut-title">新闻速递</span> <span class="news-shortcut-desc">实时热点 · 多平台聚合</span></span></div>';
- 
+        var wrapper = document.createElement('div');
+        wrapper.className = 'news-shortcut-card';
+        wrapper.innerHTML = 
+          '<div class="news-upper"></div>' +
+          '<div class="news-scrolling">' +
+            '<div class="news-scrolling-inner">' +
+              '<a href="/news/" style="text-decoration:none;color:inherit">' +
+                '<span class="news-scrolling-text">' +
+                  '<span class="news-title">📰 新闻速递 · 实时热点聚合 →</span>' +
+                '</span>' +
+              '</a>' +
+            '</div>' +
+          '</div>';
+
         if (banner) {
-          banner.insertAdjacentElement('afterend', card);
+          banner.insertAdjacentElement('afterend', wrapper);
         } else if (homeContainer && recentPosts) {
-          homeContainer.insertBefore(card, recentPosts);
+          homeContainer.insertBefore(wrapper, recentPosts);
         }
       });
       </script>
