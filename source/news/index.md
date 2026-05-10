@@ -133,7 +133,7 @@ html[data-theme=dark] .tab-btn.active {
 .news-item {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: 8px;
   padding: 0 0;
 }
 .news-item:last-child {
