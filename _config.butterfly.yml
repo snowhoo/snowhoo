@@ -1535,7 +1535,7 @@ inject:
           // 10. 小屏响应式：子容器2（main-wrapper）本身切换为 column
           var layoutMediator = function() {
             if (!recentEl || !asideEl || !mainWrapper) return;
-            if (window.matchMedia('(max-width: 768px)').matches) {
+            if (window.matchMedia('(max-width: 1100px)').matches) {
               // 小屏：main-wrapper 改为 column，让 recent-posts 和 aside-content 垂直堆叠
               mainWrapper.style.cssText = 'display:flex !important; flex-direction:column !important; width:100% !important; order:3 !important; flex-shrink:0 !important;';
               recentEl.style.cssText = 'flex:0 0 auto !important; width:100% !important; display:block !important; order:1 !important; box-sizing:border-box !important;';
