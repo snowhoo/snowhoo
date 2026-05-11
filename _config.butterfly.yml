@@ -1483,29 +1483,51 @@ inject:
             '</div>' +
           '</div>';
 
-        // 确保横幅在最前面、新闻卡片紧跟其后（上下排列，永远不横排）
+        // ========== 完全重新布局：banner→卡片→(文章列表+侧栏) ==========
         if (banner && contentInner) {
-          // 1. 建立 main-wrapper，把 main 和 aside 包进去，保持两栏布局
           var recentEl = document.getElementById('recent-posts');
           var asideEl = document.getElementById('aside-content');
+
+          // 1. 强制 #content-inner 垂直排列，撑满宽度
+          contentInner.style.cssText = 'display:flex !important; flex-direction:column !important; width:100% !important; align-items:stretch !important;';
+
+          // 2. 横幅：满宽，垂直堆叠的最上方
+          banner.style.cssText = 'display:block !important; width:100% !important; order:1 !important; flex-shrink:0 !important;';
+
+          // 3. 新闻卡片：满宽
+          wrapper.style.cssText = 'display:block !important; width:100% !important; order:2 !important; flex-shrink:0 !important;';
+
+          // 4. 建立 main-wrapper，把文章列表和侧栏包成一行
           var mainWrapper = null;
           if (recentEl && asideEl && !document.querySelector('.main-wrapper')) {
             mainWrapper = document.createElement('div');
             mainWrapper.className = 'main-wrapper';
-            mainWrapper.style.cssText = 'display:flex !important; flex-direction:row !important; flex-wrap:wrap !important; width:100% !important; align-items:stretch !important;';
+            mainWrapper.style.cssText = 'display:flex !important; flex-direction:row !important; flex-wrap:wrap !important; width:100% !important; order:3 !important; align-items:stretch !important;';
             recentEl.parentNode.insertBefore(mainWrapper, recentEl);
             mainWrapper.appendChild(recentEl);
             mainWrapper.appendChild(asideEl);
           }
 
-          // 2. 把横幅移到 contentInner 最前面
-          var refNode = contentInner.firstChild;
-          contentInner.insertBefore(banner, refNode);
+          // 5. 文章列表：占满剩余空间（flex:1）
+          if (recentEl) {
+            recentEl.style.cssText = 'flex:1 !important; min-width:0 !important; display:block !important; order:1 !important;';
+          }
 
-          // 3. 把新闻卡片插到横幅正下方
+          // 6. 侧栏：固定宽度
+          if (asideEl) {
+            asideEl.style.cssText = 'flex:0 0 280px !important; width:280px !important; min-width:280px !important; display:block !important; order:2 !important;';
+          }
+
+          // 7. 把横幅移到最前面（覆盖 visitor.js 的默认位置）
+          var refNode = contentInner.firstChild;
+          if (banner !== refNode) {
+            contentInner.insertBefore(banner, refNode);
+          }
+
+          // 8. 把新闻卡片插到横幅正下方
           banner.insertAdjacentElement('afterend', wrapper);
 
-          // 4. 把 main-wrapper 插到新闻卡片下方
+          // 9. 把 main-wrapper 插到新闻卡片下方
           if (mainWrapper) {
             wrapper.insertAdjacentElement('afterend', mainWrapper);
           }
