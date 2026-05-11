@@ -16,19 +16,14 @@
   width: 100% !important;
   order: 2 !important;
 }
-/* 文章列表（main）：全宽，顶部 */
-#content-inner>main,
-#content-inner>#recent-posts,
-#content-inner>#main {
-  flex: 1 !important;
-  min-width: 0 !important;
+/* 文章列表：全宽，顶部，order:1 */
+#content-inner>#recent-posts {
   order: 1 !important;
   width: 100% !important;
+  flex: 1 !important;
 }
-/* 侧栏（aside）：全宽，在文章列表下方（实际 DOM 结构 aside 在 main 内） */
-#content-inner aside,
-main aside,
-#content-inner>main aside {
+/* 侧栏：全宽，在文章列表下方，order:2（关键修复） */
+#content-inner>#aside-content {
   order: 2 !important;
   width: 100% !important;
   flex: 0 0 auto !important;
@@ -38,18 +33,10 @@ main aside,
   #content-inner {
     flex-direction: column !important;
   }
-  #content-inner>main,
   #content-inner>#recent-posts,
-  #content-inner>#main {
+  #content-inner>#aside-content {
     width: 100% !important;
-    flex: 0 0 auto !important;
-    order: 1 !important;
-  }
-  #content-inner aside,
-  main aside,
-  #content-inner>main aside {
-    order: 2 !important;
-    width: 100% !important;
+    order: auto !important;
     flex: 0 0 auto !important;
   }
 }
