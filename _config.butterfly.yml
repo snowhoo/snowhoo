@@ -1531,6 +1531,24 @@ inject:
           if (mainWrapper) {
             wrapper.insertAdjacentElement('afterend', mainWrapper);
           }
+
+          // 10. 小屏响应式：子容器2（main-wrapper）本身切换为 column
+          var layoutMediator = function() {
+            if (!recentEl || !asideEl || !mainWrapper) return;
+            if (window.matchMedia('(max-width: 768px)').matches) {
+              // 小屏：main-wrapper 改为 column，让 recent-posts 和 aside-content 垂直堆叠
+              mainWrapper.style.cssText = 'display:flex !important; flex-direction:column !important; width:100% !important; order:3 !important; flex-shrink:0 !important;';
+              recentEl.style.cssText = 'flex:0 0 auto !important; width:100% !important; display:block !important; order:1 !important; box-sizing:border-box !important;';
+              asideEl.style.cssText = 'flex:0 0 auto !important; width:100% !important; display:block !important; order:2 !important; box-sizing:border-box !important;';
+            } else {
+              // 大屏：main-wrapper 恢复 row，recent-posts 和 aside-content 并排
+              mainWrapper.style.cssText = 'display:flex !important; flex-direction:row !important; flex-wrap:wrap !important; width:100% !important; order:3 !important; align-items:stretch !important;';
+              recentEl.style.cssText = 'flex:1 !important; min-width:0 !important; display:block !important; order:1 !important; box-sizing:border-box !important;';
+              asideEl.style.cssText = 'flex:0 0 280px !important; width:280px !important; min-width:280px !important; display:block !important; order:2 !important; box-sizing:border-box !important;';
+            }
+          };
+          layoutMediator();
+          window.addEventListener('resize', layoutMediator);
         }
       });
       </script>
