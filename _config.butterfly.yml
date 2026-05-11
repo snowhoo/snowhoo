@@ -1377,7 +1377,7 @@ inject:
     - |
       <style>
       /* ========== 首页新闻速递快捷入口卡片（导航下方）- 双区域设计 ========== */
-      /* 上部32px纯图片区（无蒙版）+ 下部16px滚动文字区（透明背景） */
+      /* 上部42px纯图片区（无蒙版）+ 下部16px滚动文字区（透明背景） */
       .news-shortcut-card {
         display: block;
         width: 100%;
@@ -1390,9 +1390,9 @@ inject:
         position: relative;
         z-index: 1;
       }
-      /* 上部图片区域 32px，无蒙版，显示背景图原貌 */
+      /* 上部图片区域 42px，无蒙版，显示背景图原貌 */
       .news-upper {
-        height: 32px;
+        height: 42px;
         background-image: url('/images/banner/news-bg.jpg');
         background-size: cover;
         background-position: center;
@@ -1453,7 +1453,7 @@ inject:
           margin: 3px 0 0 0;
         }
         .news-upper {
-          height: 28px;
+          height: 42px;
         }
         .news-scrolling {
           height: 14px;
