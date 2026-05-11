@@ -654,10 +654,7 @@ inject:
 #content-inner {
   display: grid !important;
   grid-template-columns: 1fr !important;
-  grid-template-areas:
-    "banner"
-    "card"
-    "content" !important;
+  grid-template-areas: "banner" "card" "content" !important;
   grid-template-rows: auto auto 1fr !important;
 }
 #content-inner > #solar-term-banner { grid-area: banner !important; display: block !important; width: 100% !important; }
