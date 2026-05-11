@@ -1486,14 +1486,15 @@ inject:
         // 确保横幅在最前面、新闻卡片紧跟其后（上下排列，永远不横排）
         if (banner && contentInner) {
           // 1. 建立 main-wrapper，把 main 和 aside 包进去，保持两栏布局
-          var mainEl = document.querySelector('#main-inner') || document.querySelector('main');
-          var asideEl = contentInner.querySelector('aside');
+          var recentEl = document.getElementById('recent-posts');
+          var asideEl = document.getElementById('aside-content');
           var mainWrapper = null;
-          if (mainEl && asideEl && !document.querySelector('.main-wrapper')) {
+          if (recentEl && asideEl && !document.querySelector('.main-wrapper')) {
             mainWrapper = document.createElement('div');
             mainWrapper.className = 'main-wrapper';
-            mainWrapper.style.cssText = 'display:flex !important; flex-wrap:wrap !important; width:100% !important;';
-            mainWrapper.appendChild(mainEl);
+            mainWrapper.style.cssText = 'display:flex !important; flex-direction:row !important; flex-wrap:wrap !important; width:100% !important; align-items:stretch !important;';
+            recentEl.parentNode.insertBefore(mainWrapper, recentEl);
+            mainWrapper.appendChild(recentEl);
             mainWrapper.appendChild(asideEl);
           }
 
