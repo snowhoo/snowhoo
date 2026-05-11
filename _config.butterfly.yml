@@ -651,15 +651,10 @@ inject:
 /* 横幅在body自然流内,位于header(即固定导航)下方 */
 #solar-term-banner{display:none;width:100%;text-align:center;padding:4px 16px;box-sizing:border-box;background-color:#f8f9fa;border:2px solid #e0e0e0;border-radius:8px}html[data-theme=dark] #solar-term-banner{background-color:#1a2a1a;border-color:#3a3a3a}#solar-term-banner .st-banner-inner{display:inline-flex;align-items:center;gap:12px;font-size:14px;flex-wrap:wrap;justify-content:center}#solar-term-banner .st-icon{font-size:16px;opacity:0.8}#solar-term-banner .st-name{font-weight:700;font-size:16px;letter-spacing:2px}#solar-term-banner .st-desc{color:#555;font-style:italic}html[data-theme=dark] #solar-term-banner .st-desc{color:#a5d6a7}@media(max-width:480px){#solar-term-banner .st-desc{display:none}}/* 节日横幅暗色适配 */html[data-theme=dark] #solar-term-banner.festival-banner .st-desc{color:#ccc}/* 节日/节气的背景图样式 */#solar-term-banner.festival-banner{background-size:cover;background-position:center;background-repeat:no-repeat;padding:6px 16px}#solar-term-banner.festival-banner .st-banner-inner{background:rgba(255,255,255,0.85);padding:8px 20px;border-radius:24px}html[data-theme=dark] #solar-term-banner.festival-banner .st-banner-inner{background:rgba(0,0,0,0.6)}/* 文章卡片统一2px边框(置顶帖由模板内联样式覆盖)*/.recent-post-item{border:2px solid #e0e0e0;border-radius:8px}html[data-theme=dark] .recent-post-item{border-color:#3a3a3a}
 /* ========== 修复：横幅/卡片垂直堆叠，主内容+侧栏两栏(Grid+Flex) ========== */
-#content-inner {
-  display: grid !important;
-  grid-template-columns: 1fr !important;
-  grid-template-areas: "banner" "card" "content" !important;
-  grid-template-rows: auto auto 1fr !important;
-}
-#content-inner > #solar-term-banner { grid-area: banner !important; display: block !important; width: 100% !important; }
-#content-inner > .news-shortcut-card { grid-area: card !important; display: block !important; width: 100% !important; }
-#content-inner > .main-wrapper { grid-area: content !important; display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; width: 100% !important; align-items: stretch !important; }</style>"
+#content-inner{display:grid;grid-template-columns:1fr;grid-template-areas:"banner" "card" "content";grid-template-rows:auto auto 1fr}
+#content-inner>#solar-term-banner{grid-area:banner;display:block;width:100%}
+#content-inner>.news-shortcut-card{grid-area:card;display:block;width:100%}
+#content-inner>.main-wrapper{grid-area:content;display:flex;flex-direction:row;flex-wrap:wrap;width:100%;align-items:stretch}</style>"
   bottom:
     - |
       <script>
