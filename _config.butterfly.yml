@@ -1399,9 +1399,9 @@ inject:
         position: relative;
         z-index: 1;
       }
-      /* 下部滚动文字区域 16px，透明背景 */
+      /* 下部滚动文字区域 24px，透明背景 */
       .news-scrolling {
-        height: 16px;
+        height: 24px;
         background: transparent;
         overflow: hidden;
         position: relative;
@@ -1413,7 +1413,7 @@ inject:
       .news-scrolling-inner {
         display: flex;
         align-items: center;
-        height: 16px;
+        height: 24px;
         padding: 0 12px;
         width: 100%;
         min-width: 100%;
