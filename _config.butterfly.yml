@@ -1406,6 +1406,8 @@ inject:
         overflow: hidden;
         position: relative;
         z-index: 1;
+        width: 100%;
+        box-sizing: border-box;
       }
       .news-scrolling-inner {
         display: flex;
