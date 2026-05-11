@@ -1483,58 +1483,54 @@ inject:
             '</div>' +
           '</div>';
 
-        // ========== 简化布局：#recent-posts 和 #aside-content 本身就是兄弟元素 ==========
+        // ========== 完全重新布局：banner→卡片→(文章列表+侧栏) ==========
         if (banner && contentInner) {
           var recentEl = document.getElementById('recent-posts');
           var asideEl = document.getElementById('aside-content');
 
-          // 0. 移除 #recent-posts 的 nc class（nc = no columns，禁止两栏布局）
-          if (recentEl && recentEl.classList.contains('nc')) {
-            recentEl.classList.remove('nc');
-          }
-
-          // 1. 父容器：flex column，让 banner/card 垂直堆叠
+          // 1. 强制 #content-inner 垂直排列，撑满宽度
           contentInner.style.cssText = 'display:flex !important; flex-direction:column !important; width:100% !important; align-items:stretch !important;';
 
-          // 2. 横幅：满宽，order:1
+          // 2. 横幅：满宽，垂直堆叠的最上方
           banner.style.cssText = 'display:block !important; width:100% !important; order:1 !important; flex-shrink:0 !important;';
 
-          // 3. 新闻卡片：满宽，order:2
+          // 3. 新闻卡片：满宽
           wrapper.style.cssText = 'display:block !important; width:100% !important; order:2 !important; flex-shrink:0 !important;';
 
-          // 4. 文章列表 + 侧栏：天然就是兄弟元素，直接设 flex row 即可
-          // #recent-posts 占满剩余空间，#aside-content 固定 280px
-          if (recentEl) {
-            recentEl.style.cssText = 'flex:1 1 auto !important; min-width:0 !important; display:block !important; order:1 !important; box-sizing:border-box !important;';
-          }
-          if (asideEl) {
-            asideEl.style.cssText = 'flex:0 0 280px !important; width:280px !important; min-width:280px !important; display:block !important; order:2 !important; box-sizing:border-box !important;';
+          // 4. 建立 main-wrapper，把文章列表和侧栏包成一行
+          var mainWrapper = null;
+          if (recentEl && asideEl && !document.querySelector('.main-wrapper')) {
+            mainWrapper = document.createElement('div');
+            mainWrapper.className = 'main-wrapper';
+            mainWrapper.style.cssText = 'display:flex !important; flex-direction:row !important; flex-wrap:wrap !important; width:100% !important; order:3 !important; align-items:stretch !important;';
+            recentEl.parentNode.insertBefore(mainWrapper, recentEl);
+            mainWrapper.appendChild(recentEl);
+            mainWrapper.appendChild(asideEl);
           }
 
-          // 5. 把横幅移到 contentInner 最前面
+          // 5. 文章列表：占满剩余空间（flex:1）
+          if (recentEl) {
+            recentEl.style.cssText = 'flex:1 !important; min-width:0 !important; display:block !important; order:1 !important;';
+          }
+
+          // 6. 侧栏：固定宽度
+          if (asideEl) {
+            asideEl.style.cssText = 'flex:0 0 280px !important; width:280px !important; min-width:280px !important; display:block !important; order:2 !important;';
+          }
+
+          // 7. 把横幅移到最前面（覆盖 visitor.js 的默认位置）
           var refNode = contentInner.firstChild;
           if (banner !== refNode) {
             contentInner.insertBefore(banner, refNode);
           }
 
-          // 6. 把新闻卡片插到横幅正下方
+          // 8. 把新闻卡片插到横幅正下方
           banner.insertAdjacentElement('afterend', wrapper);
 
-          // 7. 小屏适配：监听窗口宽度，动态切换 flex-direction
-          var layoutMediator = function() {
-            if (!recentEl || !asideEl) return;
-            if (window.matchMedia('(max-width: 768px)').matches) {
-              // 小屏：全部垂直堆叠
-              recentEl.style.cssText = 'flex:0 0 auto !important; width:100% !important; display:block !important; order:1 !important; box-sizing:border-box !important;';
-              asideEl.style.cssText = 'flex:0 0 auto !important; width:100% !important; display:block !important; order:2 !important; box-sizing:border-box !important;';
-            } else {
-              // 大屏：两栏并排
-              recentEl.style.cssText = 'flex:1 1 auto !important; min-width:0 !important; display:block !important; order:1 !important; box-sizing:border-box !important;';
-              asideEl.style.cssText = 'flex:0 0 280px !important; width:280px !important; min-width:280px !important; display:block !important; order:2 !important; box-sizing:border-box !important;';
-            }
-          };
-          layoutMediator();
-          window.addEventListener('resize', layoutMediator);
+          // 9. 把 main-wrapper 插到新闻卡片下方
+          if (mainWrapper) {
+            wrapper.insertAdjacentElement('afterend', mainWrapper);
+          }
         }
       });
       </script>
