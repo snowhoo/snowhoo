@@ -1,10 +1,9 @@
-/* 横幅→新闻卡片垂直堆叠；main-wrapper 内部文章列表+侧栏两栏并排 */
+/* 横幅→新闻卡片垂直堆叠；main-wrapper 内部 flex row 两栏 */
 
 /* 横幅：满宽 */
 #content-inner>#solar-term-banner {
   display: block !important;
   width: 100% !important;
-  flex-shrink: 0 !important;
   order: 1 !important;
 }
 
@@ -12,25 +11,21 @@
 #content-inner>.news-shortcut-card {
   display: block !important;
   width: 100% !important;
-  flex-shrink: 0 !important;
   order: 2 !important;
 }
 
-/* main-wrapper：两栏布局（由 JS 动态创建） */
+/* .main-wrapper：flex item，向外撑满整个 #content-inner 宽度 */
 #content-inner>.main-wrapper {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: wrap !important;
+  flex: 1 1 auto !important;
   width: 100% !important;
-  align-items: stretch !important;
   order: 3 !important;
 }
 
-/* 文章列表：占满剩余宽度 */
+/* main-wrapper 内部 flex row：文章列表 + 侧栏 */
 #content-inner>.main-wrapper>#recent-posts {
-  flex: 1 !important;
+  flex: 1 1 auto !important;
   min-width: 0 !important;
-  width: auto !important;
+  display: block !important;
   order: 1 !important;
 }
 
@@ -38,6 +33,8 @@
 #content-inner>.main-wrapper>#aside-content {
   flex: 0 0 220px !important;
   width: 220px !important;
+  min-width: 220px !important;
+  display: block !important;
   order: 2 !important;
 }
 
@@ -45,6 +42,7 @@
 @media (max-width: 768px) {
   #content-inner>.main-wrapper {
     flex-direction: column !important;
+    width: 100% !important;
   }
   #content-inner>.main-wrapper>#recent-posts,
   #content-inner>.main-wrapper>#aside-content {
