@@ -1496,7 +1496,7 @@ inject:
 
           // 3. 新闻卡片：满宽，加圆角边框（和节日横幅一致），顶部间隙4px
           var cardBorderColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#3a3a3a' : '#e0e0e0';
-          wrapper.style.cssText = 'display:block !important; width:100% !important; margin:4px 0 0 0 !important; order:2 !important; flex-shrink:0 !important; border:2px solid ' + cardBorderColor + ' !important; border-radius:8px !important; box-sizing:border-box !important;';
+          wrapper.style.cssText = 'display:block !important; width:100% !important; margin:2px 0 4px 0 !important; order:2 !important; flex-shrink:0 !important; border:2px solid ' + cardBorderColor + ' !important; border-radius:8px !important; box-sizing:border-box !important;';
 
           // 4. 建立 main-wrapper，把文章列表和侧栏包成一行
           var mainWrapper = null;
