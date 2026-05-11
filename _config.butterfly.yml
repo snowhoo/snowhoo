@@ -653,11 +653,11 @@ inject:
 /* ========== 修复：横幅/卡片/主内容侧栏各自独立控制 ========== */
 /* .main-wrapper 强制 flex row，保持主内容+侧栏两栏 */
 #content-inner > .main-wrapper {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: wrap !important;
-  width: 100% !important;
-  align-items: stretch !important;
+  display: flex;
+  flex-direction: row ;
+  flex-wrap: wrap;
+  //width: 100% !important;
+  align-items: stretch ;
 }
 /* 横幅和卡片保持 block 垂直堆叠 */
 #content-inner > #solar-term-banner,
