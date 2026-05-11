@@ -1,5 +1,11 @@
 /* 横幅/卡片垂直堆叠，主内容+侧栏两栏(Grid+Flex) */
-#content-inner{display:grid;grid-template-columns:minmax(0,3fr) minmax(200px,1fr);grid-template-areas:"banner banner" "card card" "content content";grid-template-rows:auto auto 1fr}
-#content-inner>#solar-term-banner{grid-area:banner;display:block;width:100%}
-#content-inner>.news-shortcut-card{grid-area:card;display:block;width:100%}
-#content-inner>.main-wrapper{grid-area:content;grid-column:1/-1;display:flex;flex-direction:row;flex-wrap:wrap;width:100%;align-items:stretch}
+#content-inner{display:grid;grid-template-columns:minmax(0,3fr) minmax(200px,1fr);grid-template-areas:"banner banner" "card card" "main main";grid-template-rows:auto auto 1fr}
+#content-inner>#solar-term-banner{grid-area:banner;order:1;display:block;width:100%}
+#content-inner>.news-shortcut-card{grid-area:card;order:2;display:block;width:100%}
+#content-inner>.main-wrapper{grid-area:main;grid-column:1/-1;order:3;display:flex;flex-direction:row;flex-wrap:wrap;width:100%;align-items:stretch}
+#content-inner>aside{order:4;flex:0 0 200px}
+#content-inner>main,#content-inner>#main,#content-inner>#recent-posts{order:3;flex:1;min-width:0}
+@media(max-width:768px){#content-inner{grid-template-columns:1fr!important;grid-template-areas:"banner" "card" "main"!important;grid-template-rows:auto auto 1fr!important}
+#content-inner>.main-wrapper{grid-column:auto!important;flex-direction:column!important;width:100%!important}
+#content-inner>aside{flex:0 0 auto!important;width:100%!important;order:3!important}
+#content-inner>main,#content-inner>#main,#content-inner>#recent-posts{order:3!important;width:100%!important;flex:0 0 auto!important}}
