@@ -1464,7 +1464,7 @@ inject:
       <script>
       document.addEventListener('DOMContentLoaded', function() {
         // 只在首页执行，避免破坏其他页面布局
-        if (!document.body.classList.contains('home')) return;
+        if (window.location.pathname !== '/') return;
 
         var banner = document.getElementById('solar-term-banner');
         var contentInner = document.querySelector('#content-inner');
