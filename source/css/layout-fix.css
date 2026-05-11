@@ -1,5 +1,11 @@
 /* 横幅→新闻卡片垂直堆叠；main-wrapper 内部 flex row 两栏 */
 
+/* 内容最外层容器：取消max-width限制（主题默认1200px/1000px hide-aside） */
+#content-inner.layout {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
 /* 横幅：满宽 */
 #content-inner>#solar-term-banner {
   display: block !important;
