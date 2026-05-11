@@ -1407,6 +1407,7 @@ inject:
         position: relative;
         z-index: 1;
         width: 100%;
+        min-width: 100%;
         box-sizing: border-box;
       }
       .news-scrolling-inner {
@@ -1415,7 +1416,10 @@ inject:
         height: 16px;
         padding: 0 12px;
         width: 100%;
+        min-width: 100%;
+        max-width: 99999px;
         box-sizing: border-box;
+        flex-shrink: 0;
       }
       .news-scrolling-text {
         display: inline-block;
