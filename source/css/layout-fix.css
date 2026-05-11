@@ -1,11 +1,57 @@
-/* 横幅/卡片垂直堆叠，主内容+侧栏两栏(Grid+Flex) */
-#content-inner{display:grid;grid-template-columns:minmax(0,3fr) minmax(200px,1fr);grid-template-areas:"banner banner" "card card" "main main";grid-template-rows:auto auto 1fr}
-#content-inner>#solar-term-banner{grid-area:banner;order:1;display:block;width:100%}
-#content-inner>.news-shortcut-card{grid-area:card;order:2;display:block;width:100%}
-#content-inner>.main-wrapper{grid-area:main;grid-column:1/-1;order:3;display:flex;flex-direction:row;flex-wrap:wrap;width:100%;align-items:stretch}
-/* 主内容在左（order:1），侧栏在右（order:2），确保正确的左右顺序 */
-.main-wrapper>main,.main-wrapper>#recent-posts,.main-wrapper>#main{order:1;flex:1;min-width:0}
-.main-wrapper>aside{order:2;flex:0 0 200px}
-@media(max-width:768px){#content-inner{grid-template-columns:1fr!important;grid-template-areas:"banner" "card" "main"!important;grid-template-rows:auto auto 1fr!important}
-#content-inner>.main-wrapper{grid-column:auto!important;flex-direction:column!important;width:100%!important;order:3!important}
-.main-wrapper>*{order:1!important;width:100%!important;flex:0 0 auto!important}}
+/* 横幅→新闻卡片→文章列表+侧栏，全部纵向堆叠 */
+#content-inner {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+}
+/* 横幅：满宽，高级感 */
+#content-inner>#solar-term-banner {
+  display: block !important;
+  width: 100% !important;
+  order: 1 !important;
+}
+/* 新闻卡片：满宽 */
+#content-inner>.news-shortcut-card {
+  display: block !important;
+  width: 100% !important;
+  order: 2 !important;
+}
+/* 主内容区：满宽，内部 flex row 让 main + aside 并排 */
+#content-inner>.main-wrapper {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  width: 100% !important;
+  order: 3 !important;
+}
+/* 文章列表：左侧，占满剩余空间 */
+.main-wrapper>main,
+.main-wrapper>#recent-posts,
+.main-wrapper>#main {
+  flex: 1 !important;
+  min-width: 0 !important;
+  order: 1 !important;
+}
+/* 侧栏：右侧，固定宽度 */
+.main-wrapper>aside {
+  flex: 0 0 220px !important;
+  width: 220px !important;
+  order: 2 !important;
+}
+/* 小屏（<=768px）：全部纵向堆叠 */
+@media (max-width: 768px) {
+  #content-inner {
+    flex-direction: column !important;
+  }
+  #content-inner>.main-wrapper {
+    flex-direction: column !important;
+  }
+  .main-wrapper>main,
+  .main-wrapper>#recent-posts,
+  .main-wrapper>#main,
+  .main-wrapper>aside {
+    width: 100% !important;
+    flex: 0 0 auto !important;
+    order: 1 !important;
+  }
+}
