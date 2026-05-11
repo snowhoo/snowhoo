@@ -3,9 +3,9 @@
 #content-inner>#solar-term-banner{grid-area:banner;order:1;display:block;width:100%}
 #content-inner>.news-shortcut-card{grid-area:card;order:2;display:block;width:100%}
 #content-inner>.main-wrapper{grid-area:main;grid-column:1/-1;order:3;display:flex;flex-direction:row;flex-wrap:wrap;width:100%;align-items:stretch}
-/* main和aside是main-wrapper的flex子元素，控制并排顺序 */
-.main-wrapper>*{order:1}
-/* 文章列表在前面，侧栏在后面（DOM顺序已经是main先aside后，这里不用改order） */
+/* 主内容在左（order:1），侧栏在右（order:2），确保正确的左右顺序 */
+.main-wrapper>main,.main-wrapper>#recent-posts,.main-wrapper>#main{order:1;flex:1;min-width:0}
+.main-wrapper>aside{order:2;flex:0 0 200px}
 @media(max-width:768px){#content-inner{grid-template-columns:1fr!important;grid-template-areas:"banner" "card" "main"!important;grid-template-rows:auto auto 1fr!important}
 #content-inner>.main-wrapper{grid-column:auto!important;flex-direction:column!important;width:100%!important;order:3!important}
-.main-wrapper>*{order:1!important}}
+.main-wrapper>*{order:1!important;width:100%!important;flex:0 0 auto!important}}
