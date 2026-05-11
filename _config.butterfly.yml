@@ -1491,12 +1491,12 @@ inject:
           // 1. 强制 #content-inner 垂直排列，撑满宽度
           contentInner.style.cssText = 'display:flex !important; flex-direction:column !important; width:100% !important; align-items:stretch !important;';
 
-          // 2. 横幅：满宽，垂直堆叠的最上方（display 由 visitor.js 控制，这里只设布局）
-          banner.style.cssText = 'width:100% !important; order:1 !important; flex-shrink:0 !important;';
+          // 2. 横幅：满宽，垂直堆叠的最上方；无内容时强制隐藏
+          banner.style.cssText = 'width:100% !important; order:1 !important; flex-shrink:0 !important; display:' + (banner.innerHTML.trim() ? 'block' : 'none') + ' !important;';
 
-          // 3. 新闻卡片：满宽，加圆角边框（和节日横幅一致）
+          // 3. 新闻卡片：满宽，加圆角边框（和节日横幅一致），顶部间隙4px
           var cardBorderColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#3a3a3a' : '#e0e0e0';
-          wrapper.style.cssText = 'display:block !important; width:100% !important; order:2 !important; flex-shrink:0 !important; border:2px solid ' + cardBorderColor + ' !important; border-radius:8px !important; box-sizing:border-box !important;';
+          wrapper.style.cssText = 'display:block !important; width:100% !important; margin:4px 0 0 0 !important; order:2 !important; flex-shrink:0 !important; border:2px solid ' + cardBorderColor + ' !important; border-radius:8px !important; box-sizing:border-box !important;';
 
           // 4. 建立 main-wrapper，把文章列表和侧栏包成一行
           var mainWrapper = null;
