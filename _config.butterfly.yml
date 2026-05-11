@@ -1501,11 +1501,29 @@ inject:
 
         // 确保横幅在最前面、新闻卡片紧跟其后（上下排列，永远不横排）
         if (banner && contentInner) {
-          // 先把横幅移到 contentInner 最前面
+          // 1. 建立 main-wrapper，把 main 和 aside 包进去，保持两栏布局
+          var mainEl = document.querySelector('#main-inner') || document.querySelector('main');
+          var asideEl = contentInner.querySelector('aside');
+          var mainWrapper = null;
+          if (mainEl && asideEl && !document.querySelector('.main-wrapper')) {
+            mainWrapper = document.createElement('div');
+            mainWrapper.className = 'main-wrapper';
+            mainWrapper.style.cssText = 'display:flex !important; flex-wrap:wrap !important; width:100% !important;';
+            mainWrapper.appendChild(mainEl);
+            mainWrapper.appendChild(asideEl);
+          }
+
+          // 2. 把横幅移到 contentInner 最前面
           var refNode = contentInner.firstChild;
           contentInner.insertBefore(banner, refNode);
-          // 再把新闻卡片插到横幅正下方（永远在 banner 之后）
+
+          // 3. 把新闻卡片插到横幅正下方
           banner.insertAdjacentElement('afterend', wrapper);
+
+          // 4. 把 main-wrapper 插到新闻卡片下方
+          if (mainWrapper) {
+            wrapper.insertAdjacentElement('afterend', mainWrapper);
+          }
         }
       });
       </script>
