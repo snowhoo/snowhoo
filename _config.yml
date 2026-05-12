@@ -118,3 +118,6 @@ encrypt:
   enable: true
   default_abstract: 这是一篇加密文章，请输入密码后阅读。
   default_message: 请输入密码
+
+skip_render:
+  - 'data/**'
