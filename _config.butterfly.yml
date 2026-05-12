@@ -1367,11 +1367,178 @@ inject:
       }
       </script>
     - |
-      <style>
-      #lucky-visitor-tag{position:fixed;top:79px;right:13px;z-index:999;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;cursor:pointer;animation:lucky-float-in .6s ease-out}@keyframes lucky-float-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}#lucky-visitor-tag .lucky-tag-inner{background:rgba(255,249,240,.90);border:1px solid rgba(255,152,0,.3);border-radius:12px;padding:5px 5px;box-shadow:0 4px 20px rgba(255,152,0,.12);display:flex;align-items:center;gap:5px;min-width:160px;height:74px;transition:opacity .3s,transform .3s,visibility .3s}#lucky-visitor-tag .lucky-emoji{font-size:24px;line-height:1}#lucky-visitor-tag .lucky-info{display:flex;flex-direction:column;align-items:flex-start;gap:3px}#lucky-visitor-tag .lucky-row1,#lucky-visitor-tag .lucky-row2{display:flex;align-items:center;gap:6px;flex-wrap:wrap}#lucky-visitor-tag .lucky-badge{font-size:12px;font-weight:700;color:#e65100;line-height:1.4}#lucky-visitor-tag .lucky-readers{font-size:12px;font-weight:600;color:#e65100;line-height:1.4}#lucky-visitor-tag .lucky-count{font-size:11px;color:#888;line-height:1.4}#lucky-visitor-tag .lucky-num{font-size:13px;font-weight:700;color:#bf360c}#lucky-visitor-tag .lucky-lottery{font-size:12px;color:#c41e3a;font-weight:600}html[data-theme=dark]#lucky-visitor-tag .lucky-tag-inner{background:rgba(62,39,35,.75);border-color:rgba(255,152,0,.2);box-shadow:0 4px 20px rgba(255,152,0,.1)}html[data-theme=dark]#lucky-visitor-tag .lucky-badge,html[data-theme=dark]#lucky-visitor-tag .lucky-readers{color:#ffb74d}html[data-theme=dark]#lucky-visitor-tag .lucky-count{color:#999}html[data-theme=dark]#lucky-visitor-tag .lucky-num{color:#ffcc80}html[data-theme=dark]#lucky-visitor-tag .lucky-lottery{color:#ff8a80}html[data-theme=dark]#lucky-visitor-tag .lucky-collapsed-icon{color:#ffcc80}
-      /* 收起/展开逻辑 */
-      #lucky-visitor-tag .lucky-tag-inner{overflow:hidden}#lucky-visitor-tag.expanded .lucky-tag-inner,#lucky-visitor-tag.expanded .lucky-emoji{opacity:1;transform:translateX(0);visibility:visible}#lucky-visitor-tag.collapsed .lucky-tag-inner{opacity:0;transform:translateX(20px);visibility:hidden;width:0;min-width:0;padding:0;border:0;margin:0;overflow:hidden}#lucky-visitor-tag.collapsed .lucky-emoji{opacity:1}#lucky-visitor-tag .lucky-collapsed-icon{display:none}#lucky-visitor-tag.collapsed .lucky-emoji{display:none}#lucky-visitor-tag.collapsed .lucky-collapsed-icon{display:block;position:fixed;right:13px;top:79px;z-index:1000;font-size:22px;line-height:1;padding:4px 1px;background:rgba(255,249,240,.90);border:1px solid rgba(255,152,0,.3);border-radius:50%;box-shadow:0 4px 20px rgba(255,152,0,.12)}html[data-theme=dark]#lucky-visitor-tag.collapsed .lucky-collapsed-icon{background:rgba(62,39,35,.75);border-color:rgba(255,152,0,.2)}
-      </style>
+      <style>#lucky-visitor-tag {
+	position: fixed;
+	top: 79px;
+	right: 13px;
+	z-index: 999;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	cursor: pointer;
+	animation: lucky-float-in .6s ease-out
+}
+
+@keyframes lucky-float-in {
+	from {
+		opacity: 0;
+		transform: translateX(20px)
+	}
+
+	to {
+		opacity: 1;
+		transform: translateX(0)
+	}
+}
+
+#lucky-visitor-tag .lucky-tag-inner {
+	background: rgba(255, 249, 240, .90);
+	border: 1px solid rgba(255, 152, 0, .3);
+	border-radius: 12px;
+	padding: 5px 5px;
+	box-shadow: 0 4px 20px rgba(255, 152, 0, .12);
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	min-width: 160px;
+	height: 74px;
+	transition: opacity .3s, transform .3s, visibility .3s
+}
+
+#lucky-visitor-tag .lucky-emoji {
+	font-size: 24px;
+	line-height: 1
+}
+
+#lucky-visitor-tag .lucky-info {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 3px
+}
+
+#lucky-visitor-tag .lucky-row1,
+#lucky-visitor-tag .lucky-row2 {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap
+}
+
+#lucky-visitor-tag .lucky-badge {
+	font-size: 12px;
+	font-weight: 700;
+	color: #e65100;
+	line-height: 1.4
+}
+
+#lucky-visitor-tag .lucky-readers {
+	font-size: 12px;
+	font-weight: 600;
+	color: #e65100;
+	line-height: 1.4
+}
+
+#lucky-visitor-tag .lucky-count {
+	font-size: 11px;
+	color: #888;
+	line-height: 1.4
+}
+
+#lucky-visitor-tag .lucky-num {
+	font-size: 13px;
+	font-weight: 700;
+	color: #bf360c
+}
+
+#lucky-visitor-tag .lucky-lottery {
+	font-size: 12px;
+	color: #c41e3a;
+	font-weight: 600
+}
+
+html[data-theme=dark]#lucky-visitor-tag .lucky-tag-inner {
+	background: rgba(62, 39, 35, .75);
+	border-color: rgba(255, 152, 0, .2);
+	box-shadow: 0 4px 20px rgba(255, 152, 0, .1)
+}
+
+html[data-theme=dark]#lucky-visitor-tag .lucky-badge,
+html[data-theme=dark]#lucky-visitor-tag .lucky-readers {
+	color: #ffb74d
+}
+
+html[data-theme=dark]#lucky-visitor-tag .lucky-count {
+	color: #999
+}
+
+html[data-theme=dark]#lucky-visitor-tag .lucky-num {
+	color: #ffcc80
+}
+
+html[data-theme=dark]#lucky-visitor-tag .lucky-lottery {
+	color: #ff8a80
+}
+
+html[data-theme=dark]#lucky-visitor-tag .lucky-collapsed-icon {
+	color: #ffcc80
+}
+
+/* 收起/展开逻辑 */
+#lucky-visitor-tag .lucky-tag-inner {
+	overflow: hidden
+}
+
+#lucky-visitor-tag.expanded .lucky-tag-inner,
+#lucky-visitor-tag.expanded .lucky-emoji {
+	opacity: 1;
+	transform: translateX(0);
+	visibility: visible
+}
+
+#lucky-visitor-tag.collapsed .lucky-tag-inner {
+	opacity: 0;
+	transform: translateX(20px);
+	visibility: hidden;
+	width: 0;
+	min-width: 0;
+	padding: 0;
+	border: 0;
+	margin: 0;
+	overflow: hidden
+}
+
+#lucky-visitor-tag.collapsed .lucky-emoji {
+	opacity: 1
+}
+
+#lucky-visitor-tag .lucky-collapsed-icon {
+	display: none
+}
+
+#lucky-visitor-tag.collapsed .lucky-emoji {
+	display: none
+}
+
+#lucky-visitor-tag.collapsed .lucky-collapsed-icon {
+	display: block;
+	position: fixed;
+	right: 13px;
+	top: 79px;
+	z-index: 1000;
+	font-size: 22px;
+	line-height: 1;
+	padding: 4px 1px;
+	background: rgba(255, 249, 240, .90);
+	border: 1px solid rgba(255, 152, 0, .3);
+	border-radius: 50%;
+	box-shadow: 0 4px 20px rgba(255, 152, 0, .12)
+}
+
+html[data-theme=dark]#lucky-visitor-tag.collapsed .lucky-collapsed-icon {
+	background: rgba(62, 39, 35, .75);
+	border-color: rgba(255, 152, 0, .2)
+}
+
+</style>
     - <script src="/js/visitor.js" defer></script>
     - <script src="/js/waline-avatar-fix.js" defer></script>
     - |
