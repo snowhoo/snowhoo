@@ -92,6 +92,7 @@ pagination_dir: page
 include:
 exclude:
 ignore:
+  - data**
 
 # Extensions
 ## Plugins: https://hexo.io/plugins/
@@ -118,5 +119,3 @@ encrypt:
   enable: true
   default_abstract: 这是一篇加密文章，请输入密码后阅读。
   default_message: 请输入密码
-
-skip_render: data/**
