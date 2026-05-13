@@ -387,7 +387,7 @@
   <select id="sourceSelect" onchange="switchSource()">
     <option value="">— 选择数据源 —</option>
   </select>
-  <input type="text" id="searchInput" placeholder="搜索影片..." oninput="doSearch()">
+  <input type="text" id="searchInput" placeholder="全局搜索影片..." oninput="doSearch()">
   <button onclick="doSearch()">搜索</button>
 </div>
 <div class="player-box"><video id="player" controls playsinline></video></div>
@@ -461,20 +461,64 @@ function switchSource() {
   }
   setStatus('\ud83d\udce1 ' + currentData.name + ' \u2014 ' + currentData.total_videos + '\u4e2a\u89c6\u9891\uff0c' + currentData.total_episodes + '\u6761\u5730\u5740');
   currentPage = 1;
-  doSearch();
+  // 如果搜索框有内容则全局搜索，否则显示当前源
+  var q = document.getElementById('searchInput').value.trim();
+  if (q) { doSearch(); }
+  else { currentFiltered = tagWithSource(currentData.videos, key, currentData.name); render(); }
 }
 
-/* ===== 搜索 ===== */
+/* ===== 全局搜索 ===== */
 function doSearch() {
-  if (!currentData) return;
   var q = document.getElementById('searchInput').value.toLowerCase().trim();
-  currentFiltered = (currentData.videos||[]).filter(function(v) {
-    if (!q) return true;
-    if ((v.vod_name||'').toLowerCase().includes(q)) return true;
-    return (v.episodes||[]).some(function(e){ return (e.title||'').toLowerCase().includes(q); });
+  if (!q) {
+    // 无关键词：显示当前源所有视频
+    if (currentData) {
+      currentFiltered = tagWithSource(currentData.videos, document.getElementById('sourceSelect').value, currentData.name);
+      setStatus('\ud83d\udce1 ' + currentData.name);
+    } else {
+      currentFiltered = [];
+      setStatus('\u23f9 \u8bf7\u9009\u62e9\u6570\u636e\u6e90');
+    }
+    currentPage = 1;
+    render();
+    return;
+  }
+  // 全局搜索：遍历所有数据源
+  var names = Object.keys(TVBOX_DATA);
+  var results = [];
+  names.forEach(function(k) {
+    var src = TVBOX_DATA[k];
+    if (!src || !src.videos) return;
+    src.videos.forEach(function(v) {
+      var match = (v.vod_name||'').toLowerCase().includes(q);
+      if (!match) {
+        match = (v.episodes||[]).some(function(e){ return (e.title||'').toLowerCase().includes(q); });
+      }
+      if (match) {
+        results.push({
+          sourceKey: k,
+          sourceName: src.name,
+          vod_name: v.vod_name,
+          vod_pic: v.vod_pic,
+          episodes: v.episodes,
+          ep_count: v.ep_count,
+          playable_count: v.playable_count,
+        });
+      }
+    });
   });
+  currentFiltered = results;
+  setStatus('\ud83d\udd0d \u5168\u5c40\u641c\u7d22: \u201c' + q + '\u201d \u2014 ' + results.length + '\u4e2a\u7ed3\u679c');
   currentPage = 1;
   render();
+}
+
+function tagWithSource(videos, key, name) {
+  return (videos||[]).map(function(v) {
+    v.sourceKey = key;
+    v.sourceName = name;
+    return v;
+  });
 }
 
 /* ===== 渲染卡片 ===== */
@@ -508,7 +552,7 @@ function render() {
     h += '<span class="card-badge ' + badgeClass + '">' + badgeText + '</span>';
     h += '</div>';
     h += '<div class="card-info"><div class="card-title">' + escHtml(v.vod_name||'') + '</div>';
-    h += '<div class="card-meta">' + epInfo + '</div></div>';
+    h += '<div class="card-meta">' + (v.sourceName?escHtml(v.sourceName)+' \u00b7 ':'') + epInfo + '</div></div>';
 
     // 剧集面板（放入 card 内部，避免撑开 Grid）
     h += '<div class="ep-panel" id="' + eid + '">';
