@@ -2,7 +2,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TVBox 播放器</title>
+<title>小红超级播霸</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <style>
 /* ===== CSS 自定义属性 ===== */
@@ -103,20 +103,35 @@
   color:inherit;
   text-decoration:none;
 }
-
-*{margin:0;padding:0;box-sizing:border-box}
-body{
+#player-wrap {
   font-family:-apple-system,'Microsoft YaHei','PingFang SC',sans-serif;
   background:var(--bg-page);
   color:var(--text-primary);
   padding:16px;
   max-width:1200px;
   margin:0 auto;
+  line-height:1.5;
+  font-size:14px;
   transition:background .3s,color .3s;
+}
+#player-wrap p,
+#player-wrap ul,
+#player-wrap ol,
+#player-wrap li {
+  margin:0;
+  padding:0;
+  border:none;
+  list-style:none;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:transparent;
+  color:inherit;
 }
 
 /* ===== Header ===== */
-h1.title{
+#player-wrap h1.title{
   font-size:18px;
   font-weight:600;
   color:var(--accent);
@@ -371,12 +386,12 @@ h1.title{
   .video-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
   .video-card .card-info{padding:6px 8px}
   .video-card .card-title{font-size:12px}
-  h1.title{font-size:16px}
+  #player-wrap h1.title{font-size:16px}
   .toolbar select,.toolbar input,.toolbar button{font-size:12px;padding:6px 8px}
 }
 </style></head><body>
 <div id="player-wrap">
-<h1 class="title">TVBox 播放器</h1>
+<h1 class="title">小红超级播霸</h1>
 <div class="toolbar">
   <select id="sourceSelect" onchange="switchSource()">
     <option value="">— 选择数据源 —</option>
