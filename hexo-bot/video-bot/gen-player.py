@@ -296,10 +296,17 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 }
 .ep-panel.open{
   display:block;
+  position:absolute;
+  left:0;
+  right:0;
+  top:100%;
+  z-index:10;
   background:var(--bg-eplist);
+  border:1px solid var(--border);
+  border-radius:0 0 var(--card-radius) var(--card-radius);
   max-height:320px;
   overflow-y:auto;
-  border-top:1px solid var(--border);
+  box-shadow:0 8px 24px var(--shadow);
 }
 .ep-panel .ep-header{
   display:flex;
@@ -406,6 +413,8 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   .video-card .card-title{font-size:12px}
   #player-wrap h1.title{font-size:16px}
   .toolbar select,.toolbar input,.toolbar button{font-size:12px;padding:6px 8px}
+  .pagination{gap:2px}
+  .pagination button{padding:3px 7px;font-size:11px;min-width:24px}
 }
 </style></head><body>
 <div id="player-wrap">
@@ -602,7 +611,7 @@ function render() {
   var pg = '';
   pg += '<button onclick="go(1)"' + (currentPage<=1?' disabled':'') + '>\u00ab</button>';
   pg += '<button onclick="go(' + (currentPage-1) + ')"' + (currentPage<=1?' disabled':'') + '>\u2039</button>';
-  var startP = Math.max(1, currentPage-3), endP = Math.min(pages, currentPage+3);
+  var startP = Math.max(1, currentPage-2), endP = Math.min(pages, currentPage+2);
   for (var pi=startP; pi<=endP; pi++)
     pg += '<button class="' + (pi===currentPage?'active':'') + '" onclick="go(' + pi + ')">' + pi + '</button>';
   pg += '<button onclick="go(' + (currentPage+1) + ')"' + (currentPage>=pages?' disabled':'') + '>\u203a</button>';
