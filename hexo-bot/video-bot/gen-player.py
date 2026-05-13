@@ -216,9 +216,9 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 #player{width:100%;aspect-ratio:16/9;background:#000;display:block}
 .next-btn{
   position:absolute;
-  right:6px;
-  bottom:6px;
-  z-index:5;
+  top:10px;
+  right:10px;
+  z-index:999;
   padding:6px 14px;
   background:rgba(0,0,0,0.7);
   color:#fff;
@@ -229,7 +229,7 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   transition:all .15s;
   display:none;
 }
-.next-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.next-btn:hover{background:var(--accent);border-color:var(--accent)}
 
 /* ===== Grid ===== */
 .video-grid{
