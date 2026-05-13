@@ -602,6 +602,7 @@ function render() {
     h += '<div class="card-info"><div class="card-title">' + escHtml(v.vod_name||'') + '</div>';
     h += '<div class="card-meta">' + (v.sourceName?escHtml(v.sourceName)+' \u00b7 ':'') + epInfo + '</div></div>';
     h += '</div>';  // close video-card
+  });  // close items.forEach
   h += '</div>';  // close video-grid
 
   if (!items.length) {
