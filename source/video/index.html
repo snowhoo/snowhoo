@@ -87,59 +87,19 @@ body{
 }
 
 /* ===== Header ===== */
-.header-row{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:10px;
-  gap:10px;
-}
-.header-row h1{
+h1.title{
   font-size:18px;
   font-weight:600;
   color:var(--accent);
-  white-space:nowrap;
+  margin-bottom:10px;
 }
-.theme-toggle{
-  background:var(--bg-card);
-  border:1px solid var(--border);
-  border-radius:20px;
-  color:var(--text-secondary);
-  cursor:pointer;
-  font-size:16px;
-  padding:4px 12px;
-  line-height:1;
-  transition:all .2s;
-  flex-shrink:0;
-}
-.theme-toggle:hover{
-  border-color:var(--accent);
-  color:var(--accent);
-}
-
-/* ===== Stats Bar ===== */
-.stats{
-  display:flex;
-  gap:10px;
-  margin:8px 0;
-  flex-wrap:wrap;
-}
-.stat{
-  background:var(--bg-card);
-  padding:6px 14px;
-  border-radius:8px;
-  text-align:center;
-  border:1px solid var(--border);
-}
-.stat .n{font-size:18px;font-weight:700;color:var(--accent)}
-.stat .l{font-size:11px;color:var(--text-muted)}
 
 /* ===== Toolbar ===== */
 .toolbar{
   display:flex;
-  gap:8px;
+  gap:6px;
   margin:10px 0;
-  flex-wrap:wrap;
+  flex-wrap:nowrap;
   align-items:center;
 }
 .toolbar select,.toolbar input,.toolbar button{
@@ -151,19 +111,21 @@ body{
   font-size:13px;
   transition:border-color .2s;
 }
-.toolbar select{flex:1;min-width:160px;cursor:pointer}
+.toolbar select{min-width:0;flex:3;cursor:pointer}
 .toolbar select:focus,.toolbar input:focus{
   outline:none;
   border-color:var(--accent);
 }
-.toolbar input{flex:2;min-width:120px}
+.toolbar input{flex:4;min-width:60px}
 .toolbar input::placeholder{color:var(--text-muted)}
 .toolbar button{
+  flex-shrink:0;
   background:var(--accent);
   color:#fff;
   border:none;
   cursor:pointer;
   font-weight:500;
+  white-space:nowrap;
 }
 .toolbar button:hover{background:var(--accent-hover)}
 
@@ -302,45 +264,27 @@ body{
 }
 .ep-panel .ep-header .ep-close:hover{color:var(--accent);background:rgba(255,107,53,0.1)}
 .ep-item{
-  display:flex;
-  align-items:center;
-  padding:6px 10px;
-  gap:6px;
+  cursor:pointer;
+  padding:7px 10px;
   font-size:12px;
   border-bottom:1px solid var(--border);
   transition:background .15s;
+  color:var(--text-secondary);
 }
 .ep-item:last-child{border-bottom:none}
-.ep-item:hover{background:var(--bg-card-hover)}
-.ep-item .eptitle{
-  color:var(--text-secondary);
-  flex:1;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  font-size:12px;
-}
-.ep-item .epfrom{
-  color:var(--text-muted);
-  font-size:10px;
-  flex-shrink:0;
-  max-width:70px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-.ep-item .ep-btn{
-  background:var(--accent);
-  border:none;
-  color:#fff;
-  padding:3px 10px;
-  border-radius:4px;
-  cursor:pointer;
+.ep-item:hover{background:var(--bg-card-hover);color:var(--text-primary)}
+.ep-item .epchecked{font-size:10px;margin-left:6px;flex-shrink:0}
+
+/* ===== Footer ===== */
+.footer{
+  text-align:center;
+  padding:12px 0;
   font-size:11px;
-  flex-shrink:0;
-  transition:background .15s;
+  color:var(--text-muted);
+  border-top:1px solid var(--border);
+  margin-top:16px;
 }
-.ep-item .ep-btn:hover{background:var(--accent-hover)}
+.footer span{margin:0 8px}
 
 /* ===== Pagination ===== */
 .pagination{
@@ -397,15 +341,11 @@ body{
   .video-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
   .video-card .card-info{padding:6px 8px}
   .video-card .card-title{font-size:12px}
-  .header-row h1{font-size:16px}
+  h1.title{font-size:16px}
   .toolbar select,.toolbar input,.toolbar button{font-size:12px;padding:6px 8px}
 }
 </style></head><body>
-<div class="header-row">
-  <h1>TVBox 播放器</h1>
-  <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题">🌓</button>
-</div>
-<div class="stats" id="stats"></div>
+<h1 class="title">TVBox 播放器</h1>
 <div class="toolbar">
   <select id="sourceSelect" onchange="switchSource()">
     <option value="">— 选择数据源 —</option>
@@ -417,13 +357,14 @@ body{
 <div id="status" class="status-bar">⏹ 选择一个数据源</div>
 <div id="content"></div>
 <div class="pagination" id="pagination"></div>
+<div class="footer" id="footer"></div>
 
 <script src="./data/all.js"></script>
 <script>
 var PAGE_SIZE = 24;
 var currentData = null, currentPage = 1, currentFiltered = [], currentHls = null;
 
-/* ===== 主题切换 ===== */
+/* ===== 主题自动适配 ===== */
 (function(){
   var t = document.documentElement.getAttribute('data-theme');
   if(!t){
@@ -440,12 +381,6 @@ var currentData = null, currentPage = 1, currentFiltered = [], currentHls = null
   }
   document.documentElement.setAttribute('data-theme', t);
 })();
-
-function toggleTheme(){
-  var html = document.documentElement;
-  var cur = html.getAttribute('data-theme');
-  html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
-}
 
 /* ===== 加载索引 ===== */
 function loadIndex() {
@@ -464,10 +399,8 @@ function loadIndex() {
     o.textContent = d.name + ' (' + (d.playable_count||0) + '/' + (d.total_episodes||0) + ')';
     sel.appendChild(o);
   });
-  document.getElementById('stats').innerHTML =
-    '<div class="stat"><div class="n">' + names.length + '</div><div class="l">\u6570\u636e\u6e90</div></div>' +
-    '<div class="stat"><div class="n">' + ta + '</div><div class="l">\u603b\u5730\u5740</div></div>' +
-    '<div class="stat"><div class="n">' + pa + '</div><div class="l">\u53ef\u64ad\u653e</div></div>';
+  document.getElementById('footer').innerHTML =
+    '<span>\u6570\u636e\u6e90 ' + names.length + '</span><span>\u603b\u5730\u5740 ' + ta + '</span><span>\u53ef\u64ad\u653e ' + pa + '</span>';
   setEmpty('\u2705 \u5df2\u52a0\u8f7d ' + names.length + ' \u4e2a\u6570\u636e\u6e90', '\u8bf7\u4ece\u4e0b\u62c9\u83dc\u5355\u9009\u62e9');
 }
 
@@ -544,14 +477,8 @@ function render() {
     h += '<div class="ep-panel" id="' + eid + '">';
     h += '<div class="ep-header"><span class="ep-count">\u5267\u96c6 (' + (v.episodes||[]).length + ')</span><button class="ep-close" onclick="event.stopPropagation();closeEp(\'' + eid + '\')">\u2716</button></div>';
     (v.episodes||[]).forEach(function(e){
-      var eb = e.playable
-        ? '<span style="color:' + (document.documentElement.getAttribute('data-theme')==='light'?'#2e7d32':'#81c784') + ';font-size:10px">\u2713</span>'
-        : '<span style="color:var(--text-muted);font-size:10px">?</span>';
-      h += '<div class="ep-item" data-url="' + escAttr(e.url||'') + '" data-name="' + escAttr((v.vod_name||'') + ' - ' + (e.title||'')) + '">';
-      h += '<span class="eptitle">' + escHtml(e.title||'') + '</span>';
-      h += eb;
-      h += '<span class="epfrom">' + escHtml(e.from||'') + '</span>';
-      h += '<button class="ep-btn" onclick="event.stopPropagation();playFrom(this)">\u25b6</button></div>';
+      var eb = e.playable ? '' : ' \u26a0';
+      h += '<div class="ep-item" onclick="event.stopPropagation();playEp(this)" data-url="' + escAttr(e.url||'') + '" data-name="' + escAttr((v.vod_name||'') + ' - ' + (e.title||'')) + '">' + escHtml(e.title||'') + eb + '</div>';
     });
     h += '</div>';
   });
@@ -609,10 +536,9 @@ function setEmpty(t, sub){
 }
 
 /* ===== 播放 ===== */
-function playFrom(btn) {
-  var item = btn.closest('.ep-item') || btn.parentElement;
-  var url = item.dataset.url;
-  var name = item.dataset.name;
+function playEp(el) {
+  var url = el.dataset.url;
+  var name = el.dataset.name;
   if (!url) return;
   doPlay(url, name);
 }
