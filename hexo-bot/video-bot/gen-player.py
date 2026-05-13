@@ -224,7 +224,6 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 .video-card{
   background:var(--bg-card);
   border-radius:var(--card-radius);
-  overflow:hidden;
   cursor:pointer;
   transition:transform .2s,box-shadow .2s;
   border:1px solid var(--border);
@@ -359,13 +358,13 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 /* ===== Pagination ===== */
 .pagination{
   display:flex;
-  gap:4px;
+  gap:3px;
   justify-content:center;
-  margin:14px 0;
-  flex-wrap:wrap;
+  margin:12px 0;
+  flex-wrap:nowrap;
 }
 .pagination button{
-  padding:4px 10px;
+  padding:3px 8px;
   border:1px solid var(--border);
   border-radius:4px;
   background:var(--bg-card);
@@ -373,7 +372,7 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   cursor:pointer;
   font-size:12px;
   transition:all .15s;
-  min-width:28px;
+  min-width:26px;
 }
 .pagination button:hover:not(.active):not(:disabled){
   background:var(--bg-card-hover);
@@ -407,14 +406,13 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 
 /* ===== Responsive ===== */
 @media(max-width:600px){
-  body{padding:10px}
   .video-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
   .video-card .card-info{padding:6px 8px}
   .video-card .card-title{font-size:12px}
   #player-wrap h1.title{font-size:16px}
   .toolbar select,.toolbar input,.toolbar button{font-size:12px;padding:6px 8px}
   .pagination{gap:2px}
-  .pagination button{padding:3px 7px;font-size:11px;min-width:24px}
+  .pagination button{padding:2px 5px;font-size:10px;min-width:20px}
 }
 </style></head><body>
 <div id="player-wrap">
