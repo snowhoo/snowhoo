@@ -413,7 +413,7 @@ def save_site_data(site_result, data_dir):
     episodes = []
     for v in site_result['videos']:
         v_eps = []
-        for ep in v['play_list'][:20]:
+        for ep in v['play_list']:
             e = {
                 'title': ep['title'],
                 'url': ep['url'],
