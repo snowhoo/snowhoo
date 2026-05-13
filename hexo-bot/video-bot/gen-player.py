@@ -227,11 +227,14 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   cursor:pointer;
   transition:transform .2s,box-shadow .2s;
   border:1px solid var(--border);
-  position:relative;
 }
 .video-card:hover{
   transform:translateY(-3px);
   box-shadow:0 4px 16px var(--shadow);
+}
+.video-card .card-body{
+  display:flex;
+  flex-wrap:wrap;
 }
 .video-card .poster-wrap{
   position:relative;
@@ -239,6 +242,11 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   aspect-ratio:3/4;
   overflow:hidden;
   background:var(--bg-card);
+  flex-shrink:0;
+}
+.video-card.expanded .poster-wrap{
+  width:130px;
+  aspect-ratio:3/4;
 }
 .video-card .poster{
   width:100%;
@@ -270,6 +278,7 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 .card-badge.unplayable{background:rgba(97,97,97,.75);color:#bdbdbd}
 .video-card .card-info{
   padding:8px 10px;
+  width:100%;
 }
 .video-card .card-title{
   font-size:13px;
@@ -287,17 +296,19 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   gap:6px;
   align-items:center;
 }
-.video-card .card-meta .sep{color:var(--text-muted)}
 
 /* ===== Episode Panel ===== */
 .ep-panel{
   display:none;
-}
-.ep-panel.open{
-  display:block;
+  flex:1;
+  min-width:0;
   background:var(--bg-eplist);
-  border-top:1px solid var(--border);
-  border-radius:0 0 var(--card-radius) var(--card-radius);
+  border-left:1px solid var(--border);
+  max-height:280px;
+  overflow-y:auto;
+}
+.video-card.expanded .ep-panel{
+  display:block;
 }
 .ep-panel .ep-header{
   display:flex;
@@ -403,6 +414,7 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   .video-card .card-title{font-size:12px}
   #player-wrap h1.title{font-size:16px}
   .toolbar select,.toolbar input,.toolbar button{font-size:12px;padding:6px 8px}
+  .video-card.expanded .poster-wrap{width:80px}
   .pagination{gap:2px}
   .pagination button{padding:2px 5px;font-size:10px;min-width:20px}
 }
@@ -569,6 +581,7 @@ function render() {
     if(v.playable_count>0) epInfo += ' \u00b7 ' + v.playable_count + '\u53ef\u64ad';
 
     h += '<div class="video-card" onclick="toggleEpisodes(this,\'' + eid + '\')">';
+    h += '<div class="card-body">';
     h += '<div class="poster-wrap">';
     if (img) {
       h += '<img class="poster" src="' + img.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=poster-fallback>\ud83c\udfac</div>\'">';
@@ -576,19 +589,19 @@ function render() {
       h += '<div class="poster-fallback">\ud83c\udfac</div>';
     }
     h += '<span class="card-badge ' + badgeClass + '">' + badgeText + '</span>';
-    h += '</div>';
-    h += '<div class="card-info"><div class="card-title">' + escHtml(v.vod_name||'') + '</div>';
-    h += '<div class="card-meta">' + (v.sourceName?escHtml(v.sourceName)+' \u00b7 ':'') + epInfo + '</div></div>';
-
-    // 剧集面板（放入 card 内部，避免撑开 Grid）
+    h += '</div>';  // close poster-wrap
+    // 剧集面板：展开后与封面并排
     h += '<div class="ep-panel" id="' + eid + '">';
     h += '<div class="ep-header"><span class="ep-count">\u5267\u96c6 (' + (v.episodes||[]).length + ')</span><button class="ep-close" onclick="event.stopPropagation();closeEp(\'' + eid + '\')">\u2716</button></div>';
     (v.episodes||[]).forEach(function(e){
       var eb = e.playable ? '' : ' \u26a0';
       h += '<div class="ep-item" onclick="event.stopPropagation();playEp(this)" data-url="' + escAttr(e.url||'') + '" data-name="' + escAttr((v.vod_name||'') + ' - ' + (e.title||'')) + '">' + escHtml(e.title||'') + eb + '</div>';
     });
-    h += '</div></div>';  // close ep-panel + video-card
-  });  // close items.forEach
+    h += '</div>';  // close ep-panel
+    h += '</div>';  // close card-body
+    h += '<div class="card-info"><div class="card-title">' + escHtml(v.vod_name||'') + '</div>';
+    h += '<div class="card-meta">' + (v.sourceName?escHtml(v.sourceName)+' \u00b7 ':'') + epInfo + '</div></div>';
+    h += '</div>';  // close video-card
   h += '</div>';  // close video-grid
 
   if (!items.length) {
@@ -613,18 +626,15 @@ function render() {
 function go(p){currentPage=p;render();}
 
 function toggleEpisodes(el, id){
-  var panel = document.getElementById(id);
-  if(!panel) return;
-  var isOpen = panel.classList.contains('open');
-  // 关闭所有其他面板
-  document.querySelectorAll('.ep-panel.open').forEach(function(p){
-    if(p.id!==id) p.classList.remove('open');
+  // 关闭所有其他展开的卡片
+  document.querySelectorAll('.video-card.expanded').forEach(function(c){
+    if(c!==el) c.classList.remove('expanded');
   });
-  panel.classList.toggle('open');
+  el.classList.toggle('expanded');
 }
 function closeEp(id){
   var el = document.getElementById(id);
-  if(el) el.classList.remove('open');
+  if(el) el.closest('.video-card').classList.remove('expanded');
 }
 function escHtml(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
