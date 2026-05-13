@@ -407,7 +407,7 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   .video-card .card-title{font-size:12px}
   #player-wrap h1.title{font-size:16px}
   .toolbar select,.toolbar input,.toolbar button{font-size:12px;padding:6px 8px}
-  .ep-panel.open{max-height:300px}
+  .ep-panel.open{max-height:298px}
   .pagination{gap:2px}
   .pagination button{padding:2px 5px;font-size:10px;min-width:20px}
 }
