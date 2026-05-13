@@ -1,0 +1,19 @@
+[
+  {
+    "name": "MV频道",
+    "type": 0,
+    "url": "http://宝盒接口.top/zb",
+    "playerType": 2,
+    "ua": "okhttp/3",
+    "epg": "http://epg.51zmt.top:8000/api/diyp/?ch={name}&date={date}",
+    "logo": "https://epg.v1.mk/logo/{name}.png"
+  },
+  {
+    "name": "宝盒冰茶",
+    "type": 0,
+    "url": "https://mzrjk.top/zb/zb.txt",
+    "playerType": 2,
+    "timeout": 10,
+    "ua": "okHttp/Mod-1.4.0.0"
+  }
+]
