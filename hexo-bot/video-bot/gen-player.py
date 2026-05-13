@@ -297,7 +297,8 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   display:block;
   background:var(--bg-eplist);
   border-top:1px solid var(--border);
-  border-radius:0 0 var(--card-radius) var(--card-radius);
+  max-height:260px;
+  overflow-y:auto;
 }
 .ep-panel .ep-header{
   display:flex;
