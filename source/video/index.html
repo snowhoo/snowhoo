@@ -265,7 +265,7 @@ h1.title{
 .ep-panel .ep-header .ep-close:hover{color:var(--accent);background:rgba(255,107,53,0.1)}
 .ep-item{
   cursor:pointer;
-  padding:7px 10px;
+  padding:4px 10px;
   font-size:12px;
   border-bottom:1px solid var(--border);
   transition:background .15s;
@@ -276,15 +276,16 @@ h1.title{
 .ep-item .epchecked{font-size:10px;margin-left:6px;flex-shrink:0}
 
 /* ===== Footer ===== */
-.footer{
+.tvbox-footer{
   text-align:center;
-  padding:12px 0;
+  padding:10px 0;
+  margin-top:14px;
   font-size:11px;
   color:var(--text-muted);
-  border-top:1px solid var(--border);
-  margin-top:16px;
+  border:none;
+  background:none;
 }
-.footer span{margin:0 8px}
+.tvbox-footer span{margin:0 6px}
 
 /* ===== Pagination ===== */
 .pagination{
@@ -357,7 +358,7 @@ h1.title{
 <div id="status" class="status-bar">⏹ 选择一个数据源</div>
 <div id="content"></div>
 <div class="pagination" id="pagination"></div>
-<div class="footer" id="footer"></div>
+<div class="tvbox-footer" id="tvboxFooter"></div>
 
 <script src="./data/all.js"></script>
 <script>
@@ -399,7 +400,7 @@ function loadIndex() {
     o.textContent = d.name + ' (' + (d.playable_count||0) + '/' + (d.total_episodes||0) + ')';
     sel.appendChild(o);
   });
-  document.getElementById('footer').innerHTML =
+  document.getElementById('tvboxFooter').innerHTML =
     '<span>\u6570\u636e\u6e90 ' + names.length + '</span><span>\u603b\u5730\u5740 ' + ta + '</span><span>\u53ef\u64ad\u653e ' + pa + '</span>';
   setEmpty('\u2705 \u5df2\u52a0\u8f7d ' + names.length + ' \u4e2a\u6570\u636e\u6e90', '\u8bf7\u4ece\u4e0b\u62c9\u83dc\u5355\u9009\u62e9');
 }
