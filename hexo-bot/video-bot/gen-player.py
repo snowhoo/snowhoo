@@ -582,8 +582,7 @@ function render() {
     h += '<span class="card-badge ' + badgeClass + '">' + badgeText + '</span>';
     h += '</div>';
     h += '<div class="card-info"><div class="card-title">' + escHtml(v.vod_name||'') + '</div>';
-    h += '<div class="card-meta">' + (v.sourceName?escHtml(v.sourceName)+' \u00b7 ':'') + epInfo + '</div></div>';
-    h += '</div>';  // close video-card
+    h += '<div class="card-meta">' + (v.sourceName?escHtml(v.sourceName)+' \u00b7 ':'') + epInfo + '</div></div></div>';
 
     // 剧集面板（与卡片平级，Grid 自动布局）
     h += '<div class="ep-panel" id="' + eid + '">';
