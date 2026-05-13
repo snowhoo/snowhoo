@@ -75,6 +75,35 @@
   }
 }
 
+/* ===== 隔离重置：屏蔽 Hexo/Butterfly 主题干扰 ===== */
+#player-wrap * {
+  box-sizing:border-box;
+}
+#player-wrap img {
+  max-width:none !important;
+  height:auto !important;
+  border-radius:0 !important;
+}
+#player-wrap button,
+#player-wrap input,
+#player-wrap select {
+  font-family:inherit;
+  font-size:inherit;
+  line-height:inherit;
+}
+#player-wrap button {
+  border-radius:4px;
+}
+#player-wrap h1 {
+  margin:0;
+  padding:0;
+  border:none;
+}
+#player-wrap a {
+  color:inherit;
+  text-decoration:none;
+}
+
 *{margin:0;padding:0;box-sizing:border-box}
 body{
   font-family:-apple-system,'Microsoft YaHei','PingFang SC',sans-serif;
@@ -346,6 +375,7 @@ h1.title{
   .toolbar select,.toolbar input,.toolbar button{font-size:12px;padding:6px 8px}
 }
 </style></head><body>
+<div id="player-wrap">
 <h1 class="title">TVBox 播放器</h1>
 <div class="toolbar">
   <select id="sourceSelect" onchange="switchSource()">
@@ -581,4 +611,4 @@ document.addEventListener('keydown', function(e){
 });
 
 loadIndex();
-</script></body></html>
+</script></div></body></html>
