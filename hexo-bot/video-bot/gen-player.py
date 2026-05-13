@@ -245,8 +245,8 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   flex-shrink:0;
 }
 .video-card.expanded .poster-wrap{
-  width:90px;
-  aspect-ratio:2/3;
+  width:130px;
+  aspect-ratio:3/4;
 }
 .video-card .poster{
   width:100%;
@@ -336,14 +336,11 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 .ep-panel .ep-header .ep-close:hover{color:var(--accent);background:rgba(255,107,53,0.1)}
 .ep-item{
   cursor:pointer;
-  padding:3px 8px;
-  font-size:11px;
+  padding:4px 10px;
+  font-size:12px;
   border-bottom:1px solid var(--border);
   transition:background .15s;
   color:var(--text-secondary);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
 }
 .ep-item:last-child{border-bottom:none}
 .ep-item:hover{background:var(--bg-card-hover);color:var(--text-primary)}
@@ -417,7 +414,7 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   .video-card .card-title{font-size:12px}
   #player-wrap h1.title{font-size:16px}
   .toolbar select,.toolbar input,.toolbar button{font-size:12px;padding:6px 8px}
-  .video-card.expanded .poster-wrap{width:60px}
+  .video-card.expanded .poster-wrap{width:80px}
   .pagination{gap:2px}
   .pagination button{padding:2px 5px;font-size:10px;min-width:20px}
 }
