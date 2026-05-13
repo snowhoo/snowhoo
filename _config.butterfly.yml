@@ -18,6 +18,7 @@ menu:
   首页: / || fas fa-home
   时间轴: /archives ||fas fa-archive
   新闻速递: /news/ || fas fa-newspaper
+  小红超级播霸: /video/ || fas fa-play-circle
   留言板: /guestbook/ || fas fa-comments
   标签: /tags/ || fas fa-tags
   分类: /categories/ || fas fa-folder-open
@@ -1376,8 +1377,8 @@ inject:
     - <script src="/js/waline-avatar-fix.js" defer></script>
     - |
       <style>
-      /* ========== 首页新闻速递快捷入口卡片（导航下方）- 双区域设计 ========== */
-      /* 上部42px纯图片区（无蒙版）+ 下部16px滚动文字区（透明背景） */
+      /* ========== 首页新闻速递快捷入口卡片（导航下方）- 按钮导航设计 ========== */
+      /* 上部按钮导航区（替代原来的纯图片区）+ 下部滚动文字区 */
       .news-shortcut-card {
         display: block;
         width: 100%;
@@ -1390,14 +1391,47 @@ inject:
         position: relative;
         z-index: 1;
       }
-      /* 上部图片区域 42px，无蒙版，显示背景图原貌 */
+      /* 上部按钮区域 */
       .news-upper {
-        height: 80px;
-        background-image: url('/images/banner/news-bg.jpg');
-        background-size: cover;
-        background-position: center;
-        position: relative;
-        z-index: 1;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 8px 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        justify-content: center;
+      }
+      .news-btn {
+        flex: 1;
+        min-width: 0;
+        padding: 7px 4px;
+        background: rgba(255,255,255,0.92);
+        border: none;
+        border-radius: 6px;
+        color: #333;
+        font-size: 13px;
+        font-weight: 500;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.15s;
+        backdrop-filter: blur(4px);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        box-sizing: border-box;
+      }
+      .news-btn:hover {
+        background: rgba(255,255,255,1);
+        transform: translateY(-1px);
+      }
+      .news-btn:active {
+        transform: translateY(0);
+      }
+      /* 单按钮时全宽 */
+      .news-upper[data-count="1"] .news-btn {
+        flex: 0 0 100%;
+        font-size: 14px;
+        padding: 9px 4px;
       }
       /* 下部滚动文字区域 24px，透明背景 */
       .news-scrolling {
@@ -1453,7 +1487,12 @@ inject:
           margin: 3px 0 0 0;
         }
         .news-upper {
-          height: 42px;
+          padding: 6px 8px;
+          gap: 5px;
+        }
+        .news-btn {
+          font-size: 12px;
+          padding: 6px 3px;
         }
         .news-scrolling {
           height: 14px;
@@ -1478,16 +1517,34 @@ inject:
         // 确保横幅在最前面、新闻卡片紧随其后（banner → card → 文章列表）
         if (document.querySelector('.news-upper')) return;
 
-        var wrapper = document.createElement('a');
-        wrapper.href = '/news/';
+        // ========== 按钮配置（修改这里添加/编辑按钮）==========
+        var NEWS_BUTTONS = [
+          { text: '百度热搜', url: 'https://top.baidu.com/board?tab=realtime' },
+          { text: '微博沸点', url: 'https://s.weibo.com/top/summary' },
+          { text: '知乎热榜', url: 'https://www.zhihu.com/hot' }
+        ];
+
+        // ========== 底部滚动字幕配置 ==========
+        // subtitle: 显示的文字（可用 'announcement' 使用站点公告，或直接写文字）
+        // subtitleUrl: 点击跳转链接（留空字符串则不可点击）
+        var NEWS_SUBTITLE = 'announcement';
+        var NEWS_SUBTITLE_URL = '';
+
+        var wrapper = document.createElement('div');
         wrapper.className = 'news-shortcut-card';
+        // 生成按钮 HTML
+        var btnHtml = NEWS_BUTTONS.map(function(btn) {
+          return '<a class="news-btn" href="' + (btn.url || '#') + '" target="_blank" rel="noopener">' + (btn.text || '') + '</a>';
+        }).join('');
+        var subtitleText = (NEWS_SUBTITLE === 'announcement') ? '📰 点击访问各平台实时热点 >>' : NEWS_SUBTITLE;
+        var subtitleHtml = NEWS_SUBTITLE_URL
+          ? '<a href="' + NEWS_SUBTITLE_URL + '" style="text-decoration:none;color:inherit">' + subtitleText + '</a>'
+          : subtitleText;
         wrapper.innerHTML = 
-          '<div class="news-upper"></div>' +
+          '<div class="news-upper" data-count="' + NEWS_BUTTONS.length + '">' + btnHtml + '</div>' +
           '<div class="news-scrolling">' +
             '<div class="news-scrolling-inner">' +
-              '<span class="news-scrolling-text">' +
-                '<a href="/news/" style="text-decoration:none;color:inherit">📰 新闻速递 · 实时热点聚合</a>' +
-              '</span>' +
+              '<span class="news-scrolling-text">' + subtitleHtml + '</span>' +
             '</div>' +
           '</div>';
 
