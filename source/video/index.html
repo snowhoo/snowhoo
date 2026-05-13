@@ -269,8 +269,11 @@
 .ep-panel.open{
   display:block;
   background:var(--bg-eplist);
-  border-top:1px solid var(--border);
-  max-height:260px;
+  border:1px solid var(--border);
+  border-top:none;
+  border-radius:0 0 var(--card-radius) var(--card-radius);
+  margin-top:-1px;
+  max-height:320px;
   overflow-y:auto;
 }
 .ep-panel .ep-header{
@@ -553,15 +556,16 @@ function render() {
     h += '</div>';
     h += '<div class="card-info"><div class="card-title">' + escHtml(v.vod_name||'') + '</div>';
     h += '<div class="card-meta">' + (v.sourceName?escHtml(v.sourceName)+' \u00b7 ':'') + epInfo + '</div></div>';
+    h += '</div>';  // close video-card
 
-    // 剧集面板（放入 card 内部，避免撑开 Grid）
+    // 剧集面板（与卡片平级，Grid 自动布局）
     h += '<div class="ep-panel" id="' + eid + '">';
     h += '<div class="ep-header"><span class="ep-count">\u5267\u96c6 (' + (v.episodes||[]).length + ')</span><button class="ep-close" onclick="event.stopPropagation();closeEp(\'' + eid + '\')">\u2716</button></div>';
     (v.episodes||[]).forEach(function(e){
       var eb = e.playable ? '' : ' \u26a0';
       h += '<div class="ep-item" onclick="event.stopPropagation();playEp(this)" data-url="' + escAttr(e.url||'') + '" data-name="' + escAttr((v.vod_name||'') + ' - ' + (e.title||'')) + '">' + escHtml(e.title||'') + eb + '</div>';
     });
-    h += '</div></div>';  // close ep-panel + video-card
+    h += '</div>';  // close ep-panel
   });  // close items.forEach
   h += '</div>';  // close video-grid
 
