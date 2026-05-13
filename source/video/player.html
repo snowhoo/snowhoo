@@ -1,0 +1,657 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TVBox 播放器</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<style>
+/* ===== CSS 自定义属性 ===== */
+:root {
+  --bg-page: #0f0f0f;
+  --bg-card: #1a1a2e;
+  --bg-card-hover: #1e1e38;
+  --bg-eplist: #111;
+  --bg-eplist-alt: #161616;
+  --bg-player: #000;
+  --bg-toolbar: #16213e;
+  --bg-input: #1a1a2e;
+  --text-primary: #e8e8e8;
+  --text-secondary: #90a4ae;
+  --text-muted: #607d8b;
+  --border: #333;
+  --accent: #ff6b35;
+  --accent-hover: #e85d2a;
+  --badge-playable-bg: #2e7d32;
+  --badge-playable-text: #fff;
+  --badge-unplayable-bg: #616161;
+  --badge-unplayable-text: #bdbdbd;
+  --shadow: rgba(0,0,0,0.4);
+  --card-radius: 10px;
+}
+[data-theme="light"] {
+  --bg-page: #f5f5f5;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f0f0f5;
+  --bg-eplist: #fafafa;
+  --bg-eplist-alt: #f0f0f0;
+  --bg-player: #000;
+  --bg-toolbar: #e8e0f0;
+  --bg-input: #fff;
+  --text-primary: #212121;
+  --text-secondary: #546e7a;
+  --text-muted: #90a4ae;
+  --border: #ddd;
+  --accent: #e65100;
+  --accent-hover: #d84315;
+  --badge-playable-bg: #2e7d32;
+  --badge-playable-text: #fff;
+  --badge-unplayable-bg: #bdbdbd;
+  --badge-unplayable-text: #757575;
+  --shadow: rgba(0,0,0,0.1);
+  --card-radius: 10px;
+}
+
+@media (prefers-color-scheme: light) {
+  [data-theme="dark"] {
+    --bg-page: #0f0f0f;
+    --bg-card: #1a1a2e;
+    --bg-card-hover: #1e1e38;
+    --bg-eplist: #111;
+    --bg-eplist-alt: #161616;
+    --bg-player: #000;
+    --bg-toolbar: #16213e;
+    --bg-input: #1a1a2e;
+    --text-primary: #e8e8e8;
+    --text-secondary: #90a4ae;
+    --text-muted: #607d8b;
+    --border: #333;
+    --accent: #ff6b35;
+    --accent-hover: #e85d2a;
+    --badge-playable-bg: #2e7d32;
+    --badge-playable-text: #fff;
+    --badge-unplayable-bg: #616161;
+    --badge-unplayable-text: #bdbdbd;
+    --shadow: rgba(0,0,0,0.4);
+  }
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:-apple-system,'Microsoft YaHei','PingFang SC',sans-serif;
+  background:var(--bg-page);
+  color:var(--text-primary);
+  padding:16px;
+  max-width:1200px;
+  margin:0 auto;
+  transition:background .3s,color .3s;
+}
+
+/* ===== Header ===== */
+.header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+  gap:10px;
+}
+.header-row h1{
+  font-size:18px;
+  font-weight:600;
+  color:var(--accent);
+  white-space:nowrap;
+}
+.theme-toggle{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  color:var(--text-secondary);
+  cursor:pointer;
+  font-size:16px;
+  padding:4px 12px;
+  line-height:1;
+  transition:all .2s;
+  flex-shrink:0;
+}
+.theme-toggle:hover{
+  border-color:var(--accent);
+  color:var(--accent);
+}
+
+/* ===== Stats Bar ===== */
+.stats{
+  display:flex;
+  gap:10px;
+  margin:8px 0;
+  flex-wrap:wrap;
+}
+.stat{
+  background:var(--bg-card);
+  padding:6px 14px;
+  border-radius:8px;
+  text-align:center;
+  border:1px solid var(--border);
+}
+.stat .n{font-size:18px;font-weight:700;color:var(--accent)}
+.stat .l{font-size:11px;color:var(--text-muted)}
+
+/* ===== Toolbar ===== */
+.toolbar{
+  display:flex;
+  gap:8px;
+  margin:10px 0;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.toolbar select,.toolbar input,.toolbar button{
+  padding:7px 10px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--bg-input);
+  color:var(--text-primary);
+  font-size:13px;
+  transition:border-color .2s;
+}
+.toolbar select{flex:1;min-width:160px;cursor:pointer}
+.toolbar select:focus,.toolbar input:focus{
+  outline:none;
+  border-color:var(--accent);
+}
+.toolbar input{flex:2;min-width:120px}
+.toolbar input::placeholder{color:var(--text-muted)}
+.toolbar button{
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  font-weight:500;
+}
+.toolbar button:hover{background:var(--accent-hover)}
+
+/* ===== Status Bar ===== */
+.status-bar{
+  background:var(--bg-card);
+  padding:6px 12px;
+  border-radius:6px;
+  margin:6px 0;
+  font-size:12px;
+  color:var(--text-secondary);
+  border:1px solid var(--border);
+}
+
+/* ===== Player ===== */
+.player-box{
+  background:var(--bg-player);
+  border-radius:10px;
+  overflow:hidden;
+  margin:10px 0;
+}
+#player{width:100%;aspect-ratio:16/9;background:#000;display:block}
+
+/* ===== Grid ===== */
+.video-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(165px,1fr));
+  gap:12px;
+  margin:12px 0;
+}
+.video-card{
+  background:var(--bg-card);
+  border-radius:var(--card-radius);
+  overflow:hidden;
+  cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+  border:1px solid var(--border);
+  position:relative;
+}
+.video-card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 4px 16px var(--shadow);
+}
+.video-card .poster-wrap{
+  position:relative;
+  width:100%;
+  aspect-ratio:3/4;
+  overflow:hidden;
+  background:var(--bg-card);
+}
+.video-card .poster{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.video-card .poster-fallback{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
+  background:linear-gradient(135deg,var(--bg-card),var(--bg-toolbar));
+  color:var(--text-muted);
+  font-size:32px;
+}
+.video-card .card-badge{
+  position:absolute;
+  top:6px;
+  right:6px;
+  padding:2px 7px;
+  border-radius:4px;
+  font-size:10px;
+  font-weight:600;
+  backdrop-filter:blur(4px);
+}
+.card-badge.playable{background:rgba(46,125,50,.85);color:#fff}
+.card-badge.unplayable{background:rgba(97,97,97,.75);color:#bdbdbd}
+.video-card .card-info{
+  padding:8px 10px;
+}
+.video-card .card-title{
+  font-size:13px;
+  color:var(--text-primary);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-weight:500;
+}
+.video-card .card-meta{
+  font-size:11px;
+  color:var(--text-secondary);
+  margin-top:3px;
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+.video-card .card-meta .sep{color:var(--text-muted)}
+
+/* ===== Episode Panel ===== */
+.ep-panel{
+  display:none;
+}
+.ep-panel.open{
+  display:block;
+  background:var(--bg-eplist);
+  border:1px solid var(--border);
+  border-top:none;
+  border-radius:0 0 var(--card-radius) var(--card-radius);
+  margin-top:-1px;
+  max-height:320px;
+  overflow-y:auto;
+}
+.ep-panel .ep-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:6px 10px;
+  font-size:11px;
+  color:var(--text-muted);
+  background:var(--bg-eplist-alt);
+  border-bottom:1px solid var(--border);
+  position:sticky;
+  top:0;
+  z-index:1;
+}
+.ep-panel .ep-header .ep-count{color:var(--text-secondary)}
+.ep-panel .ep-header .ep-close{
+  background:none;
+  border:none;
+  color:var(--text-muted);
+  cursor:pointer;
+  font-size:14px;
+  padding:2px 6px;
+  border-radius:3px;
+}
+.ep-panel .ep-header .ep-close:hover{color:var(--accent);background:rgba(255,107,53,0.1)}
+.ep-item{
+  display:flex;
+  align-items:center;
+  padding:6px 10px;
+  gap:6px;
+  font-size:12px;
+  border-bottom:1px solid var(--border);
+  transition:background .15s;
+}
+.ep-item:last-child{border-bottom:none}
+.ep-item:hover{background:var(--bg-card-hover)}
+.ep-item .eptitle{
+  color:var(--text-secondary);
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:12px;
+}
+.ep-item .epfrom{
+  color:var(--text-muted);
+  font-size:10px;
+  flex-shrink:0;
+  max-width:70px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.ep-item .ep-btn{
+  background:var(--accent);
+  border:none;
+  color:#fff;
+  padding:3px 10px;
+  border-radius:4px;
+  cursor:pointer;
+  font-size:11px;
+  flex-shrink:0;
+  transition:background .15s;
+}
+.ep-item .ep-btn:hover{background:var(--accent-hover)}
+
+/* ===== Pagination ===== */
+.pagination{
+  display:flex;
+  gap:4px;
+  justify-content:center;
+  margin:14px 0;
+  flex-wrap:wrap;
+}
+.pagination button{
+  padding:4px 10px;
+  border:1px solid var(--border);
+  border-radius:4px;
+  background:var(--bg-card);
+  color:var(--text-secondary);
+  cursor:pointer;
+  font-size:12px;
+  transition:all .15s;
+  min-width:28px;
+}
+.pagination button:hover:not(.active):not(:disabled){
+  background:var(--bg-card-hover);
+  border-color:var(--accent);
+  color:var(--accent);
+}
+.pagination button.active{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#fff;
+}
+.pagination button:disabled{
+  opacity:0.35;
+  cursor:default;
+}
+
+/* ===== Empty/loading ===== */
+.empty-state{
+  text-align:center;
+  padding:50px 20px;
+  color:var(--text-muted);
+}
+.empty-state .icon{font-size:40px;margin-bottom:10px}
+.empty-state .desc{font-size:13px}
+.empty-state .sub{font-size:11px;margin-top:4px;opacity:.7}
+
+/* ===== Scrollbar ===== */
+.ep-panel::-webkit-scrollbar{width:4px}
+.ep-panel::-webkit-scrollbar-track{background:transparent}
+.ep-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ===== Responsive ===== */
+@media(max-width:600px){
+  body{padding:10px}
+  .video-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+  .video-card .card-info{padding:6px 8px}
+  .video-card .card-title{font-size:12px}
+  .header-row h1{font-size:16px}
+  .toolbar select,.toolbar input,.toolbar button{font-size:12px;padding:6px 8px}
+}
+</style></head><body>
+<div class="header-row">
+  <h1>TVBox 播放器</h1>
+  <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题">🌓</button>
+</div>
+<div class="stats" id="stats"></div>
+<div class="toolbar">
+  <select id="sourceSelect" onchange="switchSource()">
+    <option value="">— 选择数据源 —</option>
+  </select>
+  <input type="text" id="searchInput" placeholder="搜索影片..." oninput="doSearch()">
+  <button onclick="doSearch()">搜索</button>
+</div>
+<div class="player-box"><video id="player" controls playsinline></video></div>
+<div id="status" class="status-bar">⏹ 选择一个数据源</div>
+<div id="content"></div>
+<div class="pagination" id="pagination"></div>
+
+<script src="./data/all.js"></script>
+<script>
+var PAGE_SIZE = 24;
+var currentData = null, currentPage = 1, currentFiltered = [], currentHls = null;
+
+/* ===== 主题切换 ===== */
+(function(){
+  var t = document.documentElement.getAttribute('data-theme');
+  if(!t){
+    // 检测 Hexo Butterfly 父页面主题
+    try{
+      var p = window.parent.document.documentElement;
+      var pt = p.getAttribute('data-theme');
+      if(pt === 'dark' || pt === 'light') t = pt;
+    }catch(e){}
+  }
+  // prefers-color-scheme 兜底
+  if(!t){
+    t = window.matchMedia('(prefers-color-scheme:light)').matches ? 'light' : 'dark';
+  }
+  document.documentElement.setAttribute('data-theme', t);
+})();
+
+function toggleTheme(){
+  var html = document.documentElement;
+  var cur = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+}
+
+/* ===== 加载索引 ===== */
+function loadIndex() {
+  var names = Object.keys(TVBOX_DATA);
+  if (!names.length) {
+    setEmpty('\u274c \u65e0\u6570\u636e\uff0c\u8bf7\u5148\u8fd0\u884c\u722c\u866b', '\u8bf7\u786e\u4fdd data/ \u76ee\u5f55\u4e0b\u6709\u6570\u636e\u6587\u4ef6');
+    return;
+  }
+  var sel = document.getElementById('sourceSelect'), ta = 0, pa = 0;
+  names.sort().forEach(function(k) {
+    var d = TVBOX_DATA[k];
+    ta += d.total_episodes||0;
+    pa += d.playable_count||0;
+    var o = document.createElement('option');
+    o.value = k;
+    o.textContent = d.name + ' (' + (d.playable_count||0) + '/' + (d.total_episodes||0) + ')';
+    sel.appendChild(o);
+  });
+  document.getElementById('stats').innerHTML =
+    '<div class="stat"><div class="n">' + names.length + '</div><div class="l">\u6570\u636e\u6e90</div></div>' +
+    '<div class="stat"><div class="n">' + ta + '</div><div class="l">\u603b\u5730\u5740</div></div>' +
+    '<div class="stat"><div class="n">' + pa + '</div><div class="l">\u53ef\u64ad\u653e</div></div>';
+  setEmpty('\u2705 \u5df2\u52a0\u8f7d ' + names.length + ' \u4e2a\u6570\u636e\u6e90', '\u8bf7\u4ece\u4e0b\u62c9\u83dc\u5355\u9009\u62e9');
+}
+
+/* ===== 切换数据源 ===== */
+function switchSource() {
+  var key = document.getElementById('sourceSelect').value;
+  var content = document.getElementById('content');
+  var pagination = document.getElementById('pagination');
+  if (!key) {
+    content.innerHTML = '';
+    pagination.innerHTML = '';
+    setStatus('\u23f9 \u9009\u62e9\u6570\u636e\u6e90');
+    return;
+  }
+  currentData = TVBOX_DATA[key];
+  if (!currentData || !currentData.videos) {
+    content.innerHTML = '';
+    pagination.innerHTML = '';
+    setStatus('\u274c \u6570\u636e\u683c\u5f0f\u9519\u8bef');
+    return;
+  }
+  setStatus('\ud83d\udce1 ' + currentData.name + ' \u2014 ' + currentData.total_videos + '\u4e2a\u89c6\u9891\uff0c' + currentData.total_episodes + '\u6761\u5730\u5740');
+  currentPage = 1;
+  doSearch();
+}
+
+/* ===== 搜索 ===== */
+function doSearch() {
+  if (!currentData) return;
+  var q = document.getElementById('searchInput').value.toLowerCase().trim();
+  currentFiltered = (currentData.videos||[]).filter(function(v) {
+    if (!q) return true;
+    if ((v.vod_name||'').toLowerCase().includes(q)) return true;
+    return (v.episodes||[]).some(function(e){ return (e.title||'').toLowerCase().includes(q); });
+  });
+  currentPage = 1;
+  render();
+}
+
+/* ===== 渲染卡片 ===== */
+function render() {
+  var total = currentFiltered.length, pages = Math.ceil(total/PAGE_SIZE)||1;
+  if (currentPage>pages) currentPage=pages;
+  var start=(currentPage-1)*PAGE_SIZE, items=currentFiltered.slice(start,start+PAGE_SIZE);
+
+  // 顶部统计
+  var allEps=0, allPlayable=0;
+  items.forEach(function(v){allEps+=v.ep_count||0;allPlayable+=v.playable_count||0});
+
+  var h = '';
+  // 网格
+  h += '<div class="video-grid">';
+  items.forEach(function(v,i) {
+    var eid = 'eps_' + currentPage + '_' + i;
+    var img = v.vod_pic || '';
+    var badgeClass = v.playable_count>0 ? 'playable' : 'unplayable';
+    var badgeText = v.playable_count>0 ? '\u53ef\u64ad' : '\u5f85\u9a8c\u8bc1';
+    var epInfo = (v.ep_count||0) + '\u96c6';
+    if(v.playable_count>0) epInfo += ' \u00b7 ' + v.playable_count + '\u53ef\u64ad';
+
+    h += '<div class="video-card" onclick="toggleEpisodes(this,\'' + eid + '\')">';
+    h += '<div class="poster-wrap">';
+    if (img) {
+      h += '<img class="poster" src="' + img.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=poster-fallback>\ud83c\udfac</div>\'">';
+    } else {
+      h += '<div class="poster-fallback">\ud83c\udfac</div>';
+    }
+    h += '<span class="card-badge ' + badgeClass + '">' + badgeText + '</span>';
+    h += '</div>';
+    h += '<div class="card-info"><div class="card-title">' + escHtml(v.vod_name||'') + '</div>';
+    h += '<div class="card-meta">' + epInfo + '</div></div></div>';
+
+    // 剧集面板
+    h += '<div class="ep-panel" id="' + eid + '">';
+    h += '<div class="ep-header"><span class="ep-count">\u5267\u96c6 (' + (v.episodes||[]).length + ')</span><button class="ep-close" onclick="event.stopPropagation();closeEp(\'' + eid + '\')">\u2716</button></div>';
+    (v.episodes||[]).forEach(function(e){
+      var eb = e.playable
+        ? '<span style="color:' + (document.documentElement.getAttribute('data-theme')==='light'?'#2e7d32':'#81c784') + ';font-size:10px">\u2713</span>'
+        : '<span style="color:var(--text-muted);font-size:10px">?</span>';
+      h += '<div class="ep-item" data-url="' + escAttr(e.url||'') + '" data-name="' + escAttr((v.vod_name||'') + ' - ' + (e.title||'')) + '">';
+      h += '<span class="eptitle">' + escHtml(e.title||'') + '</span>';
+      h += eb;
+      h += '<span class="epfrom">' + escHtml(e.from||'') + '</span>';
+      h += '<button class="ep-btn" onclick="event.stopPropagation();playFrom(this)">\u25b6</button></div>';
+    });
+    h += '</div>';
+  });
+  h += '</div>';
+
+  if (!items.length) {
+    h = '<div class="empty-state"><div class="icon">\ud83d\udd0d</div><div class="desc">\u65e0\u5339\u914d\u7ed3\u679c</div><div class="sub">\u8bd5\u8bd5\u5176\u4ed6\u5173\u952e\u8bcd</div></div>';
+  }
+
+  document.getElementById('content').innerHTML = h;
+
+  // 分页
+  var pg = '';
+  pg += '<button onclick="go(1)"' + (currentPage<=1?' disabled':'') + '>\u00ab</button>';
+  pg += '<button onclick="go(' + (currentPage-1) + ')"' + (currentPage<=1?' disabled':'') + '>\u2039</button>';
+  var startP = Math.max(1, currentPage-3), endP = Math.min(pages, currentPage+3);
+  for (var pi=startP; pi<=endP; pi++)
+    pg += '<button class="' + (pi===currentPage?'active':'') + '" onclick="go(' + pi + ')">' + pi + '</button>';
+  pg += '<button onclick="go(' + (currentPage+1) + ')"' + (currentPage>=pages?' disabled':'') + '>\u203a</button>';
+  pg += '<button onclick="go(' + pages + ')"' + (currentPage>=pages?' disabled':'') + '>\u00bb</button>';
+  document.getElementById('pagination').innerHTML = pg;
+}
+
+/* ===== 工具函数 ===== */
+function go(p){currentPage=p;render();}
+
+function toggleEpisodes(el, id){
+  var panel = document.getElementById(id);
+  if(!panel) return;
+  var isOpen = panel.classList.contains('open');
+  // 关闭所有其他面板
+  document.querySelectorAll('.ep-panel.open').forEach(function(p){
+    if(p.id!==id) p.classList.remove('open');
+  });
+  panel.classList.toggle('open');
+}
+function closeEp(id){
+  var el = document.getElementById(id);
+  if(el) el.classList.remove('open');
+}
+function escHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s){
+  return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function setStatus(t){
+  document.getElementById('status').textContent = t;
+}
+function setEmpty(t, sub){
+  var h = '<div class="empty-state"><div class="icon">\ud83d\udcfa</div><div class="desc">' + t + '</div>';
+  if(sub) h += '<div class="sub">' + sub + '</div>';
+  h += '</div>';
+  document.getElementById('content').innerHTML = h;
+}
+
+/* ===== 播放 ===== */
+function playFrom(btn) {
+  var item = btn.closest('.ep-item') || btn.parentElement;
+  var url = item.dataset.url;
+  var name = item.dataset.name;
+  if (!url) return;
+  doPlay(url, name);
+}
+function doPlay(url, name) {
+  if(currentHls){currentHls.destroy();currentHls=null;}
+  var v = document.getElementById('player');
+  v.pause();
+  v.removeAttribute('src');
+  v.load();
+
+  if(url.indexOf('.m3u8')>=0){
+    if(Hls.isSupported()){
+      try{
+        var hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(v);
+        currentHls = hls;
+      }catch(e){
+        v.src = url;
+      }
+    } else if(v.canPlayType('application/vnd.apple.mpegurl')){
+      v.src = url;
+    } else {
+      setStatus('\u274c \u6d4f\u89c8\u5668\u4e0d\u652f\u6301 m3u8\u64ad\u653e');
+      return;
+    }
+  } else {
+    v.src = url;
+  }
+  v.play().catch(function(){});
+  setStatus('\u25b6 ' + name);
+}
+
+/* ===== 搜索按键 ===== */
+document.addEventListener('keydown', function(e){
+  if(e.key==='Enter' && document.activeElement===document.getElementById('searchInput')){
+    doSearch();
+  }
+});
+
+loadIndex();
+</script></body></html>
