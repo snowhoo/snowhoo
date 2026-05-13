@@ -1403,7 +1403,7 @@ inject:
         flex: 1;
         min-width: 0;
         padding: 7px 4px;
-        background: rgba(255,255,255,0.92);
+        background: transparent;
         border: none;
         border-radius: 6px;
         color: #333;
@@ -1412,18 +1412,19 @@ inject:
         text-align: center;
         text-decoration: none;
         cursor: pointer;
-        transition: background 0.2s, transform 0.15s;
-        backdrop-filter: blur(4px);
+        transition: box-shadow 0.2s, transform 0.15s;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         box-sizing: border-box;
       }
       .news-btn:hover {
-        background: rgba(255,255,255,1);
+        box-shadow: 0 4px 14px rgba(0,0,0,0.2);
         transform: translateY(-1px);
       }
       .news-btn:active {
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         transform: translateY(0);
       }
       /* 单按钮时全宽 */
