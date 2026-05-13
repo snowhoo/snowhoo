@@ -186,6 +186,20 @@
   margin:12px 0;
 }
 #player{width:100%;aspect-ratio:16/9;background:#000;display:block}
+.next-btn{
+  display:block;
+  width:100%;
+  padding:8px;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:500;
+  transition:background .15s;
+}
+.next-btn:hover{background:var(--accent-hover)}
+.next-btn:disabled{opacity:0.4;cursor:default;background:var(--bg-toolbar)}
 
 /* ===== Grid ===== */
 .video-grid{
@@ -394,7 +408,10 @@
   <input type="text" id="searchInput" placeholder="全局搜索影片..." oninput="doSearch()">
   <button onclick="doSearch()">搜索</button>
 </div>
-<div class="player-box"><video id="player" controls playsinline></video></div>
+<div class="player-box">
+  <video id="player" controls playsinline></video>
+  <button id="nextBtn" class="next-btn" onclick="playNext()" style="display:none">下一集 &gt;</button>
+</div>
 <div id="status" class="status-bar">⏹ 选择一个数据源</div>
 <div id="content"></div>
 <div class="pagination" id="pagination"></div>
@@ -404,6 +421,7 @@
 <script>
 var PAGE_SIZE = 12;
 var currentData = null, currentPage = 1, currentFiltered = [], currentHls = null;
+var currentEpNext = null;
 
 /* ===== 主题自动适配 ===== */
 (function(){
@@ -625,6 +643,11 @@ function playEp(el) {
   var url = el.dataset.url;
   var name = el.dataset.name;
   if (!url) return;
+  // 查找下一集
+  var items = el.parentElement.querySelectorAll('.ep-item');
+  var idx = Array.from(items).indexOf(el);
+  currentEpNext = idx < items.length - 1 ? items[idx + 1] : null;
+  document.getElementById('nextBtn').style.display = currentEpNext ? 'block' : 'none';
   doPlay(url, name);
 }
 function doPlay(url, name) {
@@ -656,6 +679,16 @@ function doPlay(url, name) {
   v.play().catch(function(){});
   setStatus('\u25b6 ' + name);
 }
+
+/* ===== 下一集 ===== */
+function playNext() {
+  if (currentEpNext) {
+    playEp(currentEpNext);
+  }
+}
+document.getElementById('player').addEventListener('ended', function() {
+  playNext();
+});
 
 /* ===== 搜索按键 ===== */
 document.addEventListener('keydown', function(e){
