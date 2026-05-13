@@ -562,7 +562,8 @@ function render() {
       h += '<div class="ep-item" onclick="event.stopPropagation();playEp(this)" data-url="' + escAttr(e.url||'') + '" data-name="' + escAttr((v.vod_name||'') + ' - ' + (e.title||'')) + '">' + escHtml(e.title||'') + eb + '</div>';
     });
     h += '</div></div>';  // close ep-panel + video-card
-  h += '</div>';
+  });  // close items.forEach
+  h += '</div>';  // close video-grid
 
   if (!items.length) {
     h = '<div class="empty-state"><div class="icon">\ud83d\udd0d</div><div class="desc">\u65e0\u5339\u914d\u7ed3\u679c</div><div class="sub">\u8bd5\u8bd5\u5176\u4ed6\u5173\u952e\u8bcd</div></div>';
