@@ -203,7 +203,24 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   font-size:12px;
   color:var(--text-secondary);
   border:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
 }
+.status-bar .next-ep-btn{
+  flex-shrink:0;
+  padding:2px 10px;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:4px;
+  cursor:pointer;
+  font-size:11px;
+  transition:background .15s;
+  display:none;
+}
+.status-bar .next-ep-btn:hover{background:var(--accent-hover)}
 
 /* ===== Player ===== */
 .player-box{
@@ -425,7 +442,10 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 <div class="player-box">
   <video id="player" controls playsinline></video>
 </div>
-<div id="status" class="status-bar">⏹ 选择一个数据源</div>
+<div id="status" class="status-bar">
+  <span id="statusText">⏹ 选择一个数据源</span>
+  <button id="nextEpBtn" class="next-ep-btn" onclick="playNext()">下一集 &gt;</button>
+</div>
 <div id="content"></div>
 <div class="pagination" id="pagination"></div>
 <div class="tvbox-footer" id="tvboxFooter"></div>
@@ -642,7 +662,7 @@ function escAttr(s){
   return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function setStatus(t){
-  document.getElementById('status').textContent = t;
+  document.getElementById('statusText').textContent = t;
 }
 function setEmpty(t, sub){
   var h = '<div class="empty-state"><div class="icon">\ud83d\udcfa</div><div class="desc">' + t + '</div>';
@@ -660,6 +680,7 @@ function playEp(el) {
   var items = el.parentElement.querySelectorAll('.ep-item');
   var idx = Array.from(items).indexOf(el);
   currentEpNext = idx < items.length - 1 ? items[idx + 1] : null;
+  document.getElementById('nextEpBtn').style.display = currentEpNext ? 'inline' : 'none';
   doPlay(url, name);
 }
 function doPlay(url, name) {
