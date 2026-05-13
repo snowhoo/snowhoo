@@ -1517,11 +1517,15 @@ inject:
         // 确保横幅在最前面、新闻卡片紧随其后（banner → card → 文章列表）
         if (document.querySelector('.news-upper')) return;
 
+        // ========== 卡片背景配置 ==========
+        // cardBgImage: 整个卡片区域背景图片URL，留空则使用渐变背景
+        var NEWS_CARD_BG_IMAGE = '';
+
         // ========== 按钮配置（修改这里添加/编辑按钮）==========
+        // text: 按钮文字  url: 跳转链接  bgImage: 按钮背景图片URL（留空则使用半透明白色）
         var NEWS_BUTTONS = [
-          { text: '百度热搜', url: 'https://top.baidu.com/board?tab=realtime' },
-          { text: '微博沸点', url: 'https://s.weibo.com/top/summary' },
-          { text: '知乎热榜', url: 'https://www.zhihu.com/hot' }
+          { text: '新闻速递', url: '/news/' },
+          { text: '小红超级播霸', url: '/video/' },
         ];
 
         // ========== 底部滚动字幕配置 ==========
@@ -1534,14 +1538,20 @@ inject:
         wrapper.className = 'news-shortcut-card';
         // 生成按钮 HTML
         var btnHtml = NEWS_BUTTONS.map(function(btn) {
-          return '<a class="news-btn" href="' + (btn.url || '#') + '" target="_blank" rel="noopener">' + (btn.text || '') + '</a>';
+          var bgStyle = btn.bgImage
+            ? 'background-image:url(' + btn.bgImage + ');background-size:cover;background-position:center;'
+            : '';
+          return '<a class="news-btn" style="' + bgStyle + '" href="' + (btn.url || '#') + '">' + (btn.text || '') + '</a>';
         }).join('');
-        var subtitleText = (NEWS_SUBTITLE === 'announcement') ? '📰 点击访问各平台实时热点 >>' : NEWS_SUBTITLE;
+        var subtitleText = (NEWS_SUBTITLE === 'announcement') ? '📰 欢迎光临小红故事 SnowHoo.NET' : NEWS_SUBTITLE;
         var subtitleHtml = NEWS_SUBTITLE_URL
           ? '<a href="' + NEWS_SUBTITLE_URL + '" style="text-decoration:none;color:inherit">' + subtitleText + '</a>'
           : subtitleText;
+        var cardBgStyle = NEWS_CARD_BG_IMAGE
+          ? 'background-image:url(' + NEWS_CARD_BG_IMAGE + ');background-size:cover;background-position:center;'
+          : '';
         wrapper.innerHTML = 
-          '<div class="news-upper" data-count="' + NEWS_BUTTONS.length + '">' + btnHtml + '</div>' +
+          '<div class="news-upper" data-count="' + NEWS_BUTTONS.length + '" style="' + cardBgStyle + '">' + btnHtml + '</div>' +
           '<div class="news-scrolling">' +
             '<div class="news-scrolling-inner">' +
               '<span class="news-scrolling-text">' + subtitleHtml + '</span>' +
