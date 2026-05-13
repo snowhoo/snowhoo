@@ -224,7 +224,6 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 .video-card{
   background:var(--bg-card);
   border-radius:var(--card-radius);
-  overflow:hidden;
   cursor:pointer;
   transition:transform .2s,box-shadow .2s;
   border:1px solid var(--border);
@@ -297,9 +296,8 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 .ep-panel.open{
   display:block;
   background:var(--bg-eplist);
-  max-height:280px;
-  overflow-y:auto;
   border-top:1px solid var(--border);
+  border-radius:0 0 var(--card-radius) var(--card-radius);
 }
 .ep-panel .ep-header{
   display:flex;
