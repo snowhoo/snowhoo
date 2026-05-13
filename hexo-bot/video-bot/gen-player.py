@@ -425,7 +425,7 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 
 <script src="./data/all.js"></script>
 <script>
-var PAGE_SIZE = 24;
+var PAGE_SIZE = 12;
 var currentData = null, currentPage = 1, currentFiltered = [], currentHls = null;
 
 /* ===== 主题自动适配 ===== */
