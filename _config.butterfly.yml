@@ -1393,7 +1393,6 @@ inject:
       }
       /* 上部按钮区域 */
       .news-upper {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         padding: 8px 10px;
         display: flex;
         flex-wrap: wrap;
@@ -1518,7 +1517,7 @@ inject:
         if (document.querySelector('.news-upper')) return;
 
         // ========== 卡片背景配置 ==========
-        // cardBgImage: 整个卡片区域背景图片URL，留空则使用渐变背景
+        // cardBgImage: 整个卡片区域背景图片URL，留空则无背景（跟随主题透明）
         var NEWS_CARD_BG_IMAGE = '';
 
         // ========== 按钮配置（修改这里添加/编辑按钮）==========
