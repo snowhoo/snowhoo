@@ -9,7 +9,7 @@ import json
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE, 'playable', 'data')
-OUTPUT = os.path.join(BASE, 'playable', 'player.html')
+OUTPUT = os.path.join(BASE, 'playable', 'index.html')
 
 # 如果 all.js 不存在，先生成
 all_js = os.path.join(DATA_DIR, 'all.js')
@@ -29,7 +29,7 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TVBox 播放器</title>
+<title>小红超级播霸</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <style>
 /* ===== CSS 自定义属性 ===== */
@@ -102,71 +102,69 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   }
 }
 
-*{margin:0;padding:0;box-sizing:border-box}
-body{
+/* ===== 隔离重置：屏蔽 Hexo/Butterfly 主题干扰 ===== */
+#player-wrap * {
+  box-sizing:border-box;
+}
+#player-wrap img {
+  max-width:none !important;
+  height:auto !important;
+  border-radius:0 !important;
+}
+#player-wrap button,
+#player-wrap input,
+#player-wrap select {
+  font-family:inherit;
+  font-size:inherit;
+  line-height:inherit;
+}
+#player-wrap button {
+  border-radius:4px;
+}
+#player-wrap h1 {
+  margin:0;
+  padding:0;
+  border:none;
+}
+#player-wrap a {
+  color:inherit;
+  text-decoration:none;
+}
+#player-wrap {
   font-family:-apple-system,'Microsoft YaHei','PingFang SC',sans-serif;
-  background:var(--bg-page);
   color:var(--text-primary);
-  padding:16px;
   max-width:1200px;
   margin:0 auto;
-  transition:background .3s,color .3s;
+  line-height:1.5;
+  font-size:14px;
+  transition:color .3s;
+}
+#player-wrap p,
+#player-wrap ul,
+#player-wrap ol,
+#player-wrap li {
+  margin:0;
+  padding:0;
+  border:none;
+  list-style:none;
 }
 
+*{margin:0;padding:0;box-sizing:border-box}
+
 /* ===== Header ===== */
-.header-row{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:10px;
-  gap:10px;
-}
-.header-row h1{
+#player-wrap h1.title{
   font-size:18px;
   font-weight:600;
   color:var(--accent);
-  white-space:nowrap;
+  margin-bottom:10px;
 }
-.theme-toggle{
-  background:var(--bg-card);
-  border:1px solid var(--border);
-  border-radius:20px;
-  color:var(--text-secondary);
-  cursor:pointer;
-  font-size:16px;
-  padding:4px 12px;
-  line-height:1;
-  transition:all .2s;
-  flex-shrink:0;
-}
-.theme-toggle:hover{
-  border-color:var(--accent);
-  color:var(--accent);
-}
-
-/* ===== Stats Bar ===== */
-.stats{
-  display:flex;
-  gap:10px;
-  margin:8px 0;
-  flex-wrap:wrap;
-}
-.stat{
-  background:var(--bg-card);
-  padding:6px 14px;
-  border-radius:8px;
-  text-align:center;
-  border:1px solid var(--border);
-}
-.stat .n{font-size:18px;font-weight:700;color:var(--accent)}
-.stat .l{font-size:11px;color:var(--text-muted)}
 
 /* ===== Toolbar ===== */
 .toolbar{
   display:flex;
-  gap:8px;
-  margin:10px 0;
-  flex-wrap:wrap;
+  gap:6px;
+  margin:10px 0 12px;
+  flex-wrap:nowrap;
   align-items:center;
 }
 .toolbar select,.toolbar input,.toolbar button{
@@ -178,19 +176,21 @@ body{
   font-size:13px;
   transition:border-color .2s;
 }
-.toolbar select{flex:1;min-width:160px;cursor:pointer}
+.toolbar select{min-width:0;flex:3;cursor:pointer}
 .toolbar select:focus,.toolbar input:focus{
   outline:none;
   border-color:var(--accent);
 }
-.toolbar input{flex:2;min-width:120px}
+.toolbar input{flex:4;min-width:60px}
 .toolbar input::placeholder{color:var(--text-muted)}
 .toolbar button{
+  flex-shrink:0;
   background:var(--accent);
   color:#fff;
   border:none;
   cursor:pointer;
   font-weight:500;
+  white-space:nowrap;
 }
 .toolbar button:hover{background:var(--accent-hover)}
 
@@ -210,7 +210,7 @@ body{
   background:var(--bg-player);
   border-radius:10px;
   overflow:hidden;
-  margin:10px 0;
+  margin:12px 0;
 }
 #player{width:100%;aspect-ratio:16/9;background:#000;display:block}
 
@@ -297,12 +297,9 @@ body{
 .ep-panel.open{
   display:block;
   background:var(--bg-eplist);
-  border:1px solid var(--border);
-  border-top:none;
-  border-radius:0 0 var(--card-radius) var(--card-radius);
-  margin-top:-1px;
   max-height:320px;
   overflow-y:auto;
+  border-top:1px solid var(--border);
 }
 .ep-panel .ep-header{
   display:flex;
@@ -329,45 +326,28 @@ body{
 }
 .ep-panel .ep-header .ep-close:hover{color:var(--accent);background:rgba(255,107,53,0.1)}
 .ep-item{
-  display:flex;
-  align-items:center;
-  padding:6px 10px;
-  gap:6px;
+  cursor:pointer;
+  padding:4px 10px;
   font-size:12px;
   border-bottom:1px solid var(--border);
   transition:background .15s;
+  color:var(--text-secondary);
 }
 .ep-item:last-child{border-bottom:none}
-.ep-item:hover{background:var(--bg-card-hover)}
-.ep-item .eptitle{
-  color:var(--text-secondary);
-  flex:1;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  font-size:12px;
-}
-.ep-item .epfrom{
-  color:var(--text-muted);
-  font-size:10px;
-  flex-shrink:0;
-  max-width:70px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-.ep-item .ep-btn{
-  background:var(--accent);
-  border:none;
-  color:#fff;
-  padding:3px 10px;
-  border-radius:4px;
-  cursor:pointer;
+.ep-item:hover{background:var(--bg-card-hover);color:var(--text-primary)}
+.ep-item .epchecked{font-size:10px;margin-left:6px;flex-shrink:0}
+
+/* ===== Footer ===== */
+.tvbox-footer{
+  text-align:center;
+  padding:12px 0 6px;
+  margin-top:12px;
   font-size:11px;
-  flex-shrink:0;
-  transition:background .15s;
+  color:var(--text-muted);
+  border:none;
+  background:none;
 }
-.ep-item .ep-btn:hover{background:var(--accent-hover)}
+.tvbox-footer span{margin:0 6px}
 
 /* ===== Pagination ===== */
 .pagination{
@@ -424,33 +404,31 @@ body{
   .video-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
   .video-card .card-info{padding:6px 8px}
   .video-card .card-title{font-size:12px}
-  .header-row h1{font-size:16px}
+  #player-wrap h1.title{font-size:16px}
   .toolbar select,.toolbar input,.toolbar button{font-size:12px;padding:6px 8px}
 }
 </style></head><body>
-<div class="header-row">
-  <h1>TVBox 播放器</h1>
-  <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题">🌓</button>
-</div>
-<div class="stats" id="stats"></div>
+<div id="player-wrap">
+<h1 class="title">小红超级播霸</h1>
 <div class="toolbar">
   <select id="sourceSelect" onchange="switchSource()">
     <option value="">— 选择数据源 —</option>
   </select>
-  <input type="text" id="searchInput" placeholder="搜索影片..." oninput="doSearch()">
+  <input type="text" id="searchInput" placeholder="全局搜索影片..." oninput="doSearch()">
   <button onclick="doSearch()">搜索</button>
 </div>
 <div class="player-box"><video id="player" controls playsinline></video></div>
 <div id="status" class="status-bar">⏹ 选择一个数据源</div>
 <div id="content"></div>
 <div class="pagination" id="pagination"></div>
+<div class="tvbox-footer" id="tvboxFooter"></div>
 
 <script src="./data/all.js"></script>
 <script>
 var PAGE_SIZE = 24;
 var currentData = null, currentPage = 1, currentFiltered = [], currentHls = null;
 
-/* ===== 主题切换 ===== */
+/* ===== 主题自动适配 ===== */
 (function(){
   var t = document.documentElement.getAttribute('data-theme');
   if(!t){
@@ -467,12 +445,6 @@ var currentData = null, currentPage = 1, currentFiltered = [], currentHls = null
   }
   document.documentElement.setAttribute('data-theme', t);
 })();
-
-function toggleTheme(){
-  var html = document.documentElement;
-  var cur = html.getAttribute('data-theme');
-  html.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
-}
 
 /* ===== 加载索引 ===== */
 function loadIndex() {
@@ -491,10 +463,8 @@ function loadIndex() {
     o.textContent = d.name + ' (' + (d.playable_count||0) + '/' + (d.total_episodes||0) + ')';
     sel.appendChild(o);
   });
-  document.getElementById('stats').innerHTML =
-    '<div class="stat"><div class="n">' + names.length + '</div><div class="l">\u6570\u636e\u6e90</div></div>' +
-    '<div class="stat"><div class="n">' + ta + '</div><div class="l">\u603b\u5730\u5740</div></div>' +
-    '<div class="stat"><div class="n">' + pa + '</div><div class="l">\u53ef\u64ad\u653e</div></div>';
+  document.getElementById('tvboxFooter').innerHTML =
+    '<span>\u6570\u636e\u6e90 ' + names.length + '</span><span>\u603b\u5730\u5740 ' + ta + '</span><span>\u53ef\u64ad\u653e ' + pa + '</span>';
   setEmpty('\u2705 \u5df2\u52a0\u8f7d ' + names.length + ' \u4e2a\u6570\u636e\u6e90', '\u8bf7\u4ece\u4e0b\u62c9\u83dc\u5355\u9009\u62e9');
 }
 
@@ -518,20 +488,64 @@ function switchSource() {
   }
   setStatus('\ud83d\udce1 ' + currentData.name + ' \u2014 ' + currentData.total_videos + '\u4e2a\u89c6\u9891\uff0c' + currentData.total_episodes + '\u6761\u5730\u5740');
   currentPage = 1;
-  doSearch();
+  // 如果搜索框有内容则全局搜索，否则显示当前源
+  var q = document.getElementById('searchInput').value.trim();
+  if (q) { doSearch(); }
+  else { currentFiltered = tagWithSource(currentData.videos, key, currentData.name); render(); }
 }
 
-/* ===== 搜索 ===== */
+/* ===== 全局搜索 ===== */
 function doSearch() {
-  if (!currentData) return;
   var q = document.getElementById('searchInput').value.toLowerCase().trim();
-  currentFiltered = (currentData.videos||[]).filter(function(v) {
-    if (!q) return true;
-    if ((v.vod_name||'').toLowerCase().includes(q)) return true;
-    return (v.episodes||[]).some(function(e){ return (e.title||'').toLowerCase().includes(q); });
+  if (!q) {
+    // 无关键词：显示当前源所有视频
+    if (currentData) {
+      currentFiltered = tagWithSource(currentData.videos, document.getElementById('sourceSelect').value, currentData.name);
+      setStatus('\ud83d\udce1 ' + currentData.name);
+    } else {
+      currentFiltered = [];
+      setStatus('\u23f9 \u8bf7\u9009\u62e9\u6570\u636e\u6e90');
+    }
+    currentPage = 1;
+    render();
+    return;
+  }
+  // 全局搜索：遍历所有数据源
+  var names = Object.keys(TVBOX_DATA);
+  var results = [];
+  names.forEach(function(k) {
+    var src = TVBOX_DATA[k];
+    if (!src || !src.videos) return;
+    src.videos.forEach(function(v) {
+      var match = (v.vod_name||'').toLowerCase().includes(q);
+      if (!match) {
+        match = (v.episodes||[]).some(function(e){ return (e.title||'').toLowerCase().includes(q); });
+      }
+      if (match) {
+        results.push({
+          sourceKey: k,
+          sourceName: src.name,
+          vod_name: v.vod_name,
+          vod_pic: v.vod_pic,
+          episodes: v.episodes,
+          ep_count: v.ep_count,
+          playable_count: v.playable_count,
+        });
+      }
+    });
   });
+  currentFiltered = results;
+  setStatus('\ud83d\udd0d \u5168\u5c40\u641c\u7d22: \u201c' + q + '\u201d \u2014 ' + results.length + '\u4e2a\u7ed3\u679c');
   currentPage = 1;
   render();
+}
+
+function tagWithSource(videos, key, name) {
+  return (videos||[]).map(function(v) {
+    v.sourceKey = key;
+    v.sourceName = name;
+    return v;
+  });
 }
 
 /* ===== 渲染卡片 ===== */
@@ -565,23 +579,16 @@ function render() {
     h += '<span class="card-badge ' + badgeClass + '">' + badgeText + '</span>';
     h += '</div>';
     h += '<div class="card-info"><div class="card-title">' + escHtml(v.vod_name||'') + '</div>';
-    h += '<div class="card-meta">' + epInfo + '</div></div></div>';
+    h += '<div class="card-meta">' + (v.sourceName?escHtml(v.sourceName)+' \u00b7 ':'') + epInfo + '</div></div>';
 
-    // 剧集面板
+    // 剧集面板（放入 card 内部，避免撑开 Grid）
     h += '<div class="ep-panel" id="' + eid + '">';
     h += '<div class="ep-header"><span class="ep-count">\u5267\u96c6 (' + (v.episodes||[]).length + ')</span><button class="ep-close" onclick="event.stopPropagation();closeEp(\'' + eid + '\')">\u2716</button></div>';
     (v.episodes||[]).forEach(function(e){
-      var eb = e.playable
-        ? '<span style="color:' + (document.documentElement.getAttribute('data-theme')==='light'?'#2e7d32':'#81c784') + ';font-size:10px">\u2713</span>'
-        : '<span style="color:var(--text-muted);font-size:10px">?</span>';
-      h += '<div class="ep-item" data-url="' + escAttr(e.url||'') + '" data-name="' + escAttr((v.vod_name||'') + ' - ' + (e.title||'')) + '">';
-      h += '<span class="eptitle">' + escHtml(e.title||'') + '</span>';
-      h += eb;
-      h += '<span class="epfrom">' + escHtml(e.from||'') + '</span>';
-      h += '<button class="ep-btn" onclick="event.stopPropagation();playFrom(this)">\u25b6</button></div>';
+      var eb = e.playable ? '' : ' \u26a0';
+      h += '<div class="ep-item" onclick="event.stopPropagation();playEp(this)" data-url="' + escAttr(e.url||'') + '" data-name="' + escAttr((v.vod_name||'') + ' - ' + (e.title||'')) + '">' + escHtml(e.title||'') + eb + '</div>';
     });
-    h += '</div>';
-  });
+    h += '</div></div>';  // close ep-panel + video-card
   h += '</div>';
 
   if (!items.length) {
@@ -636,10 +643,9 @@ function setEmpty(t, sub){
 }
 
 /* ===== 播放 ===== */
-function playFrom(btn) {
-  var item = btn.closest('.ep-item') || btn.parentElement;
-  var url = item.dataset.url;
-  var name = item.dataset.name;
+function playEp(el) {
+  var url = el.dataset.url;
+  var name = el.dataset.name;
   if (!url) return;
   doPlay(url, name);
 }
@@ -681,7 +687,7 @@ document.addEventListener('keydown', function(e){
 });
 
 loadIndex();
-</script></body></html>'''
+</script></div></body></html>'''
 
 with open(OUTPUT, 'w', encoding='utf-8') as f:
     f.write(html)
@@ -693,11 +699,14 @@ HEXO_VIDEO_DIR = os.path.normpath(HEXO_VIDEO_DIR)  # D:\hexo\source\video
 if os.path.isdir(HEXO_VIDEO_DIR):
     import shutil, os
     # 复制 player.html
-    shutil.copy2(OUTPUT, os.path.join(HEXO_VIDEO_DIR, 'player.html'))
-    # 清理旧日志文件（不部署到线上）
+    shutil.copy2(OUTPUT, os.path.join(HEXO_VIDEO_DIR, 'index.html'))
+    # 清理旧日志文件和旧版 player.html
     old_log = os.path.join(HEXO_VIDEO_DIR, 'playable-urls-all.txt')
     if os.path.isfile(old_log):
         os.remove(old_log)
+    old_play = os.path.join(HEXO_VIDEO_DIR, 'player.html')
+    if os.path.isfile(old_play):
+        os.remove(old_play)
     # 同步 data/ 目录
     hexo_data = os.path.join(HEXO_VIDEO_DIR, 'data')
     if os.path.isdir(hexo_data):
