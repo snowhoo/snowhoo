@@ -20,7 +20,6 @@ const HEXO_ROOT = 'D:/hexo';
 const POSTS_DIR = path.join(HEXO_ROOT, 'source', '_posts');
 const COVER_DIR = path.join(HEXO_ROOT, 'source', 'images', 'onthisday');
 const GIT_BRANCH = 'source';
-const API_URL = 'https://apis.jxcxin.cn/api/lishi';
 
 // ============ 工具函数 ============
 function getToday() {
@@ -40,24 +39,38 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// ============ 获取历史事件 ============
-function fetchEvents() {
-  return new Promise((resolve, reject) => {
-    https.get(API_URL, { timeout: 15000 }, (res) => {
+// ============ 获取历史事件（API每次返回1条随机，调用25次去重） ============
+function fetchOneEvent(dateStr) {
+  return new Promise((resolve) => {
+    const url = `https://apis.jxcxin.cn/api/lishi?date=${dateStr}`;
+    https.get(url, { timeout: 8000 }, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
-        // API 返回格式：每行 "1940年05月14日事件描述"
-        const lines = data.split('\n').filter(l => l.trim());
-        const events = lines.map(line => {
-          const m = line.match(/^(\d{4})年\d{2}月\d{2}日(.+)/);
-          if (m) return { year: parseInt(m[1]), text: m[2].trim() };
-          return null;
-        }).filter(Boolean);
-        resolve(events);
+        const m = data.match(/^(\d{4})年\d{2}月\d{2}日(.+)/);
+        if (m) resolve({ year: parseInt(m[1]), text: m[2].trim() });
+        else resolve(null);
       });
-    }).on('error', reject);
+    }).on('error', () => resolve(null));
   });
+}
+
+async function fetchEvents(today) {
+  const dateStr = `${parseInt(today.month)}-${parseInt(today.day)}`;
+  const seen = new Set();
+  const events = [];
+  // 调用25次收集不同事件
+  for (let i = 0; i < 25; i++) {
+    const e = await fetchOneEvent(dateStr);
+    if (e && !seen.has(e.text)) {
+      seen.add(e.text);
+      events.push(e);
+    }
+    await sleep(200); // 间隔避免触发限流
+  }
+  // 按年份排序，取前15条
+  events.sort((a, b) => b.year - a.year);
+  return events.slice(0, 15);
 }
 
 // ============ 生成封面图（Jimp） ============
@@ -196,8 +209,8 @@ async function main() {
   log(`日期: ${today.fullDateStr}`);
 
   // Step 1: 获取历史事件
-  log('获取历史事件...');
-  const events = await fetchEvents();
+  log('获取历史事件（调用API 25次收集去重）...');
+  const events = await fetchEvents(today);
   log(`获取到 ${events.length} 条事件`);
   
   if (events.length === 0) {
