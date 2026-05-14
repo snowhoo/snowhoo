@@ -194,6 +194,33 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 }
 .toolbar button:hover{background:var(--accent-hover)}
 
+/* ===== Category Tabs ===== */
+.cat-bar{
+  display:flex;
+  gap:4px;
+  margin:6px 0 8px;
+  flex-wrap:wrap;
+}
+.cat-bar button{
+  padding:3px 10px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:transparent;
+  color:var(--text-secondary);
+  cursor:pointer;
+  font-size:11px;
+  transition:all .15s;
+}
+.cat-bar button:hover{
+  border-color:var(--accent);
+  color:var(--accent);
+}
+.cat-bar button.active{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#fff;
+}
+
 /* ===== Status Bar ===== */
 .status-bar{
   background:var(--bg-card);
@@ -446,6 +473,7 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   <span id="statusText">⏹ 选择一个数据源</span>
   <button id="nextEpBtn" class="next-ep-btn" onclick="playNext()">下一集 &gt;</button>
 </div>
+<div class="cat-bar" id="catBar"></div>
 <div id="content"></div>
 <div class="pagination" id="pagination"></div>
 <div class="tvbox-footer" id="tvboxFooter"></div>
@@ -455,6 +483,7 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 var PAGE_SIZE = 12;
 var currentData = null, currentPage = 1, currentFiltered = [], currentHls = null;
 var currentEpNext = null;
+var currentCategory = '';
 
 /* ===== 主题自动适配 ===== */
 (function(){
@@ -516,6 +545,8 @@ function switchSource() {
     setStatus('\u274c \u6570\u636e\u683c\u5f0f\u9519\u8bef');
     return;
   }
+  currentCategory = '';
+  buildCatBar();
   setStatus('\ud83d\udce1 ' + currentData.name + ' \u2014 ' + currentData.total_videos + '\u4e2a\u89c6\u9891\uff0c' + currentData.total_episodes + '\u6761\u5730\u5740');
   currentPage = 1;
   // 如果搜索框有内容则全局搜索，否则显示当前源
@@ -528,10 +559,13 @@ function switchSource() {
 function doSearch() {
   var q = document.getElementById('searchInput').value.toLowerCase().trim();
   if (!q) {
-    // 无关键词：显示当前源所有视频
+    // 无关键词：显示当前源所有视频（含分类过滤）
     if (currentData) {
       currentFiltered = tagWithSource(currentData.videos, document.getElementById('sourceSelect').value, currentData.name);
-      setStatus('\ud83d\udce1 ' + currentData.name);
+      if (currentCategory) {
+        currentFiltered = currentFiltered.filter(function(v){ return (v.vod_class||'') === currentCategory; });
+      }
+      setStatus('\ud83d\udce1 ' + currentData.name + (currentCategory?' \u00b7 '+currentCategory:''));
     } else {
       currentFiltered = [];
       setStatus('\u23f9 \u8bf7\u9009\u62e9\u6570\u636e\u6e90');
@@ -547,6 +581,7 @@ function doSearch() {
     var src = TVBOX_DATA[k];
     if (!src || !src.videos) return;
     src.videos.forEach(function(v) {
+      if (currentCategory && (v.vod_class||'') !== currentCategory) return;
       var match = (v.vod_name||'').toLowerCase().includes(q);
       if (!match) {
         match = (v.episodes||[]).some(function(e){ return (e.title||'').toLowerCase().includes(q); });
@@ -576,6 +611,29 @@ function tagWithSource(videos, key, name) {
     v.sourceName = name;
     return v;
   });
+}
+
+/* ===== 分类标签 ===== */
+function buildCatBar() {
+  if (!currentData) return;
+  var cats = {}, bars = document.getElementById('catBar');
+  (currentData.videos||[]).forEach(function(v) {
+    var c = v.vod_class || '\u672a\u5206\u7c7b';
+    cats[c] = (cats[c]||0) + 1;
+  });
+  var h = '<button class="active" onclick="filterCat(this,\'\')">\u5168\u90e8 (' + currentData.total_videos + ')</button>';
+  Object.keys(cats).sort().forEach(function(c) {
+    h += '<button onclick="filterCat(this,\'' + c.replace(/'/g,"\\'") + '\')">' + c + ' (' + cats[c] + ')</button>';
+  });
+  bars.innerHTML = h;
+}
+function filterCat(el, cat) {
+  currentCategory = cat;
+  currentPage = 1;
+  // 高亮切换
+  document.querySelectorAll('.cat-bar button').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active');
+  doSearch();
 }
 
 /* ===== 渲染卡片 ===== */

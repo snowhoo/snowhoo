@@ -348,6 +348,7 @@ def crawl_site(site, test_mode=False):
                     'name': detail.get('vod_name', ''),
                     'pic': detail.get('vod_pic', ''),
                     'remarks': detail.get('vod_remarks', ''),
+                    'vod_class': detail.get('vod_class', ''),
                     'play_list': play_info,
                 })
                 result['total_episodes'] += len(play_info)
@@ -436,6 +437,7 @@ def save_site_data(site_result, data_dir):
             'vod_name': v['name'],
             'vod_pic': v.get('pic', ''),
             'remarks': v.get('remarks', ''),
+            'vod_class': v.get('vod_class', ''),
             'ep_count': len(v['_episodes']),
             'playable_count': sum(1 for e in v['_episodes'] if e['playable']),
             'episodes': v['_episodes'],
