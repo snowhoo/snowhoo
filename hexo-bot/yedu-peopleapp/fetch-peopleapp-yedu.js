@@ -122,10 +122,23 @@ async function extractArticle(page) {
       .trim()
       || (document.querySelector('h1') ? document.querySelector('h1').textContent.trim() : '');
 
-    // 正文：获取所有可见文本段落
+    // 正文：获取所有可见文本段落（过滤 script/style 内容）
     const paragraphs = [];
     const seenTexts = new Set();
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode: function(node) {
+        // 跳过 script、style 等标签内的文本
+        var p = node.parentElement;
+        while (p) {
+          var tag = p.tagName.toLowerCase();
+          if (['script','style','noscript','svg','audio','video','iframe'].includes(tag)) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          p = p.parentElement;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }, false);
     let node;
     while (node = walker.nextNode()) {
       const t = node.textContent.trim();
@@ -135,13 +148,15 @@ async function extractArticle(page) {
       }
     }
 
-    // 找图片（过滤掉小图标、logo、头像等）
+    // 找图片（过滤掉小图标、logo、头像、跟踪像素等）
     const images = [];
     document.querySelectorAll('img').forEach(img => {
       const src = img.getAttribute('data-src') || img.src || '';
       if (!src) return;
       // 按路径过滤
       if (src.includes('icon') || src.includes('logo') || src.includes('avatar') || src.includes('nuxt') || src.endsWith('.svg')) return;
+      // 按域名过滤（统计/跟踪像素）
+      if (src.includes('cnzz') || src.includes('cnzz') || src.includes('arms-retcode') || src.includes('alicdn') || src.includes('retcode')) return;
       // 按尺寸过滤：至少宽或高 ≥ 100px
       const w = img.naturalWidth || parseInt(img.getAttribute('width') || '0');
       const h = img.naturalHeight || parseInt(img.getAttribute('height') || '0');
