@@ -13,7 +13,7 @@ const https = require('https');
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
-const Jimp = require('jimp');
+const { chromium } = require('playwright');
 
 // ============ 配置 ============
 const HEXO_ROOT = 'D:/hexo';
@@ -73,54 +73,47 @@ async function fetchEvents(today) {
   return events.slice(0, 15);
 }
 
-// ============ 生成封面图（Jimp） ============
-async function generateCover(today) {
+// ============ 生成封面图（Playwright 渲染） ============
+async function generateCover(today, page) {
   if (!fs.existsSync(COVER_DIR)) fs.mkdirSync(COVER_DIR, { recursive: true });
 
-  const W = 800, H = 450;
   const bgColors = ['#1a1a2e', '#2d1b33', '#1e3c2f', '#1a2a3a', '#3d2b1f'];
   const accentColors = ['#e94560', '#c9a0dc', '#81c784', '#4dd0e1', '#ffb74d'];
   const idx = parseInt(today.dateStr.slice(-1)) % bgColors.length;
 
+  const theme = { bg: bgColors[idx], accent: accentColors[idx], text: '#f5e6ca' };
+  const dateStr = `${today.month}月${today.day}日`;
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{width:800px;height:450px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;background:${theme.bg};position:relative;font-family:'KaiTi','STKaiti','Microsoft YaHei',sans-serif}
+  .d1{width:160px;height:160px;position:absolute;top:-40px;right:40px;border-radius:50%;background:rgba(255,255,255,0.08)}
+  .d2{width:100px;height:100px;position:absolute;bottom:30px;left:30px;border-radius:50%;background:rgba(255,255,255,0.06)}
+  .d3{width:80px;height:80px;position:absolute;top:50px;left:120px;border-radius:50%;background:rgba(255,255,255,0.05)}
+  .title{font-size:56px;color:${theme.text};letter-spacing:8px;text-shadow:2px 2px 8px rgba(0,0,0,0.3);position:relative;z-index:10;font-weight:bold}
+  .divider{width:60px;height:2px;background:${theme.accent};opacity:0.6;margin-top:24px;border-radius:1px;position:relative;z-index:10}
+  .date{font-size:20px;color:${theme.text};margin-top:20px;letter-spacing:4px;opacity:0.8;position:relative;z-index:10}
+</style></head><body>
+  <div class="d1"></div><div class="d2"></div><div class="d3"></div>
+  <div class="title">\u5386\u53f2\u4e0a\u7684\u4eca\u5929</div>
+  <div class="divider"></div>
+  <div class="date">${dateStr}</div>
+</body></html>`;
+
   try {
-    // 创建纯色背景
-    const bgColor = Jimp.cssColorToHex(bgColors[idx]);
-    const img = new Jimp(W, H, bgColor);
-
-    // 加载字体
-    let font;
-    try {
-      font = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
-    } catch (e) {
-      font = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
-    }
-
-    // 标题
-    const title = '历史上的今天';
-    const titleFont = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
-    const titleW = await Jimp.measureText(titleFont, title);
-    await img.print(titleFont, (W - titleW) / 2, 80, title);
-
-    // 日期
-    const dateStr = `${today.month}月${today.day}日`;
-    const dateFont = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE);
-    const dateW = await Jimp.measureText(dateFont, dateStr);
-    await img.print(dateFont, (W - dateW) / 2, 170, dateStr);
-
-    // 底部装饰线
-    const accentHex = Jimp.cssColorToHex(accentColors[idx]);
-    for (let x = 300; x < 500; x++) {
-      img.setPixelColor(accentHex, x, 260);
-    }
-
-    // 保存
+    const tmpHtml = path.join(COVER_DIR, `${today.dateStr}_tmp.html`);
+    fs.writeFileSync(tmpHtml, html, 'utf-8');
+    const fileUrl = `file:///${tmpHtml.replace(/\\/g, '/')}`;
+    await page.goto(fileUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await new Promise(r => setTimeout(r, 500));
     const imgName = `${today.dateStr}_onthisday.jpg`;
-    const imgPath = path.join(COVER_DIR, imgName);
-    await img.writeAsync(imgPath);
+    await page.screenshot({ path: path.join(COVER_DIR, imgName), clip: { x: 0, y: 0, width: 800, height: 450 } });
+    try { fs.unlinkSync(tmpHtml); } catch (_) {}
     log(`✅ 封面图: ${imgName}`);
     return imgName;
   } catch (err) {
-    log(`⚠️ 封面图生成失败: ${err.message}`);
+    log(`⚠️ 封面图失败: ${err.message}`);
     return null;
   }
 }
@@ -221,22 +214,31 @@ async function main() {
   // 只取前20条
   const topEvents = events.slice(0, 20);
 
-  // Step 2: 生成封面图
-  log('生成封面图...');
-  const coverName = await generateCover(today);
+  // Step 2: 生成封面图（启动浏览器）
+  log('启动浏览器生成封面图...');
+  let browser;
+  try {
+    browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--no-sandbox'] });
+    const page = await browser.newPage({ viewport: { width: 800, height: 450 } });
+    const coverName = await generateCover(today, page);
+    await browser.close();
+    browser = null;
 
-  // Step 3: 生成文章
-  const result = writeHexoPost(topEvents, today, coverName);
+    // Step 3: 生成文章
+    const result = writeHexoPost(topEvents, today, coverName);
 
-  // Step 4: Git 推送
-  log('');
-  log('========== 提交部署 ==========');
-  gitCommitAndPush(topEvents.length, today);
+    // Step 4: Git 推送
+    log('');
+    log('========== 提交部署 ==========');
+    gitCommitAndPush(topEvents.length, today);
 
-  log('');
-  log(`========== 完成 ==========`);
-  log(`文章: ${result.fileName}`);
-  log(`事件: ${topEvents.length} 条`);
+    log('');
+    log(`========== 完成 ==========`);
+    log(`文章: ${result.fileName}`);
+    log(`事件: ${topEvents.length} 条`);
+  } finally {
+    if (browser) try { await browser.close(); } catch (_) {}
+  }
 
   process.exit(0);
 }
