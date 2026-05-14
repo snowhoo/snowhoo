@@ -189,8 +189,15 @@ function articleToMarkdown(article, today, downloadedNames) {
   for (const p of paragraphs) {
     if (p.type === 'text') {
       const c = p.content;
-      if (c.length < 3 || c.includes('人民日报') && c.length < 10 ||
-          c.includes('来源') || c.includes('转载') || c.includes('版权')) continue;
+      // 过滤页脚/版权/无关文字
+      if (c.length < 3) continue;
+      if (/^打开客户端查看/.test(c)) continue;
+      if (/^中央和/.test(c) || /^中央党/.test(c)) continue;
+      if (/^App Store$/i.test(c)) continue;
+      if (/京公网安备/.test(c) || /京ICP备/.test(c)) continue;
+      if (/互联网新闻信息服务许可证/.test(c) || /举报邮箱/.test(c)) continue;
+      if (/Copyright ©/.test(c)) continue;
+      if (c.includes('人民日报') && c.length < 10 || c.includes('来源') || c.includes('转载') || c.includes('版权')) continue;
       currentText += (currentText ? '\n\n' : '') + c;
     } else if (p.type === 'image') {
       if (currentText.trim()) { mergedParagraphs.push({ type: 'text', content: currentText.trim() }); currentText = ''; }
