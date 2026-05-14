@@ -191,7 +191,7 @@ function articleToMarkdown(article, today, downloadedNames) {
       const c = p.content;
       // 过滤页脚/版权/无关文字
       if (c.length < 3) continue;
-      if (/^打开客户端查看/.test(c)) continue;
+      if (/^打开客户端/.test(c)) continue;
       if (/^中央和/.test(c) || /^中央党/.test(c)) continue;
       if (/^App Store$/i.test(c)) continue;
       if (/京公网安备/.test(c) || /京ICP备/.test(c)) continue;
