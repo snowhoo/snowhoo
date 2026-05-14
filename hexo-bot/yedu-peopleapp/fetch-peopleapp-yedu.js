@@ -115,71 +115,36 @@ async function generateCoverImage(paragraphs, today, page) {
 // ============ 文章正文提取 ============
 async function extractArticle(page) {
   const article = await page.evaluate(() => {
-    // 标题：页面 <title> 或 h1
-    const title = document.title.replace(' - 人民信报', '').replace(' - 人民网', '').trim()
+    // 标题：<title> 或 h1
+    const title = document.title
+      .replace(/[_\-]\s*人民信报$/, '')
+      .replace(/[_\-]\s*人民日报$/, '')
+      .trim()
       || (document.querySelector('h1') ? document.querySelector('h1').textContent.trim() : '');
-    
-    // 正文内容
+
+    // 正文：获取所有可见文本段落
     const paragraphs = [];
     const seenTexts = new Set();
-    
-    // 尝试多种正文选择器
-    const contentEl = document.querySelector('.article-content, .rich_media_content, .content, article, [class*="content"], [class*="article"]');
-    if (!contentEl) {
-      // 兜底：取 body 中所有可见文本
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
-      let node;
-      while (node = walker.nextNode()) {
-        const text = node.textContent.trim();
-        if (text.length > 5 && !seenTexts.has(text.substring(0, 40))) {
-          seenTexts.add(text.substring(0, 40));
-          paragraphs.push({ type: 'text', content: text });
-        }
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    let node;
+    while (node = walker.nextNode()) {
+      const t = node.textContent.trim();
+      if (t.length > 8 && !seenTexts.has(t.substring(0, 40))) {
+        seenTexts.add(t.substring(0, 40));
+        paragraphs.push({ type: 'text', content: t });
       }
-      return { title, paragraphs: paragraphs.slice(0, 50), images: [] };
     }
 
+    // 找图片
     const images = [];
-    
-    function walk(node, depth) {
-      if (depth > 30) return;
-      if (node.nodeType === Node.TEXT_NODE) {
-        const text = node.textContent.trim();
-        if (text && text.length > 1 && !seenTexts.has(text.substring(0, 40))) {
-          seenTexts.add(text.substring(0, 40));
-          paragraphs.push({ type: 'text', content: text });
-        }
-        return;
+    document.querySelectorAll('img').forEach(img => {
+      const src = img.getAttribute('data-src') || img.src || '';
+      if (src && !src.includes('icon') && !src.includes('logo') && !src.includes('avatar') && !src.includes('nuxt') && !src.endsWith('.svg')) {
+        images.push(src);
       }
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const tag = node.tagName.toLowerCase();
-        const style = (node.getAttribute('style') || '').toLowerCase();
-        if (style.includes('display:none') || style.includes('visibility:hidden') || node.hidden) return;
-        if (['script','style','noscript','br','hr','iframe','video','audio'].includes(tag)) return;
-        if (tag === 'img') {
-          const src = node.getAttribute('data-src') || node.src || '';
-          if (src && !src.includes('icon') && !src.includes('emoji') && !src.includes('avatar')) {
-            images.push(src);
-            paragraphs.push({ type: 'image', src });
-          }
-          return;
-        }
-        // 检查是否只有一张大图
-        const directImgs = node.querySelectorAll(':scope > img');
-        if (directImgs.length === 1) {
-          const img = directImgs[0];
-          const s = img.getAttribute('data-src') || img.src || '';
-          if (s && !s.includes('emoji')) {
-            images.push(s);
-            paragraphs.push({ type: 'image', src: s });
-            return;
-          }
-        }
-        for (const child of node.childNodes) walk(child, depth + 1);
-      }
-    }
-    walk(contentEl, 0);
-    return { title, paragraphs: paragraphs.slice(0, 80), images };
+    });
+
+    return { title, paragraphs, images: images.slice(0, 10) };
   });
 
   log(`  标题: ${article.title}`);
@@ -370,72 +335,57 @@ async function main() {
     await page.goto(SOURCE_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await sleep(3000);
 
-    // Step 2: 获取文章列表
+    // Step 2: 获取文章列表并点击第一篇
     log('获取文章列表...');
-    const articles = await page.evaluate(() => {
-      const items = [];
-      // peopleapp 文章列表选择器
-      const listItems = document.querySelectorAll('.audio-item, .special-item, [class*="audio"], [class*="special"] li, .list-item, .item');
-      if (listItems.length === 0) {
-        // 兜底：找所有包含"夜读"的链接
-        document.querySelectorAll('a').forEach(a => {
-          const text = a.textContent.trim();
-          if (text.includes('夜读')) {
-            const timeEl = a.querySelector('.time, [class*="time"], [class*="date"]') || a.parentElement.querySelector('.time, [class*="time"], [class*="date"]');
-            items.push({
-              title: text.replace(/^\d+\.\s*/, '').substring(0, 100),
-              url: a.href,
-              date: timeEl ? timeEl.textContent.trim() : '',
-            });
-          }
-        });
-        return items;
-      }
-      listItems.forEach((li, idx) => {
-        const titleEl = li.querySelector('.title, h3, h4, [class*="title"], .name');
-        const timeEl = li.querySelector('.time, [class*="time"], [class*="date"]');
-        const linkEl = li.querySelector('a');
-        items.push({
-          title: (titleEl ? titleEl.textContent.trim() : (linkEl ? linkEl.textContent.trim() : '')),
-          url: linkEl ? (linkEl.href.startsWith('http') ? linkEl.href : 'https://www.peopleapp.com' + linkEl.href) : '',
-          date: timeEl ? timeEl.textContent.trim() : '',
-          index: idx,
+    // 等待页面渲染完成（页面会跳转到 audiotopic）
+    await sleep(2000);
+
+    const items = await page.evaluate(() => {
+      const result = [];
+      document.querySelectorAll('.item_text').forEach((el, i) => {
+        result.push({
+          text: el.textContent.trim().substring(0, 150),
+          index: i,
         });
       });
-      return items;
+      return result;
     });
 
-    log(`找到 ${articles.length} 篇文章`);
-    articles.forEach((a, i) => log(`  [${i}] ${a.date} | ${a.title.substring(0, 50)}`));
+    log(`找到 ${items.length} 篇文章`);
+    items.forEach((a, i) => log(`  [${i}] ${a.text.substring(0, 60)}`));
 
-    if (articles.length === 0) {
+    if (items.length === 0) {
       log('❌ 未找到任何文章');
       await browser.close();
       process.exit(1);
     }
 
-    // Step 3: 找最新文章（第一篇通常是今天最新的）
-    let targetArticle = articles[0];
-    log(`选择文章: "${targetArticle.title}"`);
-
-    // Step 4: 打开文章
-    if (targetArticle.url) {
-      log(`打开文章: ${targetArticle.url}`);
-      await page.goto(targetArticle.url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-      await sleep(3000);
-    } else {
-      // 如果没有 URL，可能页面已经加载了文章详情（点击交互触发）
-      log('尝试在页面中查找并点击文章...');
-      const clicked = await page.evaluate((idx) => {
-        const items = document.querySelectorAll('.audio-item, .special-item, [class*="audio"], .item');
-        if (items[idx]) { items[idx].click(); return true; }
-        return false;
-      }, targetArticle.index || 0);
-      if (clicked) {
-        log('已点击文章');
-        await sleep(3000);
+    // Step 3: 找最新文章（带"小时前"的，通常第一篇就是）
+    let targetIndex = 0;
+    // 优先找带"小时前"或"分钟前"的（今日文章）
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].text.includes('小时前') || items[i].text.includes('分钟前')) {
+        targetIndex = i;
+        break;
       }
     }
+    log(`选择第 ${targetIndex + 1} 篇: "${items[targetIndex].text.substring(0, 50)}"`);
+
+    // Step 4: 点击文章打开详情页
+    log('点击文章...');
+    await page.evaluate((idx) => {
+      const el = document.querySelectorAll('.item_text')[idx];
+      if (el) el.click();
+    }, targetIndex);
+
+    // Step 5: 等待导航到详情页
+    await sleep(2000);
+    try {
+      await page.waitForURL('**/column/**', { timeout: 10000 });
+    } catch (e) {
+      log('⚠️ 导航等待超时，尝试继续...');
+    }
+    log(`当前页面: ${page.url()}`);
 
     // Step 5: 提取正文
     const article = await extractArticle(page);
