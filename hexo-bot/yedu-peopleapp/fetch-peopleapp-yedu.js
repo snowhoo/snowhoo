@@ -135,13 +135,18 @@ async function extractArticle(page) {
       }
     }
 
-    // 找图片
+    // 找图片（过滤掉小图标、logo、头像等）
     const images = [];
     document.querySelectorAll('img').forEach(img => {
       const src = img.getAttribute('data-src') || img.src || '';
-      if (src && !src.includes('icon') && !src.includes('logo') && !src.includes('avatar') && !src.includes('nuxt') && !src.endsWith('.svg')) {
-        images.push(src);
-      }
+      if (!src) return;
+      // 按路径过滤
+      if (src.includes('icon') || src.includes('logo') || src.includes('avatar') || src.includes('nuxt') || src.endsWith('.svg')) return;
+      // 按尺寸过滤：至少宽或高 ≥ 100px
+      const w = img.naturalWidth || parseInt(img.getAttribute('width') || '0');
+      const h = img.naturalHeight || parseInt(img.getAttribute('height') || '0');
+      if (w > 0 && h > 0 && w < 100 && h < 100) return;
+      images.push(src);
     });
 
     return { title, paragraphs, images: images.slice(0, 10) };
