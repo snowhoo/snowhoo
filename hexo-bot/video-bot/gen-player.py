@@ -493,7 +493,9 @@ function loadIndex() {
   });
   document.getElementById('tvboxFooter').innerHTML =
     '<span>\u6570\u636e\u6e90 ' + names.length + '</span><span>\u603b\u5730\u5740 ' + ta + '</span><span>\u53ef\u64ad\u653e ' + pa + '</span>';
-  setEmpty('\u2705 \u5df2\u52a0\u8f7d ' + names.length + ' \u4e2a\u6570\u636e\u6e90', '\u8bf7\u4ece\u4e0b\u62c9\u83dc\u5355\u9009\u62e9');
+  // 默认选中第一个数据源
+  sel.value = names[0];
+  switchSource();
 }
 
 /* ===== 切换数据源 ===== */
