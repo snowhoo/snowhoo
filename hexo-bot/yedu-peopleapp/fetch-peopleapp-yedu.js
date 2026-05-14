@@ -148,24 +148,23 @@ async function extractArticle(page) {
       }
     }
 
-    // 找图片（过滤掉小图标、logo、头像、跟踪像素等）
+    // 找图片：只保留文章正文配图
     const images = [];
     const seenUrls = new Set();
     document.querySelectorAll('img').forEach(img => {
       const src = img.getAttribute('data-src') || img.src || '';
       if (!src || src.startsWith('data:')) return;
-      // 去重
       if (seenUrls.has(src)) return;
       seenUrls.add(src);
-      // 按路径过滤
-      if (/icon|logo|avatar|nuxt|user_app|user_avatar|show_type/.test(src)) return;
+      // 过滤路径
+      if (/icon|logo|avatar|nuxt|user_app|user_avatar|show_type|sjbj-|image\/display\//.test(src)) return;
       if (src.endsWith('.svg')) return;
-      // 按域名过滤（统计/跟踪像素）
+      // 过滤跟踪像素
       if (/cnzz|alicdn|retcode|arms-/.test(src)) return;
-      // 按尺寸过滤：宽高都小于 150px 的跳过
+      // 只保留 ≥ 200px 的图片
       const w = img.naturalWidth || parseInt(img.getAttribute('width') || '0');
       const h = img.naturalHeight || parseInt(img.getAttribute('height') || '0');
-      if (w > 0 && h > 0 && w < 150 && h < 150) return;
+      if (w > 0 && h > 0 && w < 200 && h < 200) return;
       images.push(src);
     });
 
