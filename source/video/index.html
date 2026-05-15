@@ -800,15 +800,18 @@ function render() {
 
   // 分页：页文件导航
   var pg = '';
-  if (!currentSearchMode && currentPrefix && sourceMeta[currentPrefix]) {
-    var pc = sourceMeta[currentPrefix].page_count || 1;
-    pg += '<button onclick="goPage(1)"' + (currentFilePage<=1?' disabled':'') + '>«</button>';
-    pg += '<button onclick="goPage(' + (currentFilePage-1) + ')"' + (currentFilePage<=1?' disabled':'') + '>‹</button>';
-    var startP = Math.max(1, currentFilePage-2), endP = Math.min(pc, currentFilePage+2);
-    for (var pi=startP; pi<=endP; pi++)
-      pg += '<button class="' + (pi===currentFilePage?'active':'') + '" onclick="goPage(' + pi + ')">' + pi + '</button>';
-    pg += '<button onclick="goPage(' + (currentFilePage+1) + ')"' + (currentFilePage>=pc?' disabled':'') + '>›</button>';
-    pg += '<button onclick="goPage(' + pc + ')"' + (currentFilePage>=pc?' disabled':'') + '>»</button>';
+  var pageCount = (currentSearchMode ? Math.ceil(currentFiltered.length / PAGE_SIZE) || 1 : (sourceMeta[currentPrefix] && sourceMeta[currentPrefix].page_count) || 1);
+  if (pageCount > 1 || currentSearchMode) {
+    pg += '<button onclick="go(1)"' + (currentSearchMode ? (currentPage<=1?' disabled':'') : (currentFilePage<=1?' disabled':'')) + '>«</button>';
+    pg += '<button onclick="go(' + (currentSearchMode ? currentPage-1 : currentFilePage-1) + ')"' + (currentSearchMode ? (currentPage<=1?' disabled':'') : (currentFilePage<=1?' disabled':'')) + '>‹</button>';
+    var startP = Math.max(1, (currentSearchMode ? currentPage : currentFilePage) - 2);
+    var endP = Math.min(pageCount, (currentSearchMode ? currentPage : currentFilePage) + 2);
+    for (var pi=startP; pi<=endP; pi++) {
+      var active = pi === (currentSearchMode ? currentPage : currentFilePage);
+      pg += '<button class="' + (active ? 'active' : '') + '" onclick="go(' + pi + ')">' + pi + '</button>';
+    }
+    pg += '<button onclick="go(' + (currentSearchMode ? currentPage+1 : currentFilePage+1) + ')"' + (currentSearchMode ? (currentPage>=pageCount?' disabled':'') : (currentFilePage>=pageCount?' disabled':'')) + '>›</button>';
+    pg += '<button onclick="go(' + pageCount + ')"' + (currentSearchMode ? (currentPage>=pageCount?' disabled':'') : (currentFilePage>=pageCount?' disabled':'')) + '>»</button>';
   }
   document.getElementById('pagination').innerHTML = pg;
 }

@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 title TVBox Full Crawl
 
 set "BOT_DIR=%~dp0"
@@ -28,6 +29,55 @@ if %ERRORLEVEL% NEQ 0 (
     echo [%DATE% %TIME%] CRAWL DONE >> "%LOG%"
 )
 
+echo ========================================
+echo Copying data files to Hexo source...
+echo ========================================
+
+set "DATA_SRC=%BOT_DIR%playable\data"
+set "DATA_DST=%HEXO_DIR%\source\video\data"
+
+REM Clear target directory
+if exist "%DATA_DST%" (
+    echo Clearing target: %DATA_DST%
+    rd /s /q "%DATA_DST%"
+)
+mkdir "%DATA_DST%"
+
+REM Copy all files
+echo Copying from %DATA_SRC% to %DATA_DST%
+xcopy "%DATA_SRC%\*" "%DATA_DST%\" /Y /Q >nul 2>&1
+
+REM Verify: check count and non-zero size
+set /a FILES_OK=0
+set /a FILES_FAIL=0
+for %%F in ("%DATA_SRC%\*.*") do (
+    set "SRC=%%F"
+    set "DST=%DATA_DST%\%%~nxF"
+    if exist "!DST!" (
+        if %%~zF gtr 0 (
+            set /a FILES_OK+=1
+        ) else (
+            echo [WARN] Zero-size file: %%~nxF
+            set /a FILES_FAIL+=1
+        )
+    ) else (
+        echo [FAIL] Missing: %%~nxF
+        set /a FILES_FAIL+=1
+    )
+)
+echo   Verified: !FILES_OK! files OK, !FILES_FAIL! failed
+
+if !FILES_FAIL! gtr 0 (
+    echo [%DATE% %TIME%] COPY VERIFICATION FAILED >> "%LOG%"
+    echo ========================================
+    echo WARNING: File verification failed!
+    echo ========================================
+    pause
+) else (
+    echo [%DATE% %TIME%] Copy verified OK >> "%LOG%"
+)
+
+REM Push to source branch
 cd /d "%HEXO_DIR%"
 
 git diff --quiet -- "source/video"
@@ -50,3 +100,10 @@ echo [%DATE% %TIME%] ======== DONE ======== >> "%LOG%"
 echo ========================================
 echo Done! Log: %LOG%
 echo ========================================
+
+REM Clear source data directory after successful copy
+if !FILES_FAIL! EQU 0 (
+    echo Cleaning source data directory...
+    del /q "%DATA_SRC%\*.*" 2>nul
+    echo [%DATE% %TIME%] Source data cleaned >> "%LOG%"
+)

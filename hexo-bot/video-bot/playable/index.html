@@ -431,7 +431,7 @@
   <select id="sourceSelect" onchange="switchSource()">
     <option value="">— 选择数据源 —</option>
   </select>
-  <input type="text" id="searchInput" placeholder="全局搜索影片..." oninput="doSearch()">
+  <input type="text" id="searchInput" placeholder="全局搜索影片...">
   <button onclick="doSearch()">搜索</button>
 </div>
 <div class="player-box">
@@ -439,7 +439,7 @@
 </div>
 <div id="status" class="status-bar">
   <div class="cat-bar" id="catBar"></div>
-  <span id="statusText">⏹ 选择一个数据源</span>
+  <span id="statusText">[STOP] 选择一个数据源</span>
   <button id="nextEpBtn" class="next-ep-btn" onclick="playNext()">下集</button>
 </div>
 <div id="content"></div>
@@ -451,8 +451,12 @@ var PAGE_SIZE = 12;
 var currentData = null, currentPage = 1, currentFiltered = [], currentHls = null;
 var currentEpNext = null;
 var currentCategory = '';
-var sourceIndex = []; // 索引数据 [{name, file, total, playable}]
-var loadedSources = {}; // 已加载的分片缓存 {key: data}
+var sourceIndex = [];     // 索引数据 [{name, prefix, page_count, file, total, playable}]
+var loadedSources = {};   // 已加载的分片缓存 {key: data}
+var sourceMeta = {};      // {prefix: {page_count, name, total, playable, total_episodes}}
+var currentPrefix = '';
+var currentFilePage = 1;
+var currentSearchMode = false;
 
 /* ===== 主题自动适配 ===== */
 (function(){
@@ -477,9 +481,15 @@ function loadData(file, callback) {
   var key = (file === 'index.js') ? '_TVBOX_INDEX' : '_TVBOX_SITE_DATA';
   var src = './data/' + file;
   var s = document.createElement('script');
-  var timer = setTimeout(function() { callback(window[key] || null); }, 300);
+  var timer = setTimeout(function() { callback(null); }, 3000);
   s.onerror = function() { clearTimeout(timer); callback(null); };
-  s.onload = function() { clearTimeout(timer); callback(window[key] || null); };
+  s.onload = function() {
+    clearTimeout(timer);
+    // 用完立即删除，避免后续加载同名 key 残留
+    var data = window[key];
+    delete window[key];
+    callback(data || null);
+  };
   s.src = src;
   document.head.appendChild(s);
 }
@@ -501,53 +511,69 @@ function loadIndex() {
       ta += item.total||0;
       pa += item.playable||0;
       var o = document.createElement('option');
-      o.value = item.file;
-      o.textContent = item.name + ' (' + (item.playable||0) + '/' + (item.total||0) + ')';
+      o.value = item.prefix;
+      o.textContent = item.name;
       sel.appendChild(o);
+      // 缓存元数据供翻页 & 搜索
+      sourceMeta[item.prefix] = {
+        page_count: item.page_count || 1,
+        name: item.name,
+        total: item.total,
+        playable: item.playable,
+        total_episodes: item.total_episodes
+      };
     });
     document.getElementById('tvboxFooter').innerHTML =
       '<span>\u6570\u636e\u6e90 ' + sourceIndex.length + '</span><span>\u603b\u5730\u5740 ' + ta + '</span><span>\u53ef\u64ad\u653e ' + pa + '</span>';
-    sel.value = sourceIndex[0].file;
+    sel.value = sourceIndex[0].prefix;
     switchSource();
   });
 }
 
-/* ===== 切换数据源 ===== */
+/* ===== 切源 / 翻页核心 ===== */
 function switchSource() {
-  var file = document.getElementById('sourceSelect').value;
-  var content = document.getElementById('content');
-  var pagination = document.getElementById('pagination');
-  if (!file) {
-    content.innerHTML = '';
-    pagination.innerHTML = '';
+  var prefix = document.getElementById('sourceSelect').value;
+  if (!prefix) {
+    document.getElementById('content').innerHTML = '';
+    document.getElementById('pagination').innerHTML = '';
     setStatus('\u23f9 \u9009\u62e9\u6570\u636e\u6e90');
     return;
   }
+  currentPrefix = prefix;
+  currentFilePage = 1;
+  currentPage = 1;
+  currentSearchMode = false;
+  document.getElementById('searchInput').value = '';
+  loadPageFile(prefix, 1);
+}
 
-  // 已缓存则直接使用
-  if (loadedSources[file]) {
-    useSourceData(loadedSources[file], file);
+function loadPageFile(prefix, pageNum) {
+  var fname = prefix + '-' + String(pageNum).padStart(2, '0') + '.js';
+
+  if (loadedSources[fname]) {
+    useSourceData(loadedSources[fname], fname, pageNum);
     return;
   }
 
-  // 加载中状态
-  content.innerHTML = '<div class="empty-state"><div class="icon">\u26cf</div><div class="desc">\u52a0\u8f7d\u4e2d...</div></div>';
-  pagination.innerHTML = '';
+  document.getElementById('content').innerHTML = '<div class="empty-state"><div class="icon">\u26cf</div><div class="desc">\u52a0\u8f7d\u4e2d...</div></div>';
+  document.getElementById('pagination').innerHTML = '';
 
-  loadData(file, function(data) {
+  loadData(fname, function(data) {
     if (!data) {
-      content.innerHTML = '';
-      pagination.innerHTML = '';
-      setStatus('\u274c \u6570\u636e\u52a0\u8f7d\u5931\u8d25: ' + file);
+      document.getElementById('content').innerHTML = '';
+      document.getElementById('pagination').innerHTML = '';
+      setStatus('\u274c \u6570\u636e\u52a0\u8f7d\u5931\u8d25: ' + fname);
       return;
     }
-    loadedSources[file] = data;
-    useSourceData(data, file);
+    loadedSources[fname] = data;
+    useSourceData(data, fname, pageNum);
   });
 }
 
-function useSourceData(data, file) {
+function useSourceData(data, file, pageNum) {
   currentData = data;
+  currentFilePage = pageNum || 1;
+  currentPage = 1;
   if (!currentData || !currentData.videos) {
     document.getElementById('content').innerHTML = '';
     document.getElementById('pagination').innerHTML = '';
@@ -556,98 +582,63 @@ function useSourceData(data, file) {
   }
   currentCategory = '';
   buildCatBar();
-  setStatus('\ud83d\udce1 ' + currentData.name + ' \u2014 ' + currentData.total_videos + '\u4e2a\u89c6\u9891\uff0c' + currentData.total_episodes + '\u6761\u5730\u5740');
-  currentPage = 1;
-  // 如果搜索框有内容则全局搜索，否则显示当前源
-  var q = document.getElementById('searchInput').value.trim();
-  if (q) { doSearch(); }
-  else { currentFiltered = tagWithSource(currentData.videos, file, currentData.name); render(); }
+  var meta = sourceMeta[currentPrefix];
+  var vidCount = (currentData.videos||[]).length;
+  setStatus('\ud83d\udce1 ' + currentData.name + ' \u2014 \u7b2c' + currentFilePage + '\u9875(' + vidCount + '\u4e2a) \u2502 \u5171' + (meta?meta.total:'?') + '\u4e2a\u89c6\u9891,' + (meta?meta.playable:'?') + '\u53ef\u64ad');
+
+  currentFiltered = tagWithSource(currentData.videos, file, currentData.name);
+  render();
 }
 
 /* ===== 全局搜索 ===== */
 function doSearch() {
   var q = document.getElementById('searchInput').value.toLowerCase().trim();
+  currentSearchMode = !!q;
+
   if (!q) {
-    // 无关键词：显示当前源所有视频（含分类过滤）
-    if (currentData) {
-      currentFiltered = tagWithSource(currentData.videos, document.getElementById('sourceSelect').value, currentData.name);
-      if (currentCategory) {
-        currentFiltered = currentFiltered.filter(function(v){ return (v.vod_class||'').split(',').some(function(s){return s.trim()===currentCategory}); });
-      }
-      setStatus('\ud83d\udce1 ' + currentData.name + (currentCategory?' \u00b7 '+currentCategory:''));
-    } else {
-      currentFiltered = [];
-      setStatus('\u23f9 \u8bf7\u9009\u62e9\u6570\u636e\u6e90');
-    }
+    // 退出搜索：回到当前源当前页
+    currentSearchMode = false;
+    currentCategory = '';
     currentPage = 1;
-    render();
+    loadPageFile(currentPrefix, currentFilePage);
     return;
   }
-  // 全局搜索：按需加载各分片文件，汇聚结果
-  var searchingCount = sourceIndex.length;
-  var results = [];
-  var done = 0;
-  var statusTimer = null;
 
-  function updateStatus() {
-    setStatus('\ud83d\udd0d \u5168\u5c38\u641c\u7d22: \u201c' + q + '\u201d \u2014 \u52a0\u8f7d\u4e2d... (' + done + '/' + sourceIndex.length + ')');
-  }
-
-  function finish() {
-    done++;
-    if (done < searchingCount) {
-      updateStatus();
-      return;
-    }
+  // 只搜索当前已加载的页面文件（单页12个视频）
+  if (currentData && currentData.videos) {
+    var results = [];
+    currentData.videos.forEach(function(v) {
+      var match = (v.vod_name||'').toLowerCase().includes(q);
+      if (!match) {
+        match = (v.episodes||[]).some(function(e){ return (e.title||'').toLowerCase().includes(q); });
+      }
+      if (match) {
+        results.push({
+          sourceKey: currentPrefix + '-' + String(currentFilePage).padStart(2,'0') + '.js',
+          sourceName: currentData.name,
+          vod_name: v.vod_name,
+          vod_pic: v.vod_pic,
+          episodes: v.episodes,
+          ep_count: v.ep_count,
+          playable_count: v.playable_count,
+          vod_class: v.vod_class,
+        });
+      }
+    });
     // 过滤分类
     if (currentCategory) {
       results = results.filter(function(v){ return (v.vod_class||'').split(',').some(function(s){return s.trim()===currentCategory}); });
     }
     currentFiltered = results;
-    setStatus('\ud83d\udd0d \u5168\u5c38\u641c\u7d22: \u201c' + q + '\u201d \u2014 ' + results.length + '\u4e2a\u7ed3\u679c');
+    setStatus('\ud83d\udd0d \u5f53\u524d\u9875\u641c\u7d22: \u201c' + q + '\u201d \u2014 ' + results.length + '\u4e2a\u7ed3\u679c  （\u63d0\u793a: \u4ec5\u641c\u7d22\u5f53\u524d\u52a0\u8f7d\u7684\u9875\uff09');
     currentPage = 1;
     render();
+    return;
   }
-
-  updateStatus();
-  sourceIndex.forEach(function(item) {
-    // 已有缓存直接用
-    if (loadedSources[item.file]) {
-      searchInSource(loadedSources[item.file], item.file, q, results);
-      finish();
-      return;
-    }
-    loadData(item.file, function(data) {
-      if (data) {
-        loadedSources[item.file] = data;
-        searchInSource(data, item.file, q, results);
-      }
-      finish();
-    });
-  });
+  setStatus('\u274c \u8bf7\u5148\u9009\u62e9\u6570\u636e\u6e90');
 }
 
-function searchInSource(src, file, q, results) {
-  if (!src || !src.videos) return;
-  src.videos.forEach(function(v) {
-    var match = (v.vod_name||'').toLowerCase().includes(q);
-    if (!match) {
-      match = (v.episodes||[]).some(function(e){ return (e.title||'').toLowerCase().includes(q); });
-    }
-    if (match) {
-      results.push({
-        sourceKey: file,
-        sourceName: src.name,
-        vod_name: v.vod_name,
-        vod_pic: v.vod_pic,
-        episodes: v.episodes,
-        ep_count: v.ep_count,
-        playable_count: v.playable_count,
-        vod_class: v.vod_class,
-      });
-    }
-  });
-}
+
 
 function tagWithSource(videos, key, name) {
   return (videos||[]).map(function(v) {
@@ -657,23 +648,36 @@ function tagWithSource(videos, key, name) {
   });
 }
 
-/* ===== 分类下拉 ===== */
+/* ===== 分类下拉（优先用 index.js 预计算数据，兼容旧数据回退扫描） ===== */
 function buildCatBar() {
-  if (!currentData) return;
-  var cats = {}, bars = document.getElementById('catBar');
-  (currentData.videos||[]).forEach(function(v) {
-    var cv = (v.vod_class || '').trim();
-    if (!cv) {
-      cats['\u672a\u5206\u7c7b'] = (cats['\u672a\u5206\u7c7b'] || 0) + 1;
-    } else {
-      cv.split(',').forEach(function(c) {
-        c = c.trim();
-        if (c) cats[c] = (cats[c] || 0) + 1;
-      });
-    }
-  });
+  var meta = sourceMeta[currentPrefix];
+  var cats = {}, totalVideos = 0;
+
+  if (meta && meta.categories && Object.keys(meta.categories).length > 0) {
+    // 新数据：用 index.js 预计算的全量统计
+    cats = meta.categories;
+    totalVideos = meta.total || 0;
+  } else if (currentData && currentData.videos) {
+    // 旧数据兼容：扫描当前页（数据量小，仅限当前页12个）
+    totalVideos = currentData.videos.length;
+    (currentData.videos||[]).forEach(function(v) {
+      var cv = (v.vod_class || '').trim();
+      if (!cv) {
+        cats['未分类'] = (cats['未分类'] || 0) + 1;
+      } else {
+        cv.split(',').forEach(function(c) {
+          c = c.trim();
+          if (c) cats[c] = (cats[c] || 0) + 1;
+        });
+      }
+    });
+  } else {
+    return;
+  }
+
+  var bars = document.getElementById('catBar');
   var h = '<select onchange="filterCat(this)">';
-  h += '<option value="">\u5168\u90e8 (' + (currentData.total_videos>99?'99+':currentData.total_videos) + ')</option>';
+  h += '<option value="">全部 (' + (totalVideos>99?'99+':totalVideos) + ')</option>';
   Object.keys(cats).sort(function(a,b){return cats[b]-cats[a];}).forEach(function(c) {
     var cnt = cats[c] > 99 ? '99+' : cats[c];
     h += '<option value="' + c.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '">' + c + ' (' + cnt + ')</option>';
@@ -684,7 +688,64 @@ function buildCatBar() {
 function filterCat(sel) {
   currentCategory = sel.value;
   currentPage = 1;
-  doSearch();
+  if (!currentCategory) {
+    // 清空分类：回到正常翻页模式
+    currentSearchMode = false;
+    loadPageFile(currentPrefix, currentFilePage);
+    return;
+  }
+  // 选分类：遍历全部页文件汇总
+  currentSearchMode = true;
+  filterByCategory();
+}
+
+function filterByCategory() {
+  var meta = sourceMeta[currentPrefix];
+  var pc = meta ? meta.page_count : 1;
+  var results = [], loaded = 0;
+  var cat = currentCategory;
+  setStatus('[FILTER] ' + cat + ' — loading... (0/' + pc + ')');
+  function update() { setStatus('[FILTER] ' + cat + ' — (' + loaded + '/' + pc + ')'); }
+  function done() {
+    loaded++;
+    update();
+    if (loaded < pc) return;
+    currentFiltered = results;
+    setStatus('[FILTER] ' + cat + ' — ' + results.length + ' results');
+    currentPage = 1;
+    render();
+  }
+  for (var p = 1; p <= pc; p++) {
+    (function(pn){
+      var fn = currentPrefix + '-' + String(pn).padStart(2, '0') + '.js';
+      if (loadedSources[fn]) { collectCat(loadedSources[fn], cat, results); done(); return; }
+      loadData(fn, function(data) {
+        if (data) loadedSources[fn] = data;
+        if (data) collectCat(data, cat, results);
+        done();
+      });
+    })(p);
+  }
+}
+
+function collectCat(src, cat, results) {
+  if (!src || !src.videos) return;
+  src.videos.forEach(function(v) {
+    var classes = (v.vod_class || '').split(',');
+    var match = classes.some(function(s){ return s.trim() === cat; });
+    if (match) {
+      results.push({
+        sourceKey: currentPrefix,
+        sourceName: src.name,
+        vod_name: v.vod_name,
+        vod_pic: v.vod_pic,
+        episodes: v.episodes,
+        ep_count: v.ep_count,
+        playable_count: v.playable_count,
+        vod_class: v.vod_class,
+      });
+    }
+  });
 }
 
 /* ===== 渲染卡片 ===== */
@@ -737,20 +798,44 @@ function render() {
 
   document.getElementById('content').innerHTML = h;
 
-  // 分页
+  // 分页：页文件导航
   var pg = '';
-  pg += '<button onclick="go(1)"' + (currentPage<=1?' disabled':'') + '>\u00ab</button>';
-  pg += '<button onclick="go(' + (currentPage-1) + ')"' + (currentPage<=1?' disabled':'') + '>\u2039</button>';
-  var startP = Math.max(1, currentPage-2), endP = Math.min(pages, currentPage+2);
-  for (var pi=startP; pi<=endP; pi++)
-    pg += '<button class="' + (pi===currentPage?'active':'') + '" onclick="go(' + pi + ')">' + pi + '</button>';
-  pg += '<button onclick="go(' + (currentPage+1) + ')"' + (currentPage>=pages?' disabled':'') + '>\u203a</button>';
-  pg += '<button onclick="go(' + pages + ')"' + (currentPage>=pages?' disabled':'') + '>\u00bb</button>';
+  if (!currentSearchMode && currentPrefix && sourceMeta[currentPrefix]) {
+    var pc = sourceMeta[currentPrefix].page_count || 1;
+    pg += '<button onclick="goPage(1)"' + (currentFilePage<=1?' disabled':'') + '>«</button>';
+    pg += '<button onclick="goPage(' + (currentFilePage-1) + ')"' + (currentFilePage<=1?' disabled':'') + '>‹</button>';
+    var startP = Math.max(1, currentFilePage-2), endP = Math.min(pc, currentFilePage+2);
+    for (var pi=startP; pi<=endP; pi++)
+      pg += '<button class="' + (pi===currentFilePage?'active':'') + '" onclick="goPage(' + pi + ')">' + pi + '</button>';
+    pg += '<button onclick="goPage(' + (currentFilePage+1) + ')"' + (currentFilePage>=pc?' disabled':'') + '>›</button>';
+    pg += '<button onclick="goPage(' + pc + ')"' + (currentFilePage>=pc?' disabled':'') + '>»</button>';
+  }
   document.getElementById('pagination').innerHTML = pg;
 }
 
 /* ===== 工具函数 ===== */
-function go(p){currentPage=p;render();}
+function goPage(n) {
+  if (!currentPrefix || n < 1) return;
+  var meta = sourceMeta[currentPrefix];
+  var pc = meta ? meta.page_count : 1;
+  if (n > pc) n = pc;
+  if (n !== currentFilePage) { loadPageFile(currentPrefix, n); return; }
+  currentPage = n;
+  render();
+}
+function go(p){
+  if (currentSearchMode) {
+    // 搜索/分类筛选模式：内存分页
+    var total = currentFiltered.length;
+    var maxPages = Math.ceil(total / PAGE_SIZE) || 1;
+    if (p < 1) p = 1;
+    if (p > maxPages) p = maxPages;
+    currentPage = p;
+    render();
+    return;
+  }
+  goPage(p);
+}
 
 function toggleEpisodes(el, id){
   var panel = document.getElementById(id);

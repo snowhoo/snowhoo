@@ -145,7 +145,7 @@ def collect_cmsv10_sites():
     if config and 'sources' in config:
         source_urls = config['sources']
         crawler_config = config.get('crawler', {})
-        print(f'📋 从 config.json 读取 {len(source_urls)} 个数据源')
+        print(f'[SRC] 从 config.json 读取 {len(source_urls)} 个数据源')
     else:
         # 回退：从 parsed/ aggregated/ 目录读取已有数据
         source_urls = []
@@ -287,63 +287,67 @@ def fetch_cmsv10_detail(api, vod_id):
         return None
 
 
-def crawl_site(site, test_mode=False):
-    """爬取单个站点的所有播放地址"""
+def crawl_site(site, data_dir=None):
+    """爬取单个站点：每页12个视频，固定40页，逐页写文件释放内存"""
+    import re
+
     api = site['api']
     name = site['name']
+    source = site['source']
+
+    MAX_PAGES = 40
+    VIDEOS_PER_PAGE = 12
+
+    # 生成安全文件名前缀
+    safe_prefix = re.sub(r'[^\w\u4e00-\u9fff]', '_', name).strip('_')[:50]
+
+    total_videos = 0
+    total_episodes = 0
+    playable_count = 0
+    pages_written = 0
+    category_counts = {}  # {分类名: 视频数}
 
     result = {
         'name': name,
         'api': api,
-        'source': site['source'],
+        'source': source,
+        'prefix': safe_prefix,
         'total_videos': 0,
         'total_episodes': 0,
         'playable_episodes': 0,
+        'pages_written': 0,
         'videos': [],
         'error': None,
     }
 
-    # Step 1: 获取首页列表
+    # 测试首页连通性
     home = fetch_cmsv10_list(api)
     if not home:
         result['error'] = '首页接口无响应'
         return result
 
-    items = home.get('list', [])
-    if not items:
-        result['error'] = '首页列表为空'
-        return result
+    print(f'  [分页] {name}: 固定 {MAX_PAGES} 页, 每页 {VIDEOS_PER_PAGE} 个视频', flush=True)
 
-    # page 字段可能是字符串或对象
-    page_info = home.get('page', {})
-    if isinstance(page_info, dict):
-        total_pages = int(page_info.get('pagecount', 1) or 1)
-    else:
-        # page 是数字或字符串，pagecount在响应根层级
-        total_pages = int(home.get('pagecount', 1) or 1)
+    for pg in range(1, MAX_PAGES + 1):
+        page_data = fetch_cmsv10_list(api, page=pg)
+        if not page_data:
+            print(f'    [{name}] 页 {pg}: 无数据，写空文件', flush=True)
+            save_site_page(name, api, source, [], pg, MAX_PAGES, data_dir, safe_prefix)
+            pages_written += 1
+            continue
 
-    # 安全防护：限制最大分页
-    config = load_config()
-    max_pages = (config or {}).get('crawler', {}).get('max_pages_per_site', 20) or 20
-    if total_pages > max_pages:
-        print(f'  ⚠ {name}: pagecount={total_pages}>MAX={max_pages}，已截断', flush=True)
-        total_pages = max_pages
+        items = page_data.get('list', [])
+        if not items:
+            print(f'    [{name}] 页 {pg}: 列表为空，写空文件', flush=True)
+            save_site_page(name, api, source, [], pg, MAX_PAGES, data_dir, safe_prefix)
+            pages_written += 1
+            continue
 
-    print(f'  [分页] {name}: {total_pages} 页', flush=True)
-
-    # Step 2: 遍历分页获取详情
-    videos_added = 0
-    for pg in range(1, total_pages + 1):
-        print(f'    [页] {pg}/{total_pages}...', flush=True)
-        if pg > 1:
-            page_data = fetch_cmsv10_list(api, page=pg)
-            if not page_data:
-                break
-            items = page_data.get('list', [])
-            if not items:
-                break
-
+        # 收集本页视频（最多 VIDEOS_PER_PAGE 个）
+        page_videos = []
         for vod in items:
+            if len(page_videos) >= VIDEOS_PER_PAGE:
+                break
             vod_id = vod.get('vod_id', '')
             if not vod_id:
                 continue
@@ -357,25 +361,52 @@ def crawl_site(site, test_mode=False):
             play_info = extract_play_urls(play_url, play_from)
 
             if play_info:
-                result['videos'].append({
-                    'vod_id': vod_id,
+                # 累加分类统计
+                raw_class = detail.get('vod_class', '') or ''
+                for part in [c.strip() for c in raw_class.split(',') if c.strip()]:
+                    category_counts[part] = category_counts.get(part, 0) + 1
+
+                page_videos.append({
                     'name': detail.get('vod_name', ''),
                     'pic': detail.get('vod_pic', ''),
                     'remarks': detail.get('vod_remarks', ''),
                     'vod_class': detail.get('vod_class', ''),
                     'play_list': play_info,
                 })
-                result['total_episodes'] += len(play_info)
-                result['playable_episodes'] += sum(1 for p in play_info if is_playable(p['url']))
-                videos_added += 1
-                if videos_added % 10 == 0:
-                    print(f'      [视频] {name}: {videos_added} 个...', flush=True)
 
             time.sleep(0.1)
 
-    result['total_videos'] = len(result['videos'])
+        if not page_videos:
+            print(f'    [{name}] 页 {pg}: 无有效视频', flush=True)
+            continue
+
+        # 统计累积
+        total_videos += len(page_videos)
+        for v in page_videos:
+            total_episodes += len(v['play_list'])
+            playable_count += sum(1 for p in v['play_list'] if is_playable(p['url']))
+
+        # 立即写文件并释放内存
+        fname = save_site_page(name, api, source, page_videos, pg, MAX_PAGES, data_dir, safe_prefix)
+        pages_written += 1
+
+        # 释放内存
+        del page_videos
+
+        if pages_written % 10 == 0:
+            print(f'    [{name}] 页 {pg}/{MAX_PAGES}: 已写 {pages_written} 页, 累计 {total_videos} 个视频', flush=True)
+
+        time.sleep(0.3)  # 页面间限速
+
+    result['total_videos'] = total_videos
+    result['total_episodes'] = total_episodes
+    result['playable_episodes'] = playable_count
+    result['pages_written'] = pages_written
+    result['category_counts'] = category_counts
+
     if result['total_videos'] == 0:
         result['error'] = '未找到可播放视频'
+
     return result
 
 
@@ -404,7 +435,7 @@ def generate_html(sites_data):
 
     rows = []
     for group_name, items in site_groups.items():
-        rows.append(f'<div class="group"><h3>📡 {group_name} ({len(items)})</h3>')
+        rows.append(f'<div class="group"><h3>[SITE] {group_name} ({len(items)})</h3>')
         for item in items:
             badge = '<span class="badge ok">可播放</span>' if item['playable'] else '<span class="badge no">需验证</span>'
             label = f"{item['video_name']} - {item['title']}" if item['title'] else item['video_name']
@@ -416,62 +447,45 @@ def generate_html(sites_data):
   </div>''')
         rows.append('</div>')
 
-def save_site_data(site_result, data_dir):
-    """将单个站点的数据保存为 JSON 文件"""
+def save_site_page(site_name, api, source, videos, page_num, total_pages, data_dir, safe_prefix):
+    """将单页视频数据保存为 JS 文件（每页独立文件，允许空页）"""
     import re
-    if site_result.get('error') or not site_result.get('videos'):
-        return None
 
-    safe_name = re.sub(r'[^\w\u4e00-\u9fff]', '_', site_result['name'])
-    safe_name = safe_name.strip('_')[:50]
-    filename = f'{safe_name}.json'
+    filename = f'{safe_prefix}-{page_num:02d}.js'
     filepath = os.path.join(data_dir, filename)
 
-    episodes = []
-    for v in site_result['videos']:
+    page_videos = []
+    for v in videos:
         v_eps = []
         for ep in v['play_list']:
-            e = {
+            v_eps.append({
                 'title': ep['title'],
                 'url': ep['url'],
                 'from': ep['from'],
                 'playable': is_playable(ep['url']),
-            }
-            episodes.append(e)
-            v_eps.append(e)
-        v['_episodes'] = v_eps  # 保留层级结构
+            })
 
-    data = {
-        'name': site_result['name'],
-        'api': site_result['api'],
-        'source': site_result['source'],
-        'total_videos': len(site_result['videos']),
-        'total_episodes': len(episodes),
-        'playable_count': sum(1 for e in episodes if e['playable']),
-        # 层级结构：视频 → 剧集
-        'videos': [{
+        page_videos.append({
             'vod_name': v['name'],
             'vod_pic': v.get('pic', ''),
             'remarks': v.get('remarks', ''),
             'vod_class': v.get('vod_class', ''),
-            'ep_count': len(v['_episodes']),
-            'playable_count': sum(1 for e in v['_episodes'] if e['playable']),
-            'episodes': v['_episodes'],
-        } for v in site_result['videos']],
+            'ep_count': len(v_eps),
+            'playable_count': sum(1 for e in v_eps if e['playable']),
+            'episodes': v_eps,
+        })
+
+    data = {
+        'name': site_name,
+        'api': api,
+        'source': source,
+        'videos': page_videos,
     }
 
-    # 只生成 .js 文件，不输出 .json
-    js_filepath = filepath.replace('.json', '.js')
-    with open(js_filepath, 'w', encoding='utf-8') as f:
+    with open(filepath, 'w', encoding='utf-8') as f:
         f.write(f'window._TVBOX_SITE_DATA = {json.dumps(data, ensure_ascii=False)};')
 
-    return {
-        'name': site_result['name'],
-        'file': filename.replace('.json', '.js'),  # .js 后缀供前端使用
-        'total': data['total_videos'],  # 影片数
-        'playable': data['playable_count'],  # 可播放集数
-        'total_episodes': data['total_episodes'],  # 总集数（用于 footer 汇总）
-    }
+    return filename
 
 
 def generate_player_html():
@@ -519,7 +533,7 @@ h1{color:#ff6b35;font-size:22px;margin-bottom:15px}
 .loading{text-align:center;padding:40px;color:#78909c;font-size:16px}
 .empty{text-align:center;padding:40px;color:#78909c}
 </style></head><body>
-<h1>📺 TVBox 播放器</h1>
+<h1>? TVBox 播放器</h1>
 <div class="stats" id="stats"></div>
 <div class="toolbar">
   <select id="sourceSelect" onchange="switchSource()">
@@ -576,7 +590,7 @@ function switchSource() {
     return;
   }
   currentData = TVBOX_DATA[key];
-  document.getElementById('status').textContent = '📡 ' + currentData.name + ' - ' + currentData.total_videos + '个视频，' + currentData.total_episodes + '条地址';
+  document.getElementById('status').textContent = '[SITE] ' + currentData.name + ' - ' + currentData.total_videos + '个视频，' + currentData.total_episodes + '条地址';
   currentPage = 1;
   doSearch();
 }
@@ -700,11 +714,11 @@ def main():
 
     # 加载站点
     all_sites = collect_cmsv10_sites()
-    print(f'\n📡 发现 {len(all_sites)} 个 API 站点')
+    print(f'\n[SITE] 发现 {len(all_sites)} 个 API 站点')
 
     if specific_site:
         sites = [s for s in all_sites if specific_site.lower() in s['name'].lower() or specific_site.lower() in s['key'].lower()]
-        print(f'🔍 筛选 "{specific_site}": {len(sites)} 个')
+        print(f'[SEARCH] 筛选 "{specific_site}": {len(sites)} 个')
     else:
         sites = all_sites
 
@@ -712,33 +726,36 @@ def main():
         print('⚠️ 没有找到站点')
         return
 
-    # 并发爬取，每完成一个站立即写出 JS 并释放内存
+    # 并发爬取，每完成一页立即写出 JS 并释放内存
     site_stats = []
     data_dir = os.path.join(PLAYABLE_DIR, 'data')
+    if os.path.exists(data_dir):
+        import shutil
+        shutil.rmtree(data_dir)   # 清空旧数据
     os.makedirs(data_dir, exist_ok=True)
 
     def crawl_one(site):
         """供线程池调用的单站爬取函数"""
         name = site['name']
-        print(f'  📥 {name}... ', end='', flush=True)
-        result = crawl_site(site, test_mode)
-        # 立即写出 JS 文件
-        save_site_data(result, data_dir)
-        # 只保留统计信息，释放完整 videos 内存
+        print(f'  [CRAWL] {name}... ', flush=True)
+        result = crawl_site(site, data_dir)
+        # 记录统计，videos 已在 crawl_site 内逐页释放
         stats = {
             'name': result['name'],
             'api': result['api'],
+            'source': result['source'],
+            'prefix': result.get('prefix', ''),
             'total_videos': result['total_videos'],
             'total_episodes': result['total_episodes'],
             'playable_episodes': result['playable_episodes'],
+            'pages_written': result.get('pages_written', 0),
+            'category_counts': result.get('category_counts', {}),
             'error': result.get('error'),
         }
-        result['videos'] = []
-        del result
         if stats['error']:
             print(f'❌ {stats["error"]}')
         else:
-            print(f'✅ {stats["total_videos"]}个视频, {stats["playable_episodes"]}/{stats["total_episodes"]}个可播放')
+            print(f'✅ {stats["total_videos"]}个视频, {stats["playable_episodes"]}/{stats["total_episodes"]}个可播放, {stats["pages_written"]}页', flush=True)
         time.sleep(10)  # 站间限速，避免被封
         return stats
 
@@ -760,36 +777,23 @@ def main():
                 })
             time.sleep(0.5)  # 站间限速
 
-    # 输出
-    print('\n' + '=' * 60)
-    print('  生成输出...')
-
-    # 索引已在逐站写出，此处直接读取文件列表构建索引
+    # 生成 index.js（新格式，含 prefix + page_count）
     site_index = []
-    for fname in sorted(os.listdir(data_dir)):
-        if fname.endswith('.js') and fname != 'index.js':
-            fpath = os.path.join(data_dir, fname)
-            try:
-                with open(fpath, 'r', encoding='utf-8-sig') as f:
-                    content = f.read()
-                # 从 window._TVBOX_SITE_DATA = {...} 中提取 JSON
-                import re
-                m = re.search(r'window\._TVBOX_SITE_DATA\s*=\s*(\{.*\});?$', content, re.DOTALL)
-                if not m:
-                    continue
-                d = json.loads(m.group(1))
-                site_index.append({
-                    'name': d.get('name', fname),
-                    'api': d.get('api', ''),
-                    'file': fname,
-                    'total': d.get('total_videos', 0),  # 影片数
-                    'playable': d.get('playable_count', 0),  # 可播放集数
-                    'total_episodes': d.get('total_episodes', 0),  # 总集数
-                })
-            except Exception:
-                pass
+    for s in site_stats:
+        if s.get('error') or not s.get('prefix'):
+            continue
+        site_index.append({
+            'name': s['name'],
+            'api': s['api'],
+            'prefix': s['prefix'],
+            'page_count': s.get('pages_written', 0),
+            'file': f"{s['prefix']}-01.js",   # 前端默认加载第1页
+            'total': s['total_videos'],
+            'playable': s['playable_episodes'],
+            'total_episodes': s['total_episodes'],
+            'categories': s.get('category_counts', {}),
+        })
 
-    # 生成 index.js（替换 index.json）
     with open(os.path.join(data_dir, 'index.js'), 'w', encoding='utf-8') as f:
         f.write(f'window._TVBOX_INDEX = {json.dumps(site_index, ensure_ascii=False)};')
 
@@ -802,18 +806,21 @@ def main():
         'total_videos': sum(s['total_videos'] for s in site_stats),
         'total_episodes': sum(s['total_episodes'] for s in site_stats),
         'total_playable': sum(s['playable_episodes'] for s in site_stats),
-        'sites': [{'name': s['name'], 'api': s['api'], 'videos': s['total_videos'], 
+        'sites': [{'name': s['name'], 'api': s['api'],
+                    'videos': s['total_videos'],
                     'episodes': s['total_episodes'], 'playable': s['playable_episodes'],
+                    'pages': s.get('pages_written', 0),
                     'error': s.get('error')} for s in site_stats],
     }
+    os.makedirs(REPORT_DIR, exist_ok=True)
     with open(os.path.join(REPORT_DIR, 'crawl-report.json'), 'w', encoding='utf-8') as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
 
     print(f'  站点: {report["succeeded"]}/{report["total_sites"]} 成功')
     print(f'  视频: {report["total_videos"]} 个')
     print(f'  地址: {report["total_episodes"]} 条 ({report["total_playable"]} 可播放)')
-    print(f'  📁 data/ — {len(site_index)} 个站点数据文件')
-    print(f'  📋 report/crawl-report.json')
+    print(f'  [DIR] data/ — {len(site_index)} 个站点, 分页文件')
+    print(f'  [SRC] report/crawl-report.json')
     print('=' * 60)
 
 
