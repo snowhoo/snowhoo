@@ -439,7 +439,7 @@
 </div>
 <div id="status" class="status-bar">
   <div class="cat-bar" id="catBar"></div>
-  <span id="statusText">⏹ 选择一个数据源</span>
+  <span id="statusText">[STOP] 选择一个数据源</span>
   <button id="nextEpBtn" class="next-ep-btn" onclick="playNext()">下集</button>
 </div>
 <div id="content"></div>
@@ -648,23 +648,36 @@ function tagWithSource(videos, key, name) {
   });
 }
 
-/* ===== 分类下拉 ===== */
+/* ===== 分类下拉（优先用 index.js 预计算数据，兼容旧数据回退扫描） ===== */
 function buildCatBar() {
-  if (!currentData) return;
-  var cats = {}, bars = document.getElementById('catBar');
-  (currentData.videos||[]).forEach(function(v) {
-    var cv = (v.vod_class || '').trim();
-    if (!cv) {
-      cats['\u672a\u5206\u7c7b'] = (cats['\u672a\u5206\u7c7b'] || 0) + 1;
-    } else {
-      cv.split(',').forEach(function(c) {
-        c = c.trim();
-        if (c) cats[c] = (cats[c] || 0) + 1;
-      });
-    }
-  });
+  var meta = sourceMeta[currentPrefix];
+  var cats = {}, totalVideos = 0;
+
+  if (meta && meta.categories && Object.keys(meta.categories).length > 0) {
+    // 新数据：用 index.js 预计算的全量统计
+    cats = meta.categories;
+    totalVideos = meta.total || 0;
+  } else if (currentData && currentData.videos) {
+    // 旧数据兼容：扫描当前页（数据量小，仅限当前页12个）
+    totalVideos = currentData.videos.length;
+    (currentData.videos||[]).forEach(function(v) {
+      var cv = (v.vod_class || '').trim();
+      if (!cv) {
+        cats['未分类'] = (cats['未分类'] || 0) + 1;
+      } else {
+        cv.split(',').forEach(function(c) {
+          c = c.trim();
+          if (c) cats[c] = (cats[c] || 0) + 1;
+        });
+      }
+    });
+  } else {
+    return;
+  }
+
+  var bars = document.getElementById('catBar');
   var h = '<select onchange="filterCat(this)">';
-  h += '<option value="">\u5168\u90e8 (' + (currentData.total_videos>99?'99+':currentData.total_videos) + ')</option>';
+  h += '<option value="">全部 (' + (totalVideos>99?'99+':totalVideos) + ')</option>';
   Object.keys(cats).sort(function(a,b){return cats[b]-cats[a];}).forEach(function(c) {
     var cnt = cats[c] > 99 ? '99+' : cats[c];
     h += '<option value="' + c.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '">' + c + ' (' + cnt + ')</option>';
@@ -675,7 +688,64 @@ function buildCatBar() {
 function filterCat(sel) {
   currentCategory = sel.value;
   currentPage = 1;
-  doSearch();
+  if (!currentCategory) {
+    // 清空分类：回到正常翻页模式
+    currentSearchMode = false;
+    loadPageFile(currentPrefix, currentFilePage);
+    return;
+  }
+  // 选分类：遍历全部页文件汇总
+  currentSearchMode = true;
+  filterByCategory();
+}
+
+function filterByCategory() {
+  var meta = sourceMeta[currentPrefix];
+  var pc = meta ? meta.page_count : 1;
+  var results = [], loaded = 0;
+  var cat = currentCategory;
+  setStatus('[FILTER] ' + cat + ' — loading... (0/' + pc + ')');
+  function update() { setStatus('[FILTER] ' + cat + ' — (' + loaded + '/' + pc + ')'); }
+  function done() {
+    loaded++;
+    update();
+    if (loaded < pc) return;
+    currentFiltered = results;
+    setStatus('[FILTER] ' + cat + ' — ' + results.length + ' results');
+    currentPage = 1;
+    render();
+  }
+  for (var p = 1; p <= pc; p++) {
+    (function(pn){
+      var fn = currentPrefix + '-' + String(pn).padStart(2, '0') + '.js';
+      if (loadedSources[fn]) { collectCat(loadedSources[fn], cat, results); done(); return; }
+      loadData(fn, function(data) {
+        if (data) loadedSources[fn] = data;
+        if (data) collectCat(data, cat, results);
+        done();
+      });
+    })(p);
+  }
+}
+
+function collectCat(src, cat, results) {
+  if (!src || !src.videos) return;
+  src.videos.forEach(function(v) {
+    var classes = (v.vod_class || '').split(',');
+    var match = classes.some(function(s){ return s.trim() === cat; });
+    if (match) {
+      results.push({
+        sourceKey: currentPrefix,
+        sourceName: src.name,
+        vod_name: v.vod_name,
+        vod_pic: v.vod_pic,
+        episodes: v.episodes,
+        ep_count: v.ep_count,
+        playable_count: v.playable_count,
+        vod_class: v.vod_class,
+      });
+    }
+  });
 }
 
 /* ===== 渲染卡片 ===== */
@@ -753,7 +823,19 @@ function goPage(n) {
   currentPage = n;
   render();
 }
-function go(p){goPage(p);}
+function go(p){
+  if (currentSearchMode) {
+    // 搜索/分类筛选模式：内存分页
+    var total = currentFiltered.length;
+    var maxPages = Math.ceil(total / PAGE_SIZE) || 1;
+    if (p < 1) p = 1;
+    if (p > maxPages) p = maxPages;
+    currentPage = p;
+    render();
+    return;
+  }
+  goPage(p);
+}
 
 function toggleEpisodes(el, id){
   var panel = document.getElementById(id);
