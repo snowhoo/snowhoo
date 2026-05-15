@@ -1,17 +1,1 @@
-﻿window._TVBOX_INDEX = [
-  {"name": "暴風", "file": "暴風.js", "total": 17402, "playable": 17402},
-  {"name": "索尼 ", "file": "索尼.js", "total": 15341, "playable": 15340},
-  {"name": "量子", "file": "量子.js", "total": 38467, "playable": 38467},
-  {"name": "非凡", "file": "非凡.js", "total": 49810, "playable": 49810},
-  {"name": "🐉┃索尼┃高清", "file": "索尼_高清.js", "total": 15686, "playable": 15685},
-  {"name": "🥗┃非凡┃资源", "file": "非凡_资源.js", "total": 49810, "playable": 49810},
-  {"name": "🥑┃量子┃资源", "file": "量子_资源.js", "total": 38469, "playable": 38469},
-  {"name": "🐯虎牙采集", "file": "虎牙采集.js", "total": 11759, "playable": 11759},
-  {"name": "🦊火狐采集", "file": "火狐采集.js", "total": 23504, "playable": 11752},
-  {"name": "🎏百度┃采集", "file": "百度_采集.js", "total": 14376, "playable": 14376},
-  {"name": "红牛｜资源", "file": "红牛_资源.js", "total": 23148, "playable": 11574},
-  {"name": "光速｜资源", "file": "光速_资源.js", "total": 23082, "playable": 11541},
-  {"name": "极速｜资源", "file": "极速_资源.js", "total": 23552, "playable": 11776},
-  {"name": "索尼｜资源", "file": "索尼_资源.js", "total": 15348, "playable": 15347},
-  {"name": "非凡｜资源", "file": "非凡_资源.js", "total": 49114, "playable": 49114}
-];
+window._TVBOX_INDEX = [{"name": "光速｜资源", "api": "http://api.guangsuapi.com/api.php/provide/vod/", "file": "光速_资源.js", "total": 399, "playable": 11541, "total_episodes": 23082}, {"name": "暴風", "api": "https://bfzyapi.com/api.php/provide/vod", "file": "暴風.js", "total": 399, "playable": 16891, "total_episodes": 16891}, {"name": "极速｜资源", "api": "https://jszyapi.com/api.php/provide/vod/", "file": "极速_资源.js", "total": 400, "playable": 11776, "total_episodes": 23552}, {"name": "🦊火狐采集", "api": "https://hhzyapi.com/api.php/provide/vod/", "file": "火狐采集.js", "total": 400, "playable": 11675, "total_episodes": 23350}, {"name": "🎏百度┃采集", "api": "https://api.apibdzy.com/api.php/provide/vod/?ac=list", "file": "百度_采集.js", "total": 400, "playable": 14389, "total_episodes": 14389}, {"name": "索尼 ", "api": "https://suoniapi.com/api.php/provide/vod", "file": "索尼.js", "total": 400, "playable": 15378, "total_episodes": 15379}, {"name": "索尼｜资源", "api": "https://suoniapi.com/api.php/provide/vod/", "file": "索尼_资源.js", "total": 400, "playable": 15347, "total_episodes": 15348}, {"name": "🐉┃索尼┃高清", "api": "https://suoniapi.com/api.php/provide/vod/?ac=list", "file": "索尼_高清.js", "total": 400, "playable": 15465, "total_episodes": 15466}, {"name": "红牛｜资源", "api": "https://www.hongniuzy2.com/api.php/provide/vod/", "file": "红牛_资源.js", "total": 400, "playable": 11574, "total_episodes": 23148}, {"name": "🐯虎牙采集", "api": "https://www.huyaapi.com/api.php/provide/vod/from/hym3u8", "file": "虎牙采集.js", "total": 400, "playable": 11759, "total_episodes": 11759}, {"name": "量子", "api": "https://cj.lziapi.com/api.php/provide/vod", "file": "量子.js", "total": 400, "playable": 38467, "total_episodes": 38467}, {"name": "🥑┃量子┃资源", "api": "https://lzizy1.com/api.php/provide/vod/", "file": "量子_资源.js", "total": 400, "playable": 36934, "total_episodes": 36934}, {"name": "非凡", "api": "http://cj.ffzyapi.com/api.php/provide/vod", "file": "非凡.js", "total": 400, "playable": 49810, "total_episodes": 49810}, {"name": "🥗┃非凡┃资源", "api": "http://ffzy1.tv/api.php/provide/vod/", "file": "非凡_资源.js", "total": 400, "playable": 49354, "total_episodes": 49354}];

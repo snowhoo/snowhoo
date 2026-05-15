@@ -744,7 +744,19 @@ def main():
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {executor.submit(crawl_one, site): site for site in sites}
         for future in as_completed(futures):
-            site_stats.append(future.result())
+            try:
+                site_stats.append(future.result())
+            except Exception as e:
+                site = futures[future]
+                print(f'❌ {site["name"]} 线程异常: {e}')
+                site_stats.append({
+                    'name': site['name'],
+                    'api': site.get('api', ''),
+                    'total_videos': 0,
+                    'total_episodes': 0,
+                    'playable_episodes': 0,
+                    'error': str(e),
+                })
 
     # 输出
     print('\n' + '=' * 60)
