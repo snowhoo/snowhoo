@@ -739,6 +739,7 @@ def main():
             print(f'❌ {stats["error"]}')
         else:
             print(f'✅ {stats["total_videos"]}个视频, {stats["playable_episodes"]}/{stats["total_episodes"]}个可播放')
+        time.sleep(10)  # 站间限速，避免被封
         return stats
 
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
@@ -757,6 +758,7 @@ def main():
                     'playable_episodes': 0,
                     'error': str(e),
                 })
+            time.sleep(0.5)  # 站间限速
 
     # 输出
     print('\n' + '=' * 60)

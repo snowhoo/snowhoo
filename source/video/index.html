@@ -431,7 +431,7 @@
   <select id="sourceSelect" onchange="switchSource()">
     <option value="">— 选择数据源 —</option>
   </select>
-  <input type="text" id="searchInput" placeholder="全局搜索影片..." oninput="doSearch()">
+  <input type="text" id="searchInput" placeholder="全局搜索影片...">
   <button onclick="doSearch()">搜索</button>
 </div>
 <div class="player-box">
@@ -477,9 +477,15 @@ function loadData(file, callback) {
   var key = (file === 'index.js') ? '_TVBOX_INDEX' : '_TVBOX_SITE_DATA';
   var src = './data/' + file;
   var s = document.createElement('script');
-  var timer = setTimeout(function() { callback(window[key] || null); }, 300);
+  var timer = setTimeout(function() { callback(null); }, 3000);
   s.onerror = function() { clearTimeout(timer); callback(null); };
-  s.onload = function() { clearTimeout(timer); callback(window[key] || null); };
+  s.onload = function() {
+    clearTimeout(timer);
+    // 用完立即删除，避免后续加载同名 key 残留
+    var data = window[key];
+    delete window[key];
+    callback(data || null);
+  };
   s.src = src;
   document.head.appendChild(s);
 }
