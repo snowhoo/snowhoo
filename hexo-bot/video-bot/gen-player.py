@@ -196,10 +196,12 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 
 /* ===== Category Select ===== */
 .cat-bar{
-  margin:6px 0 8px;
+  margin:0 8px 0 0;
 }
 .cat-bar select{
-  width:100%;
+  max-width:160px;
+  min-width:80px;
+  width:auto;
   padding:7px 10px;
   border:1px solid var(--border);
   border-radius:6px;
@@ -463,10 +465,10 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
   <video id="player" controls playsinline></video>
 </div>
 <div id="status" class="status-bar">
+  <div class="cat-bar" id="catBar"></div>
   <span id="statusText">⏹ 选择一个数据源</span>
-  <button id="nextEpBtn" class="next-ep-btn" onclick="playNext()">下一集 &gt;</button>
+  <button id="nextEpBtn" class="next-ep-btn" onclick="playNext()">下集</button>
 </div>
-<div class="cat-bar" id="catBar"></div>
 <div id="content"></div>
 <div class="pagination" id="pagination"></div>
 <div class="tvbox-footer" id="tvboxFooter"></div>
@@ -799,7 +801,7 @@ loadIndex();
 
 with open(OUTPUT, 'w', encoding='utf-8') as f:
     f.write(html)
-print(f'✅ player.html generated ({os.path.getsize(OUTPUT)/1024:.0f} KB)')
+print(f'player.html generated ({os.path.getsize(OUTPUT)/1024:.0f} KB)')
 
 # 同步到 Hexo source/video 目录
 HEXO_VIDEO_DIR = os.path.join(BASE, '..', '..', 'source', 'video')
@@ -820,6 +822,6 @@ if os.path.isdir(HEXO_VIDEO_DIR):
     if os.path.isdir(hexo_data):
         shutil.rmtree(hexo_data)
     shutil.copytree(DATA_DIR, hexo_data)
-    print(f'✅ 已同步到 Hexo: {HEXO_VIDEO_DIR}')
+    print(f'已同步到 Hexo: {HEXO_VIDEO_DIR}')
 else:
-    print(f'⚠️ Hexo 目录不存在: {HEXO_VIDEO_DIR}')
+    print(f'[WARN] Hexo 目录不存在: {HEXO_VIDEO_DIR}')

@@ -169,10 +169,12 @@
 
 /* ===== Category Select ===== */
 .cat-bar{
-  margin:6px 0 8px;
+  margin:0 8px 0 0;
 }
 .cat-bar select{
-  width:100%;
+  max-width:160px;
+  min-width:80px;
+  width:auto;
   padding:7px 10px;
   border:1px solid var(--border);
   border-radius:6px;
@@ -436,10 +438,10 @@
   <video id="player" controls playsinline></video>
 </div>
 <div id="status" class="status-bar">
+  <div class="cat-bar" id="catBar"></div>
   <span id="statusText">⏹ 选择一个数据源</span>
-  <button id="nextEpBtn" class="next-ep-btn" onclick="playNext()">下一集 &gt;</button>
+  <button id="nextEpBtn" class="next-ep-btn" onclick="playNext()">下集</button>
 </div>
-<div class="cat-bar" id="catBar"></div>
 <div id="content"></div>
 <div class="pagination" id="pagination"></div>
 <div class="tvbox-footer" id="tvboxFooter"></div>

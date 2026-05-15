@@ -39,7 +39,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// ============ 获取历史事件（API每次返回1条随机，调用25次去重） ============
+// ============ 获取历史事件（API每次返回1条随机，调用50次去重） ============
 function fetchOneEvent(dateStr) {
   return new Promise((resolve) => {
     const url = `https://apis.jxcxin.cn/api/lishi?date=${dateStr}`;
@@ -59,26 +59,26 @@ async function fetchEvents(today) {
   const dateStr = `${parseInt(today.month)}-${parseInt(today.day)}`;
   const seen = new Set();
   const events = [];
-  // 调用25次收集不同事件
-  for (let i = 0; i < 25; i++) {
+  // 调用50次收集不同事件
+  for (let i = 0; i < 50; i++) {
     const e = await fetchOneEvent(dateStr);
     if (e && !seen.has(e.text)) {
       seen.add(e.text);
       events.push(e);
     }
-    await sleep(200); // 间隔避免触发限流
+    await sleep(5000); // 间隔避免触发限流
   }
-  // 按年份排序，取前15条
+  // 按年份排序，取前50条
   events.sort((a, b) => b.year - a.year);
-  return events.slice(0, 15);
+  return events.slice(0, 50);
 }
 
 // ============ 生成封面图（Playwright 渲染） ============
 async function generateCover(today, page) {
   if (!fs.existsSync(COVER_DIR)) fs.mkdirSync(COVER_DIR, { recursive: true });
 
-  const bgColors = ['#1a1a2e', '#2d1b33', '#1e3c2f', '#1a2a3a', '#3d2b1f'];
-  const accentColors = ['#e94560', '#c9a0dc', '#81c784', '#4dd0e1', '#ffb74d'];
+  const bgColors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#43e97b'];
+  const accentColors = ['#ffffff', '#ffeaa7', '#fd79a8', '#00d2d3', '#a29bfe'];
   const idx = parseInt(today.dateStr.slice(-1)) % bgColors.length;
 
   const theme = { bg: bgColors[idx], accent: accentColors[idx], text: '#f5e6ca' };

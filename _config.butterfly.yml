@@ -16,14 +16,15 @@ nav:
 
 menu:
   首页: / || fas fa-home
-  时间轴: /archives ||fas fa-archive
+  时间轴: /archives || fas fa-archive
   新闻速递: /news/ || fas fa-newspaper
-  小红超级播霸: /video/ || fas fa-play-circle
+  小红超级播霸: /video/ || 
+  通用EXCEL打印: /xls2print/ || fa fa-file-text-o
   留言板: /guestbook/ || fas fa-comments
   标签: /tags/ || fas fa-tags
   分类: /categories/ || fas fa-folder-open
-  友情链接: /link/ || fas fa-link
-  关于: /about/ || fas fa-heart
+ # 友情链接: /link/ || fas fa-link
+ # 关于: /about/ || fas fa-heart
 
 code_blocks:
   theme: light
@@ -1538,6 +1539,7 @@ inject:
         var NEWS_BUTTONS = [
           { text: '', url: '/news/' , bgImage: '/images/banner/news.jpg' },
           { text: '', url: '/video/' , bgImage: '/images/banner/videos.jpg'},
+          { text: '', url: '/xls2print/' , bgImage: '/images/banner/xls2print.jpg'},
         ];
 
         // ========== 底部滚动字幕配置 ==========
