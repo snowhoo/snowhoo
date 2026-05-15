@@ -108,7 +108,7 @@ def load_config():
     if not os.path.exists(CONFIG_FILE):
         print(f'⚠️  config.json 不存在，回退到 parsed/ 目录')
         return None
-    with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+    with open(CONFIG_FILE, 'r', encoding='utf-8-sig') as f:
         return json.load(f)
 
 
@@ -194,7 +194,7 @@ def collect_cmsv10_sites():
                 continue
             fpath = os.path.join(data_dir, fname)
             try:
-                with open(fpath, 'r', encoding='utf-8') as f:
+                with open(fpath, 'r', encoding='utf-8-sig') as f:
                     data = json.load(f)
             except Exception:
                 continue
@@ -733,7 +733,7 @@ def main():
         fname = info['file']
         fpath = os.path.join(data_dir, fname)
         try:
-            with open(fpath, 'r', encoding='utf-8') as f:
+            with open(fpath, 'r', encoding='utf-8-sig') as f:
                 all_data[fname] = json.load(f)
         except Exception:
             pass

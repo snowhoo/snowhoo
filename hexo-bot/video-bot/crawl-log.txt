@@ -182,3 +182,869 @@ To github.com:snowhoo/snowhoo.git
 [2026/05/15 ����  0:05:44.00] PUSH FAILED 
  
 [2026/05/15 ����  0:05:50.61] ======== DONE ======== 
+ 
+[2026/05/15 ���� 10:10:54.15] ======== START ======== 
+============================================================
+  TVBox 播放地址完整爬取 v3.0
+  时间: 2026-05-15 10:10:55
+  模式: 全量
+============================================================
+📋 从 config.json 读取 6 个数据源
+  ⏭️ JSON解析失败: http://fty.xxooo.cf/tv
+  → 发现 32 个 API 站点
+
+📡 发现 32 个 API 站点
+  📥 🐯虎牙直播... ❌ 首页接口无响应
+  📥 🐠斗鱼直播... ❌ 首页接口无响应
+  📥 有声小说吧... ❌ 首页接口无响应
+  📥 JRKAN直播... ❌ 首页接口无响应
+  📥 海外看... ❌ 首页接口无响应
+  📥 暴風... ✅ 20个视频, 2764/2764个可播放
+  📥 索尼 ... ✅ 20个视频, 357/357个可播放
+  📥 快帆... ❌ 首页接口无响应
+  📥 量子... ✅ 20个视频, 6249/6249个可播放
+  📥 非凡... ✅ 20个视频, 5416/5416个可播放
+  📥 电视┃MTV... ❌ 首页接口无响应
+  📥 👒┃小胡┃资源┃... ❌ 首页接口无响应
+  📥 🐉┃索尼┃高清... ✅ 20个视频, 357/357个可播放
+  📥 🕹️淘片┃采集... ❌ 首页接口无响应
+  📥 🥗┃非凡┃资源... ✅ 20个视频, 3606/3606个可播放
+  📥 🥑┃量子┃资源... ✅ 20个视频, 6249/6249个可播放
+  📥 🦁┃四九┃资源... ❌ 首页接口无响应
+  📥 🛰️飞速┃采集... ❌ 首页接口无响应
+  📥 🐯┃奇虎┃采集... ❌ 首页接口无响应
+  📥 ⛱┃可可┃采集... ❌ 首页接口无响应
+  📥 🐯虎牙采集... ✅ 20个视频, 212/212个可播放
+  📥 🦊火狐采集... ✅ 20个视频, 465/930个可播放
+  📥 🌪️暴风影音... ❌ 首页接口无响应
+  📥 🎏百度┃采集... ✅ 20个视频, 1663/1663个可播放
+  📥 低端影视(DRPY)... ❌ 首页接口无响应
+  📥 爱看机器人(DRPY)... ❌ 首页接口无响应
+  📥 红牛｜资源... ✅ 20个视频, 442/884个可播放
+  📥 光速｜资源... ✅ 20个视频, 456/912个可播放
+  📥 极速｜资源... ✅ 20个视频, 710/1420个可播放
+  📥 快车｜资源... ❌ 首页接口无响应
+  📥 索尼｜资源... ✅ 20个视频, 357/357个可播放
+  📥 非凡｜资源... ✅ 20个视频, 3606/3606个可播放
+
+============================================================
+  生成输出...
+  站点: 15/32 成功
+  视频: 300 个
+  地址: 34982 条 (32909 可播放)
+  📁 data/ — 15 个站点数据文件
+  🎬 player.html — 播放器（数据源自 data/all.js）
+  📋 report/crawl-report.json
+============================================================
+[2026/05/15 ���� 10:15:30.64] CRAWL DONE 
+[2026/05/15 ���� 10:15:30.75] Pushing changes... 
+[source e54e0e4c] chore: auto-update TVBox video data
+ 32 files changed, 30 insertions(+), 299089 deletions(-)
+ delete mode 100644 source/video/data/all.js
+ delete mode 100644 source/video/data/index.js
+ delete mode 100644 source/video/data/index.json
+ delete mode 100644 "source/video/data/\345\205\211\351\200\237_\350\265\204\346\272\220.js"
+ delete mode 100644 "source/video/data/\345\205\211\351\200\237_\350\265\204\346\272\220.json"
+ delete mode 100644 "source/video/data/\346\232\264\351\242\250.js"
+ delete mode 100644 "source/video/data/\346\232\264\351\242\250.json"
+ delete mode 100644 "source/video/data/\346\236\201\351\200\237_\350\265\204\346\272\220.js"
+ delete mode 100644 "source/video/data/\346\236\201\351\200\237_\350\265\204\346\272\220.json"
+ delete mode 100644 "source/video/data/\347\201\253\347\213\220\351\207\207\351\233\206.js"
+ delete mode 100644 "source/video/data/\347\201\253\347\213\220\351\207\207\351\233\206.json"
+ delete mode 100644 "source/video/data/\347\231\276\345\272\246_\351\207\207\351\233\206.js"
+ delete mode 100644 "source/video/data/\347\231\276\345\272\246_\351\207\207\351\233\206.json"
+ delete mode 100644 "source/video/data/\347\264\242\345\260\274.js"
+ delete mode 100644 "source/video/data/\347\264\242\345\260\274.json"
+ delete mode 100644 "source/video/data/\347\264\242\345\260\274_\350\265\204\346\272\220.js"
+ delete mode 100644 "source/video/data/\347\264\242\345\260\274_\350\265\204\346\272\220.json"
+ delete mode 100644 "source/video/data/\347\264\242\345\260\274_\351\253\230\346\270\205.js"
+ delete mode 100644 "source/video/data/\347\264\242\345\260\274_\351\253\230\346\270\205.json"
+ delete mode 100644 "source/video/data/\347\272\242\347\211\233_\350\265\204\346\272\220.js"
+ delete mode 100644 "source/video/data/\347\272\242\347\211\233_\350\265\204\346\272\220.json"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206.json"
+ delete mode 100644 "source/video/data/\351\207\217\345\255\220.js"
+ delete mode 100644 "source/video/data/\351\207\217\345\255\220.json"
+ delete mode 100644 "source/video/data/\351\207\217\345\255\220_\350\265\204\346\272\220.js"
+ delete mode 100644 "source/video/data/\351\207\217\345\255\220_\350\265\204\346\272\220.json"
+ delete mode 100644 "source/video/data/\351\235\236\345\207\241.js"
+ delete mode 100644 "source/video/data/\351\235\236\345\207\241.json"
+ delete mode 100644 "source/video/data/\351\235\236\345\207\241_\350\265\204\346\272\220.js"
+ delete mode 100644 "source/video/data/\351\235\236\345\207\241_\350\265\204\346\272\220.json"
+To github.com:snowhoo/snowhoo.git
+   ffb1414f..e54e0e4c  source -> source
+[2026/05/15 ���� 10:15:30.75] PUSH FAILED 
+ 
+[2026/05/15 ���� 10:15:34.62] ======== DONE ======== 
+ 
+[2026/05/15 ���� 10:44:55.01] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 10:44:55.34] CRAWL FAILED 
+[2026/05/15 ���� 10:44:55.40] Pushing changes... 
+[source 6168b691] chore: auto-update TVBox video data
+ 33 files changed, 191304 insertions(+), 1321 deletions(-)
+ create mode 100644 source/video/data/all.js
+ create mode 100644 source/video/data/index.js
+ create mode 100644 source/video/data/index.json
+ create mode 100644 "source/video/data/\345\205\211\351\200\237_\350\265\204\346\272\220.js"
+ create mode 100644 "source/video/data/\345\205\211\351\200\237_\350\265\204\346\272\220.json"
+ create mode 100644 "source/video/data/\346\232\264\351\242\250.js"
+ create mode 100644 "source/video/data/\346\232\264\351\242\250.json"
+ create mode 100644 "source/video/data/\346\236\201\351\200\237_\350\265\204\346\272\220.js"
+ create mode 100644 "source/video/data/\346\236\201\351\200\237_\350\265\204\346\272\220.json"
+ create mode 100644 "source/video/data/\347\201\253\347\213\220\351\207\207\351\233\206.js"
+ create mode 100644 "source/video/data/\347\201\253\347\213\220\351\207\207\351\233\206.json"
+ create mode 100644 "source/video/data/\347\231\276\345\272\246_\351\207\207\351\233\206.js"
+ create mode 100644 "source/video/data/\347\231\276\345\272\246_\351\207\207\351\233\206.json"
+ create mode 100644 "source/video/data/\347\264\242\345\260\274.js"
+ create mode 100644 "source/video/data/\347\264\242\345\260\274.json"
+ create mode 100644 "source/video/data/\347\264\242\345\260\274_\350\265\204\346\272\220.js"
+ create mode 100644 "source/video/data/\347\264\242\345\260\274_\350\265\204\346\272\220.json"
+ create mode 100644 "source/video/data/\347\264\242\345\260\274_\351\253\230\346\270\205.js"
+ create mode 100644 "source/video/data/\347\264\242\345\260\274_\351\253\230\346\270\205.json"
+ create mode 100644 "source/video/data/\347\272\242\347\211\233_\350\265\204\346\272\220.js"
+ create mode 100644 "source/video/data/\347\272\242\347\211\233_\350\265\204\346\272\220.json"
+ create mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206.js"
+ create mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206.json"
+ create mode 100644 "source/video/data/\351\207\217\345\255\220.js"
+ create mode 100644 "source/video/data/\351\207\217\345\255\220.json"
+ create mode 100644 "source/video/data/\351\207\217\345\255\220_\350\265\204\346\272\220.js"
+ create mode 100644 "source/video/data/\351\207\217\345\255\220_\350\265\204\346\272\220.json"
+ create mode 100644 "source/video/data/\351\235\236\345\207\241.js"
+ create mode 100644 "source/video/data/\351\235\236\345\207\241.json"
+ create mode 100644 "source/video/data/\351\235\236\345\207\241_\350\265\204\346\272\220.js"
+ create mode 100644 "source/video/data/\351\235\236\345\207\241_\350\265\204\346\272\220.json"
+ delete mode 100644 source/video/index_prev.html
+ delete mode 100644 source/video/player_orig.html
+To github.com:snowhoo/snowhoo.git
+   e54e0e4c..6168b691  source -> source
+[2026/05/15 ���� 10:44:55.40] PUSH FAILED 
+ 
+[2026/05/15 ���� 10:45:00.94] ======== DONE ======== 
+ 
+[2026/05/15 ���� 10:45:53.34] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 10:45:53.65] CRAWL FAILED 
+[2026/05/15 ���� 10:45:53.70] No changes, skip push 
+ 
+[2026/05/15 ���� 10:45:53.70] ======== DONE ======== 
+ 
+[2026/05/15 ���� 10:45:56.95] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 10:45:57.25] CRAWL FAILED 
+[2026/05/15 ���� 10:45:57.29] No changes, skip push 
+ 
+[2026/05/15 ���� 10:45:57.29] ======== DONE ======== 
+ 
+[2026/05/15 ���� 10:47:40.95] ======== START ======== 
+============================================================
+  TVBox 播放地址完整爬取 v3.0
+  时间: 2026-05-15 10:47:41
+  模式: 全量
+============================================================
+📋 从 config.json 读取 6 个数据源
+  ⏭️ JSON解析失败: http://fty.xxooo.cf/tv
+  → 发现 32 个 API 站点
+
+📡 发现 32 个 API 站点
+  📥 🐯虎牙直播... ❌ 首页接口无响应
+  📥 🐠斗鱼直播... ❌ 首页接口无响应
+  📥 有声小说吧... ❌ 首页接口无响应
+  📥 JRKAN直播... ❌ 首页接口无响应
+  📥 海外看... ❌ 首页接口无响应
+  📥 暴風... ✅ 20个视频, 2493/2493个可播放
+  📥 索尼 ... ✅ 20个视频, 357/357个可播放
+  📥 快帆... ❌ 首页接口无响应
+  📥 量子... ✅ 20个视频, 6249/6249个可播放
+  📥 非凡... ✅ 20个视频, 3606/3606个可播放
+  📥 电视┃MTV... ❌ 首页接口无响应
+  📥 👒┃小胡┃资源┃... ❌ 首页接口无响应
+  📥 🐉┃索尼┃高清... ✅ 20个视频, 357/357个可播放
+  📥 🕹️淘片┃采集... ❌ 首页接口无响应
+  📥 🥗┃非凡┃资源... ✅ 20个视频, 3606/3606个可播放
+  📥 🥑┃量子┃资源... ✅ 20个视频, 6249/6249个可播放
+  📥 🦁┃四九┃资源... ❌ 首页接口无响应
+  📥 🛰️飞速┃采集... ❌ 首页接口无响应
+  📥 🐯┃奇虎┃采集... ❌ 首页接口无响应
+  📥 ⛱┃可可┃采集... ❌ 首页接口无响应
+  📥 🐯虎牙采集... ✅ 20个视频, 722/722个可播放
+  📥 🦊火狐采集... ✅ 20个视频, 713/1426个可播放
+  📥 🌪️暴风影音... ❌ 首页接口无响应
+  📥 🎏百度┃采集... ✅ 20个视频, 1848/1848个可播放
+  📥 低端影视(DRPY)... ❌ 首页接口无响应
+  📥 爱看机器人(DRPY)... ❌ 首页接口无响应
+  📥 红牛｜资源... ✅ 20个视频, 735/1470个可播放
+  📥 光速｜资源... ✅ 20个视频, 722/1444个可播放
+  📥 极速｜资源... ✅ 20个视频, 722/1444个可播放
+  📥 快车｜资源... ❌ 首页接口无响应
+  📥 索尼｜资源... ✅ 20个视频, 357/357个可播放
+  📥 非凡｜资源... ✅ 20个视频, 3606/3606个可播放
+
+============================================================
+  生成输出...
+  站点: 15/32 成功
+  视频: 300 个
+  地址: 35234 条 (32342 可播放)
+  📁 data/ — 15 个站点数据文件
+  🎬 player.html — 播放器（数据源自 data/all.js）
+  📋 report/crawl-report.json
+============================================================
+[2026/05/15 ���� 10:51:05.19] CRAWL DONE 
+[2026/05/15 ���� 10:51:05.47] Pushing changes... 
+[source 98ee356e] chore: auto-update TVBox video data
+ 22 files changed, 43226 insertions(+), 41714 deletions(-)
+To github.com:snowhoo/snowhoo.git
+   6168b691..98ee356e  source -> source
+[2026/05/15 ���� 10:51:05.47] PUSH FAILED 
+ 
+[2026/05/15 ���� 10:51:14.03] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:02:50.04] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 11:02:50.34] CRAWL FAILED 
+[2026/05/15 ���� 11:02:50.38] No changes, skip push 
+ 
+[2026/05/15 ���� 11:02:50.38] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:02:51.72] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 11:02:52.04] CRAWL FAILED 
+[2026/05/15 ���� 11:02:52.08] No changes, skip push 
+ 
+[2026/05/15 ���� 11:02:52.08] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:13:40.01] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 11:13:40.32] CRAWL FAILED 
+[2026/05/15 ���� 11:13:40.37] No changes, skip push 
+ 
+[2026/05/15 ���� 11:13:40.37] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:14:32.73] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 11:14:33.04] CRAWL FAILED 
+[2026/05/15 ���� 11:14:33.07] No changes, skip push 
+ 
+[2026/05/15 ���� 11:14:33.08] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:14:35.44] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 11:14:35.74] CRAWL FAILED 
+[2026/05/15 ���� 11:14:35.79] No changes, skip push 
+ 
+[2026/05/15 ���� 11:14:35.79] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:15:06.85] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 11:15:07.16] CRAWL FAILED 
+[2026/05/15 ���� 11:15:07.21] No changes, skip push 
+ 
+[2026/05/15 ���� 11:15:07.21] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:16:57.18] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 11:16:57.47] CRAWL FAILED 
+[2026/05/15 ���� 11:16:57.52] No changes, skip push 
+ 
+[2026/05/15 ���� 11:16:57.52] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:19:15.71] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 11:19:16.03] CRAWL FAILED 
+[2026/05/15 ���� 11:19:16.06] No changes, skip push 
+ 
+[2026/05/15 ���� 11:19:16.06] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:20:32.09] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 11:20:32.40] CRAWL FAILED 
+[2026/05/15 ���� 11:20:32.45] No changes, skip push 
+ 
+[2026/05/15 ���� 11:20:32.45] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:20:35.01] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 11:20:35.31] CRAWL FAILED 
+[2026/05/15 ���� 11:20:35.35] No changes, skip push 
+ 
+[2026/05/15 ���� 11:20:35.35] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:20:58.85] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 11:20:59.16] CRAWL FAILED 
+[2026/05/15 ���� 11:20:59.19] No changes, skip push 
+ 
+[2026/05/15 ���� 11:20:59.20] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:26:04.08] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 11:26:04.42] CRAWL FAILED 
+[2026/05/15 ���� 11:26:04.46] No changes, skip push 
+ 
+[2026/05/15 ���� 11:26:04.46] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:31:54.19] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 11:31:54.50] CRAWL FAILED 
+[2026/05/15 ���� 11:31:54.53] No changes, skip push 
+ 
+[2026/05/15 ���� 11:31:54.55] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:35:06.74] ======== START ======== 
+============================================================
+  TVBox 播放地址完整爬取 v3.0
+  时间: 2026-05-15 11:35:07
+  模式: 全量
+============================================================
+📋 从 config.json 读取 6 个数据源
+  ⏭️ JSON解析失败: http://fty.xxooo.cf/tv
+  → 发现 32 个 API 站点
+
+📡 发现 32 个 API 站点
+  📥 🐯虎牙直播... ❌ 首页接口无响应
+  📥 🐠斗鱼直播... ❌ 首页接口无响应
+  📥 有声小说吧... ❌ 首页接口无响应
+  📥 JRKAN直播... ❌ 首页接口无响应
+  📥 海外看... ❌ 首页接口无响应
+  📥 暴風... ✅ 20个视频, 1931/1931个可播放
+  📥 索尼 ... ✅ 20个视频, 357/357个可播放
+  📥 快帆... ❌ 首页接口无响应
+  📥 量子... ✅ 20个视频, 6423/6423个可播放
+  📥 非凡... ✅ 20个视频, 3334/3334个可播放
+  📥 电视┃MTV... ❌ 首页接口无响应
+  📥 👒┃小胡┃资源┃... ❌ 首页接口无响应
+  📥 🐉┃索尼┃高清... ✅ 20个视频, 357/357个可播放
+  📥 🕹️淘片┃采集... ❌ 首页接口无响应
+  📥 🥗┃非凡┃资源... ✅ 20个视频, 3432/3432个可播放
+  📥 🥑┃量子┃资源... ✅ 20个视频, 6423/6423个可播放
+  📥 🦁┃四九┃资源... ❌ 首页接口无响应
+  📥 🛰️飞速┃采集... ❌ 首页接口无响应
+  📥 🐯┃奇虎┃采集... ❌ 首页接口无响应
+  📥 ⛱┃可可┃采集... ❌ 首页接口无响应
+  📥 🐯虎牙采集... ✅ 20个视频, 2614/2614个可播放
+  📥 🦊火狐采集... ✅ 20个视频, 1682/3364个可播放
+  📥 🌪️暴风影音... ❌ 首页接口无响应
+  📥 🎏百度┃采集... ✅ 20个视频, 1839/1839个可播放
+  📥 低端影视(DRPY)... ❌ 首页接口无响应
+  📥 爱看机器人(DRPY)... ❌ 首页接口无响应
+  📥 红牛｜资源... ✅ 20个视频, 2687/5374个可播放
+  📥 光速｜资源... ✅ 20个视频, 1836/3672个可播放
+  📥 极速｜资源... ✅ 20个视频, 1823/3646个可播放
+  📥 快车｜资源... ❌ 首页接口无响应
+  📥 索尼｜资源... ✅ 20个视频, 357/357个可播放
+  📥 非凡｜资源... ✅ 20个视频, 3432/3432个可播放
+
+============================================================
+  生成输出...
+  站点: 15/32 成功
+  视频: 300 个
+  地址: 46555 条 (38527 可播放)
+  📁 data/ — 15 个站点数据文件
+  🎬 player.html — 播放器（数据源自 data/all.js）
+  📋 report/crawl-report.json
+============================================================
+[2026/05/15 ���� 11:39:00.92] CRAWL DONE 
+[2026/05/15 ���� 11:39:01.20] Pushing changes... 
+[source 0ac8dbd3] chore: auto-update TVBox video data
+ 24 files changed, 117066 insertions(+), 48096 deletions(-)
+To github.com:snowhoo/snowhoo.git
+   98ee356e..0ac8dbd3  source -> source
+[2026/05/15 ���� 11:39:01.20] PUSH FAILED 
+ 
+[2026/05/15 ���� 11:39:07.25] ======== DONE ======== 
+ 
+[2026/05/15 ���� 11:57:50.13] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 11:57:50.45] CRAWL FAILED 
+[2026/05/15 ���� 11:57:50.49] No changes, skip push 
+ 
+[2026/05/15 ���� 11:57:50.49] ======== DONE ======== 
+ 
+[2026/05/15 ���� 12:20:15.95] ======== START ======== 
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 787, in <module>
+    main()
+    ~~~~^^
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 668, in main
+    config = load_config()
+  File "D:\hexo\hexo-bot\video-bot\tvbox-crawler.py", line 112, in load_config
+    return json.load(f)
+           ~~~~~~~~~^^^
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "C:\Users\Administrator\.workbuddy\binaries\python\versions\3.13.12\Lib\json\__init__.py", line 341, in loads
+    raise JSONDecodeError("Unexpected UTF-8 BOM (decode using utf-8-sig)",
+                          s, 0)
+json.decoder.JSONDecodeError: Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)
+[2026/05/15 ���� 12:20:16.24] CRAWL FAILED 
+[2026/05/15 ���� 12:20:16.29] No changes, skip push 
+ 
+[2026/05/15 ���� 12:20:16.29] ======== DONE ======== 
+ 
+[2026/05/15 ���� 12:46:52.46] ======== START ======== 
+============================================================
+  TVBox 播放地址完整爬取 v3.0
+  时间: 2026-05-15 12:46:52
+  模式: 全量
+============================================================
+📋 从 config.json 读取 40 个数据源
+  ⏭️ JSON解析失败: http://v.rbotv.cn
+  ⏭️ 获取失败: http://www.wuyevod.com/vodshow/{cateId}-{area}--{class}-----{catePg}---{year}.html
+  ⏭️ JSON解析失败: http://xn--6orr3pi6g9uu.top/lib/custom_spider.jar
+  ⏭️ JSON解析失败: https://bd.jx.cn/?url=
+  ⏭️ JSON解析失败: https://gd-filems.dancf.com/gaoding/cms/mcm79j/mcm79j/59385/6a211035-3658-45ce-a476-79f6f5dc02b71172884.png?x-oss-process=image/resize,h_1308/interlace,1
+  ⏭️ JSON解析失败: https://gitee.com/KYSY1/dyy/raw/master/bh2601251.jar
+  ⏭️ JSON解析失败: https://gitee.com/nangezhe/kan/raw/master/ngzmods/nange.jar
+  ⏭️ JSON解析失败: https://gitee.com/tianwikeji/jar/raw/master/Yoursmile.jar
+  ⏭️ JSON解析失败: https://gitlab.com/fantaiying/ext/-/raw/main/drpy2.min.js
+  ⏭️ JSON解析失败: https://img2.gelonghui.com/library/d6014-7a5d5b19-3fe5-456a-8335-925bc845606fnull
+  ⏭️ JSON解析失败: https://jihulab.com/bhjk1/vip/-/raw/main/BHQX.jar
+  ⏭️ JSON解析失败: https://jx.77flv.cc/?url=
+  ⏭️ JSON解析失败: https://jx.xmflv.com/?url=
+  ⏭️ JSON解析失败: https://jx.xyflv.cc/
+  ⏭️ JSON解析失败: https://jx.xymp4.cc/?url=
+  ⏭️ JSON解析失败: https://jx.yparse.com/index.php?url=
+  ⏭️ JSON解析失败: https://mzrjk.top/zb/zb.txt
+  ⏭️ 获取失败: https://raw.githubusercontent.com/xyq254245/xyqonlinerule/main/dr_py/libs/drpy2.min.js
+  ⏭️ JSON解析失败: https://shangjihuoke.com
+  ⏭️ JSON解析失败: https://vip.wwgz.cn:5200
+  ⏭️ JSON解析失败: https://www.appmovie.cc/index.php/vod/show/area/{area}/{year}/class/{class}/id/{cateId}/page/{catePg}.html
+  ⏭️ JSON解析失败: https://www.playm3u8.cn/jiexi.php?url=
+  ⏭️ JSON解析失败: https://www.psmp3.com
+  ⏭️ JSON解析失败: https://www.xsmp3.com
+  ⏭️ JSON解析失败: https://yemu.xyz/?url=
+  → 发现 32 个 API 站点
+
+📡 发现 32 个 API 站点
+  📥 👒┃小胡┃资源┃... ❌ 首页接口无响应
+  📥 🐉┃索尼┃高清... ✅ 20个视频, 1294/1294个可播放
+  📥 🕹️淘片┃采集... ❌ 首页接口无响应
+  📥 🥗┃非凡┃资源... ✅ 20个视频, 3356/3356个可播放
+  📥 🥑┃量子┃资源... ✅ 20个视频, 2174/2174个可播放
+  📥 🦁┃四九┃资源... ❌ 首页接口无响应
+  📥 🛰️飞速┃采集... ❌ 首页接口无响应
+  📥 🐯┃奇虎┃采集... ❌ 首页接口无响应
+  📥 ⛱┃可可┃采集... ❌ 首页接口无响应
+  📥 🐯虎牙采集... ✅ 20个视频, 292/292个可播放
+  📥 🦊火狐采集... ✅ 20个视频, 372/744个可播放
+  📥 🌪️暴风影音... ❌ 首页接口无响应
+  📥 🎏百度┃采集... ✅ 20个视频, 1839/1839个可播放
+  📥 🎶明星┃MV... ❌ 首页接口无响应
+  📥 🐯虎牙直播... ❌ 首页接口无响应
+  📥 🐠斗鱼直播... ❌ 首页接口无响应
+  📥 有声小说吧... ❌ 首页接口无响应
+  📥 JRKAN直播... ❌ 首页接口无响应
+  📥 海外看... ❌ 首页接口无响应
+  📥 暴風... ✅ 20个视频, 540/540个可播放
+  📥 索尼 ... ✅ 20个视频, 1292/1292个可播放
+  📥 快帆... ❌ 首页接口无响应
+  📥 量子... ✅ 20个视频, 2004/2004个可播放
+  📥 非凡... ✅ 20个视频, 3336/3336个可播放
+  📥 低端影视(DRPY)... ❌ 首页接口无响应
+  📥 爱看机器人(DRPY)... ❌ 首页接口无响应
+  📥 红牛｜资源... ✅ 20个视频, 1115/2230个可播放
+  📥 光速｜资源... ✅ 20个视频, 379/758个可播放
+  📥 极速｜资源... ✅ 20个视频, 1434/2868个可播放
+  📥 快车｜资源... ❌ 首页接口无响应
+  📥 索尼｜资源... ✅ 20个视频, 1292/1292个可播放
+  📥 非凡｜资源... ✅ 20个视频, 3336/3336个可播放
+
+============================================================
+  生成输出...
+  站点: 15/32 成功
+  视频: 300 个
+  地址: 27355 条 (24055 可播放)
+  📁 data/ — 15 个站点数据文件
+  🎬 player.html — 播放器（数据源自 data/all.js）
+  📋 report/crawl-report.json
+============================================================
+[2026/05/15 ���� 12:52:05.46] CRAWL DONE 
+[2026/05/15 ���� 12:52:06.04] Pushing changes... 
+[source 5dde3fc6] chore: auto-update TVBox video data
+ 30 files changed, 61459 insertions(+), 176203 deletions(-)
+To github.com:snowhoo/snowhoo.git
+   0ac8dbd3..5dde3fc6  source -> source
+[2026/05/15 ���� 12:52:06.04] PUSH FAILED 
+ 
+[2026/05/15 ���� 12:52:14.30] ======== DONE ======== 
+ 
+[2026/05/15 ���� 13:13:33.51] ======== START ======== 
+============================================================
+  TVBox 播放地址完整爬取 v3.0
+  时间: 2026-05-15 13:13:35
+  模式: 全量
+============================================================
+📋 从 config.json 读取 46 个数据源
+  ⏭️ JSON解析失败: http://v.rbotv.cn
+  ⏭️ 获取失败: http://www.wuyevod.com/vodshow/{cateId}-{area}--{class}-----{catePg}---{year}.html
+  ⏭️ JSON解析失败: http://xn--6orr3pi6g9uu.top/lib/custom_spider.jar
+  ⏭️ JSON解析失败: https://bd.jx.cn/?url=
+  ⏭️ JSON解析失败: https://gd-filems.dancf.com/gaoding/cms/mcm79j/mcm79j/59385/6a211035-3658-45ce-a476-79f6f5dc02b71172884.png?x-oss-process=image/resize,h_1308/interlace,1
+  ⏭️ JSON解析失败: https://gitee.com/KYSY1/dyy/raw/master/bh2601251.jar
+  ⏭️ JSON解析失败: https://gitee.com/nangezhe/kan/raw/master/ngzmods/nange.jar
+  ⏭️ JSON解析失败: https://gitee.com/tianwikeji/jar/raw/master/Yoursmile.jar
+  ⏭️ JSON解析失败: https://gitlab.com/fantaiying/ext/-/raw/main/drpy2.min.js
+  ⏭️ JSON解析失败: https://img2.gelonghui.com/library/d6014-7a5d5b19-3fe5-456a-8335-925bc845606fnull
+  ⏭️ JSON解析失败: https://jihulab.com/bhjk1/vip/-/raw/main/BHQX.jar
+  ⏭️ JSON解析失败: https://jx.77flv.cc/?url=
+  ⏭️ JSON解析失败: https://jx.xmflv.com/?url=
+  ⏭️ JSON解析失败: https://jx.xyflv.cc/
+  ⏭️ JSON解析失败: https://jx.xymp4.cc/?url=
+  ⏭️ JSON解析失败: https://jx.yparse.com/index.php?url=
+  ⏭️ JSON解析失败: https://mzrjk.top/zb/zb.txt
+  ⏭️ 获取失败: https://raw.githubusercontent.com/xyq254245/xyqonlinerule/main/dr_py/libs/drpy2.min.js
+  ⏭️ JSON解析失败: https://shangjihuoke.com
+  ⏭️ JSON解析失败: https://vip.wwgz.cn:5200
+  ⏭️ JSON解析失败: https://www.appmovie.cc/index.php/vod/show/area/{area}/{year}/class/{class}/id/{cateId}/page/{catePg}.html
+  ⏭️ JSON解析失败: https://www.playm3u8.cn/jiexi.php?url=
+  ⏭️ JSON解析失败: https://www.psmp3.com
+  ⏭️ JSON解析失败: https://www.xsmp3.com
+  ⏭️ JSON解析失败: https://yemu.xyz/?url=
+  ⏭️ JSON解析失败: http://fty.xxooo.cf/tv
+  ⏭️ 获取失败: http://xhztv.top/dc
+  → 发现 32 个 API 站点
+
+📡 发现 32 个 API 站点
+  📥 🐯虎牙直播... ❌ 首页接口无响应
+  📥 🐠斗鱼直播... ❌ 首页接口无响应
+  📥 有声小说吧... ❌ 首页接口无响应
+  📥 JRKAN直播... ❌ 首页接口无响应
+  📥 海外看... ❌ 首页接口无响应
+  📥 暴風... ✅ 20个视频, 540/540个可播放
+  📥 索尼 ... ✅ 20个视频, 1294/1294个可播放
+  📥 快帆... ❌ 首页接口无响应
+  📥 量子... ✅ 20个视频, 2112/2112个可播放
+  📥 非凡... ✅ 20个视频, 2426/2426个可播放
+  📥 电视┃MTV... ❌ 首页接口无响应
+  📥 👒┃小胡┃资源┃... ❌ 首页接口无响应
+  📥 🐉┃索尼┃高清... ✅ 20个视频, 1294/1294个可播放
+  📥 🕹️淘片┃采集... ❌ 首页接口无响应
+  📥 🥗┃非凡┃资源... ✅ 20个视频, 2426/2426个可播放
+  📥 🥑┃量子┃资源... ✅ 20个视频, 2112/2112个可播放
+  📥 🦁┃四九┃资源... ❌ 首页接口无响应
+  📥 🛰️飞速┃采集... ❌ 首页接口无响应
+  📥 🐯┃奇虎┃采集... ❌ 首页接口无响应
+  📥 ⛱┃可可┃采集... ❌ 首页接口无响应
+  📥 🐯虎牙采集... ✅ 20个视频, 895/895个可播放
+  📥 🦊火狐采集... ✅ 20个视频, 917/1834个可播放
+  📥 🌪️暴风影音... ❌ 首页接口无响应
+  📥 🎏百度┃采集... ✅ 20个视频, 1817/1817个可播放
+  📥 低端影视(DRPY)... ❌ 首页接口无响应
+  📥 爱看机器人(DRPY)... ❌ 首页接口无响应
+  📥 红牛｜资源... ✅ 20个视频, 1736/3472个可播放
+  📥 光速｜资源... ✅ 20个视频, 904/1808个可播放
+  📥 极速｜资源... ✅ 20个视频, 1962/3924个可播放
+  📥 快车｜资源... ❌ 首页接口无响应
+  📥 索尼｜资源... ✅ 20个视频, 1294/1294个可播放
+  📥 非凡｜资源... ✅ 20个视频, 2426/2426个可播放
+
+============================================================
+  生成输出...
+  站点: 15/32 成功
+  视频: 300 个
+  地址: 29674 条 (24155 可播放)
+  📁 data/ — 15 个站点数据文件
+  🎬 player.html — 播放器（数据源自 data/all.js）
+  📋 report/crawl-report.json
+============================================================
+[2026/05/15 ���� 13:19:03.33] CRAWL DONE 
+[2026/05/15 ���� 13:19:03.98] Pushing changes... 
+[source 772a4e86] chore: auto-update TVBox video data
+ 30 files changed, 56249 insertions(+), 36755 deletions(-)
+To github.com:snowhoo/snowhoo.git
+   5dde3fc6..772a4e86  source -> source
+[2026/05/15 ���� 13:19:03.98] PUSH FAILED 
+ 
+[2026/05/15 ���� 13:19:10.04] ======== DONE ======== 
