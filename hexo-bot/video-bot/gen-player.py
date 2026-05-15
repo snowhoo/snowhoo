@@ -194,31 +194,24 @@ html = r'''<!DOCTYPE html><html lang="zh-CN" data-theme="dark">
 }
 .toolbar button:hover{background:var(--accent-hover)}
 
-/* ===== Category Tabs ===== */
+/* ===== Category Select ===== */
 .cat-bar{
-  display:flex;
-  gap:4px;
   margin:6px 0 8px;
-  flex-wrap:wrap;
 }
-.cat-bar button{
-  padding:3px 10px;
+.cat-bar select{
+  width:100%;
+  padding:7px 10px;
   border:1px solid var(--border);
-  border-radius:14px;
-  background:transparent;
-  color:var(--text-secondary);
+  border-radius:6px;
+  background:var(--bg-input);
+  color:var(--text-primary);
+  font-size:13px;
   cursor:pointer;
-  font-size:11px;
-  transition:all .15s;
+  transition:border-color .2s;
 }
-.cat-bar button:hover{
+.cat-bar select:focus{
+  outline:none;
   border-color:var(--accent);
-  color:var(--accent);
-}
-.cat-bar button.active{
-  background:var(--accent);
-  border-color:var(--accent);
-  color:#fff;
 }
 
 /* ===== Status Bar ===== */
@@ -563,7 +556,7 @@ function doSearch() {
     if (currentData) {
       currentFiltered = tagWithSource(currentData.videos, document.getElementById('sourceSelect').value, currentData.name);
       if (currentCategory) {
-        currentFiltered = currentFiltered.filter(function(v){ return (v.vod_class||'') === currentCategory; });
+        currentFiltered = currentFiltered.filter(function(v){ return (v.vod_class||'').split(',').some(function(s){return s.trim()===currentCategory}); });
       }
       setStatus('\ud83d\udce1 ' + currentData.name + (currentCategory?' \u00b7 '+currentCategory:''));
     } else {
@@ -581,7 +574,7 @@ function doSearch() {
     var src = TVBOX_DATA[k];
     if (!src || !src.videos) return;
     src.videos.forEach(function(v) {
-      if (currentCategory && (v.vod_class||'') !== currentCategory) return;
+      if (currentCategory && !(v.vod_class||'').split(',').some(function(s){return s.trim()===currentCategory})) return;
       var match = (v.vod_name||'').toLowerCase().includes(q);
       if (!match) {
         match = (v.episodes||[]).some(function(e){ return (e.title||'').toLowerCase().includes(q); });
@@ -613,26 +606,32 @@ function tagWithSource(videos, key, name) {
   });
 }
 
-/* ===== 分类标签 ===== */
+/* ===== 分类下拉 ===== */
 function buildCatBar() {
   if (!currentData) return;
   var cats = {}, bars = document.getElementById('catBar');
   (currentData.videos||[]).forEach(function(v) {
-    var c = v.vod_class || '\u672a\u5206\u7c7b';
-    cats[c] = (cats[c]||0) + 1;
+    var cv = (v.vod_class || '').trim();
+    if (!cv) {
+      cats['\u672a\u5206\u7c7b'] = (cats['\u672a\u5206\u7c7b'] || 0) + 1;
+    } else {
+      cv.split(',').forEach(function(c) {
+        c = c.trim();
+        if (c) cats[c] = (cats[c] || 0) + 1;
+      });
+    }
   });
-  var h = '<button class="active" onclick="filterCat(this,\'\')">\u5168\u90e8 (' + currentData.total_videos + ')</button>';
-  Object.keys(cats).sort().forEach(function(c) {
-    h += '<button onclick="filterCat(this,\'' + c.replace(/'/g,"\\'") + '\')">' + c + ' (' + cats[c] + ')</button>';
+  var h = '<select onchange="filterCat(this)">';
+  h += '<option value="">\u5168\u90e8 (' + currentData.total_videos + ')</option>';
+  Object.keys(cats).sort(function(a,b){return cats[b]-cats[a];}).forEach(function(c) {
+    h += '<option value="' + c.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '">' + c + ' (' + cats[c] + ')</option>';
   });
+  h += '</select>';
   bars.innerHTML = h;
 }
-function filterCat(el, cat) {
-  currentCategory = cat;
+function filterCat(sel) {
+  currentCategory = sel.value;
   currentPage = 1;
-  // 高亮切换
-  document.querySelectorAll('.cat-bar button').forEach(function(b){b.classList.remove('active');});
-  el.classList.add('active');
   doSearch();
 }
 
