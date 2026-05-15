@@ -446,12 +446,13 @@
 <div class="pagination" id="pagination"></div>
 <div class="tvbox-footer" id="tvboxFooter"></div>
 
-<script src="./data/all.js"></script>
 <script>
 var PAGE_SIZE = 12;
 var currentData = null, currentPage = 1, currentFiltered = [], currentHls = null;
 var currentEpNext = null;
 var currentCategory = '';
+var sourceIndex = []; // 索引数据 [{name, file, total, playable}]
+var loadedSources = {}; // 已加载的分片缓存 {key: data}
 
 /* ===== 主题自动适配 ===== */
 (function(){
@@ -471,45 +472,85 @@ var currentCategory = '';
   document.documentElement.setAttribute('data-theme', t);
 })();
 
+/* ===== 通用加载函数：script 标签注入，读取 window._TVBOX_INDEX / _TVBOX_SITE_DATA ===== */
+function loadData(file, callback) {
+  var key = (file === 'index.js') ? '_TVBOX_INDEX' : '_TVBOX_SITE_DATA';
+  var src = './data/' + file;
+  var s = document.createElement('script');
+  var timer = setTimeout(function() { callback(window[key] || null); }, 300);
+  s.onerror = function() { clearTimeout(timer); callback(null); };
+  s.onload = function() { clearTimeout(timer); callback(window[key] || null); };
+  s.src = src;
+  document.head.appendChild(s);
+}
+
 /* ===== 加载索引 ===== */
 function loadIndex() {
-  var names = Object.keys(TVBOX_DATA);
-  if (!names.length) {
-    setEmpty('\u274c \u65e0\u6570\u636e\uff0c\u8bf7\u5148\u8fd0\u884c\u722c\u866b', '\u8bf7\u786e\u4fdd data/ \u76ee\u5f55\u4e0b\u6709\u6570\u636e\u6587\u4ef6');
-    return;
-  }
-  var sel = document.getElementById('sourceSelect'), ta = 0, pa = 0;
-  names.sort().forEach(function(k) {
-    var d = TVBOX_DATA[k];
-    ta += d.total_episodes||0;
-    pa += d.playable_count||0;
-    var o = document.createElement('option');
-    o.value = k;
-    o.textContent = d.name + ' (' + (d.playable_count||0) + '/' + (d.total_episodes||0) + ')';
-    sel.appendChild(o);
+  loadData('index.js', function(data) {
+    if (!data) {
+      setEmpty('\u274c \u7d22\u5f15\u52a0\u8f7d\u5931\u80fd', '\u8bf7\u786e\u4fdd data/ \u76ee\u5f55\u4e0b\u6709\u6570\u636e\u6587\u4ef6');
+      return;
+    }
+    sourceIndex = data;
+    if (!sourceIndex.length) {
+      setEmpty('\u274c \u65e0\u6570\u636e\uff0c\u8bf7\u5148\u8fd0\u884c\u722c\u866b', '\u8bf7\u786e\u4fdd data/ \u76ee\u5f55\u4e0b\u6709\u6570\u636e\u6587\u4ef6');
+      return;
+    }
+    var sel = document.getElementById('sourceSelect'), ta = 0, pa = 0;
+    sourceIndex.forEach(function(item) {
+      ta += item.total||0;
+      pa += item.playable||0;
+      var o = document.createElement('option');
+      o.value = item.file;
+      o.textContent = item.name + ' (' + (item.playable||0) + '/' + (item.total||0) + ')';
+      sel.appendChild(o);
+    });
+    document.getElementById('tvboxFooter').innerHTML =
+      '<span>\u6570\u636e\u6e90 ' + sourceIndex.length + '</span><span>\u603b\u5730\u5740 ' + ta + '</span><span>\u53ef\u64ad\u653e ' + pa + '</span>';
+    sel.value = sourceIndex[0].file;
+    switchSource();
   });
-  document.getElementById('tvboxFooter').innerHTML =
-    '<span>\u6570\u636e\u6e90 ' + names.length + '</span><span>\u603b\u5730\u5740 ' + ta + '</span><span>\u53ef\u64ad\u653e ' + pa + '</span>';
-  // 默认选中第一个数据源
-  sel.value = names[0];
-  switchSource();
 }
 
 /* ===== 切换数据源 ===== */
 function switchSource() {
-  var key = document.getElementById('sourceSelect').value;
+  var file = document.getElementById('sourceSelect').value;
   var content = document.getElementById('content');
   var pagination = document.getElementById('pagination');
-  if (!key) {
+  if (!file) {
     content.innerHTML = '';
     pagination.innerHTML = '';
     setStatus('\u23f9 \u9009\u62e9\u6570\u636e\u6e90');
     return;
   }
-  currentData = TVBOX_DATA[key];
+
+  // 已缓存则直接使用
+  if (loadedSources[file]) {
+    useSourceData(loadedSources[file], file);
+    return;
+  }
+
+  // 加载中状态
+  content.innerHTML = '<div class="empty-state"><div class="icon">\u26cf</div><div class="desc">\u52a0\u8f7d\u4e2d...</div></div>';
+  pagination.innerHTML = '';
+
+  loadData(file, function(data) {
+    if (!data) {
+      content.innerHTML = '';
+      pagination.innerHTML = '';
+      setStatus('\u274c \u6570\u636e\u52a0\u8f7d\u5931\u8d25: ' + file);
+      return;
+    }
+    loadedSources[file] = data;
+    useSourceData(data, file);
+  });
+}
+
+function useSourceData(data, file) {
+  currentData = data;
   if (!currentData || !currentData.videos) {
-    content.innerHTML = '';
-    pagination.innerHTML = '';
+    document.getElementById('content').innerHTML = '';
+    document.getElementById('pagination').innerHTML = '';
     setStatus('\u274c \u6570\u636e\u683c\u5f0f\u9519\u8bef');
     return;
   }
@@ -520,7 +561,7 @@ function switchSource() {
   // 如果搜索框有内容则全局搜索，否则显示当前源
   var q = document.getElementById('searchInput').value.trim();
   if (q) { doSearch(); }
-  else { currentFiltered = tagWithSource(currentData.videos, key, currentData.name); render(); }
+  else { currentFiltered = tagWithSource(currentData.videos, file, currentData.name); render(); }
 }
 
 /* ===== 全局搜索 ===== */
@@ -542,35 +583,70 @@ function doSearch() {
     render();
     return;
   }
-  // 全局搜索：遍历所有数据源
-  var names = Object.keys(TVBOX_DATA);
+  // 全局搜索：按需加载各分片文件，汇聚结果
+  var searchingCount = sourceIndex.length;
   var results = [];
-  names.forEach(function(k) {
-    var src = TVBOX_DATA[k];
-    if (!src || !src.videos) return;
-    src.videos.forEach(function(v) {
-      if (currentCategory && !(v.vod_class||'').split(',').some(function(s){return s.trim()===currentCategory})) return;
-      var match = (v.vod_name||'').toLowerCase().includes(q);
-      if (!match) {
-        match = (v.episodes||[]).some(function(e){ return (e.title||'').toLowerCase().includes(q); });
+  var done = 0;
+  var statusTimer = null;
+
+  function updateStatus() {
+    setStatus('\ud83d\udd0d \u5168\u5c38\u641c\u7d22: \u201c' + q + '\u201d \u2014 \u52a0\u8f7d\u4e2d... (' + done + '/' + sourceIndex.length + ')');
+  }
+
+  function finish() {
+    done++;
+    if (done < searchingCount) {
+      updateStatus();
+      return;
+    }
+    // 过滤分类
+    if (currentCategory) {
+      results = results.filter(function(v){ return (v.vod_class||'').split(',').some(function(s){return s.trim()===currentCategory}); });
+    }
+    currentFiltered = results;
+    setStatus('\ud83d\udd0d \u5168\u5c38\u641c\u7d22: \u201c' + q + '\u201d \u2014 ' + results.length + '\u4e2a\u7ed3\u679c');
+    currentPage = 1;
+    render();
+  }
+
+  updateStatus();
+  sourceIndex.forEach(function(item) {
+    // 已有缓存直接用
+    if (loadedSources[item.file]) {
+      searchInSource(loadedSources[item.file], item.file, q, results);
+      finish();
+      return;
+    }
+    loadData(item.file, function(data) {
+      if (data) {
+        loadedSources[item.file] = data;
+        searchInSource(data, item.file, q, results);
       }
-      if (match) {
-        results.push({
-          sourceKey: k,
-          sourceName: src.name,
-          vod_name: v.vod_name,
-          vod_pic: v.vod_pic,
-          episodes: v.episodes,
-          ep_count: v.ep_count,
-          playable_count: v.playable_count,
-        });
-      }
+      finish();
     });
   });
-  currentFiltered = results;
-  setStatus('\ud83d\udd0d \u5168\u5c40\u641c\u7d22: \u201c' + q + '\u201d \u2014 ' + results.length + '\u4e2a\u7ed3\u679c');
-  currentPage = 1;
-  render();
+}
+
+function searchInSource(src, file, q, results) {
+  if (!src || !src.videos) return;
+  src.videos.forEach(function(v) {
+    var match = (v.vod_name||'').toLowerCase().includes(q);
+    if (!match) {
+      match = (v.episodes||[]).some(function(e){ return (e.title||'').toLowerCase().includes(q); });
+    }
+    if (match) {
+      results.push({
+        sourceKey: file,
+        sourceName: src.name,
+        vod_name: v.vod_name,
+        vod_pic: v.vod_pic,
+        episodes: v.episodes,
+        ep_count: v.ep_count,
+        playable_count: v.playable_count,
+        vod_class: v.vod_class,
+      });
+    }
+  });
 }
 
 function tagWithSource(videos, key, name) {
@@ -597,9 +673,10 @@ function buildCatBar() {
     }
   });
   var h = '<select onchange="filterCat(this)">';
-  h += '<option value="">\u5168\u90e8 (' + currentData.total_videos + ')</option>';
+  h += '<option value="">\u5168\u90e8 (' + (currentData.total_videos>99?'99+':currentData.total_videos) + ')</option>';
   Object.keys(cats).sort(function(a,b){return cats[b]-cats[a];}).forEach(function(c) {
-    h += '<option value="' + c.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '">' + c + ' (' + cats[c] + ')</option>';
+    var cnt = cats[c] > 99 ? '99+' : cats[c];
+    h += '<option value="' + c.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '">' + c + ' (' + cnt + ')</option>';
   });
   h += '</select>';
   bars.innerHTML = h;

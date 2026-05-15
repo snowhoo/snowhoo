@@ -19,7 +19,9 @@ echo [%DATE% %TIME%] ======== START ======== >> "%LOG%"
 
 cd /d "%BOT_DIR%"
 
-"%PYTHON%" tvbox-crawler.py >> "%LOG%" 2>&1
+echo Running tvbox-crawler-optimized.py...
+echo [%DATE% %TIME%] Running tvbox-crawler-optimized.py... >> "%LOG%"
+"%PYTHON%" tvbox-crawler-optimized.py
 if %ERRORLEVEL% NEQ 0 (
     echo [%DATE% %TIME%] CRAWL FAILED >> "%LOG%"
 ) else (
