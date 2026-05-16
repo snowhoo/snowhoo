@@ -1014,28 +1014,7 @@ inject:
         padding: 0 !important;
       }
 
-      /* ========== 分享按钮与 Sponsor 之间留白 10px ========== */
-      /* 分享按钮下方 */
-      .post-share,
-      #post .post-share,
-      #share,
-      .share-wrap,
-      .post-share-wrap {
-        margin-bottom: 10px !important;
-      }
-      /* Sponsor 上方 */
-      .sponsor,
-      .sponsor-wrap,
-      .post-sponsor,
-      .reward-wrap,
-      .reward,
-      #sponsor {
-        margin-top: 10px !important;
-        padding-top: 0 !important;
-        margin-bottom: 12px !important;
-      }
-
-      /* ========== 减少文章内容所有元素间距 ========== */
+      /* ========== 减少文章内容所有元素间距（压缩正文行间距） ========== */
       .post-content,
       .article-content {
         padding: 0 !important;
@@ -1048,12 +1027,12 @@ inject:
         margin-bottom: 4px !important;
         padding-bottom: 0 !important;
       }
+      /* 正文段落：只压缩有内容的，空段落自然塌陷 */
       .post-content p:not(:empty),
       .article-content p:not(:empty) {
         margin-bottom: 4px !important;
         line-height: 1.4 !important;
       }
-      /* 空段落（Markdown 连续空行产生）允许自然塌陷，不强制 margin */
       .post-content p:empty,
       .article-content p:empty {
         margin-bottom: 0 !important;
@@ -1062,69 +1041,34 @@ inject:
         line-height: 1.2 !important;
       }
 
-      /* ========== 减少 Sponsor 上方间距 ========== */
-      .sponsor,
-      .sponsor-wrap,
-      .post-sponsor,
-      .reward-wrap,
-      .reward,
-      #sponsor {
+      /* ========== 文章页各区域间距统一压缩 ========== */
+      /* 元信息栏 */
+      .post-meta, .article-meta-wrap, #post-info {
+        margin: 12px 0 !important;
+        padding: 8px 0 !important;
+        line-height: 1.6 !important;
+      }
+      .post-meta * { margin: 0 4px !important; padding: 0 !important; }
+
+      /* 分享按钮 / Sponsor */
+      .post-share, #share, .share-wrap { margin-bottom: 10px !important; }
+      .sponsor, .reward, #sponsor {
         margin-top: 2px !important;
-        padding-top: 0 !important;
         margin-bottom: 2px !important;
-      }
-
-      /* ========== 减少版权声明间距 ========== */
-      .post-copyright,
-      .copyright-wrap,
-      .article-copyright,
-      #copyright {
-        margin-top: 2px !important;
-        padding: 4px 8px !important;
-      }
-
-      /* ========== 减少标签区域间距 ========== */
-      .post-tags,
-      .tag-wrap,
-      .article-tags,
-      #post-tags {
-        margin-top: 2px !important;
-        padding-top: 0 !important;
-        margin-bottom: 2px !important;
-      }
-
-      /* ========== 减少上下篇文章导航间距 ========== */
-      #pagination,
-      .pagination-post,
-      .post-nav,
-      #post-nav {
-        margin-top: 2px !important;
         padding-top: 0 !important;
       }
 
-      /* ========== 减少相关文章区域间距 ========== */
-      .relatedPosts,
-      .related-posts,
-      #related-posts {
-        margin-top: 2px !important;
-        padding-top: 0 !important;
-      }
+      /* 版权 / 标签 / 导航 / 相关文章 / 评论 */
+      .post-copyright, #copyright { margin-top: 2px !important; padding: 4px 8px !important; }
+      .post-tags, #post-tags { margin-top: 2px !important; padding-top: 0 !important; margin-bottom: 2px !important; }
+      #pagination, .pagination-post { margin-top: 2px !important; padding-top: 0 !important; }
+      .relatedPosts { margin-top: 2px !important; padding-top: 0 !important; }
+      #comments { margin-top: 2px !important; padding-top: 0 !important; }
 
-      /* ========== 减少评论区上方间距 ========== */
-      #comments,
-      .comments-wrap,
-      #comment {
-        margin-top: 2px !important;
-        padding-top: 0 !important;
-      }
-
-      /* ========== 通用:强制减少所有 div 和 section 的上下 margin ========== */
-      #post > div,
-      #post > section,
-      .post > div,
-      .post > section,
-      #article-container > div,
-      #article-container > section {
+      /* 通用：文章容器内 div/section 微间距 */
+      #post > div, #post > section,
+      .post > div, .post > section,
+      #article-container > div, #article-container > section {
         margin-top: 1px !important;
         margin-bottom: 1px !important;
       }
