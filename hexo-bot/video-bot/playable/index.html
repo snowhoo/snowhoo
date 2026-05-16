@@ -647,9 +647,10 @@ function doSearch() {
 
   // 递归串行：逐源逐页加载
   function loadNextSource(srcIdx) {
-    if (searchVersion !== thisVersion) return;  // 已被新搜索取代
+    if (searchVersion !== thisVersion) { isSearching = false; return; }  // 已被新搜索取代
     if (srcIdx >= sourceIndex.length) {
-      if (searchVersion !== thisVersion) return;
+      if (searchVersion !== thisVersion) { isSearching = false; return; }
+      isSearching = false;
       setStatus('\ud83d\udd0d \u5168\u5c40\u641c\u7d22\u5b8c\u6210: \u201c' + q + '\u201d \u2014 ' + currentFiltered.length + '\u4e2a\u7ed3\u679c');
       return;
     }
