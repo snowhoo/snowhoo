@@ -1,0 +1,1 @@
+window._TVBOX_SITE_DATA = {"name": "bfzyapi", "api": "https://bfzyapi.com/api.php/provide/vod/", "source": "", "videos": []};
