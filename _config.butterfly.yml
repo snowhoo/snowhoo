@@ -1399,6 +1399,12 @@ inject:
         gap: 0px;
         justify-content: center;
       }
+      /* 宽屏（>768px）按钮间隙 */
+      @media (min-width: 769px) {
+        .news-upper {
+          gap: 8px;
+        }
+      }
       .news-btn {
         flex: 1;
         min-width: 0;
