@@ -25,7 +25,9 @@
   ],
 
   "crawler": {
-    "_max_videos_per_site": "已弃用，现在每站固定40页×12视频=480个",
+    "max_workers": 9,
+    "max_pages": 40,
+    "videos_per_page": 12,
     "request_timeout": 15,
     "test_mode": false
   }

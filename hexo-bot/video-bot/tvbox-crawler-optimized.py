@@ -22,8 +22,6 @@ from datetime import datetime
 from urllib.parse import urlparse, urljoin
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-MAX_WORKERS = 9  # 并发线程数，可根据网络状况调整
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')
 PLAYABLE_DIR = os.path.join(BASE_DIR, 'playable')
@@ -316,7 +314,7 @@ def fetch_cmsv10_detail(api, vod_id):
         return None
 
 
-def crawl_site(site, data_dir=None):
+def crawl_site(site, data_dir=None, max_pages=40, videos_per_page=12):
     """爬取单个站点：每页12个视频，固定40页，逐页写文件释放内存"""
     import re
 
@@ -324,8 +322,8 @@ def crawl_site(site, data_dir=None):
     name = site['name']
     source = site['source']
 
-    MAX_PAGES = 40
-    VIDEOS_PER_PAGE = 12
+    MAX_PAGES = max_pages
+    VIDEOS_PER_PAGE = videos_per_page
 
     # 生成安全文件名前缀
     safe_prefix = re.sub(r'[^\w\u4e00-\u9fff]', '_', name).strip('_')[:50]
@@ -411,10 +409,14 @@ def crawl_site(site, data_dir=None):
             if not detail:
                 continue
 
-            # 分类统计：计入所有有分类的视频，不论是否可播放
+            # 分类统计：计入所有视频，不论是否可播放
             raw_class = detail.get('vod_class', '') or ''
-            for part in [c.strip() for c in raw_class.split(',') if c.strip()]:
-                category_counts[part] = category_counts.get(part, 0) + 1
+            if raw_class.strip():
+                for part in [c.strip() for c in raw_class.split(',') if c.strip()]:
+                    category_counts[part] = category_counts.get(part, 0) + 1
+            else:
+                # 无分类的视频计入"未分类"
+                category_counts['未分类'] = category_counts.get('未分类', 0) + 1
 
             play_url = detail.get('vod_play_url', '') or detail.get('play_url', '')
             play_from = detail.get('vod_play_from', '') or detail.get('play_from', '')
@@ -803,6 +805,9 @@ def main():
         return
 
     # 并发爬取，每完成一页立即写出 JS 并释放内存
+    max_workers = crawler_cfg.get('max_workers', 9)
+    max_pages = crawler_cfg.get('max_pages', 40)
+    videos_per_page = crawler_cfg.get('videos_per_page', 12)
     site_stats = []
     data_dir = os.path.join(PLAYABLE_DIR, 'data')
     if os.path.exists(data_dir):
@@ -816,7 +821,7 @@ def main():
         """供线程池调用的单站爬取函数"""
         name = site['name']
         print(f'  [CRAWL] {name}... ', flush=True)
-        result = crawl_site(site, data_dir)
+        result = crawl_site(site, data_dir, max_pages, videos_per_page)
         # 记录统计，videos 已在 crawl_site 内逐页释放
         stats = {
             'name': result['name'],
@@ -838,7 +843,7 @@ def main():
         time.sleep(10)  # 站间限速，避免被封
         return stats
 
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(crawl_one, site): site for site in sites}
         for future in as_completed(futures):
             try:
