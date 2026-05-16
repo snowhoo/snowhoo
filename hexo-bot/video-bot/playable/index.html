@@ -682,12 +682,9 @@ function doSearch() {
       loadedFiles++;
       if (data && data.videos) {
         data.videos.forEach(function(v) {
+          // 只搜可播放的视频
+          if (!v.playable_count) return;
           var match = (v.vod_name || '').toLowerCase().includes(q);
-          if (!match) {
-            match = (v.episodes || []).some(function(e) {
-              return (e.title || '').toLowerCase().includes(q);
-            });
-          }
           if (match) {
             var item = {
               sourceKey: f.fname,
