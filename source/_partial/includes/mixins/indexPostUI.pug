@@ -7,7 +7,7 @@ mixin indexPostUI()
       each article, index in page.posts.data
         - const isSticky = globalPageType === 'home' && (article.top || article.sticky > 0)
         - const stickyColor = isSticky ? stickyColors[Math.floor(Math.random() * stickyColors.length)] : ''
-        .recent-post-item(class=isSticky ? 'is-sticky' : '', style=isSticky ? `border: 2px solid ${stickyColor}; border-radius: 8px;` : '')
+        .recent-post-item(class=isSticky ? 'is-sticky' : '', style=isSticky ? `border: 1px solid ${stickyColor}; border-radius: 8px;` : '')
           - const link = article.link || article.path
           - const title = article.title || _p('no_title')
           - const leftOrRight = indexLayout === 3 ? (index % 2 === 0 ? 'left' : 'right') : (indexLayout === 2 ? 'right' : '')
