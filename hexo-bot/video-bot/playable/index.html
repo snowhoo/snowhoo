@@ -463,6 +463,7 @@ var sourceMeta = {};      // {prefix: {page_count, name, total, playable, total_
 var currentPrefix = '';
 var currentFilePage = 1;
 var currentSearchMode = false;
+var isSearching = false; // 搜索进行中锁
 var searchVersion = 0;   // 搜索版本号，用于取消过期搜索
 
 /* ===== 主题自动适配 ===== */
@@ -613,7 +614,6 @@ function useSourceData(data, file, pageNum) {
 /* ===== 全局搜索（流式：遍历所有数据源全部文件） ===== */
 function doSearch() {
   var q = document.getElementById('searchInput').value.toLowerCase().trim();
-  var thisVersion = ++searchVersion;  // 标记本次搜索版本
 
   if (!q) {
     currentSearchMode = false;
@@ -623,14 +623,27 @@ function doSearch() {
     return;
   }
 
+  // 搜索进行中，忽略新的搜索请求
+  if (isSearching) return;
+  isSearching = true;
+
+  var thisVersion = ++searchVersion;  // 标记本次搜索版本
+
   currentFiltered = [];
   allSearchResults = [];
   currentPage = 1;
   currentSearchMode = true;
 
+  // 统计总文件数
+  var totalFiles = 0;
+  sourceIndex.forEach(function(src) {
+    var pc = src.page_count || 1;
+    totalFiles += pc;
+  });
+
   var loadedFiles = 0;
 
-  setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: 0/... \u2014 \u201c' + q + '\u201d');
+  setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: 0/' + totalFiles + ' \u2014 \u201c' + q + '\u201d');
 
   // 递归串行：逐源逐页加载
   function loadNextSource(srcIdx) {
@@ -681,7 +694,7 @@ function doSearch() {
             }
           });
         }
-        setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: ' + loadedFiles + '/... \u2014 \u201c' + q + '\u201d \u2014 ' + currentFiltered.length + '\u4e2a\u7ed3\u679c');
+        setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: ' + loadedFiles + '/' + totalFiles + ' \u2014 \u201c' + q + '\u201d \u2014 ' + currentFiltered.length + '\u4e2a\u7ed3\u679c');
         render();
         buildCatBarFromFiltered();
         // 下一个文件

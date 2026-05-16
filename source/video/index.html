@@ -628,9 +628,16 @@ function doSearch() {
   currentPage = 1;
   currentSearchMode = true;
 
+  // 统计总文件数
+  var totalFiles = 0;
+  sourceIndex.forEach(function(src) {
+    var pc = src.page_count || 1;
+    totalFiles += pc;
+  });
+
   var loadedFiles = 0;
 
-  setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: 0/... \u2014 \u201c' + q + '\u201d');
+  setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: 0/' + totalFiles + ' \u2014 \u201c' + q + '\u201d');
 
   // 递归串行：逐源逐页加载
   function loadNextSource(srcIdx) {
@@ -681,7 +688,7 @@ function doSearch() {
             }
           });
         }
-        setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: ' + loadedFiles + '/... \u2014 \u201c' + q + '\u201d \u2014 ' + currentFiltered.length + '\u4e2a\u7ed3\u679c');
+        setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: ' + loadedFiles + '/' + totalFiles + ' \u2014 \u201c' + q + '\u201d \u2014 ' + currentFiltered.length + '\u4e2a\u7ed3\u679c');
         render();
         buildCatBarFromFiltered();
         // 下一个文件
