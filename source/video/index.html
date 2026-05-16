@@ -489,7 +489,12 @@ function loadData(file, callback) {
   var key = (file === 'index.js') ? '_TVBOX_INDEX' : '_TVBOX_SITE_DATA';
   var src = './data/' + file;
   var s = document.createElement('script');
-  var timer = setTimeout(function() { callback(null); }, 3000);
+  var timer = setTimeout(function() {
+    s.onload = null;  // 取消后续 onload，避免超时后再加载完成时重复回调
+    s.onerror = null;
+    document.head.removeChild(s);
+    callback(null);
+  }, 3000);
   s.onerror = function() { clearTimeout(timer); callback(null); };
   s.onload = function() {
     clearTimeout(timer);
