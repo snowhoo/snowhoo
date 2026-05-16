@@ -521,7 +521,8 @@ function loadIndex() {
         total: item.total,
         playable_videos: item.playable_videos || 0,
         playable: item.playable,
-        total_episodes: item.total_episodes
+        total_episodes: item.total_episodes,
+        categories: item.categories || {}
       };
     });
     document.getElementById('tvboxFooter').innerHTML =
@@ -680,7 +681,7 @@ function buildCatBar() {
   var playableVid = meta ? meta.playable_videos : 0;
   var totalVid = meta ? meta.total : 0;
   var h = '<select onchange="filterCat(this)">';
-  h += '<option value="">全部 (' + (playableVid>99?'99+':playableVid) + '/' + (totalVid>99?'99+':totalVid) + ')</option>';
+  h += '<option value="">全部 (' + (totalVid>99?'99+':totalVid) + '/' + (playableVid>99?'99+':playableVid) + ')</option>';
   Object.keys(cats).sort(function(a,b){return cats[b]-cats[a];}).forEach(function(c) {
     var cnt = cats[c] > 99 ? '99+' : cats[c];
     h += '<option value="' + c.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '">' + c + ' (' + cnt + ')</option>';
