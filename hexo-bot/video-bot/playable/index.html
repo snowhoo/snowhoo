@@ -438,6 +438,7 @@
   </select>
   <input type="text" id="searchInput" placeholder="全局搜索影片...">
   <button onclick="doSearch()">搜索</button>
+  <button id="stopSearchBtn" onclick="stopSearch()" style="display:none">停止</button>
 </div>
 <div class="player-box">
   <video id="player" controls playsinline></video>
@@ -616,6 +617,14 @@ function useSourceData(data, file, pageNum) {
   render();
 }
 
+/* ===== 停止搜索 ===== */
+function stopSearch() {
+  isSearching = false;
+  searchVersion++;  // 使当前搜索的异步回调全部失效
+  document.getElementById('stopSearchBtn').style.display = 'none';
+  setStatus('\u23f9 \u641c\u7d22\u5df2\u505c\u6b62 \u2014 ' + currentFiltered.length + '\u4e2a\u7ed3\u679c');
+}
+
 /* ===== 全局搜索（扁平遍历：直接从 sourceIndex 展开所有文件路径） ===== */
 function doSearch() {
   var q = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -630,6 +639,7 @@ function doSearch() {
 
   if (isSearching) return;
   isSearching = true;
+  document.getElementById('stopSearchBtn').style.display = '';
 
   var thisVersion = ++searchVersion;
 
@@ -662,12 +672,13 @@ function doSearch() {
     if (searchVersion !== thisVersion) { isSearching = false; return; }
     if (idx >= allFiles.length) {
       isSearching = false;
+      document.getElementById('stopSearchBtn').style.display = 'none';
       setStatus('\ud83d\udd0d \u5168\u5c40\u641c\u7d22\u5b8c\u6210: \u201c' + q + '\u201d \u2014 ' + currentFiltered.length + '\u4e2a\u7ed3\u679c');
       return;
     }
     var f = allFiles[idx++];
     loadData(f.fname, function(data) {
-      if (searchVersion !== thisVersion) { isSearching = false; return; }
+      if (searchVersion !== thisVersion) { isSearching = false; document.getElementById('stopSearchBtn').style.display = 'none'; return; }
       loadedFiles++;
       if (data && data.videos) {
         data.videos.forEach(function(v) {
