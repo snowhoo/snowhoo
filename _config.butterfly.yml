@@ -1537,9 +1537,9 @@ inject:
         // ========== 按钮配置（修改这里添加/编辑按钮）==========
         // text: 按钮文字  url: 跳转链接  bgImage: 按钮背景图片URL（留空则使用半透明白色）
         var NEWS_BUTTONS = [
-          { text: '', url: '/news/' , bgImage: '/images/banner/news.jpg' },
-          { text: '', url: '/video/' , bgImage: '/images/banner/videos.jpg'},
-          { text: '', url: '/xls2print/' , bgImage: '/images/banner/xls2print.jpg'},
+          { text: '新闻速递', url: '/news/' , bgImage: '' },
+          { text: '超级播霸', url: '/video/' , bgImage: ''},
+          { text: 'Excel任意打印', url: '/xls2print/' , bgImage: ''},
         ];
 
         // ========== 底部滚动字幕配置 ==========
