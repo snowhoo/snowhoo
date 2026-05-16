@@ -519,6 +519,7 @@ function loadIndex() {
         page_count: item.page_count || 1,
         name: item.name,
         total: item.total,
+        playable_videos: item.playable_videos || 0,
         playable: item.playable,
         total_episodes: item.total_episodes
       };
@@ -584,7 +585,7 @@ function useSourceData(data, file, pageNum) {
   buildCatBar();
   var meta = sourceMeta[currentPrefix];
   var vidCount = (currentData.videos||[]).length;
-  setStatus('\ud83d\udce1 ' + currentData.name + ' \u2014 \u7b2c' + currentFilePage + '\u9875(' + vidCount + '\u4e2a) \u2502 \u5171' + (meta?meta.total:'?') + '\u4e2a\u89c6\u9891,' + (meta?meta.playable:'?') + '\u53ef\u64ad');
+  setStatus('\ud83d\udce1 ' + currentData.name + ' \u2014 \u7b2c' + currentFilePage + '\u9875');
 
   currentFiltered = tagWithSource(currentData.videos, file, currentData.name);
   render();
@@ -654,9 +655,9 @@ function buildCatBar() {
   var cats = {}, totalVideos = 0;
 
   if (meta && meta.categories && Object.keys(meta.categories).length > 0) {
-    // 新数据：用 index.js 预计算的全量统计
+    // 新数据：用 index.js 预计算的全量统计（已修复为统计全部视频，不限可播放）
     cats = meta.categories;
-    totalVideos = meta.total || 0;
+    totalVideos = Object.values(cats).reduce(function(a,b){return a+b;}, 0);
   } else if (currentData && currentData.videos) {
     // 旧数据兼容：扫描当前页（数据量小，仅限当前页12个）
     totalVideos = currentData.videos.length;
@@ -676,8 +677,10 @@ function buildCatBar() {
   }
 
   var bars = document.getElementById('catBar');
+  var playableVid = meta ? meta.playable_videos : 0;
+  var totalVid = meta ? meta.total : 0;
   var h = '<select onchange="filterCat(this)">';
-  h += '<option value="">全部 (' + (totalVideos>99?'99+':totalVideos) + ')</option>';
+  h += '<option value="">全部 (' + (playableVid>99?'99+':playableVid) + '/' + (totalVid>99?'99+':totalVid) + ')</option>';
   Object.keys(cats).sort(function(a,b){return cats[b]-cats[a];}).forEach(function(c) {
     var cnt = cats[c] > 99 ? '99+' : cats[c];
     h += '<option value="' + c.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '">' + c + ' (' + cnt + ')</option>';
@@ -800,18 +803,15 @@ function render() {
 
   // 分页：页文件导航
   var pg = '';
-  var pageCount = (currentSearchMode ? Math.ceil(currentFiltered.length / PAGE_SIZE) || 1 : (sourceMeta[currentPrefix] && sourceMeta[currentPrefix].page_count) || 1);
-  if (pageCount > 1 || currentSearchMode) {
-    pg += '<button onclick="go(1)"' + (currentSearchMode ? (currentPage<=1?' disabled':'') : (currentFilePage<=1?' disabled':'')) + '>«</button>';
-    pg += '<button onclick="go(' + (currentSearchMode ? currentPage-1 : currentFilePage-1) + ')"' + (currentSearchMode ? (currentPage<=1?' disabled':'') : (currentFilePage<=1?' disabled':'')) + '>‹</button>';
-    var startP = Math.max(1, (currentSearchMode ? currentPage : currentFilePage) - 2);
-    var endP = Math.min(pageCount, (currentSearchMode ? currentPage : currentFilePage) + 2);
-    for (var pi=startP; pi<=endP; pi++) {
-      var active = pi === (currentSearchMode ? currentPage : currentFilePage);
-      pg += '<button class="' + (active ? 'active' : '') + '" onclick="go(' + pi + ')">' + pi + '</button>';
-    }
-    pg += '<button onclick="go(' + (currentSearchMode ? currentPage+1 : currentFilePage+1) + ')"' + (currentSearchMode ? (currentPage>=pageCount?' disabled':'') : (currentFilePage>=pageCount?' disabled':'')) + '>›</button>';
-    pg += '<button onclick="go(' + pageCount + ')"' + (currentSearchMode ? (currentPage>=pageCount?' disabled':'') : (currentFilePage>=pageCount?' disabled':'')) + '>»</button>';
+  if (!currentSearchMode && currentPrefix && sourceMeta[currentPrefix]) {
+    var pc = sourceMeta[currentPrefix].page_count || 1;
+    pg += '<button onclick="goPage(1)"' + (currentFilePage<=1?' disabled':'') + '>«</button>';
+    pg += '<button onclick="goPage(' + (currentFilePage-1) + ')"' + (currentFilePage<=1?' disabled':'') + '>‹</button>';
+    var startP = Math.max(1, currentFilePage-2), endP = Math.min(pc, currentFilePage+2);
+    for (var pi=startP; pi<=endP; pi++)
+      pg += '<button class="' + (pi===currentFilePage?'active':'') + '" onclick="goPage(' + pi + ')">' + pi + '</button>';
+    pg += '<button onclick="goPage(' + (currentFilePage+1) + ')"' + (currentFilePage>=pc?' disabled':'') + '>›</button>';
+    pg += '<button onclick="goPage(' + pc + ')"' + (currentFilePage>=pc?' disabled':'') + '>»</button>';
   }
   document.getElementById('pagination').innerHTML = pg;
 }
