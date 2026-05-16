@@ -988,16 +988,16 @@ inject:
       }
 
       /* ========== 文章头部:标题区域紧凑 ========== */
-      .post-header,
+      /* .post-header,
       .article-header {
         margin-top: 0 !important;
         padding-top: 0 !important;
         margin-bottom: 6px !important;
         padding-bottom: 0 !important;
-      }
+      } */
 
       /* ========== 元数据(来源、作者等)适当留白 ========== */
-      .post-meta,
+      /* .post-meta,
       .post-meta-wrap,
       .article-meta-wrap,
       .post-info,
@@ -1012,10 +1012,10 @@ inject:
       .article-meta * {
         margin: 0 4px !important;
         padding: 0 !important;
-      }
+      } */
 
       /* ========== 减少文章内容所有元素间距（压缩正文行间距） ========== */
-      .post-content,
+      /* .post-content,
       .article-content {
         padding: 0 !important;
         margin: 0 !important;
@@ -1026,9 +1026,9 @@ inject:
         padding-top: 0 !important;
         margin-bottom: 4px !important;
         padding-bottom: 0 !important;
-      }
+      } */
       /* 正文段落：只压缩有内容的，空段落自然塌陷 */
-      .post-content p:not(:empty),
+      /* .post-content p:not(:empty),
       .article-content p:not(:empty) {
         margin-bottom: 4px !important;
         line-height: 1.4 !important;
@@ -1039,39 +1039,39 @@ inject:
         min-height: 0 !important;
         padding: 0 !important;
         line-height: 1.2 !important;
-      }
+      } */
 
       /* ========== 文章页各区域间距统一压缩 ========== */
       /* 元信息栏 */
-      .post-meta, .article-meta-wrap, #post-info {
+      /* .post-meta, .article-meta-wrap, #post-info {
         margin: 12px 0 !important;
         padding: 8px 0 !important;
         line-height: 1.6 !important;
       }
-      .post-meta * { margin: 0 4px !important; padding: 0 !important; }
+      .post-meta * { margin: 0 4px !important; padding: 0 !important; } */
 
       /* 分享按钮 / Sponsor */
-      .post-share, #share, .share-wrap { margin-bottom: 10px !important; }
+      /* .post-share, #share, .share-wrap { margin-bottom: 10px !important; }
       .sponsor, .reward, #sponsor {
         margin-top: 2px !important;
         margin-bottom: 2px !important;
         padding-top: 0 !important;
-      }
+      } */
 
       /* 版权 / 标签 / 导航 / 相关文章 / 评论 */
-      .post-copyright, #copyright { margin-top: 2px !important; padding: 4px 8px !important; }
+      /* .post-copyright, #copyright { margin-top: 2px !important; padding: 4px 8px !important; }
       .post-tags, #post-tags { margin-top: 2px !important; padding-top: 0 !important; margin-bottom: 2px !important; }
       #pagination, .pagination-post { margin-top: 2px !important; padding-top: 0 !important; }
       .relatedPosts { margin-top: 2px !important; padding-top: 0 !important; }
-      #comments { margin-top: 2px !important; padding-top: 0 !important; }
+      #comments { margin-top: 2px !important; padding-top: 0 !important; } */
 
       /* 通用：文章容器内 div/section 微间距 */
-      #post > div, #post > section,
+      /* #post > div, #post > section,
       .post > div, .post > section,
       #article-container > div, #article-container > section {
         margin-top: 1px !important;
         margin-bottom: 1px !important;
-      }
+      } */
       </style>
       <script>
       document.addEventListener('DOMContentLoaded', function() {
