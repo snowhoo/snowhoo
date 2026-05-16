@@ -463,6 +463,7 @@ var sourceMeta = {};      // {prefix: {page_count, name, total, playable, total_
 var currentPrefix = '';
 var currentFilePage = 1;
 var currentSearchMode = false;
+var searchVersion = 0;   // 搜索版本号，用于取消过期搜索
 
 /* ===== 主题自动适配 ===== */
 (function(){
@@ -612,7 +613,7 @@ function useSourceData(data, file, pageNum) {
 /* ===== 全局搜索（流式：遍历所有数据源全部文件） ===== */
 function doSearch() {
   var q = document.getElementById('searchInput').value.toLowerCase().trim();
-  currentSearchMode = !!q;
+  var thisVersion = ++searchVersion;  // 标记本次搜索版本
 
   if (!q) {
     currentSearchMode = false;
@@ -625,22 +626,17 @@ function doSearch() {
   currentFiltered = [];
   allSearchResults = [];
   currentPage = 1;
-
-  // 统计总文件数
-  var totalFiles = 0;
-  sourceIndex.forEach(function(src) {
-    var pc = src.page_count || 1;
-    totalFiles += pc;
-  });
+  currentSearchMode = true;
 
   var loadedFiles = 0;
 
-  setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: 0/' + totalFiles + ' \u2014 \u201c' + q + '\u201d');
+  setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: 0/... \u2014 \u201c' + q + '\u201d');
 
   // 递归串行：逐源逐页加载
   function loadNextSource(srcIdx) {
+    if (searchVersion !== thisVersion) return;  // 已被新搜索取代
     if (srcIdx >= sourceIndex.length) {
-      // 全部完成
+      if (searchVersion !== thisVersion) return;
       setStatus('\ud83d\udd0d \u5168\u5c40\u641c\u7d22\u5b8c\u6210: \u201c' + q + '\u201d \u2014 ' + currentFiltered.length + '\u4e2a\u7ed3\u679c');
       return;
     }
@@ -651,6 +647,7 @@ function doSearch() {
 
     // 当前源搜完后进入下一个源
     function loadNextPage(pageIdx) {
+      if (searchVersion !== thisVersion) return;  // 已被新搜索取代
       if (pageIdx > pc) {
         loadNextSource(srcIdx + 1);
         return;
@@ -658,6 +655,7 @@ function doSearch() {
 
       var fname = prefix + '-' + String(pageIdx).padStart(2, '0') + '.js';
       loadData(fname, function(data) {
+        if (searchVersion !== thisVersion) return;  // 已被新搜索取代，丢弃结果
         loadedFiles++;
         if (data && data.videos) {
           data.videos.forEach(function(v) {
@@ -683,7 +681,7 @@ function doSearch() {
             }
           });
         }
-        setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: ' + loadedFiles + '/' + totalFiles + ' \u2014 \u201c' + q + '\u201d \u2014 ' + currentFiltered.length + '\u4e2a\u7ed3\u679c');
+        setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: ' + loadedFiles + '/... \u2014 \u201c' + q + '\u201d \u2014 ' + currentFiltered.length + '\u4e2a\u7ed3\u679c');
         render();
         buildCatBarFromFiltered();
         // 下一个文件
