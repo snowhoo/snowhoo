@@ -112,6 +112,61 @@ async function generateCoverImage(paragraphs, today, page) {
   }
 }
 
+// ============ 详情页提取实际发布日期 ============
+async function extractArticleDate(page) {
+  // 尝试从页面 DOM 中提取发布日期（多种常见格式）
+  const dateStr = await page.evaluate(() => {
+    // 常见日期文本模式
+    const patterns = [
+      // "05月16日" / "2025年05月16日"
+      /(\d{4})年(\d{1,2})月(\d{1,2})日/,
+      /(\d{1,2})月(\d{1,2})日/,
+      // "2025-05-16" / "2025/05/16"
+      /(\d{4})[-\/](\d{2})[-\/](\d{2})/,
+    ];
+
+    const searchIn = (el) => {
+      const text = el.textContent.trim();
+      for (const p of patterns) {
+        const m = text.match(p);
+        if (m) return m;
+      }
+      return null;
+    };
+
+    // 优先查找常见日期容器
+    const selectors = [
+      '.date', '.time', '.article-date', '.publish-date', '.post-date',
+      '[class*="date"]', '[class*="time"]', '[class*="publish"]',
+      'time', '.meta-date', '.info-date',
+    ];
+    for (const sel of selectors) {
+      const el = document.querySelector(sel);
+      if (el) {
+        const m = searchIn(el);
+        if (m) return m;
+      }
+    }
+
+    // 从 meta 标签取
+    const metaDate = document.querySelector('meta[property*="date"], meta[name*="date"], meta[name="publish"]');
+    if (metaDate) {
+      const content = metaDate.getAttribute('content') || '';
+      const m = content.match(/(\d{4})[-\/](\d{2})[-\/](\d{2})/);
+      if (m) return m;
+    }
+
+    // 全局搜索
+    const allText = document.body.innerText;
+    for (const p of patterns) {
+      const m = allText.match(p);
+      if (m) return m;
+    }
+    return null;
+  });
+  return dateStr;
+}
+
 // ============ 文章正文提取 ============
 async function extractArticle(page) {
   const article = await page.evaluate(() => {
@@ -391,34 +446,83 @@ async function main() {
       process.exit(1);
     }
 
-    // Step 3: 找最新文章（带"小时前"的，通常第一篇就是）
-    let targetIndex = 0;
-    // 优先找带"小时前"或"分钟前"的（今日文章）
+    // Step 3: 收集所有带"小时前/分钟前"的候选文章
+    const candidates = [];
     for (let i = 0; i < items.length; i++) {
       if (items[i].text.includes('小时前') || items[i].text.includes('分钟前')) {
-        targetIndex = i;
-        break;
+        candidates.push(i);
       }
     }
-    log(`选择第 ${targetIndex + 1} 篇: "${items[targetIndex].text.substring(0, 50)}"`);
-
-    // Step 4: 点击文章打开详情页
-    log('点击文章...');
-    await page.evaluate((idx) => {
-      const el = document.querySelectorAll('.item_text')[idx];
-      if (el) el.click();
-    }, targetIndex);
-
-    // Step 5: 等待导航到详情页
-    await sleep(2000);
-    try {
-      await page.waitForURL('**/column/**', { timeout: 10000 });
-    } catch (e) {
-      log('⚠️ 导航等待超时，尝试继续...');
+    if (candidates.length === 0) {
+      log('❌ 未找到任何带"小时前/分钟前"的候选文章');
+      await browser.close();
+      process.exit(1);
     }
-    log(`当前页面: ${page.url()}`);
+    log(`找到 ${candidates.length} 篇候选文章，逐一校验实际日期...`);
+
+    // Step 4: 逐个点进去验证实际发布日期，直到找到今天的
+    let targetIndex = null;
+    for (let ci = 0; ci < candidates.length; ci++) {
+      const idx = candidates[ci];
+      log(`  检查第 ${ci + 1}/${candidates.length} 篇: "${items[idx].text.substring(0, 40)}..."`);
+
+      await page.evaluate((i) => {
+        const el = document.querySelectorAll('.item_text')[i];
+        if (el) el.click();
+      }, idx);
+
+      await sleep(2000);
+      try {
+        await page.waitForURL('**/column/**', { timeout: 10000 });
+      } catch (e) {
+        log('    ⚠️ 导航等待超时，尝试继续...');
+      }
+
+      const articleDate = await extractArticleDate(page);
+      log(`    提取到日期信息: ${JSON.stringify(articleDate)}`);
+
+      if (articleDate) {
+        // 解析年/月/日
+        let pubYear, pubMonth, pubDay;
+        if (articleDate[1] && articleDate[1].length === 4) {
+          // "2025年05月16日" 或 "2025-05-16"
+          pubYear = parseInt(articleDate[1]);
+          pubMonth = parseInt(articleDate[2]);
+          pubDay = parseInt(articleDate[3]);
+        } else {
+          // "05月16日" → 用今年
+          pubYear = today.year;
+          pubMonth = parseInt(articleDate[1]);
+          pubDay = parseInt(articleDate[2]);
+        }
+
+        const isToday = (pubYear === today.year && pubMonth === parseInt(today.month) && pubDay === parseInt(today.day));
+
+        if (isToday) {
+          log(`    ✅ 日期匹配今日 (${pubYear}-${String(pubMonth).padStart(2,'0')}-${String(pubDay).padStart(2,'0')})，使用此文章`);
+          targetIndex = idx;
+          break;
+        } else {
+          log(`    ❌ 日期为 ${pubYear}-${String(pubMonth).padStart(2,'0')}-${String(pubDay).padStart(2,'0')}，不是今天，继续...`);
+        }
+      } else {
+        log(`    ⚠️ 无法提取日期，根据时间判断继续...`);
+      }
+
+      // 返回列表页继续检查下一个候选
+      log('    返回列表页...');
+      await page.goto(SOURCE_URL, { waitUntil: 'domcontentloaded', timeout: 20000 });
+      await sleep(2000);
+    }
+
+    if (targetIndex === null) {
+      log('❌ 遍历所有候选文章，未找到今日发布的文章（今日文章可能尚未发布）');
+      await browser.close();
+      process.exit(1);
+    }
 
     // Step 5: 提取正文
+    log(`当前页面: ${page.url()}`);
     const article = await extractArticle(page);
 
     if (!article.title && article.paragraphs.length === 0) {
