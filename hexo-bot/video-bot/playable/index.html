@@ -224,6 +224,11 @@
   overflow:hidden;
   margin:12px 0;
   position:relative;
+  height:0;
+  transition:height .3s;
+}
+.player-box.playing{
+  height:auto;
 }
 #player{width:100%;aspect-ratio:16/9;background:#000;display:block}
 
@@ -1007,6 +1012,7 @@ function doPlay(url, name) {
   v.pause();
   v.removeAttribute('src');
   v.load();
+  document.querySelector('.player-box').classList.add('playing');
 
   if(url.indexOf('.m3u8')>=0){
     if(Hls.isSupported()){
@@ -1039,6 +1045,10 @@ function playNext() {
 }
 document.getElementById('player').addEventListener('ended', function() {
   playNext();
+  // 无下一集时收起播放器
+  if (!currentEpNext) {
+    document.querySelector('.player-box').classList.remove('playing');
+  }
 });
 
 /* ===== 搜索按键 ===== */
