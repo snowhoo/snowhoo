@@ -1439,6 +1439,23 @@ inject:
       html[data-theme=dark] .news-btn:active {
         box-shadow: 0 1px 4px rgba(180,180,180,0.2);
       }
+      /* ========== 七彩背景按钮（RAINBOW_BG=true 时启用）========== */
+      /* 7 种彩虹色，亮色主题 */
+      .news-btn-0  { background: #ff6b6b !important; color: #fff !important; }
+      .news-btn-1  { background: #ffa502 !important; color: #fff !important; }
+      .news-btn-2  { background: #ffd32a !important; color: #333 !important; }
+      .news-btn-3  { background: #2ed573 !important; color: #fff !important; }
+      .news-btn-4  { background: #1e90ff !important; color: #fff !important; }
+      .news-btn-5  { background: #9b59b6 !important; color: #fff !important; }
+      .news-btn-6  { background: #fd79a8 !important; color: #fff !important; }
+      /* 7 种彩虹色，暗色主题（更深更饱和） */
+      html[data-theme=dark] .news-btn-0  { background: #c0392b !important; color: #fff !important; }
+      html[data-theme=dark] .news-btn-1  { background: #d35400 !important; color: #fff !important; }
+      html[data-theme=dark] .news-btn-2  { background: #f39c12 !important; color: #1a1a1a !important; }
+      html[data-theme=dark] .news-btn-3  { background: #27ae60 !important; color: #fff !important; }
+      html[data-theme=dark] .news-btn-4  { background: #2980b9 !important; color: #fff !important; }
+      html[data-theme=dark] .news-btn-5  { background: #8e44ad !important; color: #fff !important; }
+      html[data-theme=dark] .news-btn-6  { background: #c0392b !important; color: #fff !important; }
       /* 单按钮时全宽 */
       .news-upper[data-count="1"] .news-btn {
         flex: 0 0 100%;
@@ -1480,6 +1497,10 @@ inject:
         // cardBgImage: 整个卡片区域背景图片URL，留空则无背景（跟随主题透明）
         var NEWS_CARD_BG_IMAGE = '';
 
+        // ========== 七彩按钮背景配置 ==========
+        // RAINBOW_BG: true=每个按钮显示不同彩虹背景色，false=透明背景（默认）
+        var RAINBOW_BG = true;
+
         // ========== 按钮配置（修改这里添加/编辑按钮）==========
         // text: 按钮文字  url: 跳转链接  bgImage: 按钮背景图片URL（留空则使用半透明白色）
         var NEWS_BUTTONS = [
@@ -1491,11 +1512,12 @@ inject:
         var wrapper = document.createElement('div');
         wrapper.className = 'news-shortcut-card';
         // 生成按钮 HTML
-        var btnHtml = NEWS_BUTTONS.map(function(btn) {
+        var btnHtml = NEWS_BUTTONS.map(function(btn, idx) {
           var bgStyle = btn.bgImage
             ? 'background-image:url(' + btn.bgImage + ');background-size:cover;background-position:center;'
             : '';
-          return '<a class="news-btn" style="' + bgStyle + '" href="' + (btn.url || '#') + '">' + (btn.text || '') + '</a>';
+          var rainbowClass = (RAINBOW_BG && !btn.bgImage) ? ' news-btn-' + (idx % 7) : '';
+          return '<a class="news-btn' + rainbowClass + '" style="' + bgStyle + '" href="' + (btn.url || '#') + '">' + (btn.text || '') + '</a>';
         }).join('');
         var cardBgStyle = NEWS_CARD_BG_IMAGE
           ? 'background-image:url(' + NEWS_CARD_BG_IMAGE + ');background-size:cover;background-position:center;'
