@@ -43,9 +43,13 @@ if exist "%DATA_DST%" (
 )
 mkdir "%DATA_DST%"
 
-REM Copy all files
+REM Copy data files
 echo Copying from %DATA_SRC% to %DATA_DST%
 xcopy "%DATA_SRC%\*" "%DATA_DST%\" /Y /Q >nul 2>&1
+
+REM Copy index.html
+echo Copying index.html to Hexo source
+xcopy "%BOT_DIR%playable\index.html" "%HEXO_DIR%\source\video\" /Y /Q >nul 2>&1
 
 REM Verify: check count and non-zero size
 set /a FILES_OK=0
@@ -95,15 +99,17 @@ if %ERRORLEVEL% EQU 1 (
     echo [%DATE% %TIME%] No changes, skip push >> "%LOG%"
 )
 
+REM Clear source data directory after successful push
+if !FILES_FAIL! EQU 0 (
+    if exist "%DATA_SRC%" (
+        echo Cleaning source data directory...
+        del /q "%DATA_SRC%\*.*" 2>nul
+        echo [%DATE% %TIME%] Source data cleaned >> "%LOG%"
+    )
+)
+
 echo. >> "%LOG%"
 echo [%DATE% %TIME%] ======== DONE ======== >> "%LOG%"
 echo ========================================
 echo Done! Log: %LOG%
 echo ========================================
-
-REM Clear source data directory after successful copy
-if !FILES_FAIL! EQU 0 (
-    echo Cleaning source data directory...
-    del /q "%DATA_SRC%\*.*" 2>nul
-    echo [%DATE% %TIME%] Source data cleaned >> "%LOG%"
-)

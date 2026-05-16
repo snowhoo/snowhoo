@@ -147,7 +147,6 @@ def collect_cmsv10_sites():
         crawler_config = config.get('crawler', {})
         print(f'[SRC] 从 config.json 读取 {len(source_urls)} 个数据源')
     else:
-        # 回退：从 parsed/ aggregated/ 目录读取已有数据
         source_urls = []
 
     all_sites = []
@@ -167,48 +166,65 @@ def collect_cmsv10_sites():
                 continue
 
             sname = url.split('/')[-1].split('.')[0][:20]
-            # 处理多仓 (JSON数组，每个元素有url指向子源)
+            # 处理JSON数组
             if isinstance(data, list):
                 for item in data:
-                    child_url = item.get('url', '') or item.get('api', '')
-                    if child_url:
-                        child_text = fetch_json_text(child_url, crawler_config.get('request_timeout', 15))
+                    if not isinstance(item, dict):
+                        continue
+                    item_url = item.get('url', '')
+                    item_api = item.get('api', '')
+
+                    if item_url:
+                        # 有 url 字段 → 多仓：url 指向子聚合 JSON，fetch 后取 sites
+                        child_text = fetch_json_text(item_url, crawler_config.get('request_timeout', 15))
                         if child_text:
                             try:
                                 child_data = json.loads(child_text)
-                                sites = child_data.get('sites', []) if isinstance(child_data, dict) else []
-                                for site in sites:
+                                child_sites = child_data.get('sites', []) if isinstance(child_data, dict) else []
+                                for site in child_sites:
+                                    _add_site(site, sname, all_sites, seen_keys)
+                            except json.JSONDecodeError:
+                                pass
+                    elif item_api.startswith(('http://', 'https://')):
+                        # api 是完整 HTTP URL → 直接作为 CMS V10 API 站点使用
+                        _add_site(item, sname, all_sites, seen_keys)
+                    elif item_api:
+                        # 相对路径 / 特殊值（如 ./drpy_libs/xxx.js）→ 尝试 fetch 后取 sites
+                        child_text = fetch_json_text(item_api, crawler_config.get('request_timeout', 15))
+                        if child_text:
+                            try:
+                                child_data = json.loads(child_text)
+                                child_sites = child_data.get('sites', []) if isinstance(child_data, dict) else []
+                                for site in child_sites:
                                     _add_site(site, sname, all_sites, seen_keys)
                             except json.JSONDecodeError:
                                 pass
                 continue
 
-            # 单仓 (标准 JSON)
+            # 单仓：优先提取 sites 格式，其次检测直接视频列表格式
             sites = data.get('sites', []) if isinstance(data, dict) else []
-            for site in sites:
-                _add_site(site, sname, all_sites, seen_keys)
+            if sites:
+                for site in sites:
+                    _add_site(site, sname, all_sites, seen_keys)
+            elif isinstance(data, dict) and 'list' in data and 'sites' not in data:
+                # 直接视频列表格式（如 360zy.com）：源本身就是可爬 API
+                # 从 URL 提取站点名（取域名部分）
+                parsed = urlparse(url)
+                direct_name = parsed.netloc.split('.')[-2] if parsed.netloc else sname
+                direct_key = f"direct_{len(all_sites)}"
+                all_sites.append({
+                    'key': direct_key,
+                    'name': direct_name,
+                    'api': url,          # 完整 URL（含 ac=list 等参数）
+                    'type': -1,
+                    'source': sname,
+                    'is_direct': True,   # 标记为直接视频源
+                })
+                seen_keys.add(direct_key)
+    else:
+        print('[WARN] config.json 中无有效数据源配置，爬虫将无法获取站点')
 
-    # 方式二：回退到 parsed/ aggregated/ 目录
-    for data_dir in [PARSED_DIR, AGGREGATED_DIR]:
-        if not os.path.isdir(data_dir):
-            continue
-        for fname in sorted(os.listdir(data_dir)):
-            if not fname.endswith('.json'):
-                continue
-            fpath = os.path.join(data_dir, fname)
-            try:
-                with open(fpath, 'r', encoding='utf-8-sig') as f:
-                    data = json.load(f)
-            except Exception:
-                continue
-            sname = fname.replace('.json', '')
-            sites = data.get('sites', [])
-            if not isinstance(sites, list):
-                continue
-            for site in sites:
-                _add_site(site, sname, all_sites, seen_keys)
-
-    print(f'  → 发现 {len(all_sites)} 个 API 站点')
+    print(f'  → 发现 {len(all_sites)} 个 API 站点（其中 {sum(1 for s in all_sites if s.get("is_direct"))} 个直接视频源）')
     return all_sites
 
 
@@ -237,12 +253,20 @@ def _add_site(site, source_name, all_sites, seen_keys):
 
 
 def fetch_cmsv10_list(api, page=1):
-    """CMSV10 ac=list 接口"""
+    """CMSV10 ac=list 接口（直接视频源 URL 已含 ac=list，不再重复添加）"""
     try:
+        # 检查 URL 是否已含 ac=list 参数，避免重复
+        has_ac_in_url = 'ac=' in api
         if '?' in api.split('/')[-1]:
-            r = session.get(api, params={'ac': 'list', 'pg': page}, timeout=15)
+            if has_ac_in_url:
+                r = session.get(api, params={'pg': page}, timeout=15)
+            else:
+                r = session.get(api, params={'ac': 'list', 'pg': page}, timeout=15)
         else:
-            r = session.get(api.rstrip('/'), params={'ac': 'list', 'pg': page}, timeout=15)
+            if has_ac_in_url:
+                r = session.get(api.rstrip('/'), params={'pg': page}, timeout=15)
+            else:
+                r = session.get(api.rstrip('/'), params={'ac': 'list', 'pg': page}, timeout=15)
         if r.status_code != 200:
             return None
         data = r.json()
@@ -266,9 +290,14 @@ def fetch_cmsv10_list(api, page=1):
 
 
 def fetch_cmsv10_detail(api, vod_id):
-    """CMSV10 ac=detail 接口"""
+    """CMSV10 ac=detail 接口（直接视频源 URL 已含 ac 参数，需替换而非累加）"""
     try:
-        if '?' in api.split('/')[-1]:
+        # 直接源 URL 已含 ac=list，需替换为 ac=detail
+        if 'ac=' in api:
+            import re
+            api = re.sub(r'ac=[^&]+', 'ac=detail', api)
+            r = session.get(api, params={'ids': vod_id}, timeout=15)
+        elif '?' in api.split('/')[-1]:
             r = session.get(api, params={'ac': 'detail', 'ids': vod_id}, timeout=15)
         else:
             r = session.get(api.rstrip('/'), params={'ac': 'detail', 'ids': vod_id}, timeout=15)
@@ -304,6 +333,7 @@ def crawl_site(site, data_dir=None):
     total_videos = 0
     total_episodes = 0
     playable_count = 0
+    playable_videos = 0
     pages_written = 0
     category_counts = {}  # {分类名: 视频数}
 
@@ -315,6 +345,7 @@ def crawl_site(site, data_dir=None):
         'total_videos': 0,
         'total_episodes': 0,
         'playable_episodes': 0,
+        'playable_videos': 0,
         'pages_written': 0,
         'videos': [],
         'error': None,
@@ -328,20 +359,44 @@ def crawl_site(site, data_dir=None):
 
     print(f'  [分页] {name}: 固定 {MAX_PAGES} 页, 每页 {VIDEOS_PER_PAGE} 个视频', flush=True)
 
+    consecutive_empty = 0   # 连续空页计数
+
     for pg in range(1, MAX_PAGES + 1):
         page_data = fetch_cmsv10_list(api, page=pg)
+
+        # 空数据：重试3次，间隔3秒，仍无数据则停止后续检索
+        retry = 0
+        while (not page_data) and retry < 3:
+            retry += 1
+            print(f'    [{name}] 页 {pg}: 无数据，重试 {retry}/3', flush=True)
+            time.sleep(3)
+            page_data = fetch_cmsv10_list(api, page=pg)
+
         if not page_data:
-            print(f'    [{name}] 页 {pg}: 无数据，写空文件', flush=True)
-            save_site_page(name, api, source, [], pg, MAX_PAGES, data_dir, safe_prefix)
-            pages_written += 1
+            print(f'    [{name}] 页 {pg}: 重试3次仍无数据，停止检索', flush=True)
+            consecutive_empty += 1
+            if consecutive_empty >= 3:
+                print(f'    [{name}] 连续 {consecutive_empty} 页无数据，停止检索', flush=True)
+                break
             continue
 
         items = page_data.get('list', [])
         if not items:
-            print(f'    [{name}] 页 {pg}: 列表为空，写空文件', flush=True)
-            save_site_page(name, api, source, [], pg, MAX_PAGES, data_dir, safe_prefix)
-            pages_written += 1
-            continue
+            # 列表为空也重试3次
+            retry = 0
+            while (not items) and retry < 3:
+                retry += 1
+                print(f'    [{name}] 页 {pg}: 列表为空，重试 {retry}/3', flush=True)
+                time.sleep(3)
+                page_data = fetch_cmsv10_list(api, page=pg)
+                items = page_data.get('list', []) if page_data else []
+            if not items:
+                print(f'    [{name}] 页 {pg}: 重试3次仍无数据，停止检索', flush=True)
+                consecutive_empty += 1
+                if consecutive_empty >= 3:
+                    print(f'    [{name}] 连续 {consecutive_empty} 页无数据，停止检索', flush=True)
+                    break
+                continue
 
         # 收集本页视频（最多 VIDEOS_PER_PAGE 个）
         page_videos = []
@@ -356,16 +411,16 @@ def crawl_site(site, data_dir=None):
             if not detail:
                 continue
 
+            # 分类统计：计入所有有分类的视频，不论是否可播放
+            raw_class = detail.get('vod_class', '') or ''
+            for part in [c.strip() for c in raw_class.split(',') if c.strip()]:
+                category_counts[part] = category_counts.get(part, 0) + 1
+
             play_url = detail.get('vod_play_url', '') or detail.get('play_url', '')
             play_from = detail.get('vod_play_from', '') or detail.get('play_from', '')
             play_info = extract_play_urls(play_url, play_from)
 
             if play_info:
-                # 累加分类统计
-                raw_class = detail.get('vod_class', '') or ''
-                for part in [c.strip() for c in raw_class.split(',') if c.strip()]:
-                    category_counts[part] = category_counts.get(part, 0) + 1
-
                 page_videos.append({
                     'name': detail.get('vod_name', ''),
                     'pic': detail.get('vod_pic', ''),
@@ -378,17 +433,26 @@ def crawl_site(site, data_dir=None):
 
         if not page_videos:
             print(f'    [{name}] 页 {pg}: 无有效视频', flush=True)
+            consecutive_empty += 1
+            if consecutive_empty >= 3:
+                print(f'    [{name}] 连续 {consecutive_empty} 页无有效视频，停止检索', flush=True)
+                break
             continue
+
+        # 成功有一页，清空连续空页计数
+        consecutive_empty = 0
 
         # 统计累积
         total_videos += len(page_videos)
+        playable_videos += len(page_videos)   # 有播放地址的视频数（每页12个上限）
         for v in page_videos:
             total_episodes += len(v['play_list'])
             playable_count += sum(1 for p in v['play_list'] if is_playable(p['url']))
 
         # 立即写文件并释放内存
         fname = save_site_page(name, api, source, page_videos, pg, MAX_PAGES, data_dir, safe_prefix)
-        pages_written += 1
+        if fname:
+            pages_written += 1
 
         # 释放内存
         del page_videos
@@ -401,6 +465,7 @@ def crawl_site(site, data_dir=None):
     result['total_videos'] = total_videos
     result['total_episodes'] = total_episodes
     result['playable_episodes'] = playable_count
+    result['playable_videos'] = playable_videos
     result['pages_written'] = pages_written
     result['category_counts'] = category_counts
 
@@ -451,6 +516,9 @@ def save_site_page(site_name, api, source, videos, page_num, total_pages, data_d
     """将单页视频数据保存为 JS 文件（每页独立文件，允许空页）"""
     import re
 
+    # 确保目录存在（并发场景下可能已被清理）
+    os.makedirs(data_dir, exist_ok=True)
+
     filename = f'{safe_prefix}-{page_num:02d}.js'
     filepath = os.path.join(data_dir, filename)
 
@@ -465,15 +533,23 @@ def save_site_page(site_name, api, source, videos, page_num, total_pages, data_d
                 'playable': is_playable(ep['url']),
             })
 
+        # 封面缺失用占位图
+        raw_pic = v.get('pic', '') or v.get('vod_pic', '')
+        vod_pic = raw_pic if raw_pic.startswith('http') else ''
+
         page_videos.append({
             'vod_name': v['name'],
-            'vod_pic': v.get('pic', ''),
+            'vod_pic': vod_pic,
             'remarks': v.get('remarks', ''),
             'vod_class': v.get('vod_class', ''),
             'ep_count': len(v_eps),
             'playable_count': sum(1 for e in v_eps if e['playable']),
             'episodes': v_eps,
         })
+
+    # 无有效视频不写文件
+    if not page_videos:
+        return None
 
     data = {
         'name': site_name,
@@ -485,7 +561,7 @@ def save_site_page(site_name, api, source, videos, page_num, total_pages, data_d
     with open(filepath, 'w', encoding='utf-8') as f:
         f.write(f'window._TVBOX_SITE_DATA = {json.dumps(data, ensure_ascii=False)};')
 
-    return filename
+    return filepath
 
 
 def generate_player_html():
@@ -731,7 +807,9 @@ def main():
     data_dir = os.path.join(PLAYABLE_DIR, 'data')
     if os.path.exists(data_dir):
         import shutil
-        shutil.rmtree(data_dir)   # 清空旧数据
+        for item in os.listdir(data_dir):
+            path = os.path.join(data_dir, item)
+            shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
     os.makedirs(data_dir, exist_ok=True)
 
     def crawl_one(site):
@@ -748,6 +826,7 @@ def main():
             'total_videos': result['total_videos'],
             'total_episodes': result['total_episodes'],
             'playable_episodes': result['playable_episodes'],
+            'playable_videos': result.get('playable_videos', 0),
             'pages_written': result.get('pages_written', 0),
             'category_counts': result.get('category_counts', {}),
             'error': result.get('error'),
@@ -789,6 +868,7 @@ def main():
             'page_count': s.get('pages_written', 0),
             'file': f"{s['prefix']}-01.js",   # 前端默认加载第1页
             'total': s['total_videos'],
+            'playable_videos': s.get('playable_videos', 0),
             'playable': s['playable_episodes'],
             'total_episodes': s['total_episodes'],
             'categories': s.get('category_counts', {}),
