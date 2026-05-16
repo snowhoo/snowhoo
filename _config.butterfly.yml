@@ -1048,10 +1048,18 @@ inject:
         margin-bottom: 4px !important;
         padding-bottom: 0 !important;
       }
-      .post-content p,
-      .article-content p {
+      .post-content p:not(:empty),
+      .article-content p:not(:empty) {
         margin-bottom: 4px !important;
         line-height: 1.4 !important;
+      }
+      /* 空段落（Markdown 连续空行产生）允许自然塌陷，不强制 margin */
+      .post-content p:empty,
+      .article-content p:empty {
+        margin-bottom: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        line-height: 1.2 !important;
       }
 
       /* ========== 减少 Sponsor 上方间距 ========== */
