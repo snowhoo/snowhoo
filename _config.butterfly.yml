@@ -103,7 +103,7 @@ index_site_info_top:
 index_top_img_height:
 
 subtitle:
-  enable: false
+  enable: true
   effect: true
   typed_option:
   source: false
@@ -472,8 +472,8 @@ rounded_corners_ui: true
 text_align_justify: false
 
 mask:
-  header: false
-  footer: false
+  header: true
+  footer: true
 
 preloader:
   enable: false
@@ -1448,6 +1448,7 @@ inject:
       }
       /* 下部滚动文字区域 24px，透明背景 */
       .news-scrolling {
+        display: none;
         height: 24px;
         background: transparent;
         overflow: hidden;
@@ -1583,9 +1584,8 @@ inject:
           // 2. 横幅：满宽，垂直堆叠的最上方；无内容时强制隐藏
           banner.style.cssText = 'width:100% !important; margin:0 0 4px 0 !important; order:1 !important; flex-shrink:0 !important; display:' + (banner.innerHTML.trim() ? 'block' : 'none') + ' !important';
 
-          // 3. 新闻卡片：满宽，加圆角边框（和节日横幅一致）
-          var cardBorderColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#3a3a3a' : '#e0e0e0';
-          wrapper.style.cssText = 'display:block !important; width:100% !important; margin:0 0 4px 0 !important; order:2 !important; flex-shrink:0 !important; border:2px solid ' + cardBorderColor + ' !important; border-radius:8px !important; box-sizing:border-box !important;';
+          // 3. 新闻卡片：满宽，边框已移除
+          wrapper.style.cssText = 'display:block !important; width:100% !important; margin:0 0 4px 0 !important; order:2 !important; flex-shrink:0 !important; border:0 !important; border-radius:0 !important; box-sizing:border-box !important;';
 
           // 4. 建立 main-wrapper，把文章列表和侧栏包成一行
           var mainWrapper = null;
@@ -1622,19 +1622,8 @@ inject:
             wrapper.insertAdjacentElement('afterend', mainWrapper);
           }
 
-          // 10. 监听暗色模式切换，动态更新卡片边框颜色
-          var cardEl = document.querySelector('.news-shortcut-card');
-          if (cardEl) {
-            var cardBorderObserver = new MutationObserver(function(mutations) {
-              mutations.forEach(function(mutation) {
-                if (mutation.attributeName === 'data-theme') {
-                  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                  cardEl.style.borderColor = isDark ? '#3a3a3a' : '#e0e0e0';
-                }
-              });
-            });
-            cardBorderObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-          }
+          // 10. 监听暗色模式切换，动态更新卡片边框颜色（已禁用，边框为0）
+          // var cardEl = document.querySelector('.news-shortcut-card');
 
           // 11. 小屏响应式：子容器2（main-wrapper）本身切换为 column
           var layoutMediator = function() {
