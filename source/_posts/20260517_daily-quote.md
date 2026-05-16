@@ -1,5 +1,5 @@
 ---
-title: The whole future lies in uncertainty: live immedia… —— Seneca
+title: "The whole future lies in uncertainty: live immedia… —— Seneca"
 date: 2026-05-17 06:00:00
 updated: 2026-05-17 06:00:00
 categories:
