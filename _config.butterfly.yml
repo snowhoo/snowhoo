@@ -1446,50 +1446,6 @@ inject:
         font-size: 26px;
         padding: 0px 0px;
       }
-      /* 下部滚动文字区域 24px，透明背景 */
-      .news-scrolling {
-        display: none;
-        height: 24px;
-        background: transparent;
-        overflow: hidden;
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        min-width: 100%;
-        box-sizing: border-box;
-      }
-      .news-scrolling-inner {
-        display: flex;
-        align-items: center;
-        height: 24px;
-        padding: 0 12px;
-        width: 100%;
-        min-width: 100%;
-        max-width: 99999px;
-        box-sizing: border-box;
-        flex-shrink: 0;
-      }
-      .news-scrolling-text {
-        display: inline-block;
-        white-space: nowrap;
-        animation: marquee 12s linear infinite;
-        color: #333;
-        font-size: 12px;
-        line-height: 1;
-      }
-      .news-scrolling-text a {
-        display: flex;
-        align-items: center;
-        text-decoration: none;
-        color: inherit;
-      }
-      @keyframes marquee {
-        0%   { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-      }
-      html[data-theme=dark] .news-scrolling-text {
-        color: #ccc;
-      }
       /* hover效果 */
       .news-shortcut-card:active,
       .news-shortcut-card:hover {
@@ -1507,16 +1463,6 @@ inject:
         .news-btn {
           font-size: 16px;
           padding: 0px 0px;
-        }
-        .news-scrolling {
-          height: 14px;
-        }
-        .news-scrolling-inner {
-          padding: 0 10px;
-          height: 14px;
-        }
-        .news-scrolling-text {
-          font-size: 11px;
         }
       }
       </style>
@@ -1543,12 +1489,6 @@ inject:
           { text: 'Excel打印', url: '/xls2print/' , bgImage: ''},
         ];
 
-        // ========== 底部滚动字幕配置 ==========
-        // subtitle: 显示的文字（可用 'announcement' 使用站点公告，或直接写文字）
-        // subtitleUrl: 点击跳转链接（留空字符串则不可点击）
-        var NEWS_SUBTITLE = 'announcement';
-        var NEWS_SUBTITLE_URL = '';
-
         var wrapper = document.createElement('div');
         wrapper.className = 'news-shortcut-card';
         // 生成按钮 HTML
@@ -1558,20 +1498,11 @@ inject:
             : '';
           return '<a class="news-btn" style="' + bgStyle + '" href="' + (btn.url || '#') + '">' + (btn.text || '') + '</a>';
         }).join('');
-        var subtitleText = (NEWS_SUBTITLE === 'announcement') ? '📰 欢迎光临小红故事 SnowHoo.NET' : NEWS_SUBTITLE;
-        var subtitleHtml = NEWS_SUBTITLE_URL
-          ? '<a href="' + NEWS_SUBTITLE_URL + '" style="text-decoration:none;color:inherit">' + subtitleText + '</a>'
-          : subtitleText;
         var cardBgStyle = NEWS_CARD_BG_IMAGE
           ? 'background-image:url(' + NEWS_CARD_BG_IMAGE + ');background-size:cover;background-position:center;'
           : '';
-        wrapper.innerHTML = 
-          '<div class="news-upper" data-count="' + NEWS_BUTTONS.length + '" style="' + cardBgStyle + '">' + btnHtml + '</div>' +
-          '<div class="news-scrolling">' +
-            '<div class="news-scrolling-inner">' +
-              '<span class="news-scrolling-text">' + subtitleHtml + '</span>' +
-            '</div>' +
-          '</div>';
+        wrapper.innerHTML =
+          '<div class="news-upper" data-count="' + NEWS_BUTTONS.length + '" style="' + cardBgStyle + '">' + btnHtml + '</div>';
 
         // ========== 完全重新布局：banner→卡片→(文章列表+侧栏) ==========
         if (banner && contentInner) {
