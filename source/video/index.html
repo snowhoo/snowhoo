@@ -616,7 +616,7 @@ function useSourceData(data, file, pageNum) {
   render();
 }
 
-/* ===== 全局搜索（流式：遍历所有数据源全部文件） ===== */
+/* ===== 全局搜索（扁平遍历：直接从 sourceIndex 展开所有文件路径） ===== */
 function doSearch() {
   var q = document.getElementById('searchInput').value.toLowerCase().trim();
 
@@ -628,90 +628,79 @@ function doSearch() {
     return;
   }
 
-  // 搜索进行中，忽略新的搜索请求
   if (isSearching) return;
   isSearching = true;
 
-  var thisVersion = ++searchVersion;  // 标记本次搜索版本
+  var thisVersion = ++searchVersion;
 
   currentFiltered = [];
   allSearchResults = [];
   currentPage = 1;
   currentSearchMode = true;
 
-  // 统计总文件数
-  var totalFiles = 0;
+  // 扁平化：所有需要搜索的文件列表
+  var allFiles = [];
   sourceIndex.forEach(function(src) {
     var pc = src.page_count || 1;
-    totalFiles += pc;
+    for (var i = 1; i <= pc; i++) {
+      allFiles.push({
+        fname: src.prefix + '-' + String(i).padStart(2, '0') + '.js',
+        name: src.name
+      });
+    }
   });
 
+  var totalFiles = allFiles.length;
   var loadedFiles = 0;
 
   setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: 0/' + totalFiles + ' \u2014 \u201c' + q + '\u201d');
 
-  // 递归串行：逐源逐页加载
-  function loadNextSource(srcIdx) {
-    if (searchVersion !== thisVersion) { isSearching = false; return; }  // 已被新搜索取代
-    if (srcIdx >= sourceIndex.length) {
-      if (searchVersion !== thisVersion) { isSearching = false; return; }
+  // 顺序遍历
+  var idx = 0;
+
+  function loadNext() {
+    if (searchVersion !== thisVersion) { isSearching = false; return; }
+    if (idx >= allFiles.length) {
       isSearching = false;
       setStatus('\ud83d\udd0d \u5168\u5c40\u641c\u7d22\u5b8c\u6210: \u201c' + q + '\u201d \u2014 ' + currentFiltered.length + '\u4e2a\u7ed3\u679c');
       return;
     }
-
-    var src = sourceIndex[srcIdx];
-    var pc = src.page_count || 1;
-    var prefix = src.prefix;
-
-    // 当前源搜完后进入下一个源
-    function loadNextPage(pageIdx) {
-      if (searchVersion !== thisVersion) return;  // 已被新搜索取代
-      if (pageIdx > pc) {
-        loadNextSource(srcIdx + 1);
-        return;
+    var f = allFiles[idx++];
+    loadData(f.fname, function(data) {
+      if (searchVersion !== thisVersion) { isSearching = false; return; }
+      loadedFiles++;
+      if (data && data.videos) {
+        data.videos.forEach(function(v) {
+          var match = (v.vod_name || '').toLowerCase().includes(q);
+          if (!match) {
+            match = (v.episodes || []).some(function(e) {
+              return (e.title || '').toLowerCase().includes(q);
+            });
+          }
+          if (match) {
+            var item = {
+              sourceKey: f.fname,
+              sourceName: f.name,
+              vod_name: v.vod_name,
+              vod_pic: v.vod_pic,
+              episodes: v.episodes,
+              ep_count: v.ep_count,
+              playable_count: v.playable_count,
+              vod_class: v.vod_class,
+            };
+            currentFiltered.push(item);
+            allSearchResults.push(item);
+          }
+        });
       }
-
-      var fname = prefix + '-' + String(pageIdx).padStart(2, '0') + '.js';
-      loadData(fname, function(data) {
-        if (searchVersion !== thisVersion) return;  // 已被新搜索取代，丢弃结果
-        loadedFiles++;
-        if (data && data.videos) {
-          data.videos.forEach(function(v) {
-            var match = (v.vod_name || '').toLowerCase().includes(q);
-            if (!match) {
-              match = (v.episodes || []).some(function(e) {
-                return (e.title || '').toLowerCase().includes(q);
-              });
-            }
-            if (match) {
-              var item = {
-                sourceKey: fname,
-                sourceName: data.name,
-                vod_name: v.vod_name,
-                vod_pic: v.vod_pic,
-                episodes: v.episodes,
-                ep_count: v.ep_count,
-                playable_count: v.playable_count,
-                vod_class: v.vod_class,
-              };
-              currentFiltered.push(item);
-              allSearchResults.push(item);
-            }
-          });
-        }
-        setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: ' + loadedFiles + '/' + totalFiles + ' \u2014 \u201c' + q + '\u201d \u2014 ' + currentFiltered.length + '\u4e2a\u7ed3\u679c');
-        render();
-        buildCatBarFromFiltered();
-        // 下一个文件
-        loadNextPage(pageIdx + 1);
-      });
-    }
-
-    loadNextPage(1);
+      setStatus('\ud83d\udd0d \u641c\u7d22\u4e2d: ' + loadedFiles + '/' + totalFiles + ' \u2014 \u201c' + q + '\u201d \u2014 ' + currentFiltered.length + '\u4e2a\u7ed3\u679c');
+      render();
+      buildCatBarFromFiltered();
+      loadNext();
+    });
   }
 
-  loadNextSource(0);
+  loadNext();
 }
 
 
