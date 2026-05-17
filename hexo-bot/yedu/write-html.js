@@ -153,47 +153,56 @@ const html = `<!DOCTYPE html>
 
     .yedu-article-content {
       flex: 1;
-      padding: 10px 14px;
+      padding: 8px 12px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       overflow: hidden;
+      min-width: 0;
     }
 
     .yedu-article-title {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       color: var(--text-primary, #1a1a2e);
-      margin-bottom: 5px;
-      line-height: 1.4;
+      line-height: 1.35;
       font-weight: 600;
-      white-space: nowrap;
+      white-space: normal;
       overflow: hidden;
-      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .yedu-article-date {
+      font-size: 0.72rem;
+      color: var(--text-secondary, #aaa);
+      margin-top: 3px;
     }
 
     .yedu-article-summary {
       color: var(--text-secondary, #888);
-      font-size: 0.78rem;
-      line-height: 1.5;
+      font-size: 0.75rem;
+      line-height: 1.45;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      margin-top: 4px;
     }
 
     .yedu-read-more {
       color: #e94560;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 3px;
-      margin-top: 5px;
+      gap: 2px;
+      margin-top: 4px;
       transition: gap 0.2s ease;
     }
 
-    .yedu-read-more:hover { gap: 5px; }
-    .yedu-read-more svg { width: 11px; height: 11px; fill: #e94560; transition: transform 0.2s ease; }
+    .yedu-read-more:hover { gap: 4px; }
+    .yedu-read-more svg { width: 10px; height: 10px; fill: #e94560; transition: transform 0.2s ease; }
     .yedu-read-more.yedu-expanded svg { transform: rotate(180deg); }
 
     .yedu-full-content {
@@ -270,10 +279,16 @@ const html = `<!DOCTYPE html>
 
     @media (max-width: 600px) {
       .yedu-article-main { height: auto; flex-direction: column; }
-      .yedu-article-cover { flex: none; width: 100%; height: 150px; }
+      .yedu-article-cover { flex: none; width: 100%; height: 160px; }
       .yedu-audio-btn { width: 44px; height: 44px; }
-      .yedu-article-content { padding: 10px 12px; }
-      .yedu-article-title { font-size: 0.9rem; }
+      .yedu-article-content { padding: 8px 10px; }
+      .yedu-article-title { font-size: 0.88rem; -webkit-line-clamp: 1; }
+    }
+
+    @media (min-width: 601px) {
+      .yedu-article-main { height: 110px; }
+      .yedu-article-cover { flex: 0 0 160px; width: 160px; }
+      .yedu-article-content { padding: 10px 14px; }
     }
   </style>
 </head>
@@ -339,11 +354,6 @@ const html = `<!DOCTYPE html>
         if (article.duration) {
           metaHtml += '<svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg><span>' + article.duration + '</span>';
         }
-        if (article.pubDate) {
-          metaHtml += '<span>' + article.pubDate + '</span>';
-        } else if (article.timeAgo) {
-          metaHtml += '<span>' + article.timeAgo + '</span>';
-        }
         metaHtml += '</div>';
 
         var progressHtml = hasAudio
@@ -362,14 +372,15 @@ const html = `<!DOCTYPE html>
             '<div class="yedu-article-cover">' +
               (imgSrc ? '<img src="' + imgSrc + '" alt="" loading="lazy" onerror="this.style.display=\\'none\\';this.nextElementSibling.style.display=\\'flex\\'">' : '') +
               '<div class="yedu-img-placeholder" style="display:' + (imgSrc ? 'none' : 'flex') + '">夜读</div>' +
-              (hasAudio ? '<button class="yedu-audio-btn" onclick="yeduToggleAudio(' + globalIndex + ',this)" data-src="' + article.audioSrc + '"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>' : '') +
+              (hasAudio ? '<button class="yedu-audio-btn" data-index="' + globalIndex + '" data-src="' + article.audioSrc + '"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>' : '') +
               metaHtml +
               progressHtml +
             '</div>' +
             '<div class="yedu-article-content">' +
               '<h2 class="yedu-article-title" title="' + article.title + '">' + article.title + '</h2>' +
+              (article.pubDate ? '<div class="yedu-article-date">' + article.pubDate + '</div>' : '') +
               '<p class="yedu-article-summary">' + (article.summary || '') + '</p>' +
-              '<div class="yedu-read-more" onclick="yeduToggleContent(this,' + globalIndex + ')"><span>展开</span><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></div>' +
+              '<div class="yedu-read-more" data-index="' + globalIndex + '"><span>展开</span><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></div>' +
             '</div>' +
           '</div>' +
           '<div class="yedu-full-content" id="yedu-full-content-' + globalIndex + '">' +
@@ -382,14 +393,42 @@ const html = `<!DOCTYPE html>
       }
 
       if (totalPages > 1) {
-        html += '<div class="yedu-pagination">' +
-          '<button onclick="yeduRenderPage(' + (page - 1) + ')" ' + (page <= 1 ? 'disabled' : '') + '>上一页</button>' +
+        html += '<div class="yedu-pagination" data-total="' + totalPages + '" data-page="' + page + '">' +
+          '<button class="yedu-prev-btn" ' + (page <= 1 ? 'disabled' : '') + '>上一页</button>' +
           '<span class="yedu-page-info">' + page + ' / ' + totalPages + '</span>' +
-          '<button onclick="yeduRenderPage(' + (page + 1) + ')" ' + (page >= totalPages ? 'disabled' : '') + '>下一页</button>' +
+          '<button class="yedu-next-btn" ' + (page >= totalPages ? 'disabled' : '') + '>下一页</button>' +
         '</div>';
       }
 
       container.innerHTML = html;
+
+      // 事件委托到 container，统一处理所有交互
+      container.addEventListener('click', function(e) {
+        var btn = e.target.closest('.yedu-audio-btn');
+        if (btn) {
+          e.stopPropagation();
+          yeduToggleAudio(parseInt(btn.getAttribute('data-index')), btn);
+          return;
+        }
+        var readMore = e.target.closest('.yedu-read-more');
+        if (readMore) {
+          e.stopPropagation();
+          yeduToggleContent(readMore, parseInt(readMore.getAttribute('data-index')));
+          return;
+        }
+        var prevBtn = e.target.closest('.yedu-prev-btn');
+        if (prevBtn && !prevBtn.disabled) {
+          var pg = document.querySelector('.yedu-pagination');
+          renderPage(parseInt(pg.getAttribute('data-page')) - 1);
+          return;
+        }
+        var nextBtn = e.target.closest('.yedu-next-btn');
+        if (nextBtn && !nextBtn.disabled) {
+          var pg = document.querySelector('.yedu-pagination');
+          renderPage(parseInt(pg.getAttribute('data-page')) + 1);
+          return;
+        }
+      });
     }
 
     function yeduToggleAudio(index, btn) {
@@ -454,10 +493,6 @@ const html = `<!DOCTYPE html>
       var isShow = content.classList.toggle('yedu-show');
       el.querySelector('span').textContent = isShow ? '收起' : '展开';
       el.classList.toggle('yedu-expanded');
-    }
-
-    function yeduRenderPage(page) {
-      renderPage(page);
     }
 
     document.addEventListener('DOMContentLoaded', loadData);
