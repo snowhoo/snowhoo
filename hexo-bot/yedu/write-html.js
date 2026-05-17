@@ -279,16 +279,19 @@ const html = `<!DOCTYPE html>
 
     @media (max-width: 600px) {
       .yedu-article-main { height: auto; flex-direction: column; }
-      .yedu-article-cover { flex: none; width: 100%; height: 160px; }
-      .yedu-audio-btn { width: 44px; height: 44px; }
-      .yedu-article-content { padding: 8px 10px; }
+      .yedu-article-cover { flex: none; width: 100%; height: 140px; }
+      .yedu-audio-btn { width: 40px; height: 40px; }
+      .yedu-article-content { padding: 6px 10px; }
       .yedu-article-title { font-size: 0.88rem; -webkit-line-clamp: 1; }
+      .yedu-article-date { margin-top: 2px; }
+      .yedu-article-summary { margin-top: 2px; }
+      .yedu-read-more { margin-top: 2px; }
     }
 
     @media (min-width: 601px) {
       .yedu-article-main { height: 110px; }
       .yedu-article-cover { flex: 0 0 160px; width: 160px; }
-      .yedu-article-content { padding: 10px 14px; }
+      .yedu-article-content { padding: 10px 14px; justify-content: flex-start; }
     }
   </style>
 </head>
@@ -402,8 +405,11 @@ const html = `<!DOCTYPE html>
 
       container.innerHTML = html;
 
-      // 事件委托到 container，统一处理所有交互
-      container.addEventListener('click', function(e) {
+      // 替换旧的点击 listener（防止叠加）
+      if (window._yeduHandler) {
+        container.removeEventListener('click', window._yeduHandler);
+      }
+      window._yeduHandler = function(e) {
         var btn = e.target.closest('.yedu-audio-btn');
         if (btn) {
           e.stopPropagation();
@@ -428,7 +434,8 @@ const html = `<!DOCTYPE html>
           renderPage(parseInt(pg.getAttribute('data-page')) + 1);
           return;
         }
-      });
+      };
+      container.addEventListener('click', window._yeduHandler);
     }
 
     function yeduToggleAudio(index, btn) {
