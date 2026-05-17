@@ -374,7 +374,12 @@
       try {
         const response = await fetch('data/yedu-list.json');
         const data = await response.json();
-        allArticles = data;
+        // 按 fetchDate 倒序，最新的在前
+        allArticles = data.sort((a, b) => {
+          const ta = a.fetchDate ? new Date(a.fetchDate) : 0;
+          const tb = b.fetchDate ? new Date(b.fetchDate) : 0;
+          return tb - ta;
+        });
         renderPage(1);
       } catch (error) {
         console.error('加载数据失败:', error);
