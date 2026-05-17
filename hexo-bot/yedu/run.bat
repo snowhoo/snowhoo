@@ -1,20 +1,16 @@
 @echo off
 chcp 65001 >nul
 
-REM 切换到脚本目录
 cd /d "%~dp0"
 
-REM 复制 index.html 到 Hexo 源目录
-set HEXO_SOURCE=D:\hexo\source
-set HEXO_YEDU=%HEXO_SOURCE%\yedu
+REM 1. 运行爬虫（数据写入 D:\hexo\source\yedu\data\）
+call node fetch-yedu-list.js
 
-copy /Y "%~dp0index.html" "%HEXO_YEDU%\index.html"
+REM 2. 动态生成 index.html（扫描 data 目录生成文件列表）
+call node write-html.js
 
-REM 运行爬虫
-node fetch-yedu-list.js
-
-REM Git 提交并推送
-cd /d %HEXO_SOURCE%
+REM 3. Git 提交并推送
+cd /d D:\hexo\source
 git add -A
 git commit -m "update yedu %date% %time%"
 git push origin source

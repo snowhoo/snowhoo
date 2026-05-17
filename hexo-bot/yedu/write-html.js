@@ -1,4 +1,25 @@
-<!DOCTYPE html>
+/**
+ * 根据 data/ 目录下的 .js 文件动态生成 index.html
+ * 每次运行爬虫后执行，保持 index.html 与实际数据同步
+ */
+const fs = require('fs');
+const path = require('path');
+const glob = require('glob');
+
+const OUTPUT_DIR = 'D:\\hexo\\source\\yedu';
+const DATA_DIR = path.join(OUTPUT_DIR, 'data');
+const HTML_PATH = path.join(OUTPUT_DIR, 'index.html');
+
+
+// 扫描 data/ 下所有 .js 文件（排除 article-list.js 等）
+const files = glob.sync('*.js', { cwd: DATA_DIR })
+  .filter(f => f !== 'article-list.js')
+  .sort()
+  .reverse(); // 最新时间戳排在前面
+
+const filesJsArray = '[\n      ' + files.map(f => "'" + f + "'").join(',\n      ') + '\n    ]';
+
+const html = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -261,28 +282,7 @@
   </div>
 
   <script type="module">
-    var DATA_FILES = [
-      '20260515-2149-001.js',
-      '20260514-2155-001.js',
-      '20260513-2225-001.js',
-      '20260512-2215-001.js',
-      '20260511-2240-001.js',
-      '20260510-2151-001.js',
-      '20260509-2237-001.js',
-      '20260508-2209-001.js',
-      '20260507-2220-001.js',
-      '20260505-2229-001.js',
-      '20260504-2241-001.js',
-      '20260502-2217-001.js',
-      '20260501-2243-001.js',
-      '20260430-2226-001.js',
-      '20260428-2207-001.js',
-      '20260426-2328-001.js',
-      '20260425-2210-001.js',
-      '20260424-2215-001.js',
-      '20260421-2236-001.js',
-      '20260420-2211-001.js'
-    ];
+    var DATA_FILES = ${filesJsArray};
 
     var PAGE_SIZE = 10;
     var currentPage = 1;
@@ -352,7 +352,7 @@
         html += '<div class="yedu-article-card" data-index="' + globalIndex + '">' +
           '<div class="yedu-article-main">' +
             '<div class="yedu-article-cover">' +
-              (imgSrc ? '<img src="' + imgSrc + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' : '') +
+              (imgSrc ? '<img src="' + imgSrc + '" alt="" loading="lazy" onerror="this.style.display=\\'none\\';this.nextElementSibling.style.display=\\'flex\\'">' : '') +
               '<div class="yedu-img-placeholder" style="display:' + (imgSrc ? 'none' : 'flex') + '">夜读</div>' +
               (hasAudio ? '<button class="yedu-audio-btn" onclick="yeduToggleAudio(' + globalIndex + ',this)" data-src="' + article.audioSrc + '"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>' : '') +
               metaHtml +
@@ -455,4 +455,13 @@
     document.addEventListener('DOMContentLoaded', loadData);
   </script>
 </body>
-</html>
+</html>`;
+
+fs.writeFileSync(HTML_PATH, html, 'utf8');
+
+// 同步一份到项目目录（便于本地 file:// 打开预览）
+const localHtml = path.join(__dirname, 'index.html');
+fs.writeFileSync(localHtml, html, 'utf8');
+
+console.log('index.html generated: ' + files.length + ' articles (' + OUTPUT_DIR + ')');
+console.log('sync: ' + localHtml);
