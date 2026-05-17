@@ -171,6 +171,7 @@ const html = `<!DOCTYPE html>
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
+      margin: 0;
     }
 
     .yedu-article-date {
@@ -187,7 +188,7 @@ const html = `<!DOCTYPE html>
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     .yedu-read-more {
@@ -197,7 +198,7 @@ const html = `<!DOCTYPE html>
       display: inline-flex;
       align-items: center;
       gap: 2px;
-      margin-top: 4px;
+      margin-top: 2px;
       transition: gap 0.2s ease;
     }
 
@@ -281,17 +282,16 @@ const html = `<!DOCTYPE html>
       .yedu-article-main { height: auto; flex-direction: column; }
       .yedu-article-cover { flex: none; width: 100%; height: 140px; }
       .yedu-audio-btn { width: 40px; height: 40px; }
-      .yedu-article-content { padding: 6px 10px; }
+      .yedu-article-content { padding: 4px 10px; }
       .yedu-article-title { font-size: 0.88rem; -webkit-line-clamp: 1; }
-      .yedu-article-date { margin-top: 2px; }
-      .yedu-article-summary { margin-top: 2px; }
-      .yedu-read-more { margin-top: 2px; }
+      .yedu-article-date { margin-top: 1px; }
     }
 
     @media (min-width: 601px) {
-      .yedu-article-main { height: 110px; }
+      .yedu-article-main { height: 110px; align-items: stretch; }
       .yedu-article-cover { flex: 0 0 160px; width: 160px; }
-      .yedu-article-content { padding: 10px 14px; justify-content: flex-start; }
+      .yedu-article-content { padding: 6px 14px; justify-content: flex-start; }
+      .yedu-article-date { margin-top: 1px; }
     }
   </style>
 </head>
