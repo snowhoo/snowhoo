@@ -1,7 +1,8 @@
 /**
  * 人民朗读专辑爬虫
  * 增量抓取：比对 URL，已存在则跳过
- * 文章分单文件存储，索引极简（只存日期+文件名）
+ * 文章分单文件存储，索引极简（只存 pubDate + filename）
+ * 输出 .js 文件（ES Module），支持 file:// 直接访问
  * 用法: node fetch-yedu-list.js
  */
 
@@ -15,7 +16,7 @@ const http = require('http');
 const ALBUM_URL = 'https://www.peopleapp.com/audiotopic/21622-10000002141';
 const OUTPUT_DIR = 'D:\\hexo\\source\\yedu';
 const DATA_DIR = path.join(OUTPUT_DIR, 'data');
-const ARTICLE_LIST_FILE = path.join(DATA_DIR, 'article-list.json');
+const ARTICLE_LIST_FILE = path.join(DATA_DIR, 'article-list.js');
 const IMAGES_DIR = path.join(OUTPUT_DIR, 'images');
 
 // ============ 工具函数 ============
@@ -61,6 +62,11 @@ async function downloadImage(imgUrl) {
   });
 }
 
+// 序列化 JS 值（用于输出 .js 文件）
+function serialize(data) {
+  return 'export default ' + JSON.stringify(data, null, 2) + ';';
+}
+
 // ============ 抓取列表页 ============
 async function fetchList(page) {
   await page.goto(ALBUM_URL, { waitUntil: 'domcontentloaded', timeout: 30000 });
@@ -91,6 +97,16 @@ async function fetchDetail(page) {
       || document.querySelector('[class*=title]')?.textContent?.trim()
       || document.title.replace(/_人民日报$/, '').replace(/人民朗读/, '').trim();
 
+    // 提取详情页真实发布日期（格式：2026-05-15 21:49）
+    let pubDate = '';
+    const spanEl = document.querySelector('span.shrink-0');
+    if (spanEl) {
+      const txt = spanEl.textContent.trim();
+      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(txt)) {
+        pubDate = txt;
+      }
+    }
+
     const audioSrc = document.querySelector('audio')?.src || '';
 
     const imgs = [];
@@ -114,15 +130,20 @@ async function fetchDetail(page) {
       }
     });
 
-    return { title, audioSrc, coverSrc, summary, paragraphs, allImages: imgs };
+    return { title, pubDate, audioSrc, coverSrc, summary, paragraphs, allImages: imgs };
   });
 }
 
-// ============ 读索引 [{date, filename}] ============
+// ============ 读索引 [{pubDate, filename}] ============
 function loadIndex() {
   if (fs.existsSync(ARTICLE_LIST_FILE)) {
     try {
-      return JSON.parse(fs.readFileSync(ARTICLE_LIST_FILE, 'utf-8'));
+      // .js 文件格式：export default [...];
+      const raw = fs.readFileSync(ARTICLE_LIST_FILE, 'utf-8');
+      const match = raw.match(/^export\s+default\s+(\[[\s\S]*\]);?\s*$/);
+      if (match) {
+        return JSON.parse(match[1]);
+      }
     } catch (e) {
       log(`[数据] 读取索引失败: ${e.message}`);
     }
@@ -130,9 +151,9 @@ function loadIndex() {
   return [];
 }
 
-// ============ 写索引 ============
+// ============ 写索引（JS 格式） ============
 function saveIndex(index) {
-  fs.writeFileSync(ARTICLE_LIST_FILE, JSON.stringify(index, null, 2), 'utf-8');
+  fs.writeFileSync(ARTICLE_LIST_FILE, serialize(index), 'utf-8');
 }
 
 // ============ 主流程 ============
@@ -147,7 +168,6 @@ async function main() {
     const index = loadIndex();
     const existingUrls = new Set();
 
-    // 兼容旧格式索引（article-list.json 早期版本含 url 字段）
     index.forEach(item => {
       if (item.url) existingUrls.add(item.url);
       if (item._url) existingUrls.add(item._url);
@@ -174,7 +194,6 @@ async function main() {
 
     let fetchedCount = 0;
 
-    // 单次循环：点击 -> 判断 -> 抓详情 -> 写文件 -> 更新索引
     for (let i = 0; i < listItems.length; i++) {
       const item = listItems[i];
 
@@ -199,12 +218,27 @@ async function main() {
 
       const detail = await fetchDetail(page);
 
-      const now = new Date();
-      const pad = (n) => String(n).padStart(2, '0');
-      const dateStr = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
-      const articleId = index.length + fetchedCount + 1;
-      const dailySeq = String(articleId).padStart(3, '0');
-      const articleFileName = `${dateStr}-${dailySeq}.json`;
+      // 文件名：20260515-2149-001.js  （pubDate 时间戳 + 当天序号）
+      let articleFileName;
+      if (detail.pubDate) {
+        const [datePart, timePart] = detail.pubDate.split(' ');
+        const yyyy = datePart.substring(0, 4);
+        const mm = datePart.substring(5, 7);
+        const dd = datePart.substring(8, 10);
+        const hh = timePart.substring(0, 2);
+        const min = timePart.substring(3, 5);
+        const datePrefix = `${yyyy}${mm}${dd}`;
+        const sameDayCount = index.filter(entry => entry.pubDate && entry.pubDate.startsWith(datePrefix)).length;
+        const dailySeq = String(sameDayCount + 1).padStart(3, '0');
+        articleFileName = `${datePrefix}-${hh}${min}-${dailySeq}.js`;
+      } else {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const dateStr = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
+        const articleId = index.length + fetchedCount + 1;
+        const dailySeq = String(articleId).padStart(3, '0');
+        articleFileName = `${dateStr}-${dailySeq}.js`;
+      }
 
       // 下载封面图
       let localCover = null;
@@ -217,25 +251,25 @@ async function main() {
         }
       }
 
-      // 写单文章 JSON（含完整内容）
+      // 写单文章 JS（ES Module）
       const article = {
-        id: articleId,
         title: detail.title || item.title,
         timeAgo: item.timeAgo,
         duration: item.duration,
         url: detailUrl,
+        pubDate: detail.pubDate || null,
         audioSrc: detail.audioSrc,
         coverSrc: localCover || detail.coverSrc,
         summary: detail.summary,
         paragraphs: detail.paragraphs,
-        fetchDate: `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`,
       };
 
-      fs.writeFileSync(path.join(DATA_DIR, articleFileName), JSON.stringify(article, null, 2), 'utf-8');
+      const articlePath = path.join(DATA_DIR, articleFileName);
+      fs.writeFileSync(articlePath, serialize(article), 'utf-8');
       log(`  [保存] data/${articleFileName}`);
 
-      // 更新索引（极简：只存日期+文件名），立即写出
-      index.unshift({ date: dateStr, filename: articleFileName });
+      // 更新索引
+      index.unshift({ pubDate: detail.pubDate || null, filename: articleFileName });
       saveIndex(index);
 
       fetchedCount++;

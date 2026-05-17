@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>夜读</title>
+  <title>澶滆</title>
   <style>
     .yedu-app { padding: 0; }
 
@@ -251,17 +251,17 @@
 <body>
   <div class="yedu-app">
     <div class="yedu-header">
-      <h1>夜读</h1>
-      <span>每晚十点·温暖相伴</span>
+      <h1>澶滆</h1>
+      <span>姣忔櫄鍗佺偣路娓╂殩鐩镐即</span>
     </div>
 
     <div class="yedu-article-list" id="yeduArticleList">
-      <div class="yedu-loading">正在加载...</div>
+      <div class="yedu-loading">姝ｅ湪鍔犺浇...</div>
     </div>
   </div>
 
-  <script>
-    const PAGE_SIZE = 20;
+  <script type="module">
+    const PAGE_SIZE = 10;
     let currentPage = 1;
     let articles = [];
     let currentAudio = null;
@@ -269,28 +269,30 @@
 
     async function loadData() {
       try {
-        const resp = await fetch('data/article-list.json');
-        const index = await resp.json();
+        // ES Module import() 鏀寔 file:// 鐩存帴璁块棶锛屾棤 CORS 闄愬埗
+        const indexModule = await import('./data/article-list.js');
+        const index = indexModule.default;
 
-        index.sort((a, b) => b.date.localeCompare(a.date));
+        // 鎸夌湡瀹炲彂甯冩棩鏈熼檷搴忔帓鍒?
+        index.sort((a, b) => (b.pubDate || '').localeCompare(a.pubDate || ''));
 
-        const dataDir = 'data/';
+        // 骞惰鍔犺浇鎵€鏈夋枃绔狅紙import() 鏀寔 file://锛?
         const fetches = index.map(item =>
-          fetch(dataDir + item.filename).then(r => r.json()).catch(() => null)
+          import(`./data/${item.filename}`).then(m => m.default).catch(() => null)
         );
         const results = await Promise.all(fetches);
 
         articles = results.filter(Boolean).map((article, i) => ({
           ...article,
           _filename: index[i].filename,
-          _date: index[i].date,
+          _pubDate: index[i].pubDate,
         }));
 
         renderPage(1);
       } catch (error) {
-        console.error('加载失败:', error);
+        console.error('鍔犺浇澶辫触:', error);
         document.getElementById('yeduArticleList').innerHTML =
-          '<div class="yedu-loading">数据加载失败，请刷新重试</div>';
+          '<div class="yedu-loading">鏁版嵁鍔犺浇澶辫触锛岃鍒锋柊閲嶈瘯</div>';
       }
     }
 
@@ -304,7 +306,7 @@
       const container = document.getElementById('yeduArticleList');
 
       if (articles.length === 0) {
-        container.innerHTML = '<div class="yedu-loading">暂无内容</div>';
+        container.innerHTML = '<div class="yedu-loading">鏆傛棤鍐呭</div>';
         return;
       }
 
@@ -318,7 +320,7 @@
           <div class="yedu-article-main">
             <div class="yedu-article-cover">
               ${imgSrc ? `<img src="${imgSrc}" alt="${article.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-              <div class="yedu-img-placeholder" style="display:${imgSrc ? 'none' : 'flex'}">夜读</div>
+              <div class="yedu-img-placeholder" style="display:${imgSrc ? 'none' : 'flex'}">澶滆</div>
               ${hasAudio ? `
               <button class="yedu-audio-btn" onclick="yeduToggleAudio(${globalIndex}, this)" data-src="${article.audioSrc}">
                 <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -328,7 +330,7 @@
                   <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
                   <span>${article.duration}</span>
                 ` : ''}
-                <span>${article.timeAgo || ''}</span>
+                ${article.pubDate ? `<span>${article.pubDate}</span>` : `<span>${article.timeAgo || ''}</span>`}
               </div>
               ${hasAudio ? `
               <div class="yedu-audio-progress">
@@ -339,7 +341,7 @@
               <h2 class="yedu-article-title" title="${article.title}">${article.title}</h2>
               <p class="yedu-article-summary">${article.summary || ''}</p>
               <div class="yedu-read-more" onclick="yeduToggleContent(this, ${globalIndex})">
-                <span>展开</span>
+                <span>灞曞紑</span>
                 <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
               </div>
             </div>
@@ -347,7 +349,7 @@
           <div class="yedu-full-content" id="yedu-full-content-${globalIndex}">
             <div class="yedu-full-content-inner">
               ${(article.paragraphs || []).map(p => `<p>${p}</p>`).join('')}
-              <a href="${article.url}" target="_blank" class="yedu-source-link">查看原文 →</a>
+              <a href="${article.url}" target="_blank" class="yedu-source-link">鏌ョ湅鍘熸枃 鈫?/a>
             </div>
           </div>
         </div>
@@ -356,9 +358,9 @@
       if (totalPages > 1) {
         html += `
         <div class="yedu-pagination">
-          <button onclick="yeduRenderPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>上一页</button>
+          <button onclick="yeduRenderPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>涓婁竴椤?/button>
           <span class="yedu-page-info">${page} / ${totalPages}</span>
-          <button onclick="yeduRenderPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>下一页</button>
+          <button onclick="yeduRenderPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>涓嬩竴椤?/button>
         </div>`;
       }
 
@@ -424,7 +426,7 @@
     function yeduToggleContent(el, index) {
       const content = document.getElementById(`yedu-full-content-${index}`);
       const isShow = content.classList.toggle('yedu-show');
-      el.querySelector('span').textContent = isShow ? '收起' : '展开';
+      el.querySelector('span').textContent = isShow ? '鏀惰捣' : '灞曞紑';
       el.classList.toggle('yedu-expanded');
     }
 

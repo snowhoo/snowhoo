@@ -44,13 +44,14 @@
 
     .yedu-article-main {
       display: flex;
-      height: 110px;
+      height: auto;
+      min-height: 135px;
     }
 
     .yedu-article-cover {
       position: relative;
-      flex: 0 0 120px;
-      width: 120px;
+      flex: 0 0 160px;
+      width: 160px;
       overflow: hidden;
       background: var(--cover-bg, #2d4a6e);
     }
@@ -127,19 +128,26 @@
       padding: 10px 14px;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      gap: 6px;
       overflow: hidden;
     }
 
     .yedu-article-title {
       font-size: 0.95rem;
       color: var(--text-primary, #1a1a2e);
-      margin-bottom: 5px;
+      margin-bottom: 4px;
       line-height: 1.4;
       font-weight: 600;
-      white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .yedu-article-datetime {
+      font-size: 0.72rem;
+      color: #999;
+      margin-bottom: 4px;
     }
 
     .yedu-article-summary {
@@ -147,7 +155,7 @@
       font-size: 0.78rem;
       line-height: 1.5;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 0;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
@@ -241,7 +249,7 @@
 
     @media (max-width: 600px) {
       .yedu-article-main { height: auto; flex-direction: column; }
-      .yedu-article-cover { flex: none; width: 100%; height: 150px; }
+      .yedu-article-cover { flex: none; width: 100%; height: 110px; }
       .yedu-audio-btn { width: 44px; height: 44px; }
       .yedu-article-content { padding: 10px 12px; }
       .yedu-article-title { font-size: 0.9rem; }
@@ -272,7 +280,11 @@
         const resp = await fetch('data/article-list.json');
         const index = await resp.json();
 
-        index.sort((a, b) => b.date.localeCompare(a.date));
+        index.sort((a, b) => {
+          if (b.date !== a.date) return +b.date - +a.date;
+          const getSeq = f => parseInt(f.filename.split('-').pop());
+          return getSeq(a) - getSeq(b);
+        });
 
         const dataDir = 'data/';
         const fetches = index.map(item =>
@@ -328,7 +340,6 @@
                   <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
                   <span>${article.duration}</span>
                 ` : ''}
-                <span>${article.timeAgo || ''}</span>
               </div>
               ${hasAudio ? `
               <div class="yedu-audio-progress">
@@ -337,6 +348,15 @@
             </div>
             <div class="yedu-article-content">
               <h2 class="yedu-article-title" title="${article.title}">${article.title}</h2>
+              <div class="yedu-article-datetime">${(function(){
+  const cover = article.coverSrc || '';
+  const m = cover.match(/(\d{8})-(\d{6})-/);
+  if(m){
+    const h = m[2].slice(0,2), min = m[2].slice(2,4), s = m[2].slice(4,6);
+    return (article.fetchDate || '') + ' ' + h + ':' + min + ':' + s;
+  }
+  return article.fetchDate || '';
+})()}</div>
               <p class="yedu-article-summary">${article.summary || ''}</p>
               <div class="yedu-read-more" onclick="yeduToggleContent(this, ${globalIndex})">
                 <span>展开</span>
