@@ -425,28 +425,38 @@
   width:100% !important;
   height:400px !important;
   object-fit:cover !important;
+  object-position:center top !important;
   display:block !important;
+}
+@media (max-aspect-ratio: 1/1) {
+  .banner-wrap img{height:400px !important;}
+}
+@media (min-aspect-ratio: 1/1) {
+  .banner-wrap img{height:200px !important;}
 }
 .banner-wrap .overlay{
   position:absolute;
-  inset:0;
+  top:0;
+  left:0;
+  right:0;
+  height:33%;
   display:flex;
   flex-direction:column;
   align-items:center;
-  justify-content:center;
-  padding:30px 20px 20px;
+  justify-content:flex-end;
+  padding:0 20px 8px;
   color:#fff;
-  text-shadow:0 2px 4px rgba(0,0,0,0.5);
+  text-shadow:0 2px 8px rgba(0,0,0,0.8),0 0 20px rgba(0,0,0,0.5);
 }
 .banner-wrap .overlay h2{
   color:#fff;
   font-size:22px;
   font-weight:600;
   margin-bottom:4px;
-  text-shadow:0 2px 8px rgba(0,0,0,0.5);
+  text-shadow:0 2px 8px rgba(0,0,0,0.8),0 0 20px rgba(0,0,0,0.5);
 }
 .banner-wrap .overlay p{
-  color:rgba(255,255,255,0.8);
+  color:rgba(255,255,255,0.9);
   font-size:13px;
 }
 
