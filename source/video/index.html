@@ -421,18 +421,28 @@
   overflow:hidden;
   position:relative;
 }
+.banner-wrap{
+  width:100%;
+  margin-bottom:12px;
+  border-radius:8px;
+  overflow:hidden;
+  position:relative;
+  background:#1a1a1a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 .banner-wrap img{
   width:100% !important;
-  height:400px !important;
-  object-fit:cover !important;
-  object-position:center top !important;
+  max-height:400px !important;
+  object-fit:contain !important;
   display:block !important;
 }
 @media (max-aspect-ratio: 1/1) {
-  .banner-wrap img{height:400px !important;}
+  .banner-wrap img{max-height:400px !important;}
 }
 @media (min-aspect-ratio: 1/1) {
-  .banner-wrap img{height:200px !important;}
+  .banner-wrap img{max-height:200px !important;}
 }
 .banner-wrap .overlay{
   position:absolute;
