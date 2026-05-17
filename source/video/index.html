@@ -420,26 +420,21 @@
   border-radius:12px;
   overflow:hidden;
   position:relative;
-  background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
-  min-height:180px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  line-height:0;
 }
 .banner-wrap img{
   width:100%;
-  height:180px;
   object-fit:cover;
   display:block;
 }
 .banner-wrap .overlay{
   position:absolute;
   inset:0;
-  background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,transparent 60%);
+  background:linear-gradient(to bottom,rgba(0,0,0,0.3) 0%,rgba(0,0,0,0.6) 100%);
   display:flex;
   flex-direction:column;
   align-items:center;
-  justify-content:flex-end;
+  justify-content:center;
   padding:20px;
 }
 .banner-wrap .overlay h2{
@@ -550,13 +545,10 @@ function loadData(file, callback, timeout) {
 
 /* ===== 加载索引 ===== */
 function loadIndex() {
-  var timeout = setTimeout(function() {
-    setEmpty('\u23f3 \u7d27\u5f20\u52a0\u8f7d\u4e2d...', '\u7b49\u5f85 data/ \u7d27\u5f20\u52a0\u8f7d\uff0c\u6216\u68c0\u67e5\u7f51\u7edc\u8fde\u63a5');
-  }, 10000);
   loadData('index.js', function(data) {
-    clearTimeout(timeout);
     if (!data) {
-      setEmpty('\u23f3 \u7d27\u5f20\u52a0\u8f7d\u4e2d...', '\u7b49\u5f85 data/ \u7d27\u5f20\u52a0\u8f7d\uff0c\u6216\u68c0\u67e5\u7f51\u7edc\u8fde\u63a5');
+      // index.js 未加载完/加载不到时，仅显示封面，不提示错误
+      showBanner();
       return;
     }
     sourceIndex = data;
@@ -596,29 +588,28 @@ function loadIndex() {
     });
     document.getElementById('tvboxFooter').innerHTML =
       '<span>\u6570\u636e\u6e90 ' + sourceIndex.length + '</span><span>\u603b\u5730\u5740 ' + ta + '</span><span>\u53ef\u64ad\u653e ' + pa + '</span>';
-    // 默认不选中任何源，显示"选择数据源"提示
+    // 默认不选中任何源，显示封面
+    showBanner();
   });
+}
+
+function showBanner() {
+  var img = new Image();
+  img.onload = function() {
+    document.getElementById('content').innerHTML = '<div class="banner-wrap"><img src="./banner.jpg?t=' + Date.now() + '"><div class="overlay"><h2>欢迎使用超级播霸</h2><p>请选择上方数据源或直接全网搜索</p></div></div>';
+  };
+  img.onerror = function() {
+    document.getElementById('content').innerHTML = '<div class="banner-wrap"><img src="https://picsum.photos/1200/300?random=1"><div class="overlay"><h2>欢迎使用超级播霸</h2><p>请选择上方数据源或直接全网搜索</p></div></div>';
+  };
+  img.src = './banner.jpg';
+  document.getElementById('pagination').innerHTML = '';
 }
 
 /* ===== 切源 / 翻页核心 ===== */
 function switchSource() {
   var prefix = document.getElementById('sourceSelect').value;
   if (!prefix) {
-    if (!sourceIndex.length) {
-      document.getElementById('content').innerHTML = '';
-      document.getElementById('pagination').innerHTML = '';
-      setStatus('\u23f9 \u9009\u62e9\u6570\u636e\u6e90');
-      return;
-    }
-    var img = new Image();
-    img.onload = function() {
-      document.getElementById('content').innerHTML = '<div class="banner-wrap"><img src="./banner.jpg?t=' + Date.now() + '"><div class="overlay"><h2>欢迎使用超级播霸</h2><p>请选择上方数据源或直接全网搜索</p></div></div>';
-    };
-    img.onerror = function() {
-      document.getElementById('content').innerHTML = '<div class="banner-wrap"><img src="https://api.pearktrue.cn/api/picture/?category=动漫&type=json"><div class="overlay"><h2>欢迎使用超级播霸</h2><p>请选择上方数据源或直接全网搜索</p></div></div>';
-    };
-    img.src = './banner.jpg';
-    document.getElementById('pagination').innerHTML = '';
+    showBanner();
     setStatus('\u23f9 \u9009\u62e9\u6570\u636e\u6e90');
     return;
   }
