@@ -156,7 +156,7 @@ const html = `<!DOCTYPE html>
       padding: 8px 12px;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
       overflow: hidden;
       min-width: 0;
     }
@@ -164,7 +164,7 @@ const html = `<!DOCTYPE html>
     .yedu-article-title {
       font-size: 0.9rem;
       color: var(--text-primary, #1a1a2e);
-      line-height: 1.35;
+      line-height: 1.2;
       font-weight: 600;
       white-space: normal;
       overflow: hidden;
@@ -177,18 +177,18 @@ const html = `<!DOCTYPE html>
     .yedu-article-date {
       font-size: 0.72rem;
       color: var(--text-secondary, #aaa);
-      margin-top: 3px;
+      margin: 0;
     }
 
     .yedu-article-summary {
       color: var(--text-secondary, #888);
       font-size: 0.75rem;
-      line-height: 1.45;
+      line-height: 1.3;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      margin-top: 2px;
+      margin: 0;
     }
 
     .yedu-read-more {
@@ -198,7 +198,10 @@ const html = `<!DOCTYPE html>
       display: inline-flex;
       align-items: center;
       gap: 2px;
-      margin-top: 2px;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: none;
       transition: gap 0.2s ease;
     }
 
@@ -247,6 +250,9 @@ const html = `<!DOCTYPE html>
       width: 100%;
       height: 100%;
       background: var(--cover-bg, #2d4a6e);
+      background-image: url('images/微信图片_20260518002627_203_70.jpg');
+      background-size: cover;
+      background-position: center;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -284,14 +290,14 @@ const html = `<!DOCTYPE html>
       .yedu-audio-btn { width: 40px; height: 40px; }
       .yedu-article-content { padding: 4px 10px; }
       .yedu-article-title { font-size: 0.88rem; -webkit-line-clamp: 1; }
-      .yedu-article-date { margin-top: 1px; }
     }
 
     @media (min-width: 601px) {
       .yedu-article-main { height: 110px; align-items: stretch; }
       .yedu-article-cover { flex: 0 0 160px; width: 160px; }
-      .yedu-article-content { padding: 6px 14px; justify-content: flex-start; }
-      .yedu-article-date { margin-top: 1px; }
+      .yedu-article-content { padding: 3px 14px; }
+      .yedu-article-title { line-height: 1.15; font-size: 0.88rem; }
+      .yedu-article-summary { line-height: 1.15; font-size: 0.73rem; }
     }
   </style>
 </head>
