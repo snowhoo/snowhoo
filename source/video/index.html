@@ -413,6 +413,47 @@
 .empty-state .desc{font-size:13px}
 .empty-state .sub{font-size:11px;margin-top:4px;opacity:.7}
 
+/* ===== 全网状态封面 ===== */
+.banner-wrap{
+  width:100%;
+  margin-bottom:12px;
+  border-radius:12px;
+  overflow:hidden;
+  position:relative;
+  background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
+  min-height:180px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.banner-wrap img{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+  display:block;
+}
+.banner-wrap .overlay{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,transparent 60%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  padding:20px;
+}
+.banner-wrap .overlay h2{
+  color:#fff;
+  font-size:22px;
+  font-weight:600;
+  margin-bottom:4px;
+  text-shadow:0 2px 8px rgba(0,0,0,0.5);
+}
+.banner-wrap .overlay p{
+  color:rgba(255,255,255,0.8);
+  font-size:13px;
+}
+
 /* ===== Scrollbar ===== */
 .ep-panel::-webkit-scrollbar{width:4px}
 .ep-panel::-webkit-scrollbar-track{background:transparent}
@@ -555,8 +596,7 @@ function loadIndex() {
     });
     document.getElementById('tvboxFooter').innerHTML =
       '<span>\u6570\u636e\u6e90 ' + sourceIndex.length + '</span><span>\u603b\u5730\u5740 ' + ta + '</span><span>\u53ef\u64ad\u653e ' + pa + '</span>';
-    sel.value = sourceIndex[0].prefix;
-    switchSource();
+    // 默认不选中任何源，显示"选择数据源"提示
   });
 }
 
@@ -564,7 +604,20 @@ function loadIndex() {
 function switchSource() {
   var prefix = document.getElementById('sourceSelect').value;
   if (!prefix) {
-    document.getElementById('content').innerHTML = '';
+    if (!sourceIndex.length) {
+      document.getElementById('content').innerHTML = '';
+      document.getElementById('pagination').innerHTML = '';
+      setStatus('\u23f9 \u9009\u62e9\u6570\u636e\u6e90');
+      return;
+    }
+    var img = new Image();
+    img.onload = function() {
+      document.getElementById('content').innerHTML = '<div class="banner-wrap"><img src="./banner.jpg?t=' + Date.now() + '"><div class="overlay"><h2>欢迎使用超级播霸</h2><p>请选择上方数据源或直接全网搜索</p></div></div>';
+    };
+    img.onerror = function() {
+      document.getElementById('content').innerHTML = '<div class="banner-wrap"><img src="https://api.pearktrue.cn/api/picture/?category=动漫&type=json"><div class="overlay"><h2>欢迎使用超级播霸</h2><p>请选择上方数据源或直接全网搜索</p></div></div>';
+    };
+    img.src = './banner.jpg';
     document.getElementById('pagination').innerHTML = '';
     setStatus('\u23f9 \u9009\u62e9\u6570\u636e\u6e90');
     return;
@@ -620,6 +673,16 @@ function useSourceData(data, file, pageNum) {
   render();
 }
 
+/* ===== 恢复源下拉框文字 ===== */
+function restoreSourceSelect() {
+  var sel = document.getElementById('sourceSelect');
+  if (currentPrefix && sel.querySelector('option[value="' + currentPrefix + '"]')) {
+    sel.value = currentPrefix;
+  } else if (sourceIndex.length) {
+    sel.value = sourceIndex[0].prefix;
+  }
+}
+
 /* ===== 停止搜索 ===== */
 function stopSearch() {
   isSearching = false;
@@ -643,6 +706,9 @@ function doSearch() {
   if (isSearching) return;
   isSearching = true;
   document.getElementById('stopSearchBtn').style.display = '';
+  // 重置源下拉框为全网状态
+  document.getElementById('sourceSelect').value = '';
+  document.getElementById('sourceSelect').options[0].textContent = '\u5168\u7f51';
 
   var thisVersion = ++searchVersion;
 

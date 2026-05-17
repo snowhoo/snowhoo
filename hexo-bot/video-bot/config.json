@@ -1,12 +1,10 @@
-{
+﻿{
   "_说明": "TVBox 数据源配置文件",
   "_用法": "修改 sources 列表，添加或移除数据源地址，然后运行 python tvbox-crawler.py",
 
   "sources": [
     "http://epg.51zmt.top:8000/api/diyp/?ch={name}&date={date}",
     "http://xhztv.top/xhz",
-    "http://xhztv.top/4k.json",
-    "http://fty.xxooo.cf/tv",
     "http://xhztv.top/dc",
     "https://fastly.jsdelivr.net/gh/qirenzhidao/tvbox18@main/app.json",
     "https://fastly.jsdelivr.net/gh/gaotianliuyun/gao@master/0827.json",
