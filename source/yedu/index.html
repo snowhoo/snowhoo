@@ -5,26 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>人民朗读 - 夜读精选</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    .yedu-app * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    body {
+    .yedu-app {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
       min-height: 100vh;
       padding: 24px 16px;
     }
 
-    .header {
+    .yedu-header {
       max-width: 900px;
       margin: 0 auto 20px;
       text-align: center;
     }
 
-    .header h1 {
+    .yedu-header h1 {
       color: #fff;
       font-size: 1.6rem;
       font-weight: 300;
@@ -33,18 +29,15 @@
       text-shadow: 0 2px 20px rgba(233, 69, 96, 0.3);
     }
 
-    .header p {
+    .yedu-header p {
       color: rgba(255, 255, 255, 0.5);
       font-size: 0.8rem;
       letter-spacing: 2px;
     }
 
-    .article-list {
-      max-width: 900px;
-      margin: 0 auto;
-    }
+    .yedu-article-list { max-width: 900px; margin: 0 auto; }
 
-    .article-card {
+    .yedu-article-card {
       background: rgba(255, 255, 255, 0.95);
       border-radius: 10px;
       overflow: hidden;
@@ -53,18 +46,17 @@
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .article-card:hover {
+    .yedu-article-card:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
     }
 
-    /* 左右布局 - 紧凑 */
-    .article-main {
+    .yedu-article-main {
       display: flex;
       height: 120px;
     }
 
-    .article-cover {
+    .yedu-article-cover {
       position: relative;
       flex: 0 0 140px;
       width: 140px;
@@ -72,18 +64,16 @@
       background: #2d4a6e;
     }
 
-    .article-cover img {
+    .yedu-article-cover img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       transition: transform 0.3s ease;
     }
 
-    .article-card:hover .article-cover img {
-      transform: scale(1.08);
-    }
+    .yedu-article-card:hover .yedu-article-cover img { transform: scale(1.08); }
 
-    .audio-btn {
+    .yedu-audio-btn {
       position: absolute;
       top: 50%;
       left: 50%;
@@ -102,27 +92,13 @@
       z-index: 2;
     }
 
-    .audio-btn:hover {
-      background: rgba(233, 69, 96, 1);
-      transform: translate(-50%, -50%) scale(1.1);
-    }
+    .yedu-audio-btn:hover { background: rgba(233, 69, 96, 1); transform: translate(-50%, -50%) scale(1.1); }
 
-    .audio-btn svg {
-      width: 16px;
-      height: 16px;
-      fill: #fff;
-      margin-left: 2px;
-    }
+    .yedu-audio-btn svg { width: 16px; height: 16px; fill: #fff; margin-left: 2px; }
+    .yedu-audio-btn.yedu-playing svg { margin-left: 0; }
+    .yedu-audio-btn.yedu-playing svg path { d: "M6 4h4v16H6zM14 4h4v16h-4z"; }
 
-    .audio-btn.playing svg {
-      margin-left: 0;
-    }
-
-    .audio-btn.playing svg path {
-      d: "M6 4h4v16H6zM14 4h4v16h-4z";
-    }
-
-    .article-meta {
+    .yedu-article-meta {
       position: absolute;
       bottom: 6px;
       right: 6px;
@@ -138,14 +114,9 @@
       z-index: 2;
     }
 
-    .article-meta svg {
-      width: 10px;
-      height: 10px;
-      fill: currentColor;
-    }
+    .yedu-article-meta svg { width: 10px; height: 10px; fill: currentColor; }
 
-    /* 音频播放进度条 */
-    .audio-progress {
+    .yedu-audio-progress {
       position: absolute;
       bottom: 0;
       left: 0;
@@ -155,14 +126,14 @@
       z-index: 3;
     }
 
-    .audio-progress-bar {
+    .yedu-audio-progress-bar {
       height: 100%;
       background: #e94560;
       width: 0;
       transition: width 0.1s linear;
     }
 
-    .article-content {
+    .yedu-article-content {
       flex: 1;
       padding: 12px 16px;
       display: flex;
@@ -171,7 +142,7 @@
       overflow: hidden;
     }
 
-    .article-title {
+    .yedu-article-title {
       font-size: 1rem;
       color: #1a1a2e;
       margin-bottom: 6px;
@@ -182,7 +153,7 @@
       text-overflow: ellipsis;
     }
 
-    .article-summary {
+    .yedu-article-summary {
       color: #888;
       font-size: 0.8rem;
       line-height: 1.5;
@@ -192,7 +163,7 @@
       overflow: hidden;
     }
 
-    .read-more {
+    .yedu-read-more {
       color: #e94560;
       font-size: 0.75rem;
       cursor: pointer;
@@ -203,34 +174,20 @@
       transition: gap 0.2s ease;
     }
 
-    .read-more:hover {
-      gap: 6px;
-    }
+    .yedu-read-more:hover { gap: 6px; }
+    .yedu-read-more svg { width: 12px; height: 12px; fill: #e94560; transition: transform 0.2s ease; }
+    .yedu-read-more.yedu-expanded svg { transform: rotate(180deg); }
 
-    .read-more svg {
-      width: 12px;
-      height: 12px;
-      fill: #e94560;
-      transition: transform 0.2s ease;
-    }
-
-    .read-more.expanded svg {
-      transform: rotate(180deg);
-    }
-
-    /* 展开的正文区域 */
-    .full-content {
+    .yedu-full-content {
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.4s ease;
       background: rgba(255, 255, 255, 0.98);
     }
 
-    .full-content.show {
-      max-height: 2000px;
-    }
+    .yedu-full-content.yedu-show { max-height: 2000px; }
 
-    .full-content-inner {
+    .yedu-full-content-inner {
       padding: 16px;
       color: #444;
       font-size: 0.85rem;
@@ -238,11 +195,9 @@
       border-top: 1px solid #eee;
     }
 
-    .full-content-inner p {
-      margin-bottom: 12px;
-    }
+    .yedu-full-content-inner p { margin-bottom: 12px; }
 
-    .source-link {
+    .yedu-source-link {
       display: inline-block;
       margin-top: 12px;
       color: #999;
@@ -251,24 +206,16 @@
       transition: color 0.2s ease;
     }
 
-    .source-link:hover {
-      color: #e94560;
-    }
+    .yedu-source-link:hover { color: #e94560; }
 
-    /* 隐藏原生音频控件 */
-    audio {
-      display: none;
-    }
-
-    .loading {
+    .yedu-loading {
       text-align: center;
       color: rgba(255, 255, 255, 0.7);
       padding: 40px 0;
       font-size: 1rem;
     }
 
-    /* 图片加载失败占位图 */
-    .img-placeholder {
+    .yedu-img-placeholder {
       width: 100%;
       height: 100%;
       background: #2d4a6e;
@@ -280,8 +227,7 @@
       font-weight: 500;
     }
 
-    /* 分页 */
-    .pagination {
+    .yedu-pagination {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -289,7 +235,7 @@
       margin-top: 20px;
     }
 
-    .pagination button {
+    .yedu-pagination button {
       padding: 8px 16px;
       border: none;
       border-radius: 6px;
@@ -300,189 +246,150 @@
       transition: all 0.2s ease;
     }
 
-    .pagination button:hover:not(:disabled) {
-      background: rgba(233, 69, 96, 0.8);
-    }
-
-    .pagination button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .pagination .page-info {
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 0.85rem;
-    }
+    .yedu-pagination button:hover:not(:disabled) { background: rgba(233, 69, 96, 0.8); }
+    .yedu-pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .yedu-pagination .yedu-page-info { color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; }
 
     @media (max-width: 600px) {
-      body {
-        padding: 16px 10px;
-      }
-
-      .header h1 {
-        font-size: 1.3rem;
-        letter-spacing: 3px;
-      }
-
-      .article-main {
-        height: auto;
-        flex-direction: column;
-      }
-
-      .article-cover {
-        flex: none;
-        width: 100%;
-        height: 160px;
-      }
-
-      .audio-btn {
-        width: 50px;
-        height: 50px;
-      }
-
-      .article-content {
-        padding: 12px;
-      }
-
-      .article-title {
-        font-size: 0.95rem;
-      }
+      .yedu-app { padding: 16px 10px; }
+      .yedu-header h1 { font-size: 1.3rem; letter-spacing: 3px; }
+      .yedu-article-main { height: auto; flex-direction: column; }
+      .yedu-article-cover { flex: none; width: 100%; height: 160px; }
+      .yedu-audio-btn { width: 50px; height: 50px; }
+      .yedu-article-content { padding: 12px; }
+      .yedu-article-title { font-size: 0.95rem; }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>人民朗读</h1>
-    <p>夜读精选 · 每晚十点 · 温暖相伴</p>
-  </div>
+  <div class="yedu-app">
+    <div class="yedu-header">
+      <h1>人民朗读</h1>
+      <p>夜读精选 · 每晚十点 · 温暖相伴</p>
+    </div>
 
-  <div class="article-list" id="articleList">
-    <div class="loading">正在加载...</div>
+    <div class="yedu-article-list" id="yeduArticleList">
+      <div class="yedu-loading">正在加载...</div>
+    </div>
   </div>
 
   <script>
     const PAGE_SIZE = 20;
     let currentPage = 1;
-    let allArticles = [];
-
-    // 当前播放的音频
+    let articles = [];
     let currentAudio = null;
     let currentBtn = null;
 
-    // 加载数据
     async function loadData() {
       try {
-        const response = await fetch('data/yedu-list.json');
-        const data = await response.json();
-        // 按 fetchDate 倒序，最新的在前
-        allArticles = data.sort((a, b) => {
-          const ta = a.fetchDate ? new Date(a.fetchDate) : 0;
-          const tb = b.fetchDate ? new Date(b.fetchDate) : 0;
-          return tb - ta;
-        });
+        const resp = await fetch('data/article-list.json');
+        const index = await resp.json();
+
+        index.sort((a, b) => b.date.localeCompare(a.date));
+
+        const dataDir = 'data/';
+        const fetches = index.map(item =>
+          fetch(dataDir + item.filename).then(r => r.json()).catch(() => null)
+        );
+        const results = await Promise.all(fetches);
+
+        articles = results.filter(Boolean).map((article, i) => ({
+          ...article,
+          _filename: index[i].filename,
+          _date: index[i].date,
+        }));
+
         renderPage(1);
       } catch (error) {
-        console.error('加载数据失败:', error);
-        document.getElementById('articleList').innerHTML = '<div class="loading">数据加载失败，请刷新重试</div>';
+        console.error('加载失败:', error);
+        document.getElementById('yeduArticleList').innerHTML =
+          '<div class="yedu-loading">数据加载失败，请刷新重试</div>';
       }
     }
 
-    // 获取正文图片（过滤掉小图、logo 和 UI 元素）
-    function getContentImage(article) {
-      if (article.allImages && article.allImages.length > 0) {
-        const validImages = article.allImages.filter(img => {
-          if (img.w < 300) return false;
-          if (/logo|icon|avatar|show_type\/201808|cdnpeoplefront.*\/_nuxt\//.test(img.src)) return false;
-          return true;
-        });
-        if (validImages.length > 0) {
-          return validImages[0].src;
-        }
-      }
-      return article.coverSrc || '';
-    }
-
-    // 渲染指定页
     function renderPage(page) {
       currentPage = page;
       const start = (page - 1) * PAGE_SIZE;
       const end = start + PAGE_SIZE;
-      const pageArticles = allArticles.slice(start, end);
-      const totalPages = Math.ceil(allArticles.length / PAGE_SIZE);
+      const pageArticles = articles.slice(start, end);
+      const totalPages = Math.ceil(articles.length / PAGE_SIZE);
 
-      const container = document.getElementById('articleList');
+      const container = document.getElementById('yeduArticleList');
+
+      if (articles.length === 0) {
+        container.innerHTML = '<div class="yedu-loading">暂无内容</div>';
+        return;
+      }
 
       let html = pageArticles.map((article, i) => {
         const globalIndex = start + i;
-        const imgSrc = getContentImage(article);
+        const hasAudio = !!article.audioSrc;
+        const imgSrc = article.coverSrc || '';
 
         return `
-        <div class="article-card" data-index="${globalIndex}">
-          <div class="article-main">
-            <div class="article-cover">
+        <div class="yedu-article-card" data-index="${globalIndex}">
+          <div class="yedu-article-main">
+            <div class="yedu-article-cover">
               ${imgSrc ? `<img src="${imgSrc}" alt="${article.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
-              <div class="img-placeholder" style="display:${imgSrc ? 'none' : 'flex'}">夜读</div>
-              <button class="audio-btn" onclick="toggleAudio(${globalIndex}, this)" data-src="${article.audioSrc}">
-                <svg viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              </button>
-              <div class="article-meta">
+              <div class="yedu-img-placeholder" style="display:${imgSrc ? 'none' : 'flex'}">夜读</div>
+              ${hasAudio ? `
+              <button class="yedu-audio-btn" onclick="yeduToggleAudio(${globalIndex}, this)" data-src="${article.audioSrc}">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </button>` : ''}
+              <div class="yedu-article-meta">
                 ${article.duration ? `
                   <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
                   <span>${article.duration}</span>
                 ` : ''}
                 <span>${article.timeAgo || ''}</span>
               </div>
-              <div class="audio-progress">
-                <div class="audio-progress-bar" id="progress-${globalIndex}"></div>
-              </div>
+              ${hasAudio ? `
+              <div class="yedu-audio-progress">
+                <div class="yedu-audio-progress-bar" id="yedu-progress-${globalIndex}"></div>
+              </div>` : ''}
             </div>
-            <div class="article-content">
-              <h2 class="article-title" title="${article.title}">${article.title}</h2>
-              <p class="article-summary">${article.summary}</p>
-              <div class="read-more" onclick="toggleContent(this, ${globalIndex})">
+            <div class="yedu-article-content">
+              <h2 class="yedu-article-title" title="${article.title}">${article.title}</h2>
+              <p class="yedu-article-summary">${article.summary || ''}</p>
+              <div class="yedu-read-more" onclick="yeduToggleContent(this, ${globalIndex})">
                 <span>展开</span>
                 <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
               </div>
             </div>
           </div>
-          <div class="full-content" id="full-content-${globalIndex}">
-            <div class="full-content-inner">
+          <div class="yedu-full-content" id="yedu-full-content-${globalIndex}">
+            <div class="yedu-full-content-inner">
               ${(article.paragraphs || []).map(p => `<p>${p}</p>`).join('')}
-              <a href="${article.url}" target="_blank" class="source-link">查看原文 →</a>
+              <a href="${article.url}" target="_blank" class="yedu-source-link">查看原文 →</a>
             </div>
           </div>
         </div>
       `}).join('');
 
-      // 分页控件
       if (totalPages > 1) {
         html += `
-        <div class="pagination">
-          <button onclick="renderPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>上一页</button>
-          <span class="page-info">${page} / ${totalPages}</span>
-          <button onclick="renderPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>下一页</button>
-        </div>
-      `;
+        <div class="yedu-pagination">
+          <button onclick="yeduRenderPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>上一页</button>
+          <span class="yedu-page-info">${page} / ${totalPages}</span>
+          <button onclick="yeduRenderPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>下一页</button>
+        </div>`;
       }
 
       container.innerHTML = html;
     }
 
-    // 切换音频播放
-    function toggleAudio(index, btn) {
+    function yeduToggleAudio(index, btn) {
       const src = btn.dataset.src;
-      const progressBar = document.getElementById(`progress-${index}`);
+      const progressBar = document.getElementById(`yedu-progress-${index}`);
 
       if (currentAudio && currentAudio.src === src) {
         if (currentAudio.paused) {
           currentAudio.play();
-          btn.classList.add('playing');
+          btn.classList.add('yedu-playing');
           btn.querySelector('svg path').setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
         } else {
           currentAudio.pause();
-          btn.classList.remove('playing');
+          btn.classList.remove('yedu-playing');
           btn.querySelector('svg path').setAttribute('d', 'M8 5v14l11-7z');
         }
         return;
@@ -492,7 +399,7 @@
         currentAudio.pause();
         currentAudio = null;
         if (currentBtn) {
-          currentBtn.classList.remove('playing');
+          currentBtn.classList.remove('yedu-playing');
           currentBtn.querySelector('svg path').setAttribute('d', 'M8 5v14l11-7z');
         }
       }
@@ -502,43 +409,42 @@
       currentBtn = btn;
 
       audio.addEventListener('timeupdate', () => {
-        if (audio.duration) {
-          const percent = (audio.currentTime / audio.duration) * 100;
-          progressBar.style.width = percent + '%';
+        if (audio.duration && progressBar) {
+          progressBar.style.width = (audio.currentTime / audio.duration * 100) + '%';
         }
       });
 
       audio.addEventListener('ended', () => {
-        btn.classList.remove('playing');
+        btn.classList.remove('yedu-playing');
         btn.querySelector('svg path').setAttribute('d', 'M8 5v14l11-7z');
-        progressBar.style.width = '0%';
+        if (progressBar) progressBar.style.width = '0%';
       });
 
       audio.addEventListener('error', () => {
-        btn.classList.remove('playing');
+        btn.classList.remove('yedu-playing');
         btn.querySelector('svg path').setAttribute('d', 'M8 5v14l11-7z');
-        progressBar.style.width = '0%';
-        alert('音频加载失败，请稍后重试');
+        if (progressBar) progressBar.style.width = '0%';
       });
 
-      btn.classList.add('playing');
+      btn.classList.add('yedu-playing');
       btn.querySelector('svg path').setAttribute('d', 'M6 19h4V5H6v14zm8-14v14h4V5h-4z');
-      audio.play().catch(err => {
-        console.error('播放失败:', err);
-        btn.classList.remove('playing');
+      audio.play().catch(() => {
+        btn.classList.remove('yedu-playing');
         btn.querySelector('svg path').setAttribute('d', 'M8 5v14l11-7z');
       });
     }
 
-    // 展开/收起正文
-    function toggleContent(el, index) {
-      const content = document.getElementById(`full-content-${index}`);
-      const isShow = content.classList.toggle('show');
+    function yeduToggleContent(el, index) {
+      const content = document.getElementById(`yedu-full-content-${index}`);
+      const isShow = content.classList.toggle('yedu-show');
       el.querySelector('span').textContent = isShow ? '收起' : '展开';
-      el.classList.toggle('expanded');
+      el.classList.toggle('yedu-expanded');
     }
 
-    // 页面加载完成后获取数据
+    function yeduRenderPage(page) {
+      renderPage(page);
+    }
+
     document.addEventListener('DOMContentLoaded', loadData);
   </script>
 </body>
