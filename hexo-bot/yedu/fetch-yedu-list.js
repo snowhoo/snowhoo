@@ -14,6 +14,7 @@ const ALBUM_URL = 'https://www.peopleapp.com/audiotopic/21622-10000002141';
 const OUTPUT_DIR = 'D:\\hexo\\source\\yedu';
 const DATA_DIR = path.join(OUTPUT_DIR, 'data');
 const IMAGES_DIR = path.join(OUTPUT_DIR, 'images');
+const Jimp = require('jimp');
 
 // ============ 工具函数 ============
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -52,7 +53,21 @@ async function downloadImage(imgUrl, pubDate) {
     protocol.get(imgUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (response) => {
       if (response.statusCode === 200) {
         response.pipe(file);
-        file.on('finish', () => { file.close(); log(`  [下载] ${relativePath}`); resolve(relativePath); });
+        file.on('finish', async () => {
+          file.close();
+          try {
+            const img = await Jimp.read(localPath);
+            const w = img.getWidth();
+            if (w > 800) { img.resize(800, Jimp.AUTO); }
+            const mime = ext === '.png' ? Jimp.MIME_PNG : Jimp.MIME_JPEG;
+            await img.quality(70).writeAsync(localPath);
+            const stats = fs.statSync(localPath);
+            log(`  [下载] ${relativePath} (${(stats.size / 1024).toFixed(1)}KB${w > 800 ? ', resized' : ''})`);
+          } catch (e) {
+            log(`  [压缩] 跳过/失败: ${e.message}`);
+          }
+          resolve(relativePath);
+        });
       } else {
         file.close();
         log(`  [失败] HTTP ${response.statusCode}: ${imgUrl}`);
@@ -209,15 +224,22 @@ async function main() {
 
       // 下载封面图
       let localCover = null;
-      if (detail.imgs && detail.imgs.length > 0) {
-        const valid = detail.imgs.filter(img =>
-          img.w >= 400 && !/logo|icon|avatar|show_type\/201808|user_app|cdnpeoplefront.*\/_nuxt\//.test(img.src)
-        );
-        if (valid.length > 0) {
-          const downloaded = await downloadImage(valid[0].src, detail.pubDate);
-          // 下载失败时用 CDN 原始 URL
-          localCover = downloaded || valid[0].src;
-        }
+      const validImgs = (detail.imgs || []).filter(img => {
+        if (img.w < 400) return false;
+        const src = img.src || '';
+        // 排除：头像、logo、icon、App图标、人民日报CDN默认图
+        if (/logo|icon|avatar|_avatar|user_avatar|show_type\/201808|user_app|cdnpeoplefront.*\/_nuxt\//.test(src)) return false;
+        // 排除：人民审美等固定图（尺寸小或特定路径）
+        if (src.includes('cdnjdout.aikan.pdnews.cn') && /default|cover|logo|icon/i.test(src)) return false;
+        return true;
+      });
+      if (validImgs.length > 0) {
+        const downloaded = await downloadImage(validImgs[0].src, detail.pubDate);
+        localCover = downloaded || validImgs[0].src;
+      } else {
+        // 无合规图片，使用占位图
+        localCover = 'images/placeholder.svg';
+        log('  [占位] no cover image, using placeholder');
       }
 
       // 写单文章 JS（ES Module）

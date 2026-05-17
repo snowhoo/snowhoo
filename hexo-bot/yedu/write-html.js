@@ -10,12 +10,20 @@ const OUTPUT_DIR = 'D:\\hexo\\source\\yedu';
 const DATA_DIR = path.join(OUTPUT_DIR, 'data');
 const HTML_PATH = path.join(OUTPUT_DIR, 'index.html');
 
-
 // 扫描 data/ 下所有 .js 文件（排除 article-list.js 等）
 const files = glob.sync('*.js', { cwd: DATA_DIR })
   .filter(f => f !== 'article-list.js')
   .sort()
   .reverse(); // 最新时间戳排在前面
+
+// 同步文章数据到本地目录（file:// 访问需要数据在同目录）
+const localDataDir = path.join(__dirname, 'data');
+if (!fs.existsSync(localDataDir)) fs.mkdirSync(localDataDir, { recursive: true });
+files.forEach(f => {
+  const src = path.join(DATA_DIR, f);
+  const dst = path.join(localDataDir, f);
+  fs.copyFileSync(src, dst);
+});
 
 const filesJsArray = '[\n      ' + files.map(f => "'" + f + "'").join(',\n      ') + '\n    ]';
 
@@ -459,9 +467,9 @@ const html = `<!DOCTYPE html>
 
 fs.writeFileSync(HTML_PATH, html, 'utf8');
 
-// 同步一份到项目目录（便于本地 file:// 打开预览）
+// 同步一份 index.html 到本地项目目录
 const localHtml = path.join(__dirname, 'index.html');
 fs.writeFileSync(localHtml, html, 'utf8');
 
-console.log('index.html generated: ' + files.length + ' articles (' + OUTPUT_DIR + ')');
-console.log('sync: ' + localHtml);
+console.log('index.html generated: ' + files.length + ' articles');
+console.log('data synced to: ' + localDataDir);
