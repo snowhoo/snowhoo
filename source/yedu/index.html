@@ -44,7 +44,6 @@
 
     .yedu-article-main {
       display: flex;
-      height: 110px;
     }
 
     .yedu-article-cover {
@@ -127,8 +126,6 @@
       padding: 8px 12px;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
-      overflow: hidden;
       min-width: 0;
     }
 
@@ -248,14 +245,13 @@
     .yedu-pagination .yedu-page-info { color: var(--text-secondary, rgba(255, 255, 255, 0.6)); font-size: 0.8rem; }
 
     @media (max-width: 600px) {
-      .yedu-article-main { height: auto; flex-direction: column; }
+      .yedu-article-main { flex-direction: column; }
       .yedu-article-cover { flex: none; width: 100%; height: 140px; }
       .yedu-audio-btn { width: 40px; height: 40px; }
       .yedu-article-content { padding: 4px 10px; }
     }
 
     @media (min-width: 601px) {
-      .yedu-article-main { height: 110px; align-items: stretch; }
       .yedu-article-cover { flex: 0 0 160px; width: 160px; }
     }
   </style>
