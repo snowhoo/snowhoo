@@ -18,4 +18,3 @@ git commit -m "update yedu %date% %time%"
 git push origin source
 
 :end
-pause

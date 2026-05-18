@@ -16,15 +16,6 @@ const files = glob.sync('*.js', { cwd: DATA_DIR })
   .sort()
   .reverse(); // 最新时间戳排在前面
 
-// 同步文章数据到本地目录（file:// 访问需要数据在同目录）
-const localDataDir = path.join(__dirname, 'data');
-if (!fs.existsSync(localDataDir)) fs.mkdirSync(localDataDir, { recursive: true });
-files.forEach(f => {
-  const src = path.join(DATA_DIR, f);
-  const dst = path.join(localDataDir, f);
-  fs.copyFileSync(src, dst);
-});
-
 const filesJsArray = '[\n      ' + files.map(f => "'" + f + "'").join(',\n      ') + '\n    ]';
 
 const html = `<!DOCTYPE html>
@@ -73,7 +64,6 @@ const html = `<!DOCTYPE html>
 
     .yedu-article-main {
       display: flex;
-      height: 110px;
     }
 
     .yedu-article-cover {
@@ -153,42 +143,32 @@ const html = `<!DOCTYPE html>
 
     .yedu-article-content {
       flex: 1;
-      padding: 8px 12px;
+      padding: 0 8px;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
-      overflow: hidden;
       min-width: 0;
     }
 
     .yedu-article-title {
-      font-size: 0.9rem;
       color: var(--text-primary, #1a1a2e);
-      line-height: 1.2;
       font-weight: 600;
       white-space: normal;
       overflow: hidden;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
-      margin: 0;
     }
 
     .yedu-article-date {
-      font-size: 0.72rem;
       color: var(--text-secondary, #aaa);
-      margin: 0;
     }
 
     .yedu-article-summary {
       color: var(--text-secondary, #888);
-      font-size: 0.75rem;
-      line-height: 1.3;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      margin: 0;
     }
 
     .yedu-read-more {
@@ -250,7 +230,7 @@ const html = `<!DOCTYPE html>
       width: 100%;
       height: 100%;
       background: var(--cover-bg, #2d4a6e);
-      background-image: url('images/微信图片_20260518002627_203_70.jpg');
+      background-image: url('images/placeholder.jpg');
       background-size: cover;
       background-position: center;
       display: flex;
@@ -285,19 +265,14 @@ const html = `<!DOCTYPE html>
     .yedu-pagination .yedu-page-info { color: var(--text-secondary, rgba(255, 255, 255, 0.6)); font-size: 0.8rem; }
 
     @media (max-width: 600px) {
-      .yedu-article-main { height: auto; flex-direction: column; }
+      .yedu-article-main { flex-direction: column; }
       .yedu-article-cover { flex: none; width: 100%; height: 140px; }
       .yedu-audio-btn { width: 40px; height: 40px; }
       .yedu-article-content { padding: 4px 10px; }
-      .yedu-article-title { font-size: 0.88rem; -webkit-line-clamp: 1; }
     }
 
     @media (min-width: 601px) {
-      .yedu-article-main { height: 110px; align-items: stretch; }
       .yedu-article-cover { flex: 0 0 160px; width: 160px; }
-      .yedu-article-content { padding: 3px 14px; }
-      .yedu-article-title { line-height: 1.15; font-size: 0.88rem; }
-      .yedu-article-summary { line-height: 1.15; font-size: 0.73rem; }
     }
   </style>
 </head>
@@ -515,9 +490,4 @@ const html = `<!DOCTYPE html>
 
 fs.writeFileSync(HTML_PATH, html, 'utf8');
 
-// 同步一份 index.html 到本地项目目录
-const localHtml = path.join(__dirname, 'index.html');
-fs.writeFileSync(localHtml, html, 'utf8');
-
 console.log('index.html generated: ' + files.length + ' articles');
-console.log('data synced to: ' + localDataDir);

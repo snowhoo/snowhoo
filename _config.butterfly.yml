@@ -881,21 +881,21 @@ inject:
       /* 文章主体容器 - 弹性缩放:大屏宽、小屏窄 */
       #post,
       .post-block {
-        padding: 20px 30px !important;
+        padding: 15px !important;
         margin: 0 !important;
       }
       /* 竖屏/小屏:减少内边距 */
       @media screen and (max-width: 768px) {
         #post,
         .post-block {
-          padding: 8px 12px !important;
+          padding: 6px !important;
         }
       }
       /* 中等屏幕 */
       @media screen and (min-width: 769px) and (max-width: 1024px) {
         #post,
         .post-block {
-          padding: 15px 20px !important;
+          padding: 10px !important;
         }
       }
       /* 文章内容区域 */
