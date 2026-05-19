@@ -24,30 +24,32 @@ hexo.on('generateBefore', function() {
     hexo.log.info('[持久化模板] 已覆盖: pagination.pug');
   }
 
-  // 递归复制所有其他 .pug 文件
-  copyPugFiles(partialDir, themeDir);
-});
-
-function copyPugFiles(sourceDir, targetDir) {
-  if (!fs.existsSync(sourceDir)) return;
-
-  const files = fs.readdirSync(sourceDir);
-
-  files.forEach(file => {
-    const sourcePath = path.join(sourceDir, file);
-    const targetPath = path.join(targetDir, file);
-    const stat = fs.statSync(sourcePath);
-
-    if (stat.isDirectory()) {
-      // 递归处理子目录
-      copyPugFiles(sourcePath, targetPath);
-    } else if (file.endsWith('.pug') && file !== 'pagination.pug') {
-      // 复制 .pug 文件（排除 pagination.pug，已单独处理）
-      if (!fs.existsSync(targetDir)) {
-        fs.mkdirSync(targetDir, { recursive: true });
-      }
-      fs.copyFileSync(sourcePath, targetPath);
+  // 复制自定义组件文件到 layout/includes/
+  const componentFiles = [
+    'poetry-widget.pug',
+    'history-today.pug',
+    'mixins/indexPostUI.pug'
+  ];
+  componentFiles.forEach(file => {
+    const src = path.join(partialDir, 'includes', file);
+    const dest = path.join(themeDir, 'includes', file);
+    if (fs.existsSync(src)) {
+      const destDir = path.dirname(dest);
+      if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+      fs.copyFileSync(src, dest);
       hexo.log.info('[持久化模板] 已覆盖: ' + file);
     }
   });
-}
+
+  // 特殊处理 index.pug：复制并修正 include 路径
+  // 源文件中的 include ./includes/xxx 在目标位置需保持正确
+  const indexSrc = path.join(partialDir, 'index.pug');
+  const indexDest = path.join(themeDir, 'index.pug');
+  if (fs.existsSync(indexSrc)) {
+    let content = fs.readFileSync(indexSrc, 'utf8');
+    // poetry-widget.pug 和 history-today.pug 需要从 theme layout/includes/ 引用
+    // 但它们实际上在 source/_partial/includes/，persist 已复制过去了，所以 ./includes/ 是正确的
+    fs.writeFileSync(indexDest, content);
+    hexo.log.info('[持久化模板] 已覆盖: index.pug');
+  }
+});

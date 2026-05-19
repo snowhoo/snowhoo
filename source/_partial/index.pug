@@ -1,8 +1,8 @@
-extends ../../../node_modules/hexo-theme-butterfly/layout/includes/layout.pug
+extends includes/layout.pug
 
 block content
   #custom-widgets
-    include ../../../source/_partial/includes/poetry-widget.pug
-    include ../../../source/_partial/includes/history-today.pug
+    include ./includes/poetry-widget.pug
+    include ./includes/history-today.pug
   include ./includes/mixins/indexPostUI.pug
   +indexPostUI
