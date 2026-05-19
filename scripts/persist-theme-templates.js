@@ -25,21 +25,27 @@ hexo.on('generateBefore', function() {
   }
 
   // 复制自定义组件文件到 layout/includes/
+  const botDir = path.join(hexo.base_dir, 'hexo-bot/refresh-cache');
   const componentFiles = [
-    'poetry-widget.pug',
-    'history-today.pug',
-    'mixins/indexPostUI.pug'
+    { src: 'poetry-widget.pug', dest: 'poetry-widget.pug' },
+    { src: 'history-today.pug', dest: 'history-today.pug' }
   ];
-  componentFiles.forEach(file => {
-    const src = path.join(partialDir, 'includes', file);
-    const dest = path.join(themeDir, 'includes', file);
-    if (fs.existsSync(src)) {
-      const destDir = path.dirname(dest);
-      if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
-      fs.copyFileSync(src, dest);
-      hexo.log.info('[持久化模板] 已覆盖: ' + file);
+  componentFiles.forEach(({ src, dest }) => {
+    const srcPath = path.join(botDir, src);
+    const destPath = path.join(themeDir, 'includes', dest);
+    if (fs.existsSync(srcPath)) {
+      fs.copyFileSync(srcPath, destPath);
+      hexo.log.info('[持久化模板] 已覆盖: ' + dest);
     }
   });
+
+  // 复制 mixins/indexPostUI.pug
+  const mixinsSrc = path.join(partialDir, 'includes/mixins/indexPostUI.pug');
+  const mixinsDest = path.join(themeDir, 'includes/mixins/indexPostUI.pug');
+  if (fs.existsSync(mixinsSrc)) {
+    fs.copyFileSync(mixinsSrc, mixinsDest);
+    hexo.log.info('[持久化模板] 已覆盖: mixins/indexPostUI.pug');
+  }
 
   // 特殊处理 index.pug：复制并修正 include 路径
   // 源文件中的 include ./includes/xxx 在目标位置需保持正确
