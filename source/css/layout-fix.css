@@ -46,21 +46,6 @@
   text-align: center;
 }
 
-#news-shortcut-card .news-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  padding: 0.6rem 1rem;
-  border-bottom: 1px solid #eff2f8;
-}
-
-#news-shortcut-card .news-header h3 {
-  font-size: 1rem;
-  font-weight: 500;
-  color: #2b4f6e;
-}
 
 #news-shortcut-card .news-date {
   font-size: 0.7rem;
@@ -153,7 +138,6 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 }
 
 @media (max-width: 600px) {
-  #news-shortcut-card .news-header h3 { font-size: 0.95rem; }
   #news-shortcut-card .news-btn { font-size: 0.75rem; padding: 0.35rem 0.75rem; }
   #news-shortcut-card .btn-row { gap: 0.4rem; padding: 0.6rem 0.75rem; }
 }
@@ -281,7 +265,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   justify-content: center;
   flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0.6rem 1rem;
+  padding: 0;
   border-bottom: 1px solid #eff2f8;
 }
 
@@ -341,7 +325,6 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 
 /* 小屏（<=600px） */
 @media screen and (max-width: 600px) {
-  #news-shortcut-card .news-header h3 { font-size: 0.95rem; }
   #news-shortcut-card .news-btn { font-size: 0.75rem; padding: 0.35rem 0.75rem; }
   #news-shortcut-card .btn-row { gap: 0.4rem; padding: 0.6rem 0.75rem; }
 
@@ -379,7 +362,6 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   #history-today { padding: 0 4rem; }
   #history-today .history-header h3 { font-size: 1.25rem; }
   #history-today .event-title { font-size: 1rem; }
-  #news-shortcut-card .news-header h3 { font-size: 1.2rem; }
   #news-shortcut-card .news-btn { font-size: 1rem; }
 }
 

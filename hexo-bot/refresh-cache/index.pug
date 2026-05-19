@@ -4,9 +4,6 @@ block home-widgets
   #custom-widgets
     //- 新闻卡片（七彩快捷按钮，彩虹色支持暗色模式）
     #news-shortcut-card
-      .news-header
-        h3 📰 新闻速递
-        span.news-date#newsDate
       .btn-row
         a.news-btn.news-btn-0(href="/yedu/") 🏠 十点夜读
         a.news-btn.news-btn-1(href="/news/") 📺 新闻速递
@@ -15,15 +12,6 @@ block home-widgets
         a.news-btn.news-btn-4(href="/guestbook/") 💬 留言
     include poetry-widget.pug
     include history-today.pug
-    script.
-      (function(){
-        var el = document.getElementById('newsDate');
-        if (el) {
-          var d = new Date();
-          var m = d.getMonth() + 1, day = d.getDate();
-          el.textContent = d.getFullYear() + '年' + m + '月' + day + '日';
-        }
-      })();
 
 block content
   include ./includes/mixins/indexPostUI.pug
