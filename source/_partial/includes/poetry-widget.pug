@@ -27,7 +27,7 @@
         span.author#authorName 陶渊明
         span.dynasty#dynastyText 东晋
         span.title#originText 《饮酒·其五》
-        button.refresh-btn#refreshBtn(aria-label="换一句") ↻ 换一句
+        button.refresh-btn#refreshBtn(aria-label='换一句') ↻ 换一句
     .expand-control#expandToggle
       span.arrow#arrowIcon ▼
       span 详情
@@ -37,69 +37,106 @@
       .small-note ※ 完整诗文及简介依据古典文献整理
   script.
     (function(){
-      var detailedPoemsDB = {
-        "静夜思":{fullText:"床前明月光，疑是地上霜。\\n举头望明月，低头思故乡。",poetBio:"李白（701－762），字太白，号青莲居士。盛唐浪漫主义诗人，有"诗仙"之称。",dynasty:"唐",author:"李白"},
-        "登鹳雀楼":{fullText:"白日依山尽，黄河入海流。\\n欲穷千里目，更上一层楼。",poetBio:"王之涣（688－742），字季凌，盛唐边塞诗人。",dynasty:"唐",author:"王之涣"},
-        "春晓":{fullText:"春眠不觉晓，处处闻啼鸟。\\n夜来风雨声，花落知多少。",poetBio:"孟浩然（689－740），襄阳人，唐代山水田园诗派代表。",dynasty:"唐",author:"孟浩然"},
-        "江雪":{fullText:"千山鸟飞绝，万径人踪灭。\\n孤舟蓑笠翁，独钓寒江雪。",poetBio:"柳宗元（773－819），字子厚，"唐宋八大家"之一。",dynasty:"唐",author:"柳宗元"},
-        "相思":{fullText:"红豆生南国，春来发几枝。\\n愿君多采撷，此物最相思。",poetBio:"王维（701－761），字摩诘，诗画双绝。",dynasty:"唐",author:"王维"},
-        "饮酒·其五":{fullText:"结庐在人境，而无车马喧。\\n问君何能尔？心远地自偏。\\n采菊东篱下，悠然见南山。\\n山气日夕佳，飞鸟相与还。\\n此中有真意，欲辨已忘言。",poetBio:"陶渊明（约365－427），字元亮，东晋田园诗人。",dynasty:"东晋",author:"陶渊明"}
-      };
-      var currentPoemData = {line:"",author:"",dynasty:"",title:"",fullDetail:null};
-      function findPoemDetails(title, contentSnippet) {
-        if (title && detailedPoemsDB[title]) return detailedPoemsDB[title];
-        for (var key in detailedPoemsDB) { var db = detailedPoemsDB[key]; if (db.fullText.indexOf(contentSnippet.substring(0,12)) >= 0) return db; }
+      var db = [
+        {title:'静夜思',fullText:'床前明月光，疑是地上霜。\n举头望明月，低头思故乡。',poetBio:'李白（701－762），字太白，号青莲居士。盛唐浪漫主义诗人，有诗仙之称。',dynasty:'唐',author:'李白'},
+        {title:'登鹳雀楼',fullText:'白日依山尽，黄河入海流。\n欲穷千里目，更上一层楼。',poetBio:'王之涣（688－742），字季凌，盛唐边塞诗人。',dynasty:'唐',author:'王之涣'},
+        {title:'春晓',fullText:'春眠不觉晓，处处闻啼鸟。\n夜来风雨声，花落知多少。',poetBio:'孟浩然（689－740），襄阳人，唐代山水田园诗派代表。',dynasty:'唐',author:'孟浩然'},
+        {title:'江雪',fullText:'千山鸟飞绝，万径人踪灭。\n孤舟蓑笠翁，独钓寒江雪。',poetBio:'柳宗元（773－819），字子厚，唐宋八大家之一。',dynasty:'唐',author:'柳宗元'},
+        {title:'相思',fullText:'红豆生南国，春来发几枝。\n愿君多采撷，此物最相思。',poetBio:'王维（701－761），字摩诘，诗画双绝。',dynasty:'唐',author:'王维'},
+        {title:'饮酒·其五',fullText:'结庐在人境，而无车马喧。\n问君何能尔？心远地自偏。\n采菊东篱下，悠然见南山。\n山气日夕佳，飞鸟相与还。\n此中有真意，欲辨已忘言。',poetBio:'陶渊明（约365－427），字元亮，东晋田园诗人。',dynasty:'东晋',author:'陶渊明'}
+      ];
+      var current = {line:'',author:'',dynasty:'',title:'',fullDetail:null};
+
+      function findDetail(title, snippet) {
+        for (var i=0;i<db.length;i++){
+          if (db[i].title === title) return db[i];
+          if (db[i].fullText.indexOf(snippet.substring(0,10)) >= 0) return db[i];
+        }
         return null;
       }
-      async function fetchPoem() {
-        var verseEl = document.getElementById("verseLine"), authorEl = document.getElementById("authorName");
-        var dynastyEl = document.getElementById("dynastyText"), originEl = document.getElementById("originText");
-        verseEl.innerHTML = '<span class="loader"></span> 采撷诗意...';
-        authorEl.innerText = ""; dynastyEl.innerText = ""; originEl.innerText = "";
-        try {
-          var resp = await fetch("https://v2.jinrishici.com/one.json", {headers:{"Cache-Control":"no-cache"}});
-          if (!resp.ok) throw new Error();
-          var result = await resp.json();
-          if (result.status === "success" && result.data) {
-            var d = result.data;
-            return {line:d.content, author:d.author||"佚名", dynasty:d.dynasty||"古代", title:d.origin||"诗词"};
-          } else throw new Error();
-        } catch(err) {
-          try {
-            var backup = await fetch("http://liflag.cn/api/gushici.php?type=json");
-            var bd = await backup.json();
-            if (bd && bd.content) return {line:bd.content, author:bd.author||"古人", dynasty:bd.source?bd.source.split('·')[0]:"古典", title:bd.source||"诗篇"};
-            else throw new Error();
-          } catch(e) { return {line:"长风破浪会有时，直挂云帆济沧海。",author:"李白",dynasty:"唐",title:"行路难·其一"}; }
+
+      function setDisplay(el, show) {
+        el.style.display = show ? 'block' : 'none';
+      }
+
+      function updateDetail() {
+        var fd = document.getElementById('fullPoemContent');
+        var pb = document.getElementById('poetBio');
+        if (current.fullDetail) {
+          fd.innerText = current.fullDetail.fullText;
+          pb.innerText = current.fullDetail.poetBio;
+        } else {
+          fd.innerText = '「' + current.line + '」';
+          pb.innerText = current.author + '，生平逸事待考。';
         }
       }
-      function updateDetailContent() {
-        var fullPoemDiv = document.getElementById("fullPoemContent"), poetBioDiv = document.getElementById("poetBio");
-        if (currentPoemData.fullDetail) {
-          fullPoemDiv.innerText = currentPoemData.fullDetail.fullText || "「" + currentPoemData.line + "」";
-          poetBioDiv.innerText = currentPoemData.fullDetail.poetBio || currentPoemData.author + "，" + currentPoemData.dynasty + "代文学家。";
-        } else { fullPoemDiv.innerText = "「" + currentPoemData.line + "」"; poetBioDiv.innerText = currentPoemData.author + "，生平逸事待考。"; }
+
+      function toggleDetail() {
+        var panel = document.getElementById('detailPanel');
+        var arrow = document.getElementById('arrowIcon');
+        var isOpen = panel.style.display === 'block';
+        if (isOpen) {
+          setDisplay(panel, false);
+          arrow.innerHTML = '▼';
+        } else {
+          updateDetail();
+          setDisplay(panel, true);
+          arrow.innerHTML = '▲';
+        }
       }
+
+      function renderPoem(poem) {
+        document.getElementById('verseLine').innerText = poem.line;
+        document.getElementById('authorName').innerText = poem.author;
+        document.getElementById('dynastyText').innerText = poem.dynasty;
+        document.getElementById('originText').innerText = '《' + poem.title + '》';
+        current.line = poem.line;
+        current.author = poem.author;
+        current.dynasty = poem.dynasty;
+        current.title = poem.title;
+        var matched = findDetail(poem.title, poem.line);
+        current.fullDetail = matched || {fullText:'「' + poem.line + '」', poetBio:poem.author + '，' + poem.dynasty + '代诗人。'};
+      }
+
+      function showLoader() {
+        document.getElementById('verseLine').innerHTML = '<span class="loader"></span> 采撷诗意...';
+        document.getElementById('authorName').innerText = '';
+        document.getElementById('dynastyText').innerText = '';
+        document.getElementById('originText').innerText = '';
+      }
+
+      async function fetchPoem() {
+        showLoader();
+        try {
+          var r = await fetch('https://v2.jinrishici.com/one.json', {headers:{'Cache-Control':'no-cache'}});
+          if (r.ok) {
+            var j = await r.json();
+            if (j.status === 'success' && j.data) {
+              var d = j.data;
+              return {line:d.content, author:d.author||'佚名', dynasty:d.dynasty||'古代', title:d.origin||'诗词'};
+            }
+          }
+        } catch(e){}
+        try {
+          var b = await fetch('http://liflag.cn/api/gushici.php?type=json');
+          var j2 = await b.json();
+          if (j2 && j2.content) {
+            return {line:j2.content, author:j2.author||'古人', dynasty:j2.source?j2.source.split('·')[0]:'古典', title:j2.source||'诗篇'};
+          }
+        } catch(e2){}
+        return {line:'长风破浪会有时，直挂云帆济沧海。',author:'李白',dynasty:'唐',title:'行路难·其一'};
+      }
+
       async function refreshPoetry() {
         var poem = await fetchPoem();
-        document.getElementById("verseLine").innerText = poem.line;
-        document.getElementById("authorName").innerText = poem.author;
-        document.getElementById("dynastyText").innerText = poem.dynasty;
-        document.getElementById("originText").innerText = "《" + poem.title + "》";
-        currentPoemData = {line:poem.line, author:poem.author, dynasty:poem.dynasty, title:poem.title, fullDetail:null};
-        var matched = findPoemDetails(poem.title, poem.line);
-        currentPoemData.fullDetail = matched || {fullText:"「" + poem.line + "」", poetBio:poem.author + "，" + poem.dynasty + "代诗人。"};
-        var panel = document.getElementById("detailPanel");
-        if (panel.style.display === "block") updateDetailContent();
+        renderPoem(poem);
+        var panel = document.getElementById('detailPanel');
+        if (panel.style.display === 'block') updateDetail();
       }
-      function toggleDetail() {
-        var panel = document.getElementById("detailPanel"), arrow = document.getElementById("arrowIcon");
-        if (panel.style.display !== "block") { updateDetailContent(); panel.style.display = "block"; arrow.innerHTML = "▲"; }
-        else { panel.style.display = "none"; arrow.innerHTML = "▼"; }
-      }
-      document.addEventListener("DOMContentLoaded", function() {
+
+      document.addEventListener('DOMContentLoaded', function() {
         refreshPoetry();
-        document.getElementById("expandToggle").addEventListener("click", toggleDetail);
-        document.getElementById("refreshBtn").addEventListener("click", function(e) { e.stopPropagation(); refreshPoetry(); });
+        document.getElementById('expandToggle').addEventListener('click', toggleDetail);
+        document.getElementById('refreshBtn').addEventListener('click', function(e){ e.stopPropagation(); refreshPoetry(); });
       });
     })();
