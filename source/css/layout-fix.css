@@ -69,17 +69,19 @@
 #news-shortcut-card .btn-row {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  width: 100%;
+  padding: 0.75rem 0;
 }
 
 /* ---- 七彩按钮（与 inject.bottom 旧配置保持一致）---- */
 #news-shortcut-card .news-btn {
   flex: 1;
   min-width: 80px;
-  max-width: 200px;
+  max-width: none;
+  width: 0;
   height: 42px;
   line-height: 42px;
   border-radius: 4px;
