@@ -16,6 +16,14 @@ hexo.on('generateBefore', function() {
     return;
   }
 
+  // 复制 layout.pug（核心布局文件，包含 block home-widgets）
+  const layoutSrc = path.join(partialDir, 'includes/layout.pug');
+  const layoutDest = path.join(themeDir, 'includes/layout.pug');
+  if (fs.existsSync(layoutSrc)) {
+    fs.copyFileSync(layoutSrc, layoutDest);
+    hexo.log.info('[持久化模板] 已覆盖: layout.pug');
+  }
+
   // 复制 pagination.pug 到 layout/includes
   const paginationSrc = path.join(partialDir, 'includes/pagination.pug');
   const paginationDest = path.join(themeDir, 'includes/pagination.pug');

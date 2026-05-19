@@ -44,6 +44,11 @@ html(lang=config.language data-theme=theme.display_mode class=htmlClassHideAside
       // 节日/节气横幅（在header下方，body自然流内，不会遮挡导航）
       #solar-term-banner
 
+      // 首页自定义模块：诗词 + 历史上的今天（放在 #content-inner 外部，避免破坏布局）
+      if globalPageType === 'home'
+        #home-widgets
+          block home-widgets
+
       main#content-inner.layout(class=hideAside)
         if body
           div!= body

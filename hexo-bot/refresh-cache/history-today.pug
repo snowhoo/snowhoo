@@ -1,39 +1,4 @@
 #history-today
-  style.
-    #history-today { width: 100%; margin: 0; padding: 0 1rem; box-sizing: border-box; }
-    #history-today .history-card { width: 100%; margin: 0 auto; font-family: system-ui,-apple-system,'Segoe UI','Noto Sans CJK SC',sans-serif; background: #ffffff; border-radius: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.03),0 1px 6px rgba(0,0,0,0.02); text-align: center; box-sizing: border-box; }
-    #history-today .history-header { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.5rem; padding: 0.6rem 1rem; border-bottom: 1px solid #eff2f8; }
-    #history-today .history-header h3 { font-size: 1rem; font-weight: 500; color: #2b4f6e; }
-    #history-today .history-date { font-size: 0.7rem; color: #8ba0bc; background: #f5f8fe; padding: 0.2rem 0.6rem; border-radius: 30px; }
-    #history-today .expand-control { display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; user-select: none; color: #8b9eb5; font-size: 0.72rem; transition: color 0.2s; }
-    #history-today .expand-control:hover { color: #4b6f92; }
-    #history-today .arrow { font-size: 0.65rem; transition: transform 0.2s ease; }
-    #history-today .detail-panel { display: none; padding: 0.5rem 1rem 1.2rem; }
-    #history-today .detail-panel.show { display: block; }
-    #history-today .events-list { display: flex; flex-direction: column; gap: 1rem; max-height: 450px; overflow-y: auto; padding-right: 0; }
-    #history-today .event-item { text-align: center; }
-    #history-today .event-year { font-weight: 600; font-size: 0.85rem; color: #4f7aa6; background: #f1f6fd; display: inline-block; padding: 0.1rem 0.45rem; border-radius: 16px; margin-right: 0.6rem; }
-    #history-today .event-title { font-size: 0.9rem; line-height: 1.45; color: #2c445e; display: inline; }
-    #history-today .status-message { color: #9ab0c9; font-size: 0.8rem; text-align: center; padding: 1rem; }
-    #history-today .events-list::-webkit-scrollbar { width: 4px; }
-    #history-today .events-list::-webkit-scrollbar-track { background: #f0f2f7; border-radius: 10px; }
-    #history-today .events-list::-webkit-scrollbar-thumb { background: #cfddee; border-radius: 10px; }
-
-    /* 响应式 */
-    @media screen and (max-width: 600px) {
-      #history-today { padding: 0 0.75rem; }
-      #history-today .history-header h3 { font-size: 0.95rem; }
-      #history-today .event-year { font-size: 0.75rem; }
-      #history-today .event-title { font-size: 0.82rem; }
-      #history-today .status-message { font-size: 0.75rem; }
-      #history-today .expand-control { font-size: 0.68rem; }
-    }
-    @media screen and (min-width: 2000px) {
-      #history-today { padding: 0 4rem; }
-      #history-today .history-header h3 { font-size: 1.25rem; }
-      #history-today .event-title { font-size: 1rem; }
-    }
-
   .history-card
     .history-header
       h3 历史上的今天
