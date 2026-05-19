@@ -33,7 +33,7 @@
 }
 
 /* =============================================
-   新闻卡片（七彩按钮）
+   七彩按钮
    ============================================= */
 #news-shortcut-card {
   width: 100%;
@@ -71,7 +71,7 @@
   max-width: 200px;
   height: 42px;
   line-height: 42px;
-  border-radius: 8px;
+  border-radius: 4px;
   font-size: 1rem;
   font-weight: 500;
   text-align: center;
@@ -164,8 +164,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 }
 
 #poetry-widget .poem-main {
-  padding: 1rem 0 0.5rem;
-  border-bottom: 1px solid #eaecef;
+  padding: 0.4rem 0 0.3rem;
 }
 
 #poetry-widget .verse {
@@ -255,6 +254,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   box-shadow: 0 1px 2px rgba(0,0,0,0.03), 0 1px 6px rgba(0,0,0,0.02);
   box-sizing: border-box;
   text-align: center;
+  padding: 0.2rem 0;
 }
 
 #history-today .history-card { width: 100%; }
@@ -338,7 +338,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   #poetry-widget .full-poem { padding: 0.75rem; font-size: 0.9rem; }
   #poetry-widget .poet-bio { font-size: 0.75rem; }
 
-  #history-today { padding: 0 0.75rem; }
+  #history-today { padding: 0.2rem 0.75rem; }
   #history-today .history-header h3 { font-size: 0.95rem; }
   #history-today .event-year { font-size: 0.75rem; }
   #history-today .event-title { font-size: 0.82rem; }
@@ -359,7 +359,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   #home-widgets { padding: 0 4rem; }
   #poetry-widget { padding: 0 4rem; }
   #poetry-widget .verse { font-size: 1.7rem; }
-  #history-today { padding: 0 4rem; }
+  #history-today { padding: 0.2rem 4rem; }
   #history-today .history-header h3 { font-size: 1.25rem; }
   #history-today .event-title { font-size: 1rem; }
   #news-shortcut-card .news-btn { font-size: 1rem; }
