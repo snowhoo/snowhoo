@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 持久化主题模板修改
  * 在每次生成前，自动将 source/_partial 中的模板文件覆盖到 node_modules/hexo-theme-butterfly/layout/
  */
