@@ -3,7 +3,7 @@ const https = require("https");
 const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
-const HEXO = "D:\\hexo";
+const HEXO = "D:\hexo";
 const TARGET = path.join(HEXO, "source", "js", "poetry.json");
 const CWD = HEXO;
 
