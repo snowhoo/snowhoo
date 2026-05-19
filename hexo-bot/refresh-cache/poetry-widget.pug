@@ -6,7 +6,6 @@
         span.author#authorName 陶渊明
         span.dynasty#dynastyText 东晋
         span.title#originText 《饮酒·其五》
-        button.refresh-btn#refreshBtn(aria-label='换一句') ↻ 换一句
     .expand-control#expandToggle
       span.arrow#arrowIcon ▼
       span 详情
@@ -33,10 +32,6 @@
         return null;
       }
 
-      function setDisplay(el, show) {
-        el.style.display = show ? 'block' : 'none';
-      }
-
       function updateDetail() {
         var fd = document.getElementById('fullPoemContent');
         var pb = document.getElementById('poetBio');
@@ -54,11 +49,11 @@
         var arrow = document.getElementById('arrowIcon');
         var isOpen = panel.style.display === 'block';
         if (isOpen) {
-          setDisplay(panel, false);
+          panel.style.display = 'none';
           arrow.innerHTML = '▼';
         } else {
           updateDetail();
-          setDisplay(panel, true);
+          panel.style.display = 'block';
           arrow.innerHTML = '▲';
         }
       }
@@ -76,72 +71,22 @@
         current.fullDetail = matched || {fullText:'「' + poem.line + '」', poetBio:poem.author + '，' + poem.dynasty + '代诗人。'};
       }
 
-      function showLoader() {
-        document.getElementById('verseLine').innerHTML = '<span class="loader"></span> 采撷诗意...';
-        document.getElementById('authorName').innerText = '';
-        document.getElementById('dynastyText').innerText = '';
-        document.getElementById('originText').innerText = '';
-      }
-
-      // 优先读本地 poetry.json（同源，无 CORS 问题）
-      async function fetchLocalPoetry() {
-        var url = '/js/poetry.json';
-        var r = await fetch(url);
-        if (r.ok) {
-          var j = await r.json();
-          if (j && j.line) return j;
-        }
-        return null;
-      }
-
-      // 外部 API（兜底）
-      async function fetchRemotePoetry(noCache) {
+      // 读取本地 poetry.json（同源，无 CORS）
+      async function loadPoetry() {
         try {
-          var ts = noCache ? '?_=' + Date.now() : '';
-          var r = await fetch('https://v2.jinrishici.com/one.json' + ts, {headers:{'Cache-Control':'no-cache'}});
+          var r = await fetch('/js/poetry.json');
           if (r.ok) {
             var j = await r.json();
-            if (j.status === 'success' && j.data) {
-              var d = j.data;
-              return {line:d.content, author:d.author||'佚名', dynasty:d.dynasty||'古代', title:d.origin||'诗词'};
-            }
+            if (j && j.line) { renderPoem(j); return; }
           }
         } catch(e){}
-        try {
-          var ts = noCache ? '?_=' + Date.now() : '';
-          var b = await fetch('http://liflag.cn/api/gushici.php?type=json' + ts);
-          var j2 = await b.json();
-          if (j2 && j2.content) {
-            return {line:j2.content, author:j2.author||'古人', dynasty:j2.source?j2.source.split('·')[0]:'古典', title:j2.source||'诗篇'};
-          }
-        } catch(e2){}
-        return {line:'长风破浪会有时，直挂云帆济沧海。',author:'李白',dynasty:'唐',title:'行路难·其一'};
-      }
-
-      // 页面初始加载：poetry.json → 外部 API
-      async function loadPoetry() {
-        showLoader();
-        var local = await fetchLocalPoetry();
-        if (local) { renderPoem(local); return; }
-        // 本地文件失败，再用外部 API
-        var poem = await fetchRemotePoetry(false);
-        renderPoem(poem);
-      }
-
-      // 刷新按钮：poetry.json（时间戳） → 外部 API
-      async function refreshPoetry() {
-        showLoader();
-        var local = await fetchLocalPoetry();
-        if (local) { renderPoem(local); return; }
-        var poem = await fetchRemotePoetry(true);
-        renderPoem(poem);
-        var panel = document.getElementById('detailPanel');
-        if (panel.style.display === 'block') updateDetail();
+        // 文件读取失败时用 db 兜底
+        var rnd = db[Math.floor(Math.random() * db.length)];
+        renderPoem({line:rnd.fullText.split('\n')[0], author:rnd.author, dynasty:rnd.dynasty, title:rnd.title});
       }
 
       document.addEventListener('DOMContentLoaded', function() {
         loadPoetry();
         document.getElementById('expandToggle').addEventListener('click', toggleDetail);
-        document.getElementById('refreshBtn').addEventListener('click', function(e){ e.stopPropagation(); refreshPoetry(); });
       });
     })();
