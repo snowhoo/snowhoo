@@ -1,7 +1,8 @@
 extends includes/layout.pug
 
 block content
-  include ./includes/poetry-widget.pug
-  include ./includes/history-today.pug
+  #custom-widgets
+    include ./includes/poetry-widget.pug
+    include ./includes/history-today.pug
   include ./includes/mixins/indexPostUI.pug
   +indexPostUI
