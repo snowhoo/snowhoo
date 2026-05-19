@@ -1,0 +1,168 @@
+#history-today
+  style.
+    #history-today { width: 100%; margin: 0 auto 1.5rem; padding: 0 1rem; box-sizing: border-box; }
+    #history-today .history-card { width: 100%; margin: 0 auto; font-family: system-ui,-apple-system,'Segoe UI','Noto Sans CJK SC',sans-serif; background: #ffffff; border-radius: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.03),0 1px 6px rgba(0,0,0,0.02); text-align: center; box-sizing: border-box; }
+    #history-today .history-header { display: flex; align-items: baseline; justify-content: center; flex-wrap: wrap; padding: 0.9rem 1rem 0.5rem; border-bottom: 1px solid #eff2f8; gap: 0.6rem; }
+    #history-today .history-header h3 { font-size: 1.1rem; font-weight: 500; color: #2b4f6e; }
+    #history-today .history-date { font-size: 0.7rem; color: #8ba0bc; background: #f5f8fe; padding: 0.2rem 0.6rem; border-radius: 30px; }
+    #history-today .expand-control { display: flex; align-items: center; justify-content: center; gap: 0.6rem; margin: 0.2rem 0.8rem 0rem; padding: 0.6rem 0 0.5rem; cursor: pointer; user-select: none; color: #8b9eb5; font-size: 0.75rem; border-top: 1px solid #eff2f8; transition: color 0.2s; }
+    #history-today .expand-control:hover { color: #4b6f92; }
+    #history-today .arrow { font-size: 0.7rem; transition: transform 0.2s ease; }
+    #history-today .loading-placeholder { display: flex; align-items: center; justify-content: center; gap: 0.6rem; margin: 0.2rem 0.8rem 0rem; padding: 0.6rem 0 0.5rem; color: #8b9eb5; font-size: 0.75rem; border-top: 1px solid #eff2f8; }
+    #history-today .loader { display: inline-block; width: 14px; height: 14px; border: 2px solid #e2e8f0; border-radius: 50%; border-top-color: #6f9bcb; animation: ht-spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes ht-spin { to { transform: rotate(360deg); } }
+    #history-today .detail-panel { display: none; padding: 0.5rem 1rem 1.2rem; border-top: 1px solid #f0f3f9; }
+    #history-today .detail-panel.show { display: block; }
+    #history-today .events-list { display: flex; flex-direction: column; gap: 1rem; max-height: 450px; overflow-y: auto; padding-right: 0; }
+    #history-today .event-item { text-align: center; }
+    #history-today .event-year { font-weight: 600; font-size: 0.85rem; color: #4f7aa6; background: #f1f6fd; display: inline-block; padding: 0.1rem 0.45rem; border-radius: 16px; margin-right: 0.6rem; }
+    #history-today .event-title { font-size: 0.9rem; line-height: 1.45; color: #2c445e; display: inline; }
+    #history-today .status-message { color: #9ab0c9; font-size: 0.8rem; text-align: center; padding: 1rem; }
+    #history-today .events-list::-webkit-scrollbar { width: 4px; }
+    #history-today .events-list::-webkit-scrollbar-track { background: #f0f2f7; border-radius: 10px; }
+    #history-today .events-list::-webkit-scrollbar-thumb { background: #cfddee; border-radius: 10px; }
+
+    /* 响应式 */
+    @media screen and (max-width: 600px) {
+      #history-today { padding: 0 0.75rem; }
+      #history-today .history-header h3 { font-size: 0.95rem; }
+      #history-today .event-year { font-size: 0.75rem; }
+      #history-today .event-title { font-size: 0.82rem; }
+      #history-today .status-message { font-size: 0.75rem; }
+      #history-today .expand-control { font-size: 0.68rem; }
+    }
+    @media screen and (min-width: 2000px) {
+      #history-today { padding: 0 4rem; }
+      #history-today .history-header h3 { font-size: 1.25rem; }
+      #history-today .event-title { font-size: 1rem; }
+    }
+
+  .history-card
+    .history-header
+      h3 📜 历史上的今天
+      span.history-date#htQueryDate
+    #htExpandArea
+    #htDetailPanel.detail-panel
+      #htEventsContainer.events-list
+        .status-message 📭 点击「展开详情」查看今日历史事件
+
+  script.
+    (function(){
+      var API = 'https://apis.jxcxin.cn/api/lishi';
+      var BASE = 25, INTERVAL = 500, DUP_LIMIT = 5, MIN = 5, EXTRA = 10;
+      var currentEvents = null, isCollecting = false;
+
+      function getToday() {
+        var d = new Date();
+        var m = String(d.getMonth()+1), day = String(d.getDate());
+        return { year: d.getFullYear(), month: m, day: day, param: parseInt(m)+'-'+parseInt(day), display: d.getFullYear()+'年'+m+'月'+day+'日' };
+      }
+
+      function esc(s) { return s?s.replace(/[&<>]/g,function(m){return m=='&'?'&amp;':m=='<'?'&lt;':m=='>'?'&gt;':m;}):''; }
+
+      function fetchOne(param) {
+        return new Promise(function(resolve) {
+          var controller = new AbortController();
+          var tid = setTimeout(function(){ controller.abort(); }, 6000);
+          fetch(API+'?date='+param, {signal:controller.signal}).then(function(r){
+            clearTimeout(tid);
+            if(!r.ok){ resolve(null); return; }
+            return r.text();
+          }).then(function(t){
+            if(!t){ resolve(null); return; }
+            var m = t.match(/^(\d{4})年\d{2}月\d{2}日(.+)/);
+            resolve(m?{year:parseInt(m[1]),text:m[2].trim()}:null);
+          }).catch(function(){ clearTimeout(tid); resolve(null); });
+        });
+      }
+
+      function collect(param, onProg) {
+        var seen = {}, events = [], empty = 0, count = 0;
+        function tick(i, max, evs) {
+          if(onProg) onProg(i+1, max, evs.length);
+        }
+        return new Promise(function(resolve) {
+          (function loop(i) {
+            if(i >= BASE) {
+              if(events.length < MIN) {
+                (function extra(j) {
+                  if(j >= EXTRA || events.length >= MIN) { resolve(events); return; }
+                  fetchOne(param).then(function(ev) {
+                    if(ev && !seen[ev.year+'|'+ev.text]) { seen[ev.year+'|'+ev.text]=1; events.push(ev); }
+                    else if(ev) empty++;
+                    tick(BASE, BASE+EXTRA, events);
+                    j++; if(j<EXTRA && events.length<MIN) { setTimeout(function(){ extra(j); }, INTERVAL); }
+                    else resolve(events);
+                  });
+                })(0);
+              } else resolve(events);
+              return;
+            }
+            fetchOne(param).then(function(ev) {
+              if(ev) {
+                var key = ev.year+'|'+ev.text;
+                if(!seen[key]) { seen[key]=1; events.push(ev); empty=0; }
+                else empty++;
+              } else empty++;
+              tick(i, BASE, events);
+              if(empty >= DUP_LIMIT) { resolve(events); return; }
+              i++; if(i<BASE) { setTimeout(function(){ loop(i); }, INTERVAL); }
+              else loop(i);
+            });
+          })(0);
+        });
+      }
+
+      function render(evs) {
+        var c = document.getElementById('htEventsContainer');
+        if(!evs || evs.length===0) { c.innerHTML='<div class="status-message">📭 今日暂无历史记载</div>'; return; }
+        evs.sort(function(a,b){ return b.year-a.year; });
+        var html='';
+        for(var i=0;i<evs.length;i++) html+='<div class="event-item"><span class="event-year">'+evs[i].year+'</span><span class="event-title">'+esc(evs[i].text)+'</span></div>';
+        c.innerHTML=html;
+      }
+
+      function showProg(cur, tot, n) {
+        var a = document.getElementById('htExpandArea');
+        if(!a) return;
+        a.innerHTML='<div class="loading-placeholder"><span class="loader"></span><span>正在收集历史事件 ('+cur+'/'+tot+')，已找到 '+n+' 条...</span></div>';
+      }
+
+      function toggleDetail() {
+        var panel = document.getElementById('htDetailPanel');
+        var arrow = document.getElementById('htArrow');
+        var text = document.getElementById('htExpandText');
+        var isOpen = panel.style.display === 'block';
+        if(isOpen) {
+          panel.style.display = 'none';
+          arrow.innerHTML = '▼';
+          text.innerText = '展开详情';
+        } else {
+          panel.style.display = 'block';
+          arrow.innerHTML = '▲';
+          text.innerText = '收起详情';
+          if(currentEvents) render(currentEvents);
+        }
+      }
+
+      function buildExpand() {
+        var a = document.getElementById('htExpandArea');
+        a.innerHTML = '<div class="expand-control" id="htToggle"><span class="arrow" id="htArrow">▼</span><span id="htExpandText">展开详情</span></div>';
+        document.getElementById('htToggle').addEventListener('click', toggleDetail);
+      }
+
+      document.getElementById('htQueryDate').innerText = getToday().display;
+      (function init() {
+        if(isCollecting) return;
+        isCollecting = true;
+        var t = getToday();
+        collect(t.param, showProg).then(function(evs) {
+          currentEvents = evs;
+          buildExpand();
+          isCollecting = false;
+        }).catch(function() {
+          document.getElementById('htExpandArea').innerHTML='<div class="loading-placeholder">⏳ 收集失败，请刷新重试</div>';
+          isCollecting = false;
+        });
+      })();
+    })();
