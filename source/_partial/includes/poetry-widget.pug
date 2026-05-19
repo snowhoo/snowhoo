@@ -1,7 +1,7 @@
 #poetry-widget
   style.
     #poetry-widget { width: 100%; margin: 0 auto 1.5rem; padding: 0 1rem; box-sizing: border-box; }
-    #poetry-widget .poetry-container { width: 100%; margin: 0 auto; font-family: system-ui,-apple-system,'Segoe UI','Noto Sans CJK SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; color: #2c2c2c; line-height: 1.5; box-sizing: border-box; }
+    #poetry-widget .poetry-container { width: 100%; margin: 0 auto; font-family: system-ui,-apple-system,'Segoe UI','Noto Sans CJK SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; color: #2c2c2c; line-height: 1.5; box-sizing: border-box; text-align: center; }
     #poetry-widget .poem-main { padding: 1rem 0 0.5rem; border-bottom: 1px solid #eaecef; }
     #poetry-widget .verse { font-size: 1.5rem; font-weight: 450; font-family: '楷体','华文楷书','KaiTi','Georgia',serif; color: #1f2d3d; line-height: 1.4; margin-bottom: 0.5rem; }
     #poetry-widget .meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; font-size: 0.85rem; color: #6c7a8a; margin-top: 0.25rem; }
@@ -14,7 +14,6 @@
     #poetry-widget .detail-panel { display: none; padding: 1rem 0 1.2rem; border-top: 1px solid #eef2f6; margin-top: 0.2rem; font-size: 0.85rem; }
     #poetry-widget .full-poem { background: #fafbfc; padding: 1rem; border-radius: 12px; font-family: '楷体','华文楷书','KaiTi',monospace; white-space: pre-line; line-height: 1.6; color: #2c3e4e; margin-bottom: 1rem; border: 1px solid #edf2f7; box-sizing: border-box; }
     #poetry-widget .poet-bio { color: #4a627a; background: #fff; padding: 0.75rem 0; border-left: 3px solid #dce5ef; padding-left: 1rem; font-size: 0.8rem; }
-    #poetry-widget .small-note { font-size: 0.65rem; color: #9aabbb; text-align: right; padding-top: 0.5rem; }
     #poetry-widget .refresh-btn { background: none; border: none; font-size: 0.7rem; color: #8f9eb2; cursor: pointer; margin-left: 0.75rem; padding: 0 0.25rem; transition: color 0.2s; }
     #poetry-widget .refresh-btn:hover { color: #56759a; }
     #poetry-widget .loader { display: inline-block; width: 14px; height: 14px; border: 2px solid #e2e6ea; border-radius: 50%; border-top-color: #8ba0b5; animation: poetry-spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
@@ -33,7 +32,6 @@
       #poetry-widget .detail-panel { font-size: 0.8rem; }
       #poetry-widget .full-poem { padding: 0.75rem; font-size: 0.9rem; }
       #poetry-widget .poet-bio { font-size: 0.75rem; }
-      #poetry-widget .small-note { font-size: 0.6rem; }
     }
 
     /* 响应式：中屏（601px - 900px） */
@@ -63,7 +61,6 @@
     .detail-panel#detailPanel
       .full-poem#fullPoemContent
       .poet-bio#poetBio
-      .small-note ※ 完整诗文及简介依据古典文献整理
   script.
     (function(){
       var db = [
