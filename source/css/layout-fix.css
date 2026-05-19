@@ -73,7 +73,7 @@
   align-items: center;
   gap: 0.5rem;
   width: 100%;
-  padding: 0.75rem 0;
+  padding: 0;
 }
 
 /* ---- 七彩按钮（与 inject.bottom 旧配置保持一致）---- */
@@ -87,28 +87,27 @@
   border-radius: 4px;
   font-size: 1rem;
   font-weight: 500;
-  text-align: center;
   text-decoration: none;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-  transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: none;
+  transition: filter 0.2s, transform 0.15s;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   padding: 0 0.25rem;
-  display: block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   box-sizing: border-box;
 }
 
 #news-shortcut-card .news-btn:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
 }
 
 #news-shortcut-card .news-btn:active {
   filter: brightness(0.95);
   transform: translateY(0);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 
 /* 彩虹色：亮色主题 */
