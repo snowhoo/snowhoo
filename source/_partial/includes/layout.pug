@@ -51,8 +51,8 @@ html(lang=config.language data-theme=theme.display_mode class=htmlClassHideAside
             block content
         else
           block content
-          if theme.aside.enable && page.aside !== false
-            include widget/index.pug
+        if theme.aside.enable && page.aside !== false
+          include widget/index.pug
 
       - const footerBg = theme.footer_img
       - const footer_bg = footerBg ? footerBg === true ? bg_img : getBgPath(footerBg) : ''
