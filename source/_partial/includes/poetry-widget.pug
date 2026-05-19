@@ -1,6 +1,6 @@
 #poetry-widget
   style.
-    #poetry-widget { max-width: 700px; margin: 0 auto 1.5rem; }
+    #poetry-widget { max-width: 700px; margin: 0 auto 1.5rem; padding: 0 1rem; }
     #poetry-widget .poetry-container { max-width: 700px; margin: 0 auto; font-family: system-ui,-apple-system,'Segoe UI','Noto Sans CJK SC','Microsoft YaHei','WenQuanYi Micro Hei',sans-serif; color: #2c2c2c; line-height: 1.5; }
     #poetry-widget .poem-main { padding: 1rem 0 0.5rem; border-bottom: 1px solid #eaecef; }
     #poetry-widget .verse { font-size: 1.5rem; font-weight: 450; font-family: '楷体','华文楷书','KaiTi','Georgia',serif; color: #1f2d3d; line-height: 1.4; margin-bottom: 0.5rem; }
@@ -20,6 +20,39 @@
     #poetry-widget .loader { display: inline-block; width: 14px; height: 14px; border: 2px solid #e2e6ea; border-radius: 50%; border-top-color: #8ba0b5; animation: poetry-spin 0.6s linear infinite; vertical-align: middle; margin-right: 6px; }
     @keyframes poetry-spin { to { transform: rotate(360deg); } }
     #poetry-widget a, #poetry-widget a:visited { text-decoration: none; }
+
+    /* 响应式：小屏（<=600px） */
+    @media screen and (max-width: 600px) {
+      #poetry-widget .verse { font-size: 1.15rem; }
+      #poetry-widget .meta { font-size: 0.75rem; gap: 0.35rem; }
+      #poetry-widget .dynasty { font-size: 0.65rem; }
+      #poetry-widget .title { font-size: 0.72rem; }
+      #poetry-widget .refresh-btn { font-size: 0.65rem; }
+      #poetry-widget .expand-control { font-size: 0.65rem; }
+      #poetry-widget .detail-panel { font-size: 0.8rem; }
+      #poetry-widget .full-poem { padding: 0.75rem; font-size: 0.9rem; }
+      #poetry-widget .poet-bio { font-size: 0.75rem; }
+      #poetry-widget .small-note { font-size: 0.6rem; }
+    }
+
+    /* 响应式：中屏（601px - 900px） */
+    @media screen and (min-width: 601px) and (max-width: 900px) {
+      #poetry-widget .verse { font-size: 1.3rem; }
+      #poetry-widget .meta { font-size: 0.8rem; }
+      #poetry-widget .detail-panel { font-size: 0.82rem; }
+      #poetry-widget .full-poem { font-size: 0.9rem; }
+    }
+
+    /* 响应式：大屏（>1024px），两侧增加呼吸感 */
+    @media screen and (min-width: 1025px) {
+      #poetry-widget { padding: 0 2rem; }
+    }
+
+    /* 响应式：超大屏（>=2000px） */
+    @media screen and (min-width: 2000px) {
+      #poetry-widget { padding: 0 4rem; }
+      #poetry-widget .verse { font-size: 1.7rem; }
+    }
   .poetry-container
     .poem-main
       .verse#verseLine 采菊东篱下，悠然见南山
