@@ -46,10 +46,9 @@ html(lang=config.language data-theme=theme.display_mode class=htmlClassHideAside
 
       main#content-inner.layout(class=hideAside)
         if globalPageType === 'home'
-          #home-widgets
+          #home-container
             block home-widgets
-        if body
-          div!= body
+            block content
         else
           block content
           if theme.aside.enable && page.aside !== false
