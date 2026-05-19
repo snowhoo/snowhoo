@@ -50,11 +50,28 @@
       var API = 'https://apis.jxcxin.cn/api/lishi';
       var BASE = 25, INTERVAL = 500, DUP_LIMIT = 5, MIN = 5, EXTRA = 10;
       var currentEvents = null;
+      var CACHE_KEY = 'ht_cache';
+      var todayStr = '';
 
       function getToday() {
         var d = new Date();
         var m = String(d.getMonth()+1), day = String(d.getDate());
+        todayStr = d.getFullYear()+'-'+m+'-'+day;
         return { year: d.getFullYear(), month: m, day: day, param: parseInt(m)+'-'+parseInt(day), display: d.getFullYear()+'年'+m+'月'+day+'日' };
+      }
+
+      function getCache() {
+        try {
+          var raw = localStorage.getItem(CACHE_KEY);
+          if(!raw) return null;
+          var c = JSON.parse(raw);
+          if(c.date === todayStr && Array.isArray(c.events) && c.events.length > 0) return c.events;
+        } catch(e){}
+        return null;
+      }
+
+      function setCache(events) {
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({date:todayStr, events:events})); } catch(e){}
       }
 
       function esc(s) { return s?s.replace(/[&<>]/g,function(m){return m=='&'?'&amp;':m=='<'?'&lt;':m=='>'?'&gt;':m;}):''; }
@@ -76,10 +93,8 @@
       }
 
       function collect(param, onProg) {
-        var seen = {}, events = [], empty = 0, count = 0;
-        function tick(i, max, evs) {
-          if(onProg) onProg(i+1, max, evs.length);
-        }
+        var seen = {}, events = [], empty = 0;
+        function tick(i, max, evs) { if(onProg) onProg(i+1, max, evs.length); }
         return new Promise(function(resolve) {
           (function loop(i) {
             if(i >= BASE) {
@@ -90,7 +105,7 @@
                     if(ev && !seen[ev.year+'|'+ev.text]) { seen[ev.year+'|'+ev.text]=1; events.push(ev); }
                     else if(ev) empty++;
                     tick(BASE, BASE+EXTRA, events);
-                    j++; if(j<EXTRA && events.length<MIN) { setTimeout(function(){ extra(j); }, INTERVAL); }
+                    j++; if(j<EXTRA && events.length<MIN) setTimeout(function(){ extra(j); }, INTERVAL);
                     else resolve(events);
                   });
                 })(0);
@@ -98,14 +113,11 @@
               return;
             }
             fetchOne(param).then(function(ev) {
-              if(ev) {
-                var key = ev.year+'|'+ev.text;
-                if(!seen[key]) { seen[key]=1; events.push(ev); empty=0; }
-                else empty++;
-              } else empty++;
+              if(ev) { var key = ev.year+'|'+ev.text; if(!seen[key]) { seen[key]=1; events.push(ev); empty=0; } else empty++; }
+              else empty++;
               tick(i, BASE, events);
               if(empty >= DUP_LIMIT) { resolve(events); return; }
-              i++; if(i<BASE) { setTimeout(function(){ loop(i); }, INTERVAL); }
+              i++; if(i<BASE) setTimeout(function(){ loop(i); }, INTERVAL);
               else loop(i);
             });
           })(0);
@@ -121,9 +133,9 @@
         c.innerHTML=html;
       }
 
-      function showProg(cur, tot, n) {
-        var text = document.getElementById('htExpandText');
-        if(text) text.innerText = '收集中 ('+cur+'/'+tot+') '+n+'条';
+      function setText(s) {
+        var t = document.getElementById('htExpandText');
+        if(t) t.innerText = s;
       }
 
       function toggleDetail() {
@@ -143,17 +155,22 @@
         }
       }
 
-      document.getElementById('htQueryDate').innerText = getToday().display;
+      var t = getToday();
+      document.getElementById('htQueryDate').innerText = t.display;
       document.getElementById('htToggle').addEventListener('click', toggleDetail);
-      (function init() {
-        var t = getToday();
-        collect(t.param, showProg).then(function(evs) {
-          currentEvents = evs;
-          var text = document.getElementById('htExpandText');
-          if(text) text.innerText = '展开详情';
-        }).catch(function() {
-          var text = document.getElementById('htExpandText');
-          if(text) text.innerText = '加载失败';
-        });
-      })();
+
+      var cached = getCache();
+      if(cached) {
+        currentEvents = cached;
+        render(currentEvents);
+        var panel = document.getElementById('htDetailPanel');
+        panel.style.display = 'block';
+        document.getElementById('htArrow').innerHTML = '▲';
+        setText('收起详情');
+      } else {
+        setText('收集中...');
+        collect(t.param, function(cur, tot, n){ setText('收集中 ('+cur+'/'+tot+') '+n+'条'); })
+          .then(function(evs){ currentEvents = evs; setCache(evs); setText('展开详情'); })
+          .catch(function(){ setText('加载失败'); });
+      }
     })();
