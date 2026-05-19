@@ -13,14 +13,22 @@ mixin indexPostUI()
           - const leftOrRight = indexLayout === 3 ? (index % 2 === 0 ? 'left' : 'right') : (indexLayout === 2 ? 'right' : '')
           - const post_cover = article.cover
           - const no_cover = article.cover === false || !theme.cover.index_enable ? 'no-cover' : ''
+          - const placeholder_seed = article.path || article.title || index
+          - const ph = `https://picsum.photos/seed/${encodeURIComponent(placeholder_seed)}`
+          - const ph_xl = `${ph}/1200/630`
+          - const ph_lg = `${ph}/800/420`
+          - const ph_md = `${ph}/600/315`
+          - const ph_sm = `${ph}/400/210`
 
-          if post_cover && theme.cover.index_enable
-            .post_cover(class=leftOrRight)
-              a(href=url_for(link) title=title)
+          .post_cover(class=leftOrRight)
+            a(href=url_for(link) title=title)
+              if post_cover && theme.cover.index_enable
                 if article.cover_type === 'img'
                   img.post-bg(src=url_for(post_cover) onerror=`this.onerror=null;this.src='${url_for(theme.error_img.post_page)}'` alt=title)
                 else
                   div.post-bg(style=`background: ${post_cover}`)
+              else
+                img.post-bg.no-cover-placeholder(src=ph_md srcset=`${ph_sm} 400w, ${ph_md} 600w, ${ph_lg} 800w, ${ph_xl} 1200w` sizes='(max-width:400px) 400px,(max-width:768px) 600px,(max-width:1200px) 800px,1200px' alt=title loading='lazy')
           .recent-post-info(class=no_cover)
             a.article-title(href=url_for(link) title=title)
               if globalPageType === 'home' && (article.top || article.sticky > 0)
