@@ -164,7 +164,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 }
 
 #poetry-widget .poem-main {
-  padding: 0.4rem 0 0.3rem;
+  padding: 0;
 }
 
 #poetry-widget .verse {
@@ -269,8 +269,8 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   border-bottom: 1px solid #eff2f8;
 }
 
-#history-today .history-header h3 { font-size: 1rem; font-weight: 500; color: #2b4f6e; }
-#history-today .history-date { font-size: 0.7rem; color: #8ba0bc; background: #f5f8fe; padding: 0.2rem 0.6rem; border-radius: 30px; }
+#history-today .history-header h3 { font-size: 1rem; font-weight: 500; color: #2b4f6e; margin: 0; line-height: 1; }
+#history-today .history-date { font-size: 0.7rem; color: #8ba0bc; background: #f5f8fe; padding: 0.2rem 0.6rem; border-radius: 30px; line-height: 1; }
 
 #history-today .expand-control {
   display: inline-flex;
@@ -281,6 +281,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   color: #8b9eb5;
   font-size: 0.72rem;
   transition: color 0.2s;
+  line-height: 1;
 }
 
 #history-today .expand-control:hover { color: #4b6f92; }
