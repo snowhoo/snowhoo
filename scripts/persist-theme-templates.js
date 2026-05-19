@@ -47,15 +47,11 @@ hexo.on('generateBefore', function() {
     hexo.log.info('[持久化模板] 已覆盖: mixins/indexPostUI.pug');
   }
 
-  // 特殊处理 index.pug：复制并修正 include 路径
-  // 源文件中的 include ./includes/xxx 在目标位置需保持正确
-  const indexSrc = path.join(partialDir, 'index.pug');
+  // 复制 index.pug
+  const indexSrc = path.join(botDir, 'index.pug');
   const indexDest = path.join(themeDir, 'index.pug');
   if (fs.existsSync(indexSrc)) {
-    let content = fs.readFileSync(indexSrc, 'utf8');
-    // poetry-widget.pug 和 history-today.pug 需要从 theme layout/includes/ 引用
-    // 但它们实际上在 source/_partial/includes/，persist 已复制过去了，所以 ./includes/ 是正确的
-    fs.writeFileSync(indexDest, content);
+    fs.copyFileSync(indexSrc, indexDest);
     hexo.log.info('[持久化模板] 已覆盖: index.pug');
   }
 });
