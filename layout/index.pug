@@ -1,0 +1,239 @@
+extends includes/layout.pug
+
+block content
+  //- 诗词小句 widget - 插在导航和文章列表之间
+  #poetry-widget
+    style.
+      #poetry-widget {
+        max-width: 700px;
+        margin: 0 auto 1.5rem;
+      }
+      #poetry-widget .poetry-container {
+        max-width: 700px;
+        margin: 0 auto;
+        font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans CJK SC', 'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif;
+        color: #2c2c2c;
+        line-height: 1.5;
+      }
+      #poetry-widget .poem-main {
+        padding: 1rem 0 0.5rem;
+        border-bottom: 1px solid #eaecef;
+      }
+      #poetry-widget .verse {
+        font-size: 1.5rem;
+        font-weight: 450;
+        font-family: '楷体', '华文楷书', 'KaiTi', 'Georgia', serif;
+        color: #1f2d3d;
+        line-height: 1.4;
+        margin-bottom: 0.5rem;
+      }
+      #poetry-widget .meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: #6c7a8a;
+        margin-top: 0.25rem;
+      }
+      #poetry-widget .author { font-weight: 500; color: #4a5b6e; }
+      #poetry-widget .dynasty {
+        background: #f0f2f5;
+        padding: 0.1rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+      }
+      #poetry-widget .title { font-size: 0.8rem; color: #8a9bb0; }
+      #poetry-widget .expand-control {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin: 0.75rem 0 0.5rem;
+        padding: 0.25rem 0;
+        cursor: pointer;
+        user-select: none;
+        color: #8f9eb2;
+        font-size: 0.7rem;
+        transition: color 0.2s;
+        border-top: 1px solid #eef2f6;
+        border-bottom: 1px solid #eef2f6;
+      }
+      #poetry-widget .expand-control:hover { color: #4a6b8f; }
+      #poetry-widget .arrow {
+        font-size: 0.75rem;
+        transition: transform 0.2s ease;
+        display: inline-block;
+      }
+      #poetry-widget .detail-panel { display: none; padding: 1rem 0 1.2rem; border-top: 1px solid #eef2f6; margin-top: 0.2rem; font-size: 0.85rem; }
+      #poetry-widget .detail-panel.show { display: block; }
+      #poetry-widget .full-poem {
+        background: #fafbfc;
+        padding: 1rem;
+        border-radius: 12px;
+        font-family: '楷体', '华文楷书', 'KaiTi', monospace;
+        white-space: pre-line;
+        line-height: 1.6;
+        color: #2c3e4e;
+        margin-bottom: 1rem;
+        border: 1px solid #edf2f7;
+      }
+      #poetry-widget .poet-bio {
+        color: #4a627a;
+        background: #ffffff;
+        padding: 0.75rem 0;
+        border-left: 3px solid #dce5ef;
+        padding-left: 1rem;
+        font-size: 0.8rem;
+      }
+      #poetry-widget .small-note {
+        font-size: 0.65rem;
+        color: #9aabbb;
+        text-align: right;
+        padding-top: 0.5rem;
+      }
+      #poetry-widget .refresh-btn {
+        background: none;
+        border: none;
+        font-size: 0.7rem;
+        color: #8f9eb2;
+        cursor: pointer;
+        margin-left: 0.75rem;
+        padding: 0 0.25rem;
+        transition: color 0.2s;
+      }
+      #poetry-widget .refresh-btn:hover { color: #56759a; }
+      #poetry-widget .loader {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid #e2e6ea;
+        border-radius: 50%;
+        border-top-color: #8ba0b5;
+        animation: poetry-spin 0.6s linear infinite;
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+      @keyframes poetry-spin { to { transform: rotate(360deg); } }
+      #poetry-widget a, #poetry-widget a:visited { text-decoration: none; }
+
+    .poetry-container
+      .poem-main
+        .verse#verseLine 采菊东篱下，悠然见南山
+        .meta
+          span.author#authorName 陶渊明
+          span.dynasty#dynastyText 东晋
+          span.title#originText 《饮酒·其五》
+          button.refresh-btn#refreshBtn(aria-label="换一句") ↻ 换一句
+      .expand-control#expandToggle
+        span.arrow#arrowIcon ▼
+        span 详情
+      .detail-panel#detailPanel
+        .full-poem#fullPoemContent
+        .poet-bio#poetBio
+        .small-note ※ 完整诗文及简介依据古典文献整理
+
+    script.
+      const detailedPoemsDB = {
+        "静夜思": { fullText: "床前明月光，疑是地上霜。\\n举头望明月，低头思故乡。", poetBio: "李白（701－762），字太白，号青莲居士。盛唐浪漫主义诗人，有"诗仙"之称。", dynasty: "唐", author: "李白" },
+        "登鹳雀楼": { fullText: "白日依山尽，黄河入海流。\\n欲穷千里目，更上一层楼。", poetBio: "王之涣（688－742），字季凌，盛唐边塞诗人，豪放豁达，诗作意境开阔。", dynasty: "唐", author: "王之涣" },
+        "春晓": { fullText: "春眠不觉晓，处处闻啼鸟。\\n夜来风雨声，花落知多少。", poetBio: "孟浩然（689－740），襄阳人，唐代山水田园诗派代表，诗风清淡自然。", dynasty: "唐", author: "孟浩然" },
+        "江雪": { fullText: "千山鸟飞绝，万径人踪灭。\\n孤舟蓑笠翁，独钓寒江雪。", poetBio: "柳宗元（773－819），字子厚，"唐宋八大家"之一，诗文俱佳，山水游记尤妙。", dynasty: "唐", author: "柳宗元" },
+        "相思": { fullText: "红豆生南国，春来发几枝。\\n愿君多采撷，此物最相思。", poetBio: "王维（701－761），字摩诘，诗画双绝，苏轼赞其"诗中有画，画中有诗"。", dynasty: "唐", author: "王维" },
+        "赋得古原草送别": { fullText: "离离原上草，一岁一枯荣。\\n野火烧不尽，春风吹又生。\\n远芳侵古道，晴翠接荒城。\\n又送王孙去，萋萋满别情。", poetBio: "白居易（772－846），字乐天，号香山居士，唐代现实主义诗人，诗风通俗晓畅。", dynasty: "唐", author: "白居易" },
+        "水调歌头·明月几时有": { fullText: "明月几时有？把酒问青天。不知天上宫阙，今夕是何年。我欲乘风归去，又恐琼楼玉宇，高处不胜寒。起舞弄清影，何似在人间。\\n转朱阁，低绮户，照无眠。不应有恨，何事长向别时圆？人有悲欢离合，月有阴晴圆缺，此事古难全。但愿人长久，千里共婵娟。", poetBio: "苏轼（1037－1101），号东坡居士，北宋文坛领袖，词开豪放一派，书画俱佳。", dynasty: "宋", author: "苏轼" },
+        "声声慢·寻寻觅觅": { fullText: "寻寻觅觅，冷冷清清，凄凄惨惨戚戚。乍暖还寒时候，最难将息。三杯两盏淡酒，怎敌他、晚来风急！雁过也，正伤心，却是旧时相识。\\n满地黄花堆积，憔悴损，如今有谁堪摘？守着窗儿，独自怎生得黑！梧桐更兼细雨，到黄昏、点点滴滴。这次第，怎一个愁字了得！", poetBio: "李清照（1084－1155），号易安居士，宋代婉约派代表词人，有"千古第一才女"之称。", dynasty: "宋", author: "李清照" },
+        "关雎": { fullText: "关关雎鸠，在河之洲。窈窕淑女，君子好逑。\\n参差荇菜，左右流之。窈窕淑女，寤寐求之。\\n求之不得，寤寐思服。悠哉悠哉，辗转反侧。\\n参差荇菜，左右采之。窈窕淑女，琴瑟友之。\\n参差荇菜，左右芼之，窈窕淑女，钟鼓乐之。", poetBio: "《诗经》是中国最早的诗歌总集，收录西周至春秋诗歌311篇。此篇为《诗经》之首。", dynasty: "先秦", author: "佚名（诗经）" },
+        "饮酒·其五": { fullText: "结庐在人境，而无车马喧。\\n问君何能尔？心远地自偏。\\n采菊东篱下，悠然见南山。\\n山气日夕佳，飞鸟相与还。\\n此中有真意，欲辨已忘言。", poetBio: "陶渊明（约365－427），字元亮，东晋田园诗人，辞官归隐，开创田园诗派。", dynasty: "东晋", author: "陶渊明" }
+      };
+
+      function findPoemDetails(title, contentSnippet) {
+        if (title && detailedPoemsDB[title]) return detailedPoemsDB[title];
+        for (let key in detailedPoemsDB) {
+          let db = detailedPoemsDB[key];
+          if (db.fullText.includes(contentSnippet.substring(0, 12)) || contentSnippet.includes(db.fullText.split('\n')[0] && db.fullText.split('\n')[0].substring(0, 8))) return db;
+        }
+        return null;
+      }
+
+      var currentPoemData = { line: "", author: "", dynasty: "", title: "", fullDetail: null };
+
+      async function fetchPoem() {
+        var verseEl = document.getElementById("verseLine");
+        var authorEl = document.getElementById("authorName");
+        var dynastyEl = document.getElementById("dynastyText");
+        var originEl = document.getElementById("originText");
+        verseEl.innerHTML = '<span class="loader"></span> 采撷诗意...';
+        authorEl.innerText = ""; dynastyEl.innerText = ""; originEl.innerText = "";
+        try {
+          var resp = await fetch("https://v2.jinrishici.com/one.json", { headers: { "Cache-Control": "no-cache" } });
+          if (!resp.ok) throw new Error();
+          var result = await resp.json();
+          if (result.status === "success" && result.data) {
+            var data = result.data;
+            var line = data.content, author = data.author || "佚名", title = data.origin || "诗词";
+            var dynasty = data.dynasty || data.category || "古代";
+            return { line: line, author: author, dynasty: dynasty, title: title };
+          } else throw new Error();
+        } catch (err) {
+          try {
+            var backup = await fetch("http://liflag.cn/api/gushici.php?type=json");
+            var backupData = await backup.json();
+            if (backupData && backupData.content) {
+              return { line: backupData.content, author: backupData.author || "古人", dynasty: backupData.source ? backupData.source.split('·')[0] : "古典", title: backupData.source || backupData.origin || "诗篇" };
+            } else throw new Error();
+          } catch (e) {
+            return { line: "长风破浪会有时，直挂云帆济沧海。", author: "李白", dynasty: "唐", title: "行路难·其一" };
+          }
+        }
+      }
+
+      async function refreshPoetry() {
+        var poem = await fetchPoem();
+        document.getElementById("verseLine").innerText = poem.line;
+        document.getElementById("authorName").innerText = poem.author;
+        document.getElementById("dynastyText").innerText = poem.dynasty;
+        document.getElementById("originText").innerText = "《" + poem.title + "》";
+        currentPoemData.line = poem.line; currentPoemData.author = poem.author;
+        currentPoemData.title = poem.title; currentPoemData.dynasty = poem.dynasty;
+        var matched = findPoemDetails(poem.title, poem.line);
+        if (matched) { currentPoemData.fullDetail = matched; }
+        else { currentPoemData.fullDetail = { fullText: "「" + poem.line + "」\\n（全诗待续，仅呈此佳句）", poetBio: poem.author + "，" + poem.dynasty + "代诗人。此句意境悠远，更多赏析可查阅原典。" }; }
+        var panel = document.getElementById("detailPanel");
+        if (panel.classList.contains("show")) { updateDetailContent(); }
+      }
+
+      function updateDetailContent() {
+        var fullPoemDiv = document.getElementById("fullPoemContent");
+        var poetBioDiv = document.getElementById("poetBio");
+        if (currentPoemData.fullDetail) {
+          fullPoemDiv.innerText = currentPoemData.fullDetail.fullText || "「" + currentPoemData.line + "」";
+          poetBioDiv.innerText = currentPoemData.fullDetail.poetBio || currentPoemData.author + "，" + currentPoemData.dynasty + "代杰出文学家。";
+        } else {
+          fullPoemDiv.innerText = "「" + currentPoemData.line + "」\\n（完整诗文暂未收录）";
+          poetBioDiv.innerText = currentPoemData.author + "，生平逸事待考。";
+        }
+      }
+
+      function toggleDetail() {
+        var panel = document.getElementById("detailPanel");
+        var arrow = document.getElementById("arrowIcon");
+        var isShow = panel.classList.contains("show");
+        if (!isShow) { updateDetailContent(); panel.classList.add("show"); arrow.innerHTML = "▲"; }
+        else { panel.classList.remove("show"); arrow.innerHTML = "▼"; }
+      }
+
+      window.addEventListener("DOMContentLoaded", async function() {
+        await refreshPoetry();
+        document.getElementById("expandToggle").addEventListener("click", toggleDetail);
+        document.getElementById("refreshBtn").addEventListener("click", async function(e) {
+          e.stopPropagation();
+          await refreshPoetry();
+          var panel = document.getElementById("detailPanel");
+          if (panel.classList.contains("show")) { updateDetailContent(); }
+        });
+      });
+
+  //- 文章列表
+  include ./includes/mixins/indexPostUI.pug
+  +indexPostUI
