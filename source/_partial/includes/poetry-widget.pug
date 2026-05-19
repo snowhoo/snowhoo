@@ -12,7 +12,6 @@
     #poetry-widget .expand-control:hover { color: #4a6b8f; }
     #poetry-widget .arrow { font-size: 0.75rem; transition: transform 0.2s ease; display: inline-block; }
     #poetry-widget .detail-panel { display: none; padding: 1rem 0 1.2rem; border-top: 1px solid #eef2f6; margin-top: 0.2rem; font-size: 0.85rem; }
-    #poetry-widget .detail-panel.show { display: block; }
     #poetry-widget .full-poem { background: #fafbfc; padding: 1rem; border-radius: 12px; font-family: '楷体','华文楷书','KaiTi',monospace; white-space: pre-line; line-height: 1.6; color: #2c3e4e; margin-bottom: 1rem; border: 1px solid #edf2f7; }
     #poetry-widget .poet-bio { color: #4a627a; background: #fff; padding: 0.75rem 0; border-left: 3px solid #dce5ef; padding-left: 1rem; font-size: 0.8rem; }
     #poetry-widget .small-note { font-size: 0.65rem; color: #9aabbb; text-align: right; padding-top: 0.5rem; }
@@ -91,12 +90,12 @@
         var matched = findPoemDetails(poem.title, poem.line);
         currentPoemData.fullDetail = matched || {fullText:"「" + poem.line + "」", poetBio:poem.author + "，" + poem.dynasty + "代诗人。"};
         var panel = document.getElementById("detailPanel");
-        if (panel.classList.contains("show")) updateDetailContent();
+        if (panel.style.display === "block") updateDetailContent();
       }
       function toggleDetail() {
         var panel = document.getElementById("detailPanel"), arrow = document.getElementById("arrowIcon");
-        if (!panel.classList.contains("show")) { updateDetailContent(); panel.classList.add("show"); arrow.innerHTML = "▲"; }
-        else { panel.classList.remove("show"); arrow.innerHTML = "▼"; }
+        if (panel.style.display !== "block") { updateDetailContent(); panel.style.display = "block"; arrow.innerHTML = "▲"; }
+        else { panel.style.display = "none"; arrow.innerHTML = "▼"; }
       }
       document.addEventListener("DOMContentLoaded", function() {
         refreshPoetry();
