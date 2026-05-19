@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>刷新历史缓存</title>
+<style>body{opacity:0}</style>
+</head>
+<body>
+<div id="history-today">
+  <style>
+    #history-today .history-card{width:100%;max-width:800px;margin:0 auto;font-family:system-ui,sans-serif;background:#fff;border-radius:20px;box-shadow:0 1px 2px rgba(0,0,0,0.03);text-align:center}
+    #history-today .history-header{display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.6rem 1rem}
+    #history-today .history-header h3{font-size:1rem;font-weight:500;color:#2b4f6e}
+    #history-today .history-date{font-size:0.7rem;color:#8ba0bc;background:#f5f8fe;padding:0.2rem 0.6rem;border-radius:30px}
+    #history-today .detail-panel{display:none;padding:0.5rem 1rem 1.2rem}
+    #history-today .events-list{display:flex;flex-direction:column;gap:1rem}
+    #history-today .event-item{text-align:center}
+    #history-today .event-year{font-weight:600;font-size:0.85rem;color:#4f7aa6;background:#f1f6fd;display:inline-block;padding:0.1rem 0.45rem;border-radius:16px;margin-right:0.6rem}
+    #history-today .event-title{font-size:0.9rem;line-height:1.45;color:#2c445e;display:inline}
+    #history-today .status-message{color:#9ab0c9;font-size:0.8rem;text-align:center;padding:1rem}
+  </style>
+  <div class="history-card">
+    <div class="history-header">
+      <h3>历史上的今天</h3>
+      <span class="history-date" id="htQueryDate"></span>
+    </div>
+    <div id="htDetailPanel" class="detail-panel">
+      <div id="htEventsContainer" class="events-list"><div class="status-message">加载中...</div></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var API = 'https://apis.jxcxin.cn/api/lishi';
+  var BASE = 50, INTERVAL = 1500, DUP_LIMIT = 5, MIN = 5, EXTRA = 20;
+  var CACHE_KEY = 'ht_cache';
+  var todayStr = '';
+  var DONE = false;
+
+  function getToday() {
+    var d = new Date();
+    var m = String(d.getMonth()+1), day = String(d.getDate());
+    todayStr = d.getFullYear()+'-'+m+'-'+day;
+    return { year: d.getFullYear(), month: m, day: day, param: parseInt(m)+'-'+parseInt(day), display: d.getFullYear()+'年'+m+'月'+day+'日' };
+  }
+
+  function getCache() {
+    try {
+      var raw = localStorage.getItem(CACHE_KEY);
+      if(!raw) return null;
+      var c = JSON.parse(raw);
+      if(c.date === todayStr && Array.isArray(c.events) && c.events.length > 0) return c.events;
+    } catch(e){}
+    return null;
+  }
+
+  function setCache(events) {
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({date:todayStr, events:events})); } catch(e){}
+    if(!DONE) { DONE = true; document.title = '[OK] ' + events.length + ' events cached'; window.close(); }
+  }
+
+  function esc(s) { return s?s.replace(/[&<>]/g,function(m){return m=='&'?'&amp;':m=='<'?'&lt;':m=='>'?'&gt;':m;}):''; }
+
+  function fetchOne(param) {
+    return new Promise(function(resolve) {
+      var controller = new AbortController();
+      var tid = setTimeout(function(){ controller.abort(); }, 6000);
+      fetch(API+'?date='+param, {signal:controller.signal}).then(function(r){
+        clearTimeout(tid);
+        if(!r.ok){ resolve(null); return; }
+        return r.text();
+      }).then(function(t){
+        if(!t){ resolve(null); return; }
+        var m = t.match(/^(\d{4})年\d{2}月\d{2}日(.+)/);
+        resolve(m?{year:parseInt(m[1]),text:m[2].trim()}:null);
+      }).catch(function(){ clearTimeout(tid); resolve(null); });
+    });
+  }
+
+  function collect(param) {
+    var seen = {}, events = [], empty = 0;
+    return new Promise(function(resolve) {
+      (function loop(i) {
+        if(i >= BASE) {
+          if(events.length < MIN) {
+            (function extra(j) {
+              if(j >= EXTRA || events.length >= MIN) { resolve(events); return; }
+              fetchOne(param).then(function(ev) {
+                if(ev && !seen[ev.year+'|'+ev.text]) { seen[ev.year+'|'+ev.text]=1; events.push(ev); }
+                else if(ev) empty++;
+                j++; if(j<EXTRA && events.length<MIN) setTimeout(function(){ extra(j); }, INTERVAL);
+                else resolve(events);
+              });
+            })(0);
+          } else resolve(events);
+          return;
+        }
+        fetchOne(param).then(function(ev) {
+          if(ev) { var key = ev.year+'|'+ev.text; if(!seen[key]) { seen[key]=1; events.push(ev); empty=0; } else empty++; }
+          else empty++;
+          if(empty >= DUP_LIMIT) { resolve(events); return; }
+          i++; if(i<BASE) setTimeout(function(){ loop(i); }, INTERVAL);
+          else loop(i);
+        });
+      })(0);
+    });
+  }
+
+  var t = getToday();
+  document.getElementById('htQueryDate').innerText = t.display;
+
+  var cached = getCache();
+  if(cached) {
+    document.title = '[HIT] using cache';
+    window.close();
+  } else {
+    document.title = '[MISS] collecting...';
+    collect(t.param).then(function(evs) {
+      setCache(evs);
+    }).catch(function() {
+      document.title = '[ERR] failed';
+      window.close();
+    });
+    // 超时保护：90秒强制关闭
+    setTimeout(function(){ if(!DONE) { DONE=true; window.close(); } }, 90000);
+  }
+})();
+</script>
+</body>
+</html>

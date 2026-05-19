@@ -48,7 +48,7 @@
   script.
     (function(){
       var API = 'https://apis.jxcxin.cn/api/lishi';
-      var BASE = 25, INTERVAL = 500, DUP_LIMIT = 5, MIN = 5, EXTRA = 10;
+      var BASE = 50, INTERVAL = 1500, DUP_LIMIT = 5, MIN = 5, EXTRA = 20;
       var currentEvents = null;
       var CACHE_KEY = 'ht_cache';
       var todayStr = '';
@@ -162,15 +162,11 @@
       var cached = getCache();
       if(cached) {
         currentEvents = cached;
-        render(currentEvents);
-        var panel = document.getElementById('htDetailPanel');
-        panel.style.display = 'block';
-        document.getElementById('htArrow').innerHTML = '▲';
-        setText('收起详情');
+        setText('展开详情 ('+cached.length+'条)');
       } else {
         setText('收集中...');
         collect(t.param, function(cur, tot, n){ setText('收集中 ('+cur+'/'+tot+') '+n+'条'); })
-          .then(function(evs){ currentEvents = evs; setCache(evs); setText('展开详情'); })
+          .then(function(evs){ currentEvents = evs; setCache(evs); setText('展开详情 ('+evs.length+'条)'); })
           .catch(function(){ setText('加载失败'); });
       }
     })();
