@@ -79,7 +79,7 @@
 /* ---- 七彩按钮（与 inject.bottom 旧配置保持一致）---- */
 #news-shortcut-card .news-btn {
   flex: 1;
-  min-width: 80px;
+  min-width: 0;
   max-width: none;
   width: 0;
   height: 42px;
@@ -94,6 +94,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  padding: 0 0.25rem;
 }
 
 #news-shortcut-card .news-btn:hover {
