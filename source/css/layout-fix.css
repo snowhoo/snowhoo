@@ -95,6 +95,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   padding: 0 0.25rem;
+  display: block;
+  box-sizing: border-box;
 }
 
 #news-shortcut-card .news-btn:hover {
