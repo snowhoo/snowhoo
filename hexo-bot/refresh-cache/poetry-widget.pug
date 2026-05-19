@@ -83,10 +83,10 @@
         document.getElementById('originText').innerText = '';
       }
 
-      async function fetchPoem() {
+      async function fetchPoem(noCache) {
         showLoader();
         try {
-          var r = await fetch('https://v2.jinrishici.com/one.json', {headers:{'Cache-Control':'no-cache'}});
+          var r = await fetch(noCache ? 'https://v2.jinrishici.com/one.json?_=' + Date.now() : 'https://v2.jinrishici.com/one.json', {headers:{'Cache-Control':'no-cache'}});
           if (r.ok) {
             var j = await r.json();
             if (j.status === 'success' && j.data) {
@@ -96,7 +96,7 @@
           }
         } catch(e){}
         try {
-          var b = await fetch('http://liflag.cn/api/gushici.php?type=json');
+          var b = await fetch(noCache ? 'http://liflag.cn/api/gushici.php?type=json&_=' + Date.now() : 'http://liflag.cn/api/gushici.php?type=json');
           var j2 = await b.json();
           if (j2 && j2.content) {
             return {line:j2.content, author:j2.author||'古人', dynasty:j2.source?j2.source.split('·')[0]:'古典', title:j2.source||'诗篇'};
@@ -105,8 +105,8 @@
         return {line:'长风破浪会有时，直挂云帆济沧海。',author:'李白',dynasty:'唐',title:'行路难·其一'};
       }
 
-      async function refreshPoetry() {
-        var poem = await fetchPoem();
+      async function refreshPoetry(noCache) {
+        var poem = await fetchPoem(noCache);
         renderPoem(poem);
         var panel = document.getElementById('detailPanel');
         if (panel.style.display === 'block') updateDetail();
@@ -115,6 +115,6 @@
       document.addEventListener('DOMContentLoaded', function() {
         refreshPoetry();
         document.getElementById('expandToggle').addEventListener('click', toggleDetail);
-        document.getElementById('refreshBtn').addEventListener('click', function(e){ e.stopPropagation(); refreshPoetry(); });
+        document.getElementById('refreshBtn').addEventListener('click', function(e){ e.stopPropagation(); refreshPoetry(true); });
       });
     })();
