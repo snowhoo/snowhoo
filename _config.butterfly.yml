@@ -657,9 +657,7 @@ inject:
 #solar-term-banner{display:none;width:100%;text-align:center;padding:4px 16px;box-sizing:border-box;background-color:#f8f9fa;border:2px solid #e0e0e0;border-radius:8px}html[data-theme=dark] #solar-term-banner{background-color:#1a2a1a;border-color:#3a3a3a}#solar-term-banner .st-banner-inner{display:inline-flex;align-items:center;gap:12px;font-size:14px;flex-wrap:wrap;justify-content:center}#solar-term-banner .st-icon{font-size:16px;opacity:0.8}#solar-term-banner .st-name{font-weight:700;font-size:16px;letter-spacing:2px}#solar-term-banner .st-desc{color:#555;font-style:italic}html[data-theme=dark] #solar-term-banner .st-desc{color:#a5d6a7}@media(max-width:480px){#solar-term-banner .st-desc{display:none}}/* 节日横幅暗色适配 */
 html[data-theme=dark] #solar-term-banner.festival-banner .st-desc{color:#ccc}html[data-theme=dark] #solar-term-banner.festival-banner{border-color:#3a3a3a}
 /* 节日/节气的背景图样式 */
-#solar-term-banner.festival-banner{background-size:cover;background-position:center;background-repeat:no-repeat;padding:6px 16px}#solar-term-banner.festival-banner .st-banner-inner{background:rgba(255,255,255,0.85);padding:8px 20px;border-radius:24px}html[data-theme=dark] #solar-term-banner.festival-banner .st-banner-inner{background:rgba(0,0,0,0.6)}/* 文章卡片统一1px边框(置顶帖由模板内联样式覆盖)*/.recent-post-item{border:1px solid #e0e0e0;border-radius:8px}html[data-theme=dark] .recent-post-item{border-color:#3a3a3a} #content-inner.layout,
-.layout,
-.layout > div:first-child:not(.nc) {
+#solar-term-banner.festival-banner{background-size:cover;background-position:center;background-repeat:no-repeat;padding:6px 16px}#solar-term-banner.festival-banner .st-banner-inner{background:rgba(255,255,255,0.85);padding:8px 20px;border-radius:24px}html[data-theme=dark] #solar-term-banner.festival-banner .st-banner-inner{background:rgba(0,0,0,0.6)}/* 文章卡片统一1px边框(置顶帖由模板内联样式覆盖)*/.recent-post-item{border:1px solid #e0e0e0;border-radius:8px}html[data-theme=dark] .recent-post-item{border-color:#3a3a3a} #home-widgets {
   padding: 0 !important;
   max-width: 100% !important;
 }/*去除主内容区边距*/
