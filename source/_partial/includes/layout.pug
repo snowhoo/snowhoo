@@ -46,8 +46,7 @@ html(lang=config.language data-theme=theme.display_mode class=htmlClassHideAside
 
       // 首页自定义模块：诗词 + 历史上的今天（放在 #content-inner 外部，避免破坏布局）
       if globalPageType === 'home'
-        #home-widgets
-          block home-widgets
+        block home-widgets
 
       main#content-inner.layout(class=hideAside)
         if body
