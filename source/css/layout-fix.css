@@ -1,6 +1,6 @@
 ﻿/* =============================================
    首页自定义组件统一样式
-   覆盖原有的各 <style> 块,统一管理
+   覆盖原有的各 <style> 块，统一管理
    ============================================= */
 
 /* ---- 首页 widgets 外层容器 ---- */
@@ -72,7 +72,7 @@
   padding: 0;
 }
 
-/* ---- 七彩按钮(与 inject.bottom 旧配置保持一致)---- */
+/* ---- 七彩按钮（与 inject.bottom 旧配置保持一致）---- */
 #news-shortcut-card .news-btn {
   flex: 1;
   min-width: 0;
@@ -106,7 +106,7 @@
   transform: translateY(0);
 }
 
-/* 彩虹色:亮色主题 */
+/* 彩虹色：亮色主题 */
 #news-shortcut-card .news-btn-0 { background: #ff6b6b !important; color: #fff !important; }
 #news-shortcut-card .news-btn-1 { background: #ffa502 !important; color: #fff !important; }
 #news-shortcut-card .news-btn-2 { background: #ffd32a !important; color: #333 !important; }
@@ -115,7 +115,7 @@
 #news-shortcut-card .news-btn-5 { background: #9b59b6 !important; color: #fff !important; }
 #news-shortcut-card .news-btn-6 { background: #fd79a8 !important; color: #fff !important; }
 
-/* 彩虹色:暗色主题 */
+/* 彩虹色：暗色主题 */
 html[data-theme=dark] #news-shortcut-card .news-btn-0 { background: #c0392b !important; color: #fff !important; }
 html[data-theme=dark] #news-shortcut-card .news-btn-1 { background: #d35400 !important; color: #fff !important; }
 html[data-theme=dark] #news-shortcut-card .news-btn-2 { background: #f39c12 !important; color: #1a1a1a !important; }
@@ -254,24 +254,24 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   border-bottom: 1px solid #eff2f8;
 }
 
-#history-today .history-header h3 {
-  font-size: 1.1em;
-  font-weight: 400;
-  color: var(--text-highlight-color);
-  margin: 0;
-  line-height: 1.4;
-  transition: all .2s ease-in-out;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
+#history-today .history-header h3 { 
+  font-size: 1.1em; 
+  font-weight: 400; 
+  color: var(--text-highlight-color); 
+  margin: 0; 
+  line-height: 1.4; 
+  transition: all .2s ease-in-out; 
+  display: flex; 
+  align-items: center; 
+  gap: 0.4rem; 
 }
-#history-today .history-date {
-  font-size: 0.7rem;
-  color: var(--text-secondary, #8ba0bc);
-  background: var(--bg-secondary, #f5f8fe);
-  padding: 0.2rem 0.6rem;
-  border-radius: 30px;
-  line-height: 1;
+#history-today .history-date { 
+  font-size: 0.7rem; 
+  color: var(--text-secondary, #8ba0bc); 
+  background: var(--bg-secondary, #f5f8fe); 
+  padding: 0.2rem 0.6rem; 
+  border-radius: 30px; 
+  line-height: 1; 
 }
 
 #history-today .expand-control {
@@ -295,8 +295,8 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   color: #fff;
 }
 #history-today .arrow {
-  font-size: 0.65rem;
-  transition: transform 0.2s ease;
+  font-size: 0.65rem; 
+  transition: transform 0.2s ease; 
 }
 
 #history-today .detail-panel { display: none; padding: 0.5rem 1rem 1.2rem; }
@@ -312,7 +312,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 }
 
 #history-today .event-item {
-  text-align: left;
+  text-align: left; 
   line-height: 1.6;
   color: #2c3e4e;
 }
@@ -331,9 +331,8 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 }
 
 #history-today .event-title {
-  font-size: 1.5rem;
   line-height: 1.4;
-  display: inline;
+  display: inline; 
 }
 
 #history-today .status-message { color: #9ab0c9; font-size: 0.8rem; text-align: center; padding: 1rem; }
@@ -346,7 +345,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
    响应式断点
    ============================================= */
 
-/* 小屏(<=600px) */
+/* 小屏（<=600px） */
 @media screen and (max-width: 600px) {
   #news-shortcut-card .news-btn { font-size: 0.75rem; padding: 0.35rem 0.75rem; }
   #news-shortcut-card .btn-row { gap: 0.4rem; padding: 0; }
@@ -363,23 +362,23 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   #history-today { padding: 0.2rem 0; }
   #history-today .history-header h3 { font-size: 0.95rem; }
   #history-today .event-year { font-size: 0.75rem; }
-  #history-today .event-title { font-size: 1.15rem; }
+  #history-today .event-title { font-size: 0.9rem; }
   #history-today .status-message { font-size: 0.75rem; }
   #history-today .expand-control { font-size: 0.68rem; }
   #history-today .event-item { padding: 0.75rem; font-size: 0.9rem; }/*历史上的今天正文*/
 }
 
-/* 中屏(601px - 900px) */
+/* 中屏（601px - 900px） */
 @media screen and (min-width: 601px) and (max-width: 900px) {
   #poetry-widget .verse { font-size: 1.3rem; }
   #poetry-widget .detail-panel { font-size: 0.82rem; }
   #poetry-widget .full-poem { font-size: 0.9rem; }
 
   #history-today .event-year { font-size: 0.78rem; }
-  #history-today .event-title { font-size: 1.3rem; }
+  #history-today .event-title { font-size: 0.85rem; }
 }
 
-/* 超大屏(>=2000px) */
+/* 超大屏（>=2000px） */
 @media screen and (min-width: 2000px) {
   #home-widgets { padding: 0 4rem; }
   #poetry-widget { padding: 0 4rem; }
@@ -388,24 +387,24 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   #history-today { padding: 0.2rem 4rem; }
   #history-today .history-header h3 { font-size: 1.25rem; }
   #history-today .event-year { font-size: 0.9rem; }
-  #history-today .event-title { font-size: 1.7rem; }
+  #history-today .event-title { font-size: 1rem; }
   #news-shortcut-card .news-btn { font-size: 1rem; }
 }
 
 /* =============================================
-   旧结构的废弃规则(兼容清理)
+   旧结构的废弃规则（兼容清理）
    ============================================= */
-/* 旧的 #content-inner 子元素规则已废弃,不再使用 */
+/* 旧的 #content-inner 子元素规则已废弃，不再使用 */
 
 /* =============================================
-   无封面文章占位图(picsum.photos)
+   无封面文章占位图（picsum.photos）
    ============================================= */
 img.no-cover-placeholder {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  /* 渐变叠加,让图片和文字更融合 */
+  /* 渐变叠加，让图片和文字更融合 */
   position: relative;
 }
 
