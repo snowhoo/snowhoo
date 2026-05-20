@@ -53,7 +53,7 @@
         current.title = poem.title;
         if (poem.detail && poem.detail.content) {
           var content = Array.isArray(poem.detail.content)
-            ? poem.detail.content.join('')
+            ? poem.detail.content.join('\n')
             : poem.detail.content;
           current.fullDetail = {
             fullText: content,
