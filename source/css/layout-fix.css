@@ -258,18 +258,11 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 #history-today .history-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0.6rem;
   padding: 0;
   border-bottom: 1px solid #eff2f8;
-}
-
-#history-today .header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
 }
 
 #history-today .history-header h3 { font-size: 1.55em; font-weight: 400; color: var(--text-highlight-color); margin: 0; line-height: 1.4; transition: all .2s ease-in-out; }
