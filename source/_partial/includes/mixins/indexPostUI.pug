@@ -22,7 +22,7 @@ mixin indexPostUI()
                 else
                   div.post-bg(style=`background: ${post_cover}`)
               else
-                img.post-bg.no-cover-placeholder(src=`https://picsum.photos/seed/${img_seed}9/800/450` alt=title onerror="this.onerror=null;this.src='/images/404.jpg'")
+                img.post-bg.no-cover-placeholder(src=`https://picsum.photos/seed/${img_seed}2/800/450` alt=title onerror="this.onerror=null;this.src='/images/404.jpg'")
           .recent-post-info(class=no_cover)
             a.article-title(href=url_for(link) title=title)
               if globalPageType === 'home' && (article.top || article.sticky > 0)
