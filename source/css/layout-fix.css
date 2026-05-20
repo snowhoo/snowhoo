@@ -335,7 +335,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   #poetry-widget { padding: 0 0.75rem; }
   #poetry-widget .verse { font-size: 1.15rem; }
   #poetry-widget .dynasty { font-size: 0.65rem; }
-  #poetry-widget .title { font-size: 0.72rem; }
+  #poetry-widget .title { font-size: 0.65rem; }
 #poetry-widget .expand-control { font-size: 0.65rem; }
   #poetry-widget .detail-panel { font-size: 0.8rem; }
   #poetry-widget .full-poem { padding: 0.75rem; font-size: 0.9rem; }
@@ -354,6 +354,9 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   #poetry-widget .verse { font-size: 1.3rem; }
   #poetry-widget .detail-panel { font-size: 0.82rem; }
   #poetry-widget .full-poem { font-size: 0.9rem; }
+
+  #history-today .event-year { font-size: 0.78rem; }
+  #history-today .event-title { font-size: 0.85rem; }
 }
 
 /* 超大屏（>=2000px） */
@@ -361,8 +364,10 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   #home-widgets { padding: 0 4rem; }
   #poetry-widget { padding: 0 4rem; }
   #poetry-widget .verse { font-size: 1.7rem; }
+  #poetry-widget .detail-panel { font-size: 0.9rem; }
   #history-today { padding: 0.2rem 4rem; }
   #history-today .history-header h3 { font-size: 1.25rem; }
+  #history-today .event-year { font-size: 0.9rem; }
   #history-today .event-title { font-size: 1rem; }
   #news-shortcut-card .news-btn { font-size: 1rem; }
 }
