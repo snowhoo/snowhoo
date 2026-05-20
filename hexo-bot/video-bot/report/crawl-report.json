@@ -1,12 +1,21 @@
 {
-  "time": "2026-05-20T00:16:08.216475",
+  "time": "2026-05-21T00:19:20.341040",
   "total_sites": 28,
   "succeeded": 14,
   "failed": 14,
-  "total_videos": 6668,
-  "total_episodes": 350099,
-  "total_playable": 309617,
+  "total_videos": 6704,
+  "total_episodes": 330078,
+  "total_playable": 292455,
   "sites": [
+    {
+      "name": "🐯虎牙直播",
+      "api": "http://xhztv.top/xhz/js/lib/drpy2.min.js",
+      "videos": 0,
+      "episodes": 0,
+      "playable": 0,
+      "pages": 0,
+      "error": "首页接口无响应"
+    },
     {
       "name": "有声小说吧",
       "api": "http://xhztv.top/xhz/js/lib/drpy2.min.js",
@@ -28,15 +37,6 @@
     {
       "name": "JRKAN直播",
       "api": "http://xhztv.top/xhz/js/lib/drpy.min.js",
-      "videos": 0,
-      "episodes": 0,
-      "playable": 0,
-      "pages": 0,
-      "error": "首页接口无响应"
-    },
-    {
-      "name": "🐯虎牙直播",
-      "api": "http://xhztv.top/xhz/js/lib/drpy2.min.js",
       "videos": 0,
       "episodes": 0,
       "playable": 0,
@@ -80,15 +80,6 @@
       "error": "首页接口无响应"
     },
     {
-      "name": "🦁┃四九┃资源",
-      "api": "https://49zy1.com/api.php/provide/vod/?ac=list",
-      "videos": 0,
-      "episodes": 0,
-      "playable": 0,
-      "pages": 0,
-      "error": "首页接口无响应"
-    },
-    {
       "name": "电视┃MTV",
       "api": "https://mv.wogg.link/mv/vod",
       "videos": 0,
@@ -98,8 +89,8 @@
       "error": "首页接口无响应"
     },
     {
-      "name": "🐯┃奇虎┃采集",
-      "api": "https://caiji.qhzyapi.com/api.php/provide/vod/",
+      "name": "🦁┃四九┃资源",
+      "api": "https://49zy1.com/api.php/provide/vod/?ac=list",
       "videos": 0,
       "episodes": 0,
       "playable": 0,
@@ -109,6 +100,15 @@
     {
       "name": "🛰️飞速┃采集",
       "api": "https://www.feisuzyapi.com/api.php/provide/vod/?ac=list",
+      "videos": 0,
+      "episodes": 0,
+      "playable": 0,
+      "pages": 0,
+      "error": "首页接口无响应"
+    },
+    {
+      "name": "🐯┃奇虎┃采集",
+      "api": "https://caiji.qhzyapi.com/api.php/provide/vod/",
       "videos": 0,
       "episodes": 0,
       "playable": 0,
@@ -128,8 +128,8 @@
       "name": "🥗┃非凡┃资源",
       "api": "http://ffzy1.tv/api.php/provide/vod/",
       "videos": 480,
-      "episodes": 44584,
-      "playable": 44584,
+      "episodes": 40902,
+      "playable": 40902,
       "pages": 40,
       "error": null
     },
@@ -146,8 +146,8 @@
       "name": "非凡",
       "api": "http://cj.ffzyapi.com/api.php/provide/vod",
       "videos": 480,
-      "episodes": 44584,
-      "playable": 44584,
+      "episodes": 40902,
+      "playable": 40902,
       "pages": 40,
       "error": null
     },
@@ -155,35 +155,26 @@
       "name": "量子",
       "api": "https://cj.lziapi.com/api.php/provide/vod",
       "videos": 480,
-      "episodes": 40224,
-      "playable": 40224,
+      "episodes": 35811,
+      "playable": 35811,
+      "pages": 40,
+      "error": null
+    },
+    {
+      "name": "🐯虎牙采集",
+      "api": "https://www.huyaapi.com/api.php/provide/vod/from/hym3u8",
+      "videos": 480,
+      "episodes": 14872,
+      "playable": 14872,
       "pages": 40,
       "error": null
     },
     {
       "name": "🥑┃量子┃资源",
       "api": "https://lzizy1.com/api.php/provide/vod/",
-      "videos": 473,
-      "episodes": 38623,
-      "playable": 38623,
-      "pages": 40,
-      "error": null
-    },
-    {
-      "name": "🦊火狐采集",
-      "api": "https://hhzyapi.com/api.php/provide/vod/",
       "videos": 480,
-      "episodes": 30592,
-      "playable": 15296,
-      "pages": 40,
-      "error": null
-    },
-    {
-      "name": "索尼 ",
-      "api": "https://suoniapi.com/api.php/provide/vod",
-      "videos": 480,
-      "episodes": 16754,
-      "playable": 16754,
+      "episodes": 35811,
+      "playable": 35811,
       "pages": 40,
       "error": null
     },
@@ -191,35 +182,35 @@
       "name": "🐉┃索尼┃高清",
       "api": "https://suoniapi.com/api.php/provide/vod/?ac=list",
       "videos": 480,
-      "episodes": 15725,
-      "playable": 15725,
+      "episodes": 16985,
+      "playable": 16984,
+      "pages": 40,
+      "error": null
+    },
+    {
+      "name": "索尼 ",
+      "api": "https://suoniapi.com/api.php/provide/vod",
+      "videos": 480,
+      "episodes": 16167,
+      "playable": 16166,
+      "pages": 40,
+      "error": null
+    },
+    {
+      "name": "🦊火狐采集",
+      "api": "https://hhzyapi.com/api.php/provide/vod/",
+      "videos": 480,
+      "episodes": 25950,
+      "playable": 12975,
       "pages": 40,
       "error": null
     },
     {
       "name": "暴風",
       "api": "https://bfzyapi.com/api.php/provide/vod",
-      "videos": 460,
-      "episodes": 16951,
-      "playable": 16951,
-      "pages": 39,
-      "error": null
-    },
-    {
-      "name": "🐯虎牙采集",
-      "api": "https://www.huyaapi.com/api.php/provide/vod/from/hym3u8",
-      "videos": 480,
-      "episodes": 14677,
-      "playable": 14677,
-      "pages": 40,
-      "error": null
-    },
-    {
-      "name": "360zy",
-      "api": "https://360zy.com/api.php/provide/vod?",
-      "videos": 480,
-      "episodes": 12657,
-      "playable": 12656,
+      "videos": 471,
+      "episodes": 13478,
+      "playable": 13478,
       "pages": 40,
       "error": null
     },
@@ -227,8 +218,17 @@
       "name": "🎏百度┃采集",
       "api": "https://api.apibdzy.com/api.php/provide/vod/?ac=list",
       "videos": 480,
-      "episodes": 11950,
-      "playable": 11950,
+      "episodes": 11983,
+      "playable": 11983,
+      "pages": 40,
+      "error": null
+    },
+    {
+      "name": "360zy",
+      "api": "https://360zy.com/api.php/provide/vod?",
+      "videos": 480,
+      "episodes": 12934,
+      "playable": 12933,
       "pages": 40,
       "error": null
     },
@@ -236,8 +236,8 @@
       "name": "guangsuapi",
       "api": "https://api.guangsuapi.com/api.php/provide/vod/",
       "videos": 480,
-      "episodes": 26470,
-      "playable": 13235,
+      "episodes": 23838,
+      "playable": 11919,
       "pages": 40,
       "error": null
     },
@@ -245,18 +245,18 @@
       "name": "jszyapi",
       "api": "https://jszyapi.com/api.php/provide/vod/at/json",
       "videos": 480,
-      "episodes": 23900,
-      "playable": 11950,
+      "episodes": 25452,
+      "playable": 12726,
       "pages": 40,
       "error": null
     },
     {
       "name": "bfzyapi",
       "api": "https://bfzyapi.com/api.php/provide/vod/",
-      "videos": 455,
-      "episodes": 12408,
-      "playable": 12408,
-      "pages": 39,
+      "videos": 473,
+      "episodes": 14993,
+      "playable": 14993,
+      "pages": 40,
       "error": null
     }
   ]
