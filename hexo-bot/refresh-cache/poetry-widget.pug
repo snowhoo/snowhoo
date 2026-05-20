@@ -15,23 +15,7 @@
       .poet-bio#poetBio
   script.
     (function(){
-      var db = [
-        {title:'静夜思',fullText:'床前明月光，疑是地上霜。\n举头望明月，低头思故乡。',poetBio:'李白（701－762），字太白，号青莲居士。盛唐浪漫主义诗人，有诗仙之称。',dynasty:'唐',author:'李白'},
-        {title:'登鹳雀楼',fullText:'白日依山尽，黄河入海流。\n欲穷千里目，更上一层楼。',poetBio:'王之涣（688－742），字季凌，盛唐边塞诗人。',dynasty:'唐',author:'王之涣'},
-        {title:'春晓',fullText:'春眠不觉晓，处处闻啼鸟。\n夜来风雨声，花落知多少。',poetBio:'孟浩然（689－740），襄阳人，唐代山水田园诗派代表。',dynasty:'唐',author:'孟浩然'},
-        {title:'江雪',fullText:'千山鸟飞绝，万径人踪灭。\n孤舟蓑笠翁，独钓寒江雪。',poetBio:'柳宗元（773－819），字子厚，唐宋八大家之一。',dynasty:'唐',author:'柳宗元'},
-        {title:'相思',fullText:'红豆生南国，春来发几枝。\n愿君多采撷，此物最相思。',poetBio:'王维（701－761），字摩诘，诗画双绝。',dynasty:'唐',author:'王维'},
-        {title:'饮酒·其五',fullText:'结庐在人境，而无车马喧。\n问君何能尔？心远地自偏。\n采菊东篱下，悠然见南山。\n山气日夕佳，飞鸟相与还。\n此中有真意，欲辨已忘言。',poetBio:'陶渊明（约365－427），字元亮，东晋田园诗人。',dynasty:'东晋',author:'陶渊明'}
-      ];
       var current = {line:'',author:'',dynasty:'',title:'',fullDetail:null};
-
-      function findDetail(title, snippet) {
-        for (var i=0;i<db.length;i++){
-          if (db[i].title === title) return db[i];
-          if (db[i].fullText.indexOf(snippet.substring(0,10)) >= 0) return db[i];
-        }
-        return null;
-      }
 
       function updateDetail() {
         var fd = document.getElementById('fullPoemContent');
@@ -68,8 +52,15 @@
         current.author = poem.author;
         current.dynasty = poem.dynasty;
         current.title = poem.title;
-        var matched = findDetail(poem.title, poem.line);
-        current.fullDetail = matched || {fullText:'「' + poem.line + '」', poetBio:poem.author + '，' + poem.dynasty + '代诗人。'};
+        if (poem.detail && poem.detail.content) {
+          var content = Array.isArray(poem.detail.content)
+            ? poem.detail.content.join('')
+            : poem.detail.content;
+          current.fullDetail = {
+            fullText: content,
+            poetBio: poem.detail.biography || poem.author + '，生平逸事待考。'
+          };
+        }
       }
 
       // 读取本地 poetry.json（同源，无 CORS）
@@ -81,9 +72,8 @@
             if (j && j.line) { renderPoem(j); return; }
           }
         } catch(e){}
-        // 文件读取失败时用 db 兜底
-        var rnd = db[Math.floor(Math.random() * db.length)];
-        renderPoem({line:rnd.fullText.split('\n')[0], author:rnd.author, dynasty:rnd.dynasty, title:rnd.title});
+        // 文件读取失败时显示默认值
+        current.fullDetail = {fullText:'「' + current.line + '」', poetBio:'数据加载失败'};
       }
 
       document.addEventListener('DOMContentLoaded', function() {
