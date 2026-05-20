@@ -489,3 +489,20 @@ html[data-theme=dark] #history-today .expand-control {
 html[data-theme=dark] #history-today .expand-control:hover {
   background: #e74c3c;
 }
+
+
+/* ========== 页面主体左右边距收紧（覆盖主题默认值） ========== */
+#nav .header-inner > * {
+    max-width: 1400px !important;     /* 原1200px → 1400px，内容更宽 */
+    padding: 0 24px !important;       /* 原15px/30px → 统一24px */
+}
+@media screen and (min-width: 768px) and (max-width: 1300px) {
+    #nav .header-inner > * {
+        padding: 0 20px !important;
+    }
+}
+@media screen and (max-width: 767px) {
+    #nav .header-inner > * {
+        padding: 0 12px !important;
+    }
+}
