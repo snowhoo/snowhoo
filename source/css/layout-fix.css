@@ -389,6 +389,11 @@ img.no-cover-placeholder {
   transition: transform 0.3s ease;
 }
 
+/* 修复主题 .post-bg z-index: -4 导致占位图不显示 */
+#recent-posts .recent-post-item .post-bg {
+  z-index: 1 !important;
+}
+
 /* =============================================
    暗色模式适配
    ============================================= */
