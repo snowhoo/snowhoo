@@ -62,15 +62,6 @@
   padding: 0 0;
 }
 
-
-#news-shortcut-card .news-date {
-  font-size: 0.7rem;
-  color: #8ba0bc;
-  background: #f5f8fe;
-  padding: 0.2rem 0.6rem;
-  border-radius: 30px;
-}
-
 #news-shortcut-card .btn-row {
   display: flex;
   flex-wrap: wrap;
@@ -218,9 +209,8 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 
 #poetry-widget .full-poem {
   background: #fafbfc;
-  padding: 1rem;
   border-radius: 12px;
-    white-space: pre-line;
+  white-space: pre-line;
   line-height: 1.6;
   color: #2c3e4e;
   margin-bottom: 1rem;
@@ -231,9 +221,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 #poetry-widget .poet-bio {
   color: #4a627a;
   background: #fff;
-  padding: 0.75rem 0;
   border-left: 3px solid #dce5ef;
-  padding-left: 1rem;
   font-size: 0.8rem;
 }
 
@@ -266,8 +254,25 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   border-bottom: 1px solid #eff2f8;
 }
 
-#history-today .history-header h3 { font-size: 1.1em; font-weight: 400; color: var(--text-highlight-color); margin: 0; line-height: 1.4; transition: all .2s ease-in-out; display: flex; align-items: center; gap: 0.4rem; }
-#history-today .history-date { font-size: 0.7rem; color: var(--text-secondary, #8ba0bc); background: var(--bg-secondary, #f5f8fe); padding: 0.2rem 0.6rem; border-radius: 30px; line-height: 1; }
+#history-today .history-header h3 { 
+  font-size: 1.1em; 
+  font-weight: 400; 
+  color: var(--text-highlight-color); 
+  margin: 0; 
+  line-height: 1.4; 
+  transition: all .2s ease-in-out; 
+  display: flex; 
+  align-items: center; 
+  gap: 0.4rem; 
+}
+#history-today .history-date { 
+  font-size: 0.7rem; 
+  color: var(--text-secondary, #8ba0bc); 
+  background: var(--bg-secondary, #f5f8fe); 
+  padding: 0.2rem 0.6rem; 
+  border-radius: 30px; 
+  line-height: 1; 
+}
 
 #history-today .expand-control {
   display: inline-flex;
@@ -289,7 +294,10 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   transform: translateY(-1px);
   color: #fff;
 }
-#history-today .arrow { font-size: 0.65rem; transition: transform 0.2s ease; }
+#history-today .arrow {
+  font-size: 0.65rem; 
+  transition: transform 0.2s ease; 
+}
 
 #history-today .detail-panel { display: none; padding: 0.5rem 1rem 1.2rem; }
 #history-today .detail-panel.show { display: block; }
@@ -303,7 +311,11 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   padding-right: 0;
 }
 
-#history-today .event-item { text-align: left; }
+#history-today .event-item {
+  text-align: left; 
+  line-height: 1.6;
+  color: #2c3e4e;
+}
 
 #history-today .event-year {
   font-weight: 600;
@@ -318,7 +330,10 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   margin-right: 0.6rem;
 }
 
-#history-today .event-title { font-size: 0.9rem; line-height: 1.4; color: #2c445e; display: inline; }
+#history-today .event-title {
+  line-height: 1.4;
+  display: inline; 
+}
 
 #history-today .status-message { color: #9ab0c9; font-size: 0.8rem; text-align: center; padding: 1rem; }
 
@@ -341,15 +356,16 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   #poetry-widget .title { font-size: 0.65rem; }
 #poetry-widget .expand-control { font-size: 0.65rem; }
   #poetry-widget .detail-panel { font-size: 0.8rem; }
-  #poetry-widget .full-poem { padding: 0.75rem; font-size: 0.9rem; }
+  #poetry-widget .full-poem { padding: 0.75rem; font-size: 0.9rem; }/*诗词诗文*/
   #poetry-widget .poet-bio { font-size: 0.75rem; }
 
   #history-today { padding: 0.2rem 0; }
   #history-today .history-header h3 { font-size: 0.95rem; }
   #history-today .event-year { font-size: 0.75rem; }
-  #history-today .event-title { font-size: 0.82rem; }
+  #history-today .event-title { font-size: 0.9rem; }
   #history-today .status-message { font-size: 0.75rem; }
   #history-today .expand-control { font-size: 0.68rem; }
+  #history-today .event-item { padding: 0.75rem; font-size: 0.9rem; }/*历史上的今天正文*/
 }
 
 /* 中屏（601px - 900px） */
