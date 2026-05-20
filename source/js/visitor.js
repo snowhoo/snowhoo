@@ -49,6 +49,7 @@
     { date: '2026-04-05', name: '清明节', desc: '清明时节雨纷纷，路上行人欲断魂', color: '#6ab04c', bgImg: '/images/banner/qingming-bg.png' },
     { date: '2026-05-01', name: '劳动节', desc: '致敬每一位劳动者，节日快乐', color: '#c0392b', bgImg: '/images/banner/laodong-bg.png' },
     { date: '2026-05-10', name: '母亲节', desc: '妈妈，您辛苦了！', color: '#e91e63', bgImg: '/images/banner/muqinjie-bg.png' },
+    { date: '2026-05-20', name: '520', desc: '说一声我爱你，感谢一路有你', color: '#e91e63', bgImg: '/images/banner/520-bg.png' },
     { date: '2026-05-31', name: '端午节', desc: '粽叶飘香，端午安康', color: '#27ae60', bgImg: '/images/banner/duanwu-bg.png' },
     { date: '2026-08-19', name: '七夕节', desc: '金风玉露一相逢，便胜却人间无数', color: '#c0392b', bgImg: '/images/banner/qixi-bg.png' },
     { date: '2026-10-01', name: '国庆节', desc: '祝祖国繁荣昌盛！', color: '#c41e3a', bgImg: '/images/banner/guoqing-bg.png' },
