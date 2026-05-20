@@ -308,6 +308,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 #history-today .event-year {
   font-weight: 600;
   font-size: 1.5rem;
+  font-family: '楷体', '华文楷书', 'KaiTi', 'Georgia', serif;
   line-height: 1.4;
   color: #4f7aa6;
   background: #f1f6fd;
@@ -317,7 +318,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   margin-right: 0.6rem;
 }
 
-#history-today .event-title { line-height: 1.4; color: #2c445e; display: inline; }
+#history-today .event-title { font-size: 1.5rem; line-height: 1.4; color: #2c445e; display: inline; }
 
 #history-today .status-message { color: #9ab0c9; font-size: 0.8rem; text-align: center; padding: 1rem; }
 
