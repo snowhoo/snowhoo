@@ -13,6 +13,7 @@ mixin indexPostUI()
           - const leftOrRight = indexLayout === 3 ? (index % 2 === 0 ? 'left' : 'right') : (indexLayout === 2 ? 'right' : '')
           - const post_cover = article.cover
           - const no_cover = article.cover === false || !theme.cover.index_enable ? 'no-cover' : ''
+          - const img_seed = article.date ? article.date.format('YYYYMMDD') : (article.path || article.title || index).replace(/[^a-zA-Z0-9]/g, '')
           .post_cover(class=leftOrRight)
             a(href=url_for(link) title=title)
               if post_cover && theme.cover.index_enable
@@ -21,7 +22,7 @@ mixin indexPostUI()
                 else
                   div.post-bg(style=`background: ${post_cover}`)
               else
-                img.post-bg.no-cover-placeholder(src='https://picsum.photos/800/450' alt=title onerror="this.onerror=null;this.src='/images/404.jpg'")
+                img.post-bg.no-cover-placeholder(src=`https://picsum.photos/seed/${img_seed}/800/450` alt=title onerror="this.onerror=null;this.src='/images/404.jpg'")
           .recent-post-info(class=no_cover)
             a.article-title(href=url_for(link) title=title)
               if globalPageType === 'home' && (article.top || article.sticky > 0)
