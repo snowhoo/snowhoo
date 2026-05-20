@@ -1,8 +1,9 @@
 #history-today
   .history-card
     .history-header
-      span.history-date#htQueryDate
-      h3 历史上的今天
+      .header-left
+        h3 历史上的今天
+        span.history-date#htQueryDate
       .expand-control#htToggle
         span.arrow#htArrow ▼
         span#htExpandText 详情
@@ -111,11 +112,11 @@
         if(isOpen) {
           panel.style.display = 'none';
           arrow.innerHTML = '▼';
-          text.innerText = '展开详情';
+          text.innerText = '详情';
         } else {
           panel.style.display = 'block';
           arrow.innerHTML = '▲';
-          text.innerText = '收起详情';
+          text.innerText = '详情';
           if(currentEvents) render(currentEvents);
         }
       }

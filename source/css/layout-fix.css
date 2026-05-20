@@ -165,7 +165,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 #poetry-widget .meta-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0.5rem 0.8rem;
   line-height: 1;
@@ -178,17 +178,6 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   color: #1f2d3d;
   line-height: 1.4;
   margin-bottom: 0.5rem;
-}
-
-#poetry-widget .meta {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  align-items: baseline;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  color: #6c7a8a;
-  margin-top: 0.25rem;
 }
 
 #poetry-widget .author { font-weight: 500; color: #4a5b6e; }
@@ -269,11 +258,18 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 #history-today .history-header {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.6rem;
   padding: 0;
   border-bottom: 1px solid #eff2f8;
+}
+
+#history-today .header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
 }
 
 #history-today .history-header h3 { font-size: 1.55em; font-weight: 400; color: var(--text-highlight-color); margin: 0; line-height: 1.4; transition: all .2s ease-in-out; }
@@ -345,7 +341,6 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 
   #poetry-widget { padding: 0 0.75rem; }
   #poetry-widget .verse { font-size: 1.15rem; }
-  #poetry-widget .meta { font-size: 0.75rem; gap: 0.35rem; }
   #poetry-widget .dynasty { font-size: 0.65rem; }
   #poetry-widget .title { font-size: 0.72rem; }
 #poetry-widget .expand-control { font-size: 0.65rem; }
@@ -364,7 +359,6 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 /* 中屏（601px - 900px） */
 @media screen and (min-width: 601px) and (max-width: 900px) {
   #poetry-widget .verse { font-size: 1.3rem; }
-  #poetry-widget .meta { font-size: 0.8rem; }
   #poetry-widget .detail-panel { font-size: 0.82rem; }
   #poetry-widget .full-poem { font-size: 0.9rem; }
 }
@@ -411,10 +405,6 @@ html[data-theme=dark] #poetry-widget {
 
 html[data-theme=dark] #poetry-widget .verse {
   color: #e8e8e8;
-}
-
-html[data-theme=dark] #poetry-widget .meta {
-  color: #8a9bab;
 }
 
 html[data-theme=dark] #poetry-widget .author {
