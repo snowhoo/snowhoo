@@ -265,7 +265,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   border-bottom: 1px solid #eff2f8;
 }
 
-#history-today .history-header h3 { font-size: 1.55em; font-weight: 400; color: var(--text-highlight-color); margin: 0; line-height: 1.4; transition: all .2s ease-in-out; }
+#history-today .history-header h3 { font-size: 1.1em; font-weight: 400; color: var(--text-highlight-color); margin: 0; line-height: 1.4; transition: all .2s ease-in-out; display: flex; align-items: center; gap: 0.4rem; }
 #history-today .history-date { font-size: 0.7rem; color: var(--text-secondary, #8ba0bc); background: var(--bg-secondary, #f5f8fe); padding: 0.2rem 0.6rem; border-radius: 30px; line-height: 1; }
 
 #history-today .expand-control {
