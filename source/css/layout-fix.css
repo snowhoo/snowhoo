@@ -181,7 +181,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 #poetry-widget .meta {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: baseline;
   gap: 0.5rem;
   font-size: 0.85rem;
@@ -225,15 +225,16 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 
 #poetry-widget .full-poem {
   background: #fafbfc;
-  padding: 1rem;
+  padding: 1rem 1.5rem;
   border-radius: 12px;
   font-family: '楷体', '华文楷书', 'KaiTi', monospace;
   white-space: pre-line;
-  line-height: 1.6;
+  line-height: 1.8;
   color: #2c3e4e;
   margin-bottom: 1rem;
   border: 1px solid #edf2f7;
   box-sizing: border-box;
+  text-align: justify;
 }
 
 #poetry-widget .poet-bio {
@@ -275,7 +276,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 }
 
 #history-today .history-header h3 { font-size: 1.55em; font-weight: 400; color: var(--text-highlight-color); margin: 0; line-height: 1.4; transition: all .2s ease-in-out; }
-#history-today .history-date { font-size: 0.7rem; color: var(--text-secondary, #8ba0bc); background: var(--bg-secondary, #f5f8fe); padding: 0.2rem 0.6rem; border-radius: 30px; line-height: 1; }
+#history-today .history-date { font-size: 0.7rem; color: var(--text-secondary, #8ba0bc); background: var(--bg-secondary, #f5f8fe); padding: 0.2rem 0.6rem; border-radius: 30px; line-height: 1; margin-right: 0.6rem; }
 
 #history-today .expand-control {
   display: inline-flex;
