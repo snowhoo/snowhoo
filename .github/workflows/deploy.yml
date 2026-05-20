@@ -31,9 +31,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Patch Font Awesome CDN to bootcdn (domestic CDN)
+      - name: Patch Font Awesome CDN to bootcdn + inject slogan
         run: |
           sed -i 's|cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css|cdn.bootcdn.net/ajax/libs/font-awesome/6.5.1/css/all.min.css|g' node_modules/hexo-theme-butterfly/layout/includes/head.pug
+          sed -i "/img.site-icon(src=url_for(theme.nav.logo) alt='Logo')/a\\      span.site-slogan 一九七九年，春天" node_modules/hexo-theme-butterfly/layout/includes/header/nav.pug
 
       - name: Generate static files
         run: npx hexo generate
