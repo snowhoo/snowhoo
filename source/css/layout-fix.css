@@ -307,7 +307,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 
 #history-today .event-year {
   font-weight: 600;
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-family: '楷体', '华文楷书', 'KaiTi', 'Georgia', serif;
   line-height: 1.4;
   color: #4f7aa6;
@@ -318,7 +318,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   margin-right: 0.6rem;
 }
 
-#history-today .event-title { font-size: 1.5rem; line-height: 1.4; color: #2c445e; display: inline; }
+#history-today .event-title { font-size: 0.9rem; line-height: 1.4; color: #2c445e; display: inline; }
 
 #history-today .status-message { color: #9ab0c9; font-size: 0.8rem; text-align: center; padding: 1rem; }
 
@@ -346,8 +346,8 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 
   #history-today { padding: 0.2rem 0; }
   #history-today .history-header h3 { font-size: 0.95rem; }
-  #history-today .event-year { font-size: 1.15rem; }
-  #history-today .event-title { font-size: 1.15rem; }
+  #history-today .event-year { font-size: 0.75rem; }
+  #history-today .event-title { font-size: 0.82rem; }
   #history-today .status-message { font-size: 0.75rem; }
   #history-today .expand-control { font-size: 0.68rem; }
 }
@@ -358,8 +358,8 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   #poetry-widget .detail-panel { font-size: 0.82rem; }
   #poetry-widget .full-poem { font-size: 0.9rem; }
 
-  #history-today .event-year { font-size: 1.3rem; }
-  #history-today .event-title { font-size: 1.3rem; }
+  #history-today .event-year { font-size: 0.78rem; }
+  #history-today .event-title { font-size: 0.85rem; }
 }
 
 /* 超大屏（>=2000px） */
@@ -370,8 +370,8 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   #poetry-widget .detail-panel { font-size: 0.9rem; }
   #history-today { padding: 0.2rem 4rem; }
   #history-today .history-header h3 { font-size: 1.25rem; }
-  #history-today .event-year { font-size: 1.7rem; }
-  #history-today .event-title { font-size: 1.7rem; }
+  #history-today .event-year { font-size: 0.9rem; }
+  #history-today .event-title { font-size: 1rem; }
   #news-shortcut-card .news-btn { font-size: 1rem; }
 }
 
