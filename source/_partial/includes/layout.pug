@@ -41,8 +41,6 @@ html(lang=config.language data-theme=theme.display_mode class=htmlClassHideAside
 
     #body-wrap(class=pageType)
       include ./header/index.pug
-      // 节日/节气横幅（在header下方，body自然流内，不会遮挡导航）
-      #solar-term-banner
 
       main#content-inner.layout(class=hideAside)
         if globalPageType === 'home'

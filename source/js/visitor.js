@@ -85,7 +85,7 @@
         var fp = f.date.split('-');
         var datePrefix = parseInt(fp[1],10) + '月' + parseInt(fp[2],10) + '日';
         banner.innerHTML =
-          '<div class="st-banner-inner" style="border-color:' + f.color + '20' + ';">' +
+          '<div class="st-banner-inner">' +
           '<span class="st-name" style="color:' + f.color + ';">今天是' + datePrefix + '，' + f.name + '</span>' +
           '<span class="st-desc" style="color:#555;">' + f.desc + '</span>' +
           '</div>';
