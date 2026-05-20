@@ -264,6 +264,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   display: flex; 
   align-items: center; 
   gap: 0.4rem; 
+  font-family: '楷体', '华文楷书', 'KaiTi', 'Georgia', serif;
 }
 #history-today .history-date { 
   font-size: 0.7rem; 
@@ -352,20 +353,20 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 
   #poetry-widget { padding: 0; }
   #poetry-widget .verse { font-size: 1.15rem; }
-  #poetry-widget .dynasty { font-size: 0.65rem; }
-  #poetry-widget .title { font-size: 0.65rem; }
-#poetry-widget .expand-control { font-size: 0.65rem; }
+  #poetry-widget .dynasty { font-size: 0.68rem; }
+  #poetry-widget .title { font-size: 0.68rem; }
+  #poetry-widget .expand-control { font-size: 0.68rem; }
   #poetry-widget .detail-panel { font-size: 0.8rem; }
   #poetry-widget .full-poem { padding: 0.75rem; font-size: 0.9rem; }/*诗词诗文*/
   #poetry-widget .poet-bio { font-size: 0.75rem; }
 
   #history-today { padding: 0.2rem 0; }
-  #history-today .history-header h3 { font-size: 0.95rem; }
+  #history-today .history-header h3 { font-size: 1.15rem; }
   #history-today .event-year { font-size: 0.75rem; }
   #history-today .event-title { font-size: 0.9rem; }
   #history-today .status-message { font-size: 0.75rem; }
   #history-today .expand-control { font-size: 0.68rem; }
-  #history-today .event-item { padding: 0.75rem; font-size: 0.9rem; }/*历史上的今天正文*/
+  #history-today .event-item { font-size: 0.9rem; }/*历史上的今天正文*/
 }
 
 /* 中屏（601px - 900px） */
