@@ -1009,8 +1009,7 @@ function render() {
     card.dataset.patched = '1';
     card.addEventListener('click', function(e) {
       e.stopPropagation(); // 阻止冒泡到 document 委托
-      var panel = document.getElementById(this.dataset.eid);
-      if (panel) panel.classList.toggle('open');
+      toggleEpisodes(this, this.dataset.eid);
     });
   });
 
@@ -1113,22 +1112,20 @@ function doPlay(url, name) {
   v.load();
   document.querySelector('.player-box').classList.add('playing');
 
-  if(url.indexOf('.m3u8')>=0){
-    if(Hls.isSupported()){
-      try{
-        var hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(v);
-        currentHls = hls;
-      }catch(e){
-        v.src = url;
-      }
-    } else if(v.canPlayType('application/vnd.apple.mpegurl')){
+  if(url.indexOf('.m3u8')>=0 && typeof Hls !== 'undefined' && Hls.isSupported()){
+    try{
+      var hls = new Hls();
+      hls.loadSource(url);
+      hls.attachMedia(v);
+      currentHls = hls;
+    }catch(e){
       v.src = url;
-    } else {
-      setStatus('\u274c \u6d4f\u89c8\u5668\u4e0d\u652f\u6301 m3u8\u64ad\u653e');
-      return;
     }
+  } else if(url.indexOf('.m3u8')>=0 && v.canPlayType('application/vnd.apple.mpegurl')){
+    v.src = url;
+  } else if(url.indexOf('.m3u8')>=0){
+    // Hls 未加载或不支持，直接设 src 让浏览器尝试
+    v.src = url;
   } else {
     v.src = url;
   }
