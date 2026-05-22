@@ -136,19 +136,14 @@
             dataScripts.push(basePath + match[1].replace(/^\.\//, ''));
           }
 
-          // 3. 提取模板的内联 JS（最后一个 script 块，渲染逻辑）
-          var inlineScriptMatch = bodyContent.match(/<script(?![^>]*src)[^>]*>([\s\S]*?)<\/script>/i);
-          var inlineScriptContent = inlineScriptMatch ? inlineScriptMatch[1] : '';
-
-          // 4. 生成纯净 HTML：移除 data 脚本 + 内联 JS
+          // 3. 生成纯净 HTML：只移除 data 脚本，保留模板的内联 JS（innerHTML 会执行它）
           var bodyHtml = bodyContent
-            .replace(/<!-- DATA_FILES_START -->[\s\S]*?<!-- DATA_FILES_END -->/g, '')
-            .replace(/<script(?![^>]*src)[^>]*>[\s\S]*?<\/script>/gi, '');
+            .replace(/<!-- DATA_FILES_START -->[\s\S]*?<!-- DATA_FILES_END -->/g, '');
 
           bodyHtml = fixRelativePaths(bodyHtml, basePath);
           bodyHtml = bodyHtml.replace(/__CID__/g, id);
 
-          // 5. 加载数据脚本
+          // 4. 加载数据脚本
           return Promise.all(dataScripts.map(function(src) {
             return fetch(src).then(function(r) { return r.text(); });
           })).then(function(texts) {
@@ -163,19 +158,12 @@
               .reverse()
               .map(function(k) { return window[k]; });
 
-            return { bodyHtml: bodyHtml, inlineScript: inlineScriptContent };
+            return bodyHtml;
           });
         })
-        .then(function(result) {
-          // 6. 注入 HTML（不含 JS）
-          content.innerHTML = result.bodyHtml;
-
-          // 7. 执行模板 JS：innerHTML 不会执行脚本，必须新建 script 元素
-          if (result.inlineScript) {
-            var scriptEl = document.createElement('script');
-            scriptEl.textContent = result.inlineScript;
-            content.appendChild(scriptEl);
-          }
+        .then(function(bodyHtml) {
+          // 5. 注入 HTML（内联 script 会被 innerHTML 执行）
+          content.innerHTML = bodyHtml;
 
           content.dataset.loaded = 'true';
         })

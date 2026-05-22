@@ -465,9 +465,6 @@ layout: false
       });
     }
 
-    // 暴露到 window，供 sevencolor.js 调用
-    window.__scRenderPage = __scRenderPage;
-
     function __scToggleContent(el, index) {
       var content = document.getElementById('__CID__-full-content-' + index);
       if (!content) return;
@@ -475,6 +472,9 @@ layout: false
       el.querySelector('span').textContent = isShow ? '收起' : '展开';
       el.classList.toggle('__CID__-expanded');
     }
+
+    // 注入后自动渲染第一页
+    __scRenderPage(1);
   </script>
 </body>
 </html>
