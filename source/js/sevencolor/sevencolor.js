@@ -96,10 +96,7 @@
       content.innerHTML = '<div class="sc-loading">加载中...</div>';
 
       fetch(htmlUrl)
-        .then(function(r) {
-          console.log('[SevenColor] fetch ok, status:', r.status);
-          return r.text();
-        })
+        .then(function(r) { return r.text(); })
         .then(function(html) {
           // 去掉模板 HTML 的外层框架标签，只保留 body 内容
           html = html.replace(/<!DOCTYPE[^>]*>\s*/gi, '');
@@ -138,7 +135,6 @@
           while ((match = scriptRegex.exec(bodyContent)) !== null) {
             dataScripts.push(basePath + match[1].replace(/^\.\//, ''));
           }
-          console.log('[SevenColor] dataScripts found:', dataScripts.length, dataScripts);
 
           // 3. 提取 body 内容（只移除 data 脚本部分，保留模板 JS）
           // 移除 <!-- DATA_FILES_START --> ... <!-- DATA_FILES_END --> 之间的 data 脚本
@@ -146,6 +142,10 @@
           bodyHtml = fixRelativePaths(bodyHtml, basePath);
           // 替换内容 ID 占位符
           bodyHtml = bodyHtml.replace(/__CID__/g, id);
+
+          // 在模板 JS 末尾注入一行：自动调用渲染（直接在模板 JS 块内追加，不依赖 laterScript）
+          var renderCall = '\nwindow.__scRenderPage && window.__scRenderPage(1);\n';
+          bodyHtml = bodyHtml.replace(/<\/script>\s*$/, renderCall + '</script>');
 
           // 4. 加载数据脚本（从原始 html 字符串中提取）
           return Promise.all(dataScripts.map(function(src) {
@@ -171,18 +171,8 @@
           // 5. 注入模板 HTML（包含模板的 JS）
           content.innerHTML = bodyHtml;
 
-          // 6. 触发渲染：调用模板里定义的 window.__scRenderPage
-          console.log('[SevenColor] articles count:', (window.__scArticles || []).length);
-          var laterScript = document.createElement('script');
-          laterScript.textContent = '(function(){'
-            + 'console.log("[SevenColor] laterScript running, __scRenderPage:", typeof window.__scRenderPage);'
-            + 'if (window.__scRenderPage) {'
-            + 'window.__scRenderPage(1);'
-            + '} else {'
-            + 'console.error("__scRenderPage not found");'
-            + '}'
-            + '})();';
-          content.appendChild(laterScript);
+          // 5. 注入模板 HTML（包含模板的 JS，JS 末尾自带渲染调用）
+          content.innerHTML = bodyHtml;
 
           content.dataset.loaded = 'true';
         })
