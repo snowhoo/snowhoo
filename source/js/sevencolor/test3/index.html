@@ -1218,29 +1218,21 @@ document.addEventListener('click', function(e) {
 loadIndex();
 
 /* ===== 直接点击补丁：绕过事件委托问题 ===== */
-var patchRun = 0;
 function patchVideoCards() {
-  patchRun++;
-  var cards = document.querySelectorAll('.video-card');
-  var panels = document.querySelectorAll('.ep-panel');
-  console.log('[PATCH ' + patchRun + '] cards:', cards.length, 'panels:', panels.length);
+  var cards = document.querySelectorAll('.video-card:not([data-patched])');
   if (cards.length === 0) return;
   cards.forEach(function(card) {
-    if (card.dataset.patched) return;
     card.dataset.patched = '1';
     card.addEventListener('click', function(e) {
-      console.log('[PATCH] video-card clicked, eid:', this.dataset.eid);
+      console.log('[DIRECT] video-card clicked, eid:', this.dataset.eid);
       var panel = document.getElementById(this.dataset.eid);
-      console.log('[PATCH] panel:', panel);
       if (panel) {
         panel.classList.toggle('open');
-        console.log('[PATCH] open toggled, now:', panel.classList.contains('open'));
+        console.log('[DIRECT] panel open:', panel.classList.contains('open'));
       }
     });
   });
-  patched = true;
-  console.log('[PATCH ' + patchRun + '] done, patched', cards.length, 'cards');
+  console.log('[PATCH] bound', cards.length, 'new cards');
 }
-// 持续监听新卡片（每 2 秒检查一次，跳过已有 dataset.patched 的）
-setInterval(patchVideoCards, 2000);
+// 渲染完成后已直接绑定，不再需要轮询
 </script></div></body></html>
