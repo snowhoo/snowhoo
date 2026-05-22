@@ -195,6 +195,11 @@
               .reverse()
               .map(function(k) { return window[k]; });
 
+            console.log('[SevenColor] articles count:', window.__scArticles.length, 'prefix:', prefix);
+            if (window.__scArticles.length > 0) {
+              console.log('[SevenColor] first article coverSrc:', window.__scArticles[0].coverSrc);
+            }
+
             return { bodyHtml: bodyHtml, inlineScriptContent: inlineScriptContent };
           });
         })
