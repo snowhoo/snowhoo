@@ -1160,6 +1160,7 @@ document.addEventListener('change', function(e) {
   if (target.classList.contains('cat-filter')) { filterCat(target); return; }
 });
 document.addEventListener('click', function(e) {
+  console.log('[DEBUG] click captured:', e.target);
   var target = e.target;
   var closest = target.closest('button');
   if (!closest || closest.disabled) return;
