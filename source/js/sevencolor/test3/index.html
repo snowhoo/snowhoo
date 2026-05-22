@@ -1012,13 +1012,10 @@ function render() {
     if (card.dataset.patched) return;
     card.dataset.patched = '1';
     card.addEventListener('click', function(e) {
-      console.log('[DIRECT] video-card clicked, eid:', this.dataset.eid);
+      console.log('[DIRECT] fired, setting _sevencolorHandled');
+      e._sevencolorHandled = true;
       var panel = document.getElementById(this.dataset.eid);
-      console.log('[DIRECT] panel:', panel);
-      if (panel) {
-        panel.classList.toggle('open');
-        console.log('[DIRECT] toggled, now open:', panel.classList.contains('open'));
-      }
+      if (panel) panel.classList.toggle('open');
     });
   });
 
@@ -1190,6 +1187,7 @@ document.addEventListener('change', function(e) {
   if (target.classList.contains('cat-filter')) { filterCat(target); return; }
 });
 document.addEventListener('click', function(e) {
+  console.log('[DEBUG] _sevencolorHandled=', e._sevencolorHandled);
   if (e._sevencolorHandled) return; // direct listener 已处理，跳过
   console.log('[DEBUG] click captured:', e.target);
   var target = e.target;
@@ -1218,18 +1216,6 @@ document.addEventListener('click', function(e) {
 
 loadIndex();
 
-/* ===== 直接点击补丁：绕过事件委托问题 ===== */
-function patchVideoCards() {
-  var cards = document.querySelectorAll('.video-card:not([data-patched])');
-  if (cards.length === 0) return;
-  cards.forEach(function(card) {
-    card.dataset.patched = '1';
-    card.addEventListener('click', function(e) {
-      e._sevencolorHandled = true;
-      var panel = document.getElementById(this.dataset.eid);
-      if (panel) panel.classList.toggle('open');
-    });
-  });
-}
+/* ===== 直接点击补丁：已合并到渲染流程（见 renderGrid 末尾） ===== */
 // 渲染完成后已直接绑定，不再需要轮询
 </script></div></body></html>
