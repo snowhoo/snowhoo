@@ -1163,16 +1163,22 @@ document.addEventListener('click', function(e) {
   console.log('[DEBUG] click captured:', e.target);
   var target = e.target;
   var closest = target.closest('button');
-  if (!closest || closest.disabled) return;
+  if (closest && closest.disabled) return;
+  if (!closest) {
+    var card = target.closest('.video-card');
+    console.log('[DEBUG] no button, card:', card, 'eid:', card && card.dataset.eid);
+    if (card) { toggleEpisodes(card, card.dataset.eid); return; }
+    return;
+  }
   if (closest.id === 'searchBtn') { doSearch(); return; }
   if (closest.id === 'stopSearchBtn') { stopSearch(); return; }
   if (closest.id === 'nextEpBtn') { playNext(); return; }
   if (closest.classList.contains('pg-go')) { go(parseInt(closest.dataset.page)); return; }
   if (closest.classList.contains('pg-page')) { goPage(parseInt(closest.dataset.page)); return; }
-  var card = target.closest('.video-card');
-  if (card) { toggleEpisodes(card, card.dataset.eid); return; }
   if (closest.classList.contains('ep-close')) { e.stopPropagation(); closeEp(closest.dataset.eid); return; }
   if (closest.classList.contains('ep-item')) { e.stopPropagation(); playEp(closest); return; }
+  var card = target.closest('.video-card');
+  if (card) { toggleEpisodes(card, card.dataset.eid); return; }
 });
 
 loadIndex();
