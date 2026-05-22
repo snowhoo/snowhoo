@@ -598,7 +598,8 @@ function loadIndex() {
         playable_videos: item.playable_videos || 0,
         playable: item.playable,
         total_episodes: item.total_episodes,
-        categories: item.categories || {}
+        categories: item.categories || {},
+        fileBase: item.file.replace(/\.js$/, '').replace(/-\d+$/, '')
       };
     });
     document.getElementById('tvboxFooter').innerHTML =
@@ -637,7 +638,8 @@ function switchSource() {
 }
 
 function loadPageFile(prefix, pageNum) {
-  var fname = prefix + '-' + String(pageNum).padStart(2, '0') + '.js';
+  var baseFile = (sourceMeta[prefix] && sourceMeta[prefix].fileBase) ? sourceMeta[prefix].fileBase : prefix;
+  var fname = baseFile + '-' + String(pageNum).padStart(2, '0') + '.js';
 
   if (loadedSources[fname]) {
     useSourceData(loadedSources[fname], fname, pageNum);
