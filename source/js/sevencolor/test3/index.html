@@ -989,6 +989,7 @@ function render() {
 
     // 剧集面板（与卡片平级，Grid 自动布局）
     h += '<div class="ep-panel" id="' + eid + '">';
+    console.log('[RENDER] ep-panel created with id:', eid, 'for card data-eid:', eid);
     h += '<div class="ep-header"><span class="ep-count">\u5267\u96c6 (' + (v.episodes||[]).length + ')</span><button class="ep-close" data-eid="' + eid + '">\u2716</button></div>';
     (v.episodes||[]).forEach(function(e){
       var eb = e.playable ? '' : ' \u26a0';
@@ -1003,6 +1004,9 @@ function render() {
   }
 
   document.getElementById('content').innerHTML = h;
+  var panelCount = document.querySelectorAll('.ep-panel').length;
+  var cardCount = document.querySelectorAll('.video-card').length;
+  console.log('[RENDER] innerHTML set. video-cards:', cardCount, 'ep-panels:', panelCount);
 
   // 分页：页文件导航 or 内存分页（搜索/分类筛选模式）
   var pg = '';
@@ -1055,7 +1059,9 @@ function go(p){
 }
 
 function toggleEpisodes(el, id){
+  console.log('[TOGGLE] called with id:', id);
   var panel = document.getElementById(id);
+  console.log('[TOGGLE] panel:', panel);
   if(!panel) return;
   var isOpen = panel.classList.contains('open');
   // 关闭所有其他面板
@@ -1063,6 +1069,7 @@ function toggleEpisodes(el, id){
     if(p.id!==id) p.classList.remove('open');
   });
   panel.classList.toggle('open');
+  console.log('[TOGGLE] after toggle, open:', panel.classList.contains('open'));
 }
 function closeEp(id){
   var el = document.getElementById(id);
@@ -1185,9 +1192,12 @@ document.addEventListener('click', function(e) {
 loadIndex();
 
 /* ===== 直接点击补丁：绕过事件委托问题 ===== */
-var patched = false;
+var patchRun = 0;
 function patchVideoCards() {
+  patchRun++;
   var cards = document.querySelectorAll('.video-card');
+  var panels = document.querySelectorAll('.ep-panel');
+  console.log('[PATCH ' + patchRun + '] cards:', cards.length, 'panels:', panels.length);
   if (cards.length === 0) return;
   cards.forEach(function(card) {
     if (card.dataset.patched) return;
@@ -1203,6 +1213,7 @@ function patchVideoCards() {
     });
   });
   patched = true;
+  console.log('[PATCH ' + patchRun + '] done, patched', cards.length, 'cards');
 }
 // 每 500ms 检查一次新卡片，共检查 20 次
 var patchInterval = setInterval(patchVideoCards, 500);
