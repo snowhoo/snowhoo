@@ -123,7 +123,8 @@
     btn.classList.add('sc-open');
     content.classList.add('sc-open');
 
-    content.innerHTML = '<div class="sc-loading">加载中...</div>';
+    if (!content.dataset.loaded) {
+      content.innerHTML = '<div class="sc-loading">加载中...</div>';
 
       fetch(htmlUrl)
         .then(function(r) { return r.text(); })
