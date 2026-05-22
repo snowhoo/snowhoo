@@ -8,6 +8,21 @@
   var openedId = null;
   var injectedStyles = {}; // 记录每个 id 已注入的 style，避免重复
 
+  function ensureContentContainers() {
+    var container = document.getElementById('seven-color-card');
+    if (!container) return;
+    // 清空所有旧的 content 容器
+    var oldContents = container.querySelectorAll('.sc-content');
+    oldContents.forEach(function(el) { el.remove(); });
+    // 根据 config 动态创建新的 content 容器
+    config.forEach(function(item) {
+      var div = document.createElement('div');
+      div.id = 'sc-content-' + item.id;
+      div.className = 'sc-content';
+      container.appendChild(div);
+    });
+  }
+
   function renderButtons() {
     var container = document.getElementById('seven-color-card');
     if (!container) return;
@@ -23,6 +38,8 @@
       btn.addEventListener('click', handleBtnClick);
       row.appendChild(btn);
     });
+    // 按钮渲染完成后，确保 content 容器存在
+    ensureContentContainers();
   }
 
   function handleBtnClick(e) {
