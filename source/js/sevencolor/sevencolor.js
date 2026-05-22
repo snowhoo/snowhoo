@@ -98,40 +98,52 @@
       fetch(htmlUrl)
         .then(function(r) { return r.text(); })
         .then(function(html) {
-          var parser = new DOMParser();
-          var doc = parser.parseFromString(html, 'text/html');
+          // 去掉模板 HTML 的外层框架标签，只保留 body 内容
+          html = html.replace(/<!DOCTYPE[^>]*>\s*/gi, '');
+          html = html.replace(/<html[^>]*>/gi, '');
+          html = html.replace(/<\/html>\s*/gi, '');
+          html = html.replace(/<head[^>]*>[\s\S]*?<\/head>\s*/gi, '');
+          html = html.replace(/<body/gi, '<div');
+          html = html.replace(/<\/body>/gi, '</div>');
 
-          // 1. 注入 CSS（每个 id 只注入一次）
+          // 此时 html 就是一个 <div>...</div> 结构，body 就是它的外层容器
+          // 提取其中内容（即 body > div.app 那个层级的 div）
+          var bodyContent = html.replace(/^<div[^>]*>/, '').replace(/<\/div>\s*$/, '');
+
+          // 1. 注入 CSS（每个 id 只注入一次）- 用正则提取
           if (!injectedStyles[id]) {
-            var styles = doc.querySelectorAll('style');
-            styles.forEach(function(s) {
-              var newStyle = document.createElement('style');
-              newStyle.textContent = s.textContent;
-              newStyle.dataset.scId = id;
-              document.head.appendChild(newStyle);
-            });
+            var styleMatches = bodyContent.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+            if (styleMatches) {
+              styleMatches.forEach(function(styleTag) {
+                var contentMatch = styleTag.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+                if (contentMatch) {
+                  var newStyle = document.createElement('style');
+                  newStyle.textContent = contentMatch[1];
+                  newStyle.dataset.scId = id;
+                  document.head.appendChild(newStyle);
+                }
+              });
+            }
             injectedStyles[id] = true;
           }
 
-          // 2. 提取 data 脚本列表
+          // 2. 提取 data 脚本列表（从原始 html 字符串中提取）
           var basePath = htmlUrl.replace(/\/[^/]*$/, '/');
           var dataScripts = [];
-          doc.querySelectorAll('script').forEach(function(s) {
-            var src = s.getAttribute('src');
-            if (src && src.indexOf('data/') !== -1) {
-              dataScripts.push(basePath + src.replace(/^\.\//, ''));
-            }
-          });
+          var scriptRegex = /<script[^>]+src=["']([^"']*data\/[^"']+\.js)["'][^>]*>/gi;
+          var match;
+          while ((match = scriptRegex.exec(bodyContent)) !== null) {
+            dataScripts.push(basePath + match[1].replace(/^\.\//, ''));
+          }
 
           // 3. 提取 body 内容（只移除 data 脚本部分，保留模板 JS）
-          var bodyHtml = doc.body.innerHTML;
           // 移除 <!-- DATA_FILES_START --> ... <!-- DATA_FILES_END --> 之间的 data 脚本
-          bodyHtml = bodyHtml.replace(/<!-- DATA_FILES_START -->[\s\S]*?<!-- DATA_FILES_END -->/g, '');
+          var bodyHtml = bodyContent.replace(/<!-- DATA_FILES_START -->[\s\S]*?<!-- DATA_FILES_END -->/g, '');
           bodyHtml = fixRelativePaths(bodyHtml, basePath);
           // 替换内容 ID 占位符
           bodyHtml = bodyHtml.replace(/__CID__/g, id);
 
-          // 4. 加载数据脚本
+          // 4. 加载数据脚本（从原始 html 字符串中提取）
           return Promise.all(dataScripts.map(function(src) {
             return fetch(src).then(function(r) { return r.text(); });
           })).then(function(texts) {
