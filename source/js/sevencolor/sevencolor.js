@@ -96,7 +96,7 @@
           var dataScripts = [];
           doc.querySelectorAll('script').forEach(function(s) {
             var src = s.getAttribute('src');
-            if (src && src.indexOf('/data/') !== -1) {
+            if (src && src.indexOf('data/') !== -1) {
               dataScripts.push(basePath + src.replace(/^\.\//, ''));
             }
           });
