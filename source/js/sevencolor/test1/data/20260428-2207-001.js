@@ -5,7 +5,7 @@ window.__yedu_20260428_2207_001 = {
   "url": "https://www.peopleapp.com/column/30052018910-500007467506",
   "pubDate": "2026-04-28 22:07",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260428/vod/content/output/5027b752c936421dbaccb4b2d8365724_opt.mp3",
-  "coverSrc": "images/20260428-2207-001.png",
+  "coverSrc": "./images/20260428-2207-001.png",
   "summary": "夜读 | 人生建议：靠近那些让你情绪稳定的人和事。你是否也有过这种完全沉浸其中的体验：可能是侍弄花草的专注，可能是临帖时的一笔一画，可能是跑步时有节奏的一呼一吸。当你沉浸其中，时间的流速仿佛改变了，外界的喧嚣被暂时屏蔽...",
   "paragraphs": [
     "夜读 | 人生建议：靠近那些让你情绪稳定的人和事",

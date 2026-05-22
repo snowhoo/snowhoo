@@ -5,7 +5,7 @@ window.__yedu_20260510_2151_001 = {
   "url": "https://www.peopleapp.com/column/30052100274-500007485484",
   "pubDate": "2026-05-10 21:51",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260510/vod/content/output/21b682f03af44cb9a893a836f5de2d45_opt.mp3",
-  "coverSrc": "images/20260510-2151-001.png",
+  "coverSrc": "./images/20260510-2151-001.png",
   "summary": "夜读 | 迷茫焦虑的时候，可能是珍贵的探索期、试错期。生活中，很少有人能一直走在笔直清晰的道路上，更多时候，我们会走走停停、兜兜转转，才最终看清自己真正想要什么。迷茫期就像一段没有路灯的小路，看不清远处的风景，却能让你停下匆忙的脚步，认真听听内心的声音...",
   "paragraphs": [
     "夜读 | 迷茫焦虑的时候，可能是珍贵的探索期、试错期",

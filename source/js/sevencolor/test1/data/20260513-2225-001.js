@@ -5,7 +5,7 @@ window.__yedu_20260513_2225_001 = {
   "url": "https://www.peopleapp.com/column/30052126678-500007491037",
   "pubDate": "2026-05-13 22:25",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260513/vod/content/output/12950a2b5c704eb2bc83129730890b8b_opt.mp3",
-  "coverSrc": "images/20260513-2225-001.png",
+  "coverSrc": "./images/20260513-2225-001.png",
   "summary": "夜读 | 夏天最有仪式感的10件小事，做过5件就很幸福。把摇曳的树影、绵软的云朵、满天的霞光都收藏进相册里，留住那些打动你的小美好。冰镇西瓜咬上一大口，清甜解暑；桃子、李子酸甜爽口...",
   "paragraphs": [
     "夜读 | 夏天最有仪式感的10件小事，做过5件就很幸福",

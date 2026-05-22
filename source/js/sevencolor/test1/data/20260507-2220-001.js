@@ -5,7 +5,7 @@ window.__yedu_20260507_2220_001 = {
   "url": "https://www.peopleapp.com/column/30052079718-500007480890",
   "pubDate": "2026-05-07 22:20",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260507/vod/content/output/74cda3a3adf24328bca3f08dfc2e1fa0_opt.mp3",
-  "coverSrc": "images/20260507-2220-001.png",
+  "coverSrc": "./images/20260507-2220-001.png",
   "summary": "生活中，容易内耗的人总习惯性“懂事”退让、一味迁就，却常常忽略：自己的感受同样值得被珍视。一味压抑情绪、勉强迁就、不懂拒绝，看似成全了别人，实则不断透支自己，陷入内耗。难过就坦然倾诉，疲惫就安心歇息，不合理的事就勇敢拒绝...",
   "paragraphs": [
     "生活中，容易内耗的人总习惯性“懂事”退让、一味迁就，却常常忽略：自己的感受同样值得被珍视。",

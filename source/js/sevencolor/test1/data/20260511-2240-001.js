@@ -5,7 +5,7 @@ window.__yedu_20260511_2240_001 = {
   "url": "https://www.peopleapp.com/column/30052108706-500007486991",
   "pubDate": "2026-05-11 22:40",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260511/vod/content/output/89cca4acc0544275b8341f8280b9ea9b_opt.mp3",
-  "coverSrc": "images/20260511-2240-001.png",
+  "coverSrc": "./images/20260511-2240-001.png",
   "summary": "夜读 | 孩子最渴望父母说的5句话，你有说过吗。很多父母觉得，爱都藏在行动里，不必总挂在嘴边。可孩子在年幼的时候，往往还没有能力透过沉默的付出准确解读出爱，他们需要清清楚楚地听见...",
   "paragraphs": [
     "夜读 | 孩子最渴望父母说的5句话，你有说过吗？",

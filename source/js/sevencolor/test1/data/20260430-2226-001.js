@@ -5,7 +5,7 @@ window.__yedu_20260430_2226_001 = {
   "url": "https://www.peopleapp.com/column/30052037846-500007471662",
   "pubDate": "2026-04-30 22:26",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260430/vod/content/output/d5543ea493064b989a57b5c51a62c2ab_opt.mp3",
-  "coverSrc": "images/20260430-2226-001.png",
+  "coverSrc": "./images/20260430-2226-001.png",
   "summary": "夜读 | 让你“五一”假期出行更愉悦的15件小事，赶紧收藏。明天就是“五一”假期了，你是否有旅行的安排呢。我们奔赴山海，不只为了抵达，更为了在抵达的过程中，遇见那个更放松、更快乐的自己...",
   "paragraphs": [
     "夜读 | 让你“五一”假期出行更愉悦的15件小事，赶紧收藏！",

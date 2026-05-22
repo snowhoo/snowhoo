@@ -5,7 +5,7 @@ window.__yedu_20260517_2235_001 = {
   "url": "https://www.peopleapp.com/column/30052156400-500007497324",
   "pubDate": "2026-05-17 22:35",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260517/vod/content/output/4f8479f8828045369aacaf1554f4acac_opt.mp3",
-  "coverSrc": "images/20260517-2235-001.png",
+  "coverSrc": "./images/20260517-2235-001.png",
   "summary": "夜读｜让自己变幸福的5条生活法则（建议收藏）。生活中，有些人沉迷于“找方法”，想要做一件事之前一定要有一个最好的方法和完美无缺的方案。行动之前先找方法，看好了方向再开始行动，这是对的...",
   "paragraphs": [
     "夜读｜让自己变幸福的5条生活法则（建议收藏）",

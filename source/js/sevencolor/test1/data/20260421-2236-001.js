@@ -5,7 +5,7 @@ window.__yedu_20260421_2236_001 = {
   "url": "https://www.peopleapp.com/column/30051958753-500007455061",
   "pubDate": "2026-04-21 22:36",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260421/vod/content/output/480cee08dc0849f58c39aa53e2725c17_opt.mp3",
-  "coverSrc": "images/20260421-2236-001.png",
+  "coverSrc": "./images/20260421-2236-001.png",
   "summary": "夜读 | 一个家庭最消耗孩子的，竟是这些不起眼的小事。曾在餐馆遇到一位家长不停地训斥孩子：“你看你吃没吃相、坐没坐相，丢人。”“我以后再也不带你来了”……明明是轻松的用餐时间，家长却忍不住一直盯着孩子，在各种小事上与孩子较劲，责备孩子...",
   "paragraphs": [
     "夜读 | 一个家庭最消耗孩子的，竟是这些不起眼的小事",

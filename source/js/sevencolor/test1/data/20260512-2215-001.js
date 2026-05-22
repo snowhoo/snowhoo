@@ -5,7 +5,7 @@ window.__yedu_20260512_2215_001 = {
   "url": "https://www.peopleapp.com/column/30052117080-500007488842",
   "pubDate": "2026-05-12 22:15",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260512/vod/content/output/7e03ea44ddde4b9da0cad76ddc0a97c0_opt.mp3",
-  "coverSrc": "images/20260512-2215-001.png",
+  "coverSrc": "./images/20260512-2215-001.png",
   "summary": "夜读 | 为什么人一旦读书多了，性格就变了。在安安静静读一本好书的过程中，你也能安顿好内心，褪去浮躁之气。短视频十五秒就要抓住眼球，而一本书可能需要十五小时才能读完...",
   "paragraphs": [
     "夜读 | 为什么人一旦读书多了，性格就变了",

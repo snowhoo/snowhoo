@@ -5,7 +5,7 @@ window.__yedu_20260426_2328_001 = {
   "url": "https://www.peopleapp.com/column/30051998329-500007463512",
   "pubDate": "2026-04-26 23:28",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260426/vod/content/output/308480e84ad8409c9273ee2afcdc0d3e_opt.mp3",
-  "coverSrc": "images/20260426-2328-001.jpg",
+  "coverSrc": "./images/20260426-2328-001.jpg",
   "summary": "养育孩子不需要追求完美，也不必陷入过度焦虑，那些藏在日常里的陪伴与用心，便是孩子成长路上最坚实的底气。今晚的夜读，分享养娃“回报率”超高的30件小事。这些小事里藏着对孩子最温柔的期许，也藏着陪伴成长的美好力量...",
   "paragraphs": [
     "养育孩子不需要追求完美，也不必陷入过度焦虑，那些藏在日常里的陪伴与用心，便是孩子成长路上最坚实的底气。",

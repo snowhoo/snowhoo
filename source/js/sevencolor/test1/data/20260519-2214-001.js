@@ -5,7 +5,7 @@ window.__yedu_20260519_2214_001 = {
   "url": "https://www.peopleapp.com/column/30052175956-500007501093",
   "pubDate": "2026-05-19 22:14",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260519/vod/content/output/616974f58cb944fc9e656e61e5b3efd5_opt.mp3",
-  "coverSrc": "images/20260519-2214-001.png",
+  "coverSrc": "./images/20260519-2214-001.png",
   "summary": "夜读｜“人在完全的专注里，能得到真正的休息”。看过这样一句话：“人在完全的专注里，能得到真正的休息。其实，有时候，最佳的休息方式并不是睡觉，而是去专注地做一件事...",
   "paragraphs": [
     "夜读｜“人在完全的专注里，能得到真正的休息”",
