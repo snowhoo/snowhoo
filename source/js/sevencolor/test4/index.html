@@ -1,4 +1,515 @@
 ---
 layout: false
 ---
-嵌入式页面正在开发中……
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>随机艺术画境</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 简洁嵌入式容器 — 完美融入 Hexo 明暗主题 */
+        .picsum-embedded {
+            /* 不依赖外部边距，独立适应父容器 */
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            border-radius: 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        /* 画卡容器 — 优雅留白 + 毛玻璃质感主题变量 */
+        .art-card {
+            background: var(--card-bg, rgba(255, 255, 255, 0.85));
+            backdrop-filter: blur(0px);
+            border-radius: 2rem;
+            padding: 1.2rem;
+            box-shadow: 0 12px 28px var(--shadow-color, rgba(0, 0, 0, 0.08));
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+
+        /* 图片展区 — 自适应比例 + 优雅圆角 */
+        .image-stage {
+            position: relative;
+            width: 100%;
+            background: var(--placeholder-bg, #f0f2f5);
+            border-radius: 1.2rem;
+            overflow: hidden;
+            /* 智能占位比，不强制裁切，由图片自然填充 */
+            min-height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 高清图片对象 — 完全响应，保留原始比例，最大宽度100%，高度自动继承宽高比 */
+        .dynamic-img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 1rem;
+            transition: opacity 0.25s ease-in-out;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            /* 优雅加载状态 */
+            opacity: 0;
+        }
+
+        .dynamic-img.loaded {
+            opacity: 1;
+        }
+
+        /* 轻量加载占位符 — 无侵入感 */
+        .img-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--placeholder-bg, #eef2f6);
+            color: var(--text-secondary, #6c757d);
+            font-size: 0.9rem;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            border-radius: 1.2rem;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        /* 按钮风格 — 温柔且适应深色/浅色 */
+        .btn-lucky {
+            display: block;
+            width: fit-content;
+            margin: 1.8rem auto 0.5rem auto;
+            padding: 0.8rem 2.2rem;
+            font-size: 1rem;
+            font-weight: 500;
+            font-family: inherit;
+            background: var(--btn-bg, #ffffff);
+            color: var(--btn-text, #1f2937);
+            border: 1px solid var(--btn-border, #e2e8f0);
+            border-radius: 3rem;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            letter-spacing: 0.3px;
+        }
+
+        .btn-lucky:hover {
+            background: var(--btn-hover-bg, #f8fafc);
+            border-color: var(--btn-hover-border, #cbd5e1);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--shadow-color, rgba(0, 0, 0, 0.08));
+        }
+
+        .btn-lucky:active {
+            transform: translateY(1px);
+            transition: 0.05s;
+        }
+
+        /* 极简署名 — 低调但尊重来源 */
+        .credit {
+            text-align: center;
+            font-size: 0.7rem;
+            margin-top: 0.8rem;
+            color: var(--text-muted, #94a3b8);
+            font-family: system-ui, sans-serif;
+            opacity: 0.75;
+        }
+
+        /* ----- 明亮模式变量 (默认 / 浅色主题) ----- */
+        :root {
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --placeholder-bg: #f1f5f9;
+            --btn-bg: #ffffff;
+            --btn-text: #1e293b;
+            --btn-border: #e2e8f0;
+            --btn-hover-bg: #f9fafb;
+            --btn-hover-border: #cbd5e1;
+            --shadow-color: rgba(0, 0, 0, 0.06);
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+        }
+
+        /* ----- 黑暗模式 (跟随 Hexo 主题 / 系统偏好) ----- */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --card-bg: rgba(18, 25, 35, 0.88);
+                --placeholder-bg: #1e293b;
+                --btn-bg: #1f2a3e;
+                --btn-text: #e2e8f0;
+                --btn-border: #334155;
+                --btn-hover-bg: #2d3a4e;
+                --btn-hover-border: #4b5568;
+                --shadow-color: rgba(0, 0, 0, 0.35);
+                --text-secondary: #cbd5e1;
+                --text-muted: #5b6e8c;
+            }
+            .art-card {
+                backdrop-filter: blur(2px);
+            }
+        }
+
+        /* 当没有prefers-color-scheme时但Hexo暗色主题可能手动切换？我们靠系统自动适配，完美跟随hexo风格 */
+        /* 确保图片容器适应所有屏幕宽度，且无溢出 */
+        @media (max-width: 640px) {
+            .art-card {
+                padding: 0.9rem;
+                border-radius: 1.5rem;
+            }
+            .btn-lucky {
+                padding: 0.65rem 1.8rem;
+                font-size: 0.9rem;
+                margin-top: 1.3rem;
+            }
+            .image-stage {
+                min-height: 220px;
+            }
+        }
+
+        /* 大型宽屏体验 */
+        @media (min-width: 1600px) {
+            .picsum-embedded {
+                max-width: 1600px;
+            }
+        }
+
+        /* 辅助隐藏占位符 */
+        .hidden-placeholder {
+            opacity: 0;
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body style="background: transparent; margin: 0; padding: 0;">
+    <!-- 嵌入式组件，完全适配 Hexo 明暗主题，无额外背景侵入 -->
+    <div class="picsum-embedded">
+        <div class="art-card">
+            <div class="image-stage" id="imageStage">
+                <!-- 高清动态图片 -->
+                <img id="artImage" class="dynamic-img" alt="Random artwork from Picsum" 
+                     src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f2f5'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23818c98' font-size='12'%3Eloading...%3C/text%3E%3C/svg%3E">
+                <!-- 轻量占位符 (纯视觉辅助) -->
+                <div class="img-placeholder" id="imgPlaceholder">
+                    <span>✨ 随机艺术加载中</span>
+                </div>
+            </div>
+            <button class="btn-lucky" id="refreshBtn">🎲 重新试一试手气</button>
+            <div class="credit">
+                🌄 图片源于 Lorem Picsum · 每次邂逅皆不同
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function(){
+            // ------------------------------
+            //  高清自适应模块 — 根据视口宽高 + 视网膜屏优化
+            //  每次请求符合当下页面宽/高，保证画质与尺寸黄金匹配
+            // ------------------------------
+            
+            // 配置常量：限制最大尺寸（兼顾性能与高清显示，避免过载）
+            const MAX_WIDTH = 2800;     // 4K以内足够清晰
+            const MAX_HEIGHT = 1800;    // 合理上限，picsum 完美支持
+            
+            // DOM 元素
+            const imgElement = document.getElementById('artImage');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const placeholderDiv = document.getElementById('imgPlaceholder');
+            
+            // 加载状态锁（避免快速点击并发多个请求导致错乱）
+            let isLoading = false;
+            let currentLoadController = null; // 用于简单请求标记，不复杂但维护加载状态
+            
+            /**
+             * 获取当前最佳图片尺寸（基于视口宽高 + 设备像素比，真正高清水准）
+             * 返回值: { width: number, height: number }
+             * 逻辑: 为了图片清晰自然，我们利用 window.innerWidth/innerHeight
+             * 同时乘以 devicePixelRatio 以获得视网膜级清晰度 (但限制最大边界)
+             * 并且保证图片比例和视口比例基本一致，完美适配显示区域
+             */
+            function getOptimalImageSize() {
+                // 获取视口真实宽高（不含滚动条影响，但滚动条宽度一般影响很小，为了完美使用可视区域）
+                const viewWidth = window.innerWidth;
+                const viewHeight = window.innerHeight;
+                
+                // 获取设备像素比 (高分屏下更细腻)
+                const dpr = window.devicePixelRatio || 1;
+                
+                // 目标理想宽高：基于视口尺寸和高分比，确保任何屏幕上显示都锐利
+                let targetWidth = Math.ceil(viewWidth * dpr);
+                let targetHeight = Math.ceil(viewHeight * dpr);
+                
+                // 如果视口过小，仍然保证最小请求尺寸（避免太模糊）
+                const MIN_WIDTH = 800;
+                const MIN_HEIGHT = 600;
+                if (targetWidth < MIN_WIDTH) targetWidth = MIN_WIDTH;
+                if (targetHeight < MIN_HEIGHT) targetHeight = MIN_HEIGHT;
+                
+                // 限制最大尺寸，避免请求超长图片加载缓慢
+                if (targetWidth > MAX_WIDTH) targetWidth = MAX_WIDTH;
+                if (targetHeight > MAX_HEIGHT) targetHeight = MAX_HEIGHT;
+                
+                // 额外保证比例协调（不严格限制宽高比，但Picsum会原样提供，完全自由）
+                // 但为了避免极端细长图在容器里不佳，我们不用额外约束，艺术随机也是趣味
+                return { width: targetWidth, height: targetHeight };
+            }
+            
+            /**
+             * 生成唯一且随机的 picsum 图片 URL
+             * 包含随机参数保证每次点击结果完全不同，同时尺寸精准适应当前页面宽高
+             * 并且额外加入时间戳，彻底消灭浏览器缓存导致的“同一张图”错觉
+             */
+            function buildRandomImageUrl() {
+                const { width, height } = getOptimalImageSize();
+                // 增强随机性: random 参数 + 微秒级时间戳, 确保每次手气独一无二
+                const randomSeed = Math.random().toString(36).substring(2, 12) + Date.now();
+                // 使用 picsum 官方随机终结点: /{width}/{height}?random=xxx，完美随机图且尺寸自适应
+                // 增加 `gravity` 无影响但可不加，直接组合随机种子保证完全不同
+                // 注意: 某些网络缓存会忽略?后参数，加入时间戳完美绕过
+                const url = `https://picsum.photos/${width}/${height}?random=${randomSeed}&t=${Date.now()}`;
+                return url;
+            }
+            
+            /**
+             * 优雅加载图片: 处理占位符、加载完成/失败状态
+             * 返回 Promise 用于确保加载更新同步
+             */
+            function loadImageAsync(url) {
+                return new Promise((resolve, reject) => {
+                    if (!imgElement) return reject(new Error('img element missing'));
+                    
+                    // 开始加载前，重置图片淡入样式，显示占位符指示器
+                    imgElement.classList.remove('loaded');
+                    placeholderDiv.classList.remove('hidden-placeholder');
+                    // 让占位符可见，文字可稍显提示
+                    placeholderDiv.style.opacity = '1';
+                    placeholderDiv.style.visibility = 'visible';
+                    
+                    // 新图像对象预加载，避免闪烁
+                    const tempImage = new Image();
+                    
+                    // 设置跨域匿名属性 (picsum 支持)
+                    tempImage.crossOrigin = "Anonymous";
+                    
+                    tempImage.onload = () => {
+                        // 预加载成功后更新真实 img 元素 src
+                        imgElement.src = url;
+                        // 确保图片完全显示之后移除占位符并增加 loaded 类
+                        imgElement.onload = () => {
+                            imgElement.classList.add('loaded');
+                            // 优雅隐藏占位符
+                            placeholderDiv.classList.add('hidden-placeholder');
+                            placeholderDiv.style.opacity = '0';
+                            // 完全隐藏后让占位符不可见，但不移除dom避免回流
+                            resolve(url);
+                        };
+                        imgElement.onerror = (err) => {
+                            console.warn('图片渲染错误, 后备重试');
+                            reject(new Error('Image render failed'));
+                        };
+                        // 如果图片已经缓存，手动触发一次
+                        if (imgElement.complete) {
+                            imgElement.classList.add('loaded');
+                            placeholderDiv.classList.add('hidden-placeholder');
+                            placeholderDiv.style.opacity = '0';
+                            resolve(url);
+                        }
+                    };
+                    
+                    tempImage.onerror = (error) => {
+                        console.error('预加载失败:', error);
+                        // 加载失败，保留占位符并显示错误信息
+                        placeholderDiv.innerHTML = '<span>⚠️ 加载失败 · 轻触重试</span>';
+                        setTimeout(() => {
+                            if (placeholderDiv.innerHTML.includes('轻触重试')) {
+                                placeholderDiv.innerHTML = '<span>✨ 随机艺术加载中</span>';
+                            }
+                        }, 1500);
+                        reject(new Error('Preload image failed'));
+                    };
+                    
+                    // 开始预加载新图片地址
+                    tempImage.src = url;
+                });
+            }
+            
+            /**
+             * 核心更新图片：根据最新窗口宽高获取新随机高清图
+             * 支持加载防抖 / 避免连续点击冲突
+             */
+            async function updateRandomImage() {
+                // 防止连续点击导致多次加载抢占
+                if (isLoading) {
+                    // 可选给予微小视觉反馈（按钮轻微抖动），但用户知道正在加载即可
+                    if (refreshBtn) {
+                        refreshBtn.style.transform = 'scale(0.98)';
+                        setTimeout(() => { if(refreshBtn) refreshBtn.style.transform = ''; }, 150);
+                    }
+                    return;
+                }
+                
+                isLoading = true;
+                // 添加按钮加载样式
+                if (refreshBtn) {
+                    refreshBtn.style.opacity = '0.7';
+                    refreshBtn.style.cursor = 'wait';
+                    const originalText = refreshBtn.innerText;
+                    refreshBtn.innerText = '🎴 变幻中 ...';
+                    // 保存原文本便于恢复
+                    refreshBtn._originalText = originalText;
+                }
+                
+                try {
+                    // 基于最新视口尺寸构建 URL (确保每次尺寸都适配当前窗口大小)
+                    const newImageUrl = buildRandomImageUrl();
+                    // 加载图片并更新界面
+                    await loadImageAsync(newImageUrl);
+                    // 加载成功，可选占位符复原清理
+                    placeholderDiv.innerHTML = '<span>✨ 随机艺术加载中</span>';
+                } catch (error) {
+                    console.error('图片更新失败:', error);
+                    // 重置占位符提示
+                    placeholderDiv.innerHTML = '<span>🔄 网络偶遇风 · 再试一次</span>';
+                    placeholderDiv.classList.remove('hidden-placeholder');
+                    placeholderDiv.style.opacity = '1';
+                    // 保留原有图片不变，但显示友好提示，三秒后复原提示文字
+                    setTimeout(() => {
+                        if (placeholderDiv.innerHTML.includes('再试一次')) {
+                            placeholderDiv.innerHTML = '<span>✨ 随机艺术加载中</span>';
+                        }
+                    }, 2800);
+                } finally {
+                    isLoading = false;
+                    if (refreshBtn) {
+                        refreshBtn.style.opacity = '';
+                        refreshBtn.style.cursor = '';
+                        if (refreshBtn._originalText) {
+                            refreshBtn.innerText = refreshBtn._originalText;
+                        } else {
+                            refreshBtn.innerText = '🎲 重新试一试手气';
+                        }
+                        // 清除缩放效果
+                        refreshBtn.style.transform = '';
+                    }
+                }
+            }
+            
+            /**
+             * 监听窗口尺寸变化？（高级体验：为了避免浪费流量和意外改变图片内容，
+             * 我们不自动改变图片内容，只会在用户主动点击“重新试一试手气”时根据最新窗口尺寸获取图片。
+             * 这样符合直觉: 窗口拉大后感觉模糊，点一下按钮就能得到完美适配当前宽高的新图。
+             * 同时初始加载时也会完美匹配窗口尺寸。
+             * 额外增加一个贴心功能: 如果窗口尺寸变化剧烈，显示一个微小提示？（不需要，保持简洁）
+             * 但我们保证每次点击按钮永远基于最新的窗口大小 ＋ 随机高清图。
+             */
+            
+            // 初始化加载首次高清随机图（完美匹配初视口尺寸）
+            let isFirstLoad = true;
+            
+            function initFirstImage() {
+                if (isFirstLoad) {
+                    isFirstLoad = false;
+                    updateRandomImage().catch(e => console.warn('init load mild fail', e));
+                }
+            }
+            
+            // 当页面完全就绪且DOM加载完毕，立即展现高质量图片
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initFirstImage);
+            } else {
+                initFirstImage();
+            }
+            
+            // 为了防止在 Hexo 中由于 PJAX / Turbolinks 重复绑定，使用稳健的事件绑定
+            if (refreshBtn) {
+                // 移除可能的历史绑定，使用新监听 (避免多次嵌套)
+                const newBtn = refreshBtn.cloneNode(true);
+                refreshBtn.parentNode.replaceChild(newBtn, refreshBtn);
+                // 重新获取新按钮
+                const finalBtn = document.getElementById('refreshBtn');
+                if (finalBtn) {
+                    finalBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        // 手气时刻: 重新获取当前窗口最适合尺寸 + 全新随机艺术品
+                        updateRandomImage();
+                    });
+                } else {
+                    // 后备
+                    document.getElementById('refreshBtn')?.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        updateRandomImage();
+                    });
+                }
+            } else {
+                // 极端情况 id 不存在，用选择器后备
+                const fallbackBtn = document.querySelector('.btn-lucky');
+                if (fallbackBtn) {
+                    fallbackBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        updateRandomImage();
+                    });
+                }
+            }
+            
+            // 辅助附加: 若窗口大小变动特别频繁，我们不主动刷新图片内容 (符合需求：点击按钮才换)
+            // 但是为了让高要求用户得到一致体验, 加一个极隐性优化: 如果当前图片加载已完成
+            // 当可视区宽高比和原来请求的尺寸比例差异过大，不做自动更换，一切尊重按钮
+            // 不添加额外resize重载，保证hexo嵌入性能。
+            
+            // 额外适配 Hexo 刷新重载场景：由于某些主题可能瞬间多次调用，需要保证图片加载时不会残留占位符
+            // 确保页面可见性变化不破坏图片展示
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && imgElement && imgElement.src && imgElement.src.includes('picsum')) {
+                    // 只是恢复可见性，不做强制刷新，保持原图即可
+                    if (imgElement.complete && !imgElement.classList.contains('loaded')) {
+                        imgElement.classList.add('loaded');
+                        placeholderDiv?.classList.add('hidden-placeholder');
+                    }
+                }
+            });
+            
+            // 如果图片加载缓慢, 超时后备逻辑：避免永远显示占位符
+            // 设定全局后备保险 (5秒后如果图片还没有loaded, 占位符文案友好提示但不阻塞)
+            setTimeout(() => {
+                if (imgElement && !imgElement.classList.contains('loaded') && !isLoading) {
+                    placeholderDiv.innerHTML = '<span>⌛ 首次加载稍慢 · 点击按钮重试</span>';
+                    setTimeout(() => {
+                        if (placeholderDiv.innerHTML.includes('点击按钮重试')) {
+                            placeholderDiv.innerHTML = '<span>✨ 随机艺术加载中</span>';
+                        }
+                    }, 3000);
+                }
+            }, 5000);
+            
+            // 额外适配视网膜屏和动态壁纸旋转（移动设备旋转后，点击按钮将基于新宽高，体验完美）
+            window.addEventListener('orientationchange', () => {
+                // 仅做简单处理：不做自动刷新，但假如用户旋转后立即点击按钮会获得完美的旋转后尺寸
+                // 为了用户体验，在旋转后如果当前图片很模糊且用户未点击，我们不加干扰行为，保持极简哲学
+                // 可选增加一个极轻提示，但hexo风格简洁，不要多余元素 —— 无需额外UI
+            });
+            
+            // 如果图片由于网络原因加载失败，允许点击图片区域重试？不必须，但有按钮足够。
+            // 并且为了让图片舞台更有质感，在图片加载完成后移除占位符所有残留
+            const styleCheck = setInterval(() => {
+                if (imgElement && imgElement.complete && imgElement.naturalHeight !== 0) {
+                    if (!imgElement.classList.contains('loaded')) {
+                        imgElement.classList.add('loaded');
+                        if (placeholderDiv) placeholderDiv.classList.add('hidden-placeholder');
+                    }
+                    clearInterval(styleCheck);
+                }
+            }, 200);
+            setTimeout(() => clearInterval(styleCheck), 8000);
+        })();
+    </script>
+</body>
+</html>
