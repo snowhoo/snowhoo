@@ -462,6 +462,9 @@
       });
     }
 
+    // 暴露到 window，供 sevencolor.js 调用
+    window.__scRenderPage = __scRenderPage;
+
     function __scToggleContent(el, index) {
       var content = document.getElementById('__CID__-full-content-' + index);
       if (!content) return;

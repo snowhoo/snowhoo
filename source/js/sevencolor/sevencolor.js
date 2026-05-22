@@ -155,20 +155,15 @@
           // 5. 注入模板 HTML（包含模板的 JS）
           content.innerHTML = bodyHtml;
 
-          // 6. 注入后续脚本：注册渲染函数、触发渲染
-          //    用 setTimeout 推迟一下，确保模板 JS 已执行完毕
+          // 6. 触发渲染：调用模板里定义的 window.__scRenderPage
           var laterScript = document.createElement('script');
           laterScript.textContent = '(function(){'
             + 'var cid = "' + id + '";'
-            + 'var listId = "#sc-content-' + id + ' .__CID___-article-list";'
-            + 'listId = listId.replace("__CID__", cid);'
-            + 'var container = document.querySelector(listId);'
-            + 'var articles = window.__scArticles || [];'
-            + 'if (!container || articles.length === 0) return;'
-            + 'window.__scRegisterRenderFn(cid, function(page) {'
-            + 'window.__scRender && window.__scRender(page, cid);'
-            + '});'
-            + 'window.__scRender && window.__scRender(1, cid);'
+            + 'if (window.__scRenderPage) {'
+            + 'window.__scRenderPage(1);'
+            + '} else {'
+            + 'console.error("__scRenderPage not found for:", cid);'
+            + '}'
             + '})();';
           content.appendChild(laterScript);
 
