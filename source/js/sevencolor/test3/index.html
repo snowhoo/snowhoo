@@ -1095,7 +1095,8 @@ function setEmpty(t, sub){
 function playEp(el) {
   var url = el.dataset.url;
   var name = el.dataset.name;
-  if (!url) return;
+  console.log('[playEp] url:', url, 'name:', name);
+  if (!url) { console.log('[playEp] NO URL'); return; }
   // 查找下一集
   var items = el.parentElement.querySelectorAll('.ep-item');
   var idx = Array.from(items).indexOf(el);
@@ -1104,6 +1105,7 @@ function playEp(el) {
   doPlay(url, name);
 }
 function doPlay(url, name) {
+  console.log('[doPlay] called with url:', url, 'name:', name);
   if(currentHls){currentHls.destroy();currentHls=null;}
   var v = document.getElementById('player');
   v.pause();
