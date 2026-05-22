@@ -136,27 +136,26 @@
             dataScripts.push(basePath + match[1].replace(/^\.\//, ''));
           }
 
-          // 3. 提取 body 内容（只移除 data 脚本部分，保留模板 JS）
-          // 移除 <!-- DATA_FILES_START --> ... <!-- DATA_FILES_END --> 之间的 data 脚本
-          var bodyHtml = bodyContent.replace(/<!-- DATA_FILES_START -->[\s\S]*?<!-- DATA_FILES_END -->/g, '');
+          // 3. 提取模板的内联 JS（最后一个 script 块，渲染逻辑）
+          var inlineScriptMatch = bodyContent.match(/<script(?![^>]*src)[^>]*>([\s\S]*?)<\/script>/i);
+          var inlineScriptContent = inlineScriptMatch ? inlineScriptMatch[1] : '';
+
+          // 4. 生成纯净 HTML：移除 data 脚本 + 内联 JS
+          var bodyHtml = bodyContent
+            .replace(/<!-- DATA_FILES_START -->[\s\S]*?<!-- DATA_FILES_END -->/g, '')
+            .replace(/<script(?![^>]*src)[^>]*>[\s\S]*?<\/script>/gi, '');
+
           bodyHtml = fixRelativePaths(bodyHtml, basePath);
-          // 替换内容 ID 占位符
           bodyHtml = bodyHtml.replace(/__CID__/g, id);
 
-          // 在模板 JS 末尾注入一行：自动调用渲染（直接在模板 JS 块内追加，不依赖 laterScript）
-          var renderCall = '\nwindow.__scRenderPage && window.__scRenderPage(1);\n';
-          bodyHtml = bodyHtml.replace(/<\/script>\s*$/, renderCall + '</script>');
-
-          // 4. 加载数据脚本（从原始 html 字符串中提取）
+          // 5. 加载数据脚本
           return Promise.all(dataScripts.map(function(src) {
             return fetch(src).then(function(r) { return r.text(); });
           })).then(function(texts) {
-            // 执行数据脚本，设置 window.__xxx_* 全局变量
             texts.forEach(function(text) {
               try { eval(text); } catch(e) {}
             });
 
-            // 汇总 articles 到 window.__scArticles（供模板 JS 使用）
             var prefix = CONTENT_PREFIX[id] || ('__' + id + '_');
             window.__scArticles = Object.keys(window)
               .filter(function(k) { return k.startsWith(prefix); })
@@ -164,15 +163,19 @@
               .reverse()
               .map(function(k) { return window[k]; });
 
-            return bodyHtml;
+            return { bodyHtml: bodyHtml, inlineScript: inlineScriptContent };
           });
         })
-        .then(function(bodyHtml) {
-          // 5. 注入模板 HTML（包含模板的 JS）
-          content.innerHTML = bodyHtml;
+        .then(function(result) {
+          // 6. 注入 HTML（不含 JS）
+          content.innerHTML = result.bodyHtml;
 
-          // 5. 注入模板 HTML（包含模板的 JS，JS 末尾自带渲染调用）
-          content.innerHTML = bodyHtml;
+          // 7. 执行模板 JS：innerHTML 不会执行脚本，必须新建 script 元素
+          if (result.inlineScript) {
+            var scriptEl = document.createElement('script');
+            scriptEl.textContent = result.inlineScript;
+            content.appendChild(scriptEl);
+          }
 
           content.dataset.loaded = 'true';
         })
