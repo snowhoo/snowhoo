@@ -1,7 +1,3 @@
----
-layout: false
----
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -214,7 +210,7 @@ layout: false
       width: 100%;
       height: 100%;
       background: var(--cover-bg, #2d4a6e);
-      background-image: url('images/placeholder.jpg');
+      background-image: url('./images/placeholder.jpg');
       background-size: cover;
       background-position: center;
       display: flex;
@@ -272,32 +268,31 @@ layout: false
     </div>
   </div>
 
-  <script type="module">
-    var DATA_FILES = [
-      '20260519-2214-001.js',
-      '20260518-2236-001.js',
-      '20260517-2235-001.js',
-      '20260515-2149-001.js',
-      '20260514-2155-001.js',
-      '20260513-2225-001.js',
-      '20260512-2215-001.js',
-      '20260511-2240-001.js',
-      '20260510-2151-001.js',
-      '20260509-2237-001.js',
-      '20260508-2209-001.js',
-      '20260507-2220-001.js',
-      '20260505-2229-001.js',
-      '20260504-2241-001.js',
-      '20260502-2217-001.js',
-      '20260501-2243-001.js',
-      '20260430-2226-001.js',
-      '20260428-2207-001.js',
-      '20260426-2328-001.js',
-      '20260425-2210-001.js',
-      '20260424-2215-001.js',
-      '20260421-2236-001.js'
-    ];
+  <script src="./data/20260521-2245-001.js"></script>
+  <script src="./data/20260519-2214-001.js"></script>
+  <script src="./data/20260518-2236-001.js"></script>
+  <script src="./data/20260517-2235-001.js"></script>
+  <script src="./data/20260515-2149-001.js"></script>
+  <script src="./data/20260514-2155-001.js"></script>
+  <script src="./data/20260513-2225-001.js"></script>
+  <script src="./data/20260512-2215-001.js"></script>
+  <script src="./data/20260511-2240-001.js"></script>
+  <script src="./data/20260510-2151-001.js"></script>
+  <script src="./data/20260509-2237-001.js"></script>
+  <script src="./data/20260508-2209-001.js"></script>
+  <script src="./data/20260507-2220-001.js"></script>
+  <script src="./data/20260505-2229-001.js"></script>
+  <script src="./data/20260504-2241-001.js"></script>
+  <script src="./data/20260502-2217-001.js"></script>
+  <script src="./data/20260501-2243-001.js"></script>
+  <script src="./data/20260430-2226-001.js"></script>
+  <script src="./data/20260428-2207-001.js"></script>
+  <script src="./data/20260426-2328-001.js"></script>
+  <script src="./data/20260425-2210-001.js"></script>
+  <script src="./data/20260424-2215-001.js"></script>
+  <script src="./data/20260421-2236-001.js"></script>
 
+  <script>
     var PAGE_SIZE = 10;
     var currentPage = 1;
     var articles = [];
@@ -307,13 +302,14 @@ layout: false
     var pausePath = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
     var playPath = 'M8 5v14l11-7z';
 
-    async function loadData() {
+    // 汇总所有 window.__yedu_* 的数据
+    function loadData() {
       try {
-        var fetches = DATA_FILES.map(function(f) {
-          return import('./data/' + f).then(function(m) { return m.default; }).catch(function() { return null; });
-        });
-        var results = await Promise.all(fetches);
-        articles = results.filter(Boolean);
+        articles = Object.keys(window)
+          .filter(function(k) { return k.startsWith('__yedu_'); })
+          .sort()
+          .reverse()
+          .map(function(k) { return window[k]; });
         renderPage(1);
       } catch (e) {
         console.error('加载失败:', e);
@@ -361,7 +357,7 @@ layout: false
         html += '<div class="yedu-article-card" data-index="' + globalIndex + '">' +
           '<div class="yedu-article-main">' +
             '<div class="yedu-article-cover">' +
-              (imgSrc ? '<img src="' + imgSrc + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' : '') +
+              (imgSrc ? '<img src="' + imgSrc + '" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">' : '') +
               '<div class="yedu-img-placeholder" style="display:' + (imgSrc ? 'none' : 'flex') + '">夜读</div>' +
               (hasAudio ? '<button class="yedu-audio-btn" data-index="' + globalIndex + '" data-src="' + article.audioSrc + '"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>' : '') +
               metaHtml +
@@ -491,28 +487,6 @@ layout: false
     }
 
     document.addEventListener('DOMContentLoaded', loadData);
-
-    // 向父页面发送 iframe 高度
-    function sendHeight() {
-      try {
-        var h = Math.max(
-          document.body.scrollHeight,
-          document.body.offsetHeight,
-          document.documentElement.scrollHeight,
-          document.documentElement.offsetHeight
-        );
-        window.parent.postMessage({ type: 'sevencolor-iframe-height', id: 'yedu', height: h }, '*');
-      } catch(e) {}
-    }
-    // 延迟发送，等图片等资源加载完成
-    window.addEventListener('load', function() {
-      setTimeout(sendHeight, 500);
-    });
-    // 监听内容变化（展开/收起、分页）
-    var observer = new MutationObserver(function() {
-      setTimeout(sendHeight, 300);
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
   </script>
 </body>
 </html>
