@@ -148,9 +148,7 @@
             return fetch(src).then(function(r) { return r.text(); });
           })).then(function(texts) {
             texts.forEach(function(text) {
-              try { eval(text); } catch(e) { console.error('[sc] eval error:', e); }
-            });
-            console.log('[sc] after eval, __yedu_ keys:', Object.keys(window).filter(function(k){ return k.startsWith('__yedu_'); }).length);
+              try { eval(text); } catch(e) {}
             });
 
             var prefix = CONTENT_PREFIX[id] || ('__' + id + '_');
@@ -164,9 +162,7 @@
           });
         })
         .then(function(bodyHtml) {
-          // 5. 注入 HTML（内联 script 会被 innerHTML 执行）
           content.innerHTML = bodyHtml;
-
           content.dataset.loaded = 'true';
         })
         .catch(function(e) {
