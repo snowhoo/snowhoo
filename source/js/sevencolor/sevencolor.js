@@ -106,11 +106,24 @@
     var container = document.getElementById('seven-color-card');
     var content = container.querySelector('#sc-content-' + id);
     if (!content) return;
+
+    // 如果内容已加载过，从 dataset 恢复 articles 并直接渲染
+    if (content.dataset.loaded === 'true') {
+      try {
+        window.__scArticles = JSON.parse(content.dataset.articles || '[]');
+      } catch(e) {
+        window.__scArticles = [];
+      }
+      btn.classList.add('sc-open');
+      content.classList.add('sc-open');
+      _scCallRender(id, 1);
+      return;
+    }
+
     btn.classList.add('sc-open');
     content.classList.add('sc-open');
 
-    if (!content.dataset.loaded) {
-      content.innerHTML = '<div class="sc-loading">加载中...</div>';
+    content.innerHTML = '<div class="sc-loading">加载中...</div>';
 
       fetch(htmlUrl)
         .then(function(r) { return r.text(); })
@@ -238,6 +251,8 @@
           });
         })
         .then(function(result) {
+          // 保存 articles 到 dataset，避免依赖 window 全局变量（AJAX 翻页后 window 上下文会刷新）
+          content.dataset.articles = JSON.stringify(window.__scArticles);
           content.innerHTML = result.bodyHtml;
           content.dataset.loaded = 'true';
           // eval 内联脚本（innerHTML 不会自动执行内联 script）
