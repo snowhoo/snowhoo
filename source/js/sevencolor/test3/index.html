@@ -482,14 +482,13 @@ width:100% !important;
 }
 </style></head><body>
 <div id="player-wrap">
-<h1 class="title">超级播霸</h1>
 <div class="toolbar">
-  <select id="sourceSelect" onchange="switchSource()">
+  <select id="sourceSelect">
     <option value="">— 选择数据源 —</option>
   </select>
   <input type="text" id="searchInput" placeholder="全局搜索影片...">
-  <button onclick="doSearch()">搜索</button>
-  <button id="stopSearchBtn" onclick="stopSearch()" style="display:none">停止</button>
+  <button id="searchBtn">搜索</button>
+  <button id="stopSearchBtn" style="display:none">停止</button>
 </div>
 <div class="player-box">
   <video id="player" controls playsinline></video>
@@ -497,7 +496,7 @@ width:100% !important;
 <div id="status" class="status-bar">
   <div class="cat-bar" id="catBar"></div>
   <span id="statusText">[STOP] 选择一个数据源</span>
-  <button id="nextEpBtn" class="next-ep-btn" onclick="playNext()">下集</button>
+  <button id="nextEpBtn" class="next-ep-btn">下集</button>
 </div>
 <div id="content"></div>
 <div class="pagination" id="pagination"></div>
@@ -828,7 +827,7 @@ function buildCatBar() {
   var bars = document.getElementById('catBar');
   var playableVid = meta ? meta.playable_videos : 0;
   var totalVid = meta ? meta.total : 0;
-  var h = '<select onchange="filterCat(this)">';
+  var h = '<select class="cat-filter">';
   h += '<option value="">全部 (' + (totalVid>99?'99+':totalVid) + '/' + (playableVid>99?'99+':playableVid) + ')</option>';
   Object.keys(cats).sort(function(a,b){return cats[b]-cats[a];}).forEach(function(c) {
     var cnt = cats[c] > 99 ? '99+' : cats[c];
@@ -855,7 +854,7 @@ function buildCatBarFromFiltered() {
   });
 
   var bars = document.getElementById('catBar');
-  var h = '<select onchange="filterCat(this)">';
+  var h = '<select class="cat-filter">';
   h += '<option value="">全部 (' + allSearchResults.length + ')</option>';
   Object.keys(cats).sort(function(a, b) {
     if (a === '未分类') return 1;
@@ -976,7 +975,7 @@ function render() {
     var epInfo = (v.ep_count||0) + '\u96c6';
     if(v.playable_count>0) epInfo += ' \u00b7 ' + v.playable_count + '\u53ef\u64ad';
 
-    h += '<div class="video-card" onclick="toggleEpisodes(this,\'' + eid + '\')">';
+    h += '<div class="video-card" data-eid="' + eid + '">';
     h += '<div class="poster-wrap">';
     if (img) {
       h += '<img class="poster" src="' + img.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=poster-fallback>\ud83c\udfac</div>\'">';
@@ -990,10 +989,10 @@ function render() {
 
     // 剧集面板（与卡片平级，Grid 自动布局）
     h += '<div class="ep-panel" id="' + eid + '">';
-    h += '<div class="ep-header"><span class="ep-count">\u5267\u96c6 (' + (v.episodes||[]).length + ')</span><button class="ep-close" onclick="event.stopPropagation();closeEp(\'' + eid + '\')">\u2716</button></div>';
+    h += '<div class="ep-header"><span class="ep-count">\u5267\u96c6 (' + (v.episodes||[]).length + ')</span><button class="ep-close" data-eid="' + eid + '">\u2716</button></div>';
     (v.episodes||[]).forEach(function(e){
       var eb = e.playable ? '' : ' \u26a0';
-      h += '<div class="ep-item" onclick="event.stopPropagation();playEp(this)" data-url="' + escAttr(e.url||'') + '" data-name="' + escAttr((v.vod_name||'') + ' - ' + (e.title||'')) + '">' + escHtml(e.title||'') + eb + '</div>';
+      h += '<div class="ep-item" data-url="' + escAttr(e.url||'') + '" data-name="' + escAttr((v.vod_name||'') + ' - ' + (e.title||'')) + '">' + escHtml(e.title||'') + eb + '</div>';
     });
     h += '</div>';  // close ep-panel
   });  // close items.forEach
@@ -1011,22 +1010,22 @@ function render() {
     // 搜索/分类筛选模式：内存分页
     var total = currentFiltered.length;
     var pages = Math.ceil(total / PAGE_SIZE) || 1;
-    pg += '<button onclick="go(1)"' + (currentPage<=1?' disabled':'') + '>«</button>';
-    pg += '<button onclick="go(' + (currentPage-1) + ')"' + (currentPage<=1?' disabled':'') + '>‹</button>';
+    pg += '<button class="pg-go" data-page="1"' + (currentPage<=1?' disabled':'') + '>«</button>';
+    pg += '<button class="pg-go" data-page="' + (currentPage-1) + '"' + (currentPage<=1?' disabled':'') + '>‹</button>';
     var startP = Math.max(1, currentPage-2), endP = Math.min(pages, currentPage+2);
     for (var pi=startP; pi<=endP; pi++)
-      pg += '<button class="' + (pi===currentPage?'active':'') + '" onclick="go(' + pi + ')">' + pi + '</button>';
-    pg += '<button onclick="go(' + (currentPage+1) + ')"' + (currentPage>=pages?' disabled':'') + '>›</button>';
-    pg += '<button onclick="go(' + pages + ')"' + (currentPage>=pages?' disabled':'') + '>»</button>';
+      pg += '<button class="pg-go' + (pi===currentPage?' active':'') + '" data-page="' + pi + '">' + pi + '</button>';
+    pg += '<button class="pg-go" data-page="' + (currentPage+1) + '"' + (currentPage>=pages?' disabled':'') + '>›</button>';
+    pg += '<button class="pg-go" data-page="' + pages + '"' + (currentPage>=pages?' disabled':'') + '>»</button>';
   } else if (currentPrefix && sourceMeta[currentPrefix]) {
     var pc = sourceMeta[currentPrefix].page_count || 1;
-    pg += '<button onclick="goPage(1)"' + (currentFilePage<=1?' disabled':'') + '>«</button>';
-    pg += '<button onclick="goPage(' + (currentFilePage-1) + ')"' + (currentFilePage<=1?' disabled':'') + '>‹</button>';
+    pg += '<button class="pg-page" data-page="1"' + (currentFilePage<=1?' disabled':'') + '>«</button>';
+    pg += '<button class="pg-page" data-page="' + (currentFilePage-1) + '"' + (currentFilePage<=1?' disabled':'') + '>‹</button>';
     var startP = Math.max(1, currentFilePage-2), endP = Math.min(pc, currentFilePage+2);
     for (var pi=startP; pi<=endP; pi++)
-      pg += '<button class="' + (pi===currentFilePage?'active':'') + '" onclick="goPage(' + pi + ')">' + pi + '</button>';
-    pg += '<button onclick="goPage(' + (currentFilePage+1) + ')"' + (currentFilePage>=pc?' disabled':'') + '>›</button>';
-    pg += '<button onclick="goPage(' + pc + ')"' + (currentFilePage>=pc?' disabled':'') + '>»</button>';
+      pg += '<button class="pg-page' + (pi===currentFilePage?' active':'') + '" data-page="' + pi + '">' + pi + '</button>';
+    pg += '<button class="pg-page" data-page="' + (currentFilePage+1) + '"' + (currentFilePage>=pc?' disabled':'') + '>›</button>';
+    pg += '<button class="pg-page" data-page="' + pc + '"' + (currentFilePage>=pc?' disabled':'') + '>»</button>';
   }
   document.getElementById('pagination').innerHTML = pg;
 }
@@ -1152,6 +1151,27 @@ document.addEventListener('keydown', function(e){
     e.preventDefault();
     playNext();
   }
+});
+
+/* ===== 事件委托处理器（处理 HTML 属性事件改用 addEventListener 后的绑定） */
+document.addEventListener('change', function(e) {
+  var target = e.target;
+  if (target.id === 'sourceSelect') { switchSource(); return; }
+  if (target.classList.contains('cat-filter')) { filterCat(target); return; }
+});
+document.addEventListener('click', function(e) {
+  var target = e.target;
+  var closest = target.closest('button');
+  if (!closest || closest.disabled) return;
+  if (closest.id === 'searchBtn') { doSearch(); return; }
+  if (closest.id === 'stopSearchBtn') { stopSearch(); return; }
+  if (closest.id === 'nextEpBtn') { playNext(); return; }
+  if (closest.classList.contains('pg-go')) { go(parseInt(closest.dataset.page)); return; }
+  if (closest.classList.contains('pg-page')) { goPage(parseInt(closest.dataset.page)); return; }
+  var card = target.closest('.video-card');
+  if (card) { toggleEpisodes(card, card.dataset.eid); return; }
+  if (closest.classList.contains('ep-close')) { e.stopPropagation(); closeEp(closest.dataset.eid); return; }
+  if (closest.classList.contains('ep-item')) { e.stopPropagation(); playEp(closest); return; }
 });
 
 loadIndex();
