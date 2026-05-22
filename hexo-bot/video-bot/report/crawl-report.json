@@ -1,24 +1,15 @@
 {
-  "time": "2026-05-22T00:19:28.460695",
-  "total_sites": 28,
-  "succeeded": 14,
-  "failed": 14,
-  "total_videos": 6702,
-  "total_episodes": 312289,
-  "total_playable": 274678,
+  "time": "2026-05-23T00:18:11.572147",
+  "total_sites": 27,
+  "succeeded": 12,
+  "failed": 15,
+  "total_videos": 5738,
+  "total_episodes": 287456,
+  "total_playable": 262003,
   "sites": [
     {
       "name": "快帆",
       "api": "https://api.kuaifan.tv/api.php/provide/vod",
-      "videos": 0,
-      "episodes": 0,
-      "playable": 0,
-      "pages": 0,
-      "error": "首页接口无响应"
-    },
-    {
-      "name": "海外看",
-      "api": "https://haiwaikan.com/api.php/provide/vod",
       "videos": 0,
       "episodes": 0,
       "playable": 0,
@@ -35,6 +26,15 @@
       "error": "首页接口无响应"
     },
     {
+      "name": "海外看",
+      "api": "https://haiwaikan.com/api.php/provide/vod",
+      "videos": 0,
+      "episodes": 0,
+      "playable": 0,
+      "pages": 0,
+      "error": "首页接口无响应"
+    },
+    {
       "name": "🐯虎牙直播",
       "api": "http://xhztv.top/xhz/js/lib/drpy2.min.js",
       "videos": 0,
@@ -44,7 +44,7 @@
       "error": "首页接口无响应"
     },
     {
-      "name": "有声小说吧",
+      "name": "🐠斗鱼直播",
       "api": "http://xhztv.top/xhz/js/lib/drpy2.min.js",
       "videos": 0,
       "episodes": 0,
@@ -53,7 +53,7 @@
       "error": "首页接口无响应"
     },
     {
-      "name": "🐠斗鱼直播",
+      "name": "有声小说吧",
       "api": "http://xhztv.top/xhz/js/lib/drpy2.min.js",
       "videos": 0,
       "episodes": 0,
@@ -125,13 +125,13 @@
       "error": "首页接口无响应"
     },
     {
-      "name": "🥗┃非凡┃资源",
-      "api": "http://ffzy1.tv/api.php/provide/vod/",
-      "videos": 480,
-      "episodes": 37680,
-      "playable": 37680,
-      "pages": 40,
-      "error": null
+      "name": "🐯虎牙采集",
+      "api": "https://www.huyaapi.com/api.php/provide/vod/from/hym3u8",
+      "videos": 0,
+      "episodes": 0,
+      "playable": 0,
+      "pages": 0,
+      "error": "首页接口无响应"
     },
     {
       "name": "🌪️暴风影音",
@@ -143,20 +143,20 @@
       "error": "首页接口无响应"
     },
     {
-      "name": "非凡",
-      "api": "http://cj.ffzyapi.com/api.php/provide/vod",
+      "name": "🥗┃非凡┃资源",
+      "api": "http://ffzy1.tv/api.php/provide/vod/",
       "videos": 480,
-      "episodes": 37680,
-      "playable": 37680,
+      "episodes": 45584,
+      "playable": 45584,
       "pages": 40,
       "error": null
     },
     {
-      "name": "🦊火狐采集",
-      "api": "https://hhzyapi.com/api.php/provide/vod/",
+      "name": "非凡",
+      "api": "http://cj.ffzyapi.com/api.php/provide/vod",
       "videos": 480,
-      "episodes": 25354,
-      "playable": 12677,
+      "episodes": 45584,
+      "playable": 45584,
       "pages": 40,
       "error": null
     },
@@ -164,8 +164,8 @@
       "name": "索尼 ",
       "api": "https://suoniapi.com/api.php/provide/vod",
       "videos": 480,
-      "episodes": 11737,
-      "playable": 11734,
+      "episodes": 15634,
+      "playable": 15633,
       "pages": 40,
       "error": null
     },
@@ -173,8 +173,8 @@
       "name": "🐉┃索尼┃高清",
       "api": "https://suoniapi.com/api.php/provide/vod/?ac=list",
       "videos": 480,
-      "episodes": 11982,
-      "playable": 11979,
+      "episodes": 13796,
+      "playable": 13795,
       "pages": 40,
       "error": null
     },
@@ -182,17 +182,8 @@
       "name": "量子",
       "api": "https://cj.lziapi.com/api.php/provide/vod",
       "videos": 480,
-      "episodes": 34228,
-      "playable": 34228,
-      "pages": 40,
-      "error": null
-    },
-    {
-      "name": "🐯虎牙采集",
-      "api": "https://www.huyaapi.com/api.php/provide/vod/from/hym3u8",
-      "videos": 480,
-      "episodes": 13839,
-      "playable": 13839,
+      "episodes": 31287,
+      "playable": 31287,
       "pages": 40,
       "error": null
     },
@@ -200,26 +191,17 @@
       "name": "🥑┃量子┃资源",
       "api": "https://lzizy1.com/api.php/provide/vod/",
       "videos": 480,
-      "episodes": 34458,
-      "playable": 34458,
+      "episodes": 31223,
+      "playable": 31223,
       "pages": 40,
       "error": null
     },
     {
-      "name": "暴風",
-      "api": "https://bfzyapi.com/api.php/provide/vod",
-      "videos": 472,
-      "episodes": 16183,
-      "playable": 16183,
-      "pages": 40,
-      "error": null
-    },
-    {
-      "name": "🎏百度┃采集",
-      "api": "https://api.apibdzy.com/api.php/provide/vod/?ac=list",
+      "name": "🦊火狐采集",
+      "api": "https://hhzyapi.com/api.php/provide/vod/",
       "videos": 480,
-      "episodes": 11514,
-      "playable": 11514,
+      "episodes": 24150,
+      "playable": 12075,
       "pages": 40,
       "error": null
     },
@@ -227,8 +209,26 @@
       "name": "360zy",
       "api": "https://360zy.com/api.php/provide/vod?",
       "videos": 480,
-      "episodes": 11512,
-      "playable": 11512,
+      "episodes": 15194,
+      "playable": 15194,
+      "pages": 40,
+      "error": null
+    },
+    {
+      "name": "🎏百度┃采集",
+      "api": "https://api.apibdzy.com/api.php/provide/vod/?ac=list",
+      "videos": 480,
+      "episodes": 11693,
+      "playable": 11693,
+      "pages": 40,
+      "error": null
+    },
+    {
+      "name": "暴風",
+      "api": "https://bfzyapi.com/api.php/provide/vod",
+      "videos": 464,
+      "episodes": 13809,
+      "playable": 13809,
       "pages": 40,
       "error": null
     },
@@ -236,26 +236,17 @@
       "name": "jszyapi",
       "api": "https://jszyapi.com/api.php/provide/vod/at/json",
       "videos": 480,
-      "episodes": 23182,
-      "playable": 11591,
+      "episodes": 26752,
+      "playable": 13376,
       "pages": 40,
       "error": null
     },
     {
       "name": "bfzyapi",
       "api": "https://bfzyapi.com/api.php/provide/vod/",
-      "videos": 470,
-      "episodes": 16266,
-      "playable": 16266,
-      "pages": 40,
-      "error": null
-    },
-    {
-      "name": "guangsuapi",
-      "api": "https://api.guangsuapi.com/api.php/provide/vod/",
-      "videos": 480,
-      "episodes": 26674,
-      "playable": 13337,
+      "videos": 474,
+      "episodes": 12750,
+      "playable": 12750,
       "pages": 40,
       "error": null
     }

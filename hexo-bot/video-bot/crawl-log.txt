@@ -3397,3 +3397,97 @@ hint: See the 'Note about fast-forwards' in 'git push --help' for details.
 [2026/05/22 周五  0:19:38.76] Source data cleaned 
  
 [2026/05/22 周五  0:19:38.81] ======== DONE ======== 
+ 
+[2026/05/23 周六  0:00:01.98] ======== START ======== 
+[2026/05/23 周六  0:00:01.98] Running tvbox-crawler-optimized.py... 
+[2026/05/23 周六  0:18:11.66] CRAWL DONE 
+[2026/05/23 周六  0:18:12.48] Copy verified OK 
+[2026/05/23 周六  0:18:14.16] Pushing changes... 
+[source 5a468a05] chore: auto-update TVBox video data
+ 561 files changed, 481 insertions(+), 561 deletions(-)
+ delete mode 100644 source/video/data/guangsuapi-01.js
+ delete mode 100644 source/video/data/guangsuapi-02.js
+ delete mode 100644 source/video/data/guangsuapi-03.js
+ delete mode 100644 source/video/data/guangsuapi-04.js
+ delete mode 100644 source/video/data/guangsuapi-05.js
+ delete mode 100644 source/video/data/guangsuapi-06.js
+ delete mode 100644 source/video/data/guangsuapi-07.js
+ delete mode 100644 source/video/data/guangsuapi-08.js
+ delete mode 100644 source/video/data/guangsuapi-09.js
+ delete mode 100644 source/video/data/guangsuapi-10.js
+ delete mode 100644 source/video/data/guangsuapi-11.js
+ delete mode 100644 source/video/data/guangsuapi-12.js
+ delete mode 100644 source/video/data/guangsuapi-13.js
+ delete mode 100644 source/video/data/guangsuapi-14.js
+ delete mode 100644 source/video/data/guangsuapi-15.js
+ delete mode 100644 source/video/data/guangsuapi-16.js
+ delete mode 100644 source/video/data/guangsuapi-17.js
+ delete mode 100644 source/video/data/guangsuapi-18.js
+ delete mode 100644 source/video/data/guangsuapi-19.js
+ delete mode 100644 source/video/data/guangsuapi-20.js
+ delete mode 100644 source/video/data/guangsuapi-21.js
+ delete mode 100644 source/video/data/guangsuapi-22.js
+ delete mode 100644 source/video/data/guangsuapi-23.js
+ delete mode 100644 source/video/data/guangsuapi-24.js
+ delete mode 100644 source/video/data/guangsuapi-25.js
+ delete mode 100644 source/video/data/guangsuapi-26.js
+ delete mode 100644 source/video/data/guangsuapi-27.js
+ delete mode 100644 source/video/data/guangsuapi-28.js
+ delete mode 100644 source/video/data/guangsuapi-29.js
+ delete mode 100644 source/video/data/guangsuapi-30.js
+ delete mode 100644 source/video/data/guangsuapi-31.js
+ delete mode 100644 source/video/data/guangsuapi-32.js
+ delete mode 100644 source/video/data/guangsuapi-33.js
+ delete mode 100644 source/video/data/guangsuapi-34.js
+ delete mode 100644 source/video/data/guangsuapi-35.js
+ delete mode 100644 source/video/data/guangsuapi-36.js
+ delete mode 100644 source/video/data/guangsuapi-37.js
+ delete mode 100644 source/video/data/guangsuapi-38.js
+ delete mode 100644 source/video/data/guangsuapi-39.js
+ delete mode 100644 source/video/data/guangsuapi-40.js
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-01.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-02.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-03.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-04.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-05.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-06.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-07.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-08.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-09.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-10.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-11.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-12.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-13.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-14.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-15.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-16.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-17.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-18.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-19.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-20.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-21.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-22.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-23.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-24.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-25.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-26.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-27.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-28.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-29.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-30.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-31.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-32.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-33.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-34.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-35.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-36.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-37.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-38.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-39.js"
+ delete mode 100644 "source/video/data/\350\231\216\347\211\231\351\207\207\351\233\206-40.js"
+To github.com:snowhoo/snowhoo.git
+   c1f9dceb..5a468a05  source -> source
+[2026/05/23 周六  0:18:14.16] PUSH FAILED 
+[2026/05/23 周六  0:18:29.26] Source data cleaned 
+ 
+[2026/05/23 周六  0:18:29.32] ======== DONE ======== 

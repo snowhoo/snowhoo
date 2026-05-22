@@ -609,14 +609,7 @@ function loadIndex() {
 }
 
 function showBanner() {
-  var img = new Image();
-  img.onload = function() {
-    document.getElementById('content').innerHTML = '<div class="banner-wrap"><img src="./banner.jpg?t=' + Date.now() + '"><div class="overlay"><h2>欢迎使用超级播霸</h2><p>请选择上方数据源或直接全网搜索</p></div></div>';
-  };
-  img.onerror = function() {
-    document.getElementById('content').innerHTML = '<div class="banner-wrap"><img src="https://picsum.photos/800/450.webp"><div class="overlay"><h2>欢迎使用超级播霸</h2><p>请选择上方数据源或直接全网搜索</p></div></div>';
-  };
-  img.src = './banner.jpg';
+  document.getElementById('content').innerHTML = '<div class="banner-wrap"><img src="https://picsum.photos/800/450.webp"><div class="overlay"><h2>欢迎使用超级播霸</h2><p>请选择上方数据源或直接全网搜索</p></div></div>';
   document.getElementById('pagination').innerHTML = '';
 }
 
@@ -1112,20 +1105,19 @@ function doPlay(url, name) {
   v.load();
   document.querySelector('.player-box').classList.add('playing');
 
-  if(url.indexOf('.m3u8')>=0 && typeof Hls !== 'undefined' && Hls.isSupported()){
+  if(url.indexOf('.m3u8')>=0){
     try{
-      var hls = new Hls();
-      hls.loadSource(url);
-      hls.attachMedia(v);
-      currentHls = hls;
+      if(window.Hls && Hls.isSupported()){
+        var hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(v);
+        currentHls = hls;
+      } else {
+        v.src = url;
+      }
     }catch(e){
       v.src = url;
     }
-  } else if(url.indexOf('.m3u8')>=0 && v.canPlayType('application/vnd.apple.mpegurl')){
-    v.src = url;
-  } else if(url.indexOf('.m3u8')>=0){
-    // Hls 未加载或不支持，直接设 src 让浏览器尝试
-    v.src = url;
   } else {
     v.src = url;
   }
@@ -1167,6 +1159,13 @@ document.addEventListener('change', function(e) {
 });
 document.addEventListener('click', function(e) {
   var target = e.target;
+  // 优先检查 ep-item（ep-close 也有 .ep-close class，会被 button 检查漏掉）
+  var epItem = target.closest('.ep-item');
+  if (epItem) { playEp(epItem); return; }
+  // 检查关闭按钮
+  var epClose = target.closest('.ep-close');
+  if (epClose) { e.stopPropagation(); closeEp(epClose.dataset.eid); return; }
+  // 检查其他 button
   var closest = target.closest('button');
   if (closest && closest.disabled) return;
   if (closest) {
@@ -1175,16 +1174,10 @@ document.addEventListener('click', function(e) {
     if (closest.id === 'nextEpBtn') { playNext(); return; }
     if (closest.classList.contains('pg-go')) { go(parseInt(closest.dataset.page)); return; }
     if (closest.classList.contains('pg-page')) { goPage(parseInt(closest.dataset.page)); return; }
-    if (closest.classList.contains('ep-close')) { e.stopPropagation(); closeEp(closest.dataset.eid); return; }
-    if (closest.classList.contains('ep-item')) { e.stopPropagation(); playEp(closest); return; }
-    var card = target.closest('.video-card');
-    if (card) { e.stopPropagation(); toggleEpisodes(card, card.dataset.eid); return; }
   }
-  // 非 button 点击：检查 video-card 和 ep-item（由 direct listener 处理的在这里不会到达）
+  // 检查 video-card（非 button 点击，direct listener 已处理的不会到达这里）
   var card = target.closest('.video-card');
   if (card) { toggleEpisodes(card, card.dataset.eid); return; }
-  var epItem = target.closest('.ep-item');
-  if (epItem) { playEp(epItem); return; }
 });
 
 loadIndex();
