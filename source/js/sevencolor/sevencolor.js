@@ -110,8 +110,9 @@
           // 提取其中内容（即 body > div.app 那个层级的 div）
           var bodyContent = html.replace(/^<div[^>]*>/, '').replace(/<\/div>\s*$/, '');
 
-          // 1. 注入 CSS（每个 id 只注入一次）- 用正则提取
+          // 1. 注入 CSS（每个 id 只注入一次）- 提取 <style> 和 <link> 标签
           if (!injectedStyles[id]) {
+            // 处理 <style> 标签
             var styleMatches = bodyContent.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
             if (styleMatches) {
               styleMatches.forEach(function(styleTag) {
@@ -121,6 +122,19 @@
                   newStyle.textContent = contentMatch[1];
                   newStyle.dataset.scId = id;
                   document.head.appendChild(newStyle);
+                }
+              });
+            }
+            // 处理 <link rel="stylesheet"> 标签
+            var linkMatches = bodyContent.match(/<link[^>]+rel=["']stylesheet["'][^>]*>/gi);
+            if (linkMatches) {
+              linkMatches.forEach(function(linkTag) {
+                var tempDiv = document.createElement('div');
+                tempDiv.innerHTML = linkTag;
+                var linkEl = tempDiv.firstChild;
+                if (linkEl) {
+                  linkEl.dataset.scId = id;
+                  document.head.appendChild(linkEl);
                 }
               });
             }
