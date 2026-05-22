@@ -40,9 +40,6 @@
   }
 
   function fixRelativePaths(html, basePath) {
-    console.log('[SevenColor] fixRelativePaths, basePath:', basePath);
-    var imgs = html.match(/<img[^>]+src=["'][^"']+["'][^>]*>/gi);
-    if (imgs) console.log('[SevenColor] img tags before fix:', imgs.slice(0, 3));
     // 处理 CSS url()
     html = html.replace(/url\(\s*['"]?([^'"\)]+)['"]?\s*\)/g, function(m, path) {
       if (path.startsWith('/') || path.startsWith('http')) return m;
@@ -63,8 +60,6 @@
       if (path.startsWith('/') || path.startsWith('http') || path.startsWith('#')) return m;
       return tag + attr + '=' + q1 + basePath + path.replace(/^\.\//, '') + q2;
     });
-    var imgsAfter = html.match(/<img[^>]+src=["'][^"']+["'][^>]*>/gi);
-    if (imgsAfter) console.log('[SevenColor] img tags after fix:', imgsAfter.slice(0, 3));
     return html;
   }
 
@@ -124,7 +119,13 @@
                 var contentMatch = styleTag.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
                 if (contentMatch) {
                   var newStyle = document.createElement('style');
-                  newStyle.textContent = contentMatch[1].replace(/__CID__/g, id);
+                  var cssContent = contentMatch[1]
+                    .replace(/__CID__/g, id)
+                    .replace(/url\(\s*['"]?([^'"\)]+)['"]?\s*\)/g, function(m, path) {
+                      if (path.startsWith('/') || path.startsWith('http')) return m;
+                      return 'url(\'' + basePath + path + '\')';
+                    });
+                  newStyle.textContent = cssContent;
                   newStyle.dataset.scId = id;
                   document.head.appendChild(newStyle);
                 }
@@ -179,6 +180,11 @@
             return fetch(src).then(function(r) { return r.text(); });
           })).then(function(texts) {
             texts.forEach(function(text) {
+              // 修复数据脚本中的相对路径（coverSrc, audioSrc 等）
+              text = text.replace(/"(\.[^"]+)"/g, function(m, path) {
+                if (path.startsWith('/') || path.startsWith('http')) return m;
+                return '"' + basePath + path.replace(/^\.\//, '') + '"';
+              });
               try { eval(text); } catch(e) {}
             });
 
