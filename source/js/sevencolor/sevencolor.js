@@ -136,16 +136,26 @@
             dataScripts.push(basePath + match[1].replace(/^\.\//, ''));
           }
 
-          // 3. 生成纯净 HTML：只移除 data 脚本标签，保留模板内联 JS
+          // 3. 提取内联脚本内容（用于后续 eval 执行）
+          var inlineScriptContent = '';
+          var scriptMatch = bodyContent.match(/<script>([\s\S]*?)<\/script>/i);
+          if (scriptMatch) {
+            inlineScriptContent = scriptMatch[1];
+          }
+
+          // 4. 生成纯净 HTML：移除 DATA_FILES 注释块和 data 脚本标签，保留内联 JS 供后续 eval
           var bodyHtml = bodyContent
-            .replace(/<!--DATA_FILES_START-->\s*/gi, '')
-            .replace(/\s*<!--DATA_FILES_END-->/gi, '')
-            .replace(/<script[^>]+src=["']([^"']*data\/[^"']+\.js)["'][^>]*>\s*/gi, '');
+            .replace(/<!--\s*DATA_FILES_START\s*-->\s*/gi, '')
+            .replace(/\s*<!--\s*DATA_FILES_END\s*-->/gi, '')
+            .replace(/<script[^>]+src=["']([^"']*data\/[^"']+\.js)["'][^>]*>\s*/gi, '')
+            .replace(/<script>[\s\S]*?<\/script>/i, ''); // 移除内联脚本（稍后 eval）
 
           bodyHtml = fixRelativePaths(bodyHtml, basePath);
           bodyHtml = bodyHtml.replace(/__CID__/g, id);
+          // JS 代码里的 __CID__ArticleList 也要替换
+          inlineScriptContent = inlineScriptContent.replace(/__CID__/g, id);
 
-          // 4. 加载数据脚本
+          // 5. 加载数据脚本
           return Promise.all(dataScripts.map(function(src) {
             return fetch(src).then(function(r) { return r.text(); });
           })).then(function(texts) {
@@ -160,12 +170,16 @@
               .reverse()
               .map(function(k) { return window[k]; });
 
-            return bodyHtml;
+            return { bodyHtml: bodyHtml, inlineScriptContent: inlineScriptContent };
           });
         })
-        .then(function(bodyHtml) {
-          content.innerHTML = bodyHtml;
+        .then(function(result) {
+          content.innerHTML = result.bodyHtml;
           content.dataset.loaded = 'true';
+          // eval 内联脚本（innerHTML 不会自动执行内联 script）
+          if (result.inlineScriptContent) {
+            try { eval(result.inlineScriptContent); } catch(e) { console.error('Script eval error:', e); }
+          }
         })
         .catch(function(e) {
           content.innerHTML = '<div class="sc-loading">内容加载失败</div>';

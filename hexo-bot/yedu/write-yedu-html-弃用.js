@@ -1,13 +1,13 @@
 /**
- * 根据 data/ 目录下的 .js 文件动态生成 index.html
- * 每次运行爬虫后执行，保持 index.html 与实际数据同步
+ * 根据 data/ 目录下的 .js 文件生成 index.html（全局变量版）
+ * 输出到 /js/sevencolor/test1/，供 sevencolor.js 的 HTML 解析方案使用
  */
 const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
 
-const OUTPUT_DIR = 'D:\\hexo\\source\\yedu';
-const DATA_DIR = path.join(OUTPUT_DIR, 'data');
+const DATA_DIR = 'D:\\hexo\\source\\js\\sevencolor\\test1\\data';
+const OUTPUT_DIR = 'D:\\hexo\\source\\js\\sevencolor\\test1';
 const HTML_PATH = path.join(OUTPUT_DIR, 'index.html');
 
 // 扫描 data/ 下所有 .js 文件（排除 article-list.js 等）
@@ -16,7 +16,12 @@ const files = glob.sync('*.js', { cwd: DATA_DIR })
   .sort()
   .reverse(); // 最新时间戳排在前面
 
-const filesJsArray = '[\n      ' + files.map(f => "'" + f + "'").join(',\n      ') + '\n    ]';
+// 生成 script 标签列表（加载全局变量格式的 data 文件）
+const dataScriptTags = files.map(f => {
+  // 变量名：去掉 .js 后缀，- 改成 _（JS 变量名不能有 -）
+  const varName = '__yedu_' + f.replace(/\.js$/, '').replace(/-/g, '_');
+  return `  <script src="./data/${f}"></script>`;
+}).join('\n');
 
 const html = `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -64,7 +69,6 @@ const html = `<!DOCTYPE html>
 
     .yedu-article-main {
       display: flex;
-      height: 110px;
     }
 
     .yedu-article-cover {
@@ -144,42 +148,32 @@ const html = `<!DOCTYPE html>
 
     .yedu-article-content {
       flex: 1;
-      padding: 8px 12px;
+      padding: 0 8px;
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
-      overflow: hidden;
       min-width: 0;
     }
 
     .yedu-article-title {
-      font-size: 0.9rem;
       color: var(--text-primary, #1a1a2e);
-      line-height: 1.2;
       font-weight: 600;
       white-space: normal;
       overflow: hidden;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
-      margin: 0;
     }
 
     .yedu-article-date {
-      font-size: 0.72rem;
       color: var(--text-secondary, #aaa);
-      margin: 0;
     }
 
     .yedu-article-summary {
       color: var(--text-secondary, #888);
-      font-size: 0.75rem;
-      line-height: 1.3;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
-      margin: 0;
     }
 
     .yedu-read-more {
@@ -241,7 +235,7 @@ const html = `<!DOCTYPE html>
       width: 100%;
       height: 100%;
       background: var(--cover-bg, #2d4a6e);
-      background-image: url('images/placeholder.jpg');
+      background-image: url('./images/placeholder.jpg');
       background-size: cover;
       background-position: center;
       display: flex;
@@ -276,19 +270,14 @@ const html = `<!DOCTYPE html>
     .yedu-pagination .yedu-page-info { color: var(--text-secondary, rgba(255, 255, 255, 0.6)); font-size: 0.8rem; }
 
     @media (max-width: 600px) {
-      .yedu-article-main { height: auto; flex-direction: column; }
+      .yedu-article-main { flex-direction: column; }
       .yedu-article-cover { flex: none; width: 100%; height: 140px; }
       .yedu-audio-btn { width: 40px; height: 40px; }
       .yedu-article-content { padding: 4px 10px; }
-      .yedu-article-title { font-size: 0.88rem; -webkit-line-clamp: 1; }
     }
 
     @media (min-width: 601px) {
-      .yedu-article-main { height: 110px; align-items: stretch; }
       .yedu-article-cover { flex: 0 0 160px; width: 160px; }
-      .yedu-article-content { padding: 3px 14px; }
-      .yedu-article-title { line-height: 1.15; font-size: 0.88rem; }
-      .yedu-article-summary { line-height: 1.15; font-size: 0.73rem; }
     }
   </style>
 </head>
@@ -304,9 +293,9 @@ const html = `<!DOCTYPE html>
     </div>
   </div>
 
-  <script type="module">
-    var DATA_FILES = ${filesJsArray};
+${dataScriptTags}
 
+  <script>
     var PAGE_SIZE = 10;
     var currentPage = 1;
     var articles = [];
@@ -316,13 +305,14 @@ const html = `<!DOCTYPE html>
     var pausePath = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
     var playPath = 'M8 5v14l11-7z';
 
-    async function loadData() {
+    // 汇总所有 window.__yedu_* 的数据
+    function loadData() {
       try {
-        var fetches = DATA_FILES.map(function(f) {
-          return import('./data/' + f).then(function(m) { return m.default; }).catch(function() { return null; });
-        });
-        var results = await Promise.all(fetches);
-        articles = results.filter(Boolean);
+        articles = Object.keys(window)
+          .filter(function(k) { return k.startsWith('__yedu_'); })
+          .sort()
+          .reverse()
+          .map(function(k) { return window[k]; });
         renderPage(1);
       } catch (e) {
         console.error('加载失败:', e);
@@ -370,7 +360,7 @@ const html = `<!DOCTYPE html>
         html += '<div class="yedu-article-card" data-index="' + globalIndex + '">' +
           '<div class="yedu-article-main">' +
             '<div class="yedu-article-cover">' +
-              (imgSrc ? '<img src="' + imgSrc + '" alt="" loading="lazy" onerror="this.style.display=\\'none\\';this.nextElementSibling.style.display=\\'flex\\'">' : '') +
+              (imgSrc ? '<img src="' + imgSrc + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' : '') +
               '<div class="yedu-img-placeholder" style="display:' + (imgSrc ? 'none' : 'flex') + '">夜读</div>' +
               (hasAudio ? '<button class="yedu-audio-btn" data-index="' + globalIndex + '" data-src="' + article.audioSrc + '"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>' : '') +
               metaHtml +
@@ -506,4 +496,5 @@ const html = `<!DOCTYPE html>
 
 fs.writeFileSync(HTML_PATH, html, 'utf8');
 
-console.log('index.html generated: ' + files.length + ' articles');
+console.log('index.html generated to: ' + HTML_PATH);
+console.log('Articles: ' + files.length);
