@@ -136,9 +136,11 @@
             dataScripts.push(basePath + match[1].replace(/^\.\//, ''));
           }
 
-          // 3. 生成纯净 HTML：只移除 data 脚本，保留模板的内联 JS（innerHTML 会执行它）
+          // 3. 生成纯净 HTML：只移除 data 脚本标签，保留模板内联 JS
           var bodyHtml = bodyContent
-            .replace(/<!-- DATA_FILES_START -->[\s\S]*?<!-- DATA_FILES_END -->/g, '');
+            .replace(/<!--DATA_FILES_START-->\s*/gi, '')
+            .replace(/\s*<!--DATA_FILES_END-->/gi, '')
+            .replace(/<script[^>]+src=["']([^"']*data\/[^"']+\.js)["'][^>]*>\s*/gi, '');
 
           bodyHtml = fixRelativePaths(bodyHtml, basePath);
           bodyHtml = bodyHtml.replace(/__CID__/g, id);
