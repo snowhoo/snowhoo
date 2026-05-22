@@ -11,7 +11,6 @@ layout: false
     .__CID__-app { padding: 0; }
 
     .__CID__-header {
-      display: flex;
       align-items: baseline;
       gap: 12px; 
     }
@@ -21,7 +20,7 @@ layout: false
       color: var(--text-secondary, #888);
     }
 
-    .__CID__-article-list { padding: 0 4px; }
+    .__CID__-article-list { padding: 0; text-align: left; }
 
     .__CID__-article-card {
       background: var(--card-bg, rgba(255, 255, 255, 0.95));
@@ -342,7 +341,7 @@ layout: false
               progressHtml +
             '</div>' +
             '<div class="__CID__-article-content">' +
-              '<h2 class="__CID__-article-title" title="' + article.title + '">' + article.title + '</h2>' +
+              '<h3 class="__CID__-article-title" title="' + article.title + '">' + article.title + '</h3>' +
               (article.pubDate ? '<div class="__CID__-article-date">' + article.pubDate + '</div>' : '') +
               '<p class="__CID__-article-summary">' + (article.summary || '') + '</p>' +
               '<div class="__CID__-read-more" data-index="' + globalIndex + '"><span>展开</span><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></div>' +
