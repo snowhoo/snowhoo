@@ -148,7 +148,9 @@
             return fetch(src).then(function(r) { return r.text(); });
           })).then(function(texts) {
             texts.forEach(function(text) {
-              try { eval(text); } catch(e) {}
+              try { eval(text); } catch(e) { console.error('[sc] eval error:', e); }
+            });
+            console.log('[sc] after eval, __yedu_ keys:', Object.keys(window).filter(function(k){ return k.startsWith('__yedu_'); }).length);
             });
 
             var prefix = CONTENT_PREFIX[id] || ('__' + id + '_');
