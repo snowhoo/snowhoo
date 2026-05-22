@@ -96,7 +96,10 @@
       content.innerHTML = '<div class="sc-loading">加载中...</div>';
 
       fetch(htmlUrl)
-        .then(function(r) { return r.text(); })
+        .then(function(r) {
+          console.log('[SevenColor] fetch ok, status:', r.status);
+          return r.text();
+        })
         .then(function(html) {
           // 去掉模板 HTML 的外层框架标签，只保留 body 内容
           html = html.replace(/<!DOCTYPE[^>]*>\s*/gi, '');
@@ -135,6 +138,7 @@
           while ((match = scriptRegex.exec(bodyContent)) !== null) {
             dataScripts.push(basePath + match[1].replace(/^\.\//, ''));
           }
+          console.log('[SevenColor] dataScripts found:', dataScripts.length, dataScripts);
 
           // 3. 提取 body 内容（只移除 data 脚本部分，保留模板 JS）
           // 移除 <!-- DATA_FILES_START --> ... <!-- DATA_FILES_END --> 之间的 data 脚本
@@ -168,13 +172,14 @@
           content.innerHTML = bodyHtml;
 
           // 6. 触发渲染：调用模板里定义的 window.__scRenderPage
+          console.log('[SevenColor] articles count:', (window.__scArticles || []).length);
           var laterScript = document.createElement('script');
           laterScript.textContent = '(function(){'
-            + 'var cid = "' + id + '";'
+            + 'console.log("[SevenColor] laterScript running, __scRenderPage:", typeof window.__scRenderPage);'
             + 'if (window.__scRenderPage) {'
             + 'window.__scRenderPage(1);'
             + '} else {'
-            + 'console.error("__scRenderPage not found for:", cid);'
+            + 'console.error("__scRenderPage not found");'
             + '}'
             + '})();';
           content.appendChild(laterScript);
