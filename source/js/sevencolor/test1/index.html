@@ -96,6 +96,17 @@ layout: false
       z-index: 2;
     }
 
+    .__CID__-article-corner-label {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.6rem;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      z-index: 2;
+      pointer-events: none;
+    }
+
     .__CID__-article-meta svg { width: 9px; height: 9px; fill: currentColor; }
 
     .__CID__-audio-progress {
@@ -337,6 +348,7 @@ layout: false
               (imgSrc ? '<img src="' + imgSrc + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' : '') +
               '<div class="__CID__-img-placeholder" style="display:' + (imgSrc ? 'none' : 'flex') + '">夜读</div>' +
               (hasAudio ? '<button class="__CID__-audio-btn" data-index="' + globalIndex + '" data-src="' + article.audioSrc + '"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>' : '') +
+              '<span class="__CID__-article-corner-label">每晚十点 · 温暖相伴</span>' +
               metaHtml +
               progressHtml +
             '</div>' +
