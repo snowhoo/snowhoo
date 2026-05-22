@@ -1163,6 +1163,7 @@ document.addEventListener('click', function(e) {
   console.log('[DEBUG] click captured:', e.target);
   var target = e.target;
   var closest = target.closest('button');
+  console.log('[DEBUG] closest button:', closest);
   if (closest && closest.disabled) return;
   if (!closest) {
     var card = target.closest('.video-card');
@@ -1182,4 +1183,28 @@ document.addEventListener('click', function(e) {
 });
 
 loadIndex();
+
+/* ===== 直接点击补丁：绕过事件委托问题 ===== */
+var patched = false;
+function patchVideoCards() {
+  var cards = document.querySelectorAll('.video-card');
+  if (cards.length === 0) return;
+  cards.forEach(function(card) {
+    if (card.dataset.patched) return;
+    card.dataset.patched = '1';
+    card.addEventListener('click', function(e) {
+      console.log('[PATCH] video-card clicked, eid:', this.dataset.eid);
+      var panel = document.getElementById(this.dataset.eid);
+      console.log('[PATCH] panel:', panel);
+      if (panel) {
+        panel.classList.toggle('open');
+        console.log('[PATCH] open toggled, now:', panel.classList.contains('open'));
+      }
+    });
+  });
+  patched = true;
+}
+// 每 500ms 检查一次新卡片，共检查 20 次
+var patchInterval = setInterval(patchVideoCards, 500);
+setTimeout(function() { clearInterval(patchInterval); }, 10000);
 </script></div></body></html>
