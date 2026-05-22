@@ -98,11 +98,21 @@
       fetch(htmlUrl)
         .then(function(r) { return r.text(); })
         .then(function(html) {
+          // 0. 先提取 <head> 中的 <style> 和 <link> 标签（在删除 head 之前）
+          var headStyles = [];
+          var headLinks = [];
+          html = html.replace(/<head[^>]*>([\s\S]*?)<\/head>\s*/gi, function(match, headContent) {
+            var s = headContent.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+            if (s) headStyles = headStyles.concat(s);
+            var l = headContent.match(/<link[^>]+rel=["']stylesheet["'][^>]*>/gi);
+            if (l) headLinks = headLinks.concat(l);
+            return '';
+          });
+
           // 去掉模板 HTML 的外层框架标签，只保留 body 内容
           html = html.replace(/<!DOCTYPE[^>]*>\s*/gi, '');
           html = html.replace(/<html[^>]*>/gi, '');
           html = html.replace(/<\/html>\s*/gi, '');
-          html = html.replace(/<head[^>]*>[\s\S]*?<\/head>\s*/gi, '');
           html = html.replace(/<body/gi, '<div');
           html = html.replace(/<\/body>/gi, '</div>');
 
@@ -110,12 +120,14 @@
           // 提取其中内容（即 body > div.app 那个层级的 div）
           var bodyContent = html.replace(/^<div[^>]*>/, '').replace(/<\/div>\s*$/, '');
 
-          // 1. 注入 CSS（每个 id 只注入一次）- 提取 <style> 和 <link> 标签
+          // basePath 在 CSS 注入之前就需要用到
+          var basePath = htmlUrl.replace(/\/[^/]*$/, '/');
+
+          // 1. 注入 CSS（每个 id 只注入一次）- 使用之前提取的 headStyles
           if (!injectedStyles[id]) {
             // 处理 <style> 标签
-            var styleMatches = bodyContent.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
-            if (styleMatches) {
-              styleMatches.forEach(function(styleTag) {
+            if (headStyles.length > 0) {
+              headStyles.forEach(function(styleTag) {
                 var contentMatch = styleTag.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
                 if (contentMatch) {
                   var newStyle = document.createElement('style');
@@ -128,13 +140,13 @@
                   newStyle.textContent = cssContent;
                   newStyle.dataset.scId = id;
                   document.head.appendChild(newStyle);
+                  console.log('[SevenColor] CSS injected, textContent length:', cssContent.length);
                 }
               });
             }
             // 处理 <link rel="stylesheet"> 标签
-            var linkMatches = bodyContent.match(/<link[^>]+rel=["']stylesheet["'][^>]*>/gi);
-            if (linkMatches) {
-              linkMatches.forEach(function(linkTag) {
+            if (headLinks.length > 0) {
+              headLinks.forEach(function(linkTag) {
                 var tempDiv = document.createElement('div');
                 tempDiv.innerHTML = linkTag;
                 var linkEl = tempDiv.firstChild;
@@ -148,7 +160,6 @@
           }
 
           // 2. 提取 data 脚本列表（从原始 html 字符串中提取）
-          var basePath = htmlUrl.replace(/\/[^/]*$/, '/');
           var dataScripts = [];
           var scriptRegex = /<script[^>]+src=["']([^"']*data\/[^"']+\.js)["'][^>]*>/gi;
           var match;
