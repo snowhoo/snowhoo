@@ -199,6 +199,12 @@
             if (window.__scArticles.length > 0) {
               console.log('[SevenColor] first article coverSrc:', window.__scArticles[0].coverSrc);
             }
+            // 检查 CSS 是否注入
+            var injected = document.querySelector('head style[data-sc-id="' + id + '"]');
+            console.log('[SevenColor] injected CSS exists:', !!injected, 'id:', id);
+            if (injected) {
+              console.log('[SevenColor] CSS content (first 200 chars):', injected.textContent.substring(0, 200));
+            }
 
             return { bodyHtml: bodyHtml, inlineScriptContent: inlineScriptContent };
           });
