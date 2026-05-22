@@ -1190,6 +1190,7 @@ document.addEventListener('change', function(e) {
   if (target.classList.contains('cat-filter')) { filterCat(target); return; }
 });
 document.addEventListener('click', function(e) {
+  if (e._sevencolorHandled) return; // direct listener 已处理，跳过
   console.log('[DEBUG] click captured:', e.target);
   var target = e.target;
   var closest = target.closest('button');
@@ -1224,15 +1225,11 @@ function patchVideoCards() {
   cards.forEach(function(card) {
     card.dataset.patched = '1';
     card.addEventListener('click', function(e) {
-      console.log('[DIRECT] video-card clicked, eid:', this.dataset.eid);
+      e._sevencolorHandled = true;
       var panel = document.getElementById(this.dataset.eid);
-      if (panel) {
-        panel.classList.toggle('open');
-        console.log('[DIRECT] panel open:', panel.classList.contains('open'));
-      }
+      if (panel) panel.classList.toggle('open');
     });
   });
-  console.log('[PATCH] bound', cards.length, 'new cards');
 }
 // 渲染完成后已直接绑定，不再需要轮询
 </script></div></body></html>
