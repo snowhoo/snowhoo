@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260508_2209_001 = {
   "title": "【夜读】越过越好的人，都有一个共同点",
   "timeAgo": "",
   "duration": "04:15",

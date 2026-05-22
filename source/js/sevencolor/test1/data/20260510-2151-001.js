@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260510_2151_001 = {
   "title": "夜读 | 迷茫焦虑的时候，可能是珍贵的探索期、试错期",
   "timeAgo": "",
   "duration": "05:20",

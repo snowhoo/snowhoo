@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260511_2240_001 = {
   "title": "夜读 | 孩子最渴望父母说的5句话，你有说过吗？",
   "timeAgo": "",
   "duration": "06:11",

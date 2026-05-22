@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260501_2243_001 = {
   "title": "夜读 | 爱心满满的五月，要心想事成哦！",
   "timeAgo": "",
   "duration": "05:04",

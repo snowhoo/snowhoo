@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260426_2328_001 = {
   "title": "夜读｜养娃“回报率”超高的30件小事",
   "timeAgo": "",
   "duration": "05:31",

@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260430_2226_001 = {
   "title": "夜读 | 让你“五一”假期出行更愉悦的15件小事，赶紧收藏！",
   "timeAgo": "",
   "duration": "06:55",

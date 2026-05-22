@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260519_2214_001 = {
   "title": "夜读｜“人在完全的专注里，能得到真正的休息”",
   "timeAgo": "30分钟前",
   "duration": "05:00",

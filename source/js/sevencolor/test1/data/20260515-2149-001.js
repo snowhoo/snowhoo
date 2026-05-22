@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260515_2149_001 = {
   "title": "夜读｜真诚建议：培养一个亲近自然的爱好",
   "timeAgo": "",
   "duration": "03:43",

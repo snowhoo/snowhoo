@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260504_2241_001 = {
   "title": "夜读丨大大方方接住别人对你的赞美",
   "timeAgo": "",
   "duration": "04:42",

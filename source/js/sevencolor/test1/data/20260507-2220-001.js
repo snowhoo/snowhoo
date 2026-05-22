@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260507_2220_001 = {
   "title": "夜读丨内耗严重的人，请每天默念这5句话",
   "timeAgo": "",
   "duration": "05:10",

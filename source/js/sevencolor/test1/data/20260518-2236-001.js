@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260518_2236_001 = {
   "title": "夜读｜做不扫兴的父母",
   "timeAgo": "2小时前",
   "duration": "04:21",

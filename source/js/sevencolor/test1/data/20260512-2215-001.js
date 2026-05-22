@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260512_2215_001 = {
   "title": "夜读 | 为什么人一旦读书多了，性格就变了",
   "timeAgo": "",
   "duration": "04:42",

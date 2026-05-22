@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260502_2217_001 = {
   "title": "【夜读】想要人生幸福，这一点很关键！",
   "timeAgo": "",
   "duration": "05:20",

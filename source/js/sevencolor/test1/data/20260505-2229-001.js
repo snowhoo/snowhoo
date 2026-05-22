@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260505_2229_001 = {
   "title": "夜读丨珍惜你身边那个可以随时打扰的人",
   "timeAgo": "",
   "duration": "04:38",

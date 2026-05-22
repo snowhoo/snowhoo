@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260513_2225_001 = {
   "title": "夜读 | 夏天最有仪式感的10件小事，做过5件就很幸福",
   "timeAgo": "",
   "duration": "06:08",

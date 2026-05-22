@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260517_2235_001 = {
   "title": "夜读｜让自己变幸福的5条生活法则（建议收藏）",
   "timeAgo": "20分钟前",
   "duration": "05:03",

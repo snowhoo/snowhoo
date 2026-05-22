@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260509_2237_001 = {
   "title": "夜读 | 换位思考的5个层次",
   "timeAgo": "",
   "duration": "05:28",

@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260514_2155_001 = {
   "title": "夜读｜这是一个高效又朴素的“健康密码”",
   "timeAgo": "",
   "duration": "05:16",

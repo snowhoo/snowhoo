@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260424_2215_001 = {
   "title": "夜读｜有这9种感受，说明你和“对的人”在一起",
   "timeAgo": "",
   "duration": "07:36",

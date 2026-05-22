@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260421_2236_001 = {
   "title": "夜读 | 一个家庭最消耗孩子的，竟是这些不起眼的小事",
   "timeAgo": "",
   "duration": "06:19",

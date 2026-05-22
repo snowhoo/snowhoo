@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260425_2210_001 = {
   "title": "夜读｜真心建议：这三样东西别带进卧室",
   "timeAgo": "",
   "duration": "04:12",

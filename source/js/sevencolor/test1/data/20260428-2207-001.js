@@ -1,4 +1,4 @@
-export default {
+window.__yedu_20260428_2207_001 = {
   "title": "夜读 | 人生建议：靠近那些让你情绪稳定的人和事",
   "timeAgo": "",
   "duration": "04:08",
