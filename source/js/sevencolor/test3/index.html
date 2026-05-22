@@ -1007,6 +1007,20 @@ function render() {
   var panelCount = document.querySelectorAll('.ep-panel').length;
   var cardCount = document.querySelectorAll('.video-card').length;
   console.log('[RENDER] innerHTML set. video-cards:', cardCount, 'ep-panels:', panelCount);
+  // 渲染完成后立刻给所有 video-card 绑定直接点击（跳过事件委托）
+  document.querySelectorAll('.video-card').forEach(function(card) {
+    if (card.dataset.patched) return;
+    card.dataset.patched = '1';
+    card.addEventListener('click', function(e) {
+      console.log('[DIRECT] video-card clicked, eid:', this.dataset.eid);
+      var panel = document.getElementById(this.dataset.eid);
+      console.log('[DIRECT] panel:', panel);
+      if (panel) {
+        panel.classList.toggle('open');
+        console.log('[DIRECT] toggled, now open:', panel.classList.contains('open'));
+      }
+    });
+  });
 
   // 分页：页文件导航 or 内存分页（搜索/分类筛选模式）
   var pg = '';
@@ -1093,47 +1107,54 @@ function setEmpty(t, sub){
 
 /* ===== 播放 ===== */
 function playEp(el) {
+  console.log('[playEp] called, el:', el, 'dataset:', el && el.dataset);
   var url = el.dataset.url;
   var name = el.dataset.name;
   console.log('[playEp] url:', url, 'name:', name);
   if (!url) { console.log('[playEp] NO URL'); return; }
-  // 查找下一集
-  var items = el.parentElement.querySelectorAll('.ep-item');
-  var idx = Array.from(items).indexOf(el);
-  currentEpNext = idx < items.length - 1 ? items[idx + 1] : null;
-  document.getElementById('nextEpBtn').style.display = currentEpNext ? 'inline' : 'none';
-  doPlay(url, name);
+  try {
+    // 查找下一集
+    var items = el.parentElement.querySelectorAll('.ep-item');
+    var idx = Array.from(items).indexOf(el);
+    currentEpNext = idx < items.length - 1 ? items[idx + 1] : null;
+    document.getElementById('nextEpBtn').style.display = currentEpNext ? 'inline' : 'none';
+    console.log('[playEp] calling doPlay');
+    doPlay(url, name);
+    console.log('[playEp] doPlay returned');
+  } catch(err) { console.error('[playEp] error:', err); }
 }
 function doPlay(url, name) {
   console.log('[doPlay] called with url:', url, 'name:', name);
-  if(currentHls){currentHls.destroy();currentHls=null;}
-  var v = document.getElementById('player');
-  v.pause();
-  v.removeAttribute('src');
-  v.load();
-  document.querySelector('.player-box').classList.add('playing');
+  try {
+    if(currentHls){currentHls.destroy();currentHls=null;}
+    var v = document.getElementById('player');
+    v.pause();
+    v.removeAttribute('src');
+    v.load();
+    document.querySelector('.player-box').classList.add('playing');
 
-  if(url.indexOf('.m3u8')>=0){
-    if(Hls.isSupported()){
-      try{
-        var hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(v);
-        currentHls = hls;
-      }catch(e){
+    if(url.indexOf('.m3u8')>=0){
+      if(Hls.isSupported()){
+        try{
+          var hls = new Hls();
+          hls.loadSource(url);
+          hls.attachMedia(v);
+          currentHls = hls;
+        }catch(e){
+          v.src = url;
+        }
+      } else if(v.canPlayType('application/vnd.apple.mpegurl')){
         v.src = url;
+      } else {
+        setStatus('\u274c \u6d4f\u89c8\u5668\u4e0d\u652f\u6301 m3u8\u64ad\u653e');
+        return;
       }
-    } else if(v.canPlayType('application/vnd.apple.mpegurl')){
-      v.src = url;
     } else {
-      setStatus('\u274c \u6d4f\u89c8\u5668\u4e0d\u652f\u6301 m3u8\u64ad\u653e');
-      return;
+      v.src = url;
     }
-  } else {
-    v.src = url;
-  }
-  v.play().catch(function(){});
-  setStatus('\u25b6 ' + name);
+    v.play().catch(function(){});
+    setStatus('\u25b6 ' + name);
+  } catch(err) { console.error('[doPlay] error:', err); }
 }
 
 /* ===== 下一集 ===== */
@@ -1220,7 +1241,6 @@ function patchVideoCards() {
   patched = true;
   console.log('[PATCH ' + patchRun + '] done, patched', cards.length, 'cards');
 }
-// 每 500ms 检查一次新卡片，共检查 20 次
-var patchInterval = setInterval(patchVideoCards, 500);
-setTimeout(function() { clearInterval(patchInterval); }, 10000);
+// 持续监听新卡片（每 2 秒检查一次，跳过已有 dataset.patched 的）
+setInterval(patchVideoCards, 2000);
 </script></div></body></html>
