@@ -246,7 +246,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 
 #history-today .history-header {
   display: flex;
-  align-items: center;
+  align-items: right;
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0.6rem;
@@ -512,6 +512,6 @@ html[data-theme=dark] #history-today .expand-control:hover {
 
 /* ========== 统一页面主体边距 ========== */
 .layout {
-    padding: 4px 20px !important;
+    padding: 4px 10px !important;
     max-width: 1400px !important;
 }
