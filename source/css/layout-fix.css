@@ -232,7 +232,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
    历史上的今天
    ============================================= */
 #history-today {
-  width: 100%;
+  width: auto;
   margin: 0 auto;
   /*font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans CJK SC', sans-serif;*/
   background: transparent;
@@ -255,7 +255,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 }
 
 #history-today .history-header h3 { 
-  font-size: 1.1em; 
+  font-size: 1.5em; 
   font-weight: 400; 
   color: var(--text-highlight-color); 
   margin: 0; 
@@ -472,7 +472,7 @@ html[data-theme=dark] #history-today .history-header {
 }
 
 html[data-theme=dark] #history-today .history-header h3 {
-  color: #a8c0d8;
+  \\color: #a8c0d8;
 }
 
 html[data-theme=dark] #history-today .history-date {
