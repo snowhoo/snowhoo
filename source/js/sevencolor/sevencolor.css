@@ -192,6 +192,34 @@ html[data-theme=dark] #seven-color-card .sc-content-inner .sc-list li {
   color: var(--text-primary, #333);
 }
 
+/* ---- 底部收起条 ---- */
+#seven-color-card .sc-collapse-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #888);
+  background: var(--bg-secondary, #f0f2f5);
+  border-radius: 0 0 8px 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  box-sizing: border-box;
+}
+
+#seven-color-card .sc-collapse-bar:hover {
+  background: var(--btn-bg, #e0e0e0);
+  color: var(--text-primary, #333);
+}
+
+#seven-color-card .sc-collapse-bar .sc-collapse-arrow {
+  font-size: 0.65rem;
+  transition: transform 0.2s ease;
+}
+
 /* ---- 响应式 ---- */
 @media (max-width: 600px) {
   #seven-color-card .sc-btn { font-size: 0.75rem; height: 36px; line-height: 36px; }

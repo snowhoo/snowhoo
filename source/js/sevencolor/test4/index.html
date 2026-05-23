@@ -8,32 +8,25 @@ layout: false
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>随机画廊 | Hexo 原生嵌入</title>
     <style>
-        /* ---------------------------------------------
-            极简样式 - 完全继承 Hexo 主题，无任何明暗定义
-            不覆盖背景、文字颜色、边框主题色
-            只保留几何布局、响应式、动效过渡
-        --------------------------------------------- */
+        /* ---------- 极简布局，无任何颜色/背景定义，完全继承 Hexo 主题 ---------- */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* 根容器：完全透明，无背景无阴影，跟随父级 */
         .picsum-embedded {
             width: 100%;
             max-width: 1400px;
             margin: 0 auto;
         }
 
-        /* 卡片容器：无背景、无边框、无阴影，继承父级颜色 */
         .art-card {
             padding: 1.2rem;
             border-radius: 2rem;
-            /* 不设置任何背景色/边框/阴影，完全由 Hexo 主题决定 */
+            /* 不设背景、边框、阴影，完全透传主题样式 */
         }
 
-        /* 图片展区：无背景，只负责比例和圆角 */
         .image-stage {
             position: relative;
             width: 100%;
@@ -43,17 +36,15 @@ layout: false
             display: flex;
             align-items: center;
             justify-content: center;
-            /* 背景透明，让主题纹理透出 */
             background: transparent;
         }
 
-        /* 图片本身：自适应，无额外颜色 */
         .dynamic-img {
             display: block;
             width: 100%;
             height: auto;
             border-radius: 1rem;
-            transition: opacity 0.25s ease-in-out;
+            transition: opacity 0.25s ease;
             opacity: 0;
         }
 
@@ -61,7 +52,6 @@ layout: false
             opacity: 1;
         }
 
-        /* 轻量占位符：背景透明，文字颜色继承当前主题 */
         .img-placeholder {
             position: absolute;
             top: 0;
@@ -72,13 +62,12 @@ layout: false
             align-items: center;
             justify-content: center;
             background: transparent;
-            color: inherit;        /* 直接继承父级文字颜色 */
+            color: inherit;
             font-size: 0.9rem;
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             border-radius: 1.2rem;
             pointer-events: none;
             transition: opacity 0.2s;
-            backdrop-filter: none;
             opacity: 1;
         }
 
@@ -87,8 +76,6 @@ layout: false
             visibility: hidden;
         }
 
-        /* 按钮: 完全继承主题风格，无预设背景/边框/颜色，
-           只保留必要的布局与交互反馈（透明度变化） */
         .btn-lucky {
             display: block;
             width: fit-content;
@@ -97,17 +84,15 @@ layout: false
             font-size: 1rem;
             font-weight: 500;
             font-family: inherit;
-            background: transparent;   /* 完全透明，继承主题背景 */
-            color: inherit;           /* 继承文本颜色 */
-            border: none;             /* 无边框，依靠主题强调 */
+            background: transparent;
+            color: inherit;
+            border: none;
             border-radius: 3rem;
             cursor: pointer;
             transition: opacity 0.2s ease, transform 0.1s;
             letter-spacing: 0.3px;
-            box-shadow: none;
         }
 
-        /* 极简悬停效果：轻微降低透明度，通用且不依赖明暗模式 */
         .btn-lucky:hover {
             opacity: 0.7;
             transform: translateY(-1px);
@@ -118,47 +103,30 @@ layout: false
             opacity: 0.8;
         }
 
-        /* 署名区域：半透明且继承文字颜色，不额外定义灰色 */
         .credit {
             text-align: center;
             font-size: 0.7rem;
             margin-top: 0.8rem;
-            opacity: 0.6;          /* 半透明，融合主题文字 */
+            opacity: 0.6;
             font-family: system-ui, sans-serif;
         }
 
-        /* 响应式调整（仅布局尺寸，不涉及颜色） */
         @media (max-width: 640px) {
-            .art-card {
-                padding: 0.9rem;
-                border-radius: 1.5rem;
-            }
-            .btn-lucky {
-                padding: 0.65rem 1.8rem;
-                font-size: 0.9rem;
-                margin-top: 1.3rem;
-            }
-            .image-stage {
-                min-height: 220px;
-            }
+            .art-card { padding: 0.9rem; border-radius: 1.5rem; }
+            .btn-lucky { padding: 0.65rem 1.8rem; font-size: 0.9rem; margin-top: 1.3rem; }
+            .image-stage { min-height: 220px; }
         }
-
         @media (min-width: 1600px) {
-            .picsum-embedded {
-                max-width: 1600px;
-            }
+            .picsum-embedded { max-width: 1600px; }
         }
     </style>
 </head>
 <body style="background: transparent; margin: 0; padding: 0;">
-    <!-- 嵌入式组件 —— 完全透明背景，所有样式继承 Hexo 主题 -->
     <div class="picsum-embedded">
         <div class="art-card">
             <div class="image-stage" id="imageStage">
-                <!-- 高清动态图片 -->
                 <img id="artImage" class="dynamic-img" alt="Random artwork from Picsum" 
                      src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='transparent'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='currentColor' font-size='12'%3E...%3C/text%3E%3C/svg%3E">
-                <!-- 轻量占位符 -->
                 <div class="img-placeholder" id="imgPlaceholder">
                     <span>✨ 随机加载中</span>
                 </div>
@@ -172,90 +140,107 @@ layout: false
 
     <script>
         (function(){
-            // ------------------------------
-            //  高清自适应模块 — 根据视口宽高 + 设备像素比
-            //  完全保留功能，无样式干扰
-            // ------------------------------
-            
+            // ----- 配置 -----
             const MAX_WIDTH = 2800;
             const MAX_HEIGHT = 1800;
-            
+            const LOAD_TIMEOUT_MS = 15000;   // 15秒超时保护
+
             const imgElement = document.getElementById('artImage');
             const refreshBtn = document.getElementById('refreshBtn');
             const placeholderDiv = document.getElementById('imgPlaceholder');
-            
+
             let isLoading = false;
-            
+            let activeTimeoutId = null;
+
+            // 获取适配当前窗口的高清尺寸
             function getOptimalImageSize() {
                 const viewWidth = window.innerWidth;
                 const viewHeight = window.innerHeight;
                 const dpr = window.devicePixelRatio || 1;
-                
                 let targetWidth = Math.ceil(viewWidth * dpr);
                 let targetHeight = Math.ceil(viewHeight * dpr);
-                
-                const MIN_WIDTH = 800;
-                const MIN_HEIGHT = 600;
+                const MIN_WIDTH = 800, MIN_HEIGHT = 600;
                 if (targetWidth < MIN_WIDTH) targetWidth = MIN_WIDTH;
                 if (targetHeight < MIN_HEIGHT) targetHeight = MIN_HEIGHT;
                 if (targetWidth > MAX_WIDTH) targetWidth = MAX_WIDTH;
                 if (targetHeight > MAX_HEIGHT) targetHeight = MAX_HEIGHT;
-                
                 return { width: targetWidth, height: targetHeight };
             }
-            
+
+            // 生成随机图片 URL（包含随机种子与时间戳，避免缓存）
             function buildRandomImageUrl() {
                 const { width, height } = getOptimalImageSize();
                 const randomSeed = Math.random().toString(36).substring(2, 12) + Date.now();
                 return `https://picsum.photos/${width}/${height}?random=${randomSeed}&t=${Date.now()}`;
             }
-            
+
+            // 加载图片（带超时保护）
             function loadImageAsync(url) {
                 return new Promise((resolve, reject) => {
-                    if (!imgElement) return reject(new Error('img element missing'));
-                    
+                    if (!imgElement) return reject(new Error('Missing img element'));
+
+                    // 清除之前的超时
+                    if (activeTimeoutId) clearTimeout(activeTimeoutId);
+
+                    // 设置超时定时器
+                    activeTimeoutId = setTimeout(() => {
+                        reject(new Error(`图片加载超时 (${LOAD_TIMEOUT_MS}ms)`));
+                    }, LOAD_TIMEOUT_MS);
+
+                    // UI 状态重置
                     imgElement.classList.remove('loaded');
                     placeholderDiv.classList.remove('hidden-placeholder');
                     placeholderDiv.style.opacity = '1';
                     placeholderDiv.style.visibility = 'visible';
-                    
+                    placeholderDiv.innerHTML = '<span>✨ 随机加载中</span>';
+
+                    // 预加载图像对象
                     const tempImage = new Image();
                     tempImage.crossOrigin = "Anonymous";
-                    
+
                     tempImage.onload = () => {
+                        // 预加载成功，将真实图片赋给 img 元素
                         imgElement.src = url;
+                        // 监听实际渲染完成
                         imgElement.onload = () => {
+                            if (activeTimeoutId) clearTimeout(activeTimeoutId);
                             imgElement.classList.add('loaded');
                             placeholderDiv.classList.add('hidden-placeholder');
                             placeholderDiv.style.opacity = '0';
                             resolve(url);
                         };
                         imgElement.onerror = (err) => {
-                            reject(new Error('Image render failed'));
+                            if (activeTimeoutId) clearTimeout(activeTimeoutId);
+                            reject(new Error('图片渲染失败'));
                         };
+                        // 如果图片已经缓存，complete 会立即为 true
                         if (imgElement.complete) {
+                            if (activeTimeoutId) clearTimeout(activeTimeoutId);
                             imgElement.classList.add('loaded');
                             placeholderDiv.classList.add('hidden-placeholder');
                             placeholderDiv.style.opacity = '0';
                             resolve(url);
                         }
                     };
-                    
+
                     tempImage.onerror = (error) => {
-                        placeholderDiv.innerHTML = '<span>⚠️ 加载失败 · 轻触重试</span>';
+                        if (activeTimeoutId) clearTimeout(activeTimeoutId);
+                        placeholderDiv.innerHTML = '<span>⚠️ 网络错误 · 轻触重试</span>';
                         setTimeout(() => {
                             if (placeholderDiv.innerHTML.includes('轻触重试')) {
                                 placeholderDiv.innerHTML = '<span>✨ 随机加载中</span>';
                             }
-                        }, 1500);
-                        reject(new Error('Preload image failed'));
+                        }, 2000);
+                        reject(new Error('预加载失败'));
                     };
-                    
+
                     tempImage.src = url;
                 });
             }
-            
+
+            // 更新随机图片（核心动作）
             async function updateRandomImage() {
+                // 防止并发点击
                 if (isLoading) {
                     if (refreshBtn) {
                         refreshBtn.style.transform = 'scale(0.98)';
@@ -263,62 +248,65 @@ layout: false
                     }
                     return;
                 }
-                
+
                 isLoading = true;
+                // 保存按钮原始文字
+                const originalText = refreshBtn ? refreshBtn.innerText : '🎲 重新试一试手气';
                 if (refreshBtn) {
                     refreshBtn.style.opacity = '0.6';
                     refreshBtn.style.cursor = 'wait';
-                    const originalText = refreshBtn.innerText;
                     refreshBtn.innerText = '🎴 变幻中 ...';
-                    refreshBtn._originalText = originalText;
                 }
-                
+
                 try {
                     const newImageUrl = buildRandomImageUrl();
                     await loadImageAsync(newImageUrl);
+                    // 成功：占位符内容重置为默认（以备下次使用）
                     placeholderDiv.innerHTML = '<span>✨ 随机加载中</span>';
                 } catch (error) {
-                    console.warn(error);
-                    placeholderDiv.innerHTML = '<span>🔄 网络波动 · 再试一次</span>';
+                    console.warn('图片更新失败:', error);
+                    placeholderDiv.innerHTML = '<span>🔄 加载异常 · 点按钮再试</span>';
                     placeholderDiv.classList.remove('hidden-placeholder');
                     placeholderDiv.style.opacity = '1';
+                    // 3秒后恢复占位符文字
                     setTimeout(() => {
-                        if (placeholderDiv.innerHTML.includes('再试一次')) {
+                        if (placeholderDiv.innerHTML.includes('点按钮再试')) {
                             placeholderDiv.innerHTML = '<span>✨ 随机加载中</span>';
                         }
-                    }, 2800);
+                    }, 3000);
                 } finally {
+                    // 确保无论成功或失败，都恢复按钮状态
                     isLoading = false;
                     if (refreshBtn) {
                         refreshBtn.style.opacity = '';
                         refreshBtn.style.cursor = '';
-                        if (refreshBtn._originalText) {
-                            refreshBtn.innerText = refreshBtn._originalText;
-                        } else {
-                            refreshBtn.innerText = '🎲 重新试一试手气';
-                        }
+                        refreshBtn.innerText = originalText;
                         refreshBtn.style.transform = '';
+                    }
+                    if (activeTimeoutId) {
+                        clearTimeout(activeTimeoutId);
+                        activeTimeoutId = null;
                     }
                 }
             }
-            
-            // 初始化首次加载
-            let isFirstLoad = true;
+
+            // 初始化：页面加载后自动请求第一张图
+            let firstLoadDone = false;
             function initFirstImage() {
-                if (isFirstLoad) {
-                    isFirstLoad = false;
-                    updateRandomImage().catch(e => console.warn(e));
+                if (!firstLoadDone) {
+                    firstLoadDone = true;
+                    updateRandomImage().catch(e => console.warn('初始加载轻量错误', e));
                 }
             }
-            
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', initFirstImage);
             } else {
                 initFirstImage();
             }
-            
-            // 按钮事件（确保不会重复绑定）
+
+            // 绑定按钮事件（稳妥方式，避免重复绑定）
             if (refreshBtn) {
+                // 克隆并替换，清除原有监听器
                 const newBtn = refreshBtn.cloneNode(true);
                 refreshBtn.parentNode.replaceChild(newBtn, refreshBtn);
                 const finalBtn = document.getElementById('refreshBtn');
@@ -342,30 +330,22 @@ layout: false
                     });
                 }
             }
-            
-            // 后备：若图片加载慢，5秒后占位符不阻塞
-            setTimeout(() => {
-                if (imgElement && !imgElement.classList.contains('loaded') && !isLoading) {
-                    placeholderDiv.innerHTML = '<span>⌛ 稍慢 · 点击按钮重试</span>';
-                    setTimeout(() => {
-                        if (placeholderDiv.innerHTML.includes('点击按钮重试')) {
-                            placeholderDiv.innerHTML = '<span>✨ 随机加载中</span>';
-                        }
-                    }, 3000);
-                }
-            }, 5000);
-            
-            // 确保图片完全加载后移除占位符残留
-            const styleCheck = setInterval(() => {
-                if (imgElement && imgElement.complete && imgElement.naturalHeight !== 0) {
-                    if (!imgElement.classList.contains('loaded')) {
-                        imgElement.classList.add('loaded');
-                        if (placeholderDiv) placeholderDiv.classList.add('hidden-placeholder');
+
+            // 后备保护：若图片长时间未加载完成（例如超时未触发），强制恢复 UI
+            setInterval(() => {
+                if (isLoading && refreshBtn && refreshBtn.innerText.includes('变幻中')) {
+                    // 额外安全阀：超过 20 秒还在加载则强制复位
+                    console.warn('安全阀触发，强制重置加载状态');
+                    isLoading = false;
+                    if (refreshBtn) {
+                        refreshBtn.style.opacity = '';
+                        refreshBtn.style.cursor = '';
+                        refreshBtn.innerText = '🎲 重新试一试手气';
                     }
-                    clearInterval(styleCheck);
+                    if (activeTimeoutId) clearTimeout(activeTimeoutId);
+                    placeholderDiv.innerHTML = '<span>✨ 点击按钮重试</span>';
                 }
-            }, 200);
-            setTimeout(() => clearInterval(styleCheck), 8000);
+            }, 20000);
         })();
     </script>
 </body>

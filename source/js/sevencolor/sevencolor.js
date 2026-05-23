@@ -116,12 +116,14 @@
       }
       btn.classList.add('sc-open');
       content.classList.add('sc-open');
+      addCollapseBar(content, id);
       _scCallRender(id, 1);
       return;
     }
 
     btn.classList.add('sc-open');
     content.classList.add('sc-open');
+    addCollapseBar(content, id);
 
     if (!content.dataset.loaded) {
       content.innerHTML = '<div class="sc-loading">加载中...</div>';
@@ -273,7 +275,25 @@
     var btn = container.querySelector('.sc-btn[data-id="' + id + '"]');
     var content = container.querySelector('#sc-content-' + id);
     if (btn) btn.classList.remove('sc-open');
-    if (content) content.classList.remove('sc-open');
+    if (content) {
+      content.classList.remove('sc-open');
+      var bar = content.querySelector('.sc-collapse-bar');
+      if (bar) bar.remove();
+    }
+  }
+
+  function addCollapseBar(content, id) {
+    var existing = content.querySelector('.sc-collapse-bar');
+    if (existing) return;
+    var bar = document.createElement('div');
+    bar.className = 'sc-collapse-bar';
+    bar.dataset.id = id;
+    bar.innerHTML = '<span class="sc-collapse-arrow">▲</span><span>收起</span>';
+    bar.addEventListener('click', function() {
+      closeContent(id);
+      openedId = null;
+    });
+    content.appendChild(bar);
   }
 
   function init() {
