@@ -14,8 +14,7 @@
 
   script.
     (function(){
-      var API = 'https://apis.jxcxin.cn/api/lishi';
-      var BASE = 50, INTERVAL = 1500, DUP_LIMIT = 5, MIN = 5, EXTRA = 20;
+      var API = 'https://api.asilu.com/today';
       var currentEvents = null;
       var CACHE_KEY = 'ht_cache';
       var todayStr = '';
@@ -24,7 +23,7 @@
         var d = new Date();
         var m = String(d.getMonth()+1), day = String(d.getDate());
         todayStr = d.getFullYear()+'-'+m+'-'+day;
-        return { year: d.getFullYear(), month: m, day: day, param: parseInt(m)+'-'+parseInt(day), display: d.getFullYear()+'年'+m+'月'+day+'日' };
+        return { year: d.getFullYear(), month: m, day: day, display: d.getFullYear()+'年'+m+'月'+day+'日' };
       }
 
       function getCache() {
@@ -41,62 +40,38 @@
         try { localStorage.setItem(CACHE_KEY, JSON.stringify({date:todayStr, events:events})); } catch(e){}
       }
 
-      function esc(s) { return s?s.replace(/[&<>]/g,function(m){return m=='&'?'&amp;':m=='<'?'&lt;':m=='>'?'&gt;':m;}):''; }
-
-      function fetchOne(param) {
-        return new Promise(function(resolve) {
+      function fetchEvents() {
+        return new Promise(function(resolve, reject) {
           var controller = new AbortController();
-          var tid = setTimeout(function(){ controller.abort(); }, 6000);
-          fetch(API+'?date='+param, {signal:controller.signal}).then(function(r){
+          var tid = setTimeout(function(){ controller.abort(); }, 8000);
+          fetch(API, {signal:controller.signal}).then(function(r){
             clearTimeout(tid);
-            if(!r.ok){ resolve(null); return; }
-            return r.text();
-          }).then(function(t){
-            if(!t){ resolve(null); return; }
-            var m = t.match(/^(\d{4})年\d{2}月\d{2}日(.+)/);
-            resolve(m?{year:parseInt(m[1]),text:m[2].trim()}:null);
-          }).catch(function(){ clearTimeout(tid); resolve(null); });
-        });
-      }
-
-      function collect(param, onProg) {
-        var seen = {}, events = [], empty = 0;
-        function tick(i, max, evs) { if(onProg) onProg(i+1, max, evs.length); }
-        return new Promise(function(resolve) {
-          (function loop(i) {
-            if(i >= BASE) {
-              if(events.length < MIN) {
-                (function extra(j) {
-                  if(j >= EXTRA || events.length >= MIN) { resolve(events); return; }
-                  fetchOne(param).then(function(ev) {
-                    if(ev && !seen[ev.year+'|'+ev.text]) { seen[ev.year+'|'+ev.text]=1; events.push(ev); }
-                    else if(ev) empty++;
-                    tick(BASE, BASE+EXTRA, events);
-                    j++; if(j<EXTRA && events.length<MIN) setTimeout(function(){ extra(j); }, INTERVAL);
-                    else resolve(events);
-                  });
-                })(0);
-              } else resolve(events);
+            if(!r.ok){ reject(new Error('请求失败')); return; }
+            return r.json();
+          }).then(function(json){
+            clearTimeout(tid);
+            if(!json || json.code !== 200 || !Array.isArray(json.data)) {
+              reject(new Error('数据格式错误'));
               return;
             }
-            fetchOne(param).then(function(ev) {
-              if(ev) { var key = ev.year+'|'+ev.text; if(!seen[key]) { seen[key]=1; events.push(ev); empty=0; } else empty++; }
-              else empty++;
-              tick(i, BASE, events);
-              if(empty >= DUP_LIMIT) { resolve(events); return; }
-              i++; if(i<BASE) setTimeout(function(){ loop(i); }, INTERVAL);
-              else loop(i);
+            // 转换为渲染格式：{year, text}
+            var events = json.data.map(function(item){
+              return { year: item.year, text: item.title };
             });
-          })(0);
+            resolve(events);
+          }).catch(function(e){
+            clearTimeout(tid);
+            reject(e);
+          });
         });
       }
 
       function render(evs) {
         var c = document.getElementById('htEventsContainer');
-        if(!evs || evs.length===0) { c.innerHTML='<div class="status-message">📭 今日暂无历史记载</div>'; return; }
+        if(!evs || evs.length===0) { c.innerHTML='<div class="status-message">今日暂无历史记载</div>'; return; }
         evs.sort(function(a,b){ return b.year-a.year; });
         var html='';
-        for(var i=0;i<evs.length;i++) html+='<div class="event-item"><span class="event-year">'+evs[i].year+'</span><span class="event-title">'+esc(evs[i].text)+'</span></div>';
+        for(var i=0;i<evs.length;i++) html+='<div class="event-item"><span class="event-year">'+evs[i].year+'</span><span class="event-title">'+evs[i].text+'</span></div>';
         c.innerHTML=html;
       }
 
@@ -131,8 +106,8 @@
         currentEvents = cached;
         setText('详情');
       } else {
-        setText('收集中...');
-        collect(t.param, function(cur, tot, n){ setText('收集中 ('+cur+'/'+tot+')'); })
+        setText('加载中...');
+        fetchEvents()
           .then(function(evs){ currentEvents = evs; setCache(evs); setText('详情'); })
           .catch(function(){ setText('加载失败'); });
       }

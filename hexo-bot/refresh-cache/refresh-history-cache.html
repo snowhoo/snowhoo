@@ -32,8 +32,7 @@
 </div>
 <script>
 (function(){
-  var API = 'https://apis.jxcxin.cn/api/lishi';
-  var BASE = 50, INTERVAL = 1500, DUP_LIMIT = 5, MIN = 5, EXTRA = 20;
+  var API = 'https://api.asilu.com/today';
   var CACHE_KEY = 'ht_cache';
   var todayStr = '';
   var DONE = false;
@@ -42,7 +41,7 @@
     var d = new Date();
     var m = String(d.getMonth()+1), day = String(d.getDate());
     todayStr = d.getFullYear()+'-'+m+'-'+day;
-    return { year: d.getFullYear(), month: m, day: day, param: parseInt(m)+'-'+parseInt(day), display: d.getFullYear()+'年'+m+'月'+day+'日' };
+    return { year: d.getFullYear(), month: m, day: day, display: d.getFullYear()+'年'+m+'月'+day+'日' };
   }
 
   function getCache() {
@@ -60,50 +59,28 @@
     if(!DONE) { DONE = true; document.title = '[OK] ' + events.length + ' events cached'; window.close(); }
   }
 
-  function esc(s) { return s?s.replace(/[&<>]/g,function(m){return m=='&'?'&amp;':m=='<'?'&lt;':m=='>'?'&gt;':m;}):''; }
-
-  function fetchOne(param) {
-    return new Promise(function(resolve) {
+  function fetchEvents() {
+    return new Promise(function(resolve, reject) {
       var controller = new AbortController();
-      var tid = setTimeout(function(){ controller.abort(); }, 6000);
-      fetch(API+'?date='+param, {signal:controller.signal}).then(function(r){
+      var tid = setTimeout(function(){ controller.abort(); }, 8000);
+      fetch(API, {signal:controller.signal}).then(function(r){
         clearTimeout(tid);
-        if(!r.ok){ resolve(null); return; }
-        return r.text();
-      }).then(function(t){
-        if(!t){ resolve(null); return; }
-        var m = t.match(/^(\d{4})年\d{2}月\d{2}日(.+)/);
-        resolve(m?{year:parseInt(m[1]),text:m[2].trim()}:null);
-      }).catch(function(){ clearTimeout(tid); resolve(null); });
-    });
-  }
-
-  function collect(param) {
-    var seen = {}, events = [], empty = 0;
-    return new Promise(function(resolve) {
-      (function loop(i) {
-        if(i >= BASE) {
-          if(events.length < MIN) {
-            (function extra(j) {
-              if(j >= EXTRA || events.length >= MIN) { resolve(events); return; }
-              fetchOne(param).then(function(ev) {
-                if(ev && !seen[ev.year+'|'+ev.text]) { seen[ev.year+'|'+ev.text]=1; events.push(ev); }
-                else if(ev) empty++;
-                j++; if(j<EXTRA && events.length<MIN) setTimeout(function(){ extra(j); }, INTERVAL);
-                else resolve(events);
-              });
-            })(0);
-          } else resolve(events);
+        if(!r.ok){ reject(new Error('请求失败')); return; }
+        return r.json();
+      }).then(function(json){
+        clearTimeout(tid);
+        if(!json || json.code !== 200 || !Array.isArray(json.data)) {
+          reject(new Error('数据格式错误'));
           return;
         }
-        fetchOne(param).then(function(ev) {
-          if(ev) { var key = ev.year+'|'+ev.text; if(!seen[key]) { seen[key]=1; events.push(ev); empty=0; } else empty++; }
-          else empty++;
-          if(empty >= DUP_LIMIT) { resolve(events); return; }
-          i++; if(i<BASE) setTimeout(function(){ loop(i); }, INTERVAL);
-          else loop(i);
+        var events = json.data.map(function(item){
+          return { year: item.year, text: item.title };
         });
-      })(0);
+        resolve(events);
+      }).catch(function(e){
+        clearTimeout(tid);
+        reject(e);
+      });
     });
   }
 
@@ -115,14 +92,14 @@
     document.title = '[HIT] using cache';
     window.close();
   } else {
-    document.title = '[MISS] collecting...';
-    collect(t.param).then(function(evs) {
+    document.title = '[MISS] fetching...';
+    fetchEvents().then(function(evs) {
       setCache(evs);
     }).catch(function() {
       document.title = '[ERR] failed';
       window.close();
     });
-    setTimeout(function(){ if(!DONE) { DONE=true; window.close(); } }, 90000);
+    setTimeout(function(){ if(!DONE) { DONE=true; window.close(); } }, 15000);
   }
 })();
 </script>
