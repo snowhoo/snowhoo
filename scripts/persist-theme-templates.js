@@ -36,7 +36,6 @@ hexo.on('generateBefore', function() {
   }
 
   // 复制自定义组件文件到 layout/（与 index.pug 同目录）
-  const scriptsDir = path.join(hexo.base_dir, 'scripts');
   const botDir = path.join(hexo.base_dir, 'hexo-bot/refresh-cache');
 
   // poetry-widget.pug 来自 hexo-bot/refresh-cache（本地，不在 git）
@@ -47,8 +46,8 @@ hexo.on('generateBefore', function() {
     hexo.log.info('[持久化模板] 已覆盖: poetry-widget.pug');
   }
 
-  // history-today.pug 来自 scripts/（在 git 里，Actions 构建可用）
-  const historySrc = path.join(scriptsDir, 'history-today.pug');
+  // history-today.pug 来自 hexo-bot/refresh-cache/
+  const historySrc = path.join(botDir, 'history-today.pug');
   const historyDest = path.join(themeDir, 'history-today.pug');
   if (fs.existsSync(historySrc)) {
     fs.copyFileSync(historySrc, historyDest);

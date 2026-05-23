@@ -1,24 +1,46 @@
-# 刷新博客「历史上的今天」localStorage 缓存
-# 每天 00:01 运行，只请求专用缓存刷新页面（极轻量）
-$url = "https://snowhoo.net/refresh-history-cache.html"
-$wait = 90
+﻿# Refresh history-today cache - call asilu API and write to local JSON
+# Scheduled task runs daily at 3:00 AM
+
+$apiUrl = "https://api.asilu.com/today"
+$jsonFile = "D:\hexo\source\js\sevencolor\history-cache.json"
 
 try {
-    $ie = New-Object -ComObject InternetExplorer.Application
-    $ie.Visible = $false
-    $ie.Silent = $true
-    $ie.Navigate($url)
+    $resp = Invoke-WebRequest -Uri $apiUrl -UseBasicParsing -TimeoutSec 30
+    $json = $resp.Content | ConvertFrom-Json
 
-    while ($ie.Busy -or $ie.ReadyState -ne 4) {
-        Start-Sleep -Milliseconds 500
+    if ($json.code -ne 200) {
+        Write-Host "[ERR] API returned code $($json.code)"
+        exit 1
     }
 
-    Start-Sleep -Seconds $wait
+    $today = Get-Date
+    $dateStr = "$($today.Year)年$($today.Month)月$($today.Day)日"
 
-    $ie.Quit()
-    [System.Runtime.Interopservices.Marshal]::ReleaseComObject($ie) | Out-Null
-    Write-Host "OK at $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    # Map API response — keep full fields including link for "百科了解事件"
+    $events = $json.data | ForEach-Object {
+        @{ year = $_.year; text = $_.title; link = $_.link; type = $_.type }
+    }
+
+    $cacheData = @{
+        date   = $dateStr
+        events = $events
+    }
+
+    $cacheJson = $cacheData | ConvertTo-Json -Compress -Depth 3
+    # Write JSON without BOM (UTF-8 is safe for JSON files)
+    [System.IO.File]::WriteAllText($jsonFile, $cacheJson, [System.Text.UTF8Encoding]::new($false))
+
+    Write-Host "[OK] $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - cached $($events.Count) events"
+
+    # Git push to trigger GitHub Actions
+    Set-Location 'D:\hexo'
+    git add 'source/js/sevencolor/history-cache.json'
+    git commit -m "[Bot] Auto refresh history-cache $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    git push origin HEAD
+
+    exit 0
+
 } catch {
-    Write-Host "ERROR: $_"
-    try { if ($ie) { $ie.Quit() } } catch {}
+    Write-Host "[ERR] $_"
+    exit 1
 }
