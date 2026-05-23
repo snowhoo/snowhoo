@@ -687,6 +687,28 @@ html[data-theme=dark] #solar-term-banner.festival-banner .st-desc{color:#ccc}
       </script>
     - |
       <script>
+      // 段落首行缩进：原文有空格 → 保留原文；原文无空格 → 自动缩进 2em
+      (function(){
+        var fixParagraphIndent = function() {
+          var s = document.querySelectorAll('#article-container p, .post-content p');
+          for (var i = 0; i < s.length; i++) {
+            var p = s[i];
+            if (!p.textContent.trim()) continue;
+            if (p.classList.contains('has-orig-indent')) continue;
+            var fc = p.firstChild;
+            if (fc && fc.nodeType === 3 && /^\s/.test(fc.textContent)) {
+              p.classList.add('has-orig-indent');
+            }
+          }
+        };
+        fixParagraphIndent();
+        if (window.btf && window.btf.addGlobalFn) {
+          window.btf.addGlobalFn('pjax_complete', fixParagraphIndent, 'fixParagraphIndent');
+        }
+      })();
+      </script>
+    - |
+      <script>
       (function(){
       var bp = document.createElement('script');
       var curProtocol = window.location.protocol.split(':')[0];
