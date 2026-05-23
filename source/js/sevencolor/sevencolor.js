@@ -290,7 +290,10 @@
     var bar = document.createElement('div');
     bar.className = 'sc-collapse-bar';
     bar.dataset.id = id;
-    bar.innerHTML = '<span class="sc-collapse-arrow">▲</span><span>收起</span>';
+    // 获取当前展开按钮的标题
+    var btn = document.querySelector('.sc-btn[data-id="' + id + '"]');
+    var btnTitle = btn ? btn.textContent.replace(/[▼▲]/g, '').trim() : '';
+    bar.innerHTML = '<span class="sc-collapse-arrow">▲</span><span>收起 ' + btnTitle + '</span>';
     bar.addEventListener('click', function() {
       closeContent(id);
       openedId = null;
