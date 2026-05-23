@@ -54,9 +54,9 @@
               reject(new Error('数据格式错误'));
               return;
             }
-            // 转换为渲染格式：{year, text}
+            // 转换为渲染格式：{year, text, link}
             var events = json.data.map(function(item){
-              return { year: item.year, text: item.title };
+              return { year: item.year, text: item.title, link: item.link };
             });
             resolve(events);
           }).catch(function(e){
@@ -71,7 +71,10 @@
         if(!evs || evs.length===0) { c.innerHTML='<div class="status-message">今日暂无历史记载</div>'; return; }
         evs.sort(function(a,b){ return b.year-a.year; });
         var html='';
-        for(var i=0;i<evs.length;i++) html+='<div class="event-item"><span class="event-year">'+evs[i].year+'</span><span class="event-title">'+evs[i].text+'</span></div>';
+        for(var i=0;i<evs.length;i++) {
+          var link = evs[i].link ? '<a href="'+evs[i].link+'" target="_blank" class="event-title" style="color:#2c445e;text-decoration:none;font-size:0.9rem;line-height:1.45">百科了解事件</a>' : '';
+          html+='<div class="event-item"><span class="event-year">'+evs[i].year+'</span><span class="event-title">'+evs[i].text+'</span>'+link+'</div>';
+        }
         c.innerHTML=html;
       }
 
