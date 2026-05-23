@@ -232,7 +232,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
    历史上的今天
    ============================================= */
 #history-today {
-  width: auto;
+  width: 100%;
   margin: 0 auto;
   /*font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans CJK SC', sans-serif;*/
   background: transparent;
@@ -251,6 +251,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   flex-wrap: wrap;
   gap: 0.6rem;
   padding: 0;
+  
   /* border-bottom: 1px solid #eff2f8; */
 }
 
