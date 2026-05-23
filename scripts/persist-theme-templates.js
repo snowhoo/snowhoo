@@ -36,19 +36,24 @@ hexo.on('generateBefore', function() {
   }
 
   // 复制自定义组件文件到 layout/（与 index.pug 同目录）
+  const scriptsDir = path.join(hexo.base_dir, 'scripts');
   const botDir = path.join(hexo.base_dir, 'hexo-bot/refresh-cache');
-  const componentFiles = [
-    { src: 'poetry-widget.pug', dest: 'poetry-widget.pug' },
-    { src: 'history-today.pug', dest: 'history-today.pug' }
-  ];
-  componentFiles.forEach(({ src, dest }) => {
-    const srcPath = path.join(botDir, src);
-    const destPath = path.join(themeDir, dest);
-    if (fs.existsSync(srcPath)) {
-      fs.copyFileSync(srcPath, destPath);
-      hexo.log.info('[持久化模板] 已覆盖: ' + dest);
-    }
-  });
+
+  // poetry-widget.pug 来自 hexo-bot/refresh-cache（本地，不在 git）
+  const poetrySrc = path.join(botDir, 'poetry-widget.pug');
+  const poetryDest = path.join(themeDir, 'poetry-widget.pug');
+  if (fs.existsSync(poetrySrc)) {
+    fs.copyFileSync(poetrySrc, poetryDest);
+    hexo.log.info('[持久化模板] 已覆盖: poetry-widget.pug');
+  }
+
+  // history-today.pug 来自 scripts/（在 git 里，Actions 构建可用）
+  const historySrc = path.join(scriptsDir, 'history-today.pug');
+  const historyDest = path.join(themeDir, 'history-today.pug');
+  if (fs.existsSync(historySrc)) {
+    fs.copyFileSync(historySrc, historyDest);
+    hexo.log.info('[持久化模板] 已覆盖: history-today.pug');
+  }
 
   // 复制 mixins/indexPostUI.pug
   const mixinsSrc = path.join(partialDir, 'includes/mixins/indexPostUI.pug');
