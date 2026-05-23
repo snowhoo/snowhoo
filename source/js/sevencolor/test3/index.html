@@ -194,7 +194,7 @@ layout: false
 
 /* ===== Status Bar ===== */
 .status-bar{
-  background:var(--bg-card);
+  //background:var(--bg-card);
   padding:2px 0px;
   border-radius:6px;
   margin:6px 0;
@@ -609,7 +609,7 @@ function loadIndex() {
 }
 
 function showBanner() {
-  document.getElementById('content').innerHTML = '<div class="banner-wrap"><img src="https://picsum.photos/800/450.webp"><div class="overlay"><h2>欢迎使用超级播霸</h2><p>请选择上方数据源或直接全网搜索</p></div></div>';
+  document.getElementById('content').innerHTML = '<div class="banner-wrap"><p>请选择上方数据源或直接全网搜索</p></div>';
   document.getElementById('pagination').innerHTML = '';
 }
 
