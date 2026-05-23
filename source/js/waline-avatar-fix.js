@@ -20,17 +20,17 @@
   }
 
   function init() {
-    setTimeout(replaceAvatars, 800);
+    requestAnimationFrame(replaceAvatars);
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    window.addEventListener('load', init);
   } else {
     init();
   }
 
   var observer = new MutationObserver(function() {
-    setTimeout(replaceAvatars, 500);
+    requestAnimationFrame(replaceAvatars);
   });
 
   var target = document.getElementById('post-comment') || document.querySelector('.wl-container') || document.body;

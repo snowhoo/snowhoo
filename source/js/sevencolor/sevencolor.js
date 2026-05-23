@@ -323,8 +323,8 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    window.addEventListener('load', init);
   } else {
-    init();
+    window.addEventListener('load', init);
   }
 })();
