@@ -337,7 +337,10 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   line-height: 1.4;
   display: inline; 
 }
-
+#history-today .event-title a {
+  margin-left: 0.4rem;
+  white-space: nowrap;  /* 让链接不换行，或根据需求调整 */
+}
 #history-today .status-message { color: #9ab0c9; font-size: 0.8rem; text-align: center; padding: 1rem; }
 
 #history-today .events-list::-webkit-scrollbar { width: 4px; }
