@@ -5,7 +5,7 @@ window.__yedu_20260424_2215_001 = {
   "url": "https://www.peopleapp.com/column/30051988438-500007461129",
   "pubDate": "2026-04-24 22:15",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260424/vod/content/output/0882a05aa8a043a1b8a280710fa2b48a_opt.mp3",
-  "coverSrc": "./images/20260424-2215-001.png",
+  "coverSrc": "./images/20260424-2215-001.webp",
   "summary": "夜读｜有这9种感受，说明你和“对的人”在一起。在跟TA相处的过程中，你可以自由地说出你的想法，抛出棘手的话题，或是彻底地放松下来。在一段好的关系下，即使你偶尔不在状态，TA也会带着爱和理解走向你、包容你...",
   "paragraphs": [
     "夜读｜有这9种感受，说明你和“对的人”在一起",

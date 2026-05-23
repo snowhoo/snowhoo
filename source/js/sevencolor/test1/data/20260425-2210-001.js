@@ -5,7 +5,7 @@ window.__yedu_20260425_2210_001 = {
   "url": "https://www.peopleapp.com/column/30051992809-500007462187",
   "pubDate": "2026-04-25 22:10",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260425/vod/content/output/10c3b285d4f543d3a36e78c8320f4cd8_opt.mp3",
-  "coverSrc": "./images/20260425-2210-001.png",
+  "coverSrc": "./images/20260425-2210-001.webp",
   "summary": "正如我们会定期清理房间，自己的内心也需要适当清理。卧室是我们休息的地方，也是我们梳理情绪的港湾。白天，我们忙着赶路，晚上一躺下，有些悬而未决的琐事就会突然冒出来，让人越想越睡不着...",
   "paragraphs": [
     "正如我们会定期清理房间，自己的内心也需要适当清理。卧室是我们休息的地方，也是我们梳理情绪的港湾。",

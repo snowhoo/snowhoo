@@ -5,7 +5,7 @@ window.__yedu_20260515_2149_001 = {
   "url": "https://www.peopleapp.com/column/30052144701-500007495279",
   "pubDate": "2026-05-15 21:49",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260515/vod/content/output/af822700dcc94916842447fcac0c5593_opt.mp3",
-  "coverSrc": "./images/20260515-2149-001.png",
+  "coverSrc": "./images/20260515-2149-001.webp",
   "summary": "如果你感到在室内的时间太久，感官和思维都变得有些迟钝，那就出门走走吧。大自然会让你的感官重新变得敏锐，让你的思维流动起来。试试去触摸粗糙的树皮，感受它的厚重；去听一场雨，辨别雨滴落在树叶、泥土和屋檐上的不同声响...",
   "paragraphs": [
     "如果你感到在室内的时间太久，感官和思维都变得有些迟钝，那就出门走走吧！大自然会让你的感官重新变得敏锐，让你的思维流动起来。",

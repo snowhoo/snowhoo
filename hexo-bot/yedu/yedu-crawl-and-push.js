@@ -18,7 +18,7 @@ const DATA_DIR = path.join(OUTPUT_DIR, 'data');
 const IMAGES_DIR = path.join(OUTPUT_DIR, 'images');
 const INDEX_HTML = path.join(OUTPUT_DIR, 'index.html');
 const HEXO_DIR = 'D:\\hexo';
-const Jimp = require('jimp');
+const sharp = require('sharp');
 
 // ============ 工具函数 ============
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -41,8 +41,9 @@ function genImageName(pubDate, ext) {
 
 async function downloadImage(imgUrl, pubDate) {
   if (!imgUrl || imgUrl.startsWith('data:')) return null;
-  const ext = path.extname(imgUrl.split('?')[0]) || '.jpg';
-  const fileName = genImageName(pubDate, ext);
+
+  // 统一输出为 webp 格式，高压缩比
+  const fileName = genImageName(pubDate, '.webp');
   const localPath = path.join(IMAGES_DIR, fileName);
   const relativePath = `images/${fileName}`;
 
@@ -52,7 +53,7 @@ async function downloadImage(imgUrl, pubDate) {
   }
 
   return new Promise((resolve) => {
-    const file = fs.createWriteStream(localPath);
+    const file = fs.createWriteStream(localPath + '.tmp');
     const protocol = imgUrl.startsWith('https') ? https : http;
     protocol.get(imgUrl, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (response) => {
       if (response.statusCode === 200) {
@@ -60,23 +61,41 @@ async function downloadImage(imgUrl, pubDate) {
         file.on('finish', async () => {
           file.close();
           try {
-            const img = await Jimp.read(localPath);
-            const w = img.getWidth();
-            if (w > 800) { img.resize(800, Jimp.AUTO); }
-            await img.quality(70).writeAsync(localPath);
+            // 使用 sharp 压缩：宽度800以内，转为webp格式，高压缩比
+            const metadata = await sharp(localPath + '.tmp').metadata();
+            const w = metadata.width || 0;
+
+            let processor = sharp(localPath + '.tmp');
+            if (w > 800) {
+              processor = processor.resize(800, null, { withoutEnlargement: true });
+            }
+            await processor
+              .webp({ quality: 60, effort: 4 })
+              .toFile(localPath);
+
+            fs.unlinkSync(localPath + '.tmp');
             const stats = fs.statSync(localPath);
             log(`  [下载] ${relativePath} (${(stats.size / 1024).toFixed(1)}KB${w > 800 ? ', resized' : ''})`);
+            resolve(relativePath);
           } catch (e) {
-            log(`  [压缩] 跳过/失败: ${e.message}`);
+            // 压缩失败，尝试删除临时文件
+            try { fs.unlinkSync(localPath + '.tmp'); } catch (_) {}
+            log(`  [压缩] 失败: ${e.message}`);
+            resolve(null);
           }
-          resolve(relativePath);
         });
       } else {
         file.close();
+        try { fs.unlinkSync(localPath + '.tmp'); } catch (_) {}
         log(`  [失败] HTTP ${response.statusCode}: ${imgUrl}`);
         resolve(null);
       }
-    }).on('error', (err) => { file.close(); log(`  [错误] ${err.message}`); resolve(null); });
+    }).on('error', (err) => {
+      file.close();
+      try { fs.unlinkSync(localPath + '.tmp'); } catch (_) {}
+      log(`  [错误] ${err.message}`);
+      resolve(null);
+    });
   });
 }
 

@@ -5,7 +5,7 @@ window.__yedu_20260518_2236_001 = {
   "url": "https://www.peopleapp.com/column/30052166571-500007499214",
   "pubDate": "2026-05-18 22:36",
   "audioSrc": "https://cdnjdout.aikan.pdnews.cn/zhbj-20260518/vod/content/output/5eeb485ca27949c98b7cf5ebffacf048_opt.mp3",
-  "coverSrc": "./images/20260518-2236-001.png",
+  "coverSrc": "./images/20260518-2236-001.webp",
   "summary": "很多时候，父母对孩子的爱，藏在一次次的“捧场”里。孩子画画得不好，但努力了同样值得表扬；孩子经历了失败，但敢于尝试就值得尊重和鼓励.....为人父母，要学会给孩子捧场，以尊重、引导、支持的态度和孩子相处。父母发自内心地表达欣赏和爱，对孩子自信心的形成非常重要...",
   "paragraphs": [
     "很多时候，父母对孩子的爱，藏在一次次的“捧场”里。",
