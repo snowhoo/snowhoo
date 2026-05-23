@@ -1353,6 +1353,55 @@ html[data-theme=dark] #solar-term-banner.festival-banner .st-desc{color:#ccc}
       </style>
     - <script src="/js/visitor.js" defer></script>
     - <script src="/js/waline-avatar-fix.js" defer></script>
+    - |
+      <style>
+      /* ========== 侧边栏组件展开/收起功能 ========== */
+      /* 可点击的手风琴标题行 */
+      .card-collapsible .card-header { cursor: pointer; user-select: none; }
+      /* 箭头图标动画 */
+      .card-collapsible .card-header > i {
+        transition: transform 0.3s ease;
+        transform: rotate(0deg);
+      }
+      .card-collapsible.is-collapsed .card-header > i {
+        transform: rotate(-180deg);
+      }
+      /* 默认收起：标签、归档 */
+      .card-tags .card-content,
+      .card-archives .card-content { display: none; }
+      .card-tags.is-collapsed .card-content,
+      .card-archives.is-collapsed .card-content { display: block; }
+      </style>
+    - |
+      <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var collapsibles = [
+          { sel: '.card-tags',         expanded: false },
+          { sel: '.card-archives',     expanded: false },
+          { sel: '.card-webinfo',     expanded: true  },
+          { sel: '.card-author',      expanded: true  },
+          { sel: '.card-announcement',expanded: true  },
+          { sel: '.card-recent-post', expanded: true  },
+          { sel: '.card-categories',  expanded: true  },
+          { sel: '.card-post-series', expanded: true  }
+        ];
+
+        collapsibles.forEach(function(cfg) {
+          var card = document.querySelector(cfg.sel);
+          if (!card) return;
+
+          card.classList.add('card-collapsible');
+          if (!cfg.expanded) card.classList.add('is-collapsed');
+
+          var header = card.querySelector('.card-header');
+          if (!header) return;
+          header.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A' || e.target.closest('a')) return;
+            card.classList.toggle('is-collapsed');
+          });
+        });
+      });
+      </script>
 # CDN Settings
 CDN:
   internal_provider: local
