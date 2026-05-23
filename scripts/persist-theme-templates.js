@@ -7,8 +7,11 @@ const fs = require('fs');
 const path = require('path');
 
 hexo.on('generateBefore', function() {
+  hexo.log.warn('[持久化模板] generateBefore 钩子触发！');
   const partialDir = path.join(hexo.base_dir, 'source/_partial');
   const themeDir = path.join(hexo.base_dir, 'node_modules/hexo-theme-butterfly/layout');
+  hexo.log.warn('[持久化模板] partialDir:', partialDir);
+  hexo.log.warn('[持久化模板] source/_partial exists:', fs.existsSync(partialDir));
 
   // 检查持久目录是否存在
   if (!fs.existsSync(partialDir)) {
