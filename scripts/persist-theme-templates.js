@@ -39,19 +39,19 @@ hexo.on('generateBefore', function() {
   const botDir = path.join(hexo.base_dir, 'hexo-bot/refresh-cache');
 
   // poetry-widget.pug 来自 hexo-bot/refresh-cache（本地，不在 git）
-  const poetrySrc = path.join(botDir, 'poetry-widget.pug');
-  const poetryDest = path.join(themeDir, 'poetry-widget.pug');
+  const poetrySrc = path.join(botDir, 'DailyPoetry.pug');
+  const poetryDest = path.join(themeDir, 'DailyPoetry.pug');
   if (fs.existsSync(poetrySrc)) {
     fs.copyFileSync(poetrySrc, poetryDest);
-    hexo.log.info('[持久化模板] 已覆盖: poetry-widget.pug');
+    hexo.log.info('[持久化模板] 已覆盖: DailyPoetry.pug');
   }
 
   // history-today.pug 来自 hexo-bot/refresh-cache/
-  const historySrc = path.join(botDir, 'history-today.pug');
-  const historyDest = path.join(themeDir, 'history-today.pug');
+  const historySrc = path.join(botDir, 'HistoryToday.pug');
+  const historyDest = path.join(themeDir, 'HistoryToday.pug');
   if (fs.existsSync(historySrc)) {
     fs.copyFileSync(historySrc, historyDest);
-    hexo.log.info('[持久化模板] 已覆盖: history-today.pug');
+    hexo.log.info('[持久化模板] 已覆盖: HistoryToday.pug');
   }
 
   // 复制 mixins/indexPostUI.pug
