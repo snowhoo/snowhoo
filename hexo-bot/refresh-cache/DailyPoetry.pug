@@ -62,12 +62,12 @@
         }
       }
 
-      // 读取本地 poetry.json（同源，无 CORS），3秒超时
+      // 读取本地 DailyPoetry.json（同源，无 CORS），3秒超时
       async function loadPoetry() {
         try {
           var controller = new AbortController();
           var tid = setTimeout(function() { controller.abort(); }, 3000);
-          var r = await fetch('/js/poetry.json', { signal: controller.signal });
+          var r = await fetch('/js/DailyPoetry.json', { signal: controller.signal });
           clearTimeout(tid);
           if (r.ok) {
             var j = await r.json();

@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
 const HEXO = "D:\\hexo";
-const TARGET = path.join(HEXO, "source", "js", "poetry.json");
+const TARGET = path.join(HEXO, "source", "js", "DailyPoetry.json");
 const CWD = HEXO;
 
 function fetchPoem() {
@@ -57,11 +57,11 @@ async function main() {
   if (!fs.existsSync(jsDir)) fs.mkdirSync(jsDir, { recursive: true });
   fs.writeFileSync(TARGET, JSON.stringify(poem, null, 2), "utf8");
   console.log("[update-poetry-json] 已写入: " + poem.line + " - " + poem.author);
-  await run("git", ["add", "source/js/poetry.json"]);
+  await run("git", ["add", "source/js/DailyPoetry.json"]);
   fs.writeFileSync(path.join(CWD, ".commit_msg"), "daily poetry update", "utf8");
   const r = await run("git", ["commit", "-F", ".commit_msg"]);
   if (r.code === 0) {
-    await run("git", ["push", "origin", "main"]);
+    await run("git", ["push", "origin", "source"]);
     console.log("[update-poetry-json] 推送完成");
   } else {
     console.log("[update-poetry-json] 无变化或提交失败: " + r.out);

@@ -17,8 +17,8 @@ block home-widgets
         each item in [0,1,2,3]
           button.sc-btn.sc-btn-placeholder(disabled style="visibility:hidden")
     //-诗词/历史上的今天
-    include poetry-widget.pug
-    include history-today.pug
+    include DailyPoetry.pug
+    include HistoryToday.pug
 
 block content
   include ./includes/mixins/indexPostUI.pug

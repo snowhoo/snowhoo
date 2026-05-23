@@ -10,11 +10,11 @@
         span#htExpandText 详情
     #htDetailPanel.detail-panel
       #htEventsContainer.events-list
-        .status-message 📭 点击「详情」查看今日历史事件
+        .status-message 
 
   script.
     (function(){
-      var API = 'https://api.asilu.com/today';
+      var JSON_FILE = '/js/HistoryToday.json';
       var currentEvents = null;
 
       function getToday() {
@@ -23,24 +23,21 @@
         return { year: d.getFullYear(), month: m, day: day, display: d.getFullYear()+'年'+m+'月'+day+'日' };
       }
 
-      function fetchFromAPI() {
+      function fetchFromJSON() {
         return new Promise(function(resolve, reject) {
           var controller = new AbortController();
-          var tid = setTimeout(function(){ controller.abort(); }, 8000);
-          fetch(API, {signal:controller.signal}).then(function(r){
+          var tid = setTimeout(function(){ controller.abort(); }, 5000);
+          fetch(JSON_FILE, {signal:controller.signal}).then(function(r){
             clearTimeout(tid);
-            if(!r.ok){ reject(new Error('API请求失败')); return; }
+            if(!r.ok) { reject(new Error('JSON not found')); return; }
             return r.json();
-          }).then(function(json){
+          }).then(function(data){
             clearTimeout(tid);
-            if(!json || json.code !== 200 || !Array.isArray(json.data)) {
-              reject(new Error('数据格式错误'));
+            if(!data || !Array.isArray(data.events) || data.events.length === 0) {
+              reject(new Error('Invalid JSON'));
               return;
             }
-            var events = json.data.map(function(item){
-              return { year: item.year, text: item.title, link: item.link || '' };
-            });
-            resolve(events);
+            resolve(data.events);
           }).catch(function(e){
             clearTimeout(tid);
             reject(e);
@@ -50,7 +47,7 @@
 
       function render(evs) {
         var c = document.getElementById('htEventsContainer');
-        if(!evs || evs.length===0) { c.innerHTML='<div class="status-message">今日暂无历史记载</div>'; return; }
+        if(!evs || evs.length===0) { c.innerHTML='<div class="status-message">往事如烟，已随风而去……</div>'; return; }
         evs.sort(function(a,b){ return b.year-a.year; });
         var html='';
         for(var i=0;i<evs.length;i++) {
@@ -87,7 +84,7 @@
       document.getElementById('htToggle').addEventListener('click', toggleDetail);
 
       setText('加载中...');
-      fetchFromAPI()
+      fetchFromJSON()
         .then(function(evs){ currentEvents = evs; setText('详情'); })
-        .catch(function(){ setText('加载失败'); });
+        .catch(function(){ setText('……'); });
     })();
