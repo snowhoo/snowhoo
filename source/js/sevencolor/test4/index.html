@@ -6,7 +6,7 @@ layout: false
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>随机画廊 · 注入增强版</title>
+    <title>图片盲盒 · 注入增强版</title>
     <style>
         /* ---------- 完全继承 Hexo 主题，无预设明暗 ---------- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -38,7 +38,7 @@ layout: false
         .credit { text-align: center; font-size: 0.7rem; margin-top: 0.8rem; opacity: 0.6; }
         @media (max-width: 640px) {
             .art-card { padding: 0.6rem; }
-            .btn-lucky { padding: 0.65rem 1.8rem; font-size: 0.9rem; }
+            .btn-lucky { padding: 0.65rem 1.8rem; font-size: 0rem; }
             .image-stage { min-height: 220px; }
         }
     </style>
@@ -49,7 +49,7 @@ layout: false
         <div class="image-stage">
             <img id="picsumDynamicImg" class="dynamic-img" alt="Random Picsum"
                  src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='transparent'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='currentColor' font-size='12'%3E...%3C/text%3E%3C/svg%3E">
-            <div id="picsumPlaceholder" class="img-placeholder"><span>✨ 随机加载中</span></div>
+            <div id="picsumPlaceholder" class="img-placeholder"><span>✨ 图片盲盒开启中……你今天的心情如何呢？</span></div>
         </div>
         <button id="picsumRefreshBtn" class="btn-lucky">🎲 重新试一试手气</button>
         <div class="credit">🌄 图片源于 Lorem Picsum · 每次邂逅皆不同</div>
@@ -122,7 +122,7 @@ layout: false
         // 3秒后恢复默认文字
         setTimeout(() => {
             if (placeholder && placeholder.innerHTML.includes(msg)) {
-                placeholder.innerHTML = '<span>✨ 随机加载中</span>';
+                placeholder.innerHTML = '<span>✨ 图片盲盒开启中……你今天的心情如何呢？</span>';
             }
         }, 3000);
     }
@@ -185,15 +185,15 @@ layout: false
         img.classList.remove('loaded');
         placeholder.classList.remove('hidden-placeholder');
         placeholder.style.opacity = '1';
-        placeholder.innerHTML = '<span>✨ 随机加载中</span>';
+        placeholder.innerHTML = '<span>✨ 图片盲盒开启中……你今天的心情如何呢？</span>';
 
         try {
             const url = buildUrl();
             await loadImage(url);
             // 成功，不需要额外动作
         } catch (err) {
-            console.warn('图片加载失败:', err);
-            setPlaceholderMessage('⚠️ 加载失败 · 点按钮重试');
+            console.warn('空盒子:', err);
+            setPlaceholderMessage('✨ 呀，运气爆棚！你居然开到了空盒子！');
         } finally {
             // 无论成功或失败，确保恢复按钮和状态
             resetUI(true);
@@ -226,7 +226,7 @@ layout: false
             console.warn('安全阀触发: 强制重置加载状态');
             resetUI(true);
             if (btn) btn.innerText = '🎲 重新试一试手气';
-            placeholder.innerHTML = '<span>✨ 点击按钮重试</span>';
+            placeholder.innerHTML = '<span>✨ 呀，运气爆棚！你居然开到了空盒子！</span>';
         }
     }, 20000);
     // 如果正常加载完成则清除安全阀
