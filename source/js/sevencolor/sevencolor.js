@@ -258,6 +258,8 @@
           content.dataset.articles = JSON.stringify(window.__scArticles);
           content.innerHTML = result.bodyHtml;
           content.dataset.loaded = 'true';
+          // 加载完成后添加收起条
+          addCollapseBar(content, id);
           // eval 内联脚本（innerHTML 不会自动执行内联 script）
           if (result.inlineScriptContent) {
             try { eval(result.inlineScriptContent); } catch(e) { console.error('Script eval error:', e); }

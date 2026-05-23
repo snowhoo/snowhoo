@@ -45,7 +45,7 @@ async function downloadImage(imgUrl, pubDate) {
   // 统一输出为 webp 格式，高压缩比
   const fileName = genImageName(pubDate, '.webp');
   const localPath = path.join(IMAGES_DIR, fileName);
-  const relativePath = `images/${fileName}`;
+  const relativePath = `./images/${fileName}`;
 
   if (fs.existsSync(localPath)) {
     log(`  [跳过] 图片已存在: ${relativePath}`);
