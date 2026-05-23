@@ -20,14 +20,14 @@ function fetchPoem() {
             resolve({
               fetchedAt: new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" }),
               line: d.content,
-              author: d.author || "佚名",
-              dynasty: d.dynasty || "古代",
+              author: d.origin && d.origin.author ? d.origin.author : "佚名",
+              dynasty: (d.origin && d.origin.dynasty) || "古代",
               title: d.origin ? (typeof d.origin === "string" ? d.origin : d.origin.title) : "诗词",
               detail: d.origin && typeof d.origin !== "string" ? {
                 content: d.origin.content,
                 author: d.origin.author,
                 dynasty: d.origin.dynasty,
-                biography: d.origin.author ? (d.origin.author.detail || "") : ""
+                biography: ""
               } : null
             });
             return;
