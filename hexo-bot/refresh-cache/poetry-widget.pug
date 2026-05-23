@@ -62,16 +62,19 @@
         }
       }
 
-      // 读取本地 poetry.json（同源，无 CORS）
+      // 读取本地 poetry.json（同源，无 CORS），3秒超时
       async function loadPoetry() {
         try {
-          var r = await fetch('/js/poetry.json');
+          var controller = new AbortController();
+          var tid = setTimeout(function() { controller.abort(); }, 3000);
+          var r = await fetch('/js/poetry.json', { signal: controller.signal });
+          clearTimeout(tid);
           if (r.ok) {
             var j = await r.json();
             if (j && j.line) { renderPoem(j); return; }
           }
         } catch(e){}
-        // 文件读取失败时显示默认值
+        // 超时或失败时显示默认值，不阻塞后续加载
         current.fullDetail = {fullText:'「' + current.line + '」', poetBio:'数据加载失败'};
       }
 
