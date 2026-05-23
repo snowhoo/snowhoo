@@ -11,13 +11,13 @@ layout: false
         /* ---------- 完全继承 Hexo 主题，无预设明暗 ---------- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         .picsum-embedded { width: 100%; max-width: 1400px; margin: 0 auto; }
-        .art-card { padding: 1.2rem; border-radius: 2rem; }
+        .art-card { padding: 0rem; border-radius: 0.6rem; }
         .image-stage {
-            position: relative; width: 100%; border-radius: 1.2rem; overflow: hidden;
+            position: relative; width: 100%; border-radius: 0.6rem; overflow: hidden;
             min-height: 280px; display: flex; align-items: center; justify-content: center;
             background: transparent;
         }
-        .dynamic-img { display: block; width: 100%; height: auto; border-radius: 1rem; transition: opacity 0.25s ease; opacity: 0; }
+        .dynamic-img { display: block; width: 100%; height: auto; border-radius: 0.6rem; transition: opacity 0.25s ease; opacity: 0; }
         .dynamic-img.loaded { opacity: 1; }
         .img-placeholder {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -37,7 +37,7 @@ layout: false
         .btn-lucky:active { transform: translateY(1px); opacity: 0.8; }
         .credit { text-align: center; font-size: 0.7rem; margin-top: 0.8rem; opacity: 0.6; }
         @media (max-width: 640px) {
-            .art-card { padding: 0.9rem; }
+            .art-card { padding: 0.6rem; }
             .btn-lucky { padding: 0.65rem 1.8rem; font-size: 0.9rem; }
             .image-stage { min-height: 220px; }
         }
