@@ -1,4 +1,4 @@
-﻿#history-today
+#history-today
   .history-card
     .history-header
       h3
@@ -15,52 +15,12 @@
   script.
     (function(){
       var API = 'https://api.asilu.com/today';
-      var JSON_FILE = '/js/sevencolor/history-cache.json';
       var currentEvents = null;
-      var CACHE_KEY = 'ht_cache';
-      var todayStr = '';
 
       function getToday() {
         var d = new Date();
         var m = String(d.getMonth()+1), day = String(d.getDate());
-        todayStr = d.getFullYear()+'-'+m+'-'+day;
         return { year: d.getFullYear(), month: m, day: day, display: d.getFullYear()+'年'+m+'月'+day+'日' };
-      }
-
-      function getCache() {
-        try {
-          var raw = localStorage.getItem(CACHE_KEY);
-          if(!raw) return null;
-          var c = JSON.parse(raw);
-          if(c.date === todayStr && Array.isArray(c.events) && c.events.length > 0) return c.events;
-        } catch(e){}
-        return null;
-      }
-
-      function setCache(events) {
-        try { localStorage.setItem(CACHE_KEY, JSON.stringify({date:todayStr, events:events})); } catch(e){}
-      }
-
-      function fetchFromJSON() {
-        return new Promise(function(resolve, reject) {
-          var controller = new AbortController();
-          var tid = setTimeout(function(){ controller.abort(); }, 5000);
-          fetch(JSON_FILE, {signal:controller.signal}).then(function(r){
-            clearTimeout(tid);
-            if(!r.ok) { reject(new Error('JSON not found')); return; }
-            return r.json();
-          }).then(function(data){
-            clearTimeout(tid);
-            if(!data || !Array.isArray(data.events) || data.events.length === 0) {
-              reject(new Error('Invalid JSON'));
-              return;
-            }
-            resolve(data.events);
-          }).catch(function(e){
-            clearTimeout(tid);
-            reject(e);
-          });
-        });
       }
 
       function fetchFromAPI() {
@@ -126,16 +86,8 @@
       document.getElementById('htQueryDate').innerText = t.display;
       document.getElementById('htToggle').addEventListener('click', toggleDetail);
 
-      var cached = getCache();
-      if(cached) {
-        currentEvents = cached;
-        setText('详情');
-      } else {
-        setText('加载中...');
-        // Try local JSON first (pre-warmed by scheduled task), fallback to API
-        fetchFromJSON()
-          .catch(function(){ return fetchFromAPI(); })
-          .then(function(evs){ currentEvents = evs; setCache(evs); setText('详情'); })
-          .catch(function(){ setText('加载失败'); });
-      }
+      setText('加载中...');
+      fetchFromAPI()
+        .then(function(evs){ currentEvents = evs; setText('详情'); })
+        .catch(function(){ setText('加载失败'); });
     })();
