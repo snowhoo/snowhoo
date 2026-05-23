@@ -1,19 +1,4 @@
 /* ========================================
-   文章正文段落：保留原文空格 + 无原文缩进时自动首行缩进两格
-   ======================================== */
-#article-container p,
-.post-content p {
-  white-space: pre-wrap;
-  text-indent: 2em;
-}
-
-/* 原文已有缩进（空格开头），取消自动缩进 */
-#article-container p.has-orig-indent,
-.post-content p.has-orig-indent {
-  text-indent: 0 !important;
-}
-
-/* ========================================
    文章封面样式 + 色条
 
    宽度 <= 768px：大图模式 + 色条
