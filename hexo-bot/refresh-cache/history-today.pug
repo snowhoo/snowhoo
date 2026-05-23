@@ -1,4 +1,4 @@
-#history-today
+﻿#history-today
   .history-card
     .history-header
       h3
@@ -15,6 +15,7 @@
   script.
     (function(){
       var API = 'https://api.asilu.com/today';
+      var JSON_FILE = '/js/sevencolor/history-cache.json';
       var currentEvents = null;
       var CACHE_KEY = 'ht_cache';
       var todayStr = '';
@@ -40,13 +41,35 @@
         try { localStorage.setItem(CACHE_KEY, JSON.stringify({date:todayStr, events:events})); } catch(e){}
       }
 
-      function fetchEvents() {
+      function fetchFromJSON() {
+        return new Promise(function(resolve, reject) {
+          var controller = new AbortController();
+          var tid = setTimeout(function(){ controller.abort(); }, 5000);
+          fetch(JSON_FILE, {signal:controller.signal}).then(function(r){
+            clearTimeout(tid);
+            if(!r.ok) { reject(new Error('JSON not found')); return; }
+            return r.json();
+          }).then(function(data){
+            clearTimeout(tid);
+            if(!data || !Array.isArray(data.events) || data.events.length === 0) {
+              reject(new Error('Invalid JSON'));
+              return;
+            }
+            resolve(data.events);
+          }).catch(function(e){
+            clearTimeout(tid);
+            reject(e);
+          });
+        });
+      }
+
+      function fetchFromAPI() {
         return new Promise(function(resolve, reject) {
           var controller = new AbortController();
           var tid = setTimeout(function(){ controller.abort(); }, 8000);
           fetch(API, {signal:controller.signal}).then(function(r){
             clearTimeout(tid);
-            if(!r.ok){ reject(new Error('请求失败')); return; }
+            if(!r.ok){ reject(new Error('API请求失败')); return; }
             return r.json();
           }).then(function(json){
             clearTimeout(tid);
@@ -54,9 +77,8 @@
               reject(new Error('数据格式错误'));
               return;
             }
-            // 转换为渲染格式：{year, text, link}
             var events = json.data.map(function(item){
-              return { year: item.year, text: item.title, link: item.link };
+              return { year: item.year, text: item.title, link: item.link || '' };
             });
             resolve(events);
           }).catch(function(e){
@@ -110,7 +132,9 @@
         setText('详情');
       } else {
         setText('加载中...');
-        fetchEvents()
+        // Try local JSON first (pre-warmed by scheduled task), fallback to API
+        fetchFromJSON()
+          .catch(function(){ return fetchFromAPI(); })
           .then(function(evs){ currentEvents = evs; setCache(evs); setText('详情'); })
           .catch(function(){ setText('加载失败'); });
       }
