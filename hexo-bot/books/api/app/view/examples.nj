@@ -1,0 +1,13 @@
+{% set activePage = 'examples' %}
+{% extends "base.nj" %}
+
+{% block content %}
+  <div id="example-content"></div>
+{% endblock %}
+
+{% block script %}
+  <script src="/public/static/js/babel.min.js"></script>
+  <script src="/public/static/js/react.min.js"></script>
+  <script src="/public/static/js/react-dom.min.js"></script>
+  <script type="text/babel" data-presets="env,react" src="/public/js/examples.js"></script>
+{% endblock %}

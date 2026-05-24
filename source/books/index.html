@@ -624,7 +624,7 @@ createApp({
       currentChapter.value = ch;
       chapterContent.value = '<div class="loading">加载中...</div>';
       try {
-        const data = await apiGet(`/api/chapter/${ch.id}`);
+        const data = await apiGet(`/api/chapter/${ch.id}?bookId=${currentBook.value._id}`);
         // 清洗内容（代理返回 { id, title, content }）
         let html = (data.content || '');
         html = html.replace(/\r\n/g, '\n').trim();
