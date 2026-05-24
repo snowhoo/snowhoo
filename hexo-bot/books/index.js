@@ -8,7 +8,7 @@ const app = express();
 const PORT = 8989;
 const BQ_BASE = 'https://www.biquge500.com';
 
-// 用 Map 缓存书的章节列表，key: bookId，value: { chapters: [], bookUrl }
+// 缓存：key: bookId，value: { chapters: [], ...bookMeta }
 const chapterCache = {};
 
 app.use(cors());
@@ -18,31 +18,28 @@ app.use(express.json());
 
 // GBK URL 编码
 function gbkEncode(str) {
-  // 使用 iconv-lite 正确将 UTF-8 转换为 GBK 字节的 Buffer
   return iconv.encode(str, 'gbk');
 }
 
 // 获取 GBK 编码的搜索关键字（URL safe）
 function gbkUrlEncode(str) {
   const buf = gbkEncode(str);
-  // 将 GBK 字节转换为 percent 编码
   return Array.from(buf).map(b => '%' + b.toString(16).padStart(2, '0').toUpperCase()).join('');
 }
 
 // 带 GBK 编码的 GET 请求
-async function fetchPage(url, referer = BQ_BASE) {
+async function fetchPage(url, referer) {
   const response = await axios.get(url, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      'Referer': referer,
-      'Accept': 'text/html,application/xhtml+xml',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Referer': referer || BQ_BASE,
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
     },
     responseType: 'arraybuffer',
     timeout: 15000,
   });
-  // biquge500 使用 GBK 编码
   const buf = Buffer.from(response.data);
-  // 检测 BOM
   let str;
   if (buf[0] === 0xEF && buf[1] === 0xBB && buf[2] === 0xBF) {
     str = iconv.decode(buf.slice(3), 'utf-8');
@@ -52,45 +49,29 @@ async function fetchPage(url, referer = BQ_BASE) {
   return str;
 }
 
-// 解析书籍详情页
-function parseBookPage(html, bookUrl) {
+// 检查页面是否是有效的书籍页面
+function isValidBookPage($) {
+  const ogBookName = $('meta[property="og:novel:book_name"]').attr('content');
+  const h1 = $('#info h1').text().trim();
+  const ogDesc = $('meta[property="og:description"]').attr('content') || '';
+  // og:description 包含中文且长度超过20则认为有效
+  const hasChineseDesc = ogDesc.length > 20;
+  return !!(ogBookName || h1 || hasChineseDesc);
+}
+
+// 从已知的书籍 URL 解析书籍信息（用于 catId=0 等特殊页面）
+function parseBookPageFromUrl(html, bookUrl) {
   const $ = cheerio.load(html);
+  const ogDesc = $('meta[property="og:description"]').attr('content') || '';
+  const ogImg = $('meta[property="og:image"]').attr('content') || '';
+  const ogUrl = $('meta[property="og:url"]').attr('content') || bookUrl || '';
 
-  // 优先用传入的 URL，否则从 og:url 获取
-  let resolvedUrl = bookUrl || $('meta[property="og:url"]').attr('content') || '';
+  // 从 og:description 提取书名（格式：《书名》还不错...）
+  const titleMatch = ogDesc.match(/《([^》]+)》/);
+  const title = titleMatch ? titleMatch[1] : '';
 
-  const info = $('#info');
-  const title = info.find('h1').text().trim();
-  // 匹配 "作者：xxx" 或 "作    者：xxx" 等各种空格变体
-  const authorRaw = info.find('p').eq(0).text().trim();
-  const author = authorRaw.replace(/^作[\s\xa0]+者[\s\xa0]*：?/, '').trim() || '';
-  const updated = info.find('p').eq(2).text().replace('最后更新：', '').trim();
-  const latestChapter = info.find('p').eq(3).find('a').text().trim();
-
-  // 简介：提取 <p> 标签内容，去重后拼接
-  const introParagraphs = [];
-  const seenTexts = new Set();
-  $('#intro p').each((i, el) => {
-    const text = $(el).text().replace(/\s+/g, ' ').trim();
-    if (text && !seenTexts.has(text)) {
-      seenTexts.add(text);
-      introParagraphs.push(text);
-    }
-  });
-  const introDeduped = introParagraphs.join(' ');
-
-  // 封面：优先用 og:image，其次用 .image img
-  const cover = $('meta[property="og:image"]').attr('content') || $('.image img').attr('src') || '';
-
-  // 分类
-  const cat = $('meta[property="og:novel:category"]').attr('content') || '';
-
-  // 字数（页面没有直接显示，从 meta 拿不到，从简介估算或留空）
-  const wordCount = '';
-
-  // 从 URL 中提取 bookId（格式：/Book/<catid>/<bookid>/）
-  const urlMatch = resolvedUrl.match(/\/Book\/(\d+)\/(\d+)\//);
-  const catId = urlMatch ? urlMatch[1] : '';
+  // 从 URL 提取 bookId
+  const urlMatch = ogUrl.match(/\/Book\/\d+\/(\d+)\//);
   const bookId = urlMatch ? urlMatch[2] : '';
 
   // 解析章节列表
@@ -100,12 +81,95 @@ function parseBookPage(html, bookUrl) {
     const link = $a.attr('href');
     const chapterTitle = $a.text().trim();
     if (link && chapterTitle) {
-      // 章节 ID 是 URL 中的数字部分，如 /Book/2/2867/1558650.html → 1558650
       const chapterId = link.match(/\/(\d+)\.html$/)?.[1] || `ch_${i}`;
       chapters.push({
         id: `${bookId}_${chapterId}`,
         title: chapterTitle,
-        link,
+        link: resolveUrl(link),
+        bookId,
+      });
+    }
+  });
+
+  return {
+    _id: bookId,
+    title,
+    author: '',
+    cover: ogImg,
+    cat: '',
+    wordCount: '',
+    updated: '',
+    longIntro: ogDesc,
+    latestChapter: '',
+    chapters,
+  };
+}
+
+// 确保 URL 是完整的
+function resolveUrl(link) {
+  if (!link) return null;
+  if (link.startsWith('http')) return link;
+  return BQ_BASE + link;
+}
+
+// 解析书籍详情页
+function parseBookPage(html, bookUrl) {
+  const $ = cheerio.load(html);
+
+  // 优先用传入的 URL，否则从 og:url 获取
+  const resolvedUrl = bookUrl || $('meta[property="og:url"]').attr('content') || '';
+
+  const info = $('#info');
+  const h1Title = info.find('h1').text().trim();
+  // 尝试从 og:description 提取书名（《书名》...）
+  const ogDesc = $('meta[property="og:description"]').attr('content') || '';
+  const titleFromDesc = (ogDesc.match(/《([^》]+)》/) || [])[1] || '';
+  const title = h1Title || titleFromDesc || '';
+  const authorRaw = info.find('p').eq(0).text().trim();
+  const author = authorRaw.replace(/^作[\s\xa0]+者[\s\xa0]*：?/, '').trim() || '';
+  const updated = info.find('p').eq(2).text().replace('最后更新：', '').trim();
+  const latestChapter = info.find('p').eq(3).find('a').text().trim();
+
+  // 简介：优先用 #intro p 标签，去重后拼接；fallback 到 og:description
+  const introParagraphs = [];
+  const seenTexts = new Set();
+  let longIntro = '';
+  $('#intro p').each((i, el) => {
+    const text = $(el).text().replace(/\s+/g, ' ').trim();
+    if (text && !seenTexts.has(text)) {
+      seenTexts.add(text);
+      introParagraphs.push(text);
+    }
+  });
+  if (introParagraphs.length > 0) {
+    longIntro = introParagraphs.join(' ');
+  } else if (ogDesc) {
+    // 用 og:description 替代，清理 HTML 实体
+    longIntro = ogDesc.replace(/&nbsp;/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  }
+
+  // 封面
+  const cover = $('meta[property="og:image"]').attr('content') || '';
+
+  // 分类
+  const cat = $('meta[property="og:novel:category"]').attr('content') || '';
+
+  // 从 URL 中提取 bookId（格式：/Book/<catid>/<bookid>/）
+  const urlMatch = resolvedUrl.match(/\/Book\/(\d+)\/(\d+)\//);
+  const bookId = urlMatch ? urlMatch[2] : '';
+
+  // 解析章节列表
+  const chapters = [];
+  $('#list dl dd').each((i, el) => {
+    const $a = $(el).find('a');
+    const link = $a.attr('href');
+    const chapterTitle = $a.text().trim();
+    if (link && chapterTitle) {
+      const chapterId = link.match(/\/(\d+)\.html$/)?.[1] || `ch_${i}`;
+      chapters.push({
+        id: `${bookId}_${chapterId}`,
+        title: chapterTitle,
+        link: resolveUrl(link),
         bookId,
       });
     }
@@ -117,9 +181,9 @@ function parseBookPage(html, bookUrl) {
     author,
     cover,
     cat,
-    wordCount,
+    wordCount: '',
     updated,
-    longIntro: introDeduped,
+    longIntro,
     latestChapter,
     chapters,
   };
@@ -128,35 +192,32 @@ function parseBookPage(html, bookUrl) {
 // 解析章节内容页
 function parseChapterPage(html) {
   const $ = cheerio.load(html);
-  const title = $('#main info h1').text().trim() || $('.bookname h1').text().trim() || '';
+  const title = $('#maininfo h1').text().trim()
+    || $('.bookname h1').text().trim()
+    || $('meta[property="og:novel:read_url"]').attr('content') || '';
 
-  // 尝试多个可能的内容容器
+  // 内容容器
   let content = '';
-  const contentSelectors = ['#content', '.content_read #content', '.book_content', '#chapterContent'];
-  for (const sel of contentSelectors) {
+  for (const sel of ['#content', '.content_read #content', '.book_content']) {
     const el = $(sel);
-    if (el.length) {
-      content = el.html() || '';
-      break;
-    }
+    if (el.length) { content = el.html() || ''; break; }
   }
 
   // 清理内容
   content = content
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<[^>]+>/g, (m) => {
-      // 保留段落内的换行
-      if (m === '<br>' || m === '<br/>' || m === '<br />' || m === '\n') return '\n';
-      if (m.startsWith('<img')) return '';
-      if (m.startsWith('<font')) return '';
-      return '';
-    })
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<font[^>]*>/gi, '')
+    .replace(/<\/font>/gi, '')
+    .replace(/<img[^>]*>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&#39;/g, "'")
     .replace(/&quot;/g, '"')
+    .replace(/<[^>]+>/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 
@@ -174,30 +235,23 @@ app.get('/api/books/search', async (req, res) => {
     const encoded = gbkUrlEncode(query);
     const searchUrl = `${BQ_BASE}/modules/article/search.php?searchkey=${encoded}`;
     const html = await fetchPage(searchUrl);
-
     const $ = cheerio.load(html);
     const results = [];
 
+    // 解析搜索结果列表
     $('#content table.grid tr').each((i, row) => {
-      if (i === 0) return; // 跳过表头
-      const $row = $(row);
-      const $tds = $row.find('td');
+      if (i === 0) return;
+      const $tds = $(row).find('td');
       if ($tds.length < 4) return;
 
       const $link = $tds.eq(0).find('a');
       const title = $link.text().trim();
       const bookUrl = $link.attr('href');
-
-      // 有些搜索页会直接跳转到书籍详情页（单结果时），而不是显示列表
-      if (!bookUrl) return;
+      if (!title || !bookUrl) return;
 
       const author = $tds.eq(2).text().trim();
       const updateTime = $tds.eq(4).text().trim();
       const status = $tds.eq(5).text().trim();
-
-      if (!title) return;
-
-      // 提取 bookId
       const urlMatch = bookUrl.match(/\/Book\/\d+\/(\d+)\//);
       const bookId = urlMatch ? urlMatch[1] : '';
 
@@ -210,22 +264,24 @@ app.get('/api/books/search', async (req, res) => {
         cover: '',
         wordCount: '',
         longIntro: '',
-        bookUrl, // 爬取详情时用
+        bookUrl: resolveUrl(bookUrl),
       });
     });
 
-    // 如果只有一个结果或者搜索直接跳转到详情页
-    if (results.length === 0 && $('meta[property="og:novel:book_name"]').length) {
-      const directBook = parseBookPage(html, '');
-      if (directBook.title) {
-        results.push(directBook);
+    // 单结果（搜索直接跳转到详情页）
+    if (results.length === 0 && isValidBookPage($)) {
+      const bookData = parseBookPage(html, '');
+      if (bookData.title) {
+        // 搜索结果不包含章节，避免返回过大的数据
+        const { chapters, ...bookMeta } = bookData;
+        results.push(bookMeta);
       }
     }
 
     res.json({ books: results });
   } catch (e) {
     console.error('Search error:', e.message);
-    res.json({ books: [], error: e.message });
+    res.json({ books: [] });
   }
 });
 
@@ -235,23 +291,21 @@ app.get('/api/books/:id', async (req, res) => {
   if (!id) return res.status(400).json({ message: '缺少书籍ID' });
 
   try {
-    // 先查缓存
     if (chapterCache[id]) {
-      const cached = chapterCache[id];
+      const c = chapterCache[id];
       return res.json({
         _id: id,
-        title: cached.title || id,
-        author: cached.author || '',
-        cover: cached.cover || '',
-        cat: cached.cat || '',
+        title: c.title || id,
+        author: c.author || '',
+        cover: c.cover || '',
+        cat: c.cat || '',
         wordCount: '',
-        updated: cached.updated || '',
-        longIntro: cached.longIntro || '',
+        updated: c.updated || '',
+        longIntro: c.longIntro || '',
       });
     }
 
-    // 从任意已知的分类页构造 URL（尝试常见结构）
-    // biquge500 的书籍页格式: /Book/<catId>/<bookId>/
+    // 尝试多个分类路径（也包括 catId=0）
     const possibleUrls = [
       `${BQ_BASE}/Book/1/${id}/`,
       `${BQ_BASE}/Book/2/${id}/`,
@@ -260,7 +314,14 @@ app.get('/api/books/:id', async (req, res) => {
       `${BQ_BASE}/Book/5/${id}/`,
       `${BQ_BASE}/Book/6/${id}/`,
       `${BQ_BASE}/Book/7/${id}/`,
+      `${BQ_BASE}/Book/0/${id}/`,
       `${BQ_BASE}/Book/21/${id}/`,
+      `${BQ_BASE}/Book/22/${id}/`,
+      `${BQ_BASE}/Book/23/${id}/`,
+      `${BQ_BASE}/Book/24/${id}/`,
+      `${BQ_BASE}/Book/25/${id}/`,
+      `${BQ_BASE}/Book/26/${id}/`,
+      `${BQ_BASE}/Book/27/${id}/`,
     ];
 
     let bookData = null;
@@ -268,14 +329,11 @@ app.get('/api/books/:id', async (req, res) => {
       try {
         const html = await fetchPage(url);
         const $ = cheerio.load(html);
-        const ogTitle = $('meta[property="og:novel:book_name"]').attr('content');
-        if (ogTitle) {
+        if (isValidBookPage($)) {
           bookData = parseBookPage(html, url);
           if (bookData.title) break;
         }
-      } catch {
-        continue;
-      }
+      } catch { continue; }
     }
 
     if (bookData && bookData.title) {
@@ -307,7 +365,14 @@ app.get('/api/books/:id/chapters', async (req, res) => {
       `${BQ_BASE}/Book/5/${id}/`,
       `${BQ_BASE}/Book/6/${id}/`,
       `${BQ_BASE}/Book/7/${id}/`,
+      `${BQ_BASE}/Book/0/${id}/`,
       `${BQ_BASE}/Book/21/${id}/`,
+      `${BQ_BASE}/Book/22/${id}/`,
+      `${BQ_BASE}/Book/23/${id}/`,
+      `${BQ_BASE}/Book/24/${id}/`,
+      `${BQ_BASE}/Book/25/${id}/`,
+      `${BQ_BASE}/Book/26/${id}/`,
+      `${BQ_BASE}/Book/27/${id}/`,
     ];
 
     let foundChapters = [];
@@ -317,20 +382,16 @@ app.get('/api/books/:id/chapters', async (req, res) => {
       try {
         const html = await fetchPage(url);
         const $ = cheerio.load(html);
-        const ogTitle = $('meta[property="og:novel:book_name"]').attr('content');
-        console.log(`[chapters] trying ${url} -> ogTitle: ${ogTitle || 'none'}, dd: ${$('#list dl dd').length}`);
-        if (ogTitle) {
+        if (isValidBookPage($)) {
           const bookData = parseBookPage(html, url);
-          console.log(`[chapters] parseBookPage: title="${bookData.title}", chapters=${bookData.chapters?.length}`);
-          if (bookData.title) {
-            foundChapters = bookData.chapters || [];
-            bookMeta = bookData;
+          if (bookData.title && bookData.chapters.length > 0) {
+            foundChapters = bookData.chapters;
+            const { chapters: _, ...meta } = bookData;
+            bookMeta = meta;
             break;
           }
         }
-      } catch {
-        continue;
-      }
+      } catch { continue; }
     }
 
     if (foundChapters.length > 0) {
@@ -353,9 +414,9 @@ app.get('/api/chapter/:chapterId', async (req, res) => {
   if (!chapterId) return res.status(400).json({ message: '缺少章节ID' });
 
   try {
-    // chapterId 格式是 `${bookId}_${chapterNum}`，需要拆分
+    // 解析 chapterId（格式：bookId_chapterNum 或直接是 chapterNum）
     let chapterNum = chapterId;
-    let actualBookId = bookId;
+    let actualBookId = bookId || '';
 
     if (chapterId.includes('_')) {
       const parts = chapterId.split('_');
@@ -363,63 +424,47 @@ app.get('/api/chapter/:chapterId', async (req, res) => {
       chapterNum = parts[1];
     }
 
-    // 尝试从缓存中获取真实 URL
-    let realChapterUrl = null;
+    let chapterUrl = null;
 
+    // 优先从缓存获取
     if (actualBookId && chapterCache[actualBookId]) {
       const cached = chapterCache[actualBookId].chapters.find(
         ch => ch.id === chapterId || ch.id === `${actualBookId}_${chapterNum}`
       );
-      if (cached) {
-        realChapterUrl = cached.link;
-      }
+      if (cached) chapterUrl = cached.link;
     }
 
-    // 如果缓存没有，尝试构造 URL
-    if (!realChapterUrl && actualBookId) {
-      // 尝试常见的分类
-      const possibleUrls = [
-        `${BQ_BASE}/Book/1/${actualBookId}/${chapterNum}.html`,
-        `${BQ_BASE}/Book/2/${actualBookId}/${chapterNum}.html`,
-        `${BQ_BASE}/Book/3/${actualBookId}/${chapterNum}.html`,
-        `${BQ_BASE}/Book/4/${actualBookId}/${chapterNum}.html`,
-        `${BQ_BASE}/Book/5/${actualBookId}/${chapterNum}.html`,
-        `${BQ_BASE}/Book/6/${actualBookId}/${chapterNum}.html`,
-        `${BQ_BASE}/Book/7/${actualBookId}/${chapterNum}.html`,
-      ];
-
-      for (const url of possibleUrls) {
+    // 缓存没有则尝试构造 URL
+    if (!chapterUrl && actualBookId) {
+      for (const catId of [0, 1, 2, 3, 4, 5, 6, 7, 21, 22, 23, 24, 25, 26, 27]) {
         try {
-          const html = await fetchPage(url);
+          const testUrl = `${BQ_BASE}/Book/${catId}/${actualBookId}/${chapterNum}.html`;
+          const html = await fetchPage(testUrl);
           const $ = cheerio.load(html);
-          const title = $('meta[property="og:novel:read_url"]').attr('content');
-          if (title) {
-            realChapterUrl = url;
+          if ($('meta[property="og:novel:read_url"]').attr('content')) {
+            chapterUrl = testUrl;
             break;
           }
-        } catch {
-          continue;
-        }
+        } catch { continue; }
       }
     }
 
-    if (!realChapterUrl) {
+    if (!chapterUrl) {
       return res.status(404).json({ message: '章节不存在' });
     }
 
-    const html = await fetchPage(realChapterUrl);
+    const html = await fetchPage(chapterUrl);
     const { title, content } = parseChapterPage(html);
-
     res.json({ title, content });
   } catch (e) {
-    console.error('Chapter content error:', e.message);
+    console.error('Chapter error:', e.message);
     res.status(500).json({ message: '获取章节内容失败' });
   }
 });
 
 // 健康检查
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', mode: 'biquge-scraper', proxy: true });
+  res.json({ status: 'ok', mode: 'biquge500-scraper' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {

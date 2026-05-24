@@ -386,8 +386,8 @@
 <script>
 const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
-// API base
-const API_BASE = 'http://114.220.75.151:8989';
+// API base - 通过反向代理访问
+const API_BASE = '/api';
 
 // localStorage keys
 const LS = {
