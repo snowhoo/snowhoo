@@ -384,6 +384,19 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   #history-today .event-title { font-size: 0.85rem; }
 }
 
+/* 大屏（>=900px）：历史上的今天两栏布局 */
+@media screen and (min-width: 900px) {
+  #history-today .events-list {
+    columns: 2;
+    column-gap: 1.5rem;
+    display: block;
+  }
+  #history-today .event-item {
+    break-inside: avoid;
+    margin-bottom: 0.6rem;
+  }
+}
+
 /* 超大屏（>=2000px） */
 @media screen and (min-width: 2000px) {
   #home-widgets { padding: 0 4rem; }
