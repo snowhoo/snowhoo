@@ -375,7 +375,25 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 }
 #history-today .event-title a {
   margin-left: 0.4rem;
-  white-space: nowrap;  /* 让链接不换行，或根据需求调整 */
+  white-space: nowrap;
+}
+#history-today .event-link {
+  display: inline-block;
+  font-size: 0.7rem;
+  color: var(--text-secondary, #8ba0bc);
+  background: var(--bg-secondary, #f5f8fe);
+  padding: 0.2rem 0.6rem;
+  border-radius: 30px;
+  line-height: 1;
+  height: min-content;
+  margin-left: 0.4rem;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+html[data-theme=dark] #history-today .event-link {
+  background: #2a2a2a;
+  color: #8a9a9a;
 }
 #history-today .status-message { color: #9ab0c9; font-size: 0.8rem; text-align: center; padding: 1rem; }
 

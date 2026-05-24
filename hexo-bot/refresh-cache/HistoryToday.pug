@@ -52,7 +52,7 @@
         evs.sort(function(a,b){ return b.year-a.year; });
         var html='';
         for(var i=0;i<evs.length;i++) {
-          var link = evs[i].link ? '<a href="'+evs[i].link+'" target="_blank" class="event-title" style="color:#2c445e;text-decoration:none;font-size:0.9rem;line-height:1.45">百科了解事件</a>' : '';
+          var link = evs[i].link ? '<a href="'+evs[i].link+'" target="_blank" class="event-link">了解详情</a>' : '';
           html+='<div class="event-item"><div class="event-year">'+evs[i].year+'</div><div class="event-body"><span class="event-title">'+evs[i].text+'</span>'+link+'</div></div>';
         }
         c.innerHTML=html;
