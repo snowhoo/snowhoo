@@ -9,10 +9,9 @@
         .expand-control#expandToggle
           span.arrow#arrowIcon ▼
           span 详情
-    .detail-wrapper#detailWrapper
-      .detail-panel#detailPanel
-        .full-poem#fullPoemContent
-        .poet-bio#poetBio
+    .detail-panel#detailPanel
+      .full-poem#fullPoemContent
+      .poet-bio#poetBio
   script.
     (function(){
       var current = {line:'',author:'',dynasty:'',title:'',fullDetail:null};
@@ -30,16 +29,15 @@
       }
 
       function toggleDetail() {
-        var wrapper = document.getElementById('detailWrapper');
         var panel = document.getElementById('detailPanel');
         var arrow = document.getElementById('arrowIcon');
-        var isOpen = wrapper.style.display === 'flex';
+        var isOpen = panel.style.display === 'block';
         if (isOpen) {
-          wrapper.style.display = 'none';
+          panel.style.display = 'none';
           arrow.innerHTML = '▼';
         } else {
           updateDetail();
-          wrapper.style.display = 'flex';
+          panel.style.display = 'block';
           arrow.innerHTML = '▲';
         }
       }

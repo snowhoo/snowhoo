@@ -384,32 +384,6 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   #history-today .event-title { font-size: 0.85rem; }
 }
 
-/* 大屏（>=900px）：诗词两栏布局 */
-@media screen and (min-width: 900px) {
-  #poetry-widget .poetry-container {
-    display: flex;
-    gap: 1.5rem;
-    align-items: flex-start;
-  }
-  #poetry-widget .poem-main {
-    flex: 1;
-    text-align: left;
-  }
-  #poetry-widget .detail-wrapper {
-    display: none;
-    flex: 1;
-    flex-direction: column;
-  }
-  #poetry-widget .detail-panel {
-    display: block;
-    padding: 0;
-    border-top: none;
-  }
-  #poetry-widget .full-poem {
-    margin-bottom: 0.8rem;
-  }
-}
-
 /* 大屏（>=900px）：历史上的今天两栏布局 */
 @media screen and (min-width: 900px) {
   #history-today .events-list {
