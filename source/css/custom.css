@@ -73,6 +73,7 @@
   height: 55px !important;
   width: auto !important;
   object-fit: contain !important;
+  vertical-align: middle !important;
 }
 
 /* LOGO + 标语容器：flexbox 垂直居中 */
@@ -89,6 +90,18 @@ html body #nav #blog-info a.nav-site-title {
   -moz-flex-direction: row !important;
   -ms-flex-direction: row !important;
   flex-direction: row !important;
+}
+
+/* LOGO + 标语整体垂直居中 */
+html body #nav #blog-info {
+  display: -webkit-flex !important;
+  display: -moz-flex !important;
+  display: -ms-flexbox !important;
+  display: flex !important;
+  -webkit-align-items: center !important;
+  -moz-align-items: center !important;
+  -ms-flex-align: center !important;
+  align-items: center !important;
 }
 
 /* 标语样式 - 红色渐变背景 */
