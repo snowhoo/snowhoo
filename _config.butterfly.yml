@@ -205,7 +205,7 @@ aside:
     enable: true
     content: 《我在八王之乱当卧底》已在番茄连载,每晚 22:00 左右加更,欢迎大家阅读!
   card_recent_post:
-    enable: true
+    enable: false
     limit: 3
     sort: date
     sort_order:
@@ -224,7 +224,7 @@ aside:
     order: 1
     sort_order:
   card_archives:
-    enable: true
+    enable: false
     type: monthly
     format: YYYY 年 MM 月
     order: -1
@@ -236,7 +236,7 @@ aside:
     orderBy: 'date'
     order: -1
   card_webinfo:
-    enable: true
+    enable: false
     post_count: true
     last_push_date: true
     sort_order:
