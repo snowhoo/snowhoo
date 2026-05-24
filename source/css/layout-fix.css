@@ -155,13 +155,21 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   padding: 0;
 }
 
+#poetry-widget .meta-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 #poetry-widget .meta-row {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 0.5rem 0.8rem;
   line-height: 1;
+  flex: 1;
 }
 
 #poetry-widget .verse {
@@ -241,26 +249,33 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 
 #history-today .history-header {
   display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.6rem;
   padding: 0;
   margin-bottom: 10px;
-
-  /* border-bottom: 1px solid #eff2f8; */
 }
 
-#history-today .history-header h3 { 
-  font-size: 1.5em; 
-  font-weight: 400; 
-  color: var(--text-highlight-color); 
-  margin: 0; 
-  line-height: 1.4; 
-  transition: all .2s ease-in-out; 
-  display: flex; 
-  align-items: center; 
-  gap: 0.4rem; 
+#history-today .header-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+#history-today .history-header h3 {
+  font-size: 1.5em;
+  font-weight: 400;
+  color: var(--text-highlight-color);
+  margin: 0;
+  line-height: 1.4;
+  transition: all .2s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   font-family: '楷体', '华文楷书', 'KaiTi', 'Georgia', serif;
 }
 #history-today .history-date { 
