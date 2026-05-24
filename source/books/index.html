@@ -221,12 +221,12 @@
     <!-- 设置面板 -->
     <div class="settings-panel" v-if="showSettings" @click.stop>
       <div class="settings-item">
-        <label>字体大小: {{ fontSize }}px</label>
+        <label>字体大小: &#123;&#123; fontSize }}px</label>
         <input type="range" min="12" max="24" v-model="fontSize" @change="savePreference">
       </div>
       <div class="settings-item toggle-dark" @click="toggleDark">
         <span>夜间模式</span>
-        <span>{{ isDark ? '开' : '关' }}</span>
+        <span>&#123;&#123; isDark ? '开' : '关' }}</span>
       </div>
     </div>
 
@@ -253,8 +253,8 @@
           <span class="fav-icon" v-if="isFaved(item.book._id)" @click.stop="toggleFav(item.book)">&#10084;</span>
           <img class="book-cover" :src="encodeURI(item.book.cover)" @error="e => e.target.style.display='none'">
           <div class="book-info">
-            <div class="book-title">{{ item.book.title }}</div>
-            <div class="book-author">{{ item.book.author }}</div>
+            <div class="book-title">&#123;&#123; item.book.title }}</div>
+            <div class="book-author">&#123;&#123; item.book.author }}</div>
           </div>
         </div>
       </div>
@@ -267,9 +267,9 @@
         <div class="history-item" v-for="item in history" :key="item.timestamp" @click="resumeRead(item)">
           <img class="history-cover" :src="encodeURI(item.cover)" @error="e => e.target.style.display='none'">
           <div class="history-info">
-            <div class="history-title">{{ item.title }}</div>
-            <div class="history-chapter">{{ item.chapterTitle }}</div>
-            <div class="history-time">{{ formatTime(item.timestamp) }}</div>
+            <div class="history-title">&#123;&#123; item.title }}</div>
+            <div class="history-chapter">&#123;&#123; item.chapterTitle }}</div>
+            <div class="history-time">&#123;&#123; formatTime(item.timestamp) }}</div>
           </div>
         </div>
       </div>
@@ -283,8 +283,8 @@
           <span class="fav-icon" @click.stop="toggleFav(book)">&#10084;</span>
           <img class="book-cover" :src="encodeURI(book.cover)" @error="e => e.target.style.display='none'">
           <div class="book-info">
-            <div class="book-title">{{ book.title }}</div>
-            <div class="book-author">{{ book.author }}</div>
+            <div class="book-title">&#123;&#123; book.title }}</div>
+            <div class="book-author">&#123;&#123; book.author }}</div>
           </div>
         </div>
       </div>
@@ -295,9 +295,9 @@
       <div v-if="bookmarks.length === 0" class="empty-state">暂无书签，<br>在阅读界面长按选择文字添加书签</div>
       <div v-else>
         <div class="bookmark-item" v-for="(bm, idx) in bookmarks" :key="idx" @click="jumpToBookmark(bm)">
-          <div class="bookmark-chapter">{{ bm.bookTitle }} - {{ bm.chapterTitle }}</div>
-          <div class="bookmark-text">"{{ bm.selectedText }}"</div>
-          <div class="bookmark-time">{{ formatTime(bm.timestamp) }}</div>
+          <div class="bookmark-chapter">&#123;&#123; bm.bookTitle }} - &#123;&#123; bm.chapterTitle }}</div>
+          <div class="bookmark-text">"&#123;&#123; bm.selectedText }}"</div>
+          <div class="bookmark-time">&#123;&#123; formatTime(bm.timestamp) }}</div>
         </div>
       </div>
     </div>
@@ -311,8 +311,8 @@
           <span class="fav-icon" v-if="isFaved(book._id)" @click.stop="toggleFav(book)">&#10084;</span>
           <img class="book-cover" :src="encodeURI(book.cover)" @error="e => e.target.style.display='none'">
           <div class="book-info">
-            <div class="book-title">{{ book.title }}</div>
-            <div class="book-author">{{ book.author }}</div>
+            <div class="book-title">&#123;&#123; book.title }}</div>
+            <div class="book-author">&#123;&#123; book.author }}</div>
           </div>
         </div>
       </div>
@@ -323,10 +323,10 @@
   <div class="page" :class="{active: currentPage === 'detail'}">
     <div class="header">
       <button class="back-btn" @click="goBack">&#8592;</button>
-      <div class="header-title">{{ currentBook.title }}</div>
+      <div class="header-title">&#123;&#123; currentBook.title }}</div>
       <div class="header-actions">
         <button class="icon-btn" @click="toggleFav(currentBook)">
-          {{ isFaved(currentBook._id) ? '❤️' : '🤍' }}
+          &#123;&#123; isFaved(currentBook._id) ? '❤️' : '🤍' }}
         </button>
         <button class="icon-btn" @click="showSettings = !showSettings">&#9881;</button>
       </div>
@@ -335,11 +335,11 @@
     <div class="detail-header">
       <img class="detail-cover" :src="encodeURI(currentBook.cover)" @error="e => e.target.style.display='none'">
       <div class="detail-info">
-        <div class="detail-title">{{ currentBook.title }}</div>
-        <div class="detail-meta">{{ currentBook.author }}</div>
-        <div class="detail-meta">{{ currentBook.cat }} | {{ currentBook.wordCount }}字</div>
-        <div class="detail-meta" v-if="currentBook.updated">更新: {{ currentBook.updated }}</div>
-        <div class="detail-desc">{{ currentBook.longIntro }}</div>
+        <div class="detail-title">&#123;&#123; currentBook.title }}</div>
+        <div class="detail-meta">&#123;&#123; currentBook.author }}</div>
+        <div class="detail-meta">&#123;&#123; currentBook.cat }} | &#123;&#123; currentBook.wordCount }}字</div>
+        <div class="detail-meta" v-if="currentBook.updated">更新: &#123;&#123; currentBook.updated }}</div>
+        <div class="detail-desc">&#123;&#123; currentBook.longIntro }}</div>
         <div class="detail-actions">
           <button class="btn btn-primary" @click="startReading">开始阅读</button>
         </div>
@@ -353,7 +353,7 @@
       <div class="chapter-list">
         <div class="chapter-item" v-for="ch in chapterList" :key="ch.id"
              @click="readChapter(ch)">
-          <span :class="{read: isChapterRead(ch.id)}">{{ ch.title }}</span>
+          <span :class="{read: isChapterRead(ch.id)}">&#123;&#123; ch.title }}</span>
         </div>
       </div>
     </div>
@@ -363,10 +363,10 @@
   <div class="page" :class="{active: currentPage === 'reader'}">
     <div class="reader-header">
       <button class="back-btn" @click="goBack">&#8592;</button>
-      <div class="header-title">{{ currentChapter.title }}</div>
+      <div class="header-title">&#123;&#123; currentChapter.title }}</div>
       <div class="header-actions">
         <button class="icon-btn" @click="addBookmark" title="添加书签">&#128278;</button>
-        <button class="icon-btn" @click="toggleDark"> {{ isDark ? '&#9788;' : '&#9790;' }} </button>
+        <button class="icon-btn" @click="toggleDark"> &#123;&#123; isDark ? '&#9788;' : '&#9790;' }} </button>
         <button class="icon-btn" @click="showSettings = !showSettings">&#9881;</button>
       </div>
     </div>
