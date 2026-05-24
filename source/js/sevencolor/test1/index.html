@@ -38,12 +38,27 @@ layout: false
 
     .__CID__-article-main {
       display: flex;
+      gap: 12px;
+    }
+
+    .__CID__-article-cover-card {
+      flex: 0 0 40%;
+      background: var(--card-bg, rgba(255, 255, 255, 0.95));
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px var(--shadow, rgba(0, 0, 0, 0.08));
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .__CID__-article-cover-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px var(--shadow, rgba(0, 0, 0, 0.12));
     }
 
     .__CID__-article-cover {
       position: relative;
-      flex: 0 0 120px;
-      width: 120px;
+      width: 100%;
+      height: 200px;
       overflow: hidden;
       background: var(--cover-bg, #2d4a6e);
     }
@@ -129,9 +144,26 @@ layout: false
       transition: width 0.1s linear;
     }
 
+    .__CID__-article-content-card {
+      flex: 1;
+      background: var(--card-bg, rgba(255, 255, 255, 0.95));
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px var(--shadow, rgba(0, 0, 0, 0.08));
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .__CID__-article-content-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px var(--shadow, rgba(0, 0, 0, 0.12));
+    }
+
     .__CID__-article-content {
       flex: 1;
-      padding: 0 8px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
       min-width: 0;
@@ -254,13 +286,16 @@ layout: false
 
     @media (max-width: 600px) {
       .__CID__-article-main { flex-direction: column; }
-      .__CID__-article-cover { flex: none; width: 100%; height: 140px; }
+      .__CID__-article-cover-card { flex: none; width: 100%; }
+      .__CID__-article-cover { height: 160px; }
+      .__CID__-article-content-card { flex: none; width: 100%; }
       .__CID__-audio-btn { width: 40px; height: 40px; }
-      .__CID__-article-content { padding: 4px 10px; }
+      .__CID__-article-content { padding: 10px; }
     }
 
     @media (min-width: 601px) {
-      .__CID__-article-cover { flex: 0 0 40%; width: 40%; height: 200px; }
+      .__CID__-article-cover-card { flex: 0 0 40%; }
+      .__CID__-article-cover { height: 200px; }
     }
   </style>
 </head>
@@ -344,19 +379,23 @@ layout: false
 
         html += '<div class="__CID__-article-card" data-index="' + globalIndex + '">' +
           '<div class="__CID__-article-main">' +
-            '<div class="__CID__-article-cover">' +
-              (imgSrc ? '<img src="' + imgSrc + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' : '') +
-              '<div class="__CID__-img-placeholder" style="display:' + (imgSrc ? 'none' : 'flex') + '">夜读</div>' +
-              (hasAudio ? '<button class="__CID__-audio-btn" data-index="' + globalIndex + '" data-src="' + article.audioSrc + '"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>' : '') +
-              '<span class="__CID__-article-corner-label">每晚十点 · 温暖相伴</span>' +
-              metaHtml +
-              progressHtml +
+            '<div class="__CID__-article-cover-card">' +
+              '<div class="__CID__-article-cover">' +
+                (imgSrc ? '<img src="' + imgSrc + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' : '') +
+                '<div class="__CID__-img-placeholder" style="display:' + (imgSrc ? 'none' : 'flex') + '">夜读</div>' +
+                (hasAudio ? '<button class="__CID__-audio-btn" data-index="' + globalIndex + '" data-src="' + article.audioSrc + '"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>' : '') +
+                '<span class="__CID__-article-corner-label">每晚十点 · 温暖相伴</span>' +
+                metaHtml +
+                progressHtml +
+              '</div>' +
             '</div>' +
-            '<div class="__CID__-article-content">' +
-              '<h3 class="__CID__-article-title" title="' + article.title + '">' + article.title + '</h3>' +
-              (article.pubDate ? '<div class="__CID__-article-date">' + article.pubDate + '</div>' : '') +
-              '<p class="__CID__-article-summary">' + (article.summary || '') + '</p>' +
-              '<div class="__CID__-read-more" data-index="' + globalIndex + '"><span>展开</span><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></div>' +
+            '<div class="__CID__-article-content-card">' +
+              '<div class="__CID__-article-content">' +
+                '<h3 class="__CID__-article-title" title="' + article.title + '">' + article.title + '</h3>' +
+                (article.pubDate ? '<div class="__CID__-article-date">' + article.pubDate + '</div>' : '') +
+                '<p class="__CID__-article-summary">' + (article.summary || '') + '</p>' +
+                '<div class="__CID__-read-more" data-index="' + globalIndex + '"><span>展开</span><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></div>' +
+              '</div>' +
             '</div>' +
           '</div>' +
           '<div class="__CID__-full-content" id="__CID__-full-content-' + globalIndex + '">' +
