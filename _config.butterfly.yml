@@ -1451,7 +1451,7 @@ html[data-theme=dark] #solar-term-banner.festival-banner .st-desc{color:#ccc}
       /* 收起/展开逻辑 */
       #lucky-visitor-tag .lucky-tag-inner{overflow:hidden}#lucky-visitor-tag.expanded .lucky-tag-inner,#lucky-visitor-tag.expanded .lucky-emoji{opacity:1;transform:translateX(0);visibility:visible}#lucky-visitor-tag.collapsed .lucky-tag-inner{opacity:0;transform:translateX(20px);visibility:hidden;width:0;min-width:0;padding:0;border:0;margin:0;overflow:hidden}#lucky-visitor-tag.collapsed .lucky-emoji{opacity:1}#lucky-visitor-tag .lucky-collapsed-icon{display:none}#lucky-visitor-tag.collapsed .lucky-emoji{display:none}#lucky-visitor-tag.collapsed .lucky-collapsed-icon{display:block;position:fixed;right:13px;top:50%;transform:translateY(-50%);z-index:1000;font-size:22px;line-height:1;padding:4px 1px;background:rgba(255,249,240,.90);border:1px solid rgba(255,152,0,.3);border-radius:50%;box-shadow:0 4px 20px rgba(255,152,0,.12)}html[data-theme=dark]#lucky-visitor-tag.collapsed .lucky-collapsed-icon{background:rgba(62,39,35,.75);border-color:rgba(255,152,0,.2)}
       </style>
-    - <script src="/js/visitor.js" defer></script>
+    - <!-- <script src="/js/visitor.js" defer></script> -->
     - <script src="/js/waline-avatar-fix.js" defer></script>
     - <link rel="stylesheet" href="/js/sevencolor/sevencolor.css">
     - <script src="/js/sevencolor/sevencolor.js" defer></script>
