@@ -386,8 +386,9 @@
 <script>
 const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
-// 追书神器 API base
-const API_BASE = 'https://api.zhuishushenqi.com';
+// 本地代理 API base（开发环境）
+// 生产环境需改为实际代理地址，如 https://api.yourdomain.com
+const API_BASE = 'http://localhost:3000';
 
 // localStorage keys
 const LS = {
@@ -551,10 +552,10 @@ createApp({
       if (!searchKeyword.value.trim()) return;
       isSearching.value = true;
       try {
-        const data = await apiGet(`/book/fuzzy-search?query=${encodeURIComponent(searchKeyword.value)}`);
+        const data = await apiGet(`/api/books/search?query=${encodeURIComponent(searchKeyword.value)}`);
         searchResults.value = (data.books || []).map(b => ({
           _id: b._id, title: b.title, author: b.author,
-          cover: b.cover ? `https://statics.zhuishushenqi.com${b.cover}` : '',
+          cover: b.cover || '',
           cat: b.cat, wordCount: b.wordCount, updated: b.updated, longIntro: b.longIntro,
         }));
       } catch(e) {
@@ -564,17 +565,17 @@ createApp({
     };
 
     const loadBookDetail = async (id) => {
-      const data = await apiGet(`/book/${id}`);
+      const data = await apiGet(`/api/books/${id}`);
       currentBook.value = {
         _id: data._id, title: data.title, author: data.author,
-        cover: data.cover ? `https://statics.zhuishushenqi.com${data.cover}` : '',
+        cover: data.cover || '',
         cat: data.cat, wordCount: data.wordCount, updated: data.updated,
         longIntro: data.longIntro,
       };
     };
 
     const loadChapterList = async (bookId, targetChapterId = null) => {
-      const data = await apiGet(`/mix-atoc/${bookId}`);
+      const data = await apiGet(`/api/books/${bookId}/chapters`);
       chapterList.value = (data.chapters || []).map(ch => ({
         id: ch.id, title: ch.title, link: ch.link,
       }));
@@ -624,9 +625,9 @@ createApp({
       currentChapter.value = ch;
       chapterContent.value = '<div class="loading">加载中...</div>';
       try {
-        const data = await apiGet(`/chapter/${ch.id}`);
-        // 清洗内容
-        let html = (data.chapter && data.chapter.cpContent) || (data.chapter && data.chapter.content) || '';
+        const data = await apiGet(`/api/chapter/${ch.id}`);
+        // 清洗内容（代理返回 { id, title, content }）
+        let html = (data.content || '');
         html = html.replace(/\r\n/g, '\n').trim();
         const paragraphs = html.split('\n').filter(p => p.trim());
         chapterContent.value = paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
