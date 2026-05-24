@@ -335,7 +335,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   gap: 0.5rem;
   max-width: max-content;
   margin: 0 auto;
-  overflow-y: auto;
+  overflow: hidden;
   padding-right: 0;
 }
 
@@ -376,19 +376,20 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 #history-today .event-title a {
   margin-left: 0.4rem;
   white-space: nowrap;
+  font-size: inherit;
 }
 #history-today .event-link {
-  display: inline-block;
-  font-size: 0.7rem;
-  color: var(--text-secondary, #8ba0bc);
-  background: var(--bg-secondary, #f5f8fe);
-  padding: 0.2rem 0.6rem;
-  border-radius: 30px;
-  line-height: 1;
+  display: inline-block !important;
+  font-size: 0.7rem !important;
+  color: var(--text-secondary, #8ba0bc) !important;
+  background: var(--bg-secondary, #f5f8fe) !important;
+  padding: 0.2rem 0.6rem !important;
+  border-radius: 30px !important;
+  line-height: 1 !important;
   height: min-content;
-  margin-left: 0.4rem;
-  white-space: nowrap;
-  text-decoration: none;
+  margin-left: 0.4rem !important;
+  white-space: nowrap !important;
+  text-decoration: none !important;
 }
 
 html[data-theme=dark] #history-today .event-link {
