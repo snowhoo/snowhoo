@@ -319,8 +319,9 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   color: #2c3e4e;
   width: 100%;
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.6rem;
 }
 
 #history-today .event-year {
@@ -333,7 +334,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   display: inline-block;
   padding: 0rem 0.45rem;
   border-radius: 4px;
-  align-self: flex-start;
+  flex-shrink: 0;
 }
 
 #history-today .event-body {
