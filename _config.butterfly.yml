@@ -202,7 +202,7 @@ aside:
       text: 我的 Github
       link: https://github.com/snowhoo
   card_announcement:
-    enable: true
+    enable: false
     content: 《我在八王之乱当卧底》已在番茄连载,每晚 22:00 左右加更,欢迎大家阅读!
   card_recent_post:
     enable: false
@@ -212,12 +212,12 @@ aside:
   card_newest_comments:
     enable: false
   card_categories:
-    enable: true
+    enable: false
     limit: 10
     expand: none
     sort_order:
   card_tags:
-    enable: true
+    enable: false
     limit: 20
     color: false
     orderby: random
