@@ -387,7 +387,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 /* 大屏（>=900px）：诗词展开两栏布局 */
 @media screen and (min-width: 900px) {
   #poetry-widget .detail-inner {
-    display: flex;
+    display: flex !important;
     gap: 1.5rem;
     align-items: flex-start;
   }
@@ -403,9 +403,9 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 /* 大屏（>=900px）：历史上的今天两栏布局 */
 @media screen and (min-width: 900px) {
   #history-today .events-list {
-    columns: 2;
+    columns: 2 !important;
     column-gap: 1.5rem;
-    display: block;
+    display: block !important;
   }
   #history-today .event-item {
     break-inside: avoid;
