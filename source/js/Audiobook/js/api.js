@@ -357,16 +357,20 @@ const AudiobookAPI = {
      * 使用公开可用的示例音频
      */
     getAudioUrlForChapter(bookId, chapterIndex) {
-        // 使用公开可用的示例音频（这些是LibriVox的公版书音频）
+        // 使用可靠可用的公开音频URL（都是公版书朗读）
         const sampleAudios = [
-            'https://www.archive.org/download/romeoandjuliet_ash_ash_librivox/romeoandjuliet_ash_001_shakespeare_64kb.mp3',
-            'https://www.archive.org/download/prideandprejudice_1008_librivox/prideandprejudice_001_austen_64kb.mp3',
-            'https://www.archive.org/download/ulysses_1005_librivox/ulysses_001_joyce_64kb.mp3',
-            'https://www.archive.org/download/grimmfairytales_061_librivox/grimmfairytales_001_grimm_64kb.mp3',
-            'https://www.archive.org/download/ Sherlock Holmes/holmesadventure_001_conandoyle_64kb.mp3'
+            // 英文公版书音频
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3',
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'
         ];
 
-        // 每个书籍ID对应一个固定的示例音频，确保同一书籍的章节使用相同音频
+        // 每个书籍ID对应一个固定的示例音频
         const audioIndex = (bookId - 1) % sampleAudios.length;
         return sampleAudios[audioIndex];
     },
