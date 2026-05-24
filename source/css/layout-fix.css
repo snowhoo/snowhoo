@@ -384,8 +384,8 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   #history-today .event-title { font-size: 0.85rem; }
 }
 
-/* 中大屏（>=601px）：诗词展开两栏布局 */
-@media screen and (min-width: 601px) {
+/* 大屏（>=900px）：诗词展开两栏布局 */
+@media screen and (min-width: 900px) {
   #poetry-widget .detail-inner {
     display: flex;
     gap: 1.5rem;
@@ -400,8 +400,8 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   }
 }
 
-/* 中大屏（>=601px）：历史上的今天两栏布局 */
-@media screen and (min-width: 601px) {
+/* 大屏（>=900px）：历史上的今天两栏布局 */
+@media screen and (min-width: 900px) {
   #history-today .events-list {
     columns: 2;
     column-gap: 1.5rem;
