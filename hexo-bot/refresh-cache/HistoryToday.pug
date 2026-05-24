@@ -4,7 +4,7 @@
       .header-left
         h3
           i.fas.fa-landmark
-          | 历史上今天
+          | 历史上的今天
         span.history-date#htQueryDate
       .expand-control#htToggle
         span.arrow#htArrow ▼
@@ -21,7 +21,7 @@
       function getToday() {
         var d = new Date();
         var m = String(d.getMonth()+1), day = String(d.getDate());
-        return { year: d.getFullYear(), month: m, day: day, display: d.getFullYear()+'年'+m+'月'+day+'日' };
+        return { year: d.getFullYear(), month: m, day: day, display: m+'月'+day+'日' };
       }
 
       function fetchFromJSON() {
@@ -84,7 +84,7 @@
       document.getElementById('htQueryDate').innerText = t.display;
       document.getElementById('htToggle').addEventListener('click', toggleDetail);
 
-      setText('加载中...');
+      setText('...');
       fetchFromJSON()
         .then(function(evs){ currentEvents = evs; setText('详情'); })
         .catch(function(){ setText('……'); });
