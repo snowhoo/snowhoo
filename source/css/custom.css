@@ -336,3 +336,35 @@ html[data-theme="dark"] #lucky-visitor-tag .lucky-collapsed-icon {
 html[data-theme="dark"] .recent-post-item {
   border-color: #3a3a3a;
 }
+
+/* =============================================
+   首页：无论屏幕大小，边栏和文章列表都垂直布局
+   ============================================= */
+
+/* 首页主容器：强制垂直 flex 方向 */
+#recent-posts {
+  width: 100% !important;
+  flex: none !important;
+}
+
+/* 侧边栏：强制垂直排列到文章列表下方 */
+.layout > .aside-content {
+  width: 100% !important;
+  flex: none !important;
+  margin-top: 20px;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 强制覆盖主题的 maxWidth900 响应式行为 */
+@media screen and (min-width: 901px) {
+  #recent-posts {
+    width: 100% !important;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  #recent-posts {
+    width: 100% !important;
+  }
+}
