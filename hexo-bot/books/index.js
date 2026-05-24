@@ -3,7 +3,7 @@ const axios = require('axios');
 const cors = require('cors');
 
 const app = express();
-const PORT = 3000;
+const PORT = 8989;
 
 const ZHAISHU_BASE = 'https://api.zhuishushenqi.com';
 
