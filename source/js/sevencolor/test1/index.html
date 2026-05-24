@@ -39,16 +39,20 @@ layout: false
     .__CID__-article-main {
       display: flex;
       gap: 12px;
+      border: none;
     }
 
     .__CID__-article-cover-card {
-      flex: 0 0 40%;
+      flex: 1;
       background: var(--card-bg, rgba(255, 255, 255, 0.95));
       border-radius: 10px;
       overflow: hidden;
       box-shadow: 0 2px 8px var(--shadow, rgba(0, 0, 0, 0.08));
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+
+    .__CID__-article-content-card {
+      flex: 1;
 
     .__CID__-article-cover-card:hover {
       transform: translateY(-2px);
@@ -294,7 +298,6 @@ layout: false
     }
 
     @media (min-width: 601px) {
-      .__CID__-article-cover-card { flex: 0 0 40%; }
       .__CID__-article-cover { height: 200px; }
     }
   </style>
