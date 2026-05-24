@@ -156,11 +156,10 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 }
 
 #poetry-widget .meta-wrapper {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
-  position: relative;
-  padding-right: 5rem;
+  width: 100%;
   box-sizing: border-box;
 }
 
@@ -171,13 +170,12 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   flex-wrap: wrap;
   gap: 0.5rem 0.8rem;
   line-height: 1;
+  grid-column: 2;
 }
 
 #poetry-widget .expand-control {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  grid-column: 3;
+  justify-self: end;
 }
 
 #poetry-widget .verse {
@@ -256,11 +254,10 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 #history-today .history-card { width: 100%; }
 
 #history-today .history-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: center;
-  position: relative;
-  padding-right: 5rem;
+  width: 100%;
   box-sizing: border-box;
   flex-wrap: wrap;
   gap: 0.6rem;
@@ -274,13 +271,12 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   justify-content: center;
   flex-wrap: wrap;
   gap: 0.5rem;
+  grid-column: 2;
 }
 
 #history-today .expand-control#htToggle {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  grid-column: 3;
+  justify-self: end;
 }
 
 #history-today .history-header h3 {
