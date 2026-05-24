@@ -118,9 +118,8 @@ html[data-theme=dark] #seven-color-card .sc-btn-6 { background: #c0392b !importa
 
 #seven-color-card .sc-content.sc-open {
   max-height: none;
-  padding: 1rem 0.5rem;
+  padding: 0;
   background: var(--card-bg, rgba(255, 255, 255, 0.95));
-  /* box-shadow: 0 2px 12px var(--shadow, rgba(0, 0, 0, 0.08)); */
 }
 
 html[data-theme=dark] #seven-color-card .sc-content.sc-open {
@@ -224,5 +223,5 @@ html[data-theme=dark] #seven-color-card .sc-content-inner .sc-list li {
 @media (max-width: 600px) {
   #seven-color-card .sc-btn { font-size: 0.75rem; height: 36px; line-height: 36px; }
   #seven-color-card .sc-btn-row { gap: 0.4rem; }
-  #seven-color-card .sc-content.sc-open { padding: 0.75rem 0.5rem; }
+  #seven-color-card .sc-content.sc-open { padding: 0; }
 }
