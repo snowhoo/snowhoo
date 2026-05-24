@@ -1,0 +1,28 @@
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    # Hexo 根目录
+    root /var/www/hexo/public;
+    index index.html;
+
+    # Hexo 静态资源
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 阅读器子目录（前端静态文件）
+    location /reader {
+        alias /var/www/hexo/public/reader;
+        try_files $uri $uri/ /reader/index.html;
+        # 如果使用 history 模式，需要 fallback；本配置使用 hash 模式，可忽略
+    }
+
+    # 后端 API 反向代理
+    location /api/ {
+        proxy_pass http://localhost:3000/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}

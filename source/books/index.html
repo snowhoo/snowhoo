@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>书籍阅读器</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <style>
+    :root {
+      --bg-color: #f5f5f5;
+      --text-color: #333;
+      --accent: #e67e22;
+      --border: #ddd;
+      --card-bg: #fff;
+      --header-bg: #fff;
+    }
+    .dark {
+      --bg-color: #1a1a2e;
+      --text-color: #c5c5c5;
+      --accent: #e67e22;
+      --border: #333;
+      --card-bg: #252540;
+      --header-bg: #252540;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      transition: background 0.3s, color 0.3s;
+      min-height: 100vh;
+    }
+    #app { max-width: 800px; margin: 0 auto; min-height: 100vh; }
+
+    /* 顶部导航 */
+    .header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+    }
+    .header-title {
+      font-size: 16px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 200px;
+    }
+    .header-actions { display: flex; gap: 12px; align-items: center; }
+    .icon-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 20px; padding: 4px; border-radius: 4px;
+      color: var(--text-color); transition: background 0.2s;
+    }
+    .icon-btn:hover { background: var(--border); }
+
+    /* 页面切换 */
+    .page { display: none; min-height: 100vh; }
+    .page.active { display: block; }
+
+    /* 首页 */
+    .search-box {
+      padding: 16px;
+      background: var(--header-bg);
+    }
+    .search-input {
+      width: 100%; padding: 10px 14px; border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-color); color: var(--text-color);
+      font-size: 15px; outline: none;
+    }
+    .search-input:focus { border-color: var(--accent); }
+
+    /* 标签栏 */
+    .tabs {
+      display: flex; background: var(--header-bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .tab {
+      flex: 1; padding: 12px 8px; text-align: center;
+      cursor: pointer; font-size: 14px; color: var(--text-color);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* 书籍卡片列表 */
+    .book-list { padding: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .book-card {
+      background: var(--card-bg); border-radius: 8px; overflow: hidden;
+      cursor: pointer; transition: transform 0.2s;
+      border: 1px solid var(--border);
+    }
+    .book-card:hover { transform: translateY(-2px); }
+    .book-cover { width: 100%; aspect-ratio: 2/3; object-fit: cover; background: #ddd; }
+    .book-info { padding: 8px; }
+    .book-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .book-author { font-size: 11px; color: #888; }
+
+    /* 详情页 */
+    .detail-header { display: flex; padding: 16px; background: var(--header-bg); gap: 16px; }
+    .detail-cover { width: 100px; border-radius: 6px; aspect-ratio: 2/3; object-fit: cover; flex-shrink: 0; }
+    .detail-info { flex: 1; }
+    .detail-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .detail-meta { font-size: 13px; color: #888; margin-bottom: 4px; }
+    .detail-desc { font-size: 13px; line-height: 1.6; margin-top: 8px; color: var(--text-color); opacity: 0.8; }
+    .detail-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .btn {
+      padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer;
+      font-size: 13px; transition: opacity 0.2s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+    .btn:hover { opacity: 0.85; }
+
+    /* 章节列表 */
+    .chapter-list { padding: 12px; }
+    .chapter-item {
+      padding: 12px; border-bottom: 1px solid var(--border);
+      cursor: pointer; font-size: 14px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .chapter-item:hover { background: var(--card-bg); }
+    .chapter-item.read { color: #888; }
+
+    /* 阅读器页 */
+    .reader-header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .reader-content {
+      padding: 20px 16px;
+      font-size: var(--font-size, 16px);
+      line-height: 1.8;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .reader-content p { margin-bottom: 1em; text-indent: 2em; }
+    .reader-nav {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 12px; z-index: 100;
+    }
+    .reader-nav button {
+      padding: 10px 24px; border-radius: 20px; border: none;
+      background: var(--accent); color: #fff; cursor: pointer; font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .reader-nav button:disabled { opacity: 0.4; }
+
+    /* 设置面板 */
+    .settings-panel {
+      position: fixed; top: 50px; right: 16px;
+      background: var(--card-bg); border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 12px; z-index: 200;
+      min-width: 200px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    .settings-item { padding: 8px 0; }
+    .settings-item label { font-size: 13px; display: block; margin-bottom: 6px; }
+    .settings-item input[type="range"] { width: 100%; }
+    .toggle-dark {
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; padding: 4px 0;
+    }
+
+    /* 书签列表 */
+    .bookmark-item {
+      padding: 12px; border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .bookmark-item:hover { background: var(--card-bg); }
+    .bookmark-chapter { font-size: 13px; font-weight: 600; }
+    .bookmark-text { font-size: 12px; color: #888; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .bookmark-time { font-size: 11px; color: #aaa; margin-top: 4px; }
+
+    /* 空状态 */
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+      color: #888; font-size: 14px;
+    }
+
+    /* 加载状态 */
+    .loading { text-align: center; padding: 40px; color: #888; }
+
+    /* 隐藏章节列表滚动条但保留功能 */
+    .chapter-scroll { max-height: 60vh; overflow-y: auto; }
+
+    /* 返回按钮 */
+    .back-btn { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--text-color); }
+
+    /* 书籍列表中的收藏图标 */
+    .fav-icon { position: absolute; top: 6px; right: 6px; font-size: 16px; }
+    .book-card { position: relative; }
+
+    /* 历史记录 */
+    .history-item { display: flex; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .history-item:hover { background: var(--card-bg); }
+    .history-cover { width: 50px; border-radius: 4px; aspect-ratio: 2/3; object-fit: cover; flex-shrink: 0; }
+    .history-info { flex: 1; }
+    .history-title { font-size: 14px; font-weight: 600; }
+    .history-chapter { font-size: 12px; color: #888; margin-top: 4px; }
+    .history-time { font-size: 11px; color: #aaa; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ========== 首页 / 书架 ========== -->
+  <div class="page" :class="{active: currentPage === 'home'}">
+    <div class="header">
+      <div class="header-title">书籍阅读器</div>
+      <div class="header-actions">
+        <button class="icon-btn" @click="showSettings = !showSettings" title="设置">&#9881;</button>
+      </div>
+    </div>
+
+    <!-- 设置面板 -->
+    <div class="settings-panel" v-if="showSettings" @click.stop>
+      <div class="settings-item">
+        <label>字体大小: {{ fontSize }}px</label>
+        <input type="range" min="12" max="24" v-model="fontSize" @change="savePreference">
+      </div>
+      <div class="settings-item toggle-dark" @click="toggleDark">
+        <span>夜间模式</span>
+        <span>{{ isDark ? '开' : '关' }}</span>
+      </div>
+    </div>
+
+    <!-- 搜索框 -->
+    <div class="search-box">
+      <input class="search-input" v-model="searchKeyword" placeholder="搜索书名/作者..."
+             @keyup.enter="searchBooks" @focus="currentTab = 'search'">
+    </div>
+
+    <!-- 标签栏 -->
+    <div class="tabs">
+      <div class="tab" :class="{active: currentTab === 'shelf'}" @click="currentTab = 'shelf'">书架</div>
+      <div class="tab" :class="{active: currentTab === 'history'}" @click="currentTab = 'history'">历史</div>
+      <div class="tab" :class="{active: currentTab === 'favorites'}" @click="currentTab = 'favorites'">收藏</div>
+      <div class="tab" :class="{active: currentTab === 'bookmarks'}" @click="currentTab = 'bookmarks'">书签</div>
+      <div class="tab" :class="{active: currentTab === 'search'}" @click="currentTab = 'search'">搜索</div>
+    </div>
+
+    <!-- 书架 -->
+    <div v-if="currentTab === 'shelf'">
+      <div v-if="history.length === 0" class="empty-state">暂无阅读记录，<br>搜索书籍开始阅读吧~</div>
+      <div class="book-list" v-else>
+        <div class="book-card" v-for="item in historyGroupByBook" :key="item.book._id" @click="openBook(item.book)">
+          <span class="fav-icon" v-if="isFaved(item.book._id)" @click.stop="toggleFav(item.book)">&#10084;</span>
+          <img class="book-cover" :src="encodeURI(item.book.cover)" @error="e => e.target.style.display='none'">
+          <div class="book-info">
+            <div class="book-title">{{ item.book.title }}</div>
+            <div class="book-author">{{ item.book.author }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 历史 -->
+    <div v-if="currentTab === 'history'">
+      <div v-if="history.length === 0" class="empty-state">暂无阅读历史</div>
+      <div v-else>
+        <div class="history-item" v-for="item in history" :key="item.timestamp" @click="resumeRead(item)">
+          <img class="history-cover" :src="encodeURI(item.cover)" @error="e => e.target.style.display='none'">
+          <div class="history-info">
+            <div class="history-title">{{ item.title }}</div>
+            <div class="history-chapter">{{ item.chapterTitle }}</div>
+            <div class="history-time">{{ formatTime(item.timestamp) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 收藏 -->
+    <div v-if="currentTab === 'favorites'">
+      <div v-if="favorites.length === 0" class="empty-state">暂无收藏</div>
+      <div class="book-list" v-else>
+        <div class="book-card" v-for="book in favorites" :key="book._id" @click="openBook(book)">
+          <span class="fav-icon" @click.stop="toggleFav(book)">&#10084;</span>
+          <img class="book-cover" :src="encodeURI(book.cover)" @error="e => e.target.style.display='none'">
+          <div class="book-info">
+            <div class="book-title">{{ book.title }}</div>
+            <div class="book-author">{{ book.author }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 书签 -->
+    <div v-if="currentTab === 'bookmarks'">
+      <div v-if="bookmarks.length === 0" class="empty-state">暂无书签，<br>在阅读界面长按选择文字添加书签</div>
+      <div v-else>
+        <div class="bookmark-item" v-for="(bm, idx) in bookmarks" :key="idx" @click="jumpToBookmark(bm)">
+          <div class="bookmark-chapter">{{ bm.bookTitle }} - {{ bm.chapterTitle }}</div>
+          <div class="bookmark-text">"{{ bm.selectedText }}"</div>
+          <div class="bookmark-time">{{ formatTime(bm.timestamp) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 搜索结果 -->
+    <div v-if="currentTab === 'search'">
+      <div v-if="isSearching" class="loading">搜索中...</div>
+      <div v-else-if="searchResults.length === 0 && searchKeyword" class="empty-state">未找到相关书籍</div>
+      <div class="book-list" v-else>
+        <div class="book-card" v-for="book in searchResults" :key="book._id" @click="openBook(book)">
+          <span class="fav-icon" v-if="isFaved(book._id)" @click.stop="toggleFav(book)">&#10084;</span>
+          <img class="book-cover" :src="encodeURI(book.cover)" @error="e => e.target.style.display='none'">
+          <div class="book-info">
+            <div class="book-title">{{ book.title }}</div>
+            <div class="book-author">{{ book.author }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 书籍详情 ========== -->
+  <div class="page" :class="{active: currentPage === 'detail'}">
+    <div class="header">
+      <button class="back-btn" @click="goBack">&#8592;</button>
+      <div class="header-title">{{ currentBook.title }}</div>
+      <div class="header-actions">
+        <button class="icon-btn" @click="toggleFav(currentBook)">
+          {{ isFaved(currentBook._id) ? '❤️' : '🤍' }}
+        </button>
+        <button class="icon-btn" @click="showSettings = !showSettings">&#9881;</button>
+      </div>
+    </div>
+
+    <div class="detail-header">
+      <img class="detail-cover" :src="encodeURI(currentBook.cover)" @error="e => e.target.style.display='none'">
+      <div class="detail-info">
+        <div class="detail-title">{{ currentBook.title }}</div>
+        <div class="detail-meta">{{ currentBook.author }}</div>
+        <div class="detail-meta">{{ currentBook.cat }} | {{ currentBook.wordCount }}字</div>
+        <div class="detail-meta" v-if="currentBook.updated">更新: {{ currentBook.updated }}</div>
+        <div class="detail-desc">{{ currentBook.longIntro }}</div>
+        <div class="detail-actions">
+          <button class="btn btn-primary" @click="startReading">开始阅读</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active">目录</div>
+    </div>
+    <div class="chapter-scroll">
+      <div class="chapter-list">
+        <div class="chapter-item" v-for="ch in chapterList" :key="ch.id"
+             @click="readChapter(ch)">
+          <span :class="{read: isChapterRead(ch.id)}">{{ ch.title }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 阅读器 ========== -->
+  <div class="page" :class="{active: currentPage === 'reader'}">
+    <div class="reader-header">
+      <button class="back-btn" @click="goBack">&#8592;</button>
+      <div class="header-title">{{ currentChapter.title }}</div>
+      <div class="header-actions">
+        <button class="icon-btn" @click="addBookmark" title="添加书签">&#128278;</button>
+        <button class="icon-btn" @click="toggleDark"> {{ isDark ? '&#9788;' : '&#9790;' }} </button>
+        <button class="icon-btn" @click="showSettings = !showSettings">&#9881;</button>
+      </div>
+    </div>
+
+    <div class="reader-content" v-html="chapterContent" @scroll="onReaderScroll"
+         style="font-size: var(--font-size, 16px);" ref="readerEl">
+    </div>
+
+    <div class="reader-nav">
+      <button :disabled="!hasPrevChapter" @click="prevChapter">上一章</button>
+      <button :disabled="!hasNextChapter" @click="nextChapter">下一章</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+
+// 追书神器 API base
+const API_BASE = 'https://api.zhuishushenqi.com';
+
+// localStorage keys
+const LS = {
+  FAV: 'books_favorites',
+  HIST: 'books_history',
+  BM: 'books_bookmarks',
+  LAST: 'books_lastread',
+  PREF: 'books_preference',
+};
+
+createApp({
+  setup() {
+    // 状态
+    const currentPage = ref('home');
+    const currentTab = ref('shelf');
+    const isDark = ref(false);
+    const fontSize = ref(16);
+    const showSettings = ref(false);
+
+    // 搜索
+    const searchKeyword = ref('');
+    const searchResults = ref([]);
+    const isSearching = ref(false);
+
+    // 收藏、历史、书签
+    const favorites = ref([]);
+    const history = ref([]);
+    const bookmarks = ref([]);
+
+    // 详情
+    const currentBook = ref({});
+    const chapterList = ref([]);
+    const readChapterIds = ref(new Set());
+
+    // 阅读器
+    const currentChapter = ref({});
+    const chapterContent = ref('');
+    const currentChapterIndex = ref(0);
+    const readerEl = ref(null);
+
+    // ========== 工具函数 ==========
+    const save = (key, val) => localStorage.setItem(key, JSON.stringify(val));
+    const load = (key, def = []) => {
+      try { return JSON.parse(localStorage.getItem(key)) || def; } catch { return def; }
+    };
+
+    const formatTime = (ts) => {
+      const d = new Date(ts);
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    };
+
+    const goBack = () => {
+      if (currentPage.value === 'reader') {
+        saveLastRead();
+        currentPage.value = 'detail';
+      } else {
+        currentPage.value = 'home';
+      }
+    };
+
+    const toggleDark = () => {
+      isDark.value = !isDark.value;
+      document.body.classList.toggle('dark', isDark.value);
+      savePreference();
+    };
+
+    const savePreference = () => {
+      save(LS.PREF, { fontSize: fontSize.value, isDark: isDark.value });
+      document.documentElement.style.setProperty('--font-size', fontSize.value + 'px');
+    };
+
+    // ========== 收藏 ==========
+    const isFaved = (id) => favorites.value.some(b => b._id === id);
+
+    const toggleFav = (book) => {
+      if (isFaved(book._id)) {
+        favorites.value = favorites.value.filter(b => b._id !== book._id);
+      } else {
+        favorites.value.unshift({ _id: book._id, title: book.title, author: book.author, cover: book.cover });
+      }
+      save(LS.FAV, favorites.value);
+    };
+
+    // ========== 阅读历史 ==========
+    const historyGroupByBook = computed(() => {
+      const map = {};
+      history.value.forEach(h => {
+        if (!map[h.book._id]) map[h.book._id] = h;
+      });
+      return Object.values(map);
+    });
+
+    const saveHistory = (book, chapter, title) => {
+      const entry = { book, chapterId: chapter.id, chapterTitle: title || chapter.title, cover: book.cover, title: book.title, timestamp: Date.now() };
+      history.value = history.value.filter(h => !(h.book._id === book._id && h.chapterId === chapter.id));
+      history.value.unshift(entry);
+      if (history.value.length > 100) history.value = history.value.slice(0, 100);
+      save(LS.HIST, history.value);
+    };
+
+    const resumeRead = (item) => {
+      currentBook.value = item.book;
+      loadChapterList(item.book._id, item.chapterId);
+    };
+
+    // ========== 书签 ==========
+    const addBookmark = () => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) {
+        alert('请先选择文字后再添加书签');
+        return;
+      }
+      const selectedText = selection.toString().slice(0, 50);
+      const range = selection.getRangeAt(0);
+      const container = document.createElement('span');
+      range.surroundContents(container);
+      const offset = Array.from(readerEl.value.childNodes).reduce((acc, node) => {
+        if (node === container.parentNode) return acc;
+        acc += node.textContent.length;
+        return acc;
+      }, 0);
+
+      bookmarks.value.unshift({
+        bookId: currentBook.value._id,
+        bookTitle: currentBook.value.title,
+        chapterId: currentChapter.value.id,
+        chapterTitle: currentChapter.value.title,
+        selectedText,
+        offset,
+        timestamp: Date.now(),
+      });
+      save(LS.BM, bookmarks.value);
+      selection.removeAllRanges();
+      alert('书签已添加');
+    };
+
+    const jumpToBookmark = (bm) => {
+      const book = favorites.value.find(b => b._id === bm.bookId) || { _id: bm.bookId, title: bm.bookTitle, cover: '' };
+      currentBook.value = book;
+      loadChapterList(bm.bookId, bm.chapterId);
+    };
+
+    // ========== 上次阅读 ==========
+    const saveLastRead = () => {
+      save(LS.LAST, {
+        bookId: currentBook.value._id,
+        chapterId: currentChapter.value.id,
+        title: currentBook.value.title,
+        chapterTitle: currentChapter.value.title,
+        position: readerEl.value ? readerEl.value.scrollTop : 0,
+      });
+    };
+
+    // ========== 章节是否已读 ==========
+    const isChapterRead = (id) => readChapterIds.value.has(id);
+
+    // ========== API ==========
+    const apiGet = (url) => axios.get(`${API_BASE}${url}`).then(r => r.data);
+
+    const searchBooks = async () => {
+      if (!searchKeyword.value.trim()) return;
+      isSearching.value = true;
+      try {
+        const data = await apiGet(`/book/fuzzy-search?query=${encodeURIComponent(searchKeyword.value)}`);
+        searchResults.value = (data.books || []).map(b => ({
+          _id: b._id, title: b.title, author: b.author,
+          cover: b.cover ? `https://statics.zhuishushenqi.com${b.cover}` : '',
+          cat: b.cat, wordCount: b.wordCount, updated: b.updated, longIntro: b.longIntro,
+        }));
+      } catch(e) {
+        searchResults.value = [];
+      }
+      isSearching.value = false;
+    };
+
+    const loadBookDetail = async (id) => {
+      const data = await apiGet(`/book/${id}`);
+      currentBook.value = {
+        _id: data._id, title: data.title, author: data.author,
+        cover: data.cover ? `https://statics.zhuishushenqi.com${data.cover}` : '',
+        cat: data.cat, wordCount: data.wordCount, updated: data.updated,
+        longIntro: data.longIntro,
+      };
+    };
+
+    const loadChapterList = async (bookId, targetChapterId = null) => {
+      const data = await apiGet(`/mix-atoc/${bookId}`);
+      chapterList.value = (data.chapters || []).map(ch => ({
+        id: ch.id, title: ch.title, link: ch.link,
+      }));
+      currentPage.value = 'detail';
+
+      if (targetChapterId) {
+        const idx = chapterList.value.findIndex(c => c.id === targetChapterId);
+        if (idx >= 0) currentChapterIndex.value = idx;
+      }
+    };
+
+    const openBook = async (book) => {
+      await loadBookDetail(book._id);
+      await loadChapterList(book._id);
+    };
+
+    const startReading = async () => {
+      if (chapterList.value.length === 0) return;
+      // 尝试定位到上次阅读章节
+      const last = load(LS.LAST, null);
+      let idx = 0;
+      if (last && last.bookId === currentBook.value._id) {
+        const found = chapterList.value.findIndex(c => c.id === last.chapterId);
+        if (found >= 0) idx = found;
+      }
+      currentChapterIndex.value = idx;
+      await loadChapterContent(chapterList.value[idx]);
+      currentPage.value = 'reader';
+      nextTick(() => {
+        const lastPos = load(LS.LAST, null);
+        if (lastPos && lastPos.bookId === currentBook.value._id && lastPos.chapterId === currentChapter.value.id && readerEl.value) {
+          readerEl.value.scrollTop = lastPos.position || 0;
+        }
+      });
+    };
+
+    const readChapter = async (ch) => {
+      currentChapterIndex.value = chapterList.value.indexOf(ch);
+      await loadChapterContent(ch);
+      currentPage.value = 'reader';
+      nextTick(() => {
+        if (readerEl.value) readerEl.value.scrollTop = 0;
+      });
+    };
+
+    const loadChapterContent = async (ch) => {
+      currentChapter.value = ch;
+      chapterContent.value = '<div class="loading">加载中...</div>';
+      try {
+        const data = await apiGet(`/chapter/${ch.id}`);
+        // 清洗内容
+        let html = (data.chapter && data.chapter.cpContent) || (data.chapter && data.chapter.content) || '';
+        html = html.replace(/\r\n/g, '\n').trim();
+        const paragraphs = html.split('\n').filter(p => p.trim());
+        chapterContent.value = paragraphs.map(p => `<p>${p.trim()}</p>`).join('');
+      } catch(e) {
+        chapterContent.value = '<p class="empty-state">加载失败，请重试</p>';
+      }
+      readChapterIds.value.add(ch.id);
+      saveHistory(currentBook.value, ch, ch.title);
+      saveLastRead();
+    };
+
+    const hasPrevChapter = computed(() => currentChapterIndex.value > 0);
+    const hasNextChapter = computed(() => currentChapterIndex.value < chapterList.value.length - 1);
+
+    const prevChapter = async () => {
+      if (!hasPrevChapter.value) return;
+      currentChapterIndex.value--;
+      await loadChapterContent(chapterList.value[currentChapterIndex.value]);
+      nextTick(() => { if (readerEl.value) readerEl.value.scrollTop = 0; });
+    };
+
+    const nextChapter = async () => {
+      if (!hasNextChapter.value) return;
+      currentChapterIndex.value++;
+      await loadChapterContent(chapterList.value[currentChapterIndex.value]);
+      nextTick(() => { if (readerEl.value) readerEl.value.scrollTop = 0; });
+    };
+
+    const onReaderScroll = () => {
+      if (readerEl.value) {
+        saveLastRead();
+      }
+    };
+
+    // ========== 初始化 ==========
+    onMounted(() => {
+      favorites.value = load(LS.FAV, []);
+      history.value = load(LS.HIST, []);
+      bookmarks.value = load(LS.BM, []);
+      const pref = load(LS.PREF, { fontSize: 16, isDark: false });
+      fontSize.value = pref.fontSize || 16;
+      isDark.value = pref.isDark || false;
+      document.body.classList.toggle('dark', isDark.value);
+      document.documentElement.style.setProperty('--font-size', fontSize.value + 'px');
+    });
+
+    return {
+      currentPage, currentTab, isDark, fontSize, showSettings,
+      searchKeyword, searchResults, isSearching,
+      favorites, history, bookmarks,
+      currentBook, chapterList, readChapterIds,
+      currentChapter, chapterContent, readerEl,
+      currentChapterIndex, hasPrevChapter, hasNextChapter,
+      // 方法
+      goBack, toggleDark, savePreference, toggleFav, isFaved, formatTime,
+      historyGroupByBook, resumeRead, addBookmark, jumpToBookmark,
+      saveLastRead, isChapterRead, searchBooks, openBook, startReading,
+      readChapter, prevChapter, nextChapter, onReaderScroll,
+    };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
