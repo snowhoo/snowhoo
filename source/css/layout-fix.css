@@ -318,9 +318,6 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   line-height: 1.1;
   color: #2c3e4e;
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
 }
 
 #history-today .event-year {
@@ -333,18 +330,12 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   display: inline-block;
   padding: 0rem 0.45rem;
   border-radius: 4px;
-  align-self: flex-start;
-}
-
-#history-today .event-body {
-  display: block;
-  line-height: 1.4;
+  margin-right: 0.6rem;
 }
 
 #history-today .event-title {
   line-height: 1.4;
-  display: inline;
-  word-break: break-word;
+  display: inline; 
 }
 #history-today .event-title a {
   margin-left: 0.4rem;
