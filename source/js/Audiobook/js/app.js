@@ -371,7 +371,7 @@ const AudiobookApp = {
         const html = books.map(book => `
             <div class="book-card" data-book-id="${book.id}">
                 <img class="book-cover" src="${book.cover}" alt="${book.title}"
-                     onerror="this.src='https://via.placeholder.com/300x400/667eea/ffffff?text=${encodeURIComponent(book.title)}'">
+                     onerror="this.src='${book.fallbackCover || AudiobookAPI.generateCover(book.id, book.title)}'">
                 <div class="book-info">
                     <div class="book-title" title="${book.title}">${book.title}</div>
                     <div class="book-author" title="${book.author}">${book.author}</div>
@@ -399,10 +399,12 @@ const AudiobookApp = {
         const container = document.getElementById('bookDetail');
         if (!container) return;
 
+        const fallbackCover = book.fallbackCover || AudiobookAPI.generateCover(book.id, book.title);
+
         const html = `
             <div class="book-detail-header">
                 <img class="book-detail-cover" src="${book.cover}" alt="${book.title}"
-                     onerror="this.src='https://via.placeholder.com/300x400/667eea/ffffff?text=${encodeURIComponent(book.title)}'">
+                     onerror="this.src='${fallbackCover}'">
                 <div class="book-detail-info">
                     <h1 class="book-detail-title">${book.title}</h1>
                     <div class="book-detail-meta">
@@ -412,7 +414,7 @@ const AudiobookApp = {
                         ${book.score ? `<span><i class="fas fa-star"></i> ${book.score}</span>` : ''}
                     </div>
                     <div class="book-detail-tags">
-                        ${book.tags.map(tag => `<span class="book-tag">${tag}</span>`).join('')}
+                        ${(book.tags || []).map(tag => `<span class="book-tag">${tag}</span>`).join('')}
                         ${book.isFinished ? '<span class="book-tag" style="color: #48bb78;">已完结</span>' : '<span class="book-tag" style="color: #f6ad55;">连载中</span>'}
                     </div>
                     <p class="book-detail-desc">${book.description || '暂无简介'}</p>
@@ -461,6 +463,7 @@ const AudiobookApp = {
                         bookTitle: book.title,
                         bookAuthor: book.author,
                         cover: book.cover,
+                        fallbackCover: book.fallbackCover,
                         addTime: Date.now()
                     });
                     AudiobookPlayer.saveLocalData();

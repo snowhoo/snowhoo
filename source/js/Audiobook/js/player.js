@@ -120,12 +120,21 @@ const AudiobookPlayer = {
         this.current.chapterTitle = chapter.title;
         this.current.chapterIndex = chapter.index;
 
-        // 获取音频URL
-        let audioUrl;
-        try {
-            audioUrl = await AudiobookAPI.getChapterAudio(chapter.id);
-        } catch (error) {
-            audioUrl = AudiobookAPI.getMockAudioUrl(chapter.id);
+        // 获取音频URL - 优先使用chapter自带的audioUrl，否则尝试API获取
+        let audioUrl = chapter.audioUrl || null;
+
+        if (!audioUrl) {
+            try {
+                audioUrl = await AudiobookAPI.getChapterAudio(chapter.id);
+            } catch (error) {
+                audioUrl = AudiobookAPI.getMockAudioUrl(chapter.id);
+            }
+        }
+
+        // 如果仍然没有有效URL，显示错误
+        if (!audioUrl) {
+            this.showToast('音频加载失败，请尝试其他章节', 'error');
+            return;
         }
 
         // 更新UI
@@ -144,6 +153,19 @@ const AudiobookPlayer = {
             this.showPlayer();
         } catch (error) {
             console.error('播放失败:', error);
+            // 如果直接播放失败，尝试使用模拟音频
+            if (audioUrl !== AudiobookAPI.getMockAudioUrl(chapter.id)) {
+                const mockUrl = AudiobookAPI.getMockAudioUrl(chapter.id);
+                this.audio.src = mockUrl;
+                try {
+                    await this.audio.play();
+                    this.showPlayer();
+                    this.showToast('已切换到备用音频源', 'info');
+                    return;
+                } catch (e2) {
+                    console.error('备用音频也播放失败:', e2);
+                }
+            }
             this.showToast('播放失败，请检查网络', 'error');
         }
     },

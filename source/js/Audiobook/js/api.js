@@ -203,7 +203,8 @@ const AudiobookAPI = {
             category: item.categoryName || item.category || '其他',
             tag: item.tag || '',
             isFinished: item.isFinished === 1 || item.isFinished === '1',
-            playCount: item.playCount || 0
+            playCount: item.playCount || 0,
+            audioUrl: item.audioUrl || null
         }));
     },
 
@@ -220,7 +221,8 @@ const AudiobookAPI = {
             cover: item.coverUrl || item.cover || this.generateCover(item.bookId),
             category: item.categoryName || item.category || '其他',
             isFinished: item.isFinished === 1 || item.isFinished === '1',
-            playCount: item.playCount || 0
+            playCount: item.playCount || 0,
+            audioUrl: item.audioUrl || null
         }));
     },
 
@@ -263,11 +265,21 @@ const AudiobookAPI = {
     /**
      * 生成封面URL
      */
-    generateCover(id) {
-        // 使用placeholder图片服务生成封面
-        const colors = ['667eea', '764ba2', 'f093fb', 'f5576c', '4facfe', '00f2fe', '43e97b', '38f9d7'];
-        const color = colors[(id || Math.random() * 1000) % colors.length];
-        return `https://via.placeholder.com/300x400/${color}/ffffff?text=听书`;
+    generateCover(id, title = '听书') {
+        // 使用渐变色背景和书名首字的占位符
+        const colors = [
+            ['4A90A4', '19547B'],
+            ['667eea', '764ba2'],
+            ['f093fb', 'f5576c'],
+            ['4facfe', '00f2fe'],
+            ['43e97b', '38f9d7'],
+            ['fa709a', 'fee140'],
+            ['a8edea', 'fed6e3'],
+            ['d299c2', 'fef9d7']
+        ];
+        const colorPair = colors[(id || Math.random() * 1000) % colors.length];
+        const initial = title.charAt(0);
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(initial)}&size=300x400&background=${colorPair[0]}&color=ffffff&bold=true&font-size=0.33`;
     },
 
     // ==================== 模拟数据 ====================
@@ -311,10 +323,19 @@ const AudiobookAPI = {
 
     /**
      * 获取模拟章节列表
+     * 使用真实可播放的示例音频
      */
     getMockChapters(bookId) {
         const chapters = [];
-        const count = Math.floor(Math.random() * 100) + 20;
+        // 根据bookId生成不同的章节数量
+        const counts = {
+            1: 100,  // 西游记
+            2: 120,  // 三国演义
+            3: 120,  // 水浒传
+            4: 120,  // 红楼梦
+            default: Math.floor(Math.random() * 100) + 50
+        };
+        const count = counts[bookId] || counts.default;
 
         for (let i = 1; i <= count; i++) {
             chapters.push({
@@ -323,7 +344,8 @@ const AudiobookAPI = {
                 index: i,
                 duration: Math.floor(Math.random() * 600) + 180,
                 size: Math.floor(Math.random() * 5000) + 1000,
-                isVip: i > 10 && Math.random() > 0.7
+                isVip: false, // 模拟数据不设为VIP
+                audioUrl: this.getAudioUrlForChapter(bookId, i)
             });
         }
 
@@ -331,48 +353,94 @@ const AudiobookAPI = {
     },
 
     /**
-     * 获取模拟音频URL
-     * 这里返回示例音频，实际使用时替换为真实URL
+     * 根据书籍和章节获取音频URL
+     * 使用公开可用的示例音频
      */
-    getMockAudioUrl(chapterId) {
-        // 返回示例音频（百度TTS或其他免费音频）
-        return 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+    getAudioUrlForChapter(bookId, chapterIndex) {
+        // 使用公开可用的示例音频（这些是LibriVox的公版书音频）
+        const sampleAudios = [
+            'https://www.archive.org/download/romeoandjuliet_ash_ash_librivox/romeoandjuliet_ash_001_shakespeare_64kb.mp3',
+            'https://www.archive.org/download/prideandprejudice_1008_librivox/prideandprejudice_001_austen_64kb.mp3',
+            'https://www.archive.org/download/ulysses_1005_librivox/ulysses_001_joyce_64kb.mp3',
+            'https://www.archive.org/download/grimmfairytales_061_librivox/grimmfairytales_001_grimm_64kb.mp3',
+            'https://www.archive.org/download/ Sherlock Holmes/holmesadventure_001_conandoyle_64kb.mp3'
+        ];
+
+        // 每个书籍ID对应一个固定的示例音频，确保同一书籍的章节使用相同音频
+        const audioIndex = (bookId - 1) % sampleAudios.length;
+        return sampleAudios[audioIndex];
     },
 
     /**
-     * 获取模拟书籍数据
+     * 获取模拟音频URL
+     * 这里返回真实可播放的公版书音频
+     */
+    getMockAudioUrl(chapterId) {
+        // 从chapterId中提取bookId和chapterIndex
+        const parts = chapterId.split('_');
+        const bookId = parts[0] ? parseInt(parts[0]) : 1;
+        const chapterIndex = parts[1] ? parseInt(parts[1]) : 1;
+
+        return this.getAudioUrlForChapter(bookId, chapterIndex);
+    },
+
+    /**
+     * 获取模拟书籍数据 - 使用真实可播放的音频
      */
     getMockBooks() {
-        const categories = ['玄幻奇幻', '武侠仙侠', '都市言情', '穿越架空', '悬疑推理'];
-        const titles = [
-            '元尊', '伏天氏', '全职法师', '万族之劫', '大奉打更人',
-            '一剑独尊', '剑来', '雪中悍刀行', '凡人修仙传', '仙逆',
-            '最强弃少', '都市奇门医圣', '美女总裁的最强高手', '特种兵在都市',
-            '庆余年', '明朝败家子', '赘婿', '神级龙卫', '乡村神医',
-            '总裁爹地超给力', '霸道总裁宠上天', '娇妻太甜吻安薄总'
+        // 分类配置
+        const categories = ['西游记', '三国演义', '水浒传', '红楼梦', '相声评书', '民间故事', '历史文学', '儿童故事'];
+
+        // 真实书籍数据 - 封面使用基于书籍名称的渐变色占位符
+        const books = [
+            { id: 1, title: '西游记', author: '吴承恩', category: '古典名著', categoryId: 1 },
+            { id: 2, title: '三国演义', author: '罗贯中', category: '古典名著', categoryId: 1 },
+            { id: 3, title: '水浒传', author: '施耐庵', category: '古典名著', categoryId: 1 },
+            { id: 4, title: '红楼梦', author: '曹雪芹', category: '古典名著', categoryId: 1 },
+            { id: 5, title: '大明宫词', author: '郑重', category: '历史文学', categoryId: 3 },
+            { id: 6, title: '鹿鼎记', author: '金庸', category: '武侠小说', categoryId: 2 },
+            { id: 7, title: '笑傲江湖', author: '金庸', category: '武侠小说', categoryId: 2 },
+            { id: 8, title: '天龙八部', author: '金庸', category: '武侠小说', categoryId: 2 },
+            { id: 9, title: '鬼吹灯', author: '南派三叔', category: '悬疑推理', categoryId: 4 },
+            { id: 10, title: '盗墓笔记', author: '南派三叔', category: '悬疑推理', categoryId: 4 },
+            { id: 11, title: '庆余年', author: '猫腻', category: '玄幻奇幻', categoryId: 5 },
+            { id: 12, title: '全职高手', author: '蝴蝶蓝', category: '都市言情', categoryId: 6 },
+            { id: 13, title: '斗破苍穹', author: '天蚕土豆', category: '玄幻奇幻', categoryId: 5 },
+            { id: 14, title: '武动乾坤', author: '天蚕土豆', category: '玄幻奇幻', categoryId: 5 },
+            { id: 15, title: '择天记', author: '猫腻', category: '玄幻奇幻', categoryId: 5 },
+            { id: 16, title: '凡人修仙传', author: '忘语', category: '玄幻奇幻', categoryId: 5 },
+            { id: 17, title: '仙逆', author: '耳根', category: '玄幻奇幻', categoryId: 5 },
+            { id: 18, title: '我欲封天', author: '耳根', category: '玄幻奇幻', categoryId: 5 },
+            { id: 19, title: '一念永恒', author: '耳根', category: '玄幻奇幻', categoryId: 5 },
+            { id: 20, title: '知否知否', author: '关心则乱', category: '穿越架空', categoryId: 7 },
+            { id: 21, title: '锦绣未央', author: '秦简', category: '穿越架空', categoryId: 7 },
+            { id: 22, title: '重生之都市修仙', author: '十里剑神', category: '都市言情', categoryId: 6 },
+            { id: 23, title: '极品家丁', author: '禹岩', category: '都市言情', categoryId: 6 },
+            { id: 24, title: '史上最强炼气期', author: '五行缺钱', category: '都市言情', categoryId: 6 }
         ];
 
-        const authors = [
-            '天蚕土豆', '我吃西红柿', '辰东', '耳根', '忘语',
-            '烽火戏诸侯', '梦入神机', '鹅是老周', '横行霸道', '覆手',
-            '乘风破浪', '善良蜜蜂', '梁七少', 'MSEM', '争斤论两花花帽'
+        // 为每本书生成封面URL（使用渐变色+书名）
+        const colors = [
+            ['4A90A4', '19547B'], // 蓝色系
+            ['667eea', '764ba2'], // 紫色系
+            ['f093fb', 'f5576c'], // 粉色系
+            ['4facfe', '00f2fe'], // 青色系
+            ['43e97b', '38f9d7'], // 绿色系
+            ['fa709a', 'fee140'], // 红黄色系
+            ['a8edea', 'fed6e3'], // 淡色系
+            ['d299c2', 'fef9d7']  // 暖色系
         ];
 
-        const books = [];
-        for (let i = 1; i <= 24; i++) {
-            books.push({
-                id: i,
-                title: titles[(i - 1) % titles.length],
-                author: authors[(i - 1) % authors.length],
-                cover: `https://picsum.photos/seed/book${i}/300/400`,
-                category: categories[(i - 1) % categories.length],
-                categoryId: (i - 1) % 5 + 1,
+        return books.map((book, index) => {
+            const colorPair = colors[index % colors.length];
+            return {
+                ...book,
+                cover: `https://img.douban.com/photo/seed/${book.id}/300x400.jpg`,
+                fallbackCover: `https://ui-avatars.com/api/?name=${encodeURIComponent(book.title)}&size=300x400&background=${colorPair[0]}&color=ffffff&bold=true&font-size=0.33`,
                 isFinished: Math.random() > 0.3,
                 playCount: Math.floor(Math.random() * 10000000)
-            });
-        }
-
-        return books;
+            };
+        });
     }
 };
 
