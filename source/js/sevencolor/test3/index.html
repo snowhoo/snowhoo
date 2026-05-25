@@ -644,6 +644,7 @@ window._favBtnClick = function(btn) {
     btn.classList.remove('faved');
     btn.innerHTML = '\u2661';
     btn.title = '\u6536\u85cf';
+    if (currentPrefix === '__favorites__') renderFavorites();
   } else {
     // 从 currentFiltered 中找（优先）
     var fullVideo = currentFiltered.find(function(v){ return v.vod_name === vodName && v.sourceKey === sourceKey; });
