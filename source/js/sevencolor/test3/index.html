@@ -762,8 +762,9 @@ function loadIndex() {
     });
     document.getElementById('tvboxFooter').innerHTML =
       '<span>\u6570\u636e\u6e90 ' + sourceIndex.length + '</span><span>\u603b\u5730\u5740 ' + ta + '</span><span>\u53ef\u64ad\u653e ' + pa + '</span>';
-    // 默认不选中任何源，显示封面
-    showBanner();
+    // 默认加载最近观看
+    document.getElementById('sourceSelect').value = '__history__';
+    renderHistory();
   });
 }
 
@@ -796,6 +797,7 @@ function switchSource() {
 function renderHistory() {
   currentSearchMode = false;
   currentCategory = '';
+  currentPrefix = '__history__';
   document.getElementById('searchInput').value = '';
   var list = getHistoryList();
   if (!list.length) {
