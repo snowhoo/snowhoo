@@ -236,6 +236,52 @@ layout: false
 }
 #player{width:100%;aspect-ratio:16/9;background:#000;display:block}
 
+/* ===== 悬浮播放器 ===== */
+.float-player{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  width:320px;
+  background:#1a1a2e;
+  border-radius:12px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.5);
+  z-index:9999;
+  overflow:hidden;
+}
+.float-player-header{
+  display:flex;
+  align-items:center;
+  padding:8px 10px;
+  background:#16213e;
+  gap:8px;
+}
+.float-player-title{
+  flex:1;
+  font-size:13px;
+  color:#fff;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.float-btn{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  border:none;
+  background:rgba(255,255,255,0.15);
+  color:#fff;
+  font-size:14px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+}
+.float-btn:hover{background:rgba(255,255,255,0.3)}
+.float-close{color:#ff6b6b}
+.float-close:hover{background:rgba(255,107,107,0.3)}
+#floatVideo{width:100%;aspect-ratio:16/9;background:#000;display:block}
+
 /* ===== Grid ===== */
 .video-grid{
   display:grid;
@@ -561,6 +607,15 @@ width:100% !important;
 <div class="player-box">
   <video id="player" controls playsinline></video>
 </div>
+<!-- 悬浮播放器 -->
+<div class="float-player" id="floatPlayer" style="display:none">
+  <div class="float-player-header">
+    <span class="float-player-title" id="floatPlayerTitle">\u6b63\u5728\u64ad\u653e</span>
+    <button class="float-btn" id="floatBackBtn" title="\u8fd4\u56de">\u2190</button>
+    <button class="float-btn float-close" id="floatCloseBtn" title="\u5173\u95ed">\u2716</button>
+  </div>
+  <video id="floatVideo" playsinline></video>
+</div>
 <div id="status" class="status-bar">
   <div class="cat-bar" id="catBar"></div>
   <span id="statusText">[STOP] 选择一个数据源</span>
@@ -732,6 +787,8 @@ function findVideoInCache(sourceKey, videoName) {
 var currentPlayingVideo = null;  // 当前播放所在视频对象
 var currentPlayingEpIndex = 0;    // 当前播放所在剧集索引
 var currentOpenVideo = null;      // 当前展开剧集面板的视频对象
+var playerInFloatMode = false;    // 播放器是否处于悬浮模式
+var floatReturnPrefix = null;     // 悬浮模式返回时的 source prefix
 
 var PAGE_SIZE = 12;
 var currentData = null, currentPage = 1, currentFiltered = [], currentHls = null;
@@ -871,6 +928,11 @@ function switchSource() {
   currentPage = 1;
   currentSearchMode = false;
   document.getElementById('searchInput').value = '';
+  // 如果有视频正在播放，切换到悬浮模式
+  if (currentPlayingVideo) {
+    floatReturnPrefix = currentPrefix;
+    showFloatPlayer();
+  }
   loadPageFile(prefix, 1);
 }
 
@@ -1565,6 +1627,121 @@ function setEmpty(t, sub){
   h += '</div>';
   document.getElementById('content').innerHTML = h;
 }
+
+/* ===== 悬浮播放器 ===== */
+function showFloatPlayer() {
+  var mainPlayer = document.getElementById('player');
+  var floatVideo = document.getElementById('floatVideo');
+  var floatPlayer = document.getElementById('floatPlayer');
+  var floatTitle = document.getElementById('floatPlayerTitle');
+
+  // 如果已经是悬浮模式则跳过
+  if (playerInFloatMode) return;
+
+  // 如果 HLS 正在播放，需要把 HLS 实例转移
+  if (currentHls) {
+    // HLS.attachMedia 只能绑定到一个 video 元素，先 detach 再 reattach
+    currentHls.detachMedia();
+    currentHls.attachMedia(floatVideo);
+  }
+
+  // 复制播放状态
+  floatVideo.src = mainPlayer.src || mainPlayer.currentSrc;
+  floatVideo.currentTime = mainPlayer.currentTime;
+  floatVideo.paused = mainPlayer.paused;
+  floatVideo.volume = mainPlayer.volume;
+
+  // 更新标题
+  if (currentPlayingVideo) {
+    floatTitle.textContent = currentPlayingVideo.vod_name || '\u6b63\u5728\u64ad\u653e';
+  }
+
+  // 隐藏主播放器，显示悬浮播放器
+  playerInFloatMode = true;
+  document.querySelector('.player-box').classList.remove('playing');
+  floatPlayer.style.display = 'block';
+
+  // 如果之前没在播放则开始播放
+  if (!floatVideo.paused) {
+    floatVideo.play().catch(function(){});
+  }
+}
+
+function hideFloatPlayer() {
+  var mainPlayer = document.getElementById('player');
+  var floatVideo = document.getElementById('floatVideo');
+  var floatPlayer = document.getElementById('floatPlayer');
+
+  if (!playerInFloatMode) return;
+
+  // 如果 HLS 正在播放，需要把 HLS 实例转移回主播放器
+  if (currentHls) {
+    currentHls.detachMedia();
+    currentHls.attachMedia(mainPlayer);
+  }
+
+  // 复制播放状态回主播放器
+  mainPlayer.src = floatVideo.src;
+  mainPlayer.currentTime = floatVideo.currentTime;
+  mainPlayer.volume = floatVideo.volume;
+
+  playerInFloatMode = false;
+  floatPlayer.style.display = 'none';
+  document.querySelector('.player-box').classList.add('playing');
+}
+
+function returnFromFloat() {
+  if (!playerInFloatMode) return;
+  // 返回时先隐藏悬浮窗口
+  var floatPlayer = document.getElementById('floatPlayer');
+  floatPlayer.style.display = 'none';
+  playerInFloatMode = false;
+  // 恢复主播放器
+  var mainPlayer = document.getElementById('player');
+  var floatVideo = document.getElementById('floatVideo');
+  if (currentHls) {
+    currentHls.detachMedia();
+    currentHls.attachMedia(mainPlayer);
+  }
+  mainPlayer.src = floatVideo.src;
+  mainPlayer.currentTime = floatVideo.currentTime;
+  mainPlayer.volume = floatVideo.volume;
+  mainPlayer.play().catch(function(){});
+  document.querySelector('.player-box').classList.add('playing');
+  // 如果有返回地址则跳转
+  if (floatReturnPrefix) {
+    document.getElementById('sourceSelect').value = floatReturnPrefix;
+    floatReturnPrefix = null;
+  }
+}
+
+function closeFloatPlayer() {
+  if (!playerInFloatMode) return;
+  var floatPlayer = document.getElementById('floatPlayer');
+  var floatVideo = document.getElementById('floatVideo');
+  // 停止播放
+  floatVideo.pause();
+  floatVideo.src = '';
+  // 销毁 HLS
+  if (currentHls) {
+    currentHls.destroy();
+    currentHls = null;
+  }
+  playerInFloatMode = false;
+  floatReturnPrefix = null;
+  floatPlayer.style.display = 'none';
+  document.querySelector('.player-box').classList.remove('playing');
+  currentPlayingVideo = null;
+  setStatus('\u23f9 \u5df2\u5173\u95ed');
+}
+
+// 悬浮播放器按钮事件绑定
+document.getElementById('floatBackBtn').addEventListener('click', function() {
+  returnFromFloat();
+});
+document.getElementById('floatCloseBtn').addEventListener('click', function() {
+  closeFloatPlayer();
+});
 
 /* ===== 播放 ===== */
 function playEp(el) {
