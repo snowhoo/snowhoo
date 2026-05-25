@@ -1425,9 +1425,11 @@ function playEp(el) {
   // 使用 currentOpenVideo（toggleEpisodes 时设置的）
   currentPlayingVideo = currentOpenVideo;
   currentPlayingEpIndex = epIndex;
-  // 保存历史记录
+  // 保存历史记录（包含当前进度）
   if (currentPlayingVideo) {
-    updateHistory(currentPlayingVideo, epIndex, 0);
+    var v = document.getElementById('player');
+    var progress = v.currentTime || 0;
+    updateHistory(currentPlayingVideo, epIndex, progress);
   }
   doPlay(url, name);
 }
