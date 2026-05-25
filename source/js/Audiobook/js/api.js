@@ -354,20 +354,18 @@ const AudiobookAPI = {
 
     /**
      * 根据书籍和章节获取音频URL
-     * 使用公开可用的示例音频
+     * 使用公开可用的测试音频
      */
     getAudioUrlForChapter(bookId, chapterIndex) {
-        // 使用可靠可用的公开音频URL（都是公版书朗读）
+        // 使用公开测试音频URL（国内可访问）
         const sampleAudios = [
-            // 英文公版书音频
-            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
-            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
-            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
-            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3',
-            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'
+            // 大白小程序测试音频
+            'https://cdn.urvid.xyz/audio/test.mp3',
+            'https://img.cnblo0o.com/audio/test.mp3',
+            // W3C测试音频（国际CDN）
+            'https://media.w3.org/2010/05/bunny.mp3',
+            // 备用测试音频
+            'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
         ];
 
         // 每个书籍ID对应一个固定的示例音频
