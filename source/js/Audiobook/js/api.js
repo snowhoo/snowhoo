@@ -77,113 +77,65 @@ const AudiobookAPI = {
 
     /**
      * 搜索书籍
-     * @param {string} keyword - 搜索关键词
-     * @param {number} page - 页码
-     * @param {number} size - 每页数量
+     * 由于懒人听书API存在CORS问题，直接返回模拟数据
      */
     async searchBooks(keyword, page = 1, size = 20) {
-        // 使用懒人听书开放平台的搜索接口
-        // 注意：实际使用中可能需要通过后端代理来调用
-        const url = `https://open.lrts.me/open/book/search?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${size}`;
-
-        try {
-            const data = await this.request(url);
-            return this.formatSearchResult(data);
-        } catch (error) {
-            // 如果懒人接口失败，返回模拟数据用于演示
-            console.log('使用模拟搜索数据');
-            return this.getMockSearchResult(keyword);
-        }
+        console.log('由于API CORS限制，使用模拟搜索数据');
+        return this.getMockSearchResult(keyword);
     },
 
     /**
      * 获取分类下的书籍
-     * @param {number} typeId - 分类ID (0=全部)
-     * @param {number} page - 页码
-     * @param {number} size - 每页数量
+     * 由于懒人听书API存在CORS问题，直接返回模拟数据
      */
     async getBooksByCategory(typeId = 0, page = 1, size = 20) {
-        const url = `https://open.lrts.me/open/book/list?typeId=${typeId}&page=${page}&size=${size}&feeType=0`;
-
-        try {
-            const data = await this.request(url);
-            return this.formatBookList(data);
-        } catch (error) {
-            console.log('使用模拟分类数据');
-            return this.getMockBookList(typeId);
-        }
+        console.log('由于API CORS限制，使用模拟分类数据');
+        return this.getMockBookList(typeId);
     },
 
     /**
      * 获取书籍详情
-     * @param {number|string} bookId - 书籍ID
+     * 由于懒人听书API存在CORS问题，直接返回模拟数据
      */
     async getBookDetail(bookId) {
-        const url = `https://open.lrts.me/open/book/${bookId}`;
-
-        try {
-            const data = await this.request(url);
-            return this.formatBookDetail(data);
-        } catch (error) {
-            console.log('使用模拟书籍详情');
-            return this.getMockBookDetail(bookId);
-        }
+        console.log('由于API CORS限制，使用模拟书籍详情');
+        return this.getMockBookDetail(bookId);
     },
 
     /**
      * 获取书籍章节列表
-     * @param {number|string} bookId - 书籍ID
+     * 由于懒人听书API存在CORS问题，直接返回模拟数据
      */
     async getBookChapters(bookId) {
-        const url = `https://open.lrts.me/open/book/${bookId}/chapters`;
-
-        try {
-            const data = await this.request(url);
-            return this.formatChapterList(data);
-        } catch (error) {
-            console.log('使用模拟章节数据');
-            return this.getMockChapters(bookId);
-        }
+        console.log('由于API CORS限制，使用模拟章节数据');
+        return this.getMockChapters(bookId);
     },
 
     /**
      * 获取章节音频URL
-     * @param {number|string} chapterId - 章节ID
+     * 由于懒人听书API存在CORS问题，直接返回模拟数据
      */
     async getChapterAudio(chapterId) {
-        const url = `https://open.lrts.me/open/chapter/${chapterId}/play`;
-
-        try {
-            const data = await this.request(url);
-            return data.playUrl || data.url || '';
-        } catch (error) {
-            console.log('使用模拟音频');
-            return this.getMockAudioUrl(chapterId);
-        }
+        console.log('由于API CORS限制，使用模拟音频');
+        return this.getMockAudioUrl(chapterId);
     },
 
     /**
      * 获取热门推荐
+     * 由于懒人听书API存在CORS问题，直接返回模拟数据
      */
     async getHotRecommend() {
-        try {
-            const data = await this.getBooksByCategory(0, 1, 12);
-            return data;
-        } catch (error) {
-            return this.getMockBookList(0);
-        }
+        console.log('使用模拟热门推荐数据');
+        return this.getMockBookList(0);
     },
 
     /**
      * 获取最新上架
+     * 由于懒人听书API存在CORS问题，直接返回模拟数据
      */
     async getNewBooks() {
-        try {
-            const data = await this.getBooksByCategory(0, 1, 12);
-            return data;
-        } catch (error) {
-            return this.getMockBookList(0);
-        }
+        console.log('使用模拟最新上架数据');
+        return this.getMockBookList(0);
     },
 
     // ==================== 数据格式化 ====================
@@ -263,10 +215,9 @@ const AudiobookAPI = {
     },
 
     /**
-     * 生成封面URL
+     * 生成封面URL - 使用内联SVG，不依赖外部服务
      */
     generateCover(id, title = '听书') {
-        // 使用渐变色背景和书名首字的占位符
         const colors = [
             ['4A90A4', '19547B'],
             ['667eea', '764ba2'],
@@ -278,8 +229,22 @@ const AudiobookAPI = {
             ['d299c2', 'fef9d7']
         ];
         const colorPair = colors[(id || Math.random() * 1000) % colors.length];
-        const initial = title.charAt(0);
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(initial)}&size=300x400&background=${colorPair[0]}&color=ffffff&bold=true&font-size=0.33`;
+        const initial = title.charAt(0) || '听';
+
+        // 生成内联SVG作为data URI
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400">
+            <defs>
+                <linearGradient id="grad${id}" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#${colorPair[0]};stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#${colorPair[1]};stop-opacity:1" />
+                </linearGradient>
+            </defs>
+            <rect width="300" height="400" fill="url(#grad${id})"/>
+            <text x="150" y="200" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">${initial}</text>
+            <text x="150" y="340" font-family="Arial, sans-serif" font-size="24" fill="rgba(255,255,255,0.8)" text-anchor="middle">${title}</text>
+        </svg>`;
+
+        return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
     },
 
     // ==================== 模拟数据 ====================
@@ -435,10 +400,24 @@ const AudiobookAPI = {
 
         return books.map((book, index) => {
             const colorPair = colors[index % colors.length];
+            const initial = book.title.charAt(0);
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400" viewBox="0 0 300 400">
+                <defs>
+                    <linearGradient id="grad${book.id}" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#${colorPair[0]};stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#${colorPair[1]};stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <rect width="300" height="400" fill="url(#grad${book.id})"/>
+                <text x="150" y="200" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">${initial}</text>
+                <text x="150" y="340" font-family="Arial, sans-serif" font-size="24" fill="rgba(255,255,255,0.8)" text-anchor="middle">${book.title}</text>
+            </svg>`;
+            const coverUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+
             return {
                 ...book,
-                cover: `https://img.douban.com/photo/seed/${book.id}/300x400.jpg`,
-                fallbackCover: `https://ui-avatars.com/api/?name=${encodeURIComponent(book.title)}&size=300x400&background=${colorPair[0]}&color=ffffff&bold=true&font-size=0.33`,
+                cover: coverUrl,
+                fallbackCover: coverUrl,
                 isFinished: Math.random() > 0.3,
                 playCount: Math.floor(Math.random() * 10000000)
             };
