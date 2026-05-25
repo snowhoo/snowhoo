@@ -566,6 +566,18 @@ var STORAGE_KEYS = {
   BOOKMARKS: 'tvbox_bookmarks'
 };
 
+/* ===== localStorage 测试 ===== */
+(function(){
+  try {
+    localStorage.setItem('_test_', '1');
+    localStorage.removeItem('_test_');
+    console.log('[TVBox] localStorage OK');
+  } catch(e) {
+    console.warn('[TVBox] localStorage error:', e.message);
+    alert('localStorage 不可用：' + e.message);
+  }
+})();
+
 /* ===== 观看历史 Helper ===== */
 // 结构: { [sourceKey+'_'+videoName]: { videoName, sourceKey, sourceName, vodPic, epIndex, epTitle, epUrl, progress, updatedAt } }
 function getHistory() {
@@ -575,12 +587,16 @@ function saveHistory(key, val) {
   var h = getHistory();
   h[key] = val;
   localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(h));
+  console.log('[TVBox] saveHistory:', key, val);
 }
 function getHistoryList() {
-  return Object.values(getHistory()).sort(function(a,b){return b.updatedAt - a.updatedAt;});
+  var list = Object.values(getHistory()).sort(function(a,b){return b.updatedAt - a.updatedAt;});
+  console.log('[TVBox] getHistoryList:', list.length);
+  return list;
 }
 function updateHistory(video, epIndex, progress) {
   var key = video.sourceKey + '_' + video.vod_name;
+  console.log('[TVBox] updateHistory:', key, epIndex, progress);
   saveHistory(key, {
     videoName: video.vod_name,
     sourceKey: video.sourceKey,
@@ -601,12 +617,16 @@ function getFavorites() {
 }
 function saveFavorites(list) {
   localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(list));
+  console.log('[TVBox] saveFavorites:', list.length);
 }
 function isFavorited(sourceKey, videoName) {
-  return getFavorites().some(function(f){ return f.sourceKey === sourceKey && f.videoName === videoName; });
+  var result = getFavorites().some(function(f){ return f.sourceKey === sourceKey && f.videoName === videoName; });
+  console.log('[TVBox] isFavorited:', sourceKey, videoName, result);
+  return result;
 }
 function addFavorite(video) {
-  if (isFavorited(video.sourceKey, video.vod_name)) return;
+  console.log('[TVBox] addFavorite:', video);
+  if (isFavorited(video.sourceKey, video.vod_name)) { console.log('[TVBox] already favorited'); return; }
   var list = getFavorites();
   list.push({
     videoName: video.vod_name,
@@ -622,6 +642,7 @@ function addFavorite(video) {
 }
 function removeFavorite(sourceKey, videoName) {
   var list = getFavorites().filter(function(f){ return !(f.sourceKey === sourceKey && f.videoName === videoName); });
+  console.log('[TVBox] removeFavorite:', sourceKey, videoName, 'remaining:', list.length);
   saveFavorites(list);
 }
 
