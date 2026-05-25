@@ -585,6 +585,18 @@ window._favBtnClick = function(btn) {
     if (!fullVideo && currentData && currentData.videos) {
       fullVideo = currentData.videos.find(function(v){ return v.vod_name === vodName; });
     }
+    // 再从 loadedSources 缓存中找（可能有完整剧集数据）
+    if (!fullVideo || !(fullVideo.episodes && fullVideo.episodes.length)) {
+      Object.values(loadedSources).some(function(data) {
+        if (data && data.videos) {
+          var found = data.videos.find(function(v){ return v.vod_name === vodName && (v.sourceKey === sourceKey || (v.sourceKey && v.sourceKey.includes(sourceKey))); });
+          if (found && found.episodes && found.episodes.length) {
+            fullVideo = found;
+            return true;
+          }
+        }
+      });
+    }
     var videoData = {
       sourceKey: sourceKey,
       vod_name: vodName,
@@ -689,6 +701,7 @@ function addBookmark(video, epIndex, progress, note) {
 var currentPlayingVideo = null;  // 当前播放所在视频对象
 var currentPlayingEpIndex = 0;    // 当前播放所在剧集索引
 var currentOpenVideo = null;      // 当前展开剧集面板的视频对象
+var currentVideoProgress = 0;    // 当前视频播放进度（秒）
 
 var PAGE_SIZE = 12;
 var currentData = null, currentPage = 1, currentFiltered = [], currentHls = null;
@@ -1422,15 +1435,14 @@ function playEp(el) {
   var epIndex = parseInt(el.dataset.epindex) || idx;
   currentEpNext = idx < items.length - 1 ? items[idx + 1] : null;
   document.getElementById('nextEpBtn').style.display = currentEpNext ? 'inline' : 'none';
+  // 保存上一个视频的进度
+  if (currentPlayingVideo && currentVideoProgress > 0) {
+    updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(currentVideoProgress));
+  }
   // 使用 currentOpenVideo（toggleEpisodes 时设置的）
   currentPlayingVideo = currentOpenVideo;
   currentPlayingEpIndex = epIndex;
-  // 保存历史记录（包含当前进度）
-  if (currentPlayingVideo) {
-    var v = document.getElementById('player');
-    var progress = v.currentTime || 0;
-    updateHistory(currentPlayingVideo, epIndex, progress);
-  }
+  currentVideoProgress = 0;
   doPlay(url, name);
 }
 function doPlay(url, name) {
@@ -1468,7 +1480,7 @@ function playNext() {
   }
 }
 document.getElementById('player').addEventListener('ended', function() {
-  // 播放结束时保存一次进度
+  // 播放结束时保存当前进度
   if (currentPlayingVideo) {
     var v = document.getElementById('player');
     updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(v.currentTime));
@@ -1477,6 +1489,19 @@ document.getElementById('player').addEventListener('ended', function() {
   // 无下一集时收起播放器
   if (!currentEpNext) {
     document.querySelector('.player-box').classList.remove('playing');
+  }
+});
+
+/* ===== 低频率更新播放进度（每10秒一次） ===== */
+var lastProgressUpdate = 0;
+document.getElementById('player').addEventListener('timeupdate', function() {
+  if (!currentPlayingVideo) return;
+  var now = Date.now();
+  if (now - lastProgressUpdate < 10000) return; // 10秒内最多更新一次
+  var v = document.getElementById('player');
+  if (v.currentTime > 5) {
+    lastProgressUpdate = now;
+    currentVideoProgress = v.currentTime;
   }
 });
 
@@ -1535,6 +1560,18 @@ document.addEventListener('click', function(e) {
       // 如果 currentFiltered 里没有，尝试从 currentData.videos 找
       if (!fullVideo && currentData && currentData.videos) {
         fullVideo = currentData.videos.find(function(v){ return v.vod_name === vodName; });
+      }
+      // 再从 loadedSources 缓存中找（可能有完整剧集数据）
+      if (!fullVideo || !(fullVideo.episodes && fullVideo.episodes.length)) {
+        Object.values(loadedSources).some(function(data) {
+          if (data && data.videos) {
+            var found = data.videos.find(function(v){ return v.vod_name === vodName; });
+            if (found && found.episodes && found.episodes.length) {
+              fullVideo = found;
+              return true;
+            }
+          }
+        });
       }
       var videoData = {
         sourceKey: sourceKey,
