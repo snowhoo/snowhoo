@@ -1870,6 +1870,27 @@ document.addEventListener('change', function(e) {
 });
 document.addEventListener('click', function(e) {
   var target = e.target;
+  // 优先检查删除按钮（历史/影签的删除有 card-delete class，与收藏按钮互斥）
+  var epDelete = target.closest('.ep-delete');
+  if (epDelete) {
+    e.stopPropagation();
+    var vodName = epDelete.dataset.vodname;
+    var sourceKey = epDelete.dataset.sourcekey;
+    var type = epDelete.dataset.type;
+    if (type === 'history') {
+      var h = getHistory();
+      delete h[sourceKey + '_' + vodName];
+      localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(h));
+      setStatus('\u2713 \u5df2\u5220\u9664');
+      renderHistory();
+    } else if (type === 'bookmark') {
+      var list = getBookmarks().filter(function(b){ return !(b.videoName === vodName && b.sourceKey === sourceKey); });
+      saveBookmarks(list);
+      setStatus('\u2713 \u5f71\u7b7e\u5df2\u5220\u9664');
+      renderBookmarks();
+    }
+    return;
+  }
   // 优先检查收藏按钮
   var favBtn = target.closest('.fav-btn');
   if (favBtn) {
@@ -1926,27 +1947,6 @@ document.addEventListener('click', function(e) {
   // 检查关闭按钮
   var epClose = target.closest('.ep-close');
   if (epClose) { e.stopPropagation(); closeEp(epClose.dataset.eid); return; }
-  // 检查删除按钮（最近播放/影签）
-  var epDelete = target.closest('.ep-delete');
-  if (epDelete) {
-    e.stopPropagation();
-    var vodName = epDelete.dataset.vodname;
-    var sourceKey = epDelete.dataset.sourcekey;
-    var type = epDelete.dataset.type;
-    if (type === 'history') {
-      var h = getHistory();
-      delete h[sourceKey + '_' + vodName];
-      localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(h));
-      setStatus('\u2713 \u5df2\u5220\u9664');
-      renderHistory();
-    } else if (type === 'bookmark') {
-      var list = getBookmarks().filter(function(b){ return !(b.videoName === vodName && b.sourceKey === sourceKey); });
-      saveBookmarks(list);
-      setStatus('\u2713 \u5f71\u7b7e\u5df2\u5220\u9664');
-      renderBookmarks();
-    }
-    return;
-  }
   // 检查其他 button
   var closest = target.closest('button');
   if (closest && closest.disabled) return;
