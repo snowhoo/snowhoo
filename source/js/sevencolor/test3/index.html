@@ -1467,6 +1467,8 @@ function render() {
     if (card.dataset.patched) return;
     card.dataset.patched = '1';
     card.addEventListener('click', function(e) {
+      // 如果点击的是删除按钮/关闭按钮，不拦截，让它冒泡到 document 处理
+      if (e.target.closest('.ep-delete') || e.target.closest('.ep-close')) return;
       e.stopPropagation(); // 阻止冒泡到 document 委托
       toggleEpisodes(this, this.dataset.eid);
     });
