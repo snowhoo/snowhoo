@@ -1422,6 +1422,7 @@ function setEmpty(t, sub){
 function playEp(el) {
   var url = el.dataset.url;
   var name = el.dataset.name;
+  console.log('[TVBox] playEp:', name, url);
   if (!url) return;
   var items = el.parentElement.querySelectorAll('.ep-item');
   var idx = Array.from(items).indexOf(el);
@@ -1432,12 +1433,16 @@ function playEp(el) {
   var card = el.closest('.video-card');
   var vodName = card ? card.dataset.vodname : '';
   var sourceKey = card ? card.dataset.sourcekey : '';
+  console.log('[TVBox] playEp find:', vodName, sourceKey, 'currentFiltered.length:', currentFiltered.length);
   // 尝试从 currentFiltered 中找到对应的视频数据
   currentPlayingVideo = currentFiltered.find(function(v){ return v.vod_name === vodName && v.sourceKey === sourceKey; }) || null;
+  console.log('[TVBox] playEp found:', currentPlayingVideo ? currentPlayingVideo.vod_name : null);
   currentPlayingEpIndex = epIndex;
   // 保存历史记录
   if (currentPlayingVideo) {
     updateHistory(currentPlayingVideo, epIndex, 0);
+  } else {
+    console.log('[TVBox] playEp: currentPlayingVideo is null, history not saved');
   }
   doPlay(url, name);
 }
