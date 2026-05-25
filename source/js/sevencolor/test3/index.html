@@ -1479,9 +1479,77 @@ function toggleEpisodes(el, id){
     var vodName = el.dataset.vodname;
     var sourceKey = el.dataset.sourcekey;
     currentOpenVideo = currentFiltered.find(function(v){ return v.vod_name === vodName && v.sourceKey === sourceKey; }) || null;
+    // 如果是历史/影签且只有一集，尝试加载完整数据
+    if (currentOpenVideo && (currentOpenVideo.isHistory || currentOpenVideo.isBookmark) && currentOpenVideo.episodes && currentOpenVideo.episodes.length === 1) {
+      var fullVideo = findVideoInCache(sourceKey, vodName);
+      if (fullVideo && fullVideo.episodes && fullVideo.episodes.length > 1) {
+        currentOpenVideo.episodes = fullVideo.episodes;
+        currentOpenVideo.playable_count = fullVideo.playable_count || fullVideo.episodes.filter(function(e){ return e.playable; }).length;
+        currentOpenVideo.ep_count = fullVideo.ep_count || fullVideo.episodes.length;
+        // 更新面板中的剧集信息
+        var epHeader = panel.querySelector('.ep-count');
+        if (epHeader) epHeader.textContent = '\u5267\u96c6 (' + currentOpenVideo.episodes.length + ')';
+        // 重新渲染剧集列表
+        renderEpList(panel, currentOpenVideo);
+      } else if (sourceMeta[sourceKey]) {
+        // 缓存没有，尝试加载数据源
+        var baseFile = sourceMeta[sourceKey].fileBase || sourceKey;
+        var fname = baseFile + '-01.js';
+        if (!loadedSources[fname]) {
+          var origOpenVideo = currentOpenVideo;
+          loadData(fname, function(data) {
+            if (data && data.videos) {
+              loadedSources[fname] = data;
+              var found = data.videos.find(function(v){ return v.vod_name === origOpenVideo.vod_name; });
+              if (found && found.episodes && found.episodes.length > 1) {
+                // 更新 currentFiltered 中的数据
+                var idx = currentFiltered.findIndex(function(v){ return v.vod_name === origOpenVideo.vod_name && v.sourceKey === origOpenVideo.sourceKey; });
+                if (idx >= 0) {
+                  currentFiltered[idx].episodes = found.episodes;
+                  currentFiltered[idx].playable_count = found.playable_count || found.episodes.filter(function(e){ return e.playable; }).length;
+                  currentFiltered[idx].ep_count = found.ep_count || found.episodes.length;
+                }
+                // 找到后更新 currentOpenVideo 并刷新面板
+                if (currentOpenVideo && currentOpenVideo.vod_name === origOpenVideo.vod_name) {
+                  currentOpenVideo.episodes = found.episodes;
+                  currentOpenVideo.playable_count = found.playable_count || found.episodes.filter(function(e){ return e.playable; }).length;
+                  currentOpenVideo.ep_count = found.ep_count || found.episodes.length;
+                  var epHeader = panel.querySelector('.ep-count');
+                  if (epHeader) epHeader.textContent = '\u5267\u96c6 (' + currentOpenVideo.episodes.length + ')';
+                  renderEpList(panel, currentOpenVideo);
+                }
+              }
+            }
+          });
+        }
+      }
+    }
   } else {
     currentOpenVideo = null;
   }
+}
+
+function renderEpList(panel, video) {
+  // 重新渲染剧集列表
+  var epList = panel.querySelector('.ep-list');
+  if (!epList) return;
+  var h = '';
+  var episodes = video.episodes || [];
+  episodes.forEach(function(e, ei) {
+    var eb = e.playable ? '' : ' \u26a0';
+    var epExtra = '';
+    var isHistoryEp = video.isHistory && ei === video.historyEpIndex;
+    var isBookmarkEp = video.isBookmark && ei === video.bookmarkEpIndex;
+    if (isHistoryEp) epExtra = ' \u25b6';
+    if (isBookmarkEp) epExtra = ' \u1f4cc';
+    var timeStr = '';
+    if ((isHistoryEp && video.historyProgress) || (isBookmarkEp && video.bookmarkProgress)) {
+      var prog = video.historyProgress || video.bookmarkProgress;
+      timeStr = ' \u2502 ' + Math.floor(prog/60) + ':' + String(prog%60).padStart(2,'0');
+    }
+    h += '<div class="ep-item' + (isHistoryEp||isBookmarkEp?' ep-current':'') + '" data-url="' + escAttr(e.url||'') + '" data-name="' + escAttr((video.vod_name||'') + ' - ' + (e.title||'')) + '" data-epindex="' + ei + '">' + escHtml(e.title||'') + eb + epExtra + timeStr + '</div>';
+  });
+  epList.innerHTML = h;
 }
 function closeEp(id){
   var el = document.getElementById(id);
@@ -1551,6 +1619,14 @@ function doPlay(url, name) {
     v.src = url;
   }
   v.play().catch(function(){});
+  // 恢复历史/影签进度
+  var savedProgress = currentOpenVideo ? (currentOpenVideo.historyProgress || currentOpenVideo.bookmarkProgress || 0) : 0;
+  if (savedProgress > 5) {
+    v.addEventListener('canplay', function once() {
+      v.removeEventListener('canplay', once);
+      v.currentTime = savedProgress;
+    });
+  }
   setStatus('\u25b6 ' + name);
 }
 
