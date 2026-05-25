@@ -1904,6 +1904,8 @@ document.addEventListener('click', function(e) {
       favBtn.classList.remove('faved');
       favBtn.innerHTML = '\u2661';
       favBtn.title = '\u6536\u85cf';
+      if (currentPrefix === '__favorites__') renderFavorites();
+      return;
     } else {
       // 从 currentFiltered 中找到完整的视频数据（优先）
       var fullVideo = currentFiltered.find(function(v){ return v.vod_name === vodName && v.sourceKey === sourceKey; });
