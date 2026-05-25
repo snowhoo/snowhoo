@@ -1551,15 +1551,17 @@ document.addEventListener('click', function(e) {
       favBtn.innerHTML = '\u2764\ufe0f';
       favBtn.title = '\u6536\u85cf';
     } else {
+      // 从 currentFiltered 中找到完整的视频数据
+      var fullVideo = currentFiltered.find(function(v){ return v.vod_name === vodName && v.sourceKey === sourceKey; });
       var videoData = {
         sourceKey: sourceKey,
         vod_name: vodName,
-        vod_pic: vodPic,
-        sourceName: '',
-        ep_count: epCount,
-        playable_count: playableCount,
-        episodes: [],
-        vod_class: ''
+        vod_pic: fullVideo ? fullVideo.vod_pic : vodPic,
+        sourceName: fullVideo ? fullVideo.sourceName : '',
+        ep_count: fullVideo ? (fullVideo.ep_count||0) : epCount,
+        playable_count: fullVideo ? (fullVideo.playable_count||0) : playableCount,
+        episodes: fullVideo ? (fullVideo.episodes||[]) : [],
+        vod_class: fullVideo ? (fullVideo.vod_class||'') : ''
       };
       addFavorite(videoData);
       favBtn.classList.add('faved');
