@@ -731,7 +731,6 @@ function findVideoInCache(sourceKey, videoName) {
 var currentPlayingVideo = null;  // 当前播放所在视频对象
 var currentPlayingEpIndex = 0;    // 当前播放所在剧集索引
 var currentOpenVideo = null;      // 当前展开剧集面板的视频对象
-var currentVideoProgress = 0;    // 当前视频播放进度（秒）
 
 var PAGE_SIZE = 12;
 var currentData = null, currentPage = 1, currentFiltered = [], currentHls = null;
@@ -1514,14 +1513,17 @@ function playEp(el) {
   var epIndex = parseInt(el.dataset.epindex) || idx;
   currentEpNext = idx < items.length - 1 ? items[idx + 1] : null;
   document.getElementById('nextEpBtn').style.display = currentEpNext ? 'inline' : 'none';
-  // 保存上一个视频的进度
-  if (currentPlayingVideo && currentVideoProgress > 0) {
-    updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(currentVideoProgress));
+  // 保存上一个视频的进度（直接获取当前视频元素的时间）
+  if (currentPlayingVideo) {
+    var v = document.getElementById('player');
+    var oldProgress = v.currentTime || 0;
+    if (oldProgress > 5) {
+      updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(oldProgress));
+    }
   }
   // 使用 currentOpenVideo（toggleEpisodes 时设置的）
   currentPlayingVideo = currentOpenVideo;
   currentPlayingEpIndex = epIndex;
-  currentVideoProgress = 0;
   doPlay(url, name);
 }
 function doPlay(url, name) {
@@ -1571,16 +1573,13 @@ document.getElementById('player').addEventListener('ended', function() {
   }
 });
 
-/* ===== 低频率更新播放进度（每10秒一次） ===== */
-var lastProgressUpdate = 0;
-document.getElementById('player').addEventListener('timeupdate', function() {
-  if (!currentPlayingVideo) return;
-  var now = Date.now();
-  if (now - lastProgressUpdate < 10000) return; // 10秒内最多更新一次
-  var v = document.getElementById('player');
-  if (v.currentTime > 5) {
-    lastProgressUpdate = now;
-    currentVideoProgress = v.currentTime;
+/* ===== 暂停时保存进度 ===== */
+document.getElementById('player').addEventListener('pause', function() {
+  if (currentPlayingVideo) {
+    var v = document.getElementById('player');
+    if (v.currentTime > 5) {
+      updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(v.currentTime));
+    }
   }
 });
 
