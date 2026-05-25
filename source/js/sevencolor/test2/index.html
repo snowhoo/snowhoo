@@ -239,6 +239,20 @@ html[data-theme=dark] .news-rank {
     font-size: 0.9rem;
   }
 }
+@media (min-width: 768px) {
+  .news-list.two-col {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 16px;
+  }
+  .news-list.two-col .news-item {
+    border-bottom: 1px solid #eee;
+    padding: 8px 0;
+  }
+  html[data-theme=dark] .news-list.two-col .news-item {
+    border-bottom-color: #333;
+  }
+}
 </style>
 
 <script>
@@ -274,15 +288,18 @@ html[data-theme=dark] .news-rank {
     return n.toLocaleString();
   }
   
+  const TARGET_PLATFORMS = ['baidu', 'weibo', 'douban', 'tieba', 'douyin', 'jinritoutiao', '52pojie', 'github'];
+
   function renderNews(data) {
     if (!data || !data.data || data.data.length === 0) {
       showError('暂无数据，请稍后重试');
       return;
     }
-    
+
     const items = data.data;
-    let html = '<ul class="news-list">';
-    
+    const isTarget = TARGET_PLATFORMS.includes(currentPlatform);
+    let html = '<ul class="news-list' + (isTarget ? ' two-col' : '') + '">';
+
     items.forEach(function(item, index) {
       const rank = index + 1;
       const isHot = rank <= HOT_THRESHOLD;
