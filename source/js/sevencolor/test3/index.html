@@ -365,8 +365,7 @@ layout: false
   width:26px;
   height:26px;
   border-radius:50%;
-  border:1px solid rgba(255,255,255,0.3);
-  background:rgba(0,0,0,0.4);
+  background:transparent;
   color:#ff6b6b;
   font-size:13px;
   cursor:pointer;
@@ -374,14 +373,14 @@ layout: false
   align-items:center;
   justify-content:center;
   z-index:2;
-  transition:all .2s;
+  transition:color .2s;
   padding:0;
 }
-.video-card .fav-btn:hover{background:rgba(255,107,107,0.8);color:#fff}
-.video-card .fav-btn.faved{color:#ff6b6b;background:rgba(255,107,107,0.7)}
+.video-card .fav-btn:hover{color:#ff4444}
+.video-card .fav-btn.faved{color:#ff6b6b}
 /* 历史/影签红色删除按钮 */
-.video-card .card-delete{color:#ff4444;}
-.video-card .card-delete:hover{background:rgba(255,68,68,0.8);color:#fff;}
+.video-card .card-delete{color:#ff4444;background:transparent;}
+.video-card .card-delete:hover{color:#ff6666;}
 
 /* ===== 观看进度条 ===== */
 .video-card .progress-bar{
@@ -1406,6 +1405,11 @@ function render() {
       h += '<div class="poster-fallback" style="display:none">\ud83c\udfac</div>';
     } else {
       h += '<div class="poster-fallback">\ud83c\udfac</div>';
+    }
+    // 收藏按钮（与删除按钮不能同时显示）
+    if (!v.isHistory && !v.isBookmark) {
+      var isFav = isFavorited(v.sourceKey, v.vod_name);
+      h += '<button class="fav-btn card-fav' + (isFav?' faved':'') + '" data-sourcekey="' + escAttr(v.sourceKey||'') + '" data-vodname="' + escAttr(v.vod_name||'') + '" data-vodpic="' + escAttr(v.vod_pic||'') + '" data-epcount="' + (v.ep_count||0) + '" data-playablecount="' + (v.playable_count||0) + '" title="' + (isFav?'\u53d6\u6d88\u6536\u85cf':'\u6536\u85cf') + '" onclick="event.stopPropagation();window._favBtnClick&&window._favBtnClick(this)">' + (isFav?'\u2764':'\u2661') + '</button>';
     }
     // 历史/影签显示删除按钮在封面上（与收藏同位置）
     if (v.isHistory || v.isBookmark) {
