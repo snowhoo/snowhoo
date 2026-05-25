@@ -16,6 +16,13 @@ const AudiobookPlayer = {
         isMuted: false
     },
 
+    // TTS语音合成状态
+    tts: {
+        enabled: false,
+        utterance: null,
+        speaking: false
+    },
+
     // 当前播放信息
     current: {
         bookId: null,
@@ -65,12 +72,16 @@ const AudiobookPlayer = {
         });
 
         this.audio.addEventListener('pause', () => {
-            this.state.isPlaying = false;
-            this.updatePlayButton(false);
+            // 如果是TTS播放，不处理暂停事件
+            if (!this.tts.enabled) {
+                this.state.isPlaying = false;
+                this.updatePlayButton(false);
+            }
         });
 
         // 时间更新
         this.audio.addEventListener('timeupdate', () => {
+            if (this.tts.enabled) return;
             this.state.currentTime = this.audio.currentTime;
             this.state.duration = this.audio.duration || 0;
             this.updateProgress();
@@ -78,19 +89,22 @@ const AudiobookPlayer = {
 
         // 音频加载完成
         this.audio.addEventListener('loadedmetadata', () => {
+            if (this.tts.enabled) return;
             this.state.duration = this.audio.duration;
             this.updateDuration();
         });
 
         // 播放结束
         this.audio.addEventListener('ended', () => {
-            this.playNext();
+            if (!this.tts.enabled) {
+                this.playNext();
+            }
         });
 
-        // 播放出错
+        // 播放出错 - 降级到TTS
         this.audio.addEventListener('error', (e) => {
-            console.error('音频播放错误:', e);
-            this.showToast('音频加载失败，请尝试切换章节', 'error');
+            console.error('音频播放错误，降级到TTS:', e);
+            this.fallbackToTTS();
         });
 
         // 等待数据
@@ -111,6 +125,9 @@ const AudiobookPlayer = {
             return;
         }
 
+        // 停止之前的TTS
+        this.stopTTS();
+
         // 更新当前播放信息
         this.current.bookId = bookInfo.id;
         this.current.bookTitle = bookInfo.title;
@@ -120,7 +137,14 @@ const AudiobookPlayer = {
         this.current.chapterTitle = chapter.title;
         this.current.chapterIndex = chapter.index;
 
-        // 获取音频URL - 优先使用chapter自带的audioUrl，否则尝试API获取
+        // 更新UI
+        this.updatePlayerUI();
+        this.updateChapterListUI();
+
+        // 添加到历史记录
+        this.addToHistory(bookInfo, chapter);
+
+        // 先尝试获取音频URL
         let audioUrl = chapter.audioUrl || null;
 
         if (!audioUrl) {
@@ -131,62 +155,125 @@ const AudiobookPlayer = {
             }
         }
 
-        // 如果仍然没有有效URL，显示错误
-        if (!audioUrl) {
-            this.showToast('音频加载失败，请尝试其他章节', 'error');
+        // 如果有有效URL，尝试播放
+        if (audioUrl) {
+            this.audio.src = audioUrl;
+            this.audio.playbackRate = this.state.playbackRate;
+
+            try {
+                await this.audio.play();
+                this.tts.enabled = false;
+                this.showPlayer();
+                return;
+            } catch (error) {
+                console.error('音频播放失败，降级到TTS:', error);
+            }
+        }
+
+        // 降级到TTS
+        this.fallbackToTTS();
+    },
+
+    // 降级到语音合成播放
+    fallbackToTTS() {
+        if (!('speechSynthesis' in window)) {
+            this.showToast('您的浏览器不支持语音合成', 'error');
             return;
         }
 
-        // 更新UI
-        this.updatePlayerUI();
-        this.updateChapterListUI();
+        this.tts.enabled = true;
+        this.showPlayer();
 
-        // 添加到历史记录
-        this.addToHistory(bookInfo, chapter);
+        // 构造要朗读的文本
+        const text = `${this.current.bookTitle}，第${this.current.chapterIndex}章，${this.current.chapterTitle}。由于当前演示环境无法访问外部音频，我们将使用浏览器语音合成来朗读内容。在实际部署时，可以接入喜马拉雅、懒人听书等平台的API来获取真实有声书内容。`;
 
-        // 开始播放
-        this.audio.src = audioUrl;
-        this.audio.playbackRate = this.state.playbackRate;
+        // 创建语音合成实例
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-CN';
+        utterance.rate = this.state.playbackRate;
+        utterance.volume = this.state.volume;
 
-        try {
-            await this.audio.play();
-            this.showPlayer();
-        } catch (error) {
-            console.error('播放失败:', error);
-            // 如果直接播放失败，尝试使用模拟音频
-            if (audioUrl !== AudiobookAPI.getMockAudioUrl(chapter.id)) {
-                const mockUrl = AudiobookAPI.getMockAudioUrl(chapter.id);
-                this.audio.src = mockUrl;
-                try {
-                    await this.audio.play();
-                    this.showPlayer();
-                    this.showToast('已切换到备用音频源', 'info');
-                    return;
-                } catch (e2) {
-                    console.error('备用音频也播放失败:', e2);
-                }
-            }
-            this.showToast('播放失败，请检查网络', 'error');
+        // 获取中文语音
+        const voices = speechSynthesis.getVoices();
+        const zhVoice = voices.find(v => v.lang.includes('zh')) || voices[0];
+        if (zhVoice) {
+            utterance.voice = zhVoice;
+        }
+
+        // 事件处理
+        utterance.onstart = () => {
+            this.state.isPlaying = true;
+            this.updatePlayButton(true);
+        };
+
+        utterance.onend = () => {
+            this.state.isPlaying = false;
+            this.updatePlayButton(false);
+            this.tts.speaking = false;
+            // 朗读结束后自动播放下一章
+            this.playNext();
+        };
+
+        utterance.onerror = (e) => {
+            console.error('TTS播放错误:', e);
+            this.showToast('语音播放出错', 'error');
+            this.state.isPlaying = false;
+            this.updatePlayButton(false);
+        };
+
+        this.tts.utterance = utterance;
+        this.tts.speaking = true;
+
+        // 开始朗读
+        speechSynthesis.speak(utterance);
+        this.showToast('使用语音合成播放', 'info');
+    },
+
+    // 停止TTS
+    stopTTS() {
+        if (this.tts.speaking) {
+            speechSynthesis.cancel();
+            this.tts.speaking = false;
         }
     },
 
     // 播放/暂停
     togglePlay() {
-        if (this.audio.paused) {
-            this.audio.play();
+        if (this.tts.enabled) {
+            // TTS控制
+            if (this.tts.speaking) {
+                speechSynthesis.pause();
+                this.state.isPlaying = false;
+                this.updatePlayButton(false);
+            } else {
+                speechSynthesis.resume();
+                this.state.isPlaying = true;
+                this.updatePlayButton(true);
+            }
         } else {
-            this.audio.pause();
+            // 音频控制
+            if (this.audio.paused) {
+                this.audio.play();
+            } else {
+                this.audio.pause();
+            }
         }
     },
 
     // 暂停
     pause() {
-        this.audio.pause();
+        if (this.tts.enabled) {
+            speechSynthesis.pause();
+        } else {
+            this.audio.pause();
+        }
     },
 
     // 播放
     play() {
-        if (this.audio.src) {
+        if (this.tts.enabled) {
+            speechSynthesis.resume();
+        } else if (this.audio.src) {
             this.audio.play();
         }
     },
@@ -194,6 +281,9 @@ const AudiobookPlayer = {
     // 上一章
     playPrev() {
         if (!this.current.chapterList || this.current.chapterList.length === 0) return;
+
+        // 停止当前TTS
+        this.stopTTS();
 
         const currentIndex = this.current.chapterIndex - 1;
         if (currentIndex > 0) {
@@ -213,6 +303,9 @@ const AudiobookPlayer = {
     // 下一章
     playNext() {
         if (!this.current.chapterList || this.current.chapterList.length === 0) return;
+
+        // 停止当前TTS
+        this.stopTTS();
 
         const currentIndex = this.current.chapterIndex;
         if (currentIndex < this.current.chapterList.length) {
@@ -246,7 +339,9 @@ const AudiobookPlayer = {
     // 设置音量
     setVolume(volume) {
         this.state.volume = Math.max(0, Math.min(1, volume));
-        this.audio.volume = this.state.volume;
+        if (!this.tts.enabled) {
+            this.audio.volume = this.state.volume;
+        }
         this.state.isMuted = this.state.volume === 0;
         this.updateVolumeUI();
         this.saveLocalData();
@@ -262,7 +357,9 @@ const AudiobookPlayer = {
     // 设置播放倍速
     setPlaybackRate(rate) {
         this.state.playbackRate = rate;
-        this.audio.playbackRate = rate;
+        if (!this.tts.enabled) {
+            this.audio.playbackRate = rate;
+        }
         this.updateSpeedUI();
         this.saveLocalData();
     },
