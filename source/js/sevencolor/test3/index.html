@@ -1466,6 +1466,11 @@ function playNext() {
   }
 }
 document.getElementById('player').addEventListener('ended', function() {
+  // 播放结束时保存一次进度
+  if (currentPlayingVideo) {
+    var v = document.getElementById('player');
+    updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(v.currentTime));
+  }
   playNext();
   // 无下一集时收起播放器
   if (!currentEpNext) {
@@ -1473,26 +1478,15 @@ document.getElementById('player').addEventListener('ended', function() {
   }
 });
 
-/* ===== 定时保存播放进度（节流：每30秒最多保存一次） ===== */
-var lastSaveTime = 0;
-document.getElementById('player').addEventListener('timeupdate', function() {
-  if (!currentPlayingVideo || (!currentPlayingEpIndex && currentPlayingEpIndex !== 0)) return;
-  var now = Date.now();
-  if (now - lastSaveTime < 30000) return; // 30秒内最多保存一次
-  var v = document.getElementById('player');
-  if (v.currentTime > 5) { // 超过5秒才保存
-    lastSaveTime = now;
-    updateHistory(currentPlayingVideo, currentPlayingEpIndex, v.currentTime);
-  }
-});
-
 /* ===== 添加影签 ===== */
 function addBookmarkHandler() {
-  if (!currentPlayingVideo || (currentPlayingEpIndex !== 0 && !currentPlayingEpIndex)) {
+  if (!currentPlayingVideo || (!currentPlayingEpIndex && currentPlayingEpIndex !== 0)) {
     setStatus('\u26a0 \u8bf7\u5148\u9009\u62e9\u5267\u96c6\u8f6c\u6362');
     return;
   }
+  // 先保存当前播放进度
   var v = document.getElementById('player');
+  updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(v.currentTime));
   var note = prompt('\u8bf7\u8f93\u5165\u5f71\u7b7e\u5907\u6ce8\uff08\u53ef\u7a7a\uff09\uff1a', '');
   if (note === null) return;
   addBookmark(currentPlayingVideo, currentPlayingEpIndex, Math.floor(v.currentTime), note);
