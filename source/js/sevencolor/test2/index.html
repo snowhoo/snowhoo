@@ -239,10 +239,26 @@ html[data-theme=dark] .news-rank {
     font-size: 0.9rem;
   }
 }
-@media (min-width: 768px) {
+@media (min-width: 768px) and (max-width: 1023px) {
   .news-list.two-col {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+    grid-auto-flow: column;
+    gap: 0 16px;
+  }
+  .news-list.two-col .news-item {
+    border-bottom: 1px solid #eee;
+    padding: 8px 0;
+  }
+  html[data-theme=dark] .news-list.two-col .news-item {
+    border-bottom-color: #333;
+  }
+}
+@media (min-width: 1024px) {
+  .news-list.two-col {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-flow: column;
     gap: 0 16px;
   }
   .news-list.two-col .news-item {
@@ -288,7 +304,7 @@ html[data-theme=dark] .news-rank {
     return n.toLocaleString();
   }
   
-  const TARGET_PLATFORMS = ['baidu', 'weibo', 'douban', 'tieba', 'douyin', 'jinritoutiao', '52pojie', 'github'];
+  const TARGET_PLATFORMS = ['baidu', 'weibo', 'douban', 'tieba', 'douyin', 'jinritoutiao'];
 
   function renderNews(data) {
     if (!data || !data.data || data.data.length === 0) {
