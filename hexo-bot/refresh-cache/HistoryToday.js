@@ -1,4 +1,4 @@
-// refresh-history-cache.js - pure Node.js, no PowerShell encoding issues
+﻿// refresh-history-cache.js - pure Node.js, no PowerShell encoding issues
 // Run by: node D:\hexo\refresh-history-cache-node.js
 // Scheduled task calls this instead of .ps1
 
@@ -76,11 +76,11 @@ async function main() {
     console.log('[GIT] ts: ' + ts + ' (git ok: ' + gitTs.ok + ')');
 
     // git add
-    const add = runGit('git add "source/js/historyDay.json"', 'D:\\hexo');
+    const add = runGit('git add "source/js/HistoryToday.json"', 'D:\\hexo');
     console.log('[GIT] add ok: ' + add.ok + (add.err ? ' err: ' + add.err : ''));
 
     // git commit
-    const commit = runGit('git commit -m "[Bot] Auto refresh historyDay ' + ts + '"', 'D:\\hexo');
+    const commit = runGit('git commit -m "[Bot] Auto refresh HistoryToday ' + ts + '"', 'D:\\hexo');
     console.log('[GIT] commit ok: ' + commit.ok + (commit.err ? ' err: ' + commit.err : ''));
 
     // git push
