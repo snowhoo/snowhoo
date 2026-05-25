@@ -219,6 +219,7 @@ layout: false
   display:none;
 }
 .status-bar .next-ep-btn:hover{background:var(--accent-hover)}
+.status-bar #bookmarkBtn{display:inline!important}
 
 /* ===== Player ===== */
 .player-box{
@@ -1229,11 +1230,12 @@ function render() {
     h += '<div class="video-card" data-eid="' + eid + '" data-vodname="' + escAttr(v.vod_name||'') + '" data-sourcekey="' + escAttr(v.sourceKey||'') + '">';
     h += '<div class="poster-wrap">';
     if (img) {
-      h += '<img class="poster" src="' + img.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '" loading="lazy" onerror="this.parentElement.innerHTML=\'<div class=poster-fallback>\ud83c\udfac</div>\'">';
+      h += '<img class="poster" src="' + img.replace(/&/g,'&amp;').replace(/"/g,'&quot;') + '" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">';
+      h += '<div class="poster-fallback" style="display:none">\ud83c\udfac</div>';
     } else {
       h += '<div class="poster-fallback">\ud83c\udfac</div>';
     }
-    // 收藏按钮
+    // 收藏按钮（放封面图之后，避免 onerror 破坏）
     if (!v.isHistory && !v.isBookmark) {
       var isFav = isFavorited(v.sourceKey, v.vod_name);
       h += '<button class="fav-btn card-fav' + (isFav?' faved':'') + '" data-sourcekey="' + escAttr(v.sourceKey||'') + '" data-vodname="' + escAttr(v.vod_name||'') + '" data-vodpic="' + escAttr(v.vod_pic||'') + '" data-epcount="' + (v.ep_count||0) + '" data-playablecount="' + (v.playable_count||0) + '" title="' + (isFav?'\u53d6\u6d88\u6536\u85cf':'\u6536\u85cf') + '">' + (isFav?'\u2764':'\u2764\ufe0f') + '</button>';
