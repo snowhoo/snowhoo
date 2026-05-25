@@ -1410,7 +1410,7 @@ function render() {
     h += '<button class="fav-btn card-fav' + (isFav?' faved':'') + '" data-sourcekey="' + escAttr(v.sourceKey||'') + '" data-vodname="' + escAttr(v.vod_name||'') + '" data-vodpic="' + escAttr(v.vod_pic||'') + '" data-epcount="' + (v.ep_count||0) + '" data-playablecount="' + (v.playable_count||0) + '" title="' + (isFav?'\u53d6\u6d88\u6536\u85cf':'\u6536\u85cf') + '" onclick="event.stopPropagation();window._favBtnClick&&window._favBtnClick(this)">' + (isFav?'\u2764':'\u2661') + '</button>';
     // 历史/影签删除按钮在收藏按钮右边
     if (v.isHistory || v.isBookmark) {
-      h += '<button class="fav-btn card-delete ep-delete" data-vodname="' + escAttr(v.vod_name||'') + '" data-sourcekey="' + escAttr(v.sourceKey||'') + '" data-type="' + (v.isHistory?'history':'bookmark') + '" title="\u5220\u9664" onclick="event.stopPropagation()">\u2716</button>';
+      h += '<button class="fav-btn card-delete ep-delete" data-vodname="' + escAttr(v.vod_name||'') + '" data-sourcekey="' + escAttr(v.sourceKey||'') + '" data-type="' + (v.isHistory?'history':'bookmark') + '" title="\u5220\u9664">\u2716</button>';
     }
     h += '<span class="card-badge ' + badgeClass + '">' + badgeText + '</span>';
     // 最近观看进度提示
