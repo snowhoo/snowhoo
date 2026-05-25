@@ -566,29 +566,34 @@ var STORAGE_KEYS = {
   BOOKMARKS: 'tvbox_bookmarks'
 };
 
-/* ===== 全局收藏按钮处理器（用于调试） ===== */
+/* ===== 全局收藏按钮处理器 ===== */
 window._favBtnClick = function(btn) {
   var sourceKey = btn.dataset.sourcekey;
   var vodName = btn.dataset.vodname;
   var vodPic = btn.dataset.vodpic;
   var epCount = parseInt(btn.dataset.epcount) || 0;
   var playableCount = parseInt(btn.dataset.playablecount) || 0;
-  console.log('[favBtnClick]', sourceKey, vodName);
   if (isFavorited(sourceKey, vodName)) {
     removeFavorite(sourceKey, vodName);
     btn.classList.remove('faved');
     btn.innerHTML = '\u2764\ufe0f';
     btn.title = '\u6536\u85cf';
   } else {
+    // 从 currentFiltered 中找（优先）
+    var fullVideo = currentFiltered.find(function(v){ return v.vod_name === vodName && v.sourceKey === sourceKey; });
+    // 如果没找到，尝试从 currentData.videos 找
+    if (!fullVideo && currentData && currentData.videos) {
+      fullVideo = currentData.videos.find(function(v){ return v.vod_name === vodName; });
+    }
     var videoData = {
       sourceKey: sourceKey,
       vod_name: vodName,
-      vod_pic: vodPic,
-      sourceName: '',
-      ep_count: epCount,
-      playable_count: playableCount,
-      episodes: [],
-      vod_class: ''
+      vod_pic: fullVideo ? fullVideo.vod_pic : vodPic,
+      sourceName: fullVideo ? (fullVideo.sourceName||'') : '',
+      ep_count: fullVideo ? (fullVideo.ep_count||0) : epCount,
+      playable_count: fullVideo ? (fullVideo.playable_count||0) : playableCount,
+      episodes: fullVideo ? (fullVideo.episodes||[]) : [],
+      vod_class: fullVideo ? (fullVideo.vod_class||'') : ''
     };
     addFavorite(videoData);
     btn.classList.add('faved');
@@ -596,18 +601,6 @@ window._favBtnClick = function(btn) {
     btn.title = '\u53d6\u6d88\u6536\u85cf';
   }
 };
-
-/* ===== localStorage 测试 ===== */
-(function(){
-  try {
-    localStorage.setItem('_test_', '1');
-    localStorage.removeItem('_test_');
-    console.log('[TVBox] localStorage OK');
-  } catch(e) {
-    console.warn('[TVBox] localStorage error:', e.message);
-    alert('localStorage 不可用：' + e.message);
-  }
-})();
 
 /* ===== 观看历史 Helper ===== */
 // 结构: { [sourceKey+'_'+videoName]: { videoName, sourceKey, sourceName, vodPic, epIndex, epTitle, epUrl, progress, updatedAt } }
@@ -618,16 +611,12 @@ function saveHistory(key, val) {
   var h = getHistory();
   h[key] = val;
   localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(h));
-  console.log('[TVBox] saveHistory:', key, val);
 }
 function getHistoryList() {
-  var list = Object.values(getHistory()).sort(function(a,b){return b.updatedAt - a.updatedAt;});
-  console.log('[TVBox] getHistoryList:', list.length);
-  return list;
+  return Object.values(getHistory()).sort(function(a,b){return b.updatedAt - a.updatedAt;});
 }
 function updateHistory(video, epIndex, progress) {
   var key = video.sourceKey + '_' + video.vod_name;
-  console.log('[TVBox] updateHistory:', key, epIndex, progress);
   saveHistory(key, {
     videoName: video.vod_name,
     sourceKey: video.sourceKey,
@@ -648,16 +637,12 @@ function getFavorites() {
 }
 function saveFavorites(list) {
   localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(list));
-  console.log('[TVBox] saveFavorites:', list.length);
 }
 function isFavorited(sourceKey, videoName) {
-  var result = getFavorites().some(function(f){ return f.sourceKey === sourceKey && f.videoName === videoName; });
-  console.log('[TVBox] isFavorited:', sourceKey, videoName, result);
-  return result;
+  return getFavorites().some(function(f){ return f.sourceKey === sourceKey && f.videoName === videoName; });
 }
 function addFavorite(video) {
-  console.log('[TVBox] addFavorite:', video);
-  if (isFavorited(video.sourceKey, video.vod_name)) { console.log('[TVBox] already favorited'); return; }
+  if (isFavorited(video.sourceKey, video.vod_name)) return;
   var list = getFavorites();
   list.push({
     videoName: video.vod_name,
@@ -673,7 +658,6 @@ function addFavorite(video) {
 }
 function removeFavorite(sourceKey, videoName) {
   var list = getFavorites().filter(function(f){ return !(f.sourceKey === sourceKey && f.videoName === videoName); });
-  console.log('[TVBox] removeFavorite:', sourceKey, videoName, 'remaining:', list.length);
   saveFavorites(list);
 }
 
@@ -1291,7 +1275,7 @@ function render() {
     // 收藏按钮（放封面图之后，避免 onerror 破坏）
     if (!v.isHistory && !v.isBookmark) {
       var isFav = isFavorited(v.sourceKey, v.vod_name);
-      h += '<button class="fav-btn card-fav' + (isFav?' faved':'') + '" data-sourcekey="' + escAttr(v.sourceKey||'') + '" data-vodname="' + escAttr(v.vod_name||'') + '" data-vodpic="' + escAttr(v.vod_pic||'') + '" data-epcount="' + (v.ep_count||0) + '" data-playablecount="' + (v.playable_count||0) + '" title="' + (isFav?'\u53d6\u6d88\u6536\u85cf':'\u6536\u85cf') + '" onclick="event.stopPropagation();console.log(\'fav click\',this.dataset.sourcekey,this.dataset.vodname);window._favBtnClick&&window._favBtnClick(this)">' + (isFav?'\u2764':'\u2764\ufe0f') + '</button>';
+      h += '<button class="fav-btn card-fav' + (isFav?' faved':'') + '" data-sourcekey="' + escAttr(v.sourceKey||'') + '" data-vodname="' + escAttr(v.vod_name||'') + '" data-vodpic="' + escAttr(v.vod_pic||'') + '" data-epcount="' + (v.ep_count||0) + '" data-playablecount="' + (v.playable_count||0) + '" title="' + (isFav?'\u53d6\u6d88\u6536\u85cf':'\u6536\u85cf') + '" onclick="event.stopPropagation();window._favBtnClick&&window._favBtnClick(this)">' + (isFav?'\u2764':'\u2764\ufe0f') + '</button>';
     }
     h += '<span class="card-badge ' + badgeClass + '">' + badgeText + '</span>';
     // 最近观看进度提示
@@ -1404,7 +1388,6 @@ function toggleEpisodes(el, id){
     var vodName = el.dataset.vodname;
     var sourceKey = el.dataset.sourcekey;
     currentOpenVideo = currentFiltered.find(function(v){ return v.vod_name === vodName && v.sourceKey === sourceKey; }) || null;
-    console.log('[TVBox] toggleEpisodes set currentOpenVideo:', currentOpenVideo ? currentOpenVideo.vod_name : null);
   } else {
     currentOpenVideo = null;
   }
@@ -1433,7 +1416,6 @@ function setEmpty(t, sub){
 function playEp(el) {
   var url = el.dataset.url;
   var name = el.dataset.name;
-  console.log('[TVBox] playEp:', name, url);
   if (!url) return;
   var items = el.parentElement.querySelectorAll('.ep-item');
   var idx = Array.from(items).indexOf(el);
@@ -1442,13 +1424,10 @@ function playEp(el) {
   document.getElementById('nextEpBtn').style.display = currentEpNext ? 'inline' : 'none';
   // 使用 currentOpenVideo（toggleEpisodes 时设置的）
   currentPlayingVideo = currentOpenVideo;
-  console.log('[TVBox] playEp currentOpenVideo:', currentPlayingVideo ? currentPlayingVideo.vod_name : null);
   currentPlayingEpIndex = epIndex;
   // 保存历史记录
   if (currentPlayingVideo) {
     updateHistory(currentPlayingVideo, epIndex, 0);
-  } else {
-    console.log('[TVBox] playEp: currentPlayingVideo is null, history not saved');
   }
   doPlay(url, name);
 }
@@ -1494,11 +1473,15 @@ document.getElementById('player').addEventListener('ended', function() {
   }
 });
 
-/* ===== 定时保存播放进度 ===== */
+/* ===== 定时保存播放进度（节流：每30秒最多保存一次） ===== */
+var lastSaveTime = 0;
 document.getElementById('player').addEventListener('timeupdate', function() {
-  if (!currentPlayingVideo || !currentPlayingEpIndex && currentPlayingEpIndex !== 0) return;
+  if (!currentPlayingVideo || (!currentPlayingEpIndex && currentPlayingEpIndex !== 0)) return;
+  var now = Date.now();
+  if (now - lastSaveTime < 30000) return; // 30秒内最多保存一次
   var v = document.getElementById('player');
   if (v.currentTime > 5) { // 超过5秒才保存
+    lastSaveTime = now;
     updateHistory(currentPlayingVideo, currentPlayingEpIndex, v.currentTime);
   }
 });
@@ -1551,13 +1534,17 @@ document.addEventListener('click', function(e) {
       favBtn.innerHTML = '\u2764\ufe0f';
       favBtn.title = '\u6536\u85cf';
     } else {
-      // 从 currentFiltered 中找到完整的视频数据
+      // 从 currentFiltered 中找到完整的视频数据（优先）
       var fullVideo = currentFiltered.find(function(v){ return v.vod_name === vodName && v.sourceKey === sourceKey; });
+      // 如果 currentFiltered 里没有，尝试从 currentData.videos 找
+      if (!fullVideo && currentData && currentData.videos) {
+        fullVideo = currentData.videos.find(function(v){ return v.vod_name === vodName; });
+      }
       var videoData = {
         sourceKey: sourceKey,
         vod_name: vodName,
         vod_pic: fullVideo ? fullVideo.vod_pic : vodPic,
-        sourceName: fullVideo ? fullVideo.sourceName : '',
+        sourceName: fullVideo ? (fullVideo.sourceName||'') : '',
         ep_count: fullVideo ? (fullVideo.ep_count||0) : epCount,
         playable_count: fullVideo ? (fullVideo.playable_count||0) : playableCount,
         episodes: fullVideo ? (fullVideo.episodes||[]) : [],
