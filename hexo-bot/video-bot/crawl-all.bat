@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 setlocal enabledelayedexpansion
 title TVBox Full Crawl
 
@@ -113,3 +114,4 @@ echo [%DATE% %TIME%] ======== DONE ======== >> "%LOG%"
 echo ========================================
 echo Done! Log: %LOG%
 echo ========================================
+pause
