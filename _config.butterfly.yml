@@ -638,6 +638,7 @@ css_prefix: true
 # Inject
 inject:
   head:
+    - "<script>(function(){var targetHost='snowhoo.net';var subdomain='szhr';var currentHost=window.location.hostname;if(currentHost===subdomain+'.'+targetHost){var path=window.location.pathname+window.location.search+window.location.hash;var newUrl='https://'+targetHost+'/'+subdomain+path;window.location.replace(newUrl);}})();</script>"
     - "<link rel='manifest' href='/manifest.json'>"
     - "<link rel='stylesheet' href='/css/waline-compact.css'>"
     - "<link rel='stylesheet' href='/css/layout-fix.css'>"
