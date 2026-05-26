@@ -3,7 +3,7 @@ extends includes/layout.pug
 block home-widgets
   #custom-widgets
     //-节日/节气横幅
-    #solar-term-banner
+    //#solar-term-banner
     //-七彩按钮，彩虹色支持暗色模式）
     //#news-shortcut-card
     //  .btn-row
@@ -17,6 +17,7 @@ block home-widgets
         each item in [0,1,2,3]
           button.sc-btn.sc-btn-placeholder(disabled style="visibility:hidden")
     //-诗词/历史上的今天
+	include FestivalSolar.pug
     include DailyPoetry.pug
     include HistoryToday.pug
 
