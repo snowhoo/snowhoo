@@ -1553,7 +1553,7 @@ function toggleEpisodes(el, id){
         // 重新渲染剧集列表
         renderEpList(panel, currentOpenVideo);
       } else if (sourceMeta[sourceKey]) {
-        // sourceKey 可能是完整文件名如"索尼-01.js"，尝试直接查
+        // 缓存没有，尝试加载数据源
         var baseFile = sourceMeta[sourceKey].fileBase || sourceKey;
         var fname = baseFile + '-01.js';
         if (!loadedSources[fname]) {
@@ -1563,12 +1563,14 @@ function toggleEpisodes(el, id){
               loadedSources[fname] = data;
               var found = data.videos.find(function(v){ return v.vod_name === origOpenVideo.vod_name; });
               if (found && found.episodes && found.episodes.length > 1) {
+                // 更新 currentFiltered 中的数据
                 var idx = currentFiltered.findIndex(function(v){ return v.vod_name === origOpenVideo.vod_name && v.sourceKey === origOpenVideo.sourceKey; });
                 if (idx >= 0) {
                   currentFiltered[idx].episodes = found.episodes;
                   currentFiltered[idx].playable_count = found.playable_count || found.episodes.filter(function(e){ return e.playable; }).length;
                   currentFiltered[idx].ep_count = found.ep_count || found.episodes.length;
                 }
+                // 找到后更新 currentOpenVideo 并刷新面板
                 if (currentOpenVideo && currentOpenVideo.vod_name === origOpenVideo.vod_name) {
                   currentOpenVideo.episodes = found.episodes;
                   currentOpenVideo.playable_count = found.playable_count || found.episodes.filter(function(e){ return e.playable; }).length;
@@ -1580,38 +1582,6 @@ function toggleEpisodes(el, id){
               }
             }
           });
-        }
-      } else {
-        // sourceKey 是完整文件名如"索尼-01.js"，提取前缀去查 sourceMeta
-        var basePrefix = sourceKey.replace(/-\d+$/, '');
-        if (sourceMeta[basePrefix]) {
-          var baseFile2 = sourceMeta[basePrefix].fileBase || basePrefix;
-          var fname2 = baseFile2 + '-01.js';
-          if (!loadedSources[fname2]) {
-            var origOpenVideo2 = currentOpenVideo;
-            loadData(fname2, function(data) {
-              if (data && data.videos) {
-                loadedSources[fname2] = data;
-                var found = data.videos.find(function(v){ return v.vod_name === origOpenVideo2.vod_name; });
-                if (found && found.episodes && found.episodes.length > 1) {
-                  var idx = currentFiltered.findIndex(function(v){ return v.vod_name === origOpenVideo2.vod_name && v.sourceKey === origOpenVideo2.sourceKey; });
-                  if (idx >= 0) {
-                    currentFiltered[idx].episodes = found.episodes;
-                    currentFiltered[idx].playable_count = found.playable_count || found.episodes.filter(function(e){ return e.playable; }).length;
-                    currentFiltered[idx].ep_count = found.ep_count || found.episodes.length;
-                  }
-                  if (currentOpenVideo && currentOpenVideo.vod_name === origOpenVideo2.vod_name) {
-                    currentOpenVideo.episodes = found.episodes;
-                    currentOpenVideo.playable_count = found.playable_count || found.episodes.filter(function(e){ return e.playable; }).length;
-                    currentOpenVideo.ep_count = found.ep_count || found.episodes.length;
-                    var epHeader = panel.querySelector('.ep-count');
-                    if (epHeader) epHeader.textContent = '\u5267\u96c6 (' + currentOpenVideo.episodes.length + ')';
-                    renderEpList(panel, currentOpenVideo);
-                  }
-                }
-              }
-            });
-          }
         }
       }
     }
