@@ -744,19 +744,6 @@ inject:
   }
 }
 
-/* ========== 节气/节日横幅(位于导航下方) ========== */
-/* 横幅在body自然流内,位于header(即固定导航)下方 */
-#solar-term-banner{display:none;width:100%;text-align:center;padding:0 16px;box-sizing:border-box;background:none;border:none;border-radius:0;overflow:hidden}html[data-theme=dark] #solar-term-banner{background:none}#solar-term-banner .st-banner-inner{display:flex;align-items:center;gap:12px;font-size:14px;flex-wrap:nowrap;justify-content:center;white-space:nowrap;animation:marquee 12s linear infinite}#solar-term-banner .st-banner-inner:hover{animation-play-state:paused}#solar-term-banner .st-icon{font-size:16px;opacity:0.8;flex-shrink:0}#solar-term-banner .st-name{font-weight:700;font-size:16px;letter-spacing:2px;flex-shrink:0}#solar-term-banner .st-desc{color:#555;font-style:italic;flex-shrink:0}html[data-theme=dark] #solar-term-banner .st-desc{color:#a5d6a7}@keyframes marquee{0%{transform:translateX(30vw)}100%{transform:translateX(-100%)}}/* 节日横幅暗色适配 */
-html[data-theme=dark] #solar-term-banner.festival-banner .st-desc{color:#ccc}
-/* 节日/节气的背景图样式 */
-#solar-term-banner.festival-banner{background:none;padding:0 16px}#solar-term-banner.festival-banner .st-banner-inner{background:none;padding:0;border-radius:0}html[data-theme=dark] #solar-term-banner.festival-banner .st-banner-inner{background:none}/* 文章卡片统一1px边框(置顶帖由模板内联样式覆盖)*/.recent-post-item{border:1px solid #e0e0e0;border-radius:8px}html[data-theme=dark] .recent-post-item{border-color:#3a3a3a} #home-widgets {
-  padding: 0 !important;
-  max-width: 100% !important;
-}/*去除主内容区边距*/
-/* 首页只显示8篇文章 */
-#recent-posts .recent-post-item:nth-child(n+9) {
-  display: none !important;
-}
 </style>"
   bottom:
     - |
@@ -1446,17 +1433,6 @@ html[data-theme=dark] #solar-term-banner.festival-banner .st-desc{color:#ccc}
         }
       }
       </script>
-    - |
-      <style>
-      #lucky-visitor-tag{position:fixed;top:50%;right:13px;transform:translateY(-50%);z-index:999;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;cursor:pointer;animation:lucky-float-in .6s ease-out}@keyframes lucky-float-in{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}#lucky-visitor-tag .lucky-tag-inner{background:rgba(255,249,240,.90);border:1px solid rgba(255,152,0,.3);border-radius:12px;padding:5px 5px;box-shadow:0 4px 20px rgba(255,152,0,.12);display:flex;align-items:center;gap:5px;min-width:160px;height:74px;transition:opacity .3s,transform .3s,visibility .3s}#lucky-visitor-tag .lucky-emoji{font-size:24px;line-height:1}#lucky-visitor-tag .lucky-info{display:flex;flex-direction:column;align-items:flex-start;gap:3px}#lucky-visitor-tag .lucky-row1,#lucky-visitor-tag .lucky-row2{display:flex;align-items:center;gap:6px;flex-wrap:wrap}#lucky-visitor-tag .lucky-badge{font-size:12px;font-weight:700;color:#e65100;line-height:1.4}#lucky-visitor-tag .lucky-readers{font-size:12px;font-weight:600;color:#e65100;line-height:1.4}#lucky-visitor-tag .lucky-count{font-size:11px;color:#888;line-height:1.4}#lucky-visitor-tag .lucky-num{font-size:13px;font-weight:700;color:#bf360c}#lucky-visitor-tag .lucky-lottery{font-size:12px;color:#c41e3a;font-weight:600}html[data-theme=dark]#lucky-visitor-tag .lucky-tag-inner{background:rgba(62,39,35,.75);border-color:rgba(255,152,0,.2);box-shadow:0 4px 20px rgba(255,152,0,.1)}html[data-theme=dark]#lucky-visitor-tag .lucky-badge,html[data-theme=dark]#lucky-visitor-tag .lucky-readers{color:#ffb74d}html[data-theme=dark]#lucky-visitor-tag .lucky-count{color:#999}html[data-theme=dark]#lucky-visitor-tag .lucky-num{color:#ffcc80}html[data-theme=dark]#lucky-visitor-tag .lucky-lottery{color:#ff8a80}html[data-theme=dark]#lucky-visitor-tag .lucky-collapsed-icon{color:#ffcc80}
-      /* 收起/展开逻辑 */
-      #lucky-visitor-tag .lucky-tag-inner{overflow:hidden}#lucky-visitor-tag.expanded .lucky-tag-inner,#lucky-visitor-tag.expanded .lucky-emoji{opacity:1;transform:translateX(0);visibility:visible}#lucky-visitor-tag.collapsed .lucky-tag-inner{opacity:0;transform:translateX(20px);visibility:hidden;width:0;min-width:0;padding:0;border:0;margin:0;overflow:hidden}#lucky-visitor-tag.collapsed .lucky-emoji{opacity:1}#lucky-visitor-tag .lucky-collapsed-icon{display:none}#lucky-visitor-tag.collapsed .lucky-emoji{display:none}#lucky-visitor-tag.collapsed .lucky-collapsed-icon{display:block;position:fixed;right:13px;top:50%;transform:translateY(-50%);z-index:1000;font-size:22px;line-height:1;padding:4px 1px;background:rgba(255,249,240,.90);border:1px solid rgba(255,152,0,.3);border-radius:50%;box-shadow:0 4px 20px rgba(255,152,0,.12)}html[data-theme=dark]#lucky-visitor-tag.collapsed .lucky-collapsed-icon{background:rgba(62,39,35,.75);border-color:rgba(255,152,0,.2)}
-      </style>
-    - <!-- <script src="/js/visitor.js" defer></script> -->
-    - <script src="/js/waline-avatar-fix.js" defer></script>
-    - <link rel="stylesheet" href="/js/sevencolor/sevencolor.css">
-    - <script src="/js/sevencolor/sevencolor.js" defer></script>
-    - |
       <style>
       /* ========== 侧边栏折叠：增强原生箭头动画 ========== */
       /* 主题原生用 .item-headline，CSS 无需重复声明 */
