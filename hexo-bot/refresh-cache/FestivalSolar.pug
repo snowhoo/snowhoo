@@ -308,6 +308,7 @@
       }
 
       async function loadData() {
+        var widget = document.getElementById('festival-solar-widget');
         try {
           var controller = new AbortController();
           var tid = setTimeout(function() { controller.abort(); }, 5000);
@@ -318,11 +319,12 @@
             var result = findCurrentFestival(data);
             if (result) {
               render(result.item, result.type);
-              var widget = document.getElementById('festival-solar-widget');
               if (widget) widget.style.display = 'block';
+              return;
             }
           }
         } catch(e) {}
+        if (widget) widget.style.display = 'none';
       }
 
       document.addEventListener('DOMContentLoaded', function() {
