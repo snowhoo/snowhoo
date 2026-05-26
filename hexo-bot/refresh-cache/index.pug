@@ -16,9 +16,11 @@ block home-widgets
       .sc-btn-row
         each item in [0,1,2,3]
           button.sc-btn.sc-btn-placeholder(disabled style="visibility:hidden")
-    //-诗词/历史上的今天
-	include FestivalSolar.pug
+    // 节日节气
+    include FestivalSolar.pug
+    // 诗词
     include DailyPoetry.pug
+    // 历史上的今天
     include HistoryToday.pug
 
 block content

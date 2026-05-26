@@ -38,6 +38,14 @@ hexo.on('generateBefore', function() {
   // 复制自定义组件文件到 layout/（与 index.pug 同目录）
   const botDir = path.join(hexo.base_dir, 'hexo-bot/refresh-cache');
 
+ // FestivalSolar.pug 来自 hexo-bot/refresh-cache（本地，不在 git）
+  const FestivalSolarSrc = path.join(botDir, 'FestivalSolar.pug');
+  const FestivalSolarDest = path.join(themeDir, 'FestivalSolar.pug');
+  if (fs.existsSync(FestivalSolarSrc)) {
+    fs.copyFileSync(FestivalSolarSrc, FestivalSolarDest);
+    hexo.log.info('[持久化模板] 已覆盖: FestivalSolar.pug');
+  }
+
   // poetry-widget.pug 来自 hexo-bot/refresh-cache（本地，不在 git）
   const poetrySrc = path.join(botDir, 'DailyPoetry.pug');
   const poetryDest = path.join(themeDir, 'DailyPoetry.pug');
