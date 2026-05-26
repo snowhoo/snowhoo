@@ -27,7 +27,7 @@
             .fs-customs-list
 
   style.
-    #festival-solar-widget {
+    #festival-solar-widget(style="display:none") {
       margin: 0 0 16px 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
@@ -318,13 +318,11 @@
             var result = findCurrentFestival(data);
             if (result) {
               render(result.item, result.type);
-              return;
+              var widget = document.getElementById('festival-solar-widget');
+              if (widget) widget.style.display = 'block';
             }
           }
         } catch(e) {}
-        // 无匹配节日/节气，隐藏整个组件
-        var widget = document.getElementById('festival-solar-widget');
-        if (widget) widget.style.display = 'none';
       }
 
       document.addEventListener('DOMContentLoaded', function() {

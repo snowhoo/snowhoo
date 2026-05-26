@@ -47,91 +47,6 @@
 }
 
 /* =============================================
-   七彩按钮
-   ============================================= */
-#news-shortcut-card {
-  width: 100%;
-  margin: 0 auto;
-  margin-top: 0 !important;
-  font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
-  background: transparent;
-  border-radius: 12px;
-  box-shadow: none;
-  box-sizing: border-box;
-  text-align: center;
-  padding: 0 0;
-}
-
-#news-shortcut-card .btn-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-evenly;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0;
-}
-
-/* ---- 七彩按钮（与 inject.bottom 旧配置保持一致）---- */
-#news-shortcut-card .news-btn {
-  flex: 1;
-  min-width: 0;
-  max-width: none;
-  width: 0;
-  height: 42px;
-  line-height: 42px;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: 500;
-  text-decoration: none;
-  box-shadow: none;
-  transition: filter 0.2s, transform 0.15s;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 0 0.25rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
-}
-
-#news-shortcut-card .news-btn:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
-
-#news-shortcut-card .news-btn:active {
-  filter: brightness(0.95);
-  transform: translateY(0);
-}
-
-/* 彩虹色：亮色主题 */
-#news-shortcut-card .news-btn-0 { background: #ff6b6b !important; color: #fff !important; }
-#news-shortcut-card .news-btn-1 { background: #ffa502 !important; color: #fff !important; }
-#news-shortcut-card .news-btn-2 { background: #ffd32a !important; color: #333 !important; }
-#news-shortcut-card .news-btn-3 { background: #2ed573 !important; color: #fff !important; }
-#news-shortcut-card .news-btn-4 { background: #1e90ff !important; color: #fff !important; }
-#news-shortcut-card .news-btn-5 { background: #9b59b6 !important; color: #fff !important; }
-#news-shortcut-card .news-btn-6 { background: #fd79a8 !important; color: #fff !important; }
-
-/* 彩虹色：暗色主题 */
-html[data-theme=dark] #news-shortcut-card .news-btn-0 { background: #c0392b !important; color: #fff !important; }
-html[data-theme=dark] #news-shortcut-card .news-btn-1 { background: #d35400 !important; color: #fff !important; }
-html[data-theme=dark] #news-shortcut-card .news-btn-2 { background: #f39c12 !important; color: #1a1a1a !important; }
-html[data-theme=dark] #news-shortcut-card .news-btn-3 { background: #27ae60 !important; color: #fff !important; }
-html[data-theme=dark] #news-shortcut-card .news-btn-4 { background: #2980b9 !important; color: #fff !important; }
-html[data-theme=dark] #news-shortcut-card .news-btn-5 { background: #8e44ad !important; color: #fff !important; }
-html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !important; color: #fff !important; }
-
-
-
-@media (max-width: 600px) {
-  #news-shortcut-card .news-btn { font-size: 0.75rem; padding: 0.35rem 0.75rem; }
-  #news-shortcut-card .btn-row { gap: 0.4rem; padding: 0; }
-}
-
-/* =============================================
    诗词模块
    ============================================= */
 #poetry-widget {
@@ -155,46 +70,13 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   padding: 0;
 }
 
-#poetry-widget .meta-wrapper {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  width: 100%;
-  box-sizing: border-box;
-}
-
 #poetry-widget .meta-row {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0.5rem 0.8rem;
   line-height: 1;
-  grid-column: 2;
-}
-
-#poetry-widget .expand-control {
-  grid-column: 3;
-  justify-self: end;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  margin: 0;
-  padding: 2px 10px;
-  cursor: pointer;
-  user-select: none;
-  color: #fff;
-  font-size: 0.6rem;
-  transition: filter 0.2s, transform 0.15s;
-  background: #dc3545;
-  border-radius: 20px;
-}
-
-#poetry-widget .expand-control:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-  color: #fff;
 }
 
 #poetry-widget .verse {
@@ -210,28 +92,52 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 #poetry-widget .dynasty { background: #f0f2f5; padding: 0.1rem 0.5rem; border-radius: 20px; font-size: 0.7rem; }
 #poetry-widget .title { font-size: 0.8rem; color: #8a9bb0; }
 
+#poetry-widget .expand-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 2px 10px;
+  cursor: pointer;
+  user-select: none;
+  color: #fff;
+  font-size: 0.7rem;
+  transition: filter 0.2s, transform 0.15s;
+  background: #dc3545;
+  border-radius: 20px;
+}
+
+#poetry-widget .expand-control:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  color: #fff;
+}
+
 #poetry-widget .arrow {
   font-size: 0.65rem;
   transition: transform 0.2s ease;
   display: inline-block;
 }
 
-#poetry-widget .detail-panel { display: none; padding: 0.5rem 1rem 1.2rem; margin-top: 0; font-size: 0.85rem; border-top: none; }
+#poetry-widget .detail-panel { display: none; padding: 0.5rem 0 1rem; margin-top: 0; font-size: 0.85rem; border-top: none; }
 
 #poetry-widget .full-poem {
+  background: #fafbfc;
+  border-radius: 12px;
   white-space: pre-line;
   line-height: 1.6;
   color: #2c3e4e;
-  margin-bottom: 0;
-  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #edf2f7;
   box-sizing: border-box;
 }
 
 #poetry-widget .poet-bio {
   color: #4a627a;
+  background: #fff;
+  border-left: 3px solid #dce5ef;
   font-size: 0.8rem;
-  padding: 0 0.75rem 0.75rem;
-  box-sizing: border-box;
 }
 
 
@@ -254,100 +160,77 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 #history-today .history-card { width: 100%; }
 
 #history-today .history-header {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
-  width: 100%;
-  box-sizing: border-box;
+  justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0.6rem;
-  padding-bottom: 0;
-  margin-bottom: 10px;
+  padding: 0;
+  border-bottom: 1px solid #eff2f8;
 }
 
-#history-today .header-left {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  grid-column: 2;
-}
-
-#history-today .expand-control#htToggle {
-  grid-column: 3;
-  justify-self: end;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  cursor: pointer;
-  user-select: none;
-  color: #fff;
-  font-size: 0.6rem;
-  transition: filter 0.2s, transform 0.15s;
-  line-height: 1;
-  background: #dc3545;
-  border-radius: 20px;
-  padding: 5px 10px;
-  height: min-content;
-}
-
-#history-today .expand-control#htToggle:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-  color: #fff;
-}
-
-#history-today .history-header h3 {
-  font-size: 1.5em;
-  font-weight: 400;
-  color: var(--text-highlight-color);
-  margin: 0;
-  line-height: 1.4;
-  transition: all .2s ease-in-out;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
+#history-today .history-header h3 { 
+  font-size: 1.1em; 
+  font-weight: 400; 
+  color: var(--text-highlight-color); 
+  margin: 0; 
+  line-height: 1.4; 
+  transition: all .2s ease-in-out; 
+  display: flex; 
+  align-items: center; 
+  gap: 0.4rem; 
   font-family: '楷体', '华文楷书', 'KaiTi', 'Georgia', serif;
 }
 #history-today .history-date { 
   font-size: 0.7rem; 
   color: var(--text-secondary, #8ba0bc); 
   background: var(--bg-secondary, #f5f8fe); 
-  padding: 0; 
+  padding: 0.2rem 0.6rem; 
   border-radius: 30px; 
   line-height: 1; 
-  height: min-content;
 }
 
+#history-today .expand-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  user-select: none;
+  color: #fff;
+  font-size: 0.72rem;
+  transition: filter 0.2s, transform 0.15s;
+  line-height: 1;
+  background: #dc3545;
+  border-radius: 20px;
+  padding: 2px 10px;
+}
+
+#history-today .expand-control:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  color: #fff;
+}
 #history-today .arrow {
   font-size: 0.65rem; 
   transition: transform 0.2s ease; 
 }
 
-#history-today .detail-panel { display: none; padding: 0.5rem 1rem 1.2rem; text-align: center; }
+#history-today .detail-panel { display: none; padding: 0.5rem 1rem 1.2rem; }
 #history-today .detail-panel.show { display: block; }
 
 #history-today .events-list {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 0.5rem;
-  max-width: max-content;
-  margin: 0 auto;
-  overflow: hidden;
+  max-height: 450px;
+  overflow-y: auto;
   padding-right: 0;
 }
 
 #history-today .event-item {
-  text-align: left;
+  text-align: left; 
   line-height: 1.1;
   color: #2c3e4e;
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 0.6rem;
 }
 
 #history-today .event-year {
@@ -360,45 +243,14 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   display: inline-block;
   padding: 0rem 0.45rem;
   border-radius: 4px;
-  flex-shrink: 0;
-}
-
-#history-today .event-body {
-  display: block;
-  line-height: 1.4;
-  flex: 1;
-  min-width: 0;
+  margin-right: 0.6rem;
 }
 
 #history-today .event-title {
   line-height: 1.4;
-  display: inline;
-  word-break: break-word;
-  white-space: normal;
-}
-#history-today .event-title a {
-  margin-left: 0.4rem;
-  white-space: nowrap;
-  font-size: inherit;
-}
-#history-today .event-link {
-  display: inline-block !important;
-  font-size: 0.7rem !important;
-  color: var(--text-secondary, #8ba0bc) !important;
-  background: var(--bg-secondary, #f5f8fe) !important;
-  padding: 0.2rem 0.6rem !important;
-  border-radius: 30px !important;
-  line-height: 1 !important;
-  height: min-content;
-  margin-left: 0.4rem !important;
-  white-space: nowrap !important;
-  text-decoration: none !important;
+  display: inline; 
 }
 
-html[data-theme=dark] #history-today .event-link {
-  background: #2a2a2a;
-  color: #8a9a9a;
-}
 #history-today .status-message { color: #9ab0c9; font-size: 0.8rem; text-align: center; padding: 1rem; }
 
 #history-today .events-list::-webkit-scrollbar { width: 4px; }
@@ -411,9 +263,6 @@ html[data-theme=dark] #history-today .event-link {
 
 /* 小屏（<=600px） */
 @media screen and (max-width: 600px) {
-  #news-shortcut-card .news-btn { font-size: 0.75rem; padding: 0.35rem 0.75rem; }
-  #news-shortcut-card .btn-row { gap: 0.4rem; padding: 0; }
-
   #poetry-widget { padding: 0; }
   #poetry-widget .verse { font-size: 1.15rem; }
   #poetry-widget .dynasty { font-size: 0.68rem; }
@@ -442,35 +291,6 @@ html[data-theme=dark] #history-today .event-link {
   #history-today .event-title { font-size: 0.85rem; }
 }
 
-/* 中屏（>=768px）：诗词展开两栏布局 */
-@media screen and (min-width: 768px) {
-  #poetry-widget .detail-inner {
-    display: flex !important;
-    gap: 1.5rem;
-    align-items: flex-start;
-  }
-  #poetry-widget .full-poem {
-    flex: 1;
-    margin-bottom: 0;
-  }
-  #poetry-widget .poet-bio {
-    flex: 1;
-  }
-}
-
-/* 中屏（>=768px）：历史上的今天两栏布局 */
-@media screen and (min-width: 768px) {
-  #history-today .events-list {
-    columns: 2 !important;
-    column-gap: 1.5rem;
-    display: block !important;
-  }
-  #history-today .event-item {
-    break-inside: avoid;
-    margin-bottom: 0.6rem;
-  }
-}
-
 /* 超大屏（>=2000px） */
 @media screen and (min-width: 2000px) {
   #home-widgets { padding: 0 4rem; }
@@ -481,7 +301,6 @@ html[data-theme=dark] #history-today .event-link {
   #history-today .history-header h3 { font-size: 1.25rem; }
   #history-today .event-year { font-size: 0.9rem; }
   #history-today .event-title { font-size: 1rem; }
-  #news-shortcut-card .news-btn { font-size: 1rem; }
 }
 
 /* =============================================
@@ -536,10 +355,14 @@ html[data-theme=dark] #poetry-widget .title {
 }
 
 html[data-theme=dark] #poetry-widget .full-poem {
+  background: #1a1a1a;
+  border-color: #333;
   color: #d0d0d0;
 }
 
 html[data-theme=dark] #poetry-widget .poet-bio {
+  background: transparent;
+  border-left-color: #444;
   color: #9aaaba;
 }
 
@@ -560,7 +383,7 @@ html[data-theme=dark] #history-today .history-header {
 }
 
 html[data-theme=dark] #history-today .history-header h3 {
-  \\color: #a8c0d8;
+  color: #a8c0d8;
 }
 
 html[data-theme=dark] #history-today .history-date {
@@ -600,6 +423,6 @@ html[data-theme=dark] #history-today .expand-control:hover {
 
 /* ========== 统一页面主体边距 ========== */
 .layout {
-    padding: 4px 10px !important;
+    padding: 4px 20px !important;
     max-width: 1400px !important;
 }
