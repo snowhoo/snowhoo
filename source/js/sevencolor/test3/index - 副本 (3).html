@@ -608,9 +608,9 @@ width:100% !important;
 <!-- 悬浮播放器 -->
 <div class="float-player" id="floatPlayer" style="display:none">
   <div class="float-player-header">
-    <span class="float-player-title" id="floatPlayerTitle">正在播放</span>
-    <button class="float-btn" id="floatBackBtn" title="返回">←</button>
-    <button class="float-btn float-close" id="floatCloseBtn" title="关闭">✖</button>
+    <span class="float-player-title" id="floatPlayerTitle">\u6b63\u5728\u64ad\u653e</span>
+    <button class="float-btn" id="floatBackBtn" title="\u8fd4\u56de">\u2190</button>
+    <button class="float-btn float-close" id="floatCloseBtn" title="\u5173\u95ed">\u2716</button>
   </div>
   <video id="floatVideo" playsinline></video>
 </div>
@@ -682,7 +682,7 @@ window._favBtnClick = function(btn) {
 };
 
 /* ===== 观看历史 Helper ===== */
-// 结构: { [sourceKey+'_'+videoName]: { videoName, sourceKey, sourceName, vodPic, ep_count, playable_count, episodes, epIndex, epTitle, epUrl, progress, updatedAt } }
+// 结构: { [sourceKey+'_'+videoName]: { videoName, sourceKey, sourceName, vodPic, epIndex, epTitle, epUrl, progress, updatedAt } }
 function getHistory() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY)) || {}; } catch(e) { return {}; }
 }
@@ -696,21 +696,11 @@ function getHistoryList() {
 }
 function updateHistory(video, epIndex, progress) {
   var key = video.sourceKey + '_' + video.vod_name;
-  // 保存完整剧集列表（深拷贝，避免引用）
-  var episodesCopy = [];
-  if (video.episodes && video.episodes.length) {
-    episodesCopy = video.episodes.map(function(ep) {
-      return { title: ep.title, url: ep.url, playable: ep.playable };
-    });
-  }
   saveHistory(key, {
     videoName: video.vod_name,
     sourceKey: video.sourceKey,
     sourceName: video.sourceName,
     vodPic: video.vod_pic,
-    ep_count: video.ep_count || episodesCopy.length,
-    playable_count: video.playable_count || episodesCopy.filter(function(e) { return e.playable; }).length,
-    episodes: episodesCopy,
     epIndex: epIndex,
     epTitle: (video.episodes||[])[epIndex] ? video.episodes[epIndex].title : '',
     epUrl: (video.episodes||[])[epIndex] ? video.episodes[epIndex].url : '',
@@ -751,7 +741,7 @@ function removeFavorite(sourceKey, videoName) {
 }
 
 /* ===== 影签 Helper ===== */
-// 结构: [{ videoName, sourceKey, sourceName, vodPic, ep_count, playable_count, episodes, epIndex, epTitle, epUrl, progress, note, createdAt }]
+// 结构: [{ videoName, sourceKey, sourceName, epIndex, epTitle, epUrl, progress, note, createdAt }]
 function getBookmarks() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.BOOKMARKS)) || []; } catch(e) { return []; }
 }
@@ -760,21 +750,10 @@ function saveBookmarks(list) {
 }
 function addBookmark(video, epIndex, progress, note) {
   var list = getBookmarks();
-  // 保存完整剧集列表
-  var episodesCopy = [];
-  if (video.episodes && video.episodes.length) {
-    episodesCopy = video.episodes.map(function(ep) {
-      return { title: ep.title, url: ep.url, playable: ep.playable };
-    });
-  }
   list.unshift({
     videoName: video.vod_name,
     sourceKey: video.sourceKey,
     sourceName: video.sourceName,
-    vodPic: video.vod_pic,
-    ep_count: video.ep_count || episodesCopy.length,
-    playable_count: video.playable_count || episodesCopy.filter(function(e) { return e.playable; }).length,
-    episodes: episodesCopy,
     epIndex: epIndex,
     epTitle: (video.episodes||[])[epIndex] ? video.episodes[epIndex].title : '',
     epUrl: (video.episodes||[])[epIndex] ? video.episodes[epIndex].url : '',
@@ -971,29 +950,23 @@ function renderHistory() {
   }
   // 转为与 videos 结构兼容的格式用于 render
   currentFiltered = list.map(function(h) {
-    // 优先使用存储的完整 episodes
+    // 尝试从缓存获取完整剧集数据
+    var fullVideo = findVideoInCache(h.sourceKey, h.videoName);
     var episodes = [];
     var playableCount = 0;
-    if (h.episodes && h.episodes.length) {
-      episodes = h.episodes;
-      playableCount = h.playable_count || episodes.filter(function(e){ return e.playable; }).length;
-    } else {
-      // 兼容旧数据：尝试从缓存获取
-      var fullVideo = findVideoInCache(h.sourceKey, h.videoName);
-      if (fullVideo && fullVideo.episodes && fullVideo.episodes.length) {
-        episodes = fullVideo.episodes;
-        playableCount = fullVideo.playable_count || episodes.filter(function(e){ return e.playable; }).length;
-      } else if (h.epUrl) {
-        episodes = [{title: h.epTitle, url: h.epUrl, playable: true}];
-        playableCount = 1;
-      }
+    if (fullVideo && fullVideo.episodes && fullVideo.episodes.length) {
+      episodes = fullVideo.episodes;
+      playableCount = fullVideo.playable_count || episodes.filter(function(e){ return e.playable; }).length;
+    } else if (h.epUrl) {
+      episodes = [{title: h.epTitle, url: h.epUrl, playable: true}];
+      playableCount = 1;
     }
     return {
       sourceKey: h.sourceKey,
       sourceName: h.sourceName,
       vod_name: h.videoName,
-      vod_pic: h.vodPic,
-      ep_count: h.ep_count || episodes.length,
+      vod_pic: fullVideo ? fullVideo.vod_pic : h.vodPic,
+      ep_count: episodes.length,
       playable_count: playableCount,
       episodes: episodes,
       isHistory: true,
@@ -1051,28 +1024,23 @@ function renderBookmarks() {
     return;
   }
   currentFiltered = list.map(function(b) {
+    // 尝试从缓存获取完整剧集数据
+    var fullVideo = findVideoInCache(b.sourceKey, b.videoName);
     var episodes = [];
     var playableCount = 0;
-    if (b.episodes && b.episodes.length) {
-      episodes = b.episodes;
-      playableCount = b.playable_count || episodes.filter(function(e){ return e.playable; }).length;
-    } else {
-      // 兼容旧数据：尝试从缓存获取
-      var fullVideo = findVideoInCache(b.sourceKey, b.videoName);
-      if (fullVideo && fullVideo.episodes && fullVideo.episodes.length) {
-        episodes = fullVideo.episodes;
-        playableCount = fullVideo.playable_count || episodes.filter(function(e){ return e.playable; }).length;
-      } else if (b.epUrl) {
-        episodes = [{title: b.epTitle, url: b.epUrl, playable: true}];
-        playableCount = 1;
-      }
+    if (fullVideo && fullVideo.episodes && fullVideo.episodes.length) {
+      episodes = fullVideo.episodes;
+      playableCount = fullVideo.playable_count || episodes.filter(function(e){ return e.playable; }).length;
+    } else if (b.epUrl) {
+      episodes = [{title: b.epTitle, url: b.epUrl, playable: true}];
+      playableCount = 1;
     }
     return {
       sourceKey: b.sourceKey,
       sourceName: b.sourceName,
       vod_name: b.videoName,
-      vod_pic: b.vodPic,
-      ep_count: b.ep_count || episodes.length,
+      vod_pic: fullVideo ? fullVideo.vod_pic : '',
+      ep_count: episodes.length,
       playable_count: playableCount,
       episodes: episodes,
       isBookmark: true,
@@ -1572,7 +1540,7 @@ function toggleEpisodes(el, id){
     var vodName = el.dataset.vodname;
     var sourceKey = el.dataset.sourcekey;
     currentOpenVideo = currentFiltered.find(function(v){ return v.vod_name === vodName && v.sourceKey === sourceKey; }) || null;
-    // 如果是历史/影签且只有一集，尝试加载完整数据（兜底，但现在存储已完整，基本不需要）
+    // 如果是历史/影签且只有一集，尝试加载完整数据
     if (currentOpenVideo && (currentOpenVideo.isHistory || currentOpenVideo.isBookmark) && currentOpenVideo.episodes && currentOpenVideo.episodes.length === 1) {
       var fullVideo = findVideoInCache(sourceKey, vodName);
       if (fullVideo && fullVideo.episodes && fullVideo.episodes.length > 1) {
@@ -1584,6 +1552,67 @@ function toggleEpisodes(el, id){
         if (epHeader) epHeader.textContent = '\u5267\u96c6 (' + currentOpenVideo.episodes.length + ')';
         // 重新渲染剧集列表
         renderEpList(panel, currentOpenVideo);
+      } else if (sourceMeta[sourceKey]) {
+        // sourceKey 可能是完整文件名如"索尼-01.js"，尝试直接查
+        var baseFile = sourceMeta[sourceKey].fileBase || sourceKey;
+        var fname = baseFile + '-01.js';
+        if (!loadedSources[fname]) {
+          var origOpenVideo = currentOpenVideo;
+          loadData(fname, function(data) {
+            if (data && data.videos) {
+              loadedSources[fname] = data;
+              var found = data.videos.find(function(v){ return v.vod_name === origOpenVideo.vod_name; });
+              if (found && found.episodes && found.episodes.length > 1) {
+                var idx = currentFiltered.findIndex(function(v){ return v.vod_name === origOpenVideo.vod_name && v.sourceKey === origOpenVideo.sourceKey; });
+                if (idx >= 0) {
+                  currentFiltered[idx].episodes = found.episodes;
+                  currentFiltered[idx].playable_count = found.playable_count || found.episodes.filter(function(e){ return e.playable; }).length;
+                  currentFiltered[idx].ep_count = found.ep_count || found.episodes.length;
+                }
+                if (currentOpenVideo && currentOpenVideo.vod_name === origOpenVideo.vod_name) {
+                  currentOpenVideo.episodes = found.episodes;
+                  currentOpenVideo.playable_count = found.playable_count || found.episodes.filter(function(e){ return e.playable; }).length;
+                  currentOpenVideo.ep_count = found.ep_count || found.episodes.length;
+                  var epHeader = panel.querySelector('.ep-count');
+                  if (epHeader) epHeader.textContent = '\u5267\u96c6 (' + currentOpenVideo.episodes.length + ')';
+                  renderEpList(panel, currentOpenVideo);
+                }
+              }
+            }
+          });
+        }
+      } else {
+        // sourceKey 是完整文件名如"索尼-01.js"，提取前缀去查 sourceMeta
+        var basePrefix = sourceKey.replace(/-\d+$/, '');
+        if (sourceMeta[basePrefix]) {
+          var baseFile2 = sourceMeta[basePrefix].fileBase || basePrefix;
+          var fname2 = baseFile2 + '-01.js';
+          if (!loadedSources[fname2]) {
+            var origOpenVideo2 = currentOpenVideo;
+            loadData(fname2, function(data) {
+              if (data && data.videos) {
+                loadedSources[fname2] = data;
+                var found = data.videos.find(function(v){ return v.vod_name === origOpenVideo2.vod_name; });
+                if (found && found.episodes && found.episodes.length > 1) {
+                  var idx = currentFiltered.findIndex(function(v){ return v.vod_name === origOpenVideo2.vod_name && v.sourceKey === origOpenVideo2.sourceKey; });
+                  if (idx >= 0) {
+                    currentFiltered[idx].episodes = found.episodes;
+                    currentFiltered[idx].playable_count = found.playable_count || found.episodes.filter(function(e){ return e.playable; }).length;
+                    currentFiltered[idx].ep_count = found.ep_count || found.episodes.length;
+                  }
+                  if (currentOpenVideo && currentOpenVideo.vod_name === origOpenVideo2.vod_name) {
+                    currentOpenVideo.episodes = found.episodes;
+                    currentOpenVideo.playable_count = found.playable_count || found.episodes.filter(function(e){ return e.playable; }).length;
+                    currentOpenVideo.ep_count = found.ep_count || found.episodes.length;
+                    var epHeader = panel.querySelector('.ep-count');
+                    if (epHeader) epHeader.textContent = '\u5267\u96c6 (' + currentOpenVideo.episodes.length + ')';
+                    renderEpList(panel, currentOpenVideo);
+                  }
+                }
+              }
+            });
+          }
+        }
       }
     }
   } else {
