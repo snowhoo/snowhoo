@@ -1,4 +1,4 @@
-#festival-solar-widget(style="display: none")
+#festival-solar-widget
   .fs-container
     .fs-banner-wrapper#fsBannerWrapper
       .fs-banner-img#fsBannerImg
@@ -27,8 +27,7 @@
             .fs-customs-list
 
   style.
-    /* 修复：正确选择器，去掉无效括号 */
-    #festival-solar-widget {
+    #festival-solar-widget(style="display:none")(style="display:none") {
       margin: 0 0 16px 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
@@ -113,7 +112,6 @@
       gap: 4px;
       transition: background 0.2s;
       z-index: 3;
-      cursor: pointer;
     }
     .fs-expand-btn:hover {
       background: rgba(0,0,0,0.6);
@@ -222,7 +220,7 @@
     }
 
   script.
-    (function() {
+    (function(){
       var JSON_FILE = '/js/FestivalSolar/FestivalSolar.json';
       var currentItem = null;
       var isPanelOpen = false;
@@ -236,6 +234,7 @@
 
       function findCurrentFestival(data) {
         var today = getTodayStr();
+        // 先精确匹配日期
         for (var i = 0; i < data.festivals.length; i++) {
           if (data.festivals[i].date === today) {
             return { item: data.festivals[i], type: 'festival' };
@@ -246,30 +245,31 @@
             return { item: data.solarTerms[i], type: 'solarTerm' };
           }
         }
+        // 无匹配，返回 null（不显示）
         return null;
       }
 
       function render(item, type) {
         currentItem = { item: item, type: type };
         var bannerImg = document.getElementById('fsBannerImg').querySelector('img');
-        bannerImg.src = item.banner || ('https://picsum.photos/1200/300?random=' + Math.floor(Math.random() * 100));
+        bannerImg.src = item.banner || ('https://picsum.photos/1200/300?random=' + Math.floor(Math.random()*100));
         bannerImg.alt = item.name;
-        var typeBadge = document.getElementById('fsTypeBadge');
-        typeBadge.innerText = type === 'festival' ? '节日' : '节气';
-        typeBadge.style.background = type === 'festival' ? 'rgba(231,76,60,0.7)' : 'rgba(76,175,80,0.7)';
+        document.getElementById('fsTypeBadge').innerText = type === 'festival' ? '节日' : '节气';
+        document.getElementById('fsTypeBadge').style.background = type === 'festival'
+          ? 'rgba(231,76,60,0.7)' : 'rgba(76,175,80,0.7)';
         document.getElementById('fsName').innerText = item.name;
         document.getElementById('fsDate').innerText = item.displayDate || item.date;
         document.getElementById('fsDesc').innerText = item.description || '';
         // 详情面板
         document.getElementById('fsDetailTitle').innerText = item.name;
-        var poetryDiv = document.getElementById('fsPoetry');
         if (item.poetry) {
-          poetryDiv.innerText = item.poetry;
-          poetryDiv.style.display = 'block';
+          document.getElementById('fsPoetry').innerText = item.poetry;
+          document.getElementById('fsPoetry').style.display = 'block';
         } else {
-          poetryDiv.style.display = 'none';
+          document.getElementById('fsPoetry').style.display = 'none';
         }
         document.getElementById('fsDetailText').innerText = item.details || '';
+        // 习俗
         var customsContainer = document.getElementById('fsCustoms');
         var customsList = customsContainer.querySelector('.fs-customs-list');
         customsList.innerHTML = '';
@@ -302,13 +302,13 @@
       }
 
       function closeDetail() {
-        if (isPanelOpen) toggleDetail();
+        if (isPanelOpen) {
+          toggleDetail();
+        }
       }
 
       async function loadData() {
         var widget = document.getElementById('festival-solar-widget');
-        // 强制初始隐藏，避免闪现
-        if (widget) widget.style.display = 'none';
         try {
           var controller = new AbortController();
           var tid = setTimeout(function() { controller.abort(); }, 5000);
@@ -319,28 +319,21 @@
             var result = findCurrentFestival(data);
             if (result) {
               render(result.item, result.type);
-              if (widget) widget.style.display = 'block'; // 匹配成功才显示
+              if (widget) widget.style.display = 'block';
               return;
             }
           }
-        } catch(e) {
-          // 静默失败，保持隐藏
-        }
+        } catch(e) {}
         if (widget) widget.style.display = 'none';
       }
 
       document.addEventListener('DOMContentLoaded', function() {
-        var bannerWrapper = document.getElementById('fsBannerWrapper');
-        var expandBtn = document.getElementById('fsExpandBtn');
-        var closeBtn = document.getElementById('fsCloseBtn');
-        if (bannerWrapper) bannerWrapper.addEventListener('click', toggleDetail);
-        if (expandBtn) {
-          expandBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            toggleDetail();
-          });
-        }
-        if (closeBtn) closeBtn.addEventListener('click', closeDetail);
+        document.getElementById('fsBannerWrapper').addEventListener('click', toggleDetail);
+        document.getElementById('fsExpandBtn').addEventListener('click', function(e) {
+          e.stopPropagation();
+          toggleDetail();
+        });
+        document.getElementById('fsCloseBtn').addEventListener('click', closeDetail);
         loadData();
       });
     })();
