@@ -1,12 +1,12 @@
-#poetry-widget
+#poetry-widget(style="display:none")
   .poetry-container
     .poem-main
-      .verse#verseLine 采菊东篱下，悠然见南山
+      .verse#verseLine
       .meta-wrapper
         .meta-row
-          span.author#authorName 陶渊明
-          span.dynasty#dynastyText 东晋
-          span.title#originText 《饮酒·其五》
+          span.author#authorName
+          span.dynasty#dynastyText
+          span.title#originText
         .expand-control#expandToggle
           span.arrow#arrowIcon ▼
           span 详情
@@ -73,11 +73,10 @@
           clearTimeout(tid);
           if (r.ok) {
             var j = await r.json();
-            if (j && j.line) { renderPoem(j); return; }
+            if (j && j.line) { renderPoem(j); document.getElementById('poetry-widget').style.display = ''; return; }
           }
         } catch(e){}
-        // 超时或失败时显示默认值，不阻塞后续加载
-        current.fullDetail = {fullText:'「' + current.line + '」', poetBio:'数据加载失败'};
+        // 加载失败，不显示
       }
 
       document.addEventListener('DOMContentLoaded', function() {
