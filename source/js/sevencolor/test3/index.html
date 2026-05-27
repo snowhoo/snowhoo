@@ -124,6 +124,7 @@ layout: false
 .pagination{ display:flex; gap:3px; justify-content:center; margin:12px 0; flex-wrap:nowrap; }
 .pagination button{ padding:3px 8px; border:1px solid var(--border); border-radius:4px; background:var(--bg-card); color:var(--text-secondary); cursor:pointer; font-size:12px; transition:all .15s; min-width:26px; }
 .pagination button.active{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.pagination button:disabled{ opacity:0.5; cursor:default; }
 .empty-state{ text-align:center; padding:50px 20px; color:var(--text-muted); }
 .tvbox-footer{ text-align:center; padding:12px 0 6px; margin-top:12px; font-size:11px; color:var(--text-muted); }
 @media(max-width:600px){ .video-grid{ grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:8px; } .toolbar select,.toolbar input,.toolbar button{ font-size:12px; padding:6px 8px; } }
@@ -307,6 +308,7 @@ function addSearchResults(newResults) {
 }
 // 清空所有搜索结果
 function clearAllSearchResults() {
+  if (currentPrefix !== '__search_result__') return;  // 只在搜索结果视图生效
   currentSearchResults = [];
   currentSearchResultCount = 0;
   currentSearchKeyword = '';
@@ -376,25 +378,31 @@ function loadIndex() {
 }
 function showBanner(){ document.getElementById('content').innerHTML=''; document.getElementById('pagination').innerHTML=''; }
 
-// ======================= 渲染历史/收藏/影签 =======================
+// ======================= 渲染历史/收藏/影签（隐藏清空按钮） =======================
 function renderHistory(){ 
   if(isSearching) stopSearch();
   currentSearchMode=false; currentCategory=''; currentPrefix='__history__'; document.getElementById('searchInput').value=''; 
-  var list=Object.values(getHistory()).sort((a,b)=>b.updatedAt-a.updatedAt); if(!list.length){ setEmpty('暂无观看记录','开始观看后会自动记录'); document.getElementById('pagination').innerHTML=''; buildSimpleCatBar('最近观看 — 0 条记录'); document.getElementById('clearSearchResultBtn').style.display='none'; return; } 
-  currentFiltered=list.map(h=>{ var episodes=[]; var playableCount=0; if(h.episodes&&h.episodes.length){ episodes=h.episodes; playableCount=h.playable_count||episodes.filter(e=>e.playable).length; }else{ var full=findVideoInCache(h.sourceKey,h.videoName); if(full&&full.episodes){ episodes=full.episodes; playableCount=full.playable_count||episodes.filter(e=>e.playable).length; }else if(h.epUrl){ episodes=[{title:h.epTitle,url:h.epUrl,playable:true}]; playableCount=1; } } return { sourceKey:h.sourceKey, sourceName:h.sourceName, vod_name:h.videoName, vod_pic:h.vodPic, ep_count:h.ep_count||episodes.length, playable_count:playableCount, episodes:episodes, isHistory:true, historyEpIndex:h.epIndex, historyProgress:h.progress }; }); currentPage=1; render(); buildSimpleCatBar('最近观看 — '+list.length+' 条记录'); document.getElementById('clearSearchResultBtn').style.display='none'; }
+  var clearBtn = document.getElementById('clearSearchResultBtn');
+  if (clearBtn) clearBtn.style.display = 'none';
+  var list=Object.values(getHistory()).sort((a,b)=>b.updatedAt-a.updatedAt); if(!list.length){ setEmpty('暂无观看记录','开始观看后会自动记录'); document.getElementById('pagination').innerHTML=''; buildSimpleCatBar('最近观看 — 0 条记录'); return; } 
+  currentFiltered=list.map(h=>{ var episodes=[]; var playableCount=0; if(h.episodes&&h.episodes.length){ episodes=h.episodes; playableCount=h.playable_count||episodes.filter(e=>e.playable).length; }else{ var full=findVideoInCache(h.sourceKey,h.videoName); if(full&&full.episodes){ episodes=full.episodes; playableCount=full.playable_count||episodes.filter(e=>e.playable).length; }else if(h.epUrl){ episodes=[{title:h.epTitle,url:h.epUrl,playable:true}]; playableCount=1; } } return { sourceKey:h.sourceKey, sourceName:h.sourceName, vod_name:h.videoName, vod_pic:h.vodPic, ep_count:h.ep_count||episodes.length, playable_count:playableCount, episodes:episodes, isHistory:true, historyEpIndex:h.epIndex, historyProgress:h.progress }; }); currentPage=1; render(); buildSimpleCatBar('最近观看 — '+list.length+' 条记录'); }
 function renderFavorites(){ 
   if(isSearching) stopSearch();
-  currentSearchMode=false; currentCategory=''; currentPrefix='__favorites__'; var list=getFavorites(); if(!list.length){ setEmpty('暂无收藏','点击卡片收藏按钮添加'); document.getElementById('pagination').innerHTML=''; buildSimpleCatBar('我的收藏 — 0 部影片'); document.getElementById('clearSearchResultBtn').style.display='none'; return; } 
-  currentFiltered=list.map(f=>({ sourceKey:f.sourceKey, sourceName:f.sourceName, vod_name:f.videoName, vod_pic:f.vodPic, ep_count:f.ep_count, playable_count:f.playable_count, episodes:f.episodes, vod_class:f.vod_class, isFavorite:true })); currentPage=1; render(); buildSimpleCatBar('我的收藏 — '+list.length+' 部影片'); document.getElementById('clearSearchResultBtn').style.display='none'; }
+  currentSearchMode=false; currentCategory=''; currentPrefix='__favorites__'; var clearBtn = document.getElementById('clearSearchResultBtn');
+  if (clearBtn) clearBtn.style.display = 'none';
+  var list=getFavorites(); if(!list.length){ setEmpty('暂无收藏','点击卡片收藏按钮添加'); document.getElementById('pagination').innerHTML=''; buildSimpleCatBar('我的收藏 — 0 部影片'); return; } 
+  currentFiltered=list.map(f=>({ sourceKey:f.sourceKey, sourceName:f.sourceName, vod_name:f.videoName, vod_pic:f.vodPic, ep_count:f.ep_count, playable_count:f.playable_count, episodes:f.episodes, vod_class:f.vod_class, isFavorite:true })); currentPage=1; render(); buildSimpleCatBar('我的收藏 — '+list.length+' 部影片'); }
 function renderBookmarks(){ 
   if(isSearching) stopSearch();
-  currentSearchMode=false; currentCategory=''; currentPrefix='__bookmarks__'; var list=getBookmarks(); if(!list.length){ setEmpty('暂无影签','播放过程中点击签字按钮添加'); document.getElementById('pagination').innerHTML=''; buildSimpleCatBar('我的影签 — 0 条影签'); document.getElementById('clearSearchResultBtn').style.display='none'; return; } 
-  currentFiltered=list.map(b=>{ var episodes=[]; var playableCount=0; if(b.episodes&&b.episodes.length){ episodes=b.episodes; playableCount=b.playable_count||episodes.filter(e=>e.playable).length; }else{ var full=findVideoInCache(b.sourceKey,b.videoName); if(full&&full.episodes){ episodes=full.episodes; playableCount=full.playable_count||episodes.filter(e=>e.playable).length; }else if(b.epUrl){ episodes=[{title:b.epTitle,url:b.epUrl,playable:true}]; playableCount=1; } } return { sourceKey:b.sourceKey, sourceName:b.sourceName, vod_name:b.videoName, vod_pic:b.vodPic, ep_count:b.ep_count||episodes.length, playable_count:playableCount, episodes:episodes, isBookmark:true, bookmarkNote:b.note, bookmarkProgress:b.progress, bookmarkEpIndex:b.epIndex }; }); currentPage=1; render(); buildSimpleCatBar('我的影签 — '+list.length+' 条影签'); document.getElementById('clearSearchResultBtn').style.display='none'; }
+  currentSearchMode=false; currentCategory=''; currentPrefix='__bookmarks__'; var clearBtn = document.getElementById('clearSearchResultBtn');
+  if (clearBtn) clearBtn.style.display = 'none';
+  var list=getBookmarks(); if(!list.length){ setEmpty('暂无影签','播放过程中点击签字按钮添加'); document.getElementById('pagination').innerHTML=''; buildSimpleCatBar('我的影签 — 0 条影签'); return; } 
+  currentFiltered=list.map(b=>{ var episodes=[]; var playableCount=0; if(b.episodes&&b.episodes.length){ episodes=b.episodes; playableCount=b.playable_count||episodes.filter(e=>e.playable).length; }else{ var full=findVideoInCache(b.sourceKey,b.videoName); if(full&&full.episodes){ episodes=full.episodes; playableCount=full.playable_count||episodes.filter(e=>e.playable).length; }else if(b.epUrl){ episodes=[{title:b.epTitle,url:b.epUrl,playable:true}]; playableCount=1; } } return { sourceKey:b.sourceKey, sourceName:b.sourceName, vod_name:b.videoName, vod_pic:b.vodPic, ep_count:b.ep_count||episodes.length, playable_count:playableCount, episodes:episodes, isBookmark:true, bookmarkNote:b.note, bookmarkProgress:b.progress, bookmarkEpIndex:b.epIndex }; }); currentPage=1; render(); buildSimpleCatBar('我的影签 — '+list.length+' 条影签'); }
 
 // ======================= 数据源切换 =======================
 function switchSource(){ if(isSearching) stopSearch(); var prefix=document.getElementById('sourceSelect').value; if(!prefix){ showBanner(); setStatus('⏹ 选择数据源'); return; } if(prefix==='__history__'){ renderHistory(); return; } if(prefix==='__favorites__'){ renderFavorites(); return; } if(prefix==='__bookmarks__'){ renderBookmarks(); return; } if(prefix==='__search_result__'){ renderSearchResult(false); return; } currentPrefix=prefix; currentFilePage=1; currentPage=1; currentSearchMode=false; document.getElementById('searchInput').value=''; if(currentPlayingVideo) floatReturnPrefix=currentPrefix, showFloatPlayer(); loadPageFile(prefix,1); }
 function loadPageFile(prefix,pageNum){ var baseFile=(sourceMeta[prefix]&&sourceMeta[prefix].fileBase)?sourceMeta[prefix].fileBase:prefix; var fname=baseFile+'-'+String(pageNum).padStart(2,'0')+'.js'; if(loadedSources[fname]){ useSourceData(loadedSources[fname],fname,pageNum); return; } document.getElementById('content').innerHTML='<div class="empty-state"><div class="icon">⛏</div><div class="desc">加载中...</div></div>'; loadData(fname,function(data){ if(data) loadedSources[fname]=data; useSourceData(data,fname,pageNum); }); }
-function useSourceData(data,file,pageNum){ currentData=data; currentFilePage=pageNum||1; currentPage=1; if(!currentData||!currentData.videos){ setStatus('❌ 数据格式错误'); return; } currentCategory=''; buildCatBar(); setStatus('📡 '+currentData.name+' — 第'+currentFilePage+'页'); currentFiltered=(currentData.videos||[]).map(v=>{ v.sourceKey=file; v.sourceName=currentData.name; return v; }); render(); }
+function useSourceData(data,file,pageNum){ currentData=data; currentFilePage=pageNum||1; currentPage=1; if(!currentData||!currentData.videos){ setStatus('❌ 数据格式错误'); return; } currentCategory=''; buildCatBar(); setStatus('📡 '+currentData.name+' — 第'+currentFilePage+'页'); currentFiltered=(currentData.videos||[]).map(v=>{ v.sourceKey=file; v.sourceName=currentData.name; return v; }); render(); var clearBtn = document.getElementById('clearSearchResultBtn'); if (clearBtn) clearBtn.style.display = 'none'; }
 function buildCatBar(){ var meta=sourceMeta[currentPrefix]; var cats={}; if(meta&&meta.categories&&Object.keys(meta.categories).length){ cats=meta.categories; }else if(currentData&&currentData.videos){ (currentData.videos||[]).forEach(v=>{ var cv=(v.vod_class||'').trim(); if(!cv) cats['未分类']=(cats['未分类']||0)+1; else cv.split(',').forEach(c=>{ c=c.trim(); if(c) cats[c]=(cats[c]||0)+1; }); }); }else{ return; } var totalVid=meta?meta.total:0; var playableVid=meta?meta.playable_videos:0; var h='<select class="cat-filter"><option value="">全部 ('+(totalVid>99?'99+':totalVid)+'/'+(playableVid>99?'99+':playableVid)+')</option>'; Object.keys(cats).sort((a,b)=>cats[b]-cats[a]).forEach(c=>{ var cnt=cats[c]>99?'99+':cats[c]; h+='<option value="'+c.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+c+' ('+cnt+')</option>'; }); h+='</select>'; document.getElementById('catBar').innerHTML=h; }
 function buildSimpleCatBar(text){ document.getElementById('catBar').innerHTML='<span style="font-size:12px;color:var(--text-muted)">'+text+'</span>'; }
 function buildCatBarFromFiltered(){ var cats={}; currentFiltered.forEach(v=>{ var cv=(v.vod_class||'').trim(); if(!cv) cats['未分类']=(cats['未分类']||0)+1; else cv.split(',').forEach(c=>{ c=c.trim(); if(c) cats[c]=(cats[c]||0)+1; }); }); var h='<select class="cat-filter"><option value="">全部 ('+currentFiltered.length+')</option>'; Object.keys(cats).sort((a,b)=>cats[b]-cats[a]).forEach(c=>{ var cnt=cats[c]>99?'99+':cats[c]; h+='<option value="'+c.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+c+' ('+cnt+')</option>'; }); h+='</select>'; document.getElementById('catBar').innerHTML=h; }
@@ -478,7 +486,7 @@ function stopSearch(){
   if (document.getElementById('sourceSelect').value === '__search_result__') renderSearchResult(false);
 }
 
-// ======================= 渲染网格 & 剧集面板 =======================
+// ======================= 渲染网格 & 剧集面板（修复分页显示） =======================
 function render(){
   var total=currentFiltered.length, pages=Math.ceil(total/PAGE_SIZE)||1; if(currentPage>pages) currentPage=pages;
   var start=(currentPage-1)*PAGE_SIZE, items=currentFiltered.slice(start,start+PAGE_SIZE);
@@ -532,13 +540,15 @@ function render(){
       removeSearchResultItem(sourceKey, vodName);
     });
   });
-  // 生成分页控件
+  // 生成分页控件（修复：即使只有一页也显示页码）
   var pg = '';
   if (isSearchResultView) {
-    // 搜索结果视图使用内存分页
     var totalMem = currentFiltered.length;
     var pagesMem = Math.ceil(totalMem / PAGE_SIZE) || 1;
-    if (pagesMem > 1) {
+    if (pagesMem === 1) {
+      // 只有一页时，显示一个不可点击的页码“1”
+      pg += '<button disabled style="opacity:0.6;">1</button>';
+    } else {
       pg += '<button class="pg-go" data-page="1"' + (currentPage <= 1 ? ' disabled' : '') + '>«</button>';
       pg += '<button class="pg-go" data-page="' + (currentPage - 1) + '"' + (currentPage <= 1 ? ' disabled' : '') + '>‹</button>';
       var startP = Math.max(1, currentPage - 2);
@@ -550,17 +560,22 @@ function render(){
       pg += '<button class="pg-go" data-page="' + pagesMem + '"' + (currentPage >= pagesMem ? ' disabled' : '') + '>»</button>';
     }
   } else if (currentSearchMode) {
-    // 实时搜索模式分页（保留）
     var totalMem = currentFiltered.length, pagesMem = Math.ceil(totalMem / PAGE_SIZE) || 1;
-    pg += '<button class="pg-go" data-page="1"' + (currentPage <= 1 ? ' disabled' : '') + '>«</button>';
-    pg += '<button class="pg-go" data-page="' + (currentPage - 1) + '"' + (currentPage <= 1 ? ' disabled' : '') + '>‹</button>';
-    var startP = Math.max(1, currentPage - 2), endP = Math.min(pagesMem, currentPage + 2);
-    for (var pi = startP; pi <= endP; pi++) pg += '<button class="pg-go' + (pi === currentPage ? ' active' : '') + '" data-page="' + pi + '">' + pi + '</button>';
-    pg += '<button class="pg-go" data-page="' + (currentPage + 1) + '"' + (currentPage >= pagesMem ? ' disabled' : '') + '>›</button>';
-    pg += '<button class="pg-go" data-page="' + pagesMem + '"' + (currentPage >= pagesMem ? ' disabled' : '') + '>»</button>';
+    if (pagesMem === 1) {
+      pg += '<button disabled style="opacity:0.6;">1</button>';
+    } else {
+      pg += '<button class="pg-go" data-page="1"' + (currentPage <= 1 ? ' disabled' : '') + '>«</button>';
+      pg += '<button class="pg-go" data-page="' + (currentPage - 1) + '"' + (currentPage <= 1 ? ' disabled' : '') + '>‹</button>';
+      var startP = Math.max(1, currentPage - 2), endP = Math.min(pagesMem, currentPage + 2);
+      for (var pi = startP; pi <= endP; pi++) pg += '<button class="pg-go' + (pi === currentPage ? ' active' : '') + '" data-page="' + pi + '">' + pi + '</button>';
+      pg += '<button class="pg-go" data-page="' + (currentPage + 1) + '"' + (currentPage >= pagesMem ? ' disabled' : '') + '>›</button>';
+      pg += '<button class="pg-go" data-page="' + pagesMem + '"' + (currentPage >= pagesMem ? ' disabled' : '') + '>»</button>';
+    }
   } else if (currentPrefix && sourceMeta[currentPrefix] && !currentPrefix.startsWith('__')) {
     var pc = sourceMeta[currentPrefix].page_count || 1;
-    if (pc > 1) {
+    if (pc === 1) {
+      pg += '<button disabled style="opacity:0.6;">1</button>';
+    } else {
       pg += '<button class="pg-page" data-page="1"' + (currentFilePage <= 1 ? ' disabled' : '') + '>«</button>';
       pg += '<button class="pg-page" data-page="' + (currentFilePage - 1) + '"' + (currentFilePage <= 1 ? ' disabled' : '') + '>‹</button>';
       var startP2 = Math.max(1, currentFilePage - 2), endP2 = Math.min(pc, currentFilePage + 2);
