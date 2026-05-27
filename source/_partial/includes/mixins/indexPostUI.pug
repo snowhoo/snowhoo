@@ -14,6 +14,9 @@ mixin indexPostUI()
           - const post_cover = article.cover
           - const no_cover = article.cover === false || !theme.cover.index_enable ? 'no-cover' : ''
           - const img_seed = article.date ? article.date.format('YYYYMMDD') : (article.path || article.title || index).replace(/[^a-zA-Z0-9]/g, '')
+          - const articleContent = article.content || ''
+          - const firstImgMatch = articleContent.match(/!\[.*?\]\((.*?)\)/)
+          - const firstArticleImg = firstImgMatch ? firstImgMatch[1] : ''
           .post_cover(class=leftOrRight)
             a(href=url_for(link) title=title)
               if post_cover && theme.cover.index_enable
@@ -21,6 +24,8 @@ mixin indexPostUI()
                   img.post-bg(src=url_for(post_cover) onerror=`this.onerror=null;this.src='${url_for(theme.error_img.post_page)}'` alt=title)
                 else
                   div.post-bg(style=`background: ${post_cover}`)
+              else if firstArticleImg
+                img.post-bg(src=url_for(firstArticleImg) onerror="this.onerror=null;this.src='/images/404.jpg'" alt=title)
               else
                 img.post-bg.no-cover-placeholder(src=`https://picsum.photos/seed/${img_seed}2/800/450` alt=title onerror="this.onerror=null;this.src='/images/404.jpg'")
           .recent-post-info(class=no_cover)
@@ -42,7 +47,7 @@ mixin indexPostUI()
                   else
                     - const data_type_updated = theme.post_meta.page.date_type === 'updated'
                     - const date_type = data_type_updated ? 'updated' : 'date'
-                    - const date_icon = data_type_updated ? 'fas fa-history' : 'far fa-calendar-alt'
+                    - const date_icon = data_type_updated ? 'fas fa-history' : 'far.fa-calendar-alt'
                     - const date_title = data_type_updated ? _p('post.updated') : _p('post.created')
                     i(class=date_icon)
                     span.article-meta-label= date_title
