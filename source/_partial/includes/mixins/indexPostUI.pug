@@ -11,12 +11,12 @@ mixin indexPostUI()
           - const link = article.link || article.path
           - const title = article.title || _p('no_title')
           - const leftOrRight = indexLayout === 3 ? (index % 2 === 0 ? 'left' : 'right') : (indexLayout === 2 ? 'right' : '')
-          - const post_cover = article.cover
-          - const no_cover = article.cover === false || !theme.cover.index_enable ? 'no-cover' : ''
           - const img_seed = article.date ? article.date.format('YYYYMMDD') : (article.path || article.title || index).replace(/[^a-zA-Z0-9]/g, '')
           - const articleContent = article.content || ''
           - const firstImgMatch = articleContent.match(/!\[.*?\]\((.*?)\)/)
           - const firstArticleImg = firstImgMatch ? firstImgMatch[1] : ''
+          - const post_cover = article.cover || firstArticleImg
+          - const no_cover = (!article.cover && !firstArticleImg) || !theme.cover.index_enable ? 'no-cover' : ''
           .post_cover(class=leftOrRight)
             a(href=url_for(link) title=title)
               if post_cover && theme.cover.index_enable
