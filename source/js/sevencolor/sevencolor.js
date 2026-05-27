@@ -305,9 +305,10 @@
     fetch(CONFIG_URL)
       .then(function(r) { return r.ok ? r.json() : null; })
       .then(function(data) {
-        if (data && Array.isArray(data)) {
+        if (data && Array.isArray(data) && data.length > 0) {
           config = data;
           renderButtons();
+          document.getElementById('seven-color-card').style.display = '';
         }
       })
       .catch(function(e) {
