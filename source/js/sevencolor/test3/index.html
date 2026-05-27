@@ -250,7 +250,7 @@ function doSearch() {
     for(var i=1;i<=pc;i++) allFiles.push({ fname: src.prefix+'-'+String(i).padStart(2,'0')+'.js', name: src.name });
   });
   var totalFiles = allFiles.length, completedFiles = 0, loadedFiles = 0;
-  var maxConcurrent = 5, running = 0, idx = 0, active = true;
+  var maxConcurrent = 10, running = 0, idx = 0, active = true;
   setStatus('🔍 搜索中: 0/'+totalFiles+' — "'+q+'"');
   function processFile(file, version){
     if(!active) return;
