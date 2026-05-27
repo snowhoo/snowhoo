@@ -137,7 +137,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 #poetry-widget {
   width: 100%;
   margin: 0 auto;
-  font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans CJK SC', 'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif;
+  //font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans CJK SC', 'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif;
   background: transparent;
   box-shadow: none;
   color: var(--text-color, #2c2c2c);
@@ -194,7 +194,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 #poetry-widget .expand-control:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
-  color: #fff;
+  color: #dc3545;
 }
 
 #poetry-widget .verse {
@@ -211,7 +211,7 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
 #poetry-widget .title { font-size: 0.8rem; color: #8a9bb0; }
 
 #poetry-widget .arrow {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   transition: transform 0.2s ease;
   display: inline-block;
 }
@@ -288,14 +288,14 @@ html[data-theme=dark] #news-shortcut-card .news-btn-6 { background: #c0392b !imp
   line-height: 1;
   //background: #dc3545;
   //border-radius: 20px;
-  padding: 5px 10px;
+  //padding: 5px 10px;
   height: min-content;
 }
 
 #history-today .expand-control#htToggle:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
-  color: #fff;
+  color: #dc3545;
 }
 
 #history-today .history-header h3 {
