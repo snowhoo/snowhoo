@@ -1,4 +1,4 @@
-#history-today
+#history-today(style="display:none")
   .history-card
     .history-header
       .header-left
@@ -84,8 +84,11 @@
       document.getElementById('htQueryDate').innerText = t.display;
       document.getElementById('htToggle').addEventListener('click', toggleDetail);
 
-      setText('...');
+      setText('');
       fetchFromJSON()
-        .then(function(evs){ currentEvents = evs; setText(''); })
-        .catch(function(){ setText(''); });
+        .then(function(evs){
+          currentEvents = evs;
+          document.getElementById('history-today').style.display = '';
+        })
+        .catch(function(){});
     })();
