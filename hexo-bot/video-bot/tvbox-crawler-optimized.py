@@ -809,7 +809,8 @@ def main():
     max_pages = crawler_cfg.get('max_pages', 40)
     videos_per_page = crawler_cfg.get('videos_per_page', 12)
     site_stats = []
-    data_dir = os.path.join(PLAYABLE_DIR, 'data')
+    # 直接生成到 Hexo source/video/data，不再用中间目录
+    data_dir = os.path.normpath(os.path.join(BASE_DIR, '..', '..', 'source', 'video', 'data'))
     if os.path.exists(data_dir):
         import shutil
         for item in os.listdir(data_dir):

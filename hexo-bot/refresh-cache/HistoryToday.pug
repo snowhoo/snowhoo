@@ -8,7 +8,7 @@
         span.history-date#htQueryDate
       .expand-control#htToggle
         span.arrow#htArrow ▼
-        span#htExpandText 详情
+        span#htExpandText
     #htDetailPanel.detail-panel
       #htEventsContainer.events-list
         .status-message 
@@ -71,11 +71,11 @@
         if(isOpen) {
           panel.style.display = 'none';
           arrow.innerHTML = '▼';
-          text.innerText = '详情';
+          text.innerText = '';
         } else {
           panel.style.display = 'block';
           arrow.innerHTML = '▲';
-          text.innerText = '详情';
+          text.innerText = '';
           if(currentEvents) render(currentEvents);
         }
       }
@@ -86,6 +86,6 @@
 
       setText('...');
       fetchFromJSON()
-        .then(function(evs){ currentEvents = evs; setText('详情'); })
-        .catch(function(){ setText('……'); });
+        .then(function(evs){ currentEvents = evs; setText(''); })
+        .catch(function(){ setText(''); });
     })();
