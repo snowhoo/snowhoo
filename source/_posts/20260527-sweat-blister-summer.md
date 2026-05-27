@@ -9,7 +9,7 @@ tags:
   - 夏季
   - 皮肤
   - 养生
-cover: https://pics6.baidu.com/feed/472309f790529822fd8b4ef66727c6da0b46d44e.jpeg@f_auto?token=7d6e4ff729bc7f8261ff5ba321e76701
+cover: /images/repost/sweat-blister-summer_01.jpg
 toc: true
 ---
 
@@ -32,7 +32,9 @@ toc: true
 
 疱疹性瘭疽、手癣或足癣、接触性皮炎、虫咬皮炎也会长在手上或脚上，容易被误诊为汗疱疹，需要加以辨别。
 
-![正确识别汗疱疹](https://pics6.baidu.com/feed/472309f790529822fd8b4ef66727c6da0b46d44e.jpeg@f_auto?token=7d6e4ff729bc7f8261ff5ba321e76701)
+![汗疱疹易混淆疾病](/images/repost/sweat-blister-summer_02.jpg)
+
+![正确识别汗疱疹](/images/repost/sweat-blister-summer_01.jpg)
 
 ## 汗疱疹是如何长出来的？
 
@@ -48,13 +50,15 @@ toc: true
 
 **出汗太多** — 夏季人体出汗多，皮脂分泌更旺盛，尤其是油性皮肤的人，总感觉自己黏糊糊的，极易导致汗液潴留于皮内而引起汗疱疹。手部多汗的人，可能比普通人更易患汗疱疹。
 
+![出汗太多诱发汗疱疹](/images/repost/sweat-blister-summer_04.jpg)
+
 **心理因素** — 长期精神紧张、焦虑抑郁，以及过度疲劳、睡眠不足、应激等也会诱发汗疱疹。
 
 **个人体质** — 皮肤敏感者对外界环境的变化更加敏感，尤其对风吹、日晒、温度湿度变化等不能耐受，轻微刺激即可诱发。
 
 **过度清洁** — 有人认为汗疱疹是清洁度不够导致的，因此会频繁洗手，其实，**过度洗手反而会加重症状**，洗手液、肥皂等都会带来刺激。
 
-![汗疱疹病因](https://pics7.baidu.com/feed/b21bb051f819861889073ba8e50093628ad4e65e.jpeg@f_auto?token=05b0c2a396e669ed8b5e739dbc0ac9f1)
+![汗疱疹病因](/images/repost/sweat-blister-summer_03.jpg)
 
 ## 长了汗疱疹如何处理？
 
