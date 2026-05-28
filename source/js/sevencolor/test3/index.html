@@ -56,7 +56,7 @@ layout: false
 *{margin:0;padding:0;box-sizing:border-box}
 #player-wrap * { box-sizing:border-box; }
 #player-wrap { font-family:-apple-system,'Microsoft YaHei','PingFang SC',sans-serif; color:var(--text-primary); max-width:1200px; margin:0 auto; line-height:1.5; font-size:14px; transition:color .3s; position:relative; }
-/* 缓存进度条（放在工具栏下方） */
+/* 缓存进度条（低调灰色） */
 #preload-progress-bar {
   width:100%;
   height:2px;
@@ -67,11 +67,10 @@ layout: false
 #preload-progress-fill {
   width:0%;
   height:100%;
-  background:var(--accent);
+  background:#aaa;  /* 低存在感灰色 */
   transition:width 0.2s ease;
   border-radius:1px;
 }
-/* 其他样式保持不变，只修改按钮大小和位置 */
 .toolbar{ display:flex; gap:6px; margin:6px 0 6px; flex-wrap:nowrap; align-items:center; }
 .toolbar select,.toolbar input,.toolbar button{ padding:7px 10px; border:1px solid var(--border); border-radius:6px; background:transparent; color:var(--text-primary); font-size:13px; transition:border-color .2s; }
 .toolbar select{ min-width:0; flex:3; cursor:pointer; }
@@ -86,6 +85,7 @@ layout: false
 .status-bar .next-ep-btn:hover{ background:var(--accent-hover); }
 .status-bar .clear-search-btn{ flex-shrink:0; padding:2px 10px; background:#555; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:11px; margin-left:4px; }
 .status-bar .clear-search-btn:hover{ background:#777; }
+.status-bar .page-info{ flex-shrink:0; font-size:11px; color:var(--text-muted); margin-left:8px; }
 .player-box{ background:var(--bg-player); border-radius:10px; overflow:hidden; margin:0px; position:relative; height:0; transition:height .3s; }
 .player-box.playing{ height:auto; }
 #player{ width:100%; aspect-ratio:16/9; background:#000; display:block; }
@@ -151,8 +151,9 @@ layout: false
 <div id="status" class="status-bar">
   <div class="cat-bar" id="catBar"></div>
   <span id="statusText">[STOP] 选择一个数据源</span>
-  <div style="display:flex; gap:6px;">
+  <div style="display:flex; gap:6px; align-items:center;">
     <button id="clearSearchResultBtn" class="clear-search-btn" style="display:none;">清空</button>
+    <span id="pageInfo" class="page-info"></span>
     <button id="bookmarkBtn" class="next-ep-btn" style="background:#4caf50;" title="添加影签">签</button>
     <button id="nextEpBtn" class="next-ep-btn">下集</button>
   </div>
@@ -262,6 +263,7 @@ function renderSearchResult(showLoadingMsg) {
     document.getElementById('statusText').textContent = statusText;
     if (clearBtn) clearBtn.style.display = 'none';
     buildSimpleCatBar('');
+    document.getElementById('pageInfo').textContent = '';
     return;
   }
   if (!currentSearchResults.length) {
@@ -270,15 +272,12 @@ function renderSearchResult(showLoadingMsg) {
     document.getElementById('statusText').textContent = '关键词: ' + currentSearchKeyword + ' - 结果: 0';
     if (clearBtn) clearBtn.style.display = 'none';
     buildSimpleCatBar('');
+    document.getElementById('pageInfo').textContent = '';
     return;
   }
   currentFiltered = currentSearchResults.slice();
   currentPage = 1;
-  render();
-  var statusText = '关键词: ' + currentSearchKeyword + ' - 结果: ' + currentSearchResultCount;
-  document.getElementById('statusText').textContent = statusText;
-  if (clearBtn) clearBtn.style.display = 'inline-block';
-  buildSimpleCatBar('');
+  render();  // render 中会更新页码和状态栏
   var sel = document.getElementById('sourceSelect');
   if (sel.value !== '__search_result__') sel.value = '__search_result__';
 }
@@ -308,13 +307,14 @@ function addSearchResults(newResults) {
 }
 // 清空所有搜索结果
 function clearAllSearchResults() {
-  if (currentPrefix !== '__search_result__') return;  // 只在搜索结果视图生效
+  if (currentPrefix !== '__search_result__') return;
   currentSearchResults = [];
   currentSearchResultCount = 0;
   currentSearchKeyword = '';
   renderSearchResult(false);
   document.getElementById('statusText').textContent = '关键词: - 结果: 0';
   document.getElementById('clearSearchResultBtn').style.display = 'none';
+  document.getElementById('pageInfo').textContent = '';
 }
 // 从当前搜索结果中删除单条记录
 function removeSearchResultItem(sourceKey, vodName) {
@@ -329,6 +329,7 @@ function removeSearchResultItem(sourceKey, vodName) {
   renderSearchResult(false);
   if (currentSearchResultCount === 0) {
     document.getElementById('clearSearchResultBtn').style.display = 'none';
+    document.getElementById('pageInfo').textContent = '';
   }
 }
 // ======================= Helper =======================
@@ -378,31 +379,34 @@ function loadIndex() {
 }
 function showBanner(){ document.getElementById('content').innerHTML=''; document.getElementById('pagination').innerHTML=''; }
 
-// ======================= 渲染历史/收藏/影签（隐藏清空按钮） =======================
+// ======================= 渲染历史/收藏/影签（隐藏清空按钮和页码） =======================
 function renderHistory(){ 
   if(isSearching) stopSearch();
   currentSearchMode=false; currentCategory=''; currentPrefix='__history__'; document.getElementById('searchInput').value=''; 
   var clearBtn = document.getElementById('clearSearchResultBtn');
   if (clearBtn) clearBtn.style.display = 'none';
+  document.getElementById('pageInfo').textContent = '';
   var list=Object.values(getHistory()).sort((a,b)=>b.updatedAt-a.updatedAt); if(!list.length){ setEmpty('暂无观看记录','开始观看后会自动记录'); document.getElementById('pagination').innerHTML=''; buildSimpleCatBar('最近观看 — 0 条记录'); return; } 
   currentFiltered=list.map(h=>{ var episodes=[]; var playableCount=0; if(h.episodes&&h.episodes.length){ episodes=h.episodes; playableCount=h.playable_count||episodes.filter(e=>e.playable).length; }else{ var full=findVideoInCache(h.sourceKey,h.videoName); if(full&&full.episodes){ episodes=full.episodes; playableCount=full.playable_count||episodes.filter(e=>e.playable).length; }else if(h.epUrl){ episodes=[{title:h.epTitle,url:h.epUrl,playable:true}]; playableCount=1; } } return { sourceKey:h.sourceKey, sourceName:h.sourceName, vod_name:h.videoName, vod_pic:h.vodPic, ep_count:h.ep_count||episodes.length, playable_count:playableCount, episodes:episodes, isHistory:true, historyEpIndex:h.epIndex, historyProgress:h.progress }; }); currentPage=1; render(); buildSimpleCatBar('最近观看 — '+list.length+' 条记录'); }
 function renderFavorites(){ 
   if(isSearching) stopSearch();
   currentSearchMode=false; currentCategory=''; currentPrefix='__favorites__'; var clearBtn = document.getElementById('clearSearchResultBtn');
   if (clearBtn) clearBtn.style.display = 'none';
+  document.getElementById('pageInfo').textContent = '';
   var list=getFavorites(); if(!list.length){ setEmpty('暂无收藏','点击卡片收藏按钮添加'); document.getElementById('pagination').innerHTML=''; buildSimpleCatBar('我的收藏 — 0 部影片'); return; } 
   currentFiltered=list.map(f=>({ sourceKey:f.sourceKey, sourceName:f.sourceName, vod_name:f.videoName, vod_pic:f.vodPic, ep_count:f.ep_count, playable_count:f.playable_count, episodes:f.episodes, vod_class:f.vod_class, isFavorite:true })); currentPage=1; render(); buildSimpleCatBar('我的收藏 — '+list.length+' 部影片'); }
 function renderBookmarks(){ 
   if(isSearching) stopSearch();
   currentSearchMode=false; currentCategory=''; currentPrefix='__bookmarks__'; var clearBtn = document.getElementById('clearSearchResultBtn');
   if (clearBtn) clearBtn.style.display = 'none';
+  document.getElementById('pageInfo').textContent = '';
   var list=getBookmarks(); if(!list.length){ setEmpty('暂无影签','播放过程中点击签字按钮添加'); document.getElementById('pagination').innerHTML=''; buildSimpleCatBar('我的影签 — 0 条影签'); return; } 
   currentFiltered=list.map(b=>{ var episodes=[]; var playableCount=0; if(b.episodes&&b.episodes.length){ episodes=b.episodes; playableCount=b.playable_count||episodes.filter(e=>e.playable).length; }else{ var full=findVideoInCache(b.sourceKey,b.videoName); if(full&&full.episodes){ episodes=full.episodes; playableCount=full.playable_count||episodes.filter(e=>e.playable).length; }else if(b.epUrl){ episodes=[{title:b.epTitle,url:b.epUrl,playable:true}]; playableCount=1; } } return { sourceKey:b.sourceKey, sourceName:b.sourceName, vod_name:b.videoName, vod_pic:b.vodPic, ep_count:b.ep_count||episodes.length, playable_count:playableCount, episodes:episodes, isBookmark:true, bookmarkNote:b.note, bookmarkProgress:b.progress, bookmarkEpIndex:b.epIndex }; }); currentPage=1; render(); buildSimpleCatBar('我的影签 — '+list.length+' 条影签'); }
 
 // ======================= 数据源切换 =======================
 function switchSource(){ if(isSearching) stopSearch(); var prefix=document.getElementById('sourceSelect').value; if(!prefix){ showBanner(); setStatus('⏹ 选择数据源'); return; } if(prefix==='__history__'){ renderHistory(); return; } if(prefix==='__favorites__'){ renderFavorites(); return; } if(prefix==='__bookmarks__'){ renderBookmarks(); return; } if(prefix==='__search_result__'){ renderSearchResult(false); return; } currentPrefix=prefix; currentFilePage=1; currentPage=1; currentSearchMode=false; document.getElementById('searchInput').value=''; if(currentPlayingVideo) floatReturnPrefix=currentPrefix, showFloatPlayer(); loadPageFile(prefix,1); }
 function loadPageFile(prefix,pageNum){ var baseFile=(sourceMeta[prefix]&&sourceMeta[prefix].fileBase)?sourceMeta[prefix].fileBase:prefix; var fname=baseFile+'-'+String(pageNum).padStart(2,'0')+'.js'; if(loadedSources[fname]){ useSourceData(loadedSources[fname],fname,pageNum); return; } document.getElementById('content').innerHTML='<div class="empty-state"><div class="icon">⛏</div><div class="desc">加载中...</div></div>'; loadData(fname,function(data){ if(data) loadedSources[fname]=data; useSourceData(data,fname,pageNum); }); }
-function useSourceData(data,file,pageNum){ currentData=data; currentFilePage=pageNum||1; currentPage=1; if(!currentData||!currentData.videos){ setStatus('❌ 数据格式错误'); return; } currentCategory=''; buildCatBar(); setStatus('📡 '+currentData.name+' — 第'+currentFilePage+'页'); currentFiltered=(currentData.videos||[]).map(v=>{ v.sourceKey=file; v.sourceName=currentData.name; return v; }); render(); var clearBtn = document.getElementById('clearSearchResultBtn'); if (clearBtn) clearBtn.style.display = 'none'; }
+function useSourceData(data,file,pageNum){ currentData=data; currentFilePage=pageNum||1; currentPage=1; if(!currentData||!currentData.videos){ setStatus('❌ 数据格式错误'); return; } currentCategory=''; buildCatBar(); setStatus('📡 '+currentData.name+' — 第'+currentFilePage+'页'); currentFiltered=(currentData.videos||[]).map(v=>{ v.sourceKey=file; v.sourceName=currentData.name; return v; }); render(); var clearBtn = document.getElementById('clearSearchResultBtn'); if (clearBtn) clearBtn.style.display = 'none'; document.getElementById('pageInfo').textContent = ''; }
 function buildCatBar(){ var meta=sourceMeta[currentPrefix]; var cats={}; if(meta&&meta.categories&&Object.keys(meta.categories).length){ cats=meta.categories; }else if(currentData&&currentData.videos){ (currentData.videos||[]).forEach(v=>{ var cv=(v.vod_class||'').trim(); if(!cv) cats['未分类']=(cats['未分类']||0)+1; else cv.split(',').forEach(c=>{ c=c.trim(); if(c) cats[c]=(cats[c]||0)+1; }); }); }else{ return; } var totalVid=meta?meta.total:0; var playableVid=meta?meta.playable_videos:0; var h='<select class="cat-filter"><option value="">全部 ('+(totalVid>99?'99+':totalVid)+'/'+(playableVid>99?'99+':playableVid)+')</option>'; Object.keys(cats).sort((a,b)=>cats[b]-cats[a]).forEach(c=>{ var cnt=cats[c]>99?'99+':cats[c]; h+='<option value="'+c.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+c+' ('+cnt+')</option>'; }); h+='</select>'; document.getElementById('catBar').innerHTML=h; }
 function buildSimpleCatBar(text){ document.getElementById('catBar').innerHTML='<span style="font-size:12px;color:var(--text-muted)">'+text+'</span>'; }
 function buildCatBarFromFiltered(){ var cats={}; currentFiltered.forEach(v=>{ var cv=(v.vod_class||'').trim(); if(!cv) cats['未分类']=(cats['未分类']||0)+1; else cv.split(',').forEach(c=>{ c=c.trim(); if(c) cats[c]=(cats[c]||0)+1; }); }); var h='<select class="cat-filter"><option value="">全部 ('+currentFiltered.length+')</option>'; Object.keys(cats).sort((a,b)=>cats[b]-cats[a]).forEach(c=>{ var cnt=cats[c]>99?'99+':cats[c]; h+='<option value="'+c.replace(/&/g,'&amp;').replace(/"/g,'&quot;')+'">'+c+' ('+cnt+')</option>'; }); h+='</select>'; document.getElementById('catBar').innerHTML=h; }
@@ -486,7 +490,7 @@ function stopSearch(){
   if (document.getElementById('sourceSelect').value === '__search_result__') renderSearchResult(false);
 }
 
-// ======================= 渲染网格 & 剧集面板（修复分页显示） =======================
+// ======================= 渲染网格 & 剧集面板（搜索结果视图会更新页码信息） =======================
 function render(){
   var total=currentFiltered.length, pages=Math.ceil(total/PAGE_SIZE)||1; if(currentPage>pages) currentPage=pages;
   var start=(currentPage-1)*PAGE_SIZE, items=currentFiltered.slice(start,start+PAGE_SIZE);
@@ -540,13 +544,12 @@ function render(){
       removeSearchResultItem(sourceKey, vodName);
     });
   });
-  // 生成分页控件（修复：即使只有一页也显示页码）
+  // 生成分页控件
   var pg = '';
   if (isSearchResultView) {
     var totalMem = currentFiltered.length;
     var pagesMem = Math.ceil(totalMem / PAGE_SIZE) || 1;
     if (pagesMem === 1) {
-      // 只有一页时，显示一个不可点击的页码“1”
       pg += '<button disabled style="opacity:0.6;">1</button>';
     } else {
       pg += '<button class="pg-go" data-page="1"' + (currentPage <= 1 ? ' disabled' : '') + '>«</button>';
@@ -559,6 +562,16 @@ function render(){
       pg += '<button class="pg-go" data-page="' + (currentPage + 1) + '"' + (currentPage >= pagesMem ? ' disabled' : '') + '>›</button>';
       pg += '<button class="pg-go" data-page="' + pagesMem + '"' + (currentPage >= pagesMem ? ' disabled' : '') + '>»</button>';
     }
+    // 更新状态栏页码信息
+    var statusSpan = document.getElementById('statusText');
+    var baseText = '关键词: ' + (currentSearchKeyword || '-') + ' - 结果: ' + currentSearchResultCount;
+    var pageInfoText = '第 ' + currentPage + ' 页 / 共 ' + pagesMem + ' 页';
+    statusSpan.textContent = baseText;
+    document.getElementById('pageInfo').textContent = pageInfoText;
+    // 确保清空按钮显示
+    var clearBtn = document.getElementById('clearSearchResultBtn');
+    if (clearBtn && currentSearchResultCount > 0) clearBtn.style.display = 'inline-block';
+    else if (clearBtn) clearBtn.style.display = 'none';
   } else if (currentSearchMode) {
     var totalMem = currentFiltered.length, pagesMem = Math.ceil(totalMem / PAGE_SIZE) || 1;
     if (pagesMem === 1) {
@@ -571,6 +584,8 @@ function render(){
       pg += '<button class="pg-go" data-page="' + (currentPage + 1) + '"' + (currentPage >= pagesMem ? ' disabled' : '') + '>›</button>';
       pg += '<button class="pg-go" data-page="' + pagesMem + '"' + (currentPage >= pagesMem ? ' disabled' : '') + '>»</button>';
     }
+    // 实时搜索模式不显示额外页码信息（已在statusText中）
+    document.getElementById('pageInfo').textContent = '';
   } else if (currentPrefix && sourceMeta[currentPrefix] && !currentPrefix.startsWith('__')) {
     var pc = sourceMeta[currentPrefix].page_count || 1;
     if (pc === 1) {
@@ -583,6 +598,8 @@ function render(){
       pg += '<button class="pg-page" data-page="' + (currentFilePage + 1) + '"' + (currentFilePage >= pc ? ' disabled' : '') + '>›</button>';
       pg += '<button class="pg-page" data-page="' + pc + '"' + (currentFilePage >= pc ? ' disabled' : '') + '>»</button>';
     }
+    // 数据源视图，页码信息已在 statusText 中显示（如“第3页”），无需重复
+    document.getElementById('pageInfo').textContent = '';
   }
   document.getElementById('pagination').innerHTML = pg;
 }
