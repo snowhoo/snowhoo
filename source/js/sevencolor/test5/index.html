@@ -51,7 +51,7 @@ layout: false
         .board-wrapper {
             position: relative;
             background: transparent;
-            padding: 12px;
+            //padding: 12px;
             border-radius: 32px;
             flex-shrink: 0;
         }
@@ -63,14 +63,14 @@ layout: false
             cursor: pointer;
             border-radius: 10px;
             /* 阴影保留但使用深色半透明，暗模式下不会产生白色边框 */
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            //box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
             outline: none;
             border: none;
         }
 
         /* 右侧侧边栏：完全透明无边框背景，避免任何白色条纹 */
         .side-panel {
-            background: transparent;
+            background: rgba(128, 128, 128, 0.2);
             border-radius: 32px;
             padding: 12px 8px;
             display: flex;
@@ -227,7 +227,7 @@ layout: false
         /* 棋盘样式选择 */
         .theme-selector select {
             width: 100%;
-            padding: 8px 12px;
+            padding: 12px 12px;
             font-size: 0.75rem;
             border-radius: 60px;
             border: 1px solid rgba(128, 128, 128, 0.3);
