@@ -12,27 +12,27 @@ layout: false
         /* ========== 完全消除 CSS 泄露 & 继承 Hexo 明暗模式 ========== */
         /* 1. 重置所有可能产生外边距/边框泄露的样式 */
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
+           // margin: 0;
+           // padding: 0;
+           // box-sizing: border-box;
+            //-webkit-tap-highlight-color: transparent;
         }
 
         /* 2. body 完全透明，无背景/渐变/内边距影响，完全交由 Hexo 主题控制 */
         body {
-            background: transparent !important;
-            font-family: inherit;   /* 继承 Hexo 字体 */
-            margin: 0 !important;
-            padding: 20px 20px 20px 20px;  /* 仅保留游戏与外部的舒适间距，但不会造成额外空行 */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: auto;
+            //background: transparent !important;
+            //font-family: inherit;   /* 继承 Hexo 字体 */
+           // margin: 0 !important;
+            //padding: 20px 20px 20px 20px;  /* 仅保留游戏与外部的舒适间距，但不会造成额外空行 */
+           // display: flex;
+           // flex-direction: column;
+            //align-items: center;
+            //min-height: auto;
         }
 
         /* 消除第一个子元素可能带来的顶部额外空白 */
-        body > *:first-child {
-            margin-top: 0;
+        //body > *:first-child {
+            //margin-top: 0;
         }
 
         /* 主容器：无任何背景/边框泄露 */
