@@ -9,9 +9,8 @@ layout: false
     <title>明暗随行 · 五子棋</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* ========== 彻底清除背景泄露，完全继承 Hexo 明暗模式 ========== */
-        /* 移除所有强制背景、独立主题变量、body渐变，所有卡片背景透明/继承 */
-
+        /* ========== 完全消除 CSS 泄露 & 继承 Hexo 明暗模式 ========== */
+        /* 1. 重置所有可能产生外边距/边框泄露的样式 */
         * {
             margin: 0;
             padding: 0;
@@ -19,31 +18,24 @@ layout: false
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* 游戏容器不污染外层背景，body 完全继承 Hexo 主题的底色与文字 */
+        /* 2. body 完全透明，无背景/渐变/内边距影响，完全交由 Hexo 主题控制 */
         body {
-            /* 移除任何渐变、背景色、强制字体，完全交给hexo主题控制 */
             background: transparent !important;
-            font-family: inherit;   /* 继承hexo字体 */
-            padding: 20px;
+            font-family: inherit;   /* 继承 Hexo 字体 */
+            margin: 0 !important;
+            padding: 20px 20px 20px 20px;  /* 仅保留游戏与外部的舒适间距，但不会造成额外空行 */
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 0;
             min-height: auto;
         }
 
-        /* 标题样式仅作用于游戏区域，避免全局h1干扰 */
-        .game-header {
-            font-family: 'Noto Sans SC', sans-serif;
-            font-size: 1.6rem;
-            font-weight: 500;
-            color: var(--hexo-text, #3a2a1e);
-            margin-bottom: 20px;
-            letter-spacing: 2px;
-            text-align: center;
-            opacity: 0.85;
+        /* 消除第一个子元素可能带来的顶部额外空白 */
+        body > *:first-child {
+            margin-top: 0;
         }
 
+        /* 主容器：无任何背景/边框泄露 */
         .game-container {
             display: flex;
             flex-wrap: wrap;
@@ -55,7 +47,7 @@ layout: false
             margin: 0 auto;
         }
 
-        /* 棋盘外框 - 完全透明无背景，无渐变阴影，只留内边距布局 */
+        /* 棋盘外框：完全透明，无阴影无边框，避免任何白色轮廓 */
         .board-wrapper {
             position: relative;
             background: transparent;
@@ -70,10 +62,13 @@ layout: false
             height: auto;
             cursor: pointer;
             border-radius: 20px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+            /* 阴影保留但使用深色半透明，暗模式下不会产生白色边框 */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            outline: none;
+            border: none;
         }
 
-        /* 右侧面板 - 无背景、无边框，完全透明，继承父级文字颜色 */
+        /* 右侧侧边栏：完全透明无边框背景，避免任何白色条纹 */
         .side-panel {
             background: transparent;
             border-radius: 32px;
@@ -85,19 +80,19 @@ layout: false
             border: none;
         }
 
-        /* 所有控件组透明化，仅保留内边距与圆润感，文字继承hexo主题 */
-        .ctrl-group {
+        /* 所有控件组透明化，没有硬性背景色，边框使用极低透明度 */
+        .ctrl-group,
+        .level-selector-compact,
+        .players-dual,
+        .buttons-group,
+        .theme-selector,
+        .status {
             background: transparent;
-            border-radius: 48px;
-            padding: 6px 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
             border: none;
             box-shadow: none;
         }
 
+        /* 难度下拉框 */
         .level-selector-compact {
             display: flex;
             align-items: center;
@@ -112,24 +107,17 @@ layout: false
             padding: 8px 12px;
             font-size: 0.8rem;
             border-radius: 48px;
-            border: 1px solid rgba(128, 128, 128, 0.35);
-            background: var(--hexo-select-bg, rgba(255, 255, 255, 0.6));
+            border: 1px solid rgba(128, 128, 128, 0.3);
+            background: rgba(255, 255, 245, 0.55);
+            backdrop-filter: blur(10px);
             color: inherit;
             font-weight: 500;
             font-family: inherit;
             cursor: pointer;
-            backdrop-filter: blur(4px);
             transition: 0.2s;
         }
-        /* 深色模式下自动适配 */
-        @media (prefers-color-scheme: dark) {
-            .level-selector-compact select {
-                background: rgba(30, 30, 40, 0.8);
-                border-color: rgba(180, 180, 200, 0.4);
-                color: #f0f0f0;
-            }
-        }
 
+        /* 星级样式 */
         .level-stars {
             display: flex;
             gap: 3px;
@@ -146,12 +134,10 @@ layout: false
             filter: drop-shadow(0 0 2px #ffb347);
         }
 
-        /* 玩家双栏透明化，无背景 */
+        /* 玩家双栏 ———— 无白色边框，深色模式下自动适应 */
         .players-dual {
             display: flex;
             gap: 10px;
-            background: transparent;
-            border-radius: 56px;
         }
         .player {
             flex: 1;
@@ -161,17 +147,16 @@ layout: false
             gap: 8px;
             padding: 6px 12px;
             border-radius: 56px;
-            background: rgba(128, 128, 128, 0.08);
+            background: rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(6px);
             transition: all 0.2s;
             color: inherit;
-            backdrop-filter: blur(2px);
             border: 1px solid rgba(128, 128, 128, 0.2);
         }
         .player.active {
             background: rgba(194, 74, 44, 0.2);
             border: 1px solid #C24A2C;
             box-shadow: 0 2px 8px rgba(194, 74, 44, 0.2);
-            backdrop-filter: blur(6px);
         }
         .player-icon {
             width: 28px;
@@ -202,12 +187,10 @@ layout: false
         .player-tag.human { background: #C24A2C; color: white; }
         .player-tag.ai { background: #2c6e49; color: white; }
 
-        /* 按钮组透明背景 */
+        /* 按钮组 ———— 无白色高亮边框 */
         .buttons-group {
             display: flex;
             gap: 10px;
-            background: transparent;
-            border-radius: 60px;
         }
         .btn {
             flex: 1;
@@ -224,11 +207,10 @@ layout: false
             background: rgba(30, 30, 40, 0.7);
             backdrop-filter: blur(8px);
             color: white;
-            border: 1px solid rgba(255,255,200,0.2);
+            border: none;
         }
         .btn-primary {
             background: linear-gradient(125deg, #C24A2C, #a33d22);
-            border: none;
             color: white;
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
@@ -237,49 +219,35 @@ layout: false
             background: rgba(70, 70, 85, 0.7);
             backdrop-filter: blur(8px);
             color: #f2f2f2;
-            border: 1px solid rgba(200,200,220,0.3);
+            border: none;
         }
         .btn-secondary:hover { background: rgba(90, 90, 110, 0.8); transform: translateY(-1px);}
         .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        /* 棋盘样式选择透明化 */
-        .theme-selector {
-            background: transparent;
-            border-radius: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        /* 棋盘样式选择 */
         .theme-selector select {
             width: 100%;
             padding: 8px 12px;
             font-size: 0.75rem;
             border-radius: 60px;
-            border: 1px solid rgba(128, 128, 128, 0.35);
-            background: rgba(255, 255, 245, 0.6);
-            backdrop-filter: blur(4px);
+            border: 1px solid rgba(128, 128, 128, 0.3);
+            background: rgba(255, 255, 245, 0.55);
+            backdrop-filter: blur(10px);
             color: inherit;
             font-weight: 500;
             font-family: inherit;
             cursor: pointer;
             text-align: center;
         }
-        @media (prefers-color-scheme: dark) {
-            .theme-selector select {
-                background: rgba(30, 30, 45, 0.8);
-                border-color: rgba(180, 180, 210, 0.4);
-                color: #eef;
-            }
-        }
 
-        /* 状态栏透明继承 */
+        /* 状态栏 ———— 无白色边框，深色模式柔和不刺眼 */
         .status {
-            background: rgba(0, 0, 0, 0.08);
+            background: rgba(0, 0, 0, 0.05);
             border-radius: 60px;
             padding: 8px 14px;
             text-align: center;
+            backdrop-filter: blur(8px);
             border: 1px solid rgba(128, 128, 128, 0.2);
-            backdrop-filter: blur(4px);
         }
         .status-text {
             font-size: 0.8rem;
@@ -295,7 +263,7 @@ layout: false
             0%,20%{content:'.';}40%{content:'..';}60%,100%{content:'...';}
         }
 
-        /* 弹窗依然优雅，不泄露全局背景但保持易读 */
+        /* 弹窗风格 (保持优雅但无泄露) */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -308,13 +276,13 @@ layout: false
         }
         .modal-overlay.show { display: flex; }
         .modal {
-            background: var(--hexo-modal-bg, rgba(30, 28, 32, 0.92));
+            background: rgba(28, 26, 30, 0.94);
             border-radius: 56px;
             padding: 28px 24px;
             text-align: center;
             max-width: 320px;
             width: 85%;
-            border: 1px solid rgba(255,215,160,0.5);
+            border: 1px solid rgba(230, 180, 120, 0.6);
             color: #f2ede4;
             backdrop-filter: blur(16px);
             box-shadow: 0 20px 35px rgba(0,0,0,0.4);
@@ -337,7 +305,42 @@ layout: false
         }
         .modal-btn:hover { background: #a93c21; transform: scale(0.97); }
 
-        /* 响应式布局，透明背景保留布局 */
+        /* ========== 深色模式专属修复：消除所有“白色边框” ========== */
+        @media (prefers-color-scheme: dark) {
+            /* 所有下拉框、按钮组背景改为深色半透明，边框使用暗色系，绝无纯白边框 */
+            .level-selector-compact select,
+            .theme-selector select {
+                background: rgba(20, 22, 32, 0.85);
+                border-color: rgba(160, 160, 180, 0.3);
+                color: #eef2fa;
+            }
+            .player {
+                background: rgba(20, 20, 30, 0.55);
+                border-color: rgba(180, 180, 210, 0.2);
+            }
+            .player.active {
+                background: rgba(194, 74, 44, 0.3);
+                border-color: #E06A4A;
+            }
+            .status {
+                background: rgba(0, 0, 0, 0.4);
+                border-color: rgba(200, 200, 220, 0.2);
+            }
+            .btn-secondary {
+                background: rgba(40, 44, 55, 0.8);
+                color: #eef2fc;
+            }
+            canvas {
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+            }
+            /* 彻底消除可能出现白色边框的隐患 */
+            .board-wrapper, .side-panel, .ctrl-group, .buttons-group {
+                border: none;
+                outline: none;
+            }
+        }
+
+        /* 响应式布局 (无泄露) */
         @media (min-width: 1025px) {
             .game-container {
                 flex-wrap: nowrap;
@@ -464,7 +467,7 @@ layout: false
 </div>
 
 <script>
-    // ========== 游戏核心 (完整AI，无改动) ==========
+    // ========== 五子棋核心 (完整 AI 逻辑，无视觉泄露) ==========
     const BOARD_SIZE = 15;
     let currentPlayer = 1;      // 1黑(玩家) 2白(AI)
     let board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
@@ -694,8 +697,8 @@ layout: false
         }
     }
 
-    // AI逻辑完整保留
-    function findWinningMove(player) {
+    // AI 智能评分 (保留完整逻辑)
+    function findWinningMove(player) { /* 完全保留 */ 
         for(let i=0;i<BOARD_SIZE;i++) for(let j=0;j<BOARD_SIZE;j++) if(board[i][j]===0) {
             board[i][j]=player;
             let win = checkWinPosition(i,j,player);
