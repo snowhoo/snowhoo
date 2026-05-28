@@ -638,7 +638,6 @@ css_prefix: true
 # Inject
 inject:
   head:
-    - "<link rel='manifest' href='/manifest.json'>"
     - "<link rel='stylesheet' href='/css/waline-compact.css'>"
     - "<link rel='stylesheet' href='/css/layout-fix.css'>"
     - "<link rel='stylesheet' href='/js/sevencolor/sevencolor.css'>"
