@@ -171,15 +171,35 @@ function filterCategory(sel){ let selected=sel.value;
   let meta=sourceMeta[currentPrefix], pc=meta.page_count||1, results=[], loaded=0;
   let done=()=>{ if(++loaded>=pc){ currentFiltered=results; setStatus(`[FILTER] ${selected} — ${results.length} results`); render(); } };
   for(let p=1;p<=pc;p++){ let fn=(meta.fileBase||currentPrefix)+'-'+String(p).padStart(2,'0')+'.js'; if(loadedSources[fn]){ collectCat(loadedSources[fn],selected,results); done(); }else loadData(fn,data=>{ if(data) loadedSources[fn]=data; if(data) collectCat(data,selected,results); done(); }); } }
-function collectCat(src,cat,out){ src?.videos?.forEach(v=>{ let cls=(v.vod_class||'').split(','); if(cls.some(c=>c.trim()===cat)) out.push({ sourceKey:currentPrefix, sourceName:src.name, vod_name:v.vod_name, vod_pic:v.vod_pic, episodes:v.episodes, ep_count:v.ep_count, playable_count:v.playable_count, vod_class:v.vod_class }); }); }
-
-// ----- 搜索并发 -----
-function doSearch(){ let q=$('searchInput').value.toLowerCase().trim(); if(!q){ if($('sourceSelect').value==='__search_result__') renderSearchResult(false); else if(currentPrefix && currentPrefix!=='__search_result__') loadPageFile(currentPrefix,currentFilePage); else renderSpecialView('__history__'); return; }
-  if(isSearching) searchVersion++, isSearching=false; resetSearch(q); isSearching=true; $('stopSearchBtn').style.display=''; let ver=++searchVersion, allFiles=[];
-  sourceIndex.forEach(src=>{ let pc=src.page_count||1, base=(sourceMeta[src.prefix]?.fileBase)||src.prefix; for(let i=1;i<=pc;i++) allFiles.push({fname:base+'-'+String(i).padStart(2,'0')+'.js', name:src.name}); });
-  let total=allFiles.length, loaded=0, idx=0, running=0, active=true; setStatus(`🔍 搜索中: 0/${total} — "${q}"`);
-  function schedule(){ if(!active) return; while(running<CONCURRENT && idx<allFiles.length){ if(searchVersion!==ver){ active=false; return; } let file=allFiles[idx++]; running++; let handle=data=>{ if(!active || searchVersion!==ver) return; if(data?.videos){ let matched=[]; data.videos.forEach(v=>{ if(v.playable_count && v.vod_name.toLowerCase().includes(q)) matched.push({ sourceKey:file.fname, sourceName:file.name, vod_name:v.vod_name, vod_pic:v.vod_pic, episodes:v.episodes, ep_count:v.ep_count, playable_count:v.playable_count, vod_class:v.vod_class }); }); if(matched.length) addSearchResults(matched); } loaded++; setStatus(`🔍 搜索中: ${loaded}/${total} — "${q}" — ${currentSearchResults.length}个结果`); running--; schedule(); }; if(loadedSources[file.fname]) handle(loadedSources[file.fname]); else loadData(file.fname,handle,5000); } if(loaded>=total){ isSearching=false; $('stopSearchBtn').style.display='none'; setStatus(`🔍 搜索完成: "${q}" — ${currentSearchResults.length}个结果`); active=false; if($('sourceSelect').value==='__search_result__') renderSearchResult(false); } } schedule(); }
-function stopSearch(){ if(!isSearching) return; searchVersion++; isSearching=false; $('stopSearchBtn').style.display='none'; setStatus(`⏹ 搜索已停止 — ${currentSearchResults.length}个结果`); if($('sourceSelect').value==='__search_result__') renderSearchResult(false); }
+// 修复分类筛选核心：正确处理「未分类」影片（vod_class为空、null或空字符串）
+function collectCat(src,cat,out){
+  if(!src?.videos) return;
+  src.videos.forEach(v=>{
+    let matched = false;
+    if(cat === '未分类') {
+      // 未分类：vod_class 不存在、null、空字符串或者仅空白字符
+      const clsRaw = v.vod_class;
+      if(!clsRaw || (typeof clsRaw === 'string' && clsRaw.trim() === '')) matched = true;
+    } else {
+      // 普通分类：检查vod_class中是否有完全匹配的分类（逗号分隔）
+      const clsRaw = v.vod_class || '';
+      const classes = clsRaw.split(',').map(c=>c.trim()).filter(c=>c);
+      if(classes.includes(cat)) matched = true;
+    }
+    if(matched){
+      out.push({
+        sourceKey: currentPrefix,
+        sourceName: src.name,
+        vod_name: v.vod_name,
+        vod_pic: v.vod_pic,
+        episodes: v.episodes,
+        ep_count: v.ep_count,
+        playable_count: v.playable_count,
+        vod_class: v.vod_class
+      });
+    }
+  });
+}
 
 // ----- 主渲染 -----
 function render(){
@@ -237,7 +257,6 @@ function render(){
 function go(p){ let total=currentFiltered.length, max=Math.ceil(total/PAGE_SIZE)||1; if(p<1) p=1; if(p>max) p=max; currentPage=p; render(); }
 function goPage(p){ if(currentCategory!==''){ go(p); return; } let meta=sourceMeta[currentPrefix]; let pc=meta?.page_count||1; if(p<1) p=1; if(p>pc) p=pc; if(p!==currentFilePage) loadPageFile(currentPrefix,p); else{ currentPage=p; render(); } }
 function toggleEpisodes(el,eid){
-  // 修复：直接使用 eid 作为 id，不要加 '#'
   let panel = document.getElementById(eid);
   if(!panel) return;
   let open = panel.classList.contains('open');
@@ -246,14 +265,12 @@ function toggleEpisodes(el,eid){
   if(!open){
     let vodName=el.dataset.vodname, sKey=el.dataset.sourcekey;
     currentOpenVideo=currentFiltered.find(v=>v.vod_name===vodName&&v.sourceKey===sKey)||null;
-    // 对于历史/影签中只有一集的情况，尝试从缓存加载完整剧集列表
     if(currentOpenVideo && currentOpenVideo.episodes?.length===1 && (currentOpenVideo.isHistory||currentOpenVideo.isBookmark)){
       let full=findVideoInCache(sKey,vodName);
       if(full?.episodes?.length>1){
         currentOpenVideo.episodes=full.episodes;
         currentOpenVideo.playable_count=full.playable_count||full.episodes.filter(e=>e.playable).length;
         currentOpenVideo.ep_count=full.ep_count||full.episodes.length;
-        // 刷新面板内的剧集列表
         let epContainer=panel;
         epContainer.innerHTML=`<div class="ep-header"><span>剧集 (${currentOpenVideo.episodes.length})</span><button class="ep-close" data-eid="${eid}">✖</button></div>`;
         currentOpenVideo.episodes.forEach((e,ei)=>{
@@ -261,7 +278,6 @@ function toggleEpisodes(el,eid){
           let prog=isCurr&&(currentOpenVideo.historyProgress||currentOpenVideo.bookmarkProgress);
           epContainer.innerHTML+=`<div class="ep-item${isCurr?' ep-current':''}" data-url="${escAttr(e.url)}" data-name="${escAttr(currentOpenVideo.vod_name+' - '+e.title)}" data-epindex="${ei}">${escHtml(e.title)}${!e.playable?' ⚠':''}${isCurr?' ▶':''}${prog?` (${Math.floor(prog/60)}'${prog%60})`:''}</div>`;
         });
-        // 重新绑定关闭按钮事件
         let closeBtn=epContainer.querySelector('.ep-close');
         if(closeBtn) closeBtn.addEventListener('click',(eve)=>{ eve.stopPropagation(); panel.classList.remove('open'); });
       }
