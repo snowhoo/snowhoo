@@ -78,21 +78,9 @@
   white-space: nowrap;
 }
 
-/* ---- 中间分割线 ---- */
-#seven-color-card .sc-btn-divider {
-  width: 1px;
-  height: 60%;
-  background: rgba(255, 255, 255, 0.3);
-  flex-shrink: 0;
-}
-
-html[data-theme=dark] #seven-color-card .sc-btn-divider {
-  background: rgba(255, 255, 255, 0.2);
-}
-
 /* ---- 右侧箭头区 ---- */
 #seven-color-card .sc-btn-right {
-  width: 20px;
+  width: 10px;
   height: 100%;
   display: flex;
   align-items: center;
@@ -100,7 +88,12 @@ html[data-theme=dark] #seven-color-card .sc-btn-divider {
   cursor: pointer;
   flex-shrink: 0;
   border-radius: 0 4px 4px 0;
-  transition: background 0.2s, color 0.2s;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  transition: background 0.2s, color 0.2s, border-left-color 0.2s;
+}
+
+html[data-theme=dark] #seven-color-card .sc-btn-right {
+  border-left-color: rgba(255, 255, 255, 0.2);
 }
 
 #seven-color-card .sc-btn-right .sc-arrow {

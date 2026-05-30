@@ -44,10 +44,6 @@
         window.location.href = item.htmlUrl.replace(/[^/]*$/, '');
       });
       
-      // 中间分割线
-      var divider = document.createElement('div');
-      divider.className = 'sc-btn-divider';
-      
       // 右侧箭头区
       var rightPart = document.createElement('div');
       rightPart.className = 'sc-btn-right';
@@ -58,7 +54,6 @@
       });
       
       btn.appendChild(leftPart);
-      btn.appendChild(divider);
       btn.appendChild(rightPart);
       row.appendChild(btn);
     });
