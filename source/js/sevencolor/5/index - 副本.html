@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>明暗随行 · 五子棋</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* ========== 完全消除 CSS 泄露 & 继承 Hexo 明暗模式 ========== */
+        /* 1. 重置所有可能产生外边距/边框泄露的样式 */
+        * {
+           // margin: 0;
+           // padding: 0;
+           // box-sizing: border-box;
+            //-webkit-tap-highlight-color: transparent;
+        }
+
+        /* 2. body 完全透明，无背景/渐变/内边距影响，完全交由 Hexo 主题控制 */
+        body {
+            //background: transparent !important;
+            //font-family: inherit;   /* 继承 Hexo 字体 */
+           // margin: 0 !important;
+            //padding: 20px 20px 20px 20px;  /* 仅保留游戏与外部的舒适间距，但不会造成额外空行 */
+           // display: flex;
+           // flex-direction: column;
+            //align-items: center;
+            //min-height: auto;
+        }
+
+        /* 消除第一个子元素可能带来的顶部额外空白 */
+        //body > *:first-child {
+            //margin-top: 0;
+        }
+
+        /* 主容器：无任何背景/边框泄露 */
+        .game-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+            justify-content: center;
+            align-items: stretch;
+            max-width: 1300px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* 棋盘外框：完全透明，无阴影无边框，避免任何白色轮廓 */
+        .board-wrapper {
+            position: relative;
+            background: transparent;
+            //padding: 12px;
+            border-radius: 32px;
+            flex-shrink: 0;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            cursor: pointer;
+            border-radius: 10px;
+            /* 阴影保留但使用深色半透明，暗模式下不会产生白色边框 */
+            //box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            outline: none;
+            border: none;
+        }
+
+        /* 右侧侧边栏：完全透明无边框背景，避免任何白色条纹 */
+        .side-panel {
+            background: rgba(128, 128, 128, 0.2);
+            border-radius: 10px;
+            padding: 12px 8px;
+            display: flex;
+            gap: 14px;
+            backdrop-filter: none;
+            box-shadow: none;
+            border: none;
+        }
+
+        /* 所有控件组透明化，没有硬性背景色，边框使用极低透明度 */
+        .ctrl-group,
+        .level-selector-compact,
+        .players-dual,
+        .buttons-group,
+        .theme-selector,
+        .status {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
+        /* 难度下拉框 */
+        .level-selector-compact {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            background: transparent;
+            border-radius: 48px;
+        }
+
+        .level-selector-compact select {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            border-radius: 48px;
+            border: 1px solid rgba(128, 128, 128, 0.3);
+            background: rgba(255, 255, 245, 0.55);
+            backdrop-filter: blur(10px);
+            color: inherit;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        /* 星级样式 */
+        .level-stars {
+            display: flex;
+            gap: 3px;
+            flex-wrap: nowrap;
+        }
+        .star {
+            width: 18px;
+            height: 18px;
+            fill: #cdc9c0;
+            transition: fill 0.1s;
+        }
+        .star.filled {
+            fill: #F5B042;
+            filter: drop-shadow(0 0 2px #ffb347);
+        }
+
+        /* 玩家双栏 ———— 无白色边框，深色模式下自动适应 */
+        .players-dual {
+            display: flex;
+            gap: 10px;
+        }
+        .player {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 56px;
+            background: rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(6px);
+            transition: all 0.2s;
+            color: inherit;
+            border: 1px solid rgba(128, 128, 128, 0.2);
+        }
+        .player.active {
+            background: rgba(194, 74, 44, 0.2);
+            border: 1px solid #C24A2C;
+            box-shadow: 0 2px 8px rgba(194, 74, 44, 0.2);
+        }
+        .player-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .player-icon.black-icon {
+            background: radial-gradient(circle at 30% 30%, #3a3a3a, #111);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        .player-icon.white-icon {
+            background: radial-gradient(circle at 30% 30%, #f8faff, #e0e6f0);
+            border: 1px solid #bbb4a4;
+        }
+        .player-name {
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: inherit;
+        }
+        .player-tag {
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 40px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .player-tag.human { background: #C24A2C; color: white; }
+        .player-tag.ai { background: #2c6e49; color: white; }
+
+        /* 按钮组 ———— 无白色高亮边框 */
+        .buttons-group {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            text-align: center;
+            white-space: nowrap;
+            background: rgba(30, 30, 40, 0.7);
+            backdrop-filter: blur(8px);
+            color: white;
+            border: none;
+        }
+        .btn-primary {
+            background: linear-gradient(125deg, #C24A2C, #a33d22);
+            color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.05);}
+        .btn-secondary {
+            background: rgba(70, 70, 85, 0.7);
+            backdrop-filter: blur(8px);
+            color: #f2f2f2;
+            border: none;
+        }
+        .btn-secondary:hover { background: rgba(90, 90, 110, 0.8); transform: translateY(-1px);}
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* 棋盘样式选择 */
+        .theme-selector select {
+            width: 100%;
+            padding: 12px 12px;
+            font-size: 0.75rem;
+            border-radius: 60px;
+            border: 1px solid rgba(128, 128, 128, 0.3);
+            background: rgba(255, 255, 245, 0.55);
+            backdrop-filter: blur(10px);
+            color: inherit;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        /* 状态栏 ———— 无白色边框，深色模式柔和不刺眼 */
+        .status {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 60px;
+            padding: 8px 14px;
+            text-align: center;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(128, 128, 128, 0.2);
+        }
+        .status-text {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: inherit;
+        }
+        .status-text.thinking { color: #C24A2C; }
+        .thinking-dots::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+        @keyframes dots {
+            0%,20%{content:'.';}40%{content:'..';}60%,100%{content:'...';}
+        }
+
+        /* 弹窗风格 (保持优雅但无泄露) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px);
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: rgba(28, 26, 30, 0.94);
+            border-radius: 56px;
+            padding: 28px 24px;
+            text-align: center;
+            max-width: 320px;
+            width: 85%;
+            border: 1px solid rgba(230, 180, 120, 0.6);
+            color: #f2ede4;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 35px rgba(0,0,0,0.4);
+        }
+        .modal-icon { font-size: 3.2rem; margin-bottom: 8px; }
+        .modal-title { font-family: inherit; font-weight: 800; font-size: 1.8rem; margin-bottom: 8px; }
+        .modal-title.win { color: #F5AC78; }
+        .modal-title.lose { color: #92b88d; }
+        .modal-message { opacity: 0.85; margin-bottom: 20px; font-size: 0.9rem; }
+        .modal-btn {
+            padding: 8px 28px;
+            background: #C24A2C;
+            color: white;
+            border: none;
+            border-radius: 48px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .modal-btn:hover { background: #a93c21; transform: scale(0.97); }
+
+        /* ========== 深色模式专属修复：消除所有“白色边框” ========== */
+        @media (prefers-color-scheme: dark) {
+            /* 所有下拉框、按钮组背景改为深色半透明，边框使用暗色系，绝无纯白边框 */
+            .level-selector-compact select,
+            .theme-selector select {
+                background: rgba(20, 22, 32, 0.85);
+                border-color: rgba(160, 160, 180, 0.3);
+                color: #eef2fa;
+            }
+            .player {
+                background: rgba(20, 20, 30, 0.55);
+                border-color: rgba(180, 180, 210, 0.2);
+            }
+            .player.active {
+                background: rgba(194, 74, 44, 0.3);
+                border-color: #E06A4A;
+            }
+            .status {
+                background: rgba(0, 0, 0, 0.4);
+                border-color: rgba(200, 200, 220, 0.2);
+            }
+            .btn-secondary {
+                background: rgba(40, 44, 55, 0.8);
+                color: #eef2fc;
+            }
+            canvas {
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+            }
+            /* 彻底消除可能出现白色边框的隐患 */
+            .board-wrapper, .side-panel, .ctrl-group, .buttons-group {
+                border: none;
+                outline: none;
+            }
+        }
+
+        /* 响应式布局 (无泄露) */
+        @media (min-width: 1025px) {
+            .game-container {
+                flex-wrap: nowrap;
+                align-items: stretch;
+            }
+            .side-panel {
+                flex: 0 0 160px;
+                flex-direction: column;
+                justify-content: space-between;
+                gap: 14px;
+                padding: 12px 8px;
+            }
+            .side-panel > * {
+                width: 100%;
+            }
+            .level-selector-compact {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .level-stars {
+                justify-content: center;
+            }
+            .players-dual {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .player {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .buttons-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .game-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+            .board-wrapper, .side-panel {
+                width: 100%;
+                max-width: 620px;
+            }
+            .side-panel {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 12px;
+            }
+            .players-dual {
+                flex-wrap: nowrap;
+            }
+        }
+        @media (max-width: 550px) {
+            .players-dual {
+                flex-wrap: wrap;
+            }
+            .btn { padding: 6px 10px; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <div class="board-wrapper">
+        <canvas id="gomokuCanvas" width="650" height="650"></canvas>
+    </div>
+    <div class="side-panel">
+        <div class="level-selector-compact">
+            <select id="levelSelect">
+                <option value="1">1级 初学</option><option value="2">2级 入门</option><option value="3">3级 初级</option>
+                <option value="4">4级 业余</option><option value="5" selected>5级 中级</option><option value="6">6级 进阶</option>
+                <option value="7">7级 高手</option><option value="8">8级 高段</option><option value="9">9级 强手</option>
+                <option value="10">10级 大师</option>
+            </select>
+            <div class="level-stars" id="levelStars"></div>
+        </div>
+
+        <div class="players-dual">
+            <div class="player active" id="playerBlack">
+                <div class="player-icon black-icon"></div>
+                <span class="player-name">黑</span>
+                <span class="player-tag human">玩家</span>
+            </div>
+            <div class="player" id="playerWhite">
+                <div class="player-icon white-icon"></div>
+                <span class="player-name">白</span>
+                <span class="player-tag ai">AI</span>
+            </div>
+        </div>
+
+        <div class="buttons-group">
+            <button class="btn btn-primary" id="restartBtn">✨ 新对局</button>
+            <button class="btn btn-secondary" id="undoBtn" disabled>↩️ 悔棋</button>
+        </div>
+
+        <div class="theme-selector">
+            <select id="themeSelect">
+                <option value="classic">🏮 经典木纹</option>
+                <option value="jade">🍃 翠玉清雅</option>
+                <option value="ink">🖌️ 水墨禅意</option>
+            </select>
+        </div>
+
+        <div class="status">
+            <div class="status-text" id="5_statusText">⚫ 轮到你落子</div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-icon" id="modalIcon">🏆</div>
+        <h2 class="modal-title" id="modalTitle">胜利!</h2>
+        <p class="modal-message" id="modalMessage">精彩对局！</p>
+        <button class="modal-btn" id="modalBtn">新的一局</button>
+    </div>
+</div>
+
+<script>
+    // ========== 五子棋核心 (完整 AI 逻辑，无视觉泄露) ==========
+    const BOARD_SIZE = 15;
+    let currentPlayer = 1;      // 1黑(玩家) 2白(AI)
+    let board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
+    let gameOver = false;
+    let aiLevel = 5;
+    let history = [];
+    let isThinking = false;
+    let winLineInfo = null;
+    let lastMovePos = null;
+    let currentTheme = "classic";
+
+    const canvas = document.getElementById('gomokuCanvas');
+    const ctx = canvas.getContext('2d');
+    const levelSelect = document.getElementById('levelSelect');
+    const levelStars = document.getElementById('levelStars');
+    const playerBlackDiv = document.getElementById('playerBlack');
+    const playerWhiteDiv = document.getElementById('playerWhite');
+    const restartBtn = document.getElementById('restartBtn');
+    const undoBtn = document.getElementById('undoBtn');
+    const statusTextDiv = document.getElementById('5_statusText');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalIcon = document.getElementById('modalIcon');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalBtn = document.getElementById('modalBtn');
+    const themeSelect = document.getElementById('themeSelect');
+
+    let cellSize = 0, padding = 0, boardWidth = 0, boardHeight = 0;
+    let previewRow = -1, previewCol = -1;
+
+    const LEVEL_NAMES = {1:'初学',2:'入门',3:'初级',4:'业余',5:'中级',6:'进阶',7:'高手',8:'高段',9:'强手',10:'大师'};
+
+    const themes = {
+        classic: { bgColor: "#FCF3E0", gridColor: "#BD8A5A", starOuter: "#DB9A60", starInner: "#F5C28E" },
+        jade: { bgColor: "#E6F0E3", gridColor: "#5F8B6F", starOuter: "#8BBF8F", starInner: "#C5E0B4" },
+        ink: { bgColor: "#F2EFE9", gridColor: "#6E5C4B", starOuter: "#B7A17A", starInner: "#E1CFB0" }
+    };
+
+    function updateLevelStars() {
+        let starsHtml = '';
+        for (let i = 1; i <= 10; i++) {
+            starsHtml += `<svg class="star ${i <= aiLevel ? 'filled' : ''}" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+        }
+        levelStars.innerHTML = starsHtml;
+    }
+
+    function resizeCanvasAndDraw() {
+        const container = canvas.parentElement;
+        let maxSize = Math.min(container.clientWidth - 10, window.innerWidth * 0.85, 660);
+        maxSize = Math.max(360, maxSize);
+        canvas.width = maxSize;
+        canvas.height = maxSize;
+        boardWidth = canvas.width;
+        boardHeight = canvas.height;
+        cellSize = boardWidth / BOARD_SIZE;
+        padding = cellSize / 2;
+        drawFullBoard();
+    }
+
+    function drawGridAndStars() {
+        const theme = themes[currentTheme];
+        ctx.save();
+        ctx.strokeStyle = theme.gridColor;
+        ctx.lineWidth = 1.8;
+        for (let i = 0; i < BOARD_SIZE; i++) {
+            ctx.beginPath();
+            ctx.moveTo(padding, padding + i * cellSize);
+            ctx.lineTo(boardWidth - padding, padding + i * cellSize);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(padding + i * cellSize, padding);
+            ctx.lineTo(padding + i * cellSize, boardHeight - padding);
+            ctx.stroke();
+        }
+        const stars = [[3,3],[3,11],[7,7],[11,3],[11,11]];
+        stars.forEach(([x,y]) => {
+            ctx.beginPath();
+            ctx.arc(padding + x * cellSize, padding + y * cellSize, cellSize * 0.11, 0, 2*Math.PI);
+            ctx.fillStyle = theme.starOuter;
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(padding + x * cellSize, padding + y * cellSize, cellSize * 0.07, 0, 2*Math.PI);
+            ctx.fillStyle = theme.starInner;
+            ctx.fill();
+        });
+        ctx.restore();
+    }
+
+    function drawPiece(row, col, player, alpha = 1.0) {
+        const cx = padding + col * cellSize;
+        const cy = padding + row * cellSize;
+        const radius = cellSize * 0.4;
+        ctx.save();
+        ctx.shadowBlur = 0;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, 2*Math.PI);
+        if (player === 1) {
+            const grad = ctx.createRadialGradient(cx - radius*0.2, cy - radius*0.2, radius*0.2, cx, cy, radius);
+            grad.addColorStop(0, '#4a4a4a');
+            grad.addColorStop(0.7, '#111');
+            grad.addColorStop(1, '#000');
+            ctx.fillStyle = grad;
+        } else {
+            const grad = ctx.createRadialGradient(cx - radius*0.2, cy - radius*0.2, radius*0.2, cx, cy, radius);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.5, '#f0f3fc');
+            grad.addColorStop(1, '#d8dfef');
+            ctx.fillStyle = grad;
+        }
+        ctx.globalAlpha = alpha;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.arc(cx - radius*0.18, cy - radius*0.18, radius*0.18, 0, 2*Math.PI);
+        ctx.fillStyle = player === 1 ? '#a5a5a5' : '#ffffffcc';
+        ctx.fill();
+        if (lastMovePos && lastMovePos.row === row && lastMovePos.col === col && !winLineInfo) {
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * 0.28, 0, 2*Math.PI);
+            ctx.fillStyle = '#E05A3A';
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    function drawAllPieces() {
+        for (let i = 0; i < BOARD_SIZE; i++)
+            for (let j = 0; j < BOARD_SIZE; j++)
+                if (board[i][j] !== 0) drawPiece(i, j, board[i][j], 1);
+    }
+
+    function drawWinLine(start, end) {
+        const startX = padding + start.col * cellSize;
+        const startY = padding + start.row * cellSize;
+        const endX = padding + end.col * cellSize;
+        const endY = padding + end.row * cellSize;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.strokeStyle = '#E63946';
+        ctx.lineWidth = Math.max(3, cellSize * 0.12);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.strokeStyle = '#FFD966';
+        ctx.lineWidth = Math.max(1.8, cellSize * 0.06);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawFullBoard() {
+        if (!ctx) return;
+        ctx.clearRect(0, 0, boardWidth, boardHeight);
+        const theme = themes[currentTheme];
+        ctx.fillStyle = theme.bgColor;
+        ctx.fillRect(0, 0, boardWidth, boardHeight);
+        drawGridAndStars();
+        drawAllPieces();
+        if (winLineInfo) drawWinLine(winLineInfo.start, winLineInfo.end);
+        if (previewRow >= 0 && previewCol >= 0 && !gameOver && currentPlayer === 1 && board[previewRow][previewCol] === 0) {
+            drawPiece(previewRow, previewCol, currentPlayer, 0.45);
+        }
+    }
+
+    function checkWinPosition(row, col, playerVal) {
+        const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+        for (let [dr, dc] of dirs) {
+            let count = 1;
+            let start = { row, col };
+            let end = { row, col };
+            for (let step = 1; step <= 5; step++) {
+                const nr = row + dr*step, nc = col + dc*step;
+                if (nr<0 || nr>=BOARD_SIZE || nc<0 || nc>=BOARD_SIZE || board[nr][nc] !== playerVal) break;
+                count++; end = { row: nr, col: nc };
+            }
+            for (let step = 1; step <= 5; step++) {
+                const nr = row - dr*step, nc = col - dc*step;
+                if (nr<0 || nr>=BOARD_SIZE || nc<0 || nc>=BOARD_SIZE || board[nr][nc] !== playerVal) break;
+                count++; start = { row: nr, col: nc };
+            }
+            if (count >= 5) return { start, end };
+        }
+        return null;
+    }
+
+    function placePiece(row, col, player) {
+        if (gameOver || board[row][col] !== 0) return false;
+        board[row][col] = player;
+        history.push({ row, col, player });
+        lastMovePos = { row, col };
+        drawFullBoard();
+        const win = checkWinPosition(row, col, player);
+        if (win) {
+            gameOver = true;
+            winLineInfo = win;
+            drawFullBoard();
+            setTimeout(() => showResult(player), 380);
+            return true;
+        }
+        let full = true;
+        for(let i=0;i<BOARD_SIZE && full;i++) for(let j=0;j<BOARD_SIZE;j++) if(board[i][j]===0){ full=false; break;}
+        if (full) {
+            gameOver = true;
+            setTimeout(() => showResult(0), 280);
+            return true;
+        }
+        currentPlayer = (player === 1 ? 2 : 1);
+        updateUI();
+        drawFullBoard();
+        undoBtn.disabled = history.length === 0;
+        return true;
+    }
+
+    function showResult(winner) {
+        modalOverlay.classList.add('show');
+        if (winner === 0) {
+            modalIcon.textContent = '🤝'; modalTitle.textContent = '平局'; modalTitle.className = 'modal-title';
+            modalMessage.textContent = '势均力敌！';
+        } else if (winner === 1) {
+            modalIcon.textContent = '🏆'; modalTitle.textContent = '胜利！'; modalTitle.className = 'modal-title win';
+            modalMessage.textContent = `击败 ${LEVEL_NAMES[aiLevel]} 级 AI，棋力非凡！`;
+        } else {
+            modalIcon.textContent = '🧠'; modalTitle.textContent = '惜败'; modalTitle.className = 'modal-title lose';
+            modalMessage.textContent = `AI (${LEVEL_NAMES[aiLevel]}) 获胜，再接再厉！`;
+        }
+    }
+
+    // AI 智能评分 (保留完整逻辑)
+    function findWinningMove(player) { /* 完全保留 */ 
+        for(let i=0;i<BOARD_SIZE;i++) for(let j=0;j<BOARD_SIZE;j++) if(board[i][j]===0) {
+            board[i][j]=player;
+            let win = checkWinPosition(i,j,player);
+            board[i][j]=0;
+            if(win) return {row:i,col:j};
+        }
+        return null;
+    }
+    function hasNeighbor(r,c) {
+        for(let dr=-2;dr<=2;dr++) for(let dc=-2;dc<=2;dc++) {
+            let nr=r+dr,nc=c+dc;
+            if(nr>=0 && nr<BOARD_SIZE && nc>=0 && nc<BOARD_SIZE && board[nr][nc]!==0) return true;
+        }
+        return false;
+    }
+    function getEmptyNearby() {
+        let arr=[];
+        for(let i=0;i<BOARD_SIZE;i++) for(let j=0;j<BOARD_SIZE;j++) if(board[i][j]===0 && hasNeighbor(i,j)) arr.push({row:i,col:j});
+        if(arr.length===0) for(let i=0;i<BOARD_SIZE;i++) for(let j=0;j<BOARD_SIZE;j++) if(board[i][j]===0) arr.push({row:i,col:j});
+        return arr;
+    }
+    function evaluateDir(row,col,player) {
+        let score=0;
+        const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+        for(let [dr,dc] of dirs){
+            let cnt=1, free=0;
+            for(let step=1;step<=4;step++){ let nr=row+dr*step,nc=col+dc*step; if(nr<0||nr>=BOARD_SIZE||nc<0||nc>=BOARD_SIZE) break; if(board[nr][nc]===player) cnt++; else if(board[nr][nc]===0){ free++; break; } else break; }
+            for(let step=1;step<=4;step++){ let nr=row-dr*step,nc=col-dc*step; if(nr<0||nr>=BOARD_SIZE||nc<0||nc>=BOARD_SIZE) break; if(board[nr][nc]===player) cnt++; else if(board[nr][nc]===0){ free++; break; } else break; }
+            if(cnt>=5) score+=120000;
+            else if(cnt===4 && free>=1) score+=30000;
+            else if(cnt===3 && free===2) score+=4000;
+            else if(cnt===3 && free>=1) score+=800;
+            else if(cnt===2 && free>=1) score+=60;
+        }
+        return score;
+    }
+    function getBestHeuristic() {
+        let best=null,bestScore=-1;
+        let candidates=getEmptyNearby();
+        for(let mv of candidates){
+            let aiS=evaluateDir(mv.row,mv.col,2);
+            let defS=evaluateDir(mv.row,mv.col,1);
+            let score= aiS*0.7 + defS*0.3 + Math.random()*0.08;
+            if(score>bestScore){ bestScore=score; best=mv;}
+        }
+        return best;
+    }
+    async function aiMove() {
+        if(gameOver || currentPlayer!==2 || isThinking) return;
+        isThinking=true;
+        updateUI();
+        await new Promise(r=>setTimeout(r,70));
+        let move=null;
+        let win=findWinningMove(2);
+        if(win) move=win;
+        else { let block=findWinningMove(1); if(block) move=block; }
+        if(!move){
+            if(aiLevel<=2){
+                let arr=getEmptyNearby();
+                if(arr.length) move=arr[Math.floor(Math.random()*arr.length)];
+            } else if(aiLevel<=4){
+                move=getBestHeuristic();
+            } else {
+                let candidates=getEmptyNearby();
+                let best=null,bestVal=-Infinity;
+                for(let mv of candidates){
+                    let score= evaluateDir(mv.row,mv.col,2)*0.65 + evaluateDir(mv.row,mv.col,1)*0.35;
+                    score += (Math.random() * (aiLevel/30));
+                    if(score>bestVal){ bestVal=score; best=mv;}
+                }
+                move=best;
+            }
+        }
+        if(move && board[move.row][move.col]===0) placePiece(move.row,move.col,2);
+        isThinking=false;
+        updateUI();
+        drawFullBoard();
+    }
+
+    function undoMove() {
+        if(isThinking || gameOver) return;
+        if(history.length>=2 && currentPlayer===1){
+            for(let i=0;i<2;i++){ let last=history.pop(); if(last) board[last.row][last.col]=0; }
+            currentPlayer=1; gameOver=false; winLineInfo=null; lastMovePos=history.length?history[history.length-1]:null;
+            drawFullBoard(); updateUI();
+        } else if(history.length>=1 && currentPlayer===2){
+            let last=history.pop(); if(last) board[last.row][last.col]=0;
+            currentPlayer=1; gameOver=false; winLineInfo=null; lastMovePos=history.length?history[history.length-1]:null;
+            drawFullBoard(); updateUI();
+        }
+        undoBtn.disabled=history.length===0;
+    }
+
+    function resetGame() {
+        board = Array(BOARD_SIZE).fill().map(()=>Array(BOARD_SIZE).fill(0));
+        currentPlayer = 1; gameOver = false; history = []; isThinking = false; winLineInfo = null; lastMovePos = null;
+        previewRow = previewCol = -1;
+        updateUI(); drawFullBoard(); modalOverlay.classList.remove('show');
+        if(currentPlayer===2 && !gameOver) setTimeout(()=>aiMove(),100);
+    }
+
+    function updateUI() {
+        playerBlackDiv.classList.toggle('active', currentPlayer===1 && !gameOver);
+        playerWhiteDiv.classList.toggle('active', currentPlayer===2 && !gameOver);
+        if(gameOver) statusTextDiv.innerHTML = '🏁 终局';
+        else if(currentPlayer===1) statusTextDiv.innerHTML = '⚫ 轮到你落子';
+        else statusTextDiv.innerHTML = '<span class="thinking">🤖 AI 思考中<span class="thinking-dots"></span></span>';
+        undoBtn.disabled = history.length===0 || isThinking || gameOver;
+    }
+
+    function setTheme(themeKey) { currentTheme = themeKey; drawFullBoard(); }
+
+    function getGridFromXY(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+        let cx = (clientX - rect.left) * scaleX, cy = (clientY - rect.top) * scaleY;
+        if(cx<0 || cx>boardWidth || cy<0 || cy>boardHeight) return null;
+        const col = Math.round((cx - padding) / cellSize), row = Math.round((cy - padding) / cellSize);
+        if(row>=0 && row<BOARD_SIZE && col>=0 && col<BOARD_SIZE) return {row,col};
+        return null;
+    }
+    function onCanvasClick(e) {
+        if(gameOver || isThinking || currentPlayer!==1) return;
+        const coord = getGridFromXY(e.clientX, e.clientY);
+        if(coord && board[coord.row][coord.col]===0){
+            placePiece(coord.row, coord.col, 1);
+            if(!gameOver && currentPlayer===2) setTimeout(()=>aiMove(), 120);
+        }
+    }
+    function onCanvasMove(e) {
+        if(gameOver || isThinking || currentPlayer!==1) { if(previewRow!==-1){ previewRow=-1; drawFullBoard(); } return; }
+        const coord = getGridFromXY(e.clientX, e.clientY);
+        if(coord && board[coord.row][coord.col]===0 && (previewRow!==coord.row || previewCol!==coord.col)){
+            previewRow=coord.row; previewCol=coord.col; drawFullBoard();
+        } else if(!coord && previewRow!==-1){ previewRow=-1; drawFullBoard(); }
+    }
+    function onCanvasLeave() { if(previewRow!==-1){ previewRow=-1; drawFullBoard(); } }
+
+    window.addEventListener('resize', ()=>{ resizeCanvasAndDraw(); });
+    restartBtn.addEventListener('click', ()=>{ resetGame(); if(currentPlayer===2 && !gameOver) setTimeout(()=>aiMove(), 100); });
+    undoBtn.addEventListener('click', undoMove);
+    levelSelect.addEventListener('change', (e)=>{ aiLevel = parseInt(e.target.value); updateLevelStars(); });
+    themeSelect.addEventListener('change', (e)=>{ setTheme(e.target.value); });
+    modalBtn.addEventListener('click', ()=>{ modalOverlay.classList.remove('show'); resetGame(); if(currentPlayer===2 && !gameOver) setTimeout(()=>aiMove(), 100); });
+
+    canvas.addEventListener('click', onCanvasClick);
+    canvas.addEventListener('mousemove', onCanvasMove);
+    canvas.addEventListener('mouseleave', onCanvasLeave);
+    canvas.addEventListener('touchstart', (e)=>{ e.preventDefault(); const t=e.touches[0]; onCanvasClick(t); });
+    canvas.addEventListener('touchmove', (e)=>{ e.preventDefault(); const t=e.touches[0]; onCanvasMove(t); });
+    canvas.addEventListener('touchend', ()=>{ previewRow=-1; drawFullBoard(); });
+
+    resizeCanvasAndDraw();
+    updateLevelStars();
+    resetGame();
+</script>
+</body>
+</html>
