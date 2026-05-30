@@ -30,21 +30,36 @@
     if (!row) return;
     row.innerHTML = '';
     config.forEach(function(item) {
-      var btn = document.createElement('button');
+      var btn = document.createElement('div');
       btn.className = 'sc-btn sc-btn-' + item.colorIndex;
       btn.dataset.id = item.id;
       btn.dataset.htmlUrl = item.htmlUrl;
-      btn.innerHTML = '<span class="sc-btn-text">' + item.icon + ' ' + item.title + '</span><span class="sc-arrow">▼</span>';
-      // 文字点击：当前页跳转
-      btn.querySelector('.sc-btn-text').addEventListener('click', function(e) {
+      
+      // 左侧文字区
+      var leftPart = document.createElement('div');
+      leftPart.className = 'sc-btn-left';
+      leftPart.innerHTML = '<span class="sc-btn-text">' + item.icon + ' ' + item.title + '</span>';
+      leftPart.addEventListener('click', function(e) {
         e.stopPropagation();
         window.location.href = item.htmlUrl.replace(/[^/]*$/, '');
       });
-      // 箭头点击：展开/收起（原功能）
-      btn.querySelector('.sc-arrow').addEventListener('click', function(e) {
+      
+      // 中间分割线
+      var divider = document.createElement('div');
+      divider.className = 'sc-btn-divider';
+      
+      // 右侧箭头区
+      var rightPart = document.createElement('div');
+      rightPart.className = 'sc-btn-right';
+      rightPart.innerHTML = '<span class="sc-arrow">▼</span>';
+      rightPart.addEventListener('click', function(e) {
         e.stopPropagation();
         handleBtnClick({ currentTarget: btn });
       });
+      
+      btn.appendChild(leftPart);
+      btn.appendChild(divider);
+      btn.appendChild(rightPart);
       row.appendChild(btn);
     });
     // 按钮渲染完成后，确保 content 容器存在

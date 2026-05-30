@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>夜读</title>
+  <style>
+    \\* { margin: 0; padding: 0; box-sizing: border-box; }
+    \\body { font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif; background: var(--bg, #f5f5f5); color: var(--color, #333); min-height: 100vh; }
+    \\html[data-theme=dark] body { background: #1a1a1a; color: #eee; }
+    \\.sc-page { max-width: 480px; margin: 0 auto; padding: 16px; }
+
+    .__CID__-app { padding: 0; }
+
+    .__CID__-header {
+      align-items: baseline;
+      gap: 12px; 
+    }
+
+    .__CID__-header span {
+      font-size: 0.85rem;
+      color: var(--text-secondary, #888);
+    }
+
+    .__CID__-article-list { padding: 0; text-align: left; }
+
+    .__CID__-article-card {
+      background: var(--card-bg, rgba(255, 255, 255, 0.95));
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .__CID__-article-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .__CID__-article-main {
+      display: flex;
+      gap: 12px;
+    }
+
+    .__CID__-article-cover-card {
+      flex: 1;
+      align-self: flex-start;
+      background: var(--card-bg, rgba(255, 255, 255, 0.95));
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .__CID__-article-cover {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 2 / 1;
+      overflow: hidden;
+      background: var(--cover-bg, #2d4a6e);
+    }
+
+    .__CID__-article-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      transition: transform 0.3s ease;
+    }
+
+    .__CID__-article-card:hover .__CID__-article-cover img { transform: scale(1.06); }
+
+    .__CID__-audio-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 36px;
+      height: 36px;
+      background: rgba(233, 69, 96, 0.9);
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      z-index: 2;
+    }
+
+    .__CID__-audio-btn:hover { background: rgba(233, 69, 96, 1); transform: translate(-50%, -50%) scale(1.1); }
+
+    .__CID__-audio-btn svg { width: 14px; height: 14px; fill: #fff; margin-left: 2px; }
+    .__CID__-audio-btn.__CID__-playing svg { margin-left: 0; }
+    .__CID__-audio-btn.__CID__-playing svg path { d: "M6 4h4v16H6zM14 4h4v16h-4z"; }
+
+    .__CID__-article-meta {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-size: 0.65rem;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      z-index: 2;
+    }
+
+    .__CID__-article-corner-label {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 0.75rem;
+      background: rgba(0, 0, 0, 0.1);
+      padding: 0px 8px;
+      border-radius: 18px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .__CID__-article-meta svg { width: 9px; height: 9px; fill: currentColor; }
+
+    .__CID__-audio-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.3);
+      z-index: 3;
+    }
+
+    .__CID__-audio-progress-bar {
+      height: 100%;
+      background: #e94560;
+      width: 0;
+      transition: width 0.1s linear;
+    }
+
+    .__CID__-article-content-card {
+      flex: 1;
+      background: var(--card-bg, rgba(255, 255, 255, 0.95));
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .__CID__-article-content-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .__CID__-article-content {
+      flex: 1;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .__CID__-article-title {
+      color: var(--text-primary, #1a1a2e);
+      font-weight: 600;
+      white-space: normal;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .__CID__-article-date {
+      color: var(--text-secondary, #aaa);
+    }
+
+    .__CID__-article-summary {
+      color: var(--text-secondary, #888);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .__CID__-read-more {
+      color: #e94560;
+      font-size: 0.7rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: none;
+      transition: gap 0.2s ease;
+    }
+
+    .__CID__-read-more:hover { gap: 4px; }
+    .__CID__-read-more svg { width: 10px; height: 10px; fill: #e94560; transition: transform 0.2s ease; }
+    .__CID__-read-more.__CID__-expanded svg { transform: rotate(180deg); }
+
+    .__CID__-full-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+      background: var(--card-bg, rgba(255, 255, 255, 0.98));
+    }
+
+    .__CID__-full-content.__CID__-show { max-height: none; }
+
+    .__CID__-full-content-inner {
+      padding: 14px;
+      color: var(--text-primary, #333);
+      font-size: 0.85rem;
+      line-height: 1.8;
+      border-top: 1px solid var(--border-color, #eee);
+    }
+
+    .__CID__-full-content-inner p { margin-bottom: 10px; }
+
+    .__CID__-source-link {
+      display: inline-block;
+      margin-top: 10px;
+      color: var(--text-secondary, #999);
+      font-size: 0.75rem;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .__CID__-source-link:hover { color: #e94560; }
+
+    .__CID__-loading {
+      text-align: center;
+      color: var(--text-secondary, rgba(255, 255, 255, 0.5));
+      padding: 40px 0;
+      font-size: 0.9rem;
+    }
+
+    .__CID__-img-placeholder {
+      width: 100%;
+      height: 100%;
+      background: var(--cover-bg, #2d4a6e);
+      background-image: url('./images/placeholder.webp');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .__CID__-pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .__CID__-pagination button {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 6px;
+      background: var(--btn-bg, rgba(255, 255, 255, 0.15));
+      color: var(--text-primary, #fff);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .__CID__-pagination button:hover:not(:disabled) { background: rgba(233, 69, 96, 0.8); }
+    .__CID__-pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .__CID__-pagination .__CID__-page-info { color: var(--text-secondary, rgba(255, 255, 255, 0.6)); font-size: 0.8rem; }
+
+    @media (max-width: 600px) {
+      .__CID__-article-main { flex-direction: column; gap: 12px; }
+      .__CID__-article-cover-card { flex: none; width: 100%; }
+      .__CID__-article-content-card { flex: none; width: 100%; }
+      .__CID__-audio-btn { width: 40px; height: 40px; }
+      .__CID__-article-content { padding: 10px; }
+    }
+
+    @media (min-width: 601px) and (max-width: 1024px) {
+      .__CID__-article-main { gap: 10px; }
+    }
+
+    @media (min-width: 1025px) {
+      .__CID__-article-main { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sc-page">
+  <div class="__CID__-app">
+    <div class="__CID__-article-list" id="__CID__ArticleList">
+      <div class="__CID__-loading">正在加载...</div>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    // 独立访问模式：basePath 为 ./ ，cid 默认 yedu
+    var basePath = window.__SC_BASE_PATH || './';
+    var cid = '__CID__';
+    if (cid === '__CID__') cid = 'yedu';
+    var prefix = '__' + cid + '_';
+
+    var pausePath = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
+    var playPath = 'M8 5v14l11-7z';
+
+    // 动态加载数据文件
+    fetch(basePath + 'data/index.json')
+      .then(function(r) { return r.json(); })
+      .then(function(files) {
+        return Promise.all(files.map(function(f) {
+          return fetch(basePath + 'data/' + f).then(function(r) { return r.text(); });
+        }));
+      })
+      .then(function(texts) {
+        texts.forEach(function(text) {
+          text = text.replace(/"(\.[^"]+)"/g, function(m, path) {
+            if (path.startsWith('/') || path.startsWith('http')) return m;
+            return '"' + basePath + path.replace(/^\.\//, '') + '"';
+          });
+          try { eval(text); } catch(e) { console.error('Data eval error:', e); }
+        });
+
+        window.__scArticles = Object.keys(window)
+          .filter(function(k) { return k.startsWith(prefix); })
+          .sort()
+          .reverse()
+          .map(function(k) { return window[k]; });
+
+        console.log('[SevenColor] loaded ' + window.__scArticles.length + ' articles, prefix:', prefix);
+        if (window.__scOnDataLoaded) window.__scOnDataLoaded(window.__scArticles);
+        __scRenderPage(1);
+      })
+      .catch(function(e) {
+        console.error('[SevenColor] data load failed:', e);
+        var container = document.getElementById('__CID__ArticleList');
+        if (container) container.innerHTML = '<div class="__CID__-loading">加载失败</div>';
+      });
+
+    function __scRenderPage(page) {
+      var articles = window.__scArticles || [];
+      var PAGE_SIZE = 1;
+      var start = (page - 1) * PAGE_SIZE;
+      var end = start + PAGE_SIZE;
+      var pageArticles = articles.slice(start, end);
+      var totalPages = Math.ceil(articles.length / PAGE_SIZE);
+      var container = document.getElementById('__CID__ArticleList');
+      if (!container) return;
+
+      if (articles.length === 0) {
+        container.innerHTML = '<div class="__CID__-loading">暂无内容</div>';
+        return;
+      }
+
+      var html = '';
+      for (var i = 0; i < pageArticles.length; i++) {
+        var article = pageArticles[i];
+        var globalIndex = start + i;
+        var hasAudio = !!article.audioSrc;
+        var imgSrc = article.coverSrc || '';
+        var metaHtml = '<div class="__CID__-article-meta">';
+        if (article.duration) {
+          metaHtml += '<svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg><span>' + article.duration + '</span>';
+        }
+        metaHtml += '</div>';
+
+        var progressHtml = hasAudio
+          ? '<div class="__CID__-audio-progress"><div class="__CID__-audio-progress-bar" id="__CID__-progress-' + globalIndex + '"></div></div>'
+          : '';
+
+        var paragraphsHtml = '';
+        if (article.paragraphs && article.paragraphs.length) {
+          for (var j = 0; j < article.paragraphs.length; j++) {
+            paragraphsHtml += '<p>' + article.paragraphs[j] + '</p>';
+          }
+        }
+
+        html += '<div class="__CID__-article-card" data-index="' + globalIndex + '">' +
+          '<div class="__CID__-article-main">' +
+            '<div class="__CID__-article-cover-card">' +
+              '<div class="__CID__-article-cover">' +
+                (imgSrc ? '<img src="' + imgSrc + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' : '') +
+                '<div class="__CID__-img-placeholder" style="display:' + (imgSrc ? 'none' : 'flex') + '">夜读</div>' +
+                (hasAudio ? '<button class="__CID__-audio-btn" data-index="' + globalIndex + '" data-src="' + article.audioSrc + '"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>' : '') +
+                '<span class="__CID__-article-corner-label">每晚十点 · 温暖相伴</span>' +
+                metaHtml +
+                progressHtml +
+              '</div>' +
+            '</div>' +
+            '<div class="__CID__-article-content-card">' +
+              '<div class="__CID__-article-content">' +
+                '<h3 class="__CID__-article-title" title="' + article.title + '">' + article.title + '</h3>' +
+                (article.pubDate ? '<div class="__CID__-article-date">' + article.pubDate + '</div>' : '') +
+                '<p class="__CID__-article-summary">' + (article.summary || '') + '</p>' +
+                '<div class="__CID__-read-more" data-index="' + globalIndex + '"><span>展开</span><svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg></div>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="__CID__-full-content" id="__CID__-full-content-' + globalIndex + '">' +
+            '<div class="__CID__-full-content-inner">' +
+              paragraphsHtml +
+                          '</div>' +
+          '</div>' +
+        '</div>';
+      }
+
+      if (totalPages > 1) {
+        html += '<div class="__CID__-pagination" data-total="' + totalPages + '" data-page="' + page + '">' +
+          '<button class="__CID__-prev-btn" ' + (page <= 1 ? 'disabled' : '') + '>上一页</button>' +
+          '<span class="__CID__-page-info">' + page + ' / ' + totalPages + '</span>' +
+          '<button class="__CID__-next-btn" ' + (page >= totalPages ? 'disabled' : '') + '>下一页</button>' +
+        '</div>';
+      }
+
+      container.innerHTML = html;
+
+      if (window._scHandler) {
+        container.removeEventListener('click', window._scHandler);
+      }
+      window._scHandler = function(e) {
+        var btn = e.target.closest('.__CID__-audio-btn');
+        if (btn) {
+          e.stopPropagation();
+          __scToggleAudio(parseInt(btn.getAttribute('data-index')), btn);
+          return;
+        }
+        var readMore = e.target.closest('.__CID__-read-more');
+        if (readMore) {
+          e.stopPropagation();
+          __scToggleContent(readMore, parseInt(readMore.getAttribute('data-index')));
+          return;
+        }
+        var prevBtn = e.target.closest('.__CID__-prev-btn');
+        if (prevBtn && !prevBtn.disabled) {
+          var pg = document.querySelector('.__CID__-pagination');
+          __scRenderPage(parseInt(pg.getAttribute('data-page')) - 1);
+          return;
+        }
+        var nextBtn = e.target.closest('.__CID__-next-btn');
+        if (nextBtn && !nextBtn.disabled) {
+          var pg = document.querySelector('.__CID__-pagination');
+          __scRenderPage(parseInt(pg.getAttribute('data-page')) + 1);
+          return;
+        }
+      };
+      container.addEventListener('click', window._scHandler);
+    }
+
+    function __scToggleAudio(index, btn) {
+      var src = btn.getAttribute('data-src');
+      var progressBar = document.getElementById('__CID__-progress-' + index);
+      var svg = btn.querySelector('svg');
+      var pathEl = svg.querySelector('path');
+
+      if (window._scAudio && window._scAudio.src === src) {
+        if (window._scAudio.paused) {
+          window._scAudio.play();
+          btn.classList.add('__CID__-playing');
+          pathEl.setAttribute('d', pausePath);
+        } else {
+          window._scAudio.pause();
+          btn.classList.remove('__CID__-playing');
+          pathEl.setAttribute('d', playPath);
+        }
+        return;
+      }
+
+      if (window._scAudio) {
+        window._scAudio.pause();
+        if (window._scAudioBtn) {
+          window._scAudioBtn.classList.remove('__CID__-playing');
+          window._scAudioBtn.querySelector('svg path').setAttribute('d', playPath);
+        }
+      }
+
+      var audio = new Audio(src);
+      window._scAudio = audio;
+      window._scAudioBtn = btn;
+
+      audio.addEventListener('timeupdate', function() {
+        if (audio.duration && progressBar) {
+          progressBar.style.width = (audio.currentTime / audio.duration * 100) + '%';
+        }
+      });
+
+      audio.addEventListener('ended', function() {
+        btn.classList.remove('__CID__-playing');
+        pathEl.setAttribute('d', playPath);
+        if (progressBar) progressBar.style.width = '0%';
+      });
+
+      audio.addEventListener('error', function() {
+        btn.classList.remove('__CID__-playing');
+        pathEl.setAttribute('d', playPath);
+        if (progressBar) progressBar.style.width = '0%';
+      });
+
+      btn.classList.add('__CID__-playing');
+      pathEl.setAttribute('d', pausePath);
+      audio.play().catch(function() {
+        btn.classList.remove('__CID__-playing');
+        pathEl.setAttribute('d', playPath);
+      });
+    }
+
+    function __scToggleContent(el, index) {
+      var content = document.getElementById('__CID__-full-content-' + index);
+      if (!content) return;
+      var isShow = content.classList.toggle('__CID__-show');
+      el.querySelector('span').textContent = isShow ? '收起' : '展开';
+      el.classList.toggle('__CID__-expanded');
+    }
+
+    // 注册全局渲染函数
+    window.__scRender = __scRenderPage;
+  </script>
+</body>
+</html>

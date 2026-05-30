@@ -26,29 +26,23 @@
   padding: 0;
 }
 
-/* ---- 单个按钮 ---- */
+/* ---- 单个按钮容器 ---- */
 #seven-color-card .sc-btn {
   flex: 1;
   min-width: 0;
   width: 0;
   height: 42px;
-  line-height: 42px;
   border-radius: 4px;
   font-size: 1rem;
   font-weight: 500;
-  text-decoration: none;
   box-shadow: none;
   transition: filter 0.2s, transform 0.15s;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 0 0.25rem;
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 0.3rem;
   box-sizing: border-box;
-  cursor: pointer;
   border: none;
   background: none;
 }
@@ -63,27 +57,71 @@
   transform: translateY(0);
 }
 
-#seven-color-card .sc-btn .sc-arrow {
+/* ---- 左侧文字区 ---- */
+#seven-color-card .sc-btn-left {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.5rem;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#seven-color-card .sc-btn-left .sc-btn-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- 中间分割线 ---- */
+#seven-color-card .sc-btn-divider {
+  width: 1px;
+  height: 60%;
+  background: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+html[data-theme=dark] #seven-color-card .sc-btn-divider {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ---- 右侧箭头区 ---- */
+#seven-color-card .sc-btn-right {
+  width: 36px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: 0 4px 4px 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+#seven-color-card .sc-btn-right .sc-arrow {
   font-size: 0.7rem;
   transition: transform 0.2s ease;
 }
 
-#seven-color-card .sc-btn.sc-open .sc-arrow {
+#seven-color-card .sc-btn.sc-open .sc-btn-right .sc-arrow {
   transform: rotate(180deg);
 }
 
-/* ---- 展开状态：黑白配色（亮色模式）---- */
-#seven-color-card .sc-btn.sc-open {
+/* ---- 展开状态：右部分黑白配色（亮色模式）---- */
+#seven-color-card .sc-btn.sc-open .sc-btn-right {
   background: #ffffff !important;
   color: #333333 !important;
-  border: 1px solid #dddddd !important;
 }
 
-/* ---- 展开状态：黑白配色（暗色模式）---- */
-html[data-theme=dark] #seven-color-card .sc-btn.sc-open {
+/* ---- 展开状态：右部分黑白配色（暗色模式）---- */
+html[data-theme=dark] #seven-color-card .sc-btn.sc-open .sc-btn-right {
   background: #333333 !important;
   color: #ffffff !important;
-  border: 1px solid #555555 !important;
 }
 
 /* ---- 彩虹色：亮色主题 ---- */
