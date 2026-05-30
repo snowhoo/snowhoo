@@ -91,9 +91,7 @@
   cursor: pointer;
   flex-shrink: 0;
   border-radius: 0 4px 4px 0;
-  border-left: 1px solid rgba(255, 255, 255, 0.3);
-  border: 1px solid transparent;
-  border-left-width: 1px;
+  border-left: 1px solid rgba(0, 0, 0, 0.2);
   transition: background 0.2s, color 0.2s, border-left-color 0.2s, border-color 0.2s;
 }
 
@@ -108,7 +106,7 @@
 }
 
 html[data-theme=dark] #seven-color-card .sc-btn-right {
-  border-left-color: rgba(255, 255, 255, 0.2);
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* ---- 展开状态：右部分黑白配色（亮色模式）---- */
