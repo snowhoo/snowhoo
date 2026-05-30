@@ -34,8 +34,17 @@
       btn.className = 'sc-btn sc-btn-' + item.colorIndex;
       btn.dataset.id = item.id;
       btn.dataset.htmlUrl = item.htmlUrl;
-      btn.innerHTML = '<span>' + item.icon + ' ' + item.title + '</span><span class="sc-arrow">▼</span>';
-      btn.addEventListener('click', handleBtnClick);
+      btn.innerHTML = '<span class="sc-btn-text">' + item.icon + ' ' + item.title + '</span><span class="sc-arrow">▼</span>';
+      // 文字点击：当前页跳转
+      btn.querySelector('.sc-btn-text').addEventListener('click', function(e) {
+        e.stopPropagation();
+        window.location.href = '/js/sevencolor/' + item.id + '/';
+      });
+      // 箭头点击：展开/收起（原功能）
+      btn.querySelector('.sc-arrow').addEventListener('click', function(e) {
+        e.stopPropagation();
+        handleBtnClick({ currentTarget: btn });
+      });
       row.appendChild(btn);
     });
     // 按钮渲染完成后，确保 content 容器存在

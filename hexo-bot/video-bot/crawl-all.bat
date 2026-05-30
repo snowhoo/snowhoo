@@ -27,7 +27,7 @@ echo [%DATE% %TIME%] CRAWL DONE >> "%LOG%"
 
 REM Git push
 cd /d "%HEXO_DIR%"
-git diff --quiet -- "source/video"
+git diff --quiet -- "source/js/sevencolor/3/video"
 if %ERRORLEVEL% EQU 1 (
     echo Pushing...
     echo [%DATE% %TIME%] Pushing >> "%LOG%"
