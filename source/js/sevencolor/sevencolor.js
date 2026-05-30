@@ -38,7 +38,7 @@
       // 文字点击：当前页跳转
       btn.querySelector('.sc-btn-text').addEventListener('click', function(e) {
         e.stopPropagation();
-        window.location.href = '/js/sevencolor/' + item.id + '/';
+        window.location.href = item.htmlUrl.replace(/[^/]*$/, '');
       });
       // 箭头点击：展开/收起（原功能）
       btn.querySelector('.sc-arrow').addEventListener('click', function(e) {
