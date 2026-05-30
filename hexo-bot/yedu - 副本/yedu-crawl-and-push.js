@@ -1,6 +1,6 @@
 /**
- * 夜读爬取 + 更新索引 + 发布
- * 流程: 爬取新文章 → 更新 data/index.json → git push
+ * 夜读爬取 + 更新列表 + 发布
+ * 流程: 爬取新文章 → 更新 index.html 的脚本列表 → git push
  * 用法: node yedu-crawl-and-push.js
  */
 
@@ -13,9 +13,10 @@ const { execSync } = require('child_process');
 
 // ============ 配置 ============
 const ALBUM_URL = 'https://www.peopleapp.com/audiotopic/21622-10000002141';
-const OUTPUT_DIR = 'D:\\hexo\\source\\js\\sevencolor\\1';
+const OUTPUT_DIR = 'D:\\hexo\\source\\js\\sevencolor\\test1';
 const DATA_DIR = path.join(OUTPUT_DIR, 'data');
 const IMAGES_DIR = path.join(OUTPUT_DIR, 'images');
+const INDEX_HTML = path.join(OUTPUT_DIR, 'index.html');
 const HEXO_DIR = 'D:\\hexo';
 const sharp = require('sharp');
 
@@ -168,18 +169,46 @@ async function fetchDetail(page) {
   });
 }
 
-// ============ 更新 data/index.json ============
-function updateIndexJson() {
-  log('[更新] data/index.json...');
+// ============ 更新 index.html 中的脚本列表 ============
+function updateIndexHtmlList() {
+  log('[更新] index.html 脚本列表...');
 
   const files = fs.readdirSync(DATA_DIR)
     .filter(f => f.endsWith('.js') && f !== 'article-list.js')
     .sort()
     .reverse();
 
-  const indexPath = path.join(DATA_DIR, 'index.json');
-  fs.writeFileSync(indexPath, JSON.stringify(files, null, 2), 'utf-8');
-  log(`  [完成] ${files.length} 个数据文件`);
+  // 生成新的 script 标签列表
+  const newScriptTags = files.map(f => {
+    return `  <script src="./data/${f}"></script>`;
+  }).join('\n');
+
+  // 读取现有 index.html
+  let html = fs.readFileSync(INDEX_HTML, 'utf-8');
+
+  // 用正则替换 <!-- DATA_FILES_START --> ... <!-- DATA_FILES_END --> 之间的内容
+  const startMarker = '<!-- DATA_FILES_START -->';
+  const endMarker = '<!-- DATA_FILES_END -->';
+
+  if (html.includes(startMarker) && html.includes(endMarker)) {
+    const regex = new RegExp(startMarker + '[\\s\\S]*?' + endMarker);
+    html = html.replace(regex, startMarker + '\n' + newScriptTags + '\n' + endMarker);
+    log(`  [替换] 找到标记，替换为 ${files.length} 个脚本`);
+  } else {
+    // 兼容旧格式：替换掉整个 <body> 里的 data 脚本部分
+    // 匹配最后一个 </body> 前面的所有 data/*.js 的 script 标签
+    const bodyScriptRegex = /(\n\s*<script src="\.\/data\/[^"]+\.js"><\/script>)+/g;
+    const match = html.match(bodyScriptRegex);
+    if (match) {
+      html = html.replace(bodyScriptRegex, '\n' + newScriptTags);
+      log(`  [替换] 旧格式，替换为 ${files.length} 个脚本`);
+    } else {
+      log('  [跳过] 未找到脚本标记且无旧格式内容，可能需要检查 index.html');
+    }
+  }
+
+  fs.writeFileSync(INDEX_HTML, html, 'utf-8');
+  log(`[完成] index.html 已更新`);
 }
 
 // ============ Git push ============
@@ -317,7 +346,7 @@ async function main() {
 
     if (fetchedCount > 0) {
       log(`[完成] 新增 ${fetchedCount} 篇`);
-      updateIndexJson();
+      updateIndexHtmlList();
       gitPush();
     } else {
       log('[完成] 无新内容，跳过发布');

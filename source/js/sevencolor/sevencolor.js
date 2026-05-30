@@ -89,34 +89,12 @@
     return html;
   }
 
-  // 每个卡口的渲染函数（contentId → renderFn）
-  var _scRenderFns = {};
-
-  // contentId → window 全局变量前缀
-  var CONTENT_PREFIX = {
-    yedu: '__yedu_',
-    news: '__news_',
-    video: '__video_',
-    photo: '__photo_'
-  };
-
-  // 注册渲染函数（由模板 JS 调用）
-  function _scRegisterRenderFn(contentId, fn) {
-    _scRenderFns[contentId] = fn;
-  }
-
-  // 调用渲染函数
-  function _scCallRender(contentId, page) {
-    var fn = _scRenderFns[contentId];
-    if (fn) fn(page);
-  }
-
   function openContent(id, htmlUrl, btn) {
     var container = document.getElementById('seven-color-card');
     var content = container.querySelector('#sc-content-' + id);
     if (!content) return;
 
-    // 如果内容已加载过，从 dataset 恢复 articles 并直接渲染
+    // 如果内容已加载过，直接恢复并重新渲染
     if (content.dataset.loaded === 'true') {
       try {
         window.__scArticles = JSON.parse(content.dataset.articles || '[]');
@@ -126,159 +104,111 @@
       btn.classList.add('sc-open');
       content.classList.add('sc-open');
       addCollapseBar(content, id);
-      _scCallRender(id, 1);
+      if (window.__scRender) window.__scRender(1);
       return;
     }
 
     btn.classList.add('sc-open');
     content.classList.add('sc-open');
     addCollapseBar(content, id);
+    content.innerHTML = '<div class="sc-loading">加载中...</div>';
 
-    if (!content.dataset.loaded) {
-      content.innerHTML = '<div class="sc-loading">加载中...</div>';
-
-      fetch(htmlUrl)
-        .then(function(r) { return r.text(); })
-        .then(function(html) {
-          // 0. 先提取 <head> 中的 <style> 和 <link> 标签（在删除 head 之前）
-          var headStyles = [];
-          var headLinks = [];
-          html = html.replace(/<head[^>]*>([\s\S]*?)<\/head>\s*/gi, function(match, headContent) {
-            var s = headContent.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
-            if (s) headStyles = headStyles.concat(s);
-            var l = headContent.match(/<link[^>]+rel=["']stylesheet["'][^>]*>/gi);
-            if (l) headLinks = headLinks.concat(l);
-            return '';
-          });
-
-          // 去掉模板 HTML 的外层框架标签，只保留 body 内容
-          html = html.replace(/<!DOCTYPE[^>]*>\s*/gi, '');
-          html = html.replace(/<html[^>]*>/gi, '');
-          html = html.replace(/<\/html>\s*/gi, '');
-          html = html.replace(/<body/gi, '<div');
-          html = html.replace(/<\/body>/gi, '</div>');
-
-          // 此时 html 就是一个 <div>...</div> 结构，body 就是它的外层容器
-          // 提取其中内容（即 body > div.app 那个层级的 div）
-          var bodyContent = html.replace(/^<div[^>]*>/, '').replace(/<\/div>\s*$/, '');
-
-          // basePath 在 CSS 注入之前就需要用到
-          var basePath = htmlUrl.replace(/\/[^/]*$/, '/');
-
-          // 1. 注入 CSS（每个 id 只注入一次）- 使用之前提取的 headStyles
-          if (!injectedStyles[id]) {
-            // 处理 <style> 标签
-            if (headStyles.length > 0) {
-              headStyles.forEach(function(styleTag) {
-                var contentMatch = styleTag.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-                if (contentMatch) {
-                  var newStyle = document.createElement('style');
-                  var cssContent = contentMatch[1]
-                    .replace(/__CID__/g, id)
-                    .replace(/url\(\s*['"]?([^'"\)]+)['"]?\s*\)/g, function(m, path) {
-                      if (path.startsWith('/') || path.startsWith('http')) return m;
-                      return 'url(\'' + basePath + path + '\')';
-                    });
-                  newStyle.textContent = cssContent;
-                  newStyle.dataset.scId = id;
-                  document.head.appendChild(newStyle);
-                  console.log('[SevenColor] CSS injected, textContent length:', cssContent.length);
-                }
-              });
-            }
-            // 处理 <link rel="stylesheet"> 标签
-            if (headLinks.length > 0) {
-              headLinks.forEach(function(linkTag) {
-                var tempDiv = document.createElement('div');
-                tempDiv.innerHTML = linkTag;
-                var linkEl = tempDiv.firstChild;
-                if (linkEl) {
-                  linkEl.dataset.scId = id;
-                  document.head.appendChild(linkEl);
-                }
-              });
-            }
-            injectedStyles[id] = true;
-          }
-
-          // 2. 提取 data 脚本列表（从原始 html 字符串中提取）
-          var dataScripts = [];
-          var scriptRegex = /<script[^>]+src=["']([^"']*data\/[^"']+\.js)["'][^>]*>/gi;
-          var match;
-          while ((match = scriptRegex.exec(bodyContent)) !== null) {
-            dataScripts.push(basePath + match[1].replace(/^\.\//, ''));
-          }
-
-          // 3. 提取内联脚本内容（用于后续 eval 执行）
-          var inlineScriptContent = '';
-          var scriptMatch = bodyContent.match(/<script>([\s\S]*?)<\/script>/i);
-          if (scriptMatch) {
-            inlineScriptContent = scriptMatch[1];
-          }
-
-          // 4. 生成纯净 HTML：移除 DATA_FILES 注释块和 data 脚本标签，保留内联 JS 供后续 eval
-          var bodyHtml = bodyContent
-            .replace(/<!--\s*DATA_FILES_START\s*-->\s*/gi, '')
-            .replace(/\s*<!--\s*DATA_FILES_END\s*-->/gi, '')
-            .replace(/<script[^>]+src=["']([^"']*data\/[^"']+\.js)["'][^>]*>\s*/gi, '')
-            .replace(/<script>[\s\S]*?<\/script>/i, ''); // 移除内联脚本（稍后 eval）
-
-          bodyHtml = fixRelativePaths(bodyHtml, basePath);
-          bodyHtml = bodyHtml.replace(/__CID__/g, id);
-          // JS 代码里的 __CID__ArticleList 也要替换
-          inlineScriptContent = inlineScriptContent.replace(/__CID__/g, id);
-
-          // 5. 加载数据脚本
-          return Promise.all(dataScripts.map(function(src) {
-            return fetch(src).then(function(r) { return r.text(); });
-          })).then(function(texts) {
-            texts.forEach(function(text) {
-              // 修复数据脚本中的相对路径（coverSrc, audioSrc 等）
-              text = text.replace(/"(\.[^"]+)"/g, function(m, path) {
-                if (path.startsWith('/') || path.startsWith('http')) return m;
-                return '"' + basePath + path.replace(/^\.\//, '') + '"';
-              });
-              try { eval(text); } catch(e) {}
-            });
-
-            var prefix = CONTENT_PREFIX[id] || ('__' + id + '_');
-            window.__scArticles = Object.keys(window)
-              .filter(function(k) { return k.startsWith(prefix); })
-              .sort()
-              .reverse()
-              .map(function(k) { return window[k]; });
-
-            console.log('[SevenColor] articles count:', window.__scArticles.length, 'prefix:', prefix);
-            if (window.__scArticles.length > 0) {
-              console.log('[SevenColor] first article coverSrc:', window.__scArticles[0].coverSrc);
-            }
-            // 检查 CSS 是否注入
-            var injected = document.querySelector('head style[data-sc-id="' + id + '"]');
-            console.log('[SevenColor] injected CSS exists:', !!injected, 'id:', id);
-            if (injected) {
-              console.log('[SevenColor] CSS content (first 200 chars):', injected.textContent.substring(0, 200));
-            }
-
-            return { bodyHtml: bodyHtml, inlineScriptContent: inlineScriptContent };
-          });
-        })
-        .then(function(result) {
-          // 保存 articles 到 dataset，避免依赖 window 全局变量（AJAX 翻页后 window 上下文会刷新）
-          content.dataset.articles = JSON.stringify(window.__scArticles);
-          content.innerHTML = result.bodyHtml;
-          content.dataset.loaded = 'true';
-          // 加载完成后添加收起条
-          addCollapseBar(content, id);
-          // eval 内联脚本（innerHTML 不会自动执行内联 script）
-          if (result.inlineScriptContent) {
-            try { eval(result.inlineScriptContent); } catch(e) { console.error('Script eval error:', e); }
-          }
-        })
-        .catch(function(e) {
-          content.innerHTML = '<div class="sc-loading">内容加载失败</div>';
-          console.error('SevenColor load failed:', e);
+    fetch(htmlUrl)
+      .then(function(r) { return r.text(); })
+      .then(function(html) {
+        // 提取 <head> 中的 <style> 和 <link>
+        var headStyles = [];
+        var headLinks = [];
+        html = html.replace(/<head[^>]*>([\s\S]*?)<\/head>\s*/gi, function(match, headContent) {
+          var s = headContent.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+          if (s) headStyles = headStyles.concat(s);
+          var l = headContent.match(/<link[^>]+rel=["']stylesheet["'][^>]*>/gi);
+          if (l) headLinks = headLinks.concat(l);
+          return '';
         });
-    }
+
+        // 去掉 Hexo front matter 和外层框架标签
+        html = html.replace(/^---[\s\S]*?---\s*/i, '');
+        html = html.replace(/<!DOCTYPE[^>]*>\s*/gi, '');
+        html = html.replace(/<html[^>]*>/gi, '');
+        html = html.replace(/<\/html>\s*/gi, '');
+        html = html.replace(/<body/gi, '<div');
+        html = html.replace(/<\/body>/gi, '</div>');
+        var bodyContent = html.replace(/^<div[^>]*>/, '').replace(/<\/div>\s*$/, '');
+
+        // 提取内联脚本
+        var inlineScriptContent = '';
+        var scriptMatch = bodyContent.match(/<script>([\s\S]*?)<\/script>/i);
+        if (scriptMatch) {
+          inlineScriptContent = scriptMatch[1];
+        }
+
+        // 移除所有 script 标签
+        var bodyHtml = bodyContent.replace(/<script[\s\S]*?<\/script>/gi, '');
+
+        var basePath = htmlUrl.replace(/\/[^/]*$/, '/');
+
+        bodyHtml = fixRelativePaths(bodyHtml, basePath);
+        bodyHtml = bodyHtml.replace(/__CID__/g, id);
+
+        // 注入 CSS（每个 id 只注入一次）
+        if (!injectedStyles[id]) {
+          if (headStyles.length > 0) {
+            headStyles.forEach(function(styleTag) {
+              var contentMatch = styleTag.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+              if (contentMatch) {
+                var newStyle = document.createElement('style');
+                var cssContent = contentMatch[1]
+                  .replace(/__CID__/g, id)
+                  .replace(/url\(\s*['"]?([^'"\)]+)['"]?\s*\)/g, function(m, path) {
+                    if (path.startsWith('/') || path.startsWith('http')) return m;
+                    return 'url(\'' + basePath + path + '\')';
+                  });
+                newStyle.textContent = cssContent;
+                newStyle.dataset.scId = id;
+                document.head.appendChild(newStyle);
+              }
+            });
+          }
+          if (headLinks.length > 0) {
+            headLinks.forEach(function(linkTag) {
+              var tempDiv = document.createElement('div');
+              tempDiv.innerHTML = linkTag;
+              var linkEl = tempDiv.firstChild;
+              if (linkEl) {
+                linkEl.dataset.scId = id;
+                document.head.appendChild(linkEl);
+              }
+            });
+          }
+          injectedStyles[id] = true;
+        }
+
+        // 替换内联脚本中的 __CID__
+        inlineScriptContent = inlineScriptContent.replace(/__CID__/g, id);
+
+        // 注入 basePath 供模板使用
+        window.__SC_BASE_PATH = basePath;
+
+        // 设置 DOM
+        content.innerHTML = bodyHtml;
+        addCollapseBar(content, id);
+
+        // 注册数据加载回调（模板加载完数据后通知我们缓存）
+        window.__scOnDataLoaded = function(articles) {
+          content.dataset.articles = JSON.stringify(articles);
+          content.dataset.loaded = 'true';
+        };
+
+        // eval 内联脚本（模板自行加载数据并渲染）
+        if (inlineScriptContent) {
+          try { eval(inlineScriptContent); } catch(e) { console.error('[SevenColor] Script eval error:', e); }
+        }
+      })
+      .catch(function(e) {
+        content.innerHTML = '<div class="sc-loading">内容加载失败</div>';
+        console.error('[SevenColor] load failed:', e);
+      });
   }
 
   function closeContent(id) {
