@@ -13,10 +13,10 @@
 [data-theme="light"]{--bg-page:#f5f5f5;--bg-card:#fff;--bg-card-hover:#f0f0f5;--bg-eplist:#fafafa;--bg-eplist-alt:#f0f0f0;--bg-player:#000;--bg-toolbar:#e8e0f0;--bg-input:#fff;--text-primary:#212121;--text-secondary:#546e7a;--text-muted:#90a4ae;--border:#ddd;--accent:#e65100;--accent-hover:#d84315;--badge-playable-bg:#2e7d32;--badge-playable-text:#fff;--badge-unplayable-bg:#bdbdbd;--badge-unplayable-text:#757575;--shadow:rgba(0,0,0,0.1);--card-radius:10px}
 #preload-progress-bar{width:100%;height:1px;background:transparent;margin:0;position:relative}
 #preload-progress-fill{width:0%;height:100%;background:#aaa;transition:width .2s}
-.toolbar{display:flex;gap:6px;margin:6px 0;flex-wrap:nowrap;align-items:center}
+.toolbar{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap;align-items:center}
 .toolbar select,.toolbar input,.toolbar button{padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text-primary);font-size:13px}
-.toolbar select{flex:3;cursor:pointer}
-.toolbar input{flex:4}
+.toolbar select{flex:2;min-width:100px;cursor:pointer}
+.toolbar input{flex:2;min-width:120px}
 .toolbar button{flex-shrink:0;background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:500}
 .toolbar button:hover{background:var(--accent-hover)}
 .cat-bar{margin:0 8px 0 0;display:flex;align-items:center;gap:8px}
