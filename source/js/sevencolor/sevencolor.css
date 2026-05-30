@@ -36,7 +36,6 @@
   font-size: 1rem;
   font-weight: 500;
   box-shadow: none;
-  transition: filter 0.2s, transform 0.15s;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -47,15 +46,7 @@
   background: none;
 }
 
-#seven-color-card .sc-btn:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
-
-#seven-color-card .sc-btn:active {
-  filter: brightness(0.95);
-  transform: translateY(0);
-}
+/* 容器整体 hover 效果移除，改为左右部分各自响应 */
 
 /* ---- 左侧文字区 ---- */
 #seven-color-card .sc-btn-left {
@@ -70,6 +61,18 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  border-radius: 4px 0 0 4px;
+  transition: filter 0.2s, transform 0.15s;
+}
+
+#seven-color-card .sc-btn-left:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+#seven-color-card .sc-btn-left:active {
+  filter: brightness(0.95);
+  transform: translateY(0);
 }
 
 #seven-color-card .sc-btn-left .sc-btn-text {
@@ -89,11 +92,39 @@
   flex-shrink: 0;
   border-radius: 0 4px 4px 0;
   border-left: 1px solid rgba(255, 255, 255, 0.3);
-  transition: background 0.2s, color 0.2s, border-left-color 0.2s;
+  border: 1px solid transparent;
+  border-left-width: 1px;
+  transition: background 0.2s, color 0.2s, border-left-color 0.2s, border-color 0.2s;
+}
+
+#seven-color-card .sc-btn-right:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+#seven-color-card .sc-btn-right:active {
+  filter: brightness(0.95);
+  transform: translateY(0);
 }
 
 html[data-theme=dark] #seven-color-card .sc-btn-right {
   border-left-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ---- 展开状态：右部分黑白配色（亮色模式）---- */
+#seven-color-card .sc-btn.sc-open .sc-btn-right {
+  background: #ffffff !important;
+  color: #333333 !important;
+  border: 1px solid #dddddd !important;
+  border-left-width: 1px !important;
+}
+
+/* ---- 展开状态：右部分黑白配色（暗色模式）---- */
+html[data-theme=dark] #seven-color-card .sc-btn.sc-open .sc-btn-right {
+  background: #333333 !important;
+  color: #ffffff !important;
+  border: 1px solid #555555 !important;
+  border-left-width: 1px !important;
 }
 
 #seven-color-card .sc-btn-right .sc-arrow {
