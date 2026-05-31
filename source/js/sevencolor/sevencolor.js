@@ -175,20 +175,15 @@
                 var cssContent = contentMatch[1]
                   .replace(/__CID__/g, id);
                 
-                // 将 CSS 限制在 #sc-content-{id} 容器内（排除@rules）
-                // 先处理@rules，避免被添加前缀
-                var atRules = [];
-                cssContent = cssContent.replace(/@[^{]+\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, function(m) {
-                  atRules.push(m);
-                  return '___ATRULE_' + (atRules.length - 1) + '___';
-                });
-                
-                // 给普通规则添加前缀
-                cssContent = cssContent.replace(/([^@][^{]*)(\{[^}]*\})/g, '#sc-content-' + id + ' $1$2');
-                
-                // 恢复@rules
-                atRules.forEach(function(rule, i) {
-                  cssContent = cssContent.replace('___ATRULE_' + i + '___', rule);
+                // 将 CSS 限制在 #sc-content-{id} 容器内
+                // 使用更精确的方法：给每个选择器添加父容器限定
+                cssContent = cssContent.replace(/([^{}]+)(\{[^}]*\})/g, function(match, selector, body) {
+                  // 跳过@rules
+                  if (selector.trim().startsWith('@')) {
+                    return match;
+                  }
+                  // 给选择器添加前缀限定
+                  return '#sc-content-' + id + ' ' + selector.trim() + body;
                 });
                 
                 // 处理相对路径
@@ -209,8 +204,9 @@
               tempDiv.innerHTML = linkTag;
               var linkEl = tempDiv.firstChild;
               if (linkEl) {
-                linkEl.dataset.scId = id;
-                document.head.appendChild(linkEl);
+                var newLink = linkEl.cloneNode(true);
+                newLink.dataset.scId = id;
+                document.head.appendChild(newLink);
               }
             });
           }

@@ -84,8 +84,30 @@ font-size:13px
             }
             const shadowRoot = host.shadowRoot;
 
-            // 将 HTML 内容注入 Shadow DOM
-            shadowRoot.innerHTML = html;
+            // 处理 HTML：提取 style 并修改 CSS 选择器，防止泄露
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // 处理 style 标签，给 CSS 添加 :host 限定
+            const styles = doc.querySelectorAll('style');
+            styles.forEach(style => {
+              let css = style.textContent;
+              // 给 CSS 添加 :host 限定，确保只影响 Shadow DOM 内部
+              css = css.replace(/([^{}]+)(\{[^}]*\})/g, function(match, selector, body) {
+                if (selector.trim().startsWith('@')) {
+                  return match; // 跳过@rules
+                }
+                // body/html 选择器特殊处理
+                if (/^(body|html)/i.test(selector.trim())) {
+                  return ':host' + body;
+                }
+                return ':host ' + selector.trim() + body;
+              });
+              style.textContent = css;
+            });
+            
+            // 将处理后的内容注入 Shadow DOM
+            shadowRoot.innerHTML = doc.documentElement.innerHTML;
 
             // 处理脚本：Shadow DOM 中 <script> 标签不会自动执行，需要手动提取执行
             // 同时确保脚本在 Shadow DOM 上下文中运行（可选，保持隔离）
