@@ -8,21 +8,28 @@ layout: false
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>夜读</title>
   <style>
-    /* CSS 变量定义在 .__CID__-app 上，嵌入和独立访问都正常工作 */
-    .__CID__-app {
-      --text-primary: #1a1a2e;
-      --text-secondary: #888;
-      --card-bg: rgba(255, 255, 255, 0.95);
-      --cover-bg: #2d4a6e;
-      --border-color: #eee;
-      padding: 0;
+    /* CSS 变量定义在 :root，嵌入和独立访问都正常工作 */
+    :root {
+      --yedu-text-primary: #1a1a2e;
+      --yedu-text-secondary: #888;
+      --yedu-card-bg: rgba(255, 255, 255, 0.95);
+      --yedu-cover-bg: #2d4a6e;
+      --yedu-border-color: #eee;
     }
-    .__CID__-app[data-theme="dark"] {
-      --text-primary: #e8e8e8;
-      --text-secondary: #90a4ae;
-      --card-bg: rgba(30, 30, 50, 0.95);
-      --cover-bg: #1a1a2e;
-      --border-color: #333;
+    [data-theme="dark"] {
+      --yedu-text-primary: #e8e8e8;
+      --yedu-text-secondary: #90a4ae;
+      --yedu-card-bg: rgba(30, 30, 50, 0.95);
+      --yedu-cover-bg: #1a1a2e;
+      --yedu-border-color: #333;
+    }
+    .__CID__-app {
+      --text-primary: var(--yedu-text-primary);
+      --text-secondary: var(--yedu-text-secondary);
+      --card-bg: var(--yedu-card-bg);
+      --cover-bg: var(--yedu-cover-bg);
+      --border-color: var(--yedu-border-color);
+      padding: 0;
     }
 
     .__CID__-header {
@@ -322,13 +329,17 @@ layout: false
 
     // 主题检测：独立访问时根据系统偏好设置主题
     function detectTheme() {
-      // 如果已经在嵌入环境，由宿主页面控制主题
-      if (window.__SC_ID && window.__SC_ID !== 'yedu') return;
+      // 如果已经在嵌入环境，尝试从父文档获取主题
+      try {
+        var parentTheme = window.parent.document.documentElement.getAttribute('data-theme');
+        if (parentTheme === 'dark' || parentTheme === 'light') {
+          document.documentElement.setAttribute('data-theme', parentTheme);
+          return;
+        }
+      } catch(e) {}
+      // 否则根据系统偏好
       var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      var app = document.querySelector('.__CID__-app');
-      if (app) {
-        app.setAttribute('data-theme', isDark ? 'dark' : 'light');
-      }
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
     }
     detectTheme();
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', detectTheme);
