@@ -410,8 +410,6 @@ layout: false
         }
         if (container) {
           container.innerHTML = '<div class="' + cid + '-loading">加载失败：' + e.message + '</div>';
-        } else {
-          console.error('Container not found');
         }
       });
 
@@ -422,7 +420,10 @@ layout: false
       var end = start + PAGE_SIZE;
       var pageArticles = articles.slice(start, end);
       var totalPages = Math.ceil(articles.length / PAGE_SIZE);
-      var container = document.getElementById('__CID__ArticleList');
+      var container = document.getElementById(cid + '-ArticleList');
+      if (!container) {
+        container = document.getElementById('__CID__ArticleList');
+      }
       if (!container) return;
 
       if (articles.length === 0) {
