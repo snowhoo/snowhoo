@@ -68,12 +68,21 @@ font-size:13px
             let html = await response.text();
 
             // 清除旧的 Shadow DOM
-            while (host.firstChild) {
-                host.removeChild(host.firstChild);
+            if (host.shadowRoot) {
+                // Shadow DOM 已存在，不能重新 attach，只能清空内容
+                while (host.shadowRoot.firstChild) {
+                    host.shadowRoot.removeChild(host.shadowRoot.firstChild);
+                }
+            } else {
+                // 首次创建 Shadow DOM
+                // 清除所有子节点
+                while (host.firstChild) {
+                    host.removeChild(host.firstChild);
+                }
+                // 创建 Shadow Root（mode: 'open' 便于调试，但不影响隔离）
+                host.attachShadow({ mode: 'open' });
             }
-
-            // 创建 Shadow Root（mode: 'open' 便于调试，但不影响隔离）
-            const shadowRoot = host.attachShadow({ mode: 'open' });
+            const shadowRoot = host.shadowRoot;
 
             // 将 HTML 内容注入 Shadow DOM
             shadowRoot.innerHTML = html;

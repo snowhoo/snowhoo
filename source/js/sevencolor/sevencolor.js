@@ -174,19 +174,8 @@
                 var newStyle = document.createElement('style');
                 var cssContent = contentMatch[1]
                   .replace(/__CID__/g, id)
-                  // 给 CSS 选择器添加命名空间，限制在当前 content 容器内
-                  .replace(/(^|\s|,|\{|>)([a-zA-Z\.\#\[\*])/g, function(m, p1, p2) {
-                    // 跳过 @media、@keyframes 等 at-rules
-                    if (m.trim().startsWith('@')) return m;
-                    // 跳过已经处理过的选择器
-                    if (p1.includes('#sc-content-' + id)) return m;
-                    // body/html 选择器替换为 #sc-content-{id}
-                    if (/^(body|html)/i.test(p2)) {
-                      return p1 + '#sc-content-' + id;
-                    }
-                    // 其他选择器添加后代限定
-                    return p1 + '#sc-content-' + id + ' ' + p2;
-                  })
+                  // 将 CSS 限制在 #sc-content-{id} 容器内
+                  .replace(/([^{]+)(\{)/g, '#sc-content-' + id + ' $1$2')
                   .replace(/url\(\s*['"]?([^'"\)]+)['"]?\s*\)/g, function(m, path) {
                     if (path.startsWith('/') || path.startsWith('http')) return m;
                     return 'url(\'' + basePath + path + '\')';

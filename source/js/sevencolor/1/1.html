@@ -334,6 +334,8 @@ layout: false
           .map(function(k) { return window[k]; });
 
         console.log('[SevenColor] loaded ' + articles.length + ' articles, prefix:', prefix);
+        // 存储到全局供 __scRenderPage 使用
+        window.__scArticles = articles;
         // 通知 sevencolor.js 缓存数据（嵌入模式）
         if (typeof onDataLoaded !== 'undefined' && onDataLoaded) {
           onDataLoaded(articles);
@@ -351,7 +353,7 @@ layout: false
       });
 
     function __scRenderPage(page) {
-      var articles = window.__scArticles || [];
+      var articles = (typeof window.__scArticles !== 'undefined' ? window.__scArticles : []);
       var PAGE_SIZE = 1;
       var start = (page - 1) * PAGE_SIZE;
       var end = start + PAGE_SIZE;
