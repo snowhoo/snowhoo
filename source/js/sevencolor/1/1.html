@@ -404,7 +404,7 @@ layout: false
       })
       .catch(function(e) {
         console.error('[SevenColor] data load failed:', e);
-        var container = document.getElementById(cid + '-ArticleList');
+        var container = document.getElementById(cid + 'ArticleList');
         if (!container) {
           container = document.getElementById('__CID__ArticleList');
         }
@@ -420,7 +420,7 @@ layout: false
       var end = start + PAGE_SIZE;
       var pageArticles = articles.slice(start, end);
       var totalPages = Math.ceil(articles.length / PAGE_SIZE);
-      var container = document.getElementById(cid + '-ArticleList');
+      var container = document.getElementById(cid + 'ArticleList');
       if (!container) {
         container = document.getElementById('__CID__ArticleList');
       }
