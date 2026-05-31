@@ -110,7 +110,7 @@ font-size:13px
             shadowRoot.innerHTML = doc.documentElement.innerHTML;
 
             // 处理脚本：Shadow DOM 中 <script> 标签不会自动执行，需要手动提取执行
-            // 同时确保脚本在 Shadow DOM 上下文中运行（可选，保持隔离）
+            // 确保脚本在 Shadow DOM 上下文中运行
             const scripts = shadowRoot.querySelectorAll('script');
             scripts.forEach(oldScript => {
                 const newScript = document.createElement('script');
@@ -120,20 +120,21 @@ font-size:13px
                     newScript.async = oldScript.async;
                     newScript.defer = oldScript.defer;
                 } else {
-                    // 内联脚本：复制内容，注入沙箱变量
+                    // 内联脚本：在 Shadow DOM 上下文中执行
                     let scriptContent = oldScript.textContent;
                     const basePath = filePath.substring(0, filePath.lastIndexOf('/') + 1);
-                    // 注入全局变量供嵌入页面使用
+                    // 在 Shadow DOM 上下文中执行脚本
                     const wrapper = `
-                    (function() {
-                        window.__SC_BASE_PATH = '${basePath}';
+                    (function(doc, basePath) {
+                        var window = doc.defaultView || {};
+                        window.__SC_BASE_PATH = basePath;
                         window.__SC_ID = 'idea';
                         ${scriptContent}
-                    })();
+                    })(this);
                     `;
                     newScript.textContent = wrapper;
                 }
-                // 执行脚本，但需要添加到 Shadow DOM 中（也会在全局作用域执行，但 DOM 操作限于 Shadow Root）
+                // 将脚本添加到 Shadow DOM 中执行
                 shadowRoot.appendChild(newScript);
                 // 移除原脚本防止重复
                 oldScript.remove();

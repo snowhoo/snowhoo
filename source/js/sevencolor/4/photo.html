@@ -58,14 +58,17 @@ layout: false
 
 <script>
 (function() {
-    // 确保只初始化一次（防止重复注入导致多个实例）
-    if (window.__PicsumRandomInjected) return;
-    window.__PicsumRandomInjected = true;
+    // DOM 元素 - 使用 querySelector 在当前文档中查找
+    const container = document.querySelector('.picsum-embedded') || document.querySelector('.image-stage');
+    if (!container) return;
 
-    // DOM 元素
-    const img = document.getElementById('picsumDynamicImg');
-    const placeholder = document.getElementById('picsumPlaceholder');
-    const btn = document.getElementById('picsumRefreshBtn');
+    // 检查是否已在该容器中初始化（通过检查特定元素是否存在）
+    if (container.querySelector('.dynamic-img.loaded') || container.__picsumInit) return;
+    container.__picsumInit = true;
+
+    const img = container.querySelector('.dynamic-img') || document.getElementById('picsumDynamicImg');
+    const placeholder = container.querySelector('.img-placeholder') || document.getElementById('picsumPlaceholder');
+    const btn = container.querySelector('.btn-lucky') || document.getElementById('picsumRefreshBtn');
 
     if (!img || !placeholder || !btn) {
         console.warn('Picsum 组件缺少必要元素');
