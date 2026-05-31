@@ -176,8 +176,22 @@
                   .replace(/__CID__/g, id);
                 
                 // 将 CSS 限制在 #sc-content-{id} 容器内（排除@rules）
+                // 先处理@rules，避免被添加前缀
+                var atRules = [];
+                cssContent = cssContent.replace(/@[^{]+\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g, function(m) {
+                  atRules.push(m);
+                  return '___ATRULE_' + (atRules.length - 1) + '___';
+                });
+                
+                // 给普通规则添加前缀
                 cssContent = cssContent.replace(/([^@][^{]*)(\{[^}]*\})/g, '#sc-content-' + id + ' $1$2');
                 
+                // 恢复@rules
+                atRules.forEach(function(rule, i) {
+                  cssContent = cssContent.replace('___ATRULE_' + i + '___', rule);
+                });
+                
+                // 处理相对路径
                 cssContent = cssContent.replace(/url\(\s*['"]?([^'"\)]+)['"]?\s*\)/g, function(m, path) {
                   if (path.startsWith('/') || path.startsWith('http')) return m;
                   return 'url(\'' + basePath + path + '\')';
@@ -203,8 +217,11 @@
           injectedStyles[id] = true;
         }
 
-        // 替换内联脚本中的 __CID__
+        // 替换内联脚本中的 __CID__（全局替换）
         inlineScriptContent = inlineScriptContent.replace(/__CID__/g, id);
+        
+        // 同时替换 bodyHtml 中可能遗漏的 __CID__（包括事件处理器中的）
+        bodyHtml = bodyHtml.replace(/__CID__/g, id);
 
         // 设置 DOM
         content.innerHTML = bodyHtml;

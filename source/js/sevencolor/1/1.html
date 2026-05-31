@@ -306,12 +306,26 @@ layout: false
     var prefix = '__' + cid + '_';
     
     // 替换 HTML 中的 __CID__ 标记（独立访问时需要）
-    document.querySelectorAll('[id*="__CID__"]').forEach(function(el) {
-      el.id = el.id.replace(/__CID__/g, cid);
-    });
-    document.querySelectorAll('[class*="__CID__"]').forEach(function(el) {
-      el.className = el.className.replace(/__CID__/g, cid);
-    });
+    function replaceCidMarkers() {
+      // 替换所有元素 ID
+      var idEls = document.querySelectorAll('[id*="__CID__"]');
+      for (var i = 0; i < idEls.length; i++) {
+        idEls[i].id = idEls[i].id.replace(/__CID__/g, cid);
+      }
+      // 替换所有元素 class
+      var classEls = document.querySelectorAll('[class*="__CID__"]');
+      for (var j = 0; j < classEls.length; j++) {
+        classEls[j].className = classEls[j].className.replace(/__CID__/g, cid);
+      }
+      // 替换 style 标签中的 CSS 类名
+      var styles = document.querySelectorAll('style');
+      for (var k = 0; k < styles.length; k++) {
+        if (styles[k].textContent) {
+          styles[k].textContent = styles[k].textContent.replace(/__CID__/g, cid);
+        }
+      }
+    }
+    replaceCidMarkers();
 
     var pausePath = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
     var playPath = 'M8 5v14l11-7z';
