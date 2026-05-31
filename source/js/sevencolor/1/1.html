@@ -304,6 +304,14 @@ layout: false
     // cid: 嵌入时由 sevencolor.js 传入，独立访问使用默认值
     var cid = (typeof window.__SC_ID !== 'undefined' ? window.__SC_ID : 'yedu');
     var prefix = '__' + cid + '_';
+    
+    // 替换 HTML 中的 __CID__ 标记（独立访问时需要）
+    document.querySelectorAll('[id*="__CID__"]').forEach(function(el) {
+      el.id = el.id.replace(/__CID__/g, cid);
+    });
+    document.querySelectorAll('[class*="__CID__"]').forEach(function(el) {
+      el.className = el.className.replace(/__CID__/g, cid);
+    });
 
     var pausePath = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
     var playPath = 'M8 5v14l11-7z';

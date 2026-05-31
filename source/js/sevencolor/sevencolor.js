@@ -173,13 +173,16 @@
               if (contentMatch) {
                 var newStyle = document.createElement('style');
                 var cssContent = contentMatch[1]
-                  .replace(/__CID__/g, id)
-                  // 将 CSS 限制在 #sc-content-{id} 容器内
-                  .replace(/([^{]+)(\{)/g, '#sc-content-' + id + ' $1$2')
-                  .replace(/url\(\s*['"]?([^'"\)]+)['"]?\s*\)/g, function(m, path) {
-                    if (path.startsWith('/') || path.startsWith('http')) return m;
-                    return 'url(\'' + basePath + path + '\')';
-                  });
+                  .replace(/__CID__/g, id);
+                
+                // 将 CSS 限制在 #sc-content-{id} 容器内（排除@rules）
+                cssContent = cssContent.replace(/([^@][^{]*)(\{[^}]*\})/g, '#sc-content-' + id + ' $1$2');
+                
+                cssContent = cssContent.replace(/url\(\s*['"]?([^'"\)]+)['"]?\s*\)/g, function(m, path) {
+                  if (path.startsWith('/') || path.startsWith('http')) return m;
+                  return 'url(\'' + basePath + path + '\')';
+                });
+                
                 newStyle.textContent = cssContent;
                 newStyle.dataset.scId = id;
                 document.head.appendChild(newStyle);
