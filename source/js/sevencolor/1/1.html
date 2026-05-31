@@ -300,9 +300,9 @@ layout: false
 
   <script>
     // basePath: 嵌入时由 sevencolor.js 传入，独立访问默认 ./
-    var basePath = (typeof basePath !== 'undefined' ? basePath : './');
+    var basePath = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : './');
     // cid: 嵌入时由 sevencolor.js 传入，独立访问使用默认值
-    var cid = (typeof id !== 'undefined' ? id : 'yedu');
+    var cid = (typeof window.__SC_ID !== 'undefined' ? window.__SC_ID : 'yedu');
     var prefix = '__' + cid + '_';
 
     var pausePath = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';

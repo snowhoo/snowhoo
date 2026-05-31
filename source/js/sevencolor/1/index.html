@@ -5,11 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>夜读</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif; background: var(--bg, #f5f5f5); color: var(--color, #333); min-height: 100vh; }
-    html[data-theme=dark] body { background: #1a1a1a; color: #eee; }
-    \\.sc-page { max-width: 480px; margin: 0 auto; padding: 16px; }
-
     .__CID__-app { padding: 0; }
 
     .__CID__-header {
@@ -293,19 +288,18 @@
   </style>
 </head>
 <body>
-  <div class="sc-page">
   <div class="__CID__-app">
     <div class="__CID__-article-list" id="__CID__ArticleList">
       <div class="__CID__-loading">正在加载...</div>
     </div>
   </div>
-  </div>
+
 
   <script>
-    // 独立访问模式：basePath 为 ./ ，cid 默认 yedu
-    var basePath = window.__SC_BASE_PATH || './';
-    var cid = '__CID__';
-    if (cid === '__CID__') cid = 'yedu';
+    // basePath: 嵌入时由 sevencolor.js 传入，独立访问默认 ./
+    var basePath = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : './');
+    // cid: 嵌入时由 sevencolor.js 传入，独立访问使用默认值
+    var cid = (typeof window.__SC_ID !== 'undefined' ? window.__SC_ID : 'yedu');
     var prefix = '__' + cid + '_';
 
     var pausePath = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
@@ -321,6 +315,7 @@
       })
       .then(function(texts) {
         texts.forEach(function(text) {
+          // 修复数据文件中的相对路径（coverSrc, audioSrc）
           text = text.replace(/"(\.[^"]+)"/g, function(m, path) {
             if (path.startsWith('/') || path.startsWith('http')) return m;
             return '"' + basePath + path.replace(/^\.\//, '') + '"';
@@ -328,14 +323,22 @@
           try { eval(text); } catch(e) { console.error('Data eval error:', e); }
         });
 
-        window.__scArticles = Object.keys(window)
+        // 收集文章数据
+        var articles = Object.keys(window)
           .filter(function(k) { return k.startsWith(prefix); })
           .sort()
           .reverse()
           .map(function(k) { return window[k]; });
 
-        console.log('[SevenColor] loaded ' + window.__scArticles.length + ' articles, prefix:', prefix);
-        if (window.__scOnDataLoaded) window.__scOnDataLoaded(window.__scArticles);
+        console.log('[SevenColor] loaded ' + articles.length + ' articles, prefix:', prefix);
+        // 通知 sevencolor.js 缓存数据（嵌入模式）
+        if (typeof onDataLoaded !== 'undefined' && onDataLoaded) {
+          onDataLoaded(articles);
+        }
+        // 注册渲染函数
+        if (typeof defineRender !== 'undefined' && defineRender) {
+          defineRender(__scRenderPage);
+        }
         __scRenderPage(1);
       })
       .catch(function(e) {
@@ -518,8 +521,8 @@
       el.classList.toggle('__CID__-expanded');
     }
 
-    // 注册全局渲染函数
-    window.__scRender = __scRenderPage;
+    // 注册全局渲染函数（嵌入模式关闭后重新打开时使用）
+    // 已在上面通过 defineRender 注册
   </script>
 </body>
 </html>

@@ -380,4 +380,8 @@ html[data-theme=dark] .news-rank {
   // Initial load
   fetchNews(currentPlatform);
 })();
+// 通知 sevencolor.js 数据已加载（嵌入模式缓存）
+if (typeof onDataLoaded !== 'undefined' && onDataLoaded) {
+  onDataLoaded([]);
+}
 </script>

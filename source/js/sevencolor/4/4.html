@@ -91,13 +91,12 @@ font-size:13px
                 } else {
                     // 内联脚本：复制内容，注入沙箱变量
                     let scriptContent = oldScript.textContent;
-                    // 注入 basePath 和 id 变量（如果脚本需要）
+                    const basePath = filePath.substring(0, filePath.lastIndexOf('/') + 1);
+                    // 注入全局变量供嵌入页面使用
                     const wrapper = `
                     (function() {
-                        var basePath = '${filePath.substring(0, filePath.lastIndexOf('/') + 1)}';
-                        var id = 'idea';
-                        var onDataLoaded = function() {};
-                        var defineRender = function() {};
+                        window.__SC_BASE_PATH = '${basePath}';
+                        window.__SC_ID = 'idea';
                         ${scriptContent}
                     })();
                     `;

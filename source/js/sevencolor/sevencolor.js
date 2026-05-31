@@ -218,6 +218,10 @@
         content.innerHTML = bodyHtml;
         addCollapseBar(content, id);
 
+        // 注入全局变量供嵌入页面使用（独立访问时也有默认值）
+        window.__SC_BASE_PATH = basePath;
+        window.__SC_ID = id;
+
         // 创建独立作用域
         var scope = {
           articles: [],
