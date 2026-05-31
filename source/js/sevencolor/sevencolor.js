@@ -182,8 +182,17 @@
                   if (selector.trim().startsWith('@')) {
                     return match;
                   }
-                  // 给选择器添加前缀限定
-                  return '#sc-content-' + id + ' ' + selector.trim() + body;
+                  var sel = selector.trim();
+                  // 特殊处理 :root — 替换为父容器，使 CSS 变量生效
+                  if (sel === ':root') {
+                    return '#sc-content-' + id + body;
+                  }
+                  // 特殊处理 [data-theme="dark"] — 同一元素，不加空格（CSS 变量继承）
+                  if (sel === '[data-theme="dark"]' || sel === '[data-theme="light"]') {
+                    return '#sc-content-' + id + sel + body;
+                  }
+                  // 给选择器添加前缀限定（后代选择器）
+                  return '#sc-content-' + id + ' ' + sel + body;
                 });
                 
                 // 处理相对路径

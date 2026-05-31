@@ -94,8 +94,29 @@ layout: false
     // 生成随机图片URL（防缓存）
     function buildUrl() {
         const { width, height } = getOptimalSize();
-        const seed = Math.random().toString(36) + Date.now() + Math.random();
-        return `https://picsum.photos/${width}/${height}?random=${seed}&_t=${Date.now()}`;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        // 随机渐变背景
+        const hues = [Math.random()*360, (Math.random()*360+180)%360];
+        for(let x=0;x<width;x+=4){
+            for(let y=0;y<height;y+=4){
+                let r=(Math.sin(x/width*Math.PI)*128+127)|0,
+                    g=(Math.sin(y/height*Math.PI)*128+127)|0,
+                    b=(Math.sin((x+y)/(width+height)*Math.PI*2)*128+127)|0;
+                ctx.fillStyle=`rgb(${r},${g},${b})`;
+                ctx.fillRect(x,y,4,4);
+            }
+        }
+        // 添加随机圆形装饰
+        for(let i=0;i<12;i++){
+            ctx.beginPath();
+            ctx.arc(Math.random()*width, Math.random()*height, Math.random()*Math.min(width, height)*0.3, 0, 2*Math.PI);
+            ctx.fillStyle=`rgba(255,255,255,${0.03+Math.random()*0.12})`;
+            ctx.fill();
+        }
+        return canvas.toDataURL('image/jpeg', 0.92);
     }
 
     // 重置UI状态（恢复按钮、清理超时）
@@ -136,7 +157,7 @@ layout: false
             }, TIMEOUT_MS);
 
             const tempImg = new Image();
-            tempImg.crossOrigin = 'Anonymous';
+            // data URL 不需要 crossOrigin
             tempImg.onload = () => {
                 img.src = url;
                 img.onload = () => {
@@ -197,7 +218,7 @@ layout: false
         } finally {
             // 无论成功或失败，确保恢复按钮和状态
             resetUI(true);
-            btn.innerText = originalText;    // 恢复原始文字（可能是“重新试一试手气”）
+            btn.innerText = originalText;    // 恢复原始文字（可能是"重新试一试手气"）
             btn.style.opacity = '';
             btn.style.cursor = '';
             isLoading = false;
