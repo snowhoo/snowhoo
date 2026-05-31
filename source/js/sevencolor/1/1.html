@@ -8,7 +8,7 @@ layout: false
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>夜读</title>
   <style>
-    /* CSS 变量定义在 :root，嵌入和独立访问都正常工作 */
+    /* CSS 变量定义在 :root */
     :root {
       --yedu-text-primary: #1a1a2e;
       --yedu-text-secondary: #888;
@@ -23,44 +23,47 @@ layout: false
       --yedu-cover-bg: #1a1a2e;
       --yedu-border-color: #333;
     }
-    .__CID__-app {
+
+    .yedu-app {
       --text-primary: var(--yedu-text-primary);
       --text-secondary: var(--yedu-text-secondary);
       --card-bg: var(--yedu-card-bg);
       --cover-bg: var(--yedu-cover-bg);
       --border-color: var(--yedu-border-color);
       padding: 0;
+      font-size: 14px;
+      line-height: 1.5;
     }
 
-    .__CID__-header {
+    .yedu-header {
       align-items: baseline;
-      gap: 12px; 
+      gap: 12px;
     }
 
-    .__CID__-header span {
+    .yedu-header span {
       font-size: 0.85rem;
       color: var(--text-secondary, #888);
     }
 
-    .__CID__-article-list { padding: 0; text-align: left; }
+    .yedu-article-list { padding: 0; text-align: left; }
 
-    .__CID__-article-card {
+    .yedu-article-card {
       background: var(--card-bg, rgba(255, 255, 255, 0.95));
       border-radius: 10px;
       overflow: hidden;
       margin-bottom: 12px;
     }
 
-    .__CID__-article-card:hover {
+    .yedu-article-card:hover {
       transform: translateY(-2px);
     }
 
-    .__CID__-article-main {
+    .yedu-article-main {
       display: flex;
       gap: 12px;
     }
 
-    .__CID__-article-cover-card {
+    .yedu-article-cover-card {
       flex: 1;
       align-self: flex-start;
       background: var(--card-bg, rgba(255, 255, 255, 0.95));
@@ -68,7 +71,7 @@ layout: false
       overflow: hidden;
     }
 
-    .__CID__-article-cover {
+    .yedu-article-cover {
       position: relative;
       width: 100%;
       aspect-ratio: 2 / 1;
@@ -76,7 +79,7 @@ layout: false
       background: var(--cover-bg, #2d4a6e);
     }
 
-    .__CID__-article-cover img {
+    .yedu-article-cover img {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -84,9 +87,9 @@ layout: false
       transition: transform 0.3s ease;
     }
 
-    .__CID__-article-card:hover .__CID__-article-cover img { transform: scale(1.06); }
+    .yedu-article-card:hover .yedu-article-cover img { transform: scale(1.06); }
 
-    .__CID__-audio-btn {
+    .yedu-audio-btn {
       position: absolute;
       top: 50%;
       left: 50%;
@@ -104,13 +107,13 @@ layout: false
       z-index: 2;
     }
 
-    .__CID__-audio-btn:hover { background: rgba(233, 69, 96, 1); transform: translate(-50%, -50%) scale(1.1); }
+    .yedu-audio-btn:hover { background: rgba(233, 69, 96, 1); transform: translate(-50%, -50%) scale(1.1); }
 
-    .__CID__-audio-btn svg { width: 14px; height: 14px; fill: #fff; margin-left: 2px; }
-    .__CID__-audio-btn.__CID__-playing svg { margin-left: 0; }
-    .__CID__-audio-btn.__CID__-playing svg path { d: "M6 4h4v16H6zM14 4h4v16h-4z"; }
+    .yedu-audio-btn svg { width: 14px; height: 14px; fill: #fff; margin-left: 2px; }
+    .yedu-audio-btn.yedu-playing svg { margin-left: 0; }
+    .yedu-audio-btn.yedu-playing svg path { d: "M6 4h4v16H6zM14 4h4v16h-4z"; }
 
-    .__CID__-article-meta {
+    .yedu-article-meta {
       position: absolute;
       bottom: 4px;
       right: 4px;
@@ -125,7 +128,7 @@ layout: false
       z-index: 2;
     }
 
-    .__CID__-article-corner-label {
+    .yedu-corner-label {
       position: absolute;
       top: 6px;
       left: 6px;
@@ -139,9 +142,9 @@ layout: false
       white-space: nowrap;
     }
 
-    .__CID__-article-meta svg { width: 9px; height: 9px; fill: currentColor; }
+    .yedu-article-meta svg { width: 9px; height: 9px; fill: currentColor; }
 
-    .__CID__-audio-progress {
+    .yedu-audio-progress {
       position: absolute;
       bottom: 0;
       left: 0;
@@ -151,14 +154,14 @@ layout: false
       z-index: 3;
     }
 
-    .__CID__-audio-progress-bar {
+    .yedu-audio-progress-bar {
       height: 100%;
       background: #e94560;
       width: 0;
       transition: width 0.1s linear;
     }
 
-    .__CID__-article-content-card {
+    .yedu-content-card {
       flex: 1;
       background: var(--card-bg, rgba(255, 255, 255, 0.95));
       border-radius: 10px;
@@ -168,11 +171,11 @@ layout: false
       min-width: 0;
     }
 
-    .__CID__-article-content-card:hover {
+    .yedu-content-card:hover {
       transform: translateY(-2px);
     }
 
-    .__CID__-article-content {
+    .yedu-content {
       flex: 1;
       padding: 12px;
       display: flex;
@@ -180,7 +183,7 @@ layout: false
       min-width: 0;
     }
 
-    .__CID__-article-title {
+    .yedu-title {
       color: var(--text-primary, #1a1a2e);
       font-weight: 600;
       white-space: normal;
@@ -190,11 +193,11 @@ layout: false
       -webkit-box-orient: vertical;
     }
 
-    .__CID__-article-date {
+    .yedu-date {
       color: var(--text-secondary, #aaa);
     }
 
-    .__CID__-article-summary {
+    .yedu-summary {
       color: var(--text-secondary, #888);
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -202,7 +205,7 @@ layout: false
       overflow: hidden;
     }
 
-    .__CID__-read-more {
+    .yedu-read-more {
       color: #e94560;
       font-size: 0.7rem;
       cursor: pointer;
@@ -216,20 +219,20 @@ layout: false
       transition: gap 0.2s ease;
     }
 
-    .__CID__-read-more:hover { gap: 4px; }
-    .__CID__-read-more svg { width: 10px; height: 10px; fill: #e94560; transition: transform 0.2s ease; }
-    .__CID__-read-more.__CID__-expanded svg { transform: rotate(180deg); }
+    .yedu-read-more:hover { gap: 4px; }
+    .yedu-read-more svg { width: 10px; height: 10px; fill: #e94560; transition: transform 0.2s ease; }
+    .yedu-read-more.yedu-expanded svg { transform: rotate(180deg); }
 
-    .__CID__-full-content {
+    .yedu-full-content {
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.4s ease;
       background: var(--card-bg, rgba(255, 255, 255, 0.98));
     }
 
-    .__CID__-full-content.__CID__-show { max-height: none; }
+    .yedu-full-content.yedu-show { max-height: none; }
 
-    .__CID__-full-content-inner {
+    .yedu-full-inner {
       padding: 14px;
       color: var(--text-primary, #333);
       font-size: 0.85rem;
@@ -237,9 +240,9 @@ layout: false
       border-top: 1px solid var(--border-color, #eee);
     }
 
-    .__CID__-full-content-inner p { margin-bottom: 10px; }
+    .yedu-full-inner p { margin-bottom: 10px; }
 
-    .__CID__-source-link {
+    .yedu-source-link {
       display: inline-block;
       margin-top: 10px;
       color: var(--text-secondary, #999);
@@ -248,16 +251,16 @@ layout: false
       transition: color 0.2s ease;
     }
 
-    .__CID__-source-link:hover { color: #e94560; }
+    .yedu-source-link:hover { color: #e94560; }
 
-    .__CID__-loading {
+    .yedu-loading {
       text-align: center;
       color: var(--text-secondary, rgba(255, 255, 255, 0.5));
       padding: 40px 0;
       font-size: 0.9rem;
     }
 
-    .__CID__-img-placeholder {
+    .yedu-placeholder {
       width: 100%;
       height: 100%;
       background: var(--cover-bg, #2d4a6e);
@@ -272,7 +275,7 @@ layout: false
       font-weight: 500;
     }
 
-    .__CID__-pagination {
+    .yedu-pagination {
       display: flex;
       justify-content: center;
       align-items: center;
@@ -280,7 +283,7 @@ layout: false
       margin-top: 16px;
     }
 
-    .__CID__-pagination button {
+    .yedu-pagination button {
       padding: 6px 14px;
       border: none;
       border-radius: 6px;
@@ -291,24 +294,24 @@ layout: false
       transition: all 0.2s ease;
     }
 
-    .__CID__-pagination button:hover:not(:disabled) { background: rgba(233, 69, 96, 0.8); }
-    .__CID__-pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
-    .__CID__-pagination .__CID__-page-info { color: var(--text-secondary, rgba(255, 255, 255, 0.6)); font-size: 0.8rem; }
+    .yedu-pagination button:hover:not(:disabled) { background: rgba(233, 69, 96, 0.8); }
+    .yedu-pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .yedu-pagination .yedu-page-info { color: var(--text-secondary, rgba(255, 255, 255, 0.6)); font-size: 0.8rem; }
 
     @media (max-width: 600px) {
-      .__CID__-article-main { flex-direction: column; gap: 12px; }
-      .__CID__-article-cover-card { flex: none; width: 100%; }
-      .__CID__-article-content-card { flex: none; width: 100%; }
-      .__CID__-audio-btn { width: 40px; height: 40px; }
-      .__CID__-article-content { padding: 10px; }
+      .yedu-article-main { flex-direction: column; gap: 12px; }
+      .yedu-cover-card { flex: none; width: 100%; }
+      .yedu-content-card { flex: none; width: 100%; }
+      .yedu-audio-btn { width: 40px; height: 40px; }
+      .yedu-content { padding: 10px; }
     }
 
     @media (min-width: 601px) and (max-width: 1024px) {
-      .__CID__-article-main { gap: 10px; }
+      .yedu-article-main { gap: 10px; }
     }
 
     @media (min-width: 1025px) {
-      .__CID__-article-main { gap: 12px; }
+      .yedu-article-main { gap: 12px; }
     }
   </style>
 </head>
