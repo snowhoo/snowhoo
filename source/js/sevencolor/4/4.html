@@ -9,7 +9,7 @@ layout: false
     <title></title>
     <style>
         /* 仅保留下拉框基础样式 */
-        #pageSelect {
+        .idea-select {
 flex:2;min-width:100px;
 cursor:pointer;
 padding:7px 10px;
@@ -20,7 +20,7 @@ color:var(--text-primary);
 font-size:13px
         }
         /* 宿主容器无样式，由内部页面决定 */
-        #pageHost {
+        .idea-host {
             width: 100%;
            /* min-height: 80vh; */
         }
@@ -28,8 +28,8 @@ font-size:13px
 </head>
 <body>
 
-<select id="pageSelect"></select>
-<div id="pageHost"></div>
+<select class="idea-select"></select>
+<div class="idea-host"></div>
 
 <script>
     // ========== 配置：下拉选项及对应的 HTML 文件路径 ==========
@@ -40,8 +40,8 @@ font-size:13px
     };
     // =====================================================
 
-    const selectEl = document.getElementById('pageSelect');
-    const host = document.getElementById('pageHost');
+    const selectEl = document.querySelector('.idea-select');
+    const host = document.querySelector('.idea-host');
 
     // 动态生成下拉选项
     function buildSelect() {
