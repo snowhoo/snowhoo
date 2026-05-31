@@ -1,518 +1,518 @@
-﻿{
-    "description":  "节日节气数据 - 2026年",
-    "festivals":  [
-                      {
-                          "id":  "birthday",
-                          "name":  "小红叔生日",
-                          "date":  "04-09",
-                          "displayDate":  "4月09日",
-                          "banner":  "https://picsum.photos/1200/300?random=526",
-                          "color":  "#9c27b0",
-                          "description":  "今天是站长：小红叔的生日哦",
-                          "details":  "一九七九年的春天，注定是不平凡的。就在九个月前，小红在亿万竞争者中脱颖而出，并坚强的存活了下来，于是新的生命故事由此拉开序幕......",
-                          "customs":  [
-                                          "吃长寿面",
-                                          "吃蛋糕",
-                                          "吹蜡烛"
-                                      ]
-                      },
-                      {
-                          "id":  "yuandan",
-                          "name":  "元旦",
-                          "date":  "01-01",
-                          "displayDate":  "1月1日",
-                          "banner":  "/js/FestivalSolar/images/元旦.webp",
-                          "color":  "#c62828",
-                          "description":  "新年伊始，万象更新",
-                          "details":  "元旦，即世界多数国家通称的\"新年\"，是公历新一年的第一天。元，谓\"首\"；旦，谓\"日\"；\"元旦\"意即\"首日\"。中国古代曾以腊月、十月等月首为元旦，汉武帝起定为农历正月初一，并沿用至今。",
-                          "customs":  [
-                                          "挂灯笼",
-                                          "贴春联",
-                                          "放烟花",
-                                          "吃饺子"
-                                      ]
-                      },
-                      {
-                          "id":  "chunjie",
-                          "name":  "春节",
-                          "date":  "01-29",
-                          "displayDate":  "1月29日",
-                          "banner":  "/js/FestivalSolar/images/春节.webp",
-                          "color":  "#e53935",
-                          "description":  "阖家团圆，共度新春",
-                          "details":  "春节，又称农历新年，是中华民族最隆重的传统佳节。历史悠久，由上古时代岁首祈年祭祀演变而来。春节期间，人们举行各种庆祝活动，祈求新的一年风调雨顺、国泰民安。",
-                          "customs":  [
-                                          "贴春联",
-                                          "挂灯笼",
-                                          "放鞭炮",
-                                          "发红包",
-                                          "吃年夜饭",
-                                          "守岁"
-                                      ]
-                      },
-                      {
-                          "id":  "yuanxiao",
-                          "name":  "元宵节",
-                          "date":  "02-12",
-                          "displayDate":  "2月12日",
-                          "banner":  "/js/FestivalSolar/images/元宵节.webp",
-                          "color":  "#e67e22",
-                          "description":  "花灯璀璨，共赏明月",
-                          "details":  "元宵节，又称上元节、小正月、元夕或灯节，是春节之后的第一个重要节日。正月十五日是一年中第一个月圆之夜，也是一元复始，大地回春的夜晚。",
-                          "customs":  [
-                                          "赏花灯",
-                                          "吃元宵",
-                                          "猜灯谜",
-                                          "舞龙舞狮"
-                                      ]
-                      },
-                      {
-                          "id":  "qingren",
-                          "name":  "情人节",
-                          "date":  "02-14",
-                          "displayDate":  "2月14日",
-                          "banner":  "/js/FestivalSolar/images/情人节.webp",
-                          "color":  "#e91e63",
-                          "description":  "浪漫相约，爱意永恒",
-                          "details":  "情人节是西方传统节日，起源于基督教，如今已成为全世界著名的浪漫节日。在这一天，情侣们互送礼物、表达爱意，单身者也借此机会向心仪的人表白。",
-                          "customs":  [
-                                          "送玫瑰",
-                                          "送巧克力",
-                                          "约会",
-                                          "写情书"
-                                      ]
-                      },
-                      {
-                          "id":  "qixi",
-                          "name":  "七夕节",
-                          "date":  "08-19",
-                          "displayDate":  "8月19日",
-                          "banner":  "/js/FestivalSolar/images/七夕节.webp",
-                          "color":  "#c0392b",
-                          "description":  "牛郎织女，鹊桥相会",
-                          "details":  "七夕节，又称七巧节、女儿节，是中国最具浪漫色彩的传统节日。来源于牛郎织女的传说，被认为是中国的情人节。这一天，女孩们会进行各种乞巧活动，祈祷自己也能拥有美好的爱情。",
-                          "customs":  [
-                                          "乞巧",
-                                          "晒书晒衣",
-                                          "拜织女",
-                                          "吃巧果"
-                                      ]
-                      },
-                      {
-                          "id":  "laodong",
-                          "name":  "劳动节",
-                          "date":  "05-01",
-                          "displayDate":  "5月1日",
-                          "banner":  "/js/FestivalSolar/images/劳动节.webp",
-                          "color":  "#c0392b",
-                          "description":  "致敬劳动者，歌颂奋斗者",
-                          "details":  "国际劳动节又称\"五一国际劳动节\"，是世界上80多个国家的全国性节日。定在每年的五月一日，是全世界劳动人民共同拥有的节日。",
-                          "customs":  [
-                                          "放假",
-                                          "出游",
-                                          "表彰劳模"
-                                      ]
-                      },
-                      {
-                          "id":  "duanwu",
-                          "name":  "端午节",
-                          "date":  "05-31",
-                          "displayDate":  "5月31日",
-                          "banner":  "/js/FestivalSolar/images/端午节.webp",
-                          "color":  "#27ae60",
-                          "description":  "粽香四溢，艾草芬芳",
-                          "details":  "端午节，又称端阳节、龙舟节、重午节等，是中国首个入选世界非物质文化遗产的节日。端午节源于纪念爱国诗人屈原，习俗包括包粽子、赛龙舟、挂艾草等。",
-                          "customs":  [
-                                          "赛龙舟",
-                                          "吃粽子",
-                                          "挂艾草",
-                                          "佩香囊"
-                                      ]
-                      },
-                      {
-                          "id":  "guoqing",
-                          "name":  "国庆节",
-                          "date":  "10-01",
-                          "displayDate":  "10月1日",
-                          "banner":  "/js/FestivalSolar/images/国庆节.webp",
-                          "color":  "#c62828",
-                          "description":  "举国同庆，繁荣富强",
-                          "details":  "国庆节是由一个国家制定的用来纪念国家本身的法定假日。它们通常是这个国家的独立、宪法的签署、或其他有重大意义的周年纪念日。",
-                          "customs":  [
-                                          "阅兵仪式",
-                                          "升国旗",
-                                          "长假出行",
-                                          "看烟花"
-                                      ]
-                      },
-                      {
-                          "id":  "zhongqiu",
-                          "name":  "中秋节",
-                          "date":  "10-08",
-                          "displayDate":  "10月8日",
-                          "banner":  "/js/FestivalSolar/images/中秋节.webp",
-                          "color":  "#e67e22",
-                          "description":  "明月寄相思，千里共婵娟",
-                          "details":  "中秋节，又称月夕、拜月节、团圆节等，是中华传统文化节日。中秋节以月之圆兆人之团圆，寄托思念故乡、思念亲人之情，自古便有赏月、吃月饼等习俗。",
-                          "customs":  [
-                                          "赏月",
-                                          "吃月饼",
-                                          "猜灯谜",
-                                          "赏桂花"
-                                      ]
-                      },
-                      {
-                          "id":  "shengdan",
-                          "name":  "圣诞节",
-                          "date":  "12-25",
-                          "displayDate":  "12月25日",
-                          "banner":  "/js/FestivalSolar/images/圣诞节.webp",
-                          "color":  "#27ae60",
-                          "description":  "圣诞快乐，平安喜乐",
-                          "details":  "圣诞节是西方传统节日，起源于基督教，现已成为全球性的节日。庆祝活动包括圣诞树、圣诞老人、礼物等元素，象征着祝福与希望。",
-                          "customs":  [
-                                          "圣诞树",
-                                          "送礼物",
-                                          "唱圣诞歌",
-                                          "家庭聚会"
-                                      ]
-                      },
-                      {
-                          "id":  "chuxi",
-                          "name":  "除夕",
-                          "date":  "02-16",
-                          "displayDate":  "2 月 16 日",
-                          "banner":  "/js/FestivalSolar/images/除夕.webp",
-                          "color":  "#c62828",
-                          "description":  "辞旧迎新，阖家团圆",
-                          "details":  "除夕，又称大年夜、除夕夜，是农历一年最后一天的夜晚，也指农历一年的最后一天。除夕是除旧布新、阖家团圆、祭祀祖先的日子，与清明节、中元节、重阳节同是中国传统祭祖节日。",
-                          "customs":  [
-                                          "吃年夜饭",
-                                          "贴春联",
-                                          "守岁",
-                                          "放鞭炮",
-                                          "发红包",
-                                          "看春晚"
-                                      ]
-                      },
-                      {
-                          "id":  "labajie",
-                          "name":  "腊八节",
-                          "date":  "01-27",
-                          "displayDate":  "1 月 27 日",
-                          "banner":  "/js/FestivalSolar/images/腊八节.webp",
-                          "color":  "#e67e22",
-                          "description":  "腊八粥香，年味渐浓",
-                          "details":  "腊八节，又称腊八，是中国传统节日，时间为农历十二月初八。腊八节是腊月里第一个重要节日，有喝腊八粥、泡腊八蒜的习俗。从腊八开始，年味越来越浓，人们开始准备过年。",
-                          "customs":  [
-                                          "喝腊八粥",
-                                          "泡腊八蒜",
-                                          "祭祀祖先"
-                                      ]
-                      },
-                      {
-                          "id":  "chongyang",
-                          "name":  "重阳节",
-                          "date":  "10-19",
-                          "displayDate":  "10 月 19 日",
-                          "banner":  "/js/FestivalSolar/images/重阳节.webp",
-                          "color":  "#ff9800",
-                          "description":  "登高望远，敬老爱老",
-                          "details":  "重阳节，又称登高节、敬老节，是中国传统节日，时间为农历九月初九。九为阳数，九月九日，两阳相重，故曰重阳。重阳节有登高、赏菊、插茱萸、吃重阳糕等习俗，现代又赋予了敬老爱老的新内涵。",
-                          "customs":  [
-                                          "登高",
-                                          "赏菊",
-                                          "插茱萸",
-                                          "吃重阳糕",
-                                          "饮菊花酒",
-                                          "敬老"
-                                      ]
-                      },
-                      {
-                          "id":  "qingmingjie",
-                          "name":  "清明节",
-                          "date":  "04-04",
-                          "displayDate":  "4 月 4 日",
-                          "banner":  "/js/FestivalSolar/images/清明节.webp",
-                          "color":  "#6ab04c",
-                          "description":  "慎终追远，踏青祭祖",
-                          "details":  "清明节是中国最重要的祭祀节日，也是二十四节气之一。它融合了古代寒食节和上巳节的习俗，兼具自然与人文两大内涵。清明时节，万物清洁而明净，故称清明。这一天，人们既要扫墓祭祖、缅怀先人，也要踏青郊游、感受春光，体现了中国人\u0027生死并置\u0027的哲学智慧。",
-                          "customs":  [
-                                          "扫墓祭祖",
-                                          "踏青",
-                                          "插柳",
-                                          "放风筝",
-                                          "荡秋千",
-                                          "蹴鞠",
-                                          "植树"
-                                      ],
-                          "poetry":  "清明时节雨纷纷，路上行人欲断魂。借问酒家何处有，牧童遥指杏花村。"
-                      }
-                  ],
-    "solarTerms":  [
-                       {
-                           "id":  "lichun",
-                           "name":  "立春",
-                           "date":  "02-03~02-05",
-                           "displayDate":  "2月3日",
-                           "banner":  "/js/FestivalSolar/images/01_立春.webp",
-                           "color":  "#4caf50",
-                           "description":  "春回大地，万物复苏",
-                           "details":  "立春是二十四节气之首，意味着新的一个轮回已开启。立春标示着万物闭藏的冬季已过去，开始进入风和日暖、万物生长的春季。",
-                           "poetry":  "春风如贵客，一到便繁华。"
-                       },
-                       {
-                           "id":  "yushui",
-                           "name":  "雨水",
-                           "date":  "02-18~02-20",
-                           "displayDate":  "2月19日",
-                           "banner":  "/js/FestivalSolar/images/02_雨水.webp",
-                           "color":  "#00bcd4",
-                           "description":  "春雨如油，润物无声",
-                           "details":  "雨水节气标示着降雨开始，雨量渐增。雨水时节，天气变化不定，是全年寒潮过程出现最多的时节之一。",
-                           "poetry":  "好雨知时节，当春乃发生。"
-                       },
-                       {
-                           "id":  "jingzhe",
-                           "name":  "惊蛰",
-                           "date":  "03-05~03-07",
-                           "displayDate":  "3月6日",
-                           "banner":  "/js/FestivalSolar/images/03_惊蛰.webp",
-                           "color":  "#8bc34a",
-                           "description":  "春雷惊梦，万物醒苏",
-                           "details":  "惊蛰时节，春雷始鸣，惊醒了蛰伏于地下冬眠的昆虫。惊蛰节气的标志性特征是春雷乍动、万物生机盎然。",
-                           "poetry":  "微雨众卉新，一雷惊蛰始。"
-                       },
-                       {
-                           "id":  "chunfen",
-                           "name":  "春分",
-                           "date":  "03-20~03-22",
-                           "displayDate":  "3月21日",
-                           "banner":  "/js/FestivalSolar/images/04_春分.webp",
-                           "color":  "#4caf50",
-                           "description":  "昼夜平分，春意盎然",
-                           "details":  "春分时节，阴阳相半，昼夜平分，寒暑平衡。春分是一年中最好的时节，春暖花开，草长莺飞。",
-                           "poetry":  "春分雨脚落声微，柳岸斜风带客归。"
-                       },
-                       {
-                           "id":  "qingming",
-                           "name":  "清明",
-                           "date":  "04-04~04-06",
-                           "displayDate":  "4月5日",
-                           "banner":  "/js/FestivalSolar/images/05_清明.webp",
-                           "color":  "#6ab04c",
-                           "description":  "清明时节，思念悠长",
-                           "details":  "清明节源自上古时代的祖先信仰与春祭礼俗，兼具自然与人文两大内涵。清明时节，气清景明，万物皆显。",
-                           "poetry":  "清明时节雨纷纷，路上行人欲断魂。"
-                       },
-                       {
-                           "id":  "guyu",
-                           "name":  "谷雨",
-                           "date":  "04-19~04-21",
-                           "displayDate":  "4月20日",
-                           "banner":  "/js/FestivalSolar/images/06_谷雨.webp",
-                           "color":  "#009688",
-                           "description":  "雨生百谷，春意正浓",
-                           "details":  "谷雨是春季最后一个节气，取自\"雨生百谷\"之意。谷雨时节，寒潮天气基本结束，气温回升加快，大大有利于谷类作物生长。",
-                           "poetry":  "谷雨如丝复似尘，煮瓶浮蜡正尝新。"
-                       },
-                       {
-                           "id":  "lixia",
-                           "name":  "立夏",
-                           "date":  "05-05~05-07",
-                           "displayDate":  "5月6日",
-                           "banner":  "/js/FestivalSolar/images/07_立夏.webp",
-                           "color":  "#ff9800",
-                           "description":  "夏季首节，万物繁茂",
-                           "details":  "立夏是二十四节气中的第七个节气，夏季的第一个节气。立夏表示即将告别春天，是夏天的开始，万物至此皆长大。",
-                           "poetry":  "四月清和雨乍晴，南山当户转分明。"
-                       },
-                       {
-                           "id":  "xiaoman",
-                           "name":  "小满",
-                           "date":  "05-20~05-22",
-                           "displayDate":  "5月21日",
-                           "banner":  "/js/FestivalSolar/images/08_小满.webp",
-                           "color":  "#ffc107",
-                           "description":  "小满未满，夏意渐浓",
-                           "details":  "小满节气意味着进入了大幅降水的雨季，雨水开始增多，往往会出现持续大范围的强降水。小满反映了降水的情况。",
-                           "poetry":  "小满动三车，忙得不知他。"
-                       },
-                       {
-                           "id":  "mangzhong",
-                           "name":  "芒种",
-                           "date":  "06-05~06-07",
-                           "displayDate":  "6月6日",
-                           "banner":  "/js/FestivalSolar/images/09_芒种.webp",
-                           "color":  "#8d6e63",
-                           "description":  "芒种时节，稻谷飘香",
-                           "details":  "芒种是夏季的第三个节气，表示仲夏时节的正式开始。芒种字面意思是\"有芒的麦子快收，有芒的稻子可种\"。",
-                           "poetry":  "时雨及芒种，四野皆插秧。"
-                       },
-                       {
-                           "id":  "xiazhi",
-                           "name":  "夏至",
-                           "date":  "06-21~06-22",
-                           "displayDate":  "6月21日",
-                           "banner":  "/js/FestivalSolar/images/10_夏至.webp",
-                           "color":  "#f44336",
-                           "description":  "白昼最长，盛夏将至",
-                           "details":  "夏至是二十四节气中最早被确定的一个节气。夏至这天，北半球各地的白昼达到全年最长，夜晚最短。",
-                           "poetry":  "昼晷已云极，宵漏自此长。"
-                       },
-                       {
-                           "id":  "xiaoshu",
-                           "name":  "小暑",
-                           "date":  "07-06~07-08",
-                           "displayDate":  "7月7日",
-                           "banner":  "/js/FestivalSolar/images/11_小暑.webp",
-                           "color":  "#ff5722",
-                           "description":  "小暑将至，炎夏登场",
-                           "details":  "小暑是夏季的第五个节气，表示盛夏正式开始。小暑虽不是一年中最炎热的时节，但紧接着就是一年中最热的大暑节气。",
-                           "poetry":  "倏忽温风至，因循小暑来。"
-                       },
-                       {
-                           "id":  "dashu",
-                           "name":  "大暑",
-                           "date":  "07-22~07-24",
-                           "displayDate":  "7月23日",
-                           "banner":  "/js/FestivalSolar/images/12_大暑.webp",
-                           "color":  "#e91e63",
-                           "description":  "大暑至，极端炎热",
-                           "details":  "大暑是夏季最后一个节气，也是全年最热的节气。大暑时节阳光强烈，气温高，酷热难耐。",
-                           "poetry":  "大暑三秋近，火德贺兰庚。"
-                       },
-                       {
-                           "id":  "liqiu",
-                           "name":  "立秋",
-                           "date":  "08-07~08-09",
-                           "displayDate":  "8月8日",
-                           "banner":  "/js/FestivalSolar/images/13_立秋.webp",
-                           "color":  "#ff9800",
-                           "description":  "秋天的第一个节气",
-                           "details":  "立秋是秋季的第一个节气，标志着孟秋时节的正式开始。立秋并不代表酷热天气的结束，初秋期间天气仍然很热。",
-                           "poetry":  "乳鸦啼散玉屏空，一枕新凉一扇风。"
-                       },
-                       {
-                           "id":  "chushu",
-                           "name":  "处暑",
-                           "date":  "08-22~08-24",
-                           "displayDate":  "8月23日",
-                           "banner":  "/js/FestivalSolar/images/14_处暑.webp",
-                           "color":  "#795548",
-                           "description":  "暑气消退，秋意渐起",
-                           "details":  "处暑是秋季的第二个节气，标志着炎热天气到了尾声。处暑之后，暑气渐渐消退，天气开始转凉。",
-                           "poetry":  "处暑无三日，新凉直万金。"
-                       },
-                       {
-                           "id":  "bailu",
-                           "name":  "白露",
-                           "date":  "09-07~09-09",
-                           "displayDate":  "9月8日",
-                           "banner":  "/js/FestivalSolar/images/15_白露.webp",
-                           "color":  "#607d8b",
-                           "description":  "露凝而白，秋意渐浓",
-                           "details":  "白露是秋季的第三个节气，反映了自然界寒气渐长的现象。白露后，天气开始转凉，昼夜温差增大。",
-                           "poetry":  "蒹葭苍苍，白露为霜。"
-                       },
-                       {
-                           "id":  "qiufen",
-                           "name":  "秋分",
-                           "date":  "09-22~09-24",
-                           "displayDate":  "9月23日",
-                           "banner":  "/js/FestivalSolar/images/16_秋分.webp",
-                           "color":  "#ff5722",
-                           "description":  "昼夜平分，秋色宜人",
-                           "details":  "秋分是秋季的第四个节气。秋分这一天，昼夜相等，阴阳相半。秋分是农业生产上的重要节气。",
-                           "poetry":  "金气秋分，风清露冷秋期半。"
-                       },
-                       {
-                           "id":  "hanlu",
-                           "name":  "寒露",
-                           "date":  "10-08~10-10",
-                           "displayDate":  "10月9日",
-                           "banner":  "/js/FestivalSolar/images/17_寒露.webp",
-                           "color":  "#5d4037",
-                           "description":  "露气寒冷，秋深菊黄",
-                           "details":  "寒露是秋季的第五个节气，反映了气候从凉爽到寒冷的变化。寒露后，气温进一步降低，露水更多更冷。",
-                           "poetry":  "袅袅凉风动，凄凄寒露零。"
-                       },
-                       {
-                           "id":  "shuangjiang",
-                           "name":  "霜降",
-                           "date":  "10-23~10-25",
-                           "displayDate":  "10月24日",
-                           "banner":  "/js/FestivalSolar/images/18_霜降.webp",
-                           "color":  "#9e9e9e",
-                           "description":  "霜降时节，万物收藏",
-                           "details":  "霜降是秋季的最后一个节气，反映了天气渐冷的现象。霜降时节，北方部分地区会出现初霜。",
-                           "poetry":  "霜降水返壑，风落木归山。"
-                       },
-                       {
-                           "id":  "lidong",
-                           "name":  "立冬",
-                           "date":  "11-07~11-08",
-                           "displayDate":  "11月8日",
-                           "banner":  "/js/FestivalSolar/images/19_立冬.webp",
-                           "color":  "#3f51b5",
-                           "description":  "冬季开始，万物收藏",
-                           "details":  "立冬是冬季的第一个节气，表示自此进入了寒冷的季节。立冬后，日照时间将继续缩短，正午太阳高度继续降低。",
-                           "poetry":  "冻笔新诗懒写，寒炉美酒时温。"
-                       },
-                       {
-                           "id":  "xiaoxue",
-                           "name":  "小雪",
-                           "date":  "11-22~11-23",
-                           "displayDate":  "11月23日",
-                           "banner":  "/js/FestivalSolar/images/20_小雪.webp",
-                           "color":  "#00bcd4",
-                           "description":  "小雪飘飘，寒意渐浓",
-                           "details":  "小雪节气是气候概念，表示气候特征中含有气候概念，并不表示一定会下雪。小雪时节，寒潮和冷空气活动频繁。",
-                           "poetry":  "小雪已晴芦叶暗，长波乍急鹤声嘶。"
-                       },
-                       {
-                           "id":  "daxue",
-                           "name":  "大雪",
-                           "date":  "12-06~12-08",
-                           "displayDate":  "12月7日",
-                           "banner":  "/js/FestivalSolar/images/21_大雪.webp",
-                           "color":  "#3f51b5",
-                           "description":  "大雪纷飞，银装素裹",
-                           "details":  "大雪是冬季的第三个节气，标志着仲冬时节正式开始。大雪节气是一个气候概念，与天气大雪无关。",
-                           "poetry":  "大雪江南见未曾，今年方始是严凝。"
-                       },
-                       {
-                           "id":  "dongzhi",
-                           "name":  "冬至",
-                           "date":  "12-21~12-23",
-                           "displayDate":  "12月22日",
-                           "banner":  "/js/FestivalSolar/images/22_冬至.webp",
-                           "color":  "#f44336",
-                           "description":  "白昼最短，团圆之时",
-                           "details":  "冬至是二十四节气中最重要的节气之一，也是中华民族的传统节日。冬至这一天，北半球白昼最短，夜晚最长。",
-                           "poetry":  "天时人事日相催，冬至阳生春又来。"
-                       },
-                       {
-                           "id":  "xiaohan",
-                           "name":  "小寒",
-                           "date":  "01-05~01-07",
-                           "displayDate":  "1月6日",
-                           "banner":  "/js/FestivalSolar/images/23_小寒.webp",
-                           "color":  "#607d8b",
-                           "description":  "小寒时节，天寒地冻",
-                           "details":  "小寒是冬季的第五个节气，标志着开始进入一年中最寒冷的日子。小寒时节，要注意防寒保暖。",
-                           "poetry":  "小寒连大吕，欢鹊垒新巢。"
-                       },
-                       {
-                           "id":  "dahan",
-                           "name":  "大寒",
-                           "date":  "01-20~01-21",
-                           "displayDate":  "1月21日",
-                           "banner":  "/js/FestivalSolar/images/24_大寒.webp",
-                           "color":  "#37474f",
-                           "description":  "大寒至寒，春望在即",
-                           "details":  "大寒是二十四节气中的最后一个节气，也是一年中最冷的时节。大寒后，农历新年即将来临，春天也不远了。",
-                           "poetry":  "大寒须守火，无事莫出门。"
-                       }
-                   ]
+{
+    "description": "节日节气数据 - 2026年",
+    "festivals": [
+        {
+            "id": "birthday",
+            "name": "小红叔生日",
+            "date": "04-09",
+            "displayDate": "4月9日",
+            "banner": "https://picsum.photos/1200/300?random=526",
+            "color": "#9c27b0",
+            "description": "今天是站长：小红叔的生日哦",
+            "details": "一九七九年的春天，注定是不平凡的。就在九个月前，小红在亿万竞争者中脱颖而出，并坚强的存活了下来，于是新的生命故事由此拉开序幕......",
+            "customs": [
+                "吃长寿面",
+                "吃蛋糕",
+                "吹蜡烛"
+            ]
+        },
+        {
+            "id": "yuandan",
+            "name": "元旦",
+            "date": "01-01",
+            "displayDate": "1月1日",
+            "banner": "/js/FestivalSolar/images/元旦.webp",
+            "color": "#c62828",
+            "description": "新年伊始，万象更新",
+            "details": "元旦，即世界多数国家通称的\"新年\"，是公历新一年的第一天。元，谓\"首\"；旦，谓\"日\"；\"元旦\"意即\"首日\"。中国古代曾以腊月、十月等月首为元旦，汉武帝起定为农历正月初一，并沿用至今。",
+            "customs": [
+                "挂灯笼",
+                "贴春联",
+                "放烟花",
+                "吃饺子"
+            ]
+        },
+        {
+            "id": "chunjie",
+            "name": "春节",
+            "date": "02-06",
+            "displayDate": "2月6日",
+            "banner": "/js/FestivalSolar/images/春节.webp",
+            "color": "#e53935",
+            "description": "阖家团圆，共度新春",
+            "details": "春节，又称农历新年，是中华民族最隆重的传统佳节。历史悠久，由上古时代岁首祈年祭祀演变而来。春节期间，人们举行各种庆祝活动，祈求新的一年风调雨顺、国泰民安。",
+            "customs": [
+                "贴春联",
+                "挂灯笼",
+                "放鞭炮",
+                "发红包",
+                "吃年夜饭",
+                "守岁"
+            ]
+        },
+        {
+            "id": "yuanxiao",
+            "name": "元宵节",
+            "date": "02-20",
+            "displayDate": "2月20日",
+            "banner": "/js/FestivalSolar/images/元宵节.webp",
+            "color": "#e67e22",
+            "description": "花灯璀璨，共赏明月",
+            "details": "元宵节，又称上元节、小正月、元夕或灯节，是春节之后的第一个重要节日。正月十五日是一年中第一个月圆之夜，也是一元复始，大地回春的夜晚。",
+            "customs": [
+                "赏花灯",
+                "吃元宵",
+                "猜灯谜",
+                "舞龙舞狮"
+            ]
+        },
+        {
+            "id": "qingren",
+            "name": "情人节",
+            "date": "02-14",
+            "displayDate": "2月14日",
+            "banner": "/js/FestivalSolar/images/情人节.webp",
+            "color": "#e91e63",
+            "description": "浪漫相约，爱意永恒",
+            "details": "情人节是西方传统节日，起源于基督教，如今已成为全世界著名的浪漫节日。在这一天，情侣们互送礼物、表达爱意，单身者也借此机会向心仪的人表白。",
+            "customs": [
+                "送玫瑰",
+                "送巧克力",
+                "约会",
+                "写情书"
+            ]
+        },
+        {
+            "id": "qixi",
+            "name": "七夕节",
+            "date": "08-19",
+            "displayDate": "8月19日",
+            "banner": "/js/FestivalSolar/images/七夕节.webp",
+            "color": "#c0392b",
+            "description": "牛郎织女，鹊桥相会",
+            "details": "七夕节，又称七巧节、女儿节，是中国最具浪漫色彩的传统节日。来源于牛郎织女的传说，被认为是中国的情人节。这一天，女孩们会进行各种乞巧活动，祈祷自己也能拥有美好的爱情。",
+            "customs": [
+                "乞巧",
+                "晒书晒衣",
+                "拜织女",
+                "吃巧果"
+            ]
+        },
+        {
+            "id": "laodong",
+            "name": "劳动节",
+            "date": "05-01",
+            "displayDate": "5月1日",
+            "banner": "/js/FestivalSolar/images/劳动节.webp",
+            "color": "#c0392b",
+            "description": "致敬劳动者，歌颂奋斗者",
+            "details": "国际劳动节又称\"五一国际劳动节\"，是世界上80多个国家的全国性节日。定在每年的五月一日，是全世界劳动人民共同拥有的节日。",
+            "customs": [
+                "放假",
+                "出游",
+                "表彰劳模"
+            ]
+        },
+        {
+            "id": "duanwu",
+            "name": "端午节",
+            "date": "06-19",
+            "displayDate": "6月19日",
+            "banner": "/js/FestivalSolar/images/端午节.webp",
+            "color": "#27ae60",
+            "description": "粽香四溢，艾草芬芳",
+            "details": "端午节，又称端阳节、龙舟节、重午节等，是中国首个入选世界非物质文化遗产的节日。端午节源于纪念爱国诗人屈原，习俗包括包粽子、赛龙舟、挂艾草等。",
+            "customs": [
+                "赛龙舟",
+                "吃粽子",
+                "挂艾草",
+                "佩香囊"
+            ]
+        },
+        {
+            "id": "guoqing",
+            "name": "国庆节",
+            "date": "10-01",
+            "displayDate": "10月1日",
+            "banner": "/js/FestivalSolar/images/国庆节.webp",
+            "color": "#c62828",
+            "description": "举国同庆，繁荣富强",
+            "details": "国庆节是由一个国家制定的用来纪念国家本身的法定假日。它们通常是这个国家的独立、宪法的签署、或其他有重大意义的周年纪念日。",
+            "customs": [
+                "阅兵仪式",
+                "升国旗",
+                "长假出行",
+                "看烟花"
+            ]
+        },
+        {
+            "id": "zhongqiu",
+            "name": "中秋节",
+            "date": "09-25",
+            "displayDate": "9月25日",
+            "banner": "/js/FestivalSolar/images/中秋节.webp",
+            "color": "#e67e22",
+            "description": "明月寄相思，千里共婵娟",
+            "details": "中秋节，又称月夕、拜月节、团圆节等，是中华传统文化节日。中秋节以月之圆兆人之团圆，寄托思念故乡、思念亲人之情，自古便有赏月、吃月饼等习俗。",
+            "customs": [
+                "赏月",
+                "吃月饼",
+                "猜灯谜",
+                "赏桂花"
+            ]
+        },
+        {
+            "id": "shengdan",
+            "name": "圣诞节",
+            "date": "12-25",
+            "displayDate": "12月25日",
+            "banner": "/js/FestivalSolar/images/圣诞节.webp",
+            "color": "#27ae60",
+            "description": "圣诞快乐，平安喜乐",
+            "details": "圣诞节是西方传统节日，起源于基督教，现已成为全球性的节日。庆祝活动包括圣诞树、圣诞老人、礼物等元素，象征着祝福与希望。",
+            "customs": [
+                "圣诞树",
+                "送礼物",
+                "唱圣诞歌",
+                "家庭聚会"
+            ]
+        },
+        {
+            "id": "chuxi",
+            "name": "除夕",
+            "date": "02-05",
+            "displayDate": "2月5日",
+            "banner": "/js/FestivalSolar/images/除夕.webp",
+            "color": "#c62828",
+            "description": "辞旧迎新，阖家团圆",
+            "details": "除夕，又称大年夜、除夕夜，是农历一年最后一天的夜晚，也指农历一年的最后一天。除夕是除旧布新、阖家团圆、祭祀祖先的日子，与清明节、中元节、重阳节同是中国传统祭祖节日。",
+            "customs": [
+                "吃年夜饭",
+                "贴春联",
+                "守岁",
+                "放鞭炮",
+                "发红包",
+                "看春晚"
+            ]
+        },
+        {
+            "id": "labajie",
+            "name": "腊八节",
+            "date": "01-15",
+            "displayDate": "1月15日",
+            "banner": "/js/FestivalSolar/images/腊八节.webp",
+            "color": "#e67e22",
+            "description": "腊八粥香，年味渐浓",
+            "details": "腊八节，又称腊八，是中国传统节日，时间为农历十二月初八。腊八节是腊月里第一个重要节日，有喝腊八粥、泡腊八蒜的习俗。从腊八开始，年味越来越浓，人们开始准备过年。",
+            "customs": [
+                "喝腊八粥",
+                "泡腊八蒜",
+                "祭祀祖先"
+            ]
+        },
+        {
+            "id": "chongyang",
+            "name": "重阳节",
+            "date": "10-18",
+            "displayDate": "10月18日",
+            "banner": "/js/FestivalSolar/images/重阳节.webp",
+            "color": "#ff9800",
+            "description": "登高望远，敬老爱老",
+            "details": "重阳节，又称登高节、敬老节，是中国传统节日，时间为农历九月初九。九为阳数，九月九日，两阳相重，故曰重阳。重阳节有登高、赏菊、插茱萸、吃重阳糕等习俗，现代又赋予了敬老爱老的新内涵。",
+            "customs": [
+                "登高",
+                "赏菊",
+                "插茱萸",
+                "吃重阳糕",
+                "饮菊花酒",
+                "敬老"
+            ]
+        },
+        {
+            "id": "qingmingjie",
+            "name": "清明节",
+            "date": "04-05",
+            "displayDate": "4月5日",
+            "banner": "/js/FestivalSolar/images/清明节.webp",
+            "color": "#6ab04c",
+            "description": "慎终追远，踏青祭祖",
+            "details": "清明节是中国最重要的祭祀节日，也是二十四节气之一。它融合了古代寒食节和上巳节的习俗，兼具自然与人文两大内涵。清明时节，万物清洁而明净，故称清明。这一天，人们既要扫墓祭祖、缅怀先人，也要踏青郊游、感受春光，体现了中国人'生死并置'的哲学智慧。",
+            "customs": [
+                "扫墓祭祖",
+                "踏青",
+                "插柳",
+                "放风筝",
+                "荡秋千",
+                "蹴鞠",
+                "植树"
+            ],
+            "poetry": "清明时节雨纷纷，路上行人欲断魂。借问酒家何处有，牧童遥指杏花村。"
+        }
+    ],
+    "solarTerms": [
+        {
+            "id": "lichun",
+            "name": "立春",
+            "date": "02-03~02-05",
+            "displayDate": "2月4日",
+            "banner": "/js/FestivalSolar/images/01_立春.webp",
+            "color": "#4caf50",
+            "description": "春回大地，万物复苏",
+            "details": "立春是二十四节气之首，意味着新的一个轮回已开启。立春标示着万物闭藏的冬季已过去，开始进入风和日暖、万物生长的春季。",
+            "poetry": "春风如贵客，一到便繁华。"
+        },
+        {
+            "id": "yushui",
+            "name": "雨水",
+            "date": "02-18~02-20",
+            "displayDate": "2月19日",
+            "banner": "/js/FestivalSolar/images/02_雨水.webp",
+            "color": "#00bcd4",
+            "description": "春雨如油，润物无声",
+            "details": "雨水节气标示着降雨开始，雨量渐增。雨水时节，天气变化不定，是全年寒潮过程出现最多的时节之一。",
+            "poetry": "好雨知时节，当春乃发生。"
+        },
+        {
+            "id": "jingzhe",
+            "name": "惊蛰",
+            "date": "03-05~03-07",
+            "displayDate": "3月6日",
+            "banner": "/js/FestivalSolar/images/03_惊蛰.webp",
+            "color": "#8bc34a",
+            "description": "春雷惊梦，万物醒苏",
+            "details": "惊蛰时节，春雷始鸣，惊醒了蛰伏于地下冬眠的昆虫。惊蛰节气的标志性特征是春雷乍动、万物生机盎然。",
+            "poetry": "微雨众卉新，一雷惊蛰始。"
+        },
+        {
+            "id": "chunfen",
+            "name": "春分",
+            "date": "03-20~03-22",
+            "displayDate": "3月21日",
+            "banner": "/js/FestivalSolar/images/04_春分.webp",
+            "color": "#4caf50",
+            "description": "昼夜平分，春意盎然",
+            "details": "春分时节，阴阳相半，昼夜平分，寒暑平衡。春分是一年中最好的时节，春暖花开，草长莺飞。",
+            "poetry": "春分雨脚落声微，柳岸斜风带客归。"
+        },
+        {
+            "id": "qingming",
+            "name": "清明",
+            "date": "04-04~04-06",
+            "displayDate": "4月5日",
+            "banner": "/js/FestivalSolar/images/05_清明.webp",
+            "color": "#6ab04c",
+            "description": "清明时节，思念悠长",
+            "details": "清明节源自上古时代的祖先信仰与春祭礼俗，兼具自然与人文两大内涵。清明时节，气清景明，万物皆显。",
+            "poetry": "清明时节雨纷纷，路上行人欲断魂。"
+        },
+        {
+            "id": "guyu",
+            "name": "谷雨",
+            "date": "04-19~04-21",
+            "displayDate": "4月20日",
+            "banner": "/js/FestivalSolar/images/06_谷雨.webp",
+            "color": "#009688",
+            "description": "雨生百谷，春意正浓",
+            "details": "谷雨是春季最后一个节气，取自\"雨生百谷\"之意。谷雨时节，寒潮天气基本结束，气温回升加快，大大有利于谷类作物生长。",
+            "poetry": "谷雨如丝复似尘，煮瓶浮蜡正尝新。"
+        },
+        {
+            "id": "lixia",
+            "name": "立夏",
+            "date": "05-05~05-07",
+            "displayDate": "5月6日",
+            "banner": "/js/FestivalSolar/images/07_立夏.webp",
+            "color": "#ff9800",
+            "description": "夏季首节，万物繁茂",
+            "details": "立夏是二十四节气中的第七个节气，夏季的第一个节气。立夏表示即将告别春天，是夏天的开始，万物至此皆长大。",
+            "poetry": "四月清和雨乍晴，南山当户转分明。"
+        },
+        {
+            "id": "xiaoman",
+            "name": "小满",
+            "date": "05-20~05-22",
+            "displayDate": "5月21日",
+            "banner": "/js/FestivalSolar/images/08_小满.webp",
+            "color": "#ffc107",
+            "description": "小满未满，夏意渐浓",
+            "details": "小满节气意味着进入了大幅降水的雨季，雨水开始增多，往往会出现持续大范围的强降水。小满反映了降水的情况。",
+            "poetry": "小满动三车，忙得不知他。"
+        },
+        {
+            "id": "mangzhong",
+            "name": "芒种",
+            "date": "06-04~06-06",
+            "displayDate": "6月5日",
+            "banner": "/js/FestivalSolar/images/09_芒种.webp",
+            "color": "#8d6e63",
+            "description": "芒种时节，稻谷飘香",
+            "details": "芒种是夏季的第三个节气，表示仲夏时节的正式开始。芒种字面意思是\"有芒的麦子快收，有芒的稻子可种\"。",
+            "poetry": "时雨及芒种，四野皆插秧。"
+        },
+        {
+            "id": "xiazhi",
+            "name": "夏至",
+            "date": "06-20~06-22",
+            "displayDate": "6月21日",
+            "banner": "/js/FestivalSolar/images/10_夏至.webp",
+            "color": "#f44336",
+            "description": "白昼最长，盛夏将至",
+            "details": "夏至是二十四节气中最早被确定的一个节气。夏至这天，北半球各地的白昼达到全年最长，夜晚最短。",
+            "poetry": "昼晷已云极，宵漏自此长。"
+        },
+        {
+            "id": "xiaoshu",
+            "name": "小暑",
+            "date": "07-06~07-08",
+            "displayDate": "7月7日",
+            "banner": "/js/FestivalSolar/images/11_小暑.webp",
+            "color": "#ff5722",
+            "description": "小暑将至，炎夏登场",
+            "details": "小暑是夏季的第五个节气，表示盛夏正式开始。小暑虽不是一年中最炎热的时节，但紧接着就是一年中最热的大暑节气。",
+            "poetry": "倏忽温风至，因循小暑来。"
+        },
+        {
+            "id": "dashu",
+            "name": "大暑",
+            "date": "07-22~07-24",
+            "displayDate": "7月23日",
+            "banner": "/js/FestivalSolar/images/12_大暑.webp",
+            "color": "#e91e63",
+            "description": "大暑至，极端炎热",
+            "details": "大暑是夏季最后一个节气，也是全年最热的节气。大暑时节阳光强烈，气温高，酷热难耐。",
+            "poetry": "大暑三秋近，火德贺兰庚。"
+        },
+        {
+            "id": "liqiu",
+            "name": "立秋",
+            "date": "08-06~08-08",
+            "displayDate": "8月7日",
+            "banner": "/js/FestivalSolar/images/13_立秋.webp",
+            "color": "#ff9800",
+            "description": "秋天的第一个节气",
+            "details": "立秋是秋季的第一个节气，标志着孟秋时节的正式开始。立秋并不代表酷热天气的结束，初秋期间天气仍然很热。",
+            "poetry": "乳鸦啼散玉屏空，一枕新凉一扇风。"
+        },
+        {
+            "id": "chushu",
+            "name": "处暑",
+            "date": "08-22~08-24",
+            "displayDate": "8月23日",
+            "banner": "/js/FestivalSolar/images/14_处暑.webp",
+            "color": "#795548",
+            "description": "暑气消退，秋意渐起",
+            "details": "处暑是秋季的第二个节气，标志着炎热天气到了尾声。处暑之后，暑气渐渐消退，天气开始转凉。",
+            "poetry": "处暑无三日，新凉直万金。"
+        },
+        {
+            "id": "bailu",
+            "name": "白露",
+            "date": "09-06~09-08",
+            "displayDate": "9月7日",
+            "banner": "/js/FestivalSolar/images/15_白露.webp",
+            "color": "#607d8b",
+            "description": "露凝而白，秋意渐浓",
+            "details": "白露是秋季的第三个节气，反映了自然界寒气渐长的现象。白露后，天气开始转凉，昼夜温差增大。",
+            "poetry": "蒹葭苍苍，白露为霜。"
+        },
+        {
+            "id": "qiufen",
+            "name": "秋分",
+            "date": "09-22~09-24",
+            "displayDate": "9月23日",
+            "banner": "/js/FestivalSolar/images/16_秋分.webp",
+            "color": "#ff5722",
+            "description": "昼夜平分，秋色宜人",
+            "details": "秋分是秋季的第四个节气。秋分这一天，昼夜相等，阴阳相半。秋分是农业生产上的重要节气。",
+            "poetry": "金气秋分，风清露冷秋期半。"
+        },
+        {
+            "id": "hanlu",
+            "name": "寒露",
+            "date": "10-07~10-09",
+            "displayDate": "10月8日",
+            "banner": "/js/FestivalSolar/images/17_寒露.webp",
+            "color": "#5d4037",
+            "description": "露气寒冷，秋深菊黄",
+            "details": "寒露是秋季的第五个节气，反映了气候从凉爽到寒冷的变化。寒露后，气温进一步降低，露水更多更冷。",
+            "poetry": "袅袅凉风动，凄凄寒露零。"
+        },
+        {
+            "id": "shuangjiang",
+            "name": "霜降",
+            "date": "10-22~10-24",
+            "displayDate": "10月23日",
+            "banner": "/js/FestivalSolar/images/18_霜降.webp",
+            "color": "#9e9e9e",
+            "description": "霜降时节，万物收藏",
+            "details": "霜降是秋季的最后一个节气，反映了天气渐冷的现象。霜降时节，北方部分地区会出现初霜。",
+            "poetry": "霜降水返壑，风落木归山。"
+        },
+        {
+            "id": "lidong",
+            "name": "立冬",
+            "date": "11-06~11-08",
+            "displayDate": "11月7日",
+            "banner": "/js/FestivalSolar/images/19_立冬.webp",
+            "color": "#3f51b5",
+            "description": "冬季开始，万物收藏",
+            "details": "立冬是冬季的第一个节气，表示自此进入了寒冷的季节。立冬后，日照时间将继续缩短，正午太阳高度继续降低。",
+            "poetry": "冻笔新诗懒写，寒炉美酒时温。"
+        },
+        {
+            "id": "xiaoxue",
+            "name": "小雪",
+            "date": "11-21~11-23",
+            "displayDate": "11月22日",
+            "banner": "/js/FestivalSolar/images/20_小雪.webp",
+            "color": "#00bcd4",
+            "description": "小雪飘飘，寒意渐浓",
+            "details": "小雪节气是气候概念，表示气候特征中含有气候概念，并不表示一定会下雪。小雪时节，寒潮和冷空气活动频繁。",
+            "poetry": "小雪已晴芦叶暗，长波乍急鹤声嘶。"
+        },
+        {
+            "id": "daxue",
+            "name": "大雪",
+            "date": "12-06~12-08",
+            "displayDate": "12月7日",
+            "banner": "/js/FestivalSolar/images/21_大雪.webp",
+            "color": "#3f51b5",
+            "description": "大雪纷飞，银装素裹",
+            "details": "大雪是冬季的第三个节气，标志着仲冬时节正式开始。大雪节气是一个气候概念，与天气大雪无关。",
+            "poetry": "大雪江南见未曾，今年方始是严凝。"
+        },
+        {
+            "id": "dongzhi",
+            "name": "冬至",
+            "date": "12-21~12-23",
+            "displayDate": "12月22日",
+            "banner": "/js/FestivalSolar/images/22_冬至.webp",
+            "color": "#f44336",
+            "description": "白昼最短，团圆之时",
+            "details": "冬至是二十四节气中最重要的节气之一，也是中华民族的传统节日。冬至这一天，北半球白昼最短，夜晚最长。",
+            "poetry": "天时人事日相催，冬至阳生春又来。"
+        },
+        {
+            "id": "xiaohan",
+            "name": "小寒",
+            "date": "01-04~01-06",
+            "displayDate": "1月5日",
+            "banner": "/js/FestivalSolar/images/23_小寒.webp",
+            "color": "#607d8b",
+            "description": "小寒时节，天寒地冻",
+            "details": "小寒是冬季的第五个节气，标志着开始进入一年中最寒冷的日子。小寒时节，要注意防寒保暖。",
+            "poetry": "小寒连大吕，欢鹊垒新巢。"
+        },
+        {
+            "id": "dahan",
+            "name": "大寒",
+            "date": "01-19~01-21",
+            "displayDate": "1月20日",
+            "banner": "/js/FestivalSolar/images/24_大寒.webp",
+            "color": "#37474f",
+            "description": "大寒至寒，春望在即",
+            "details": "大寒是二十四节气中的最后一个节气，也是一年中最冷的时节。大寒后，农历新年即将来临，春天也不远了。",
+            "poetry": "大寒须守火，无事莫出门。"
+        }
+    ]
 }
