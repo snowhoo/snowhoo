@@ -89,8 +89,19 @@ font-size:13px
                     newScript.async = oldScript.async;
                     newScript.defer = oldScript.defer;
                 } else {
-                    // 内联脚本：复制内容
-                    newScript.textContent = oldScript.textContent;
+                    // 内联脚本：复制内容，注入沙箱变量
+                    let scriptContent = oldScript.textContent;
+                    // 注入 basePath 和 id 变量（如果脚本需要）
+                    const wrapper = `
+                    (function() {
+                        var basePath = '${filePath.substring(0, filePath.lastIndexOf('/') + 1)}';
+                        var id = 'idea';
+                        var onDataLoaded = function() {};
+                        var defineRender = function() {};
+                        ${scriptContent}
+                    })();
+                    `;
+                    newScript.textContent = wrapper;
                 }
                 // 执行脚本，但需要添加到 Shadow DOM 中（也会在全局作用域执行，但 DOM 操作限于 Shadow Root）
                 shadowRoot.appendChild(newScript);

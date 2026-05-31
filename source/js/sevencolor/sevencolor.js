@@ -7,6 +7,7 @@
   var config = [];
   var openedId = null;
   var injectedStyles = {}; // 记录每个 id 已注入的 style，避免重复
+  var contentScopes = {}; // 每个 id 独立的作用域，存储 articles、render 等
 
   function ensureContentContainers() {
     var container = document.getElementById('seven-color-card');
@@ -106,15 +107,18 @@
 
     // 如果内容已加载过，直接恢复并重新渲染
     if (content.dataset.loaded === 'true') {
+      var scope = contentScopes[id] || { articles: [], render: null };
       try {
-        window.__scArticles = JSON.parse(content.dataset.articles || '[]');
+        scope.articles = JSON.parse(content.dataset.articles || '[]');
       } catch(e) {
-        window.__scArticles = [];
+        scope.articles = [];
       }
       btn.classList.add('sc-open');
       content.classList.add('sc-open');
       addCollapseBar(content, id);
-      if (window.__scRender) window.__scRender(1);
+      if (scope.render && typeof scope.render === 'function') {
+        scope.render(1);
+      }
       return;
     }
 
@@ -170,6 +174,19 @@
                 var newStyle = document.createElement('style');
                 var cssContent = contentMatch[1]
                   .replace(/__CID__/g, id)
+                  // 给 CSS 选择器添加命名空间，限制在当前 content 容器内
+                  .replace(/(^|\s|,|\{|>)([a-zA-Z\.\#\[\*])/g, function(m, p1, p2) {
+                    // 跳过 @media、@keyframes 等 at-rules
+                    if (m.trim().startsWith('@')) return m;
+                    // 跳过已经处理过的选择器
+                    if (p1.includes('#sc-content-' + id)) return m;
+                    // body/html 选择器替换为 #sc-content-{id}
+                    if (/^(body|html)/i.test(p2)) {
+                      return p1 + '#sc-content-' + id;
+                    }
+                    // 其他选择器添加后代限定
+                    return p1 + '#sc-content-' + id + ' ' + p2;
+                  })
                   .replace(/url\(\s*['"]?([^'"\)]+)['"]?\s*\)/g, function(m, path) {
                     if (path.startsWith('/') || path.startsWith('http')) return m;
                     return 'url(\'' + basePath + path + '\')';
@@ -197,22 +214,44 @@
         // 替换内联脚本中的 __CID__
         inlineScriptContent = inlineScriptContent.replace(/__CID__/g, id);
 
-        // 注入 basePath 供模板使用
-        window.__SC_BASE_PATH = basePath;
-
         // 设置 DOM
         content.innerHTML = bodyHtml;
         addCollapseBar(content, id);
 
+        // 创建独立作用域
+        var scope = {
+          articles: [],
+          basePath: basePath,
+          id: id,
+          render: null
+        };
+        contentScopes[id] = scope;
+
         // 注册数据加载回调（模板加载完数据后通知我们缓存）
-        window.__scOnDataLoaded = function(articles) {
+        scope.onDataLoaded = function(articles) {
+          scope.articles = articles;
           content.dataset.articles = JSON.stringify(articles);
           content.dataset.loaded = 'true';
         };
 
-        // eval 内联脚本（模板自行加载数据并渲染）
+        // 沙箱执行内联脚本
         if (inlineScriptContent) {
-          try { eval(inlineScriptContent); } catch(e) { console.error('[SevenColor] Script eval error:', e); }
+          try {
+            // 创建沙箱函数，传入局部变量
+            var sandboxFn = new Function(
+              'basePath', 'id', 'onDataLoaded', 'defineRender',
+              '(function() { ' + inlineScriptContent + ' })()'
+            );
+            // 提供 defineRender 回调，让模板注册 render 函数
+            sandboxFn(
+              basePath,
+              id,
+              scope.onDataLoaded,
+              function(renderFn) { scope.render = renderFn; }
+            );
+          } catch(e) {
+            console.error('[SevenColor] Script eval error:', e);
+          }
         }
       })
       .catch(function(e) {

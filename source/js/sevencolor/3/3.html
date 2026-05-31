@@ -116,7 +116,7 @@ const saveBookmarks = list => setStorage(STORAGE.BOOKMARKS,list);
 const addBookmark = (video,epIdx,prog,note) => { let list=getBookmarks(); let epsCopy=video.episodes?video.episodes.map(e=>({title:e.title,url:e.url,playable:e.playable})):[]; list.unshift({ videoName:video.vod_name, sourceKey:video.sourceKey, sourceName:video.sourceName, vodPic:video.vod_pic, ep_count:video.ep_count||epsCopy.length, playable_count:video.playable_count||epsCopy.filter(e=>e.playable).length, episodes:epsCopy, epIndex:epIdx, epTitle:(video.episodes||[])[epIdx]?.title||'', epUrl:(video.episodes||[])[epIdx]?.url||'', progress:prog, note:note||'', createdAt:Date.now() }); saveBookmarks(list); };
 const updateHistory = (video,epIdx,prog) => { let key=video.sourceKey+'_'+video.vod_name; let epsCopy=video.episodes?video.episodes.map(e=>({title:e.title,url:e.url,playable:e.playable})):[]; saveHistory(key,{ videoName:video.vod_name, sourceKey:video.sourceKey, sourceName:video.sourceName, vodPic:video.vod_pic, ep_count:video.ep_count||epsCopy.length, playable_count:video.playable_count||epsCopy.filter(e=>e.playable).length, episodes:epsCopy, epIndex:epIdx, epTitle:(video.episodes||[])[epIdx]?.title||'', epUrl:(video.episodes||[])[epIdx]?.url||'', progress:prog, updatedAt:Date.now() }); };
 function findVideoInCache(sKey,vName){ for(let k in loadedSources){ let d=loadedSources[k]; if(d?.videos){ let f=d.videos.find(v=>v.vod_name===vName); if(f) return f; } } return null; }
-function loadData(file,cb,to=3000){ let key=file==='index.js'?'_TVBOX_INDEX':'_TVBOX_SITE_DATA'; let s=document.createElement('script'); let t=setTimeout(()=>{ s.onload=s.onerror=null; s.remove(); cb(null); },to); s.onerror=()=>{ clearTimeout(t); cb(null); }; s.onload=()=>{ clearTimeout(t); let d=window[key]; delete window[key]; cb(d||null); }; let bp=window.__SC_BASE_PATH||''; s.src=bp+'data/'+file; document.head.appendChild(s); }
+function loadData(file,cb,to=3000){ let key=file==='index.js'?'_TVBOX_INDEX':'_TVBOX_SITE_DATA'; let s=document.createElement('script'); let t=setTimeout(()=>{ s.onload=s.onerror=null; s.remove(); cb(null); },to); s.onerror=()=>{ clearTimeout(t); cb(null); }; s.onload=()=>{ clearTimeout(t); let d=window[key]; delete window[key]; cb(d||null); }; let bp=(typeof basePath !== 'undefined' ? basePath : ''); s.src=bp+'data/'+file; document.head.appendChild(s); }
 
 // ----- 预加载 -----
 let preloadTotal=0,preloadCompleted=0;
@@ -408,7 +408,9 @@ $('floatBackBtn').addEventListener('click',returnFromFloat);
 $('floatCloseBtn').addEventListener('click',closeFloatPlayer);
 loadIndex();
 // 通知 sevencolor.js 数据已加载（嵌入模式缓存）
-if(window.__scOnDataLoaded) window.__scOnDataLoaded([]);
+if (typeof onDataLoaded !== 'undefined' && onDataLoaded) {
+  onDataLoaded([]);
+}
 </script>
 </body>
 </html>

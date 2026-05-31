@@ -299,11 +299,10 @@ layout: false
 
 
   <script>
-    // basePath: 嵌入时由 sevencolor.js 注入 __SC_BASE_PATH，独立访问默认 ./
-    var basePath = window.__SC_BASE_PATH || './';
-    // cid: 嵌入时由 sevencolor.js 替换 __CID__，独立访问使用默认值
-    var cid = '__CID__';
-    if (cid === '__CID__') cid = 'yedu';
+    // basePath: 嵌入时由 sevencolor.js 传入，独立访问默认 ./
+    var basePath = (typeof basePath !== 'undefined' ? basePath : './');
+    // cid: 嵌入时由 sevencolor.js 传入，独立访问使用默认值
+    var cid = (typeof id !== 'undefined' ? id : 'yedu');
     var prefix = '__' + cid + '_';
 
     var pausePath = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
@@ -328,15 +327,21 @@ layout: false
         });
 
         // 收集文章数据
-        window.__scArticles = Object.keys(window)
+        var articles = Object.keys(window)
           .filter(function(k) { return k.startsWith(prefix); })
           .sort()
           .reverse()
           .map(function(k) { return window[k]; });
 
-        console.log('[SevenColor] loaded ' + window.__scArticles.length + ' articles, prefix:', prefix);
+        console.log('[SevenColor] loaded ' + articles.length + ' articles, prefix:', prefix);
         // 通知 sevencolor.js 缓存数据（嵌入模式）
-        if (window.__scOnDataLoaded) window.__scOnDataLoaded(window.__scArticles);
+        if (typeof onDataLoaded !== 'undefined' && onDataLoaded) {
+          onDataLoaded(articles);
+        }
+        // 注册渲染函数
+        if (typeof defineRender !== 'undefined' && defineRender) {
+          defineRender(__scRenderPage);
+        }
         __scRenderPage(1);
       })
       .catch(function(e) {
@@ -520,7 +525,7 @@ layout: false
     }
 
     // 注册全局渲染函数（嵌入模式关闭后重新打开时使用）
-    window.__scRender = __scRenderPage;
+    // 已在上面通过 defineRender 注册
   </script>
 </body>
 </html>
