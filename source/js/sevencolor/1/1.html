@@ -8,6 +8,37 @@ layout: false
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>夜读</title>
   <style>
+    /* 独立访问时的 CSS 变量（嵌入时由父页面提供，或通过下方 .__CID__-app 继承） */
+    :root {
+      --text-primary: #1a1a2e;
+      --text-secondary: #888;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --cover-bg: #2d4a6e;
+      --border-color: #eee;
+    }
+    [data-theme="dark"] {
+      --text-primary: #e8e8e8;
+      --text-secondary: #90a4ae;
+      --card-bg: rgba(30, 30, 50, 0.95);
+      --cover-bg: #1a1a2e;
+      --border-color: #333;
+    }
+    /* 嵌入时用：sevencolor.js 会重写为 #sc-content-X .__CID__-app */
+    .__CID__-app {
+      --text-primary: #1a1a2e;
+      --text-secondary: #888;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --cover-bg: #2d4a6e;
+      --border-color: #eee;
+    }
+    [data-theme="dark"] .__CID__-app {
+      --text-primary: #e8e8e8;
+      --text-secondary: #90a4ae;
+      --card-bg: rgba(30, 30, 50, 0.95);
+      --cover-bg: #1a1a2e;
+      --border-color: #333;
+    }
+
     .__CID__-app { padding: 0; }
 
     .__CID__-header {
