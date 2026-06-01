@@ -10,34 +10,39 @@ layout: false
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <style>
 /* ===== 作用域隔离：所有样式限定在 #player-wrap 内 ===== */
-#player-wrap{font-family:-apple-system,'Microsoft YaHei','PingFang SC',sans-serif;max-width:1200px;margin:0 auto;line-height:1.5;font-size:14px;position:relative;--bg-page:#0f0f0f;--bg-card:#1a1a2e;--bg-card-hover:#1e1e38;--bg-eplist:#111;--bg-eplist-alt:#161616;--bg-player:#000;--bg-toolbar:#16213e;--bg-input:#1a1a2e;--text-primary:#e8e8e8;--text-secondary:#90a4ae;--text-muted:#607d8b;--border:#333;--accent:#ff6b35;--accent-hover:#e85d2a;--badge-playable-bg:#2e7d32;--badge-playable-text:#fff;--badge-unplayable-bg:#616161;--badge-unplayable-text:#bdbdbd;--shadow:rgba(0,0,0,0.4);--card-radius:10px}
-#player-wrap *{box-sizing:border-box;margin:0;padding:0}
+/* 不重置所有元素，只针对需要的元素 */
+#player-wrap{font-family:-apple-system,'Microsoft YaHei','PingFang SC',sans-serif;max-width:1200px;margin:0 auto;line-height:1.5;font-size:14px;position:relative;--bg-page:#0f0f0f;--bg-card:#1a1a2e;--bg-card-hover:#1e1e38;--bg-eplist:#111;--bg-eplist-alt:#161616;--bg-player:#000;--bg-toolbar:#16213e;--bg-input:#1a1a2e;--text-primary:#e8e8e8;--text-secondary:#90a4ae;--text-muted:#607d8b;--border:#333;--accent:#ff6b35;--accent-hover:#e85d2a;--badge-playable-bg:#2e7d32;--badge-playable-text:#fff;--badge-unplayable-bg:#616161;--badge-unplayable-text:#bdbdbd;--shadow:rgba(0,0,0,0.4);--card-radius:10px;color:var(--text-primary);transition:color .3s}
 #player-wrap[data-theme="light"]{--bg-page:#f5f5f5;--bg-card:#fff;--bg-card-hover:#f0f0f5;--bg-eplist:#fafafa;--bg-eplist-alt:#f0f0f0;--bg-player:#000;--bg-toolbar:#e8e0f0;--bg-input:#fff;--text-primary:#212121;--text-secondary:#546e7a;--text-muted:#90a4ae;--border:#ddd;--accent:#e65100;--accent-hover:#d84315;--badge-playable-bg:#2e7d32;--badge-playable-text:#fff;--badge-unplayable-bg:#bdbdbd;--badge-unplayable-text:#757575;--shadow:rgba(0,0,0,0.1);--card-radius:10px}
-#player-wrap{color:var(--text-primary);transition:color .3s}
-#player-wrap .pw-preload-bar{width:100%;height:1px;background:transparent;margin:0;position:relative;display:block}
-#player-wrap .pw-preload-fill{width:0%;height:100%;background:#aaa;transition:width .2s;display:block}
+/* 工具栏 */
 #player-wrap .pw-toolbar{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap;align-items:center}
-#player-wrap .pw-toolbar select,#player-wrap .pw-toolbar input,#player-wrap .pw-toolbar button{padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text-primary);font-size:13px}
+#player-wrap .pw-toolbar select,#player-wrap .pw-toolbar input,#player-wrap .pw-toolbar button{padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text-primary);font-size:13px;margin:0}
 #player-wrap .pw-toolbar select{flex:2;min-width:100px;cursor:pointer}
 #player-wrap .pw-toolbar input{flex:2;min-width:120px}
 #player-wrap .pw-toolbar button{flex-shrink:0;background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:500}
 #player-wrap .pw-toolbar button:hover{background:var(--accent-hover)}
+/* 分类栏 */
 #player-wrap .pw-cat-bar{margin:0 8px 0 0;display:flex;align-items:center;gap:8px}
-#player-wrap .pw-cat-bar select{max-width:160px;min-width:80px;padding:7px 10px;background:transparent;color:var(--text-primary);border:1px solid var(--border);border-radius:6px;cursor:pointer}
+#player-wrap .pw-cat-bar select{max-width:160px;min-width:80px;padding:7px 10px;background:transparent;color:var(--text-primary);border:1px solid var(--border);border-radius:6px;cursor:pointer;margin:0}
+/* 状态栏 */
 #player-wrap .pw-status-bar{padding:2px 0;margin:6px 0;font-size:12px;color:var(--text-secondary);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-#player-wrap .pw-status-bar .pw-next-ep-btn{flex-shrink:0;padding:2px 10px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;display:none}
-#player-wrap .pw-status-bar .pw-clear-search-btn{padding:2px 10px;background:#555;color:#fff;border:none;border-radius:4px;cursor:pointer}
-#player-wrap .pw-player-box{background:var(--bg-player);border-radius:10px;overflow:hidden;position:relative;height:0;transition:height .3s;margin:0}
+#player-wrap .pw-status-bar .pw-next-ep-btn{flex-shrink:0;padding:2px 10px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;display:none;margin:0}
+#player-wrap .pw-status-bar .pw-clear-search-btn{padding:2px 10px;background:#555;color:#fff;border:none;border-radius:4px;cursor:pointer;margin:0}
+/* 播放器容器 */
+#player-wrap .pw-player-box{background:var(--bg-player);border-radius:10px;overflow:hidden;position:relative;height:0;transition:height .3s;margin:0;padding:0}
 #player-wrap .pw-player-box.pw-playing{height:auto}
-#player-wrap .pw-player{width:100%;aspect-ratio:16/9;background:#000;display:block}
+#player-wrap .pw-player{width:100%;aspect-ratio:16/9;background:#000;display:block;max-height:100%}
+/* 浮动播放器 - 小屏模式 */
 #player-wrap .pw-float-player{position:fixed;bottom:20px;right:20px;width:320px;background:#1a1a2e;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.5);z-index:9999;overflow:hidden;display:none}
 #player-wrap .pw-float-header{display:flex;align-items:center;padding:8px 10px;background:#16213e;gap:8px}
 #player-wrap .pw-float-title{flex:1;font-size:13px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#player-wrap .pw-float-btn{width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#player-wrap .pw-float-btn{width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
 #player-wrap .pw-float-close{color:#ff6b6b}
-#player-wrap .pw-float-video{width:100%;aspect-ratio:16/9;background:#000}
-#player-wrap .pw-video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px;margin:12px 0}
-#player-wrap .pw-video-card{background:var(--bg-card);border-radius:var(--card-radius);cursor:pointer;transition:transform .2s,box-shadow .2s;border:1px solid var(--border);position:relative}
+#player-wrap .pw-float-video{width:100%;height:auto;aspect-ratio:16/9;background:#000;display:block;max-height:180px}
+/* 视频网格 */
+#player-wrap .pw-video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px;margin:12px 0;padding:0}
+#player-wrap .pw-video-grid *{box-sizing:border-box}
+/* 视频卡片 */
+#player-wrap .pw-video-card{background:var(--bg-card);border-radius:var(--card-radius);cursor:pointer;transition:transform .2s,box-shadow .2s;border:1px solid var(--border);position:relative;overflow:hidden}
 #player-wrap .pw-video-card:hover{transform:translateY(-3px);box-shadow:0 4px 16px var(--shadow)}
 #player-wrap .pw-video-card .pw-poster-wrap{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;background:var(--bg-card)}
 #player-wrap .pw-video-card .pw-poster{width:100%;height:100%;object-fit:cover;display:block}
@@ -46,26 +51,34 @@ layout: false
 #player-wrap .pw-video-card .pw-card-badge.pw-playable{background:rgba(46,125,50,.85);color:#fff}
 #player-wrap .pw-video-card .pw-card-badge.pw-unplayable{background:rgba(97,97,97,.75);color:#bdbdbd}
 #player-wrap .pw-video-card .pw-card-info{padding:8px 10px}
-#player-wrap .pw-video-card .pw-card-title{font-size:13px;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+#player-wrap .pw-video-card .pw-card-title{font-size:13px;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;margin:0}
 #player-wrap .pw-video-card .pw-card-meta{font-size:11px;color:var(--text-secondary);margin-top:3px;display:flex;gap:6px}
-#player-wrap .pw-video-card .pw-fav-btn{position:absolute;top:4px;width:28px;height:28px;border-radius:50%;background:transparent;color:#ff6b6b;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
+#player-wrap .pw-video-card .pw-fav-btn{position:absolute;top:4px;width:28px;height:28px;border-radius:50%;background:transparent;color:#ff6b6b;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;border:none;padding:0}
 #player-wrap .pw-video-card .pw-fav-btn.pw-faved{color:#ff6b6b}
 #player-wrap .pw-video-card .pw-card-delete{left:calc(6px + 28px + 6px);color:#f44}
 #player-wrap .pw-video-card .pw-progress-bar{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(0,0,0,0.5)}
 #player-wrap .pw-video-card .pw-progress-fill{height:100%;background:var(--accent)}
 #player-wrap .pw-video-card .pw-bookmark-note{position:absolute;bottom:4px;left:4px;right:4px;background:rgba(0,0,0,0.7);color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 剧集面板 */
 #player-wrap .pw-ep-panel{display:none;background:var(--bg-eplist);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--card-radius) var(--card-radius);margin-top:-1px;max-height:320px;overflow-y:auto}
 #player-wrap .pw-ep-panel.pw-open{display:block}
 #player-wrap .pw-ep-header{display:flex;justify-content:space-between;padding:6px 10px;font-size:11px;color:var(--text-muted);background:var(--bg-eplist-alt);border-bottom:1px solid var(--border);position:sticky;top:0}
 #player-wrap .pw-ep-item{cursor:pointer;padding:4px 10px;font-size:12px;border-bottom:1px solid var(--border);color:var(--text-secondary)}
 #player-wrap .pw-ep-item:hover{background:var(--bg-card-hover);color:var(--text-primary)}
 #player-wrap .pw-ep-item.pw-current{color:var(--accent);font-weight:500}
-#player-wrap .pw-pagination{display:flex;gap:3px;justify-content:center;margin:12px 0;flex-wrap:wrap}
-#player-wrap .pw-pagination button{padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card);color:var(--text-secondary);cursor:pointer;font-size:12px;min-width:26px}
+/* 分页 */
+#player-wrap .pw-pagination{display:flex;gap:3px;justify-content:center;margin:12px 0;flex-wrap:wrap;padding:0}
+#player-wrap .pw-pagination button{padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg-card);color:var(--text-secondary);cursor:pointer;font-size:12px;min-width:26px;margin:0}
 #player-wrap .pw-pagination button.pw-active{background:var(--accent);border-color:var(--accent);color:#fff}
 #player-wrap .pw-pagination button:disabled{opacity:0.5;cursor:default}
+/* 空状态 */
 #player-wrap .pw-empty-state{text-align:center;padding:50px 20px;color:var(--text-muted)}
+/* 页脚 */
 #player-wrap .pw-tvbox-footer{text-align:center;padding:12px 0 6px;margin-top:12px;font-size:11px;color:var(--text-muted)}
+/* 预加载条 */
+#player-wrap .pw-preload-bar{width:100%;height:1px;background:transparent;margin:0;position:relative;display:block}
+#player-wrap .pw-preload-fill{width:0%;height:100%;background:#aaa;transition:width .2s;display:block}
+/* 响应式 */
 @media(max-width:600px){#player-wrap .pw-video-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}}
 </style>
 </head>
@@ -100,8 +113,8 @@ let sourceIndex=[], loadedSources={}, sourceMeta={}, currentPrefix='', currentFi
 let currentSearchKeyword='', currentSearchResults=[], currentSearchCategory='', isSearching=false, searchVersion=0;
 let currentPlayingVideo=null, currentPlayingEpIndex=0, currentOpenVideo=null, currentEpNext=null, currentHls=null, playerInFloat=false, floatReturn=null;
 let categoryStatsLoading=false;
-const $ = id => document.getElementById(id);
 const pw$ = sel => document.querySelector('#player-wrap ' + sel);
+const $ = id => document.getElementById(id);
 const escHtml = s => String(s).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]);
 const escAttr = s => String(s).replace(/[&"']/g, m => ({'&':'&amp;','"':'&quot;',"'":'&#39;'})[m]);
 const setStatus = t => $('pwStatusText').textContent = t;
@@ -366,13 +379,13 @@ function toggleEpisodes(el,eid){
 
 // ===== 播放相关 =====
 function playEp(el){ let url=el.dataset.url; if(!url) return; let items=el.parentElement.querySelectorAll('.pw-ep-item'), idx=Array.from(items).indexOf(el), epIdx=parseInt(el.dataset.epindex)||idx; currentEpNext=idx<items.length-1?items[idx+1]:null; $('pwNextEpBtn').style.display=currentEpNext?'inline':'none'; if(currentPlayingVideo){ let v=$('pwPlayer'); if(v.currentTime>5) updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime)); } currentPlayingVideo=currentOpenVideo; currentPlayingEpIndex=epIdx; doPlay(url,el.dataset.name); }
-function doPlay(url,name){ if(currentHls) currentHls.destroy(); let v=$('pwPlayer'); v.pause(); v.removeAttribute('src'); v.load(); document.querySelector('.pw-player-box').classList.add('pw-playing'); if(url.includes('.m3u8') && window.Hls?.isSupported()){ let hls=new Hls(); hls.loadSource(url); hls.attachMedia(v); currentHls=hls; } else v.src=url; v.play().catch(()=>{}); let saved=currentOpenVideo?(currentOpenVideo.historyProgress||currentOpenVideo.bookmarkProgress||0):0; if(saved>5) v.addEventListener('canplay',function once(){ v.removeEventListener('canplay',once); v.currentTime=saved; }); setStatus(`▶ ${name}`); }
+function doPlay(url,name){ if(currentHls) currentHls.destroy(); let v=$('pwPlayer'); v.pause(); v.removeAttribute('src'); v.load(); pw$('.pw-player-box').classList.add('pw-playing'); if(url.includes('.m3u8') && window.Hls?.isSupported()){ let hls=new Hls(); hls.loadSource(url); hls.attachMedia(v); currentHls=hls; } else v.src=url; v.play().catch(()=>{}); let saved=currentOpenVideo?(currentOpenVideo.historyProgress||currentOpenVideo.bookmarkProgress||0):0; if(saved>5) v.addEventListener('canplay',function once(){ v.removeEventListener('canplay',once); v.currentTime=saved; }); setStatus(`▶ ${name}`); }
 function playNext(){ if(currentEpNext) playEp(currentEpNext); }
 function addBookmarkHandler(){ if(!currentPlayingVideo || (currentPlayingEpIndex===undefined)){ setStatus('⚠ 请先选择剧集'); return; } let v=$('pwPlayer'); updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime)); let note=prompt('影签备注：',''); if(note===null) return; addBookmark(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime),note); setStatus('✓ 影签已添加'); }
-function showFloatPlayer(){ if(playerInFloat) return; let main=$('pwPlayer'), floatV=$('pwFloatVideo'), floatDiv=$('pwFloatPlayer'); if(currentHls){ currentHls.detachMedia(); currentHls.attachMedia(floatV); } floatV.src=main.src||main.currentSrc; floatV.currentTime=main.currentTime; floatV.volume=main.volume; if(currentPlayingVideo) $('pwFloatPlayerTitle').textContent=currentPlayingVideo.vod_name||'正在播放'; playerInFloat=true; document.querySelector('.pw-player-box').classList.remove('pw-playing');
+function showFloatPlayer(){ if(playerInFloat) return; let main=$('pwPlayer'), floatV=$('pwFloatVideo'), floatDiv=$('pwFloatPlayer'); if(currentHls){ currentHls.detachMedia(); currentHls.attachMedia(floatV); } floatV.src=main.src||main.currentSrc; floatV.currentTime=main.currentTime; floatV.volume=main.volume; if(currentPlayingVideo) $('pwFloatPlayerTitle').textContent=currentPlayingVideo.vod_name||'正在播放'; playerInFloat=true; pw$('.pw-player-box').classList.remove('pw-playing');
  floatDiv.style.display='block'; if(!main.paused) floatV.play().catch(()=>{}); }
-function returnFromFloat(){ if(!playerInFloat) return; $('pwFloatPlayer').style.display='none'; playerInFloat=false; let main=$('pwPlayer'), floatV=$('pwFloatVideo'); if(currentHls){ currentHls.detachMedia(); currentHls.attachMedia(main); } main.src=floatV.src; main.currentTime=floatV.currentTime; main.volume=floatV.volume; main.play().catch(()=>{}); document.querySelector('.pw-player-box').classList.add('pw-playing'); if(floatReturn){ $('pwSourceSelect').value=floatReturn; floatReturn=null; } }
-function closeFloatPlayer(){ if(!playerInFloat) return; let v=$('pwFloatVideo'); v.pause(); v.src=''; if(currentHls){ currentHls.destroy(); currentHls=null; } playerInFloat=false; floatReturn=null; $('pwFloatPlayer').style.display='none'; document.querySelector('.pw-player-box').classList.remove('pw-playing');
+function returnFromFloat(){ if(!playerInFloat) return; $('pwFloatPlayer').style.display='none'; playerInFloat=false; let main=$('pwPlayer'), floatV=$('pwFloatVideo'); if(currentHls){ currentHls.detachMedia(); currentHls.attachMedia(main); } main.src=floatV.src; main.currentTime=floatV.currentTime; main.volume=floatV.volume; main.play().catch(()=>{}); pw$('.pw-player-box').classList.add('pw-playing'); if(floatReturn){ $('pwSourceSelect').value=floatReturn; floatReturn=null; } }
+function closeFloatPlayer(){ if(!playerInFloat) return; let v=$('pwFloatVideo'); v.pause(); v.src=''; if(currentHls){ currentHls.destroy(); currentHls=null; } playerInFloat=false; floatReturn=null; $('pwFloatPlayer').style.display='none'; pw$('.pw-player-box').classList.remove('pw-playing');
  currentPlayingVideo=null; setStatus('⏹ 已关闭'); }
 
 // ===== 初始化与主题 =====
@@ -391,7 +404,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{ let tar=e.target; if(tar.id==='pwSourceSelect') switchSource(); else if(tar.classList.contains('pw-cat-filter')) filterCategory(tar); });
 document.addEventListener('keydown',e=>{ if(e.key==='Enter' && document.activeElement===$('pwSearchInput')) doSearch(); if((e.key==='n'||e.key==='N') && currentEpNext){ e.preventDefault(); playNext(); } });
-$('pwPlayer').addEventListener('ended',()=>{ if(currentPlayingVideo){ let v=$('pwPlayer'); updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime)); } playNext(); if(!currentEpNext) document.querySelector('.pw-player-box').classList.remove('pw-playing');
+$('pwPlayer').addEventListener('ended',()=>{ if(currentPlayingVideo){ let v=$('pwPlayer'); updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime)); } playNext(); if(!currentEpNext) pw$('.pw-player-box').classList.remove('pw-playing');
  });
 $('pwPlayer').addEventListener('pause',()=>{ if(currentPlayingVideo){ let v=$('pwPlayer'); if(v.currentTime>5) updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime)); } });
 $('pwFloatBackBtn').addEventListener('click',returnFromFloat);
