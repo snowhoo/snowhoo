@@ -41,8 +41,11 @@
 
 .news-page {
   width: 100%;
+  max-width: 100%;
   margin: 0 auto;
   padding: 10px 8px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 .platform-tabs {
   display: flex;
@@ -54,6 +57,7 @@
   scrollbar-color: #ccc transparent;
   -webkit-overflow-scrolling: touch;
   white-space: nowrap;
+  min-width: 0;
 }
 .platform-tabs::-webkit-scrollbar {
   height: 4px;
