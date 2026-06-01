@@ -24,38 +24,34 @@ layout: false
 <div class="picsum-embedded">
     <div class="art-card">
         <div class="image-stage">
-            <img id="picsumImg" class="dynamic-img" alt="Random">
-            <div id="placeholder" class="img-placeholder">✨ 图片加载中...</div>
+            <img class="dynamic-img" alt="Random">
+            <div class="img-placeholder">✨ 图片加载中...</div>
         </div>
-        <button id="refreshBtn" class="btn-lucky">🎲 再试一次</button>
+        <button class="btn-lucky">🎲 再试一次</button>
         <div class="credit">🌄 图片源于 Lorem Picsum</div>
     </div>
 </div>
 
 <script>
-(function() {
-    // 在脚本所在容器中查找元素
-    const root = document.currentScript ? document.currentScript.parentNode : document;
-    const img = root.querySelector('.dynamic-img');
-    const placeholder = root.querySelector('.img-placeholder');
-    const btn = root.querySelector('.btn-lucky');
+var img = document.querySelector('.dynamic-img');
+var placeholder = document.querySelector('.img-placeholder');
+var btn = document.querySelector('.btn-lucky');
 
-    function loadRandom() {
-        img.classList.remove('loaded');
-        placeholder.classList.remove('hidden-placeholder');
-        img.src = 'https://picsum.photos/800/600?random=' + Date.now();
-        img.onload = function() {
-            img.classList.add('loaded');
-            placeholder.classList.add('hidden-placeholder');
-        };
-        img.onerror = function() {
-            placeholder.textContent = '✨ 图片加载失败';
-        };
-    }
+function loadRandom() {
+    img.classList.remove('loaded');
+    placeholder.classList.remove('hidden-placeholder');
+    img.src = 'https://picsum.photos/800/600?random=' + Date.now();
+    img.onload = function() {
+        img.classList.add('loaded');
+        placeholder.classList.add('hidden-placeholder');
+    };
+    img.onerror = function() {
+        placeholder.textContent = '✨ 图片加载失败';
+    };
+}
 
-    btn.addEventListener('click', loadRandom);
-    loadRandom();
-})();
+btn.addEventListener('click', loadRandom);
+loadRandom();
 </script>
 </body>
 </html>
