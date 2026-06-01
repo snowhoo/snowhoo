@@ -2,13 +2,13 @@ extends includes/layout.pug
 
 block home-widgets
   #custom-widgets
+    // 节日节气
+    include FestivalSolar.pug
     //- 新七彩按钮（展开式）
     #seven-color-card(style="display:none")
       .sc-btn-row
         each item in [0,1,2,3]
           button.sc-btn.sc-btn-placeholder(disabled style="visibility:hidden")
-    // 节日节气
-    include FestivalSolar.pug
     // 诗词
     include DailyPoetry.pug
     // 历史上的今天
