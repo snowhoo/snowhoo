@@ -57,96 +57,40 @@ font-size:13px
         selectEl.innerHTML = options;
         // 默认加载第一个
         selectEl.value = keys[0];
-        loadPageIntoShadow(pages[keys[0]]);
+        loadPageIntoIframe(pages[keys[0]]);
     }
 
-    // 将 HTML 文件内容加载到 Shadow DOM 中（样式隔离）
-    async function loadPageIntoShadow(filePath) {
-        try {
-            const response = await fetch(filePath);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            let html = await response.text();
-
-            // 清除旧的 Shadow DOM
-            if (host.shadowRoot) {
-                // Shadow DOM 已存在，不能重新 attach，只能清空内容
-                while (host.shadowRoot.firstChild) {
-                    host.shadowRoot.removeChild(host.shadowRoot.firstChild);
-                }
-            } else {
-                // 首次创建 Shadow DOM
-                // 清除所有子节点
-                while (host.firstChild) {
-                    host.removeChild(host.firstChild);
-                }
-                // 创建 Shadow Root（mode: 'open' 便于调试，但不影响隔离）
-                host.attachShadow({ mode: 'open' });
-            }
-            const shadowRoot = host.shadowRoot;
-
-            // 处理 HTML：提取 style 并修改 CSS 选择器，防止泄露
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            // 处理 style 标签，给 CSS 添加 :host 限定
-            const styles = doc.querySelectorAll('style');
-            styles.forEach(style => {
-              let css = style.textContent;
-              // 给 CSS 添加 :host 限定，确保只影响 Shadow DOM 内部
-              css = css.replace(/([^{}]+)(\{[^}]*\})/g, function(match, selector, body) {
-                if (selector.trim().startsWith('@')) {
-                  return match; // 跳过@rules
-                }
-                // body/html 选择器特殊处理
-                if (/^(body|html)/i.test(selector.trim())) {
-                  return ':host' + body;
-                }
-                return ':host ' + selector.trim() + body;
-              });
-              style.textContent = css;
-            });
-            
-            // 将处理后的内容注入 Shadow DOM
-            shadowRoot.innerHTML = doc.documentElement.innerHTML;
-
-            // 处理脚本：Shadow DOM 中 <script> 标签不会自动执行，需要手动提取执行
-            // 确保脚本在 Shadow DOM 上下文中运行
-            const scripts = shadowRoot.querySelectorAll('script');
-            scripts.forEach(oldScript => {
-                const newScript = document.createElement('script');
-                if (oldScript.src) {
-                    // 外部脚本：创建新脚本并加载
-                    newScript.src = oldScript.src;
-                    newScript.async = oldScript.async;
-                    newScript.defer = oldScript.defer;
-                } else {
-                    // 内联脚本：在 Shadow DOM 上下文中执行
-                    let scriptContent = oldScript.textContent;
-                    const basePath = filePath.substring(0, filePath.lastIndexOf('/') + 1);
-                    // 在 Shadow DOM 上下文中执行脚本
-                    const wrapper = `
-                    (function(doc, basePath) {
-                        var window = doc.defaultView || {};
-                        window.__SC_BASE_PATH = basePath;
-                        window.__SC_ID = 'idea';
-                        ${scriptContent}
-                    })(this);
-                    `;
-                    newScript.textContent = wrapper;
-                }
-                // 将脚本添加到 Shadow DOM 中执行
-                shadowRoot.appendChild(newScript);
-                // 移除原脚本防止重复
-                oldScript.remove();
-            });
-
-        } catch (err) {
-            console.error('加载失败:', err);
-            // 错误提示也放在 Shadow DOM 中保持干净
-            while (host.firstChild) host.removeChild(host.firstChild);
-            const fallbackRoot = host.shadowRoot || host.attachShadow({ mode: 'open' });
-            fallbackRoot.innerHTML = `<div style="color:red; padding:1rem;">加载失败: ${err.message}<br>请确保通过 HTTP 服务器访问且文件路径正确。</div>`;
+    // 将 HTML 文件通过 iframe 嵌入（样式完全隔离）
+    function loadPageIntoIframe(filePath) {
+        // 清除旧内容
+        while (host.firstChild) {
+            host.removeChild(host.firstChild);
         }
+        // 创建 iframe
+        const iframe = document.createElement('iframe');
+        iframe.style.border = 'none';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.background = 'transparent';
+        host.appendChild(iframe);
+
+        // 设置 iframe 的 sandbox（如果需要更严格的隔离可以添加更多属性）
+        iframe.sandbox = 'allow-scripts allow-same-origin';
+
+        // 等 iframe 加载完成后设置 basePath
+        iframe.onload = function() {
+            try {
+                // 设置 __SC_BASE_PATH 和 __SC_ID
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                iframe.contentWindow.__SC_BASE_PATH = filePath.substring(0, filePath.lastIndexOf('/') + 1);
+                iframe.contentWindow.__SC_ID = 'idea';
+            } catch(e) {
+                console.warn('无法设置iframe上下文:', e);
+            }
+        };
+
+        // 直接设置 src
+        iframe.src = filePath;
     }
 
     function escapeHtml(str) {
@@ -155,7 +99,7 @@ font-size:13px
 
     selectEl.addEventListener('change', (e) => {
         const filePath = pages[e.target.value];
-        if (filePath) loadPageIntoShadow(filePath);
+        if (filePath) loadPageIntoIframe(filePath);
     });
 
     buildSelect();
