@@ -218,7 +218,9 @@ function doSearchImpl(kw, ver){
   function bump(){
     if(ver!==searchVersion) return;
     doneCount++;
-    setStatus('📡 搜索中 '+doneCount+'/'+totalPages+'...');
+    setStatus('📡 搜索中 '+doneCount+'/'+totalPages+' · 已找到 '+results.length+' 条');
+    // 搜索进行中时在分类栏显示进度
+    if(isSearching) $('pwCatBar').innerHTML='<span style="font-size:12px">🔍 '+doneCount+'/'+totalPages+'</span>';
     // 增量更新搜索结果，让用户即时看到
     currentSearchResults=results.slice();
     renderSearchResult(false);
@@ -263,7 +265,6 @@ function doSearchImpl(kw, ver){
     }, 4000);
   }
   // 启动并发加载（每次并发加载若干，但逐个完成）
-  var CONCURRENT = 4;
   for(var i=0; i<CONCURRENT; i++) loadNext();
 }
 function stopSearch(){
@@ -301,7 +302,7 @@ function buildSearchCatBar(){
 function renderSearchResult(loading){
   currentPrefix='__search_result__';
   if(loading && (!currentSearchResults.length||isSearching)){
-    $('pwContent').innerHTML='<div class="pw-empty-state">🔍 搜索中…</div>';
+    $('pwContent').innerHTML='<div class="pw-empty-state">🔍 搜索中<br><span style="font-size:12px;color:var(--text-muted)">'+$('pwStatusText').textContent+'</span></div>';
     $('pwPagination').innerHTML='';
     setStatus('关键词：'+currentSearchKeyword+' - 结果：0');
     $('pwClearSearchResultBtn').style.display='none';
@@ -310,7 +311,7 @@ function renderSearchResult(loading){
   }
   if(!currentSearchResults.length){
     if(isSearching){
-      $('pwContent').innerHTML='<div class="pw-empty-state">🔍 搜索中…</div>';
+      $('pwContent').innerHTML='<div class="pw-empty-state">🔍 搜索中<br><span style="font-size:12px;color:var(--text-muted)">'+$('pwStatusText').textContent+'</span></div>';
       $('pwPagination').innerHTML='';
     } else {
       setEmpty('暂无搜索结果','请尝试其他关键词');
@@ -585,7 +586,7 @@ function render(){
       pg+='<button class="pw-pg-go" data-page="'+(currentPage+1)+'"'+(currentPage>=pgs?' disabled':'')+'>›</button><button class="pw-pg-go" data-page="'+pgs+'"'+(currentPage>=pgs?' disabled':'')+'>»</button>';
     }
     if(isSearch){
-      setStatus('关键词：'+(currentSearchKeyword||'-')+' - 结果：'+currentSearchResults.length+(currentSearchCategory?' · 分类：'+currentSearchCategory:'')+' · 第 '+currentPage+' 页');
+      if(!isSearching) setStatus('关键词：'+(currentSearchKeyword||'-')+' - 结果：'+currentSearchResults.length+(currentSearchCategory?' · 分类：'+currentSearchCategory:'')+' · 第 '+currentPage+' 页');
       $('pwClearSearchResultBtn').style.display=currentSearchResults.length?'inline-block':'none';
     }
     else if(isSpecial) setStatus((currentPrefix==='__history__'?'最近观看':currentPrefix==='__favorites__'?'我的收藏':'我的影签')+' — '+total+' 条记录 · 第 '+currentPage+' 页');
