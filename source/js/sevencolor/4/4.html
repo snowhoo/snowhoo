@@ -46,49 +46,38 @@ layout: false
         try {
             const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            let html = await response.text();
+            const html = await response.text();
+
+            // 用DOMParser解析
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
 
             // 提取head中的style
-            const headStyles = [];
-            html = html.replace(/<head[^>]*>([\s\S]*?)<\/head>\s*/gi, function(match, headContent) {
-                const s = headContent.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
-                if (s) headStyles.push(...s);
-                return '';
-            });
+            const headStyles = Array.from(doc.head.querySelectorAll('style'));
 
-            // 去掉Hexo front matter和外层框架
-            html = html.replace(/^---[\s\S]*?---\s*/i, '');
-            html = html.replace(/<!DOCTYPE[^>]*>\s*/gi, '');
-            html = html.replace(/<html[^>]*>/gi, '');
-            html = html.replace(/<\/html>\s*/gi, '');
-            html = html.replace(/<body/gi, '<div');
-            html = html.replace(/<\/body>/gi, '</div>');
+            // 提取body内容
+            const bodyContent = doc.body.innerHTML;
 
             // 提取脚本
-            const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/i);
-            const scriptContent = scriptMatch ? scriptMatch[1] : '';
-            html = html.replace(/<script[\s\S]*?<\/script>/gi, '');
-
-            // 解析并获取body内容
-            const bodyContent = html.replace(/^<div[^>]*>/, '').replace(/<\/div>\s*$/, '');
+            const scripts = doc.querySelectorAll('script');
+            let scriptContent = '';
+            scripts.forEach(s => {
+                if (s.src) return;
+                scriptContent += s.textContent + '\n';
+            });
 
             // 注入CSS
-            if (headStyles.length > 0) {
-                headStyles.forEach(styleTag => {
-                    const contentMatch = styleTag.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-                    if (contentMatch) {
-                        const style = document.createElement('style');
-                        style.textContent = contentMatch[1];
-                        document.head.appendChild(style);
-                    }
-                });
-            }
+            headStyles.forEach(styleTag => {
+                const style = document.createElement('style');
+                style.textContent = styleTag.textContent;
+                document.head.appendChild(style);
+            });
 
             // 设置DOM
             host.innerHTML = bodyContent;
 
-            // 执行脚本（在主文档上下文）
-            if (scriptContent) {
+            // 执行脚本
+            if (scriptContent.trim()) {
                 try {
                     const fn = new Function(scriptContent);
                     fn();
@@ -99,6 +88,7 @@ layout: false
 
         } catch(e) {
             console.warn('加载失败:', e);
+            host.innerHTML = '<div style="padding:20px;text-align:center;">加载失败</div>';
         }
     }
 
