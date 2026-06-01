@@ -205,23 +205,27 @@ function doSearchImpl(kw, ver){
   var totalPages = tasks.length;
   var doneCount = 0;
   var results = [];
+  var needRender = false;
 
   function searchOne(data, fname){
+    var found = false;
     if(data?.videos){
       data.videos.forEach(function(v){
         if(v.vod_name.includes(kw)||(v.vod_class||'').includes(kw)){
           results.push({vod_name:v.vod_name, vod_pic:v.vod_pic, ep_count:v.ep_count, playable_count:v.playable_count, episodes:v.episodes, vod_class:v.vod_class, sourceKey:fname, sourceName:data.name});
+          found = true;
         }
       });
     }
+    return found;
   }
 
-  function onFileDone(){
-    if(ver!==searchVersion) return;
-    doneCount++;
+  function doRender(){
+    if(ver!==searchVersion || !needRender) return;
+    needRender = false;
+    currentSearchResults = results.slice();
     setStatus('📡 搜索中 '+doneCount+'/'+totalPages+' · 已找到 '+results.length+' 条');
     $('pwCatBar').innerHTML='<span style="font-size:12px">🔍 '+doneCount+'/'+totalPages+'</span>';
-    currentSearchResults=results.slice();
     renderSearchResult(false);
   }
 
@@ -230,13 +234,13 @@ function doSearchImpl(kw, ver){
     isSearching=false;
     $('pwSearchBtn').style.display='inline';
     $('pwStopSearchBtn').style.display='none';
-    currentSearchResults=results.slice();
+    needRender = true;
+    currentSearchResults = results.slice();
     setStatus('✅ 搜索完成：关键词 '+(currentSearchKeyword||'-')+' - 结果：'+results.length+' 条');
     $('pwCatBar').innerHTML='';
     renderSearchResult(false);
   }
 
-  // 从头到尾线性处理：缓存即返回，未缓存则加载
   var running = 0;
   var idx = 0;
 
@@ -245,25 +249,25 @@ function doSearchImpl(kw, ver){
     while(idx < tasks.length){
       var task = tasks[idx++];
       if(loadedSources[task.fname]){
-        // 已缓存：同步搜索
-        searchOne(loadedSources[task.fname], task.fname);
-        onFileDone();
+        var found = searchOne(loadedSources[task.fname], task.fname);
+        doneCount++;
+        if(found) needRender = true;
       } else {
-        // 未缓存：异步加载
         running++;
         loadData(task.fname, function(data){
           if(data) loadedSources[task.fname]=data;
-          searchOne(data, task.fname);
-          onFileDone();
+          var found = searchOne(data, task.fname);
+          doneCount++;
+          if(found) needRender = true;
           running--;
-          loadNext(); // 继续下一个
+          doRender();
+          loadNext();
         }, 5000);
-        if(running >= CONCURRENT) return; // 达到并发上限，等回调
+        if(running >= CONCURRENT) break;
       }
-      // 缓存文件处理完继续循环
     }
-    // 队列耗尽，等正在 loading 的回调收尾
-    if(running <= 0) finish();
+    doRender();
+    if(idx >= tasks.length && running <= 0) finish();
   }
 
   for(var i=0; i<CONCURRENT; i++) loadNext();
