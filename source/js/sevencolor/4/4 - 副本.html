@@ -1,25 +1,35 @@
+---
+layout: false
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        .idea-select {
+            flex: 2;
+            min-width: 100px;
+            cursor: pointer;
+            padding: 7px 10px;
+            border: 1px solid var(--border, #333);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-primary, #e8e8e8);
+            font-size: 13px;
+        }
+        .idea-host {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
 <select class="idea-select"></select>
 <div class="idea-host"></div>
 
-<style>
-.idea-select {
-    flex: 2;
-    min-width: 100px;
-    cursor: pointer;
-    padding: 7px 10px;
-    border: 1px solid var(--border, #333);
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-primary, #e8e8e8);
-    font-size: 13px;
-}
-.idea-host {
-    width: 100%;
-}
-</style>
-
 <script>
-(function() {
     const pages = {
         "美图盲盒": "/js/sevencolor/4/photo.html",
         "五子连珠": "/js/sevencolor/4/five.html"
@@ -29,39 +39,44 @@
     const host = document.querySelector('.idea-host');
 
     function escapeHtml(str) {
-        return str.replace(/[&<>]/g, function(m) {
-            return {'&':'&amp;','<':'&lt;','>':'&gt;'}[m];
-        });
+        return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
     }
 
     async function loadPage(url) {
         try {
             const response = await fetch(url);
-            if (!response.ok) throw new Error('HTTP ' + response.status);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const html = await response.text();
 
+            // 用DOMParser解析
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
 
+            // 提取head中的style
             const headStyles = Array.from(doc.head.querySelectorAll('style'));
 
+            // 提取body内容
             const bodyContent = doc.body.innerHTML;
 
+            // 提取脚本
             const scripts = doc.querySelectorAll('script');
-            var scriptContent = '';
-            scripts.forEach(function(s) {
+            let scriptContent = '';
+            scripts.forEach(s => {
                 if (s.src) return;
                 scriptContent += s.textContent + '\n';
             });
 
-            headStyles.forEach(function(styleTag) {
+            // 注入CSS
+            headStyles.forEach(styleTag => {
                 const style = document.createElement('style');
                 style.textContent = styleTag.textContent;
                 document.head.appendChild(style);
             });
 
+            // 设置DOM
             host.innerHTML = bodyContent;
 
+            // 执行脚本
             if (scriptContent.trim()) {
                 try {
                     const fn = new Function(scriptContent);
@@ -70,6 +85,7 @@
                     console.warn('脚本执行失败:', e);
                 }
             }
+
         } catch(e) {
             console.warn('加载失败:', e);
             host.innerHTML = '<div style="padding:20px;text-align:center;">加载失败</div>';
@@ -82,20 +98,21 @@
             selectEl.innerHTML = '<option disabled>—— 请配置文件 ——</option>';
             return;
         }
-        var options = '';
-        keys.forEach(function(key) {
-            options += '<option value="' + escapeHtml(key) + '">' + escapeHtml(key) + '</option>';
+        let options = '';
+        keys.forEach(key => {
+            options += `<option value="${escapeHtml(key)}">${escapeHtml(key)}</option>`;
         });
         selectEl.innerHTML = options;
         selectEl.value = keys[0];
         loadPage(pages[keys[0]]);
     }
 
-    selectEl.addEventListener('change', function(e) {
+    selectEl.addEventListener('change', (e) => {
         const url = pages[e.target.value];
         if (url) loadPage(url);
     });
 
     buildSelect();
-})();
 </script>
+</body>
+</html>
