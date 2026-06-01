@@ -19,7 +19,7 @@ layout: false
 <div id="pwStatus" class="pw-status-bar">
   <div class="pw-cat-bar" id="pwCatBar"></div>
   <span id="pwStatusText">[STOP] 选择一个数据源</span>
-  <div style="display:flex; gap:6px"><button id="pwClearSearchResultBtn" class="pw-clear-search-btn" style="display:none">清空</button><button id="pwBookmarkBtn" class="pw-next-ep-btn" style="background:#4caf50">签</button><button id="pwNextEpBtn" class="pw-next-ep-btn">下集</button></div>
+  <div style="display:flex; gap:6px"><button id="pwClearSearchResultBtn" class="pw-clear-search-btn" style="display:none">清空</button><button id="pwBookmarkBtn" class="pw-next-ep-btn" style="display:none">影签</button><button id="pwNextEpBtn" class="pw-next-ep-btn">下集</button></div>
 </div>
 <div id="pwContent"></div>
 <div class="pw-pagination" id="pwPagination"></div>
@@ -38,7 +38,7 @@ layout: false
 #player-wrap .pw-cat-bar{margin:0 8px 0 0;display:flex;align-items:center;gap:8px}
 #player-wrap .pw-cat-bar select{max-width:160px;min-width:80px;padding:7px 10px;background:transparent;color:var(--text-primary);border:1px solid var(--border);border-radius:6px;cursor:pointer;margin:0}
 #player-wrap .pw-status-bar{padding:2px 0;margin:6px 0;font-size:12px;color:var(--text-secondary);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-#player-wrap .pw-status-bar .pw-next-ep-btn{flex-shrink:0;padding:2px 10px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;display:none;margin:0}
+#player-wrap .pw-status-bar .pw-next-ep-btn{flex-shrink:0;padding:2px 10px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;margin:0}#player-wrap .pw-status-bar #pwNextEpBtn{display:none}#player-wrap .pw-status-bar #pwBookmarkBtn{display:none}
 #player-wrap .pw-status-bar .pw-clear-search-btn{padding:2px 10px;background:#555;color:#fff;border:none;border-radius:4px;cursor:pointer;margin:0}
 #player-wrap .pw-player-box{display:none;background:var(--bg-player);border-radius:10px;overflow:hidden;position:relative;aspect-ratio:16/9;height:auto;max-width:100%;width:100%}#player-wrap .pw-player-box.pw-playing{display:block}
 #player-wrap .pw-player{width:100%;height:100%;background:#000;display:block;object-fit:contain}
@@ -669,6 +669,7 @@ function playEp(el){
   }
   currentPlayingVideo=currentOpenVideo;
   currentPlayingEpIndex=epIdx;
+  $('pwBookmarkBtn').style.display='inline-block';
   doPlay(url,el.dataset.name);
 }
 function doPlay(url,name){
@@ -729,6 +730,7 @@ function closeFloatPlayer(){
   $('pwFloatPlayer').style.display='none';
   pw$('.pw-player-box').classList.remove('pw-playing');
   currentPlayingVideo=null;
+  $('pwBookmarkBtn').style.display='none';
   setStatus('⏹ 已关闭');
 }
 
