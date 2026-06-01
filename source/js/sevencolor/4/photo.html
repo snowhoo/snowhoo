@@ -34,14 +34,15 @@ layout: false
 
 <script>
 (function() {
-    const img = document.getElementById('picsumImg');
-    const placeholder = document.getElementById('placeholder');
-    const btn = document.getElementById('refreshBtn');
+    // 在脚本所在容器中查找元素
+    const root = document.currentScript ? document.currentScript.parentNode : document;
+    const img = root.querySelector('.dynamic-img');
+    const placeholder = root.querySelector('.img-placeholder');
+    const btn = root.querySelector('.btn-lucky');
 
     function loadRandom() {
         img.classList.remove('loaded');
         placeholder.classList.remove('hidden-placeholder');
-        // 直接用picsum.photos随机图片
         img.src = 'https://picsum.photos/800/600?random=' + Date.now();
         img.onload = function() {
             img.classList.add('loaded');
