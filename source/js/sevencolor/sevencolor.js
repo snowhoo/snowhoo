@@ -195,18 +195,38 @@
                   return '#sc-content-' + id + ' ' + sel + body;
                 });
 
-                // 第二遍：处理 @media / @keyframes 等 @-规则 内部的子选择器
-                cssContent = cssContent.replace(/@(media|keyframes)[^{]*\{([\s\S]*?)\}\s*\}/g, function(match, atType, inner) {
+                // 第二遍：处理 @media 内部的子选择器（用花括号计数，正确处理嵌套）
+                var idx = 0;
+                while (true) {
+                  var atIdx = cssContent.indexOf('@media', idx);
+                  if (atIdx === -1) break;
+
+                  var openIdx = cssContent.indexOf('{', atIdx);
+                  if (openIdx === -1) break;
+
+                  // 花括号计数，找到匹配的 }
+                  var depth = 1;
+                  var scan = openIdx + 1;
+                  while (depth > 0 && scan < cssContent.length) {
+                    var ch = cssContent.charAt(scan);
+                    if (ch === '{') depth++;
+                    else if (ch === '}') depth--;
+                    scan++;
+                  }
+                  var closeIdx = scan - 1; // 匹配的 }
+
+                  var inner = cssContent.substring(openIdx + 1, closeIdx);
                   var scopedInner = inner.replace(/([^{}]+)(\{[^}]*\})/g, function(m2, sel, body) {
                     var s = sel.trim();
-                    // @keyframes 内的 from/to/百分比 不处理
                     if (/^(from|to|\d+%)\s*$/.test(s)) return m2;
                     if (s === ':root') return '#sc-content-' + id + body;
                     if (s === '[data-theme="dark"]' || s === '[data-theme="light"]') return '#sc-content-' + id + s + body;
                     return '#sc-content-' + id + ' ' + s + body;
                   });
-                  return match.replace(inner, scopedInner);
-                });
+
+                  cssContent = cssContent.substring(0, openIdx + 1) + scopedInner + cssContent.substring(closeIdx);
+                  idx = closeIdx + (scopedInner.length - inner.length);
+                }
                 
                 // 处理相对路径
                 cssContent = cssContent.replace(/url\(\s*['"]?([^'"\)]+)['"]?\s*\)/g, function(m, path) {
