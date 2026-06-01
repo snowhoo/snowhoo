@@ -8,7 +8,6 @@ layout: false
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
     <style>
-        /* 干净的下拉框样式 */
         .idea-select {
             flex: 2;
             min-width: 100px;
@@ -20,7 +19,6 @@ layout: false
             color: var(--text-primary, #e8e8e8);
             font-size: 13px;
         }
-        /* 宿主容器 */
         .idea-host {
             width: 100%;
         }
@@ -32,71 +30,78 @@ layout: false
 <div class="idea-host"></div>
 
 <script>
-    // ========== 配置：下拉选项及对应的 HTML 文件路径 ==========
     const pages = {
         "美图盲盒": "/js/sevencolor/4/photo.html",
         "五子连珠": "/js/sevencolor/4/five.html"
     };
-    // =====================================================
 
     const selectEl = document.querySelector('.idea-select');
     const host = document.querySelector('.idea-host');
 
-    // 转义HTML
     function escapeHtml(str) {
         return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
     }
 
-    // 加载子页面到Shadow DOM
-    async function loadPageIntoShadow(filePath) {
+    async function loadPage(url) {
         try {
-            const response = await fetch(filePath);
+            const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             let html = await response.text();
 
-            // 清除旧内容
-            while (host.firstChild) {
-                host.removeChild(host.firstChild);
-            }
-
-            // 创建Shadow DOM
-            const shadowRoot = host.attachShadow({ mode: 'open' });
-
-            // 解析HTML
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-
-            // 迁移样式
-            const styles = doc.head.querySelectorAll('style, link[rel="stylesheet"]');
-            styles.forEach(style => {
-                shadowRoot.appendChild(style.cloneNode(true));
+            // 提取head中的style
+            const headStyles = [];
+            html = html.replace(/<head[^>]*>([\s\S]*?)<\/head>\s*/gi, function(match, headContent) {
+                const s = headContent.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
+                if (s) headStyles.push(...s);
+                return '';
             });
 
-            // 迁移body内容
-            shadowRoot.innerHTML = doc.body.innerHTML;
+            // 去掉Hexo front matter和外层框架
+            html = html.replace(/^---[\s\S]*?---\s*/i, '');
+            html = html.replace(/<!DOCTYPE[^>]*>\s*/gi, '');
+            html = html.replace(/<html[^>]*>/gi, '');
+            html = html.replace(/<\/html>\s*/gi, '');
+            html = html.replace(/<body/gi, '<div');
+            html = html.replace(/<\/body>/gi, '</div>');
 
-            // setTimeout(0) 确保DOM已解析完成
-            setTimeout(() => {
-                const scripts = doc.querySelectorAll('script');
-                scripts.forEach(oldScript => {
-                    const newScript = document.createElement('script');
-                    if (oldScript.src) {
-                        newScript.src = oldScript.src;
-                        newScript.async = oldScript.async;
-                        newScript.defer = oldScript.defer;
-                    } else {
-                        newScript.textContent = oldScript.textContent;
+            // 提取脚本
+            const scriptMatch = html.match(/<script>([\s\S]*?)<\/script>/i);
+            const scriptContent = scriptMatch ? scriptMatch[1] : '';
+            html = html.replace(/<script[\s\S]*?<\/script>/gi, '');
+
+            // 解析并获取body内容
+            const bodyContent = html.replace(/^<div[^>]*>/, '').replace(/<\/div>\s*$/, '');
+
+            // 注入CSS
+            if (headStyles.length > 0) {
+                headStyles.forEach(styleTag => {
+                    const contentMatch = styleTag.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+                    if (contentMatch) {
+                        const style = document.createElement('style');
+                        style.textContent = contentMatch[1];
+                        document.head.appendChild(style);
                     }
-                    shadowRoot.appendChild(newScript);
                 });
-            }, 0);
+            }
+
+            // 设置DOM
+            host.innerHTML = bodyContent;
+
+            // 执行脚本（在主文档上下文）
+            if (scriptContent) {
+                try {
+                    const fn = new Function(scriptContent);
+                    fn();
+                } catch(e) {
+                    console.warn('脚本执行失败:', e);
+                }
+            }
 
         } catch(e) {
             console.warn('加载失败:', e);
         }
     }
 
-    // 动态生成下拉选项
     function buildSelect() {
         const keys = Object.keys(pages);
         if (keys.length === 0) {
@@ -109,12 +114,12 @@ layout: false
         });
         selectEl.innerHTML = options;
         selectEl.value = keys[0];
-        loadPageIntoShadow(pages[keys[0]]);
+        loadPage(pages[keys[0]]);
     }
 
     selectEl.addEventListener('change', (e) => {
         const url = pages[e.target.value];
-        if (url) loadPageIntoShadow(url);
+        if (url) loadPage(url);
     });
 
     buildSelect();
