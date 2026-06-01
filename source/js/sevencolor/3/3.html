@@ -80,7 +80,7 @@ layout: false
 #player-wrap .pw-pagination button:disabled{opacity:0.5;cursor:default}
 #player-wrap .pw-empty-state{text-align:center;padding:50px 20px;color:var(--text-muted)}
 #player-wrap .pw-tvbox-footer{text-align:center;padding:12px 0 6px;margin-top:12px;font-size:11px;color:var(--text-muted)}
-#player-wrap .pw-preload-bar{width:100%;height:1px;background:transparent;margin:0;position:relative;display:block}
+#player-wrap .pw-preload-bar{width:100%;height:1px;background:transparent;margin:0 0 6px 0;position:relative;display:block}
 #player-wrap .pw-preload-fill{width:0%;height:100%;background:#aaa;transition:width .2s;display:block}
 #player-wrap .pw-video-grid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px}
 #player-wrap.pw-narrow .pw-video-grid{grid-template-columns:repeat(2,1fr) !important;gap:8px}
@@ -191,53 +191,80 @@ function doSearch(){
   doSearchImpl(kw, ver);
 }
 function doSearchImpl(kw, ver){
-  var totalPages = 0;
-  sourceIndex.forEach(function(s){ totalPages += (s.page_count||1); });
-  var loadedPages = 0, results = [];
-  function checkDone(){
+  var totalPages = 0, results = [];
+  var allTasks = [];
+
+  sourceIndex.forEach(function(src){
+    var pc = src.page_count||1;
+    for(var p=1; p<=pc; p++){
+      var base=(sourceMeta[src.prefix]?.fileBase)||src.prefix;
+      var fname=base+'-'+String(p).padStart(2,'0')+'.js';
+      allTasks.push({ fname: fname, src: src });
+    }
+  });
+  totalPages = allTasks.length;
+  var doneCount = 0;
+
+  function searchOne(data, fname){
+    if(data?.videos){
+      data.videos.forEach(function(v){
+        if(v.vod_name.includes(kw)||(v.vod_class||'').includes(kw)){
+          results.push({vod_name:v.vod_name, vod_pic:v.vod_pic, ep_count:v.ep_count, playable_count:v.playable_count, episodes:v.episodes, vod_class:v.vod_class, sourceKey:fname, sourceName:data.name});
+        }
+      });
+    }
+  }
+
+  function bump(){
     if(ver!==searchVersion) return;
-    if(loadedPages >= totalPages){
-      currentSearchResults=results;
+    doneCount++;
+    setStatus('📡 搜索中 '+doneCount+'/'+totalPages+'...');
+    // 增量更新搜索结果，让用户即时看到
+    currentSearchResults=results.slice();
+    renderSearchResult(false);
+    if(doneCount >= totalPages){
       isSearching=false;
       $('pwSearchBtn').style.display='inline';
       $('pwStopSearchBtn').style.display='none';
       if(ver===searchVersion) renderSearchResult(false);
     }
   }
-  sourceIndex.forEach(function(src){
-    var pc = src.page_count||1;
-    for(var p=1; p<=pc; p++){
-      var base=(sourceMeta[src.prefix]?.fileBase)||src.prefix;
-      var fname=base+'-'+String(p).padStart(2,'0')+'.js';
-      if(loadedSources[fname]){
-        var d=loadedSources[fname];
-        if(d?.videos){
-          d.videos.forEach(function(v){
-            if(v.vod_name.includes(kw)||(v.vod_class||'').includes(kw)){
-              results.push({vod_name:v.vod_name, vod_pic:v.vod_pic, ep_count:v.ep_count, playable_count:v.playable_count, episodes:v.episodes, vod_class:v.vod_class, sourceKey:fname, sourceName:d.name});
-            }
-          });
-        }
-        loadedPages++;
-        setStatus('📡 搜索中 '+loadedPages+'/'+totalPages+'...');
-        checkDone();
-      } else {
-        loadData(fname, function(data){
-          if(data) loadedSources[fname]=data;
-          if(data?.videos){
-            data.videos.forEach(function(v){
-              if(v.vod_name.includes(kw)||(v.vod_class||'').includes(kw)){
-                results.push({vod_name:v.vod_name, vod_pic:v.vod_pic, ep_count:v.ep_count, playable_count:v.playable_count, episodes:v.episodes, vod_class:v.vod_class, sourceKey:fname, sourceName:data.name});
-              }
-            });
-          }
-          loadedPages++;
-          setStatus('📡 搜索中 '+loadedPages+'/'+totalPages+'...');
-          checkDone();
-        }, 4000);
-      }
+
+  // 第一遍：搜索所有已缓存的文件（立即出结果）
+  var uncached = [];
+  allTasks.forEach(function(task){
+    if(loadedSources[task.fname]){
+      searchOne(loadedSources[task.fname], task.fname);
+      bump();
+    } else {
+      uncached.push(task);
     }
   });
+
+  // 第二遍：逐个加载并搜索未缓存的文件
+  var ui = 0;
+  function loadNext(){
+    if(ver!==searchVersion || ui >= uncached.length){
+      // 如果全部未缓存任务已排完，等异步回调结束
+      if(doneCount >= totalPages){
+        isSearching=false;
+        $('pwSearchBtn').style.display='inline';
+        $('pwStopSearchBtn').style.display='none';
+        renderSearchResult(false);
+      }
+      return;
+    }
+    var task = uncached[ui++];
+    loadData(task.fname, function(data){
+      if(data) loadedSources[task.fname]=data;
+      searchOne(data, task.fname);
+      bump();
+      setTimeout(loadNext, 10);
+    }, 4000);
+  }
+  // 启动并发加载（每次并发加载若干，但逐个完成）
+  var CONCURRENT = 4;
+  for(var i=0; i<CONCURRENT; i++) loadNext();
 }
 function stopSearch(){
   if(!isSearching) return;
@@ -282,9 +309,14 @@ function renderSearchResult(loading){
     return;
   }
   if(!currentSearchResults.length){
-    setEmpty('暂无搜索结果','请尝试其他关键词');
-    $('pwPagination').innerHTML='';
-    setStatus('关键词：'+currentSearchKeyword+' - 结果：0');
+    if(isSearching){
+      $('pwContent').innerHTML='<div class="pw-empty-state">🔍 搜索中…</div>';
+      $('pwPagination').innerHTML='';
+    } else {
+      setEmpty('暂无搜索结果','请尝试其他关键词');
+      $('pwPagination').innerHTML='';
+    }
+    setStatus('关键词：'+currentSearchKeyword+' - 结果：'+currentSearchResults.length);
     $('pwClearSearchResultBtn').style.display='none';
     $('pwCatBar').innerHTML='';
     return;
