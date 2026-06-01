@@ -140,8 +140,8 @@ function loadData(file,cb,to=3000){ let key=file==='index.js'?'_TVBOX_INDEX':'_T
 
 // ===== 预加载 =====
 let preloadTotal=0,preloadCompleted=0;
-function updatePreload(p){ $('pwPreloadProgressFill').style.width=p+'%'; }
-function startPreload(){ if(!sourceIndex.length) return; let files=new Set(); sourceIndex.forEach(s=>{ let pc=s.page_count||1, base=(sourceMeta[s.prefix]?.fileBase)||s.prefix; for(let i=1;i<=pc;i++) files.add(base+'-'+String(i).padStart(2,'0')+'.js'); }); let arr=[...files]; preloadTotal=arr.length; preloadCompleted=0; $('pwPreloadProgressBar').style.display='block'; updatePreload(0); let idx=0,running=0; function loadOne(){ if(idx>=arr.length){ if(running===0){ updatePreload(100); setTimeout(()=>$('pwPreloadProgressBar').style.display='none',500); } return; } let f=arr[idx++]; running++; loadData(f,data=>{ if(data) loadedSources[f]=data; preloadCompleted++; updatePreload(Math.floor(preloadCompleted/preloadTotal*100)); running--; loadOne(); },5000); } for(let i=0;i<CONCURRENT;i++) loadOne(); }
+function updatePreload(p){ let el=$('pwPreloadProgressFill'); if(el) el.style.width=p+'%'; }
+function startPreload(){ if(!sourceIndex.length) return; let files=new Set(); sourceIndex.forEach(s=>{ let pc=s.page_count||1, base=(sourceMeta[s.prefix]?.fileBase)||s.prefix; for(let i=1;i<=pc;i++) files.add(base+'-'+String(i).padStart(2,'0')+'.js'); }); let arr=[...files]; preloadTotal=arr.length; preloadCompleted=0; let pb=$('pwPreloadProgressBar'); if(pb) pb.style.display='block'; updatePreload(0); let idx=0,running=0; function loadOne(){ if(idx>=arr.length){ if(running===0){ updatePreload(100); setTimeout(()=>let pb=$('pwPreloadProgressBar'); if(pb) pb.style.display='none',500); } return; } let f=arr[idx++]; running++; loadData(f,data=>{ if(data) loadedSources[f]=data; preloadCompleted++; updatePreload(Math.floor(preloadCompleted/preloadTotal*100)); running--; loadOne(); },5000); } for(let i=0;i<CONCURRENT;i++) loadOne(); }
 
 // ===== 搜索 =====
 let searchTimer=null;
