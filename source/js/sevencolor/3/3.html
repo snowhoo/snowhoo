@@ -143,6 +143,42 @@ let preloadTotal=0,preloadCompleted=0;
 function updatePreload(p){ $('pwPreloadProgressFill').style.width=p+'%'; }
 function startPreload(){ if(!sourceIndex.length) return; let files=new Set(); sourceIndex.forEach(s=>{ let pc=s.page_count||1, base=(sourceMeta[s.prefix]?.fileBase)||s.prefix; for(let i=1;i<=pc;i++) files.add(base+'-'+String(i).padStart(2,'0')+'.js'); }); let arr=[...files]; preloadTotal=arr.length; preloadCompleted=0; $('pwPreloadProgressBar').style.display='block'; updatePreload(0); let idx=0,running=0; function loadOne(){ if(idx>=arr.length){ if(running===0){ updatePreload(100); setTimeout(()=>$('pwPreloadProgressBar').style.display='none',500); } return; } let f=arr[idx++]; running++; loadData(f,data=>{ if(data) loadedSources[f]=data; preloadCompleted++; updatePreload(Math.floor(preloadCompleted/preloadTotal*100)); running--; loadOne(); },5000); } for(let i=0;i<CONCURRENT;i++) loadOne(); }
 
+// ===== 搜索 =====
+let searchTimer=null;
+function doSearch(){
+  let kw=$('pwSearchInput').value.trim();
+  if(!kw) return;
+  if(isSearching) stopSearch();
+  currentSearchKeyword=kw;
+  currentSearchResults=[];
+  currentSearchCategory='';
+  isSearching=true;
+  searchVersion++;
+  let ver=searchVersion;
+  $('pwSearchBtn').style.display='none';
+  $('pwStopSearchBtn').style.display='inline';
+  renderSearchResult(true);
+  let allVideos=[], srcCnt=0, totalSrc=Object.keys(loadedSources).length;
+  Object.values(loadedSources).forEach(d=>{ if(d?.videos) d.videos.forEach(v=>allVideos.push({...v,sourceKey:d.fileName||d.prefix||'_',sourceName:d.name})); srcCnt++; setStatus(`📡 索引中 ${srcCnt}/${totalSrc}...`); });
+  setTimeout(()=>{
+    if(ver!==searchVersion) return;
+    let results=allVideos.filter(v=>v.vod_name.includes(kw)||(v.vod_class||'').includes(kw));
+    currentSearchResults=results;
+    isSearching=false;
+    $('pwSearchBtn').style.display='inline';
+    $('pwStopSearchBtn').style.display='none';
+    if(ver===searchVersion) renderSearchResult(false);
+  },300);
+}
+function stopSearch(){
+  if(!isSearching) return;
+  searchVersion++;
+  isSearching=false;
+  $('pwSearchBtn').style.display='inline';
+  $('pwStopSearchBtn').style.display='none';
+  if(currentSearchKeyword) renderSearchResult(false);
+}
+
 // ===== 搜索结果管理 =====
 function saveSearchToStorage(){ setStorage(STORAGE.SEARCH,{ keyword:currentSearchKeyword, results:currentSearchResults, category:currentSearchCategory }); }
 function loadSearchFromStorage(){ let d=getStorage(STORAGE.SEARCH); if(d?.results?.length){ currentSearchKeyword=d.keyword||''; currentSearchResults=d.results.slice(); currentSearchCategory=d.category||''; return true; } return false; }
