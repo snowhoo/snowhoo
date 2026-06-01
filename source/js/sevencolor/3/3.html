@@ -361,7 +361,23 @@ function doSearchImpl(kw, ver){
     if(idx >= tasks.length && running <= 0) finish();
   }
 
-  for(var i=0; i<CONCURRENT; i++) loadNext();
+  // 先从 IndexedDB 预热未在内存中的文件
+  var warmRemain = 0;
+  tasks.forEach(function(task){
+    if(!loadedSources[task.fname]){
+      warmRemain++;
+      loadFromCache(task.fname, function(cached){
+        if(cached) loadedSources[task.fname] = cached;
+        warmRemain--;
+        if(warmRemain <= 0) startSearch();
+      });
+    }
+  });
+  if(warmRemain === 0) startSearch();
+
+  function startSearch(){
+    for(var i=0; i<CONCURRENT; i++) loadNext();
+  }
 }
 function stopSearch(){
   if(!isSearching) return;
