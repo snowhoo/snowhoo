@@ -60,10 +60,10 @@
       gap: 12px;
     }
 
-    /* 封面卡片：中大屏固定宽度，小屏全宽 */
+    /* 默认水平布局：封面 50%，内容 50% */
     .yedu-article-cover-card {
-      flex: 0 0 240px;
-      width: 240px;
+      flex: 0 0 50%;
+      width: 50%;
       align-self: flex-start;
       background: var(--card-bg, rgba(255, 255, 255, 0.95));
       border-radius: 10px;
@@ -160,9 +160,10 @@
       transition: width 0.1s linear;
     }
 
-    /* 内容卡片：占剩余空间 */
+    /* 内容卡片：默认占剩余50% */
     .yedu-article-content-card {
-      flex: 1;
+      flex: 0 0 50%;
+      width: 50%;
       min-width: 0;
       background: var(--card-bg, rgba(255, 255, 255, 0.95));
       border-radius: 10px;
@@ -301,10 +302,10 @@
 
     .yedu-pagination button:hover:not(:disabled) { background: rgba(233, 69, 96, 0.8); }
     .yedu-pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
-    .yedu-pagination .yedu-page-info { color: var(--text-secondary, rgba(255, 255, 255, 0.6)); font-size: 0.8rem; }
+    /*.yedu-pagination .yedu-page-info { color: var(--text-secondary, rgba(255, 255, 255, 0.6)); font-size: 0.8rem; }*/
 
-    /* 小屏：纵向排列，封面全宽 */
-    @media (max-width: 600px) {
+    /* 小屏：纵向排列，各占100% */
+    @media (max-width: 767px) {
       .yedu-article-main { flex-direction: column; gap: 12px; }
       .yedu-article-cover-card { flex: none !important; width: 100% !important; }
       .yedu-article-content-card { flex: none; width: 100%; }
@@ -312,16 +313,18 @@
       .yedu-article-content { padding: 10px; }
     }
 
-    /* 中屏：封面略窄 */
-    @media (min-width: 601px) and (max-width: 1024px) {
+    /* 中屏：水平布局，各占50% */
+    @media (min-width: 768px) and (max-width: 1024px) {
       .yedu-article-main { gap: 10px; }
-      .yedu-article-cover-card { flex: 0 0 200px; width: 200px; }
+      .yedu-article-cover-card { flex: 0 0 50%; width: 50%; }
+      .yedu-article-content-card { flex: 0 0 50%; width: 50%; }
     }
 
-    /* 大屏：封面稍宽 */
+    /* 大屏：水平布局，封面25%，内容75% */
     @media (min-width: 1025px) {
       .yedu-article-main { gap: 12px; }
-      .yedu-article-cover-card { flex: 0 0 260px; width: 260px; }
+      .yedu-article-cover-card { flex: 0 0 25%; width: 25%; }
+      .yedu-article-content-card { flex: 0 0 75%; width: 75%; }
     }
   </style>
 </head>

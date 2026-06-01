@@ -305,10 +305,10 @@ layout: false
 
     .yedu-pagination button:hover:not(:disabled) { background: rgba(233, 69, 96, 0.8); }
     .yedu-pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
-    .yedu-pagination .yedu-page-info { color: var(--text-secondary, rgba(255, 255, 255, 0.6)); font-size: 0.8rem; }
+    /*.yedu-pagination .yedu-page-info { color: var(--text-secondary, rgba(255, 255, 255, 0.6)); font-size: 0.8rem; }*/
 
     /* 小屏：纵向排列，各占100% */
-    @media (max-width: 600px) {
+    @media (max-width: 767px) {
       .yedu-article-main { flex-direction: column; gap: 12px; }
       .yedu-article-cover-card { flex: none !important; width: 100% !important; }
       .yedu-article-content-card { flex: none; width: 100%; }
@@ -317,7 +317,7 @@ layout: false
     }
 
     /* 中屏：水平布局，各占50% */
-    @media (min-width: 601px) and (max-width: 1024px) {
+    @media (min-width: 768px) and (max-width: 1024px) {
       .yedu-article-main { gap: 10px; }
       .yedu-article-cover-card { flex: 0 0 50%; width: 50%; }
       .yedu-article-content-card { flex: 0 0 50%; width: 50%; }
