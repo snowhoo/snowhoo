@@ -97,7 +97,7 @@ layout: false
   <button id="pwSearchBtn">搜索</button>
   <button id="pwStopSearchBtn" style="display:none">停止</button>
 </div>
-<div class="pw-preload-bar"><div class="pw-preload-fill"></div></div>
+<div class="pw-preload-bar" id="pwPreloadProgressBar"><div class="pw-preload-fill" id="pwPreloadProgressFill"></div></div>
 <div class="pw-player-box"><video id="pwPlayer" style="width:100%;height:100%;display:block" controls playsinline></video></div>
 <div class="pw-float-player" id="pwFloatPlayer" style="display:none">
   <div class="pw-float-header"><span class="pw-float-title" id="pwFloatPlayerTitle">正在播放</span><button class="pw-float-btn" id="pwFloatBackBtn">←</button><button class="pw-float-btn pw-float-close" id="pwFloatCloseBtn">✖</button></div>
@@ -116,7 +116,7 @@ layout: false
 // ===== 作用域隔离：所有选择器限定在 #player-wrap 内 =====
 const STORAGE = { HISTORY:'tvbox_history', FAVORITES:'tvbox_favorites', BOOKMARKS:'tvbox_bookmarks', SEARCH:'tvbox_search_results' };
 const PAGE_SIZE = 12, CONCURRENT = 10;
-let sourceIndex=[], loadedSources={}, sourceMeta={}, currentPrefix='', currentFilePage=1, currentPage=1, currentFiltered=[], currentCategory='';
+let sourceIndex=[], loadedSources={}, sourceMeta={}, currentData=null, currentPrefix='', currentFilePage=1, currentPage=1, currentFiltered=[], currentCategory='';
 let currentSearchKeyword='', currentSearchResults=[], currentSearchCategory='', isSearching=false, searchVersion=0;
 let currentPlayingVideo=null, currentPlayingEpIndex=0, currentOpenVideo=null, currentEpNext=null, currentHls=null, playerInFloat=false, floatReturn=null;
 let categoryStatsLoading=false;
