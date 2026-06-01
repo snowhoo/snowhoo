@@ -191,19 +191,20 @@ function doSearch(){
   doSearchImpl(kw, ver);
 }
 function doSearchImpl(kw, ver){
-  var totalPages = 0, results = [];
-  var allTasks = [];
+  var tasks = [];
 
   sourceIndex.forEach(function(src){
     var pc = src.page_count||1;
     for(var p=1; p<=pc; p++){
       var base=(sourceMeta[src.prefix]?.fileBase)||src.prefix;
       var fname=base+'-'+String(p).padStart(2,'0')+'.js';
-      allTasks.push({ fname: fname, src: src });
+      tasks.push({ fname: fname });
     }
   });
-  totalPages = allTasks.length;
+
+  var totalPages = tasks.length;
   var doneCount = 0;
+  var results = [];
 
   function searchOne(data, fname){
     if(data?.videos){
@@ -215,56 +216,56 @@ function doSearchImpl(kw, ver){
     }
   }
 
-  function bump(){
+  function onFileDone(){
     if(ver!==searchVersion) return;
     doneCount++;
     setStatus('📡 搜索中 '+doneCount+'/'+totalPages+' · 已找到 '+results.length+' 条');
-    // 搜索进行中时在分类栏显示进度
-    if(isSearching) $('pwCatBar').innerHTML='<span style="font-size:12px">🔍 '+doneCount+'/'+totalPages+'</span>';
-    // 增量更新搜索结果，让用户即时看到
+    $('pwCatBar').innerHTML='<span style="font-size:12px">🔍 '+doneCount+'/'+totalPages+'</span>';
     currentSearchResults=results.slice();
     renderSearchResult(false);
-    if(doneCount >= totalPages){
-      isSearching=false;
-      $('pwSearchBtn').style.display='inline';
-      $('pwStopSearchBtn').style.display='none';
-      if(ver===searchVersion) renderSearchResult(false);
-    }
   }
 
-  // 第一遍：搜索所有已缓存的文件（立即出结果）
-  var uncached = [];
-  allTasks.forEach(function(task){
-    if(loadedSources[task.fname]){
-      searchOne(loadedSources[task.fname], task.fname);
-      bump();
-    } else {
-      uncached.push(task);
-    }
-  });
+  function finish(){
+    if(ver!==searchVersion) return;
+    isSearching=false;
+    $('pwSearchBtn').style.display='inline';
+    $('pwStopSearchBtn').style.display='none';
+    currentSearchResults=results.slice();
+    setStatus('✅ 搜索完成：关键词 '+(currentSearchKeyword||'-')+' - 结果：'+results.length+' 条');
+    $('pwCatBar').innerHTML='';
+    renderSearchResult(false);
+  }
 
-  // 第二遍：逐个加载并搜索未缓存的文件
-  var ui = 0;
+  // 从头到尾线性处理：缓存即返回，未缓存则加载
+  var running = 0;
+  var idx = 0;
+
   function loadNext(){
-    if(ver!==searchVersion || ui >= uncached.length){
-      // 如果全部未缓存任务已排完，等异步回调结束
-      if(doneCount >= totalPages){
-        isSearching=false;
-        $('pwSearchBtn').style.display='inline';
-        $('pwStopSearchBtn').style.display='none';
-        renderSearchResult(false);
+    if(ver!==searchVersion) return;
+    while(idx < tasks.length){
+      var task = tasks[idx++];
+      if(loadedSources[task.fname]){
+        // 已缓存：同步搜索
+        searchOne(loadedSources[task.fname], task.fname);
+        onFileDone();
+      } else {
+        // 未缓存：异步加载
+        running++;
+        loadData(task.fname, function(data){
+          if(data) loadedSources[task.fname]=data;
+          searchOne(data, task.fname);
+          onFileDone();
+          running--;
+          loadNext(); // 继续下一个
+        }, 5000);
+        if(running >= CONCURRENT) return; // 达到并发上限，等回调
       }
-      return;
+      // 缓存文件处理完继续循环
     }
-    var task = uncached[ui++];
-    loadData(task.fname, function(data){
-      if(data) loadedSources[task.fname]=data;
-      searchOne(data, task.fname);
-      bump();
-      setTimeout(loadNext, 10);
-    }, 4000);
+    // 队列耗尽，等正在 loading 的回调收尾
+    if(running <= 0) finish();
   }
-  // 启动并发加载（每次并发加载若干，但逐个完成）
+
   for(var i=0; i<CONCURRENT; i++) loadNext();
 }
 function stopSearch(){
