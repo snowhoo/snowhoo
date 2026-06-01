@@ -158,17 +158,68 @@ function doSearch(){
   $('pwSearchBtn').style.display='none';
   $('pwStopSearchBtn').style.display='inline';
   renderSearchResult(true);
-  let allVideos=[], srcCnt=0, totalSrc=Object.keys(loadedSources).length;
-  Object.values(loadedSources).forEach(d=>{ if(d?.videos) d.videos.forEach(v=>allVideos.push({...v,sourceKey:d.fileName||d.prefix||'_',sourceName:d.name})); srcCnt++; setStatus(`📡 索引中 ${srcCnt}/${totalSrc}...`); });
-  setTimeout(()=>{
+  // 如果 sourceIndex 还没加载完，先等待
+  if(!sourceIndex.length){
+    let wait = setInterval(()=>{
+      if(!isSearching) { clearInterval(wait); return; }
+      if(sourceIndex.length){
+        clearInterval(wait);
+        doSearchImpl(kw, ver);
+      }
+    }, 200);
+    return;
+  }
+  doSearchImpl(kw, ver);
+}
+function doSearchImpl(kw, ver){
+  // 边加载边搜索所有分页
+  let totalPages = 0;
+  sourceIndex.forEach(s=>{ totalPages += (s.page_count||1); });
+  let loadedPages = 0, results = [];
+  function checkDone(){
     if(ver!==searchVersion) return;
-    let results=allVideos.filter(v=>v.vod_name.includes(kw)||(v.vod_class||'').includes(kw));
-    currentSearchResults=results;
-    isSearching=false;
-    $('pwSearchBtn').style.display='inline';
-    $('pwStopSearchBtn').style.display='none';
-    if(ver===searchVersion) renderSearchResult(false);
-  },300);
+    if(loadedPages >= totalPages){
+      currentSearchResults=results;
+      isSearching=false;
+      $('pwSearchBtn').style.display='inline';
+      $('pwStopSearchBtn').style.display='none';
+      if(ver===searchVersion) renderSearchResult(false);
+    }
+  }
+  sourceIndex.forEach(src=>{
+    let pc = src.page_count||1;
+    for(let p=1; p<=pc; p++){
+      let base=(sourceMeta[src.prefix]?.fileBase)||src.prefix;
+      let fname=base+'-'+String(p).padStart(2,'0')+'.js';
+      if(loadedSources[fname]){
+        let d=loadedSources[fname];
+        if(d?.videos){
+          d.videos.forEach(v=>{
+            if(v.vod_name.includes(kw)||(v.vod_class||'').includes(kw)){
+              results.push({...v,sourceKey:fname,sourceName:d.name});
+            }
+          });
+        }
+        loadedPages++;
+        setStatus(`📡 搜索中 ${loadedPages}/${totalPages}...`);
+        checkDone();
+      } else {
+        loadData(fname, data=>{
+          if(data) loadedSources[fname]=data;
+          if(data?.videos){
+            data.videos.forEach(v=>{
+              if(v.vod_name.includes(kw)||(v.vod_class||'').includes(kw)){
+                results.push({...v,sourceKey:fname,sourceName:data.name});
+              }
+            });
+          }
+          loadedPages++;
+          setStatus(`📡 搜索中 ${loadedPages}/${totalPages}...`);
+          checkDone();
+        }, 4000);
+      }
+    }
+  });
 }
 function stopSearch(){
   if(!isSearching) return;
