@@ -178,7 +178,7 @@
                 // 将 CSS 限制在 #sc-content-{id} 容器内
                 // 使用更精确的方法：给每个选择器添加父容器限定
                 cssContent = cssContent.replace(/([^{}]+)(\{[^}]*\})/g, function(match, selector, body) {
-                  // 跳过@rules
+                  // 跳过@rules（@media, @keyframes, @font-face 等），后续单独处理
                   if (selector.trim().startsWith('@')) {
                     return match;
                   }
@@ -193,6 +193,19 @@
                   }
                   // 给选择器添加前缀限定（后代选择器）
                   return '#sc-content-' + id + ' ' + sel + body;
+                });
+
+                // 第二遍：处理 @media / @keyframes 等 @-规则 内部的子选择器
+                cssContent = cssContent.replace(/@(media|keyframes)[^{]*\{([\s\S]*?)\}\s*\}/g, function(match, atType, inner) {
+                  var scopedInner = inner.replace(/([^{}]+)(\{[^}]*\})/g, function(m2, sel, body) {
+                    var s = sel.trim();
+                    // @keyframes 内的 from/to/百分比 不处理
+                    if (/^(from|to|\d+%)\s*$/.test(s)) return m2;
+                    if (s === ':root') return '#sc-content-' + id + body;
+                    if (s === '[data-theme="dark"]' || s === '[data-theme="light"]') return '#sc-content-' + id + s + body;
+                    return '#sc-content-' + id + ' ' + s + body;
+                  });
+                  return match.replace(inner, scopedInner);
                 });
                 
                 // 处理相对路径
