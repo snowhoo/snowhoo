@@ -73,22 +73,23 @@ layout: false
             });
 
             // 迁移body内容
-            const bodyContent = doc.body.innerHTML;
-            shadowRoot.innerHTML = bodyContent;
+            shadowRoot.innerHTML = doc.body.innerHTML;
 
-            // 执行脚本
-            const scripts = doc.querySelectorAll('script');
-            scripts.forEach(oldScript => {
-                const newScript = document.createElement('script');
-                if (oldScript.src) {
-                    newScript.src = oldScript.src;
-                    newScript.async = oldScript.async;
-                    newScript.defer = oldScript.defer;
-                } else {
-                    newScript.textContent = oldScript.textContent;
-                }
-                shadowRoot.appendChild(newScript);
-            });
+            // setTimeout(0) 确保DOM已解析完成
+            setTimeout(() => {
+                const scripts = doc.querySelectorAll('script');
+                scripts.forEach(oldScript => {
+                    const newScript = document.createElement('script');
+                    if (oldScript.src) {
+                        newScript.src = oldScript.src;
+                        newScript.async = oldScript.async;
+                        newScript.defer = oldScript.defer;
+                    } else {
+                        newScript.textContent = oldScript.textContent;
+                    }
+                    shadowRoot.appendChild(newScript);
+                });
+            }, 0);
 
         } catch(e) {
             console.warn('加载失败:', e);
