@@ -1,0 +1,108 @@
+---
+layout: false
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        /* 干净的下拉框样式 */
+        .idea-select {
+            flex: 2;
+            min-width: 100px;
+            cursor: pointer;
+            padding: 7px 10px;
+            border: 1px solid var(--border, #333);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-primary, #e8e8e8);
+            font-size: 13px;
+        }
+        /* 宿主容器 */
+        .idea-host {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<select class="idea-select"></select>
+<div class="idea-host"></div>
+
+<script>
+    // ========== 配置：下拉选项及对应的 HTML 文件路径 ==========
+    const pages = {
+        "美图盲盒": { url: "/js/sevencolor/4/photo.html", id: "photo" },
+        "五子连珠": { url: "/js/sevencolor/4/five.html", id: "five" }
+        // 后续可添加更多页面
+    };
+    // =====================================================
+
+    const selectEl = document.querySelector('.idea-select');
+    const host = document.querySelector('.idea-host');
+    let currentIframe = null;
+
+    // 转义HTML
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+    }
+
+    // 加载子页面（通过iframe嵌入，保持样式隔离）
+    function loadChildPage(pageInfo) {
+        // 清除旧iframe
+        if (currentIframe) {
+            host.removeChild(currentIframe);
+            currentIframe = null;
+        }
+        // 创建新iframe
+        const iframe = document.createElement('iframe');
+        iframe.style.border = 'none';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.background = 'transparent';
+        host.appendChild(iframe);
+        currentIframe = iframe;
+
+        // sandbox允许脚本执行
+        iframe.sandbox = 'allow-scripts';
+
+        // iframe加载完成后设置变量
+        iframe.onload = function() {
+            try {
+                iframe.contentWindow.__SC_BASE_PATH = pageInfo.url.substring(0, pageInfo.url.lastIndexOf('/') + 1);
+                iframe.contentWindow.__SC_ID = pageInfo.id;
+            } catch(e) {
+                console.warn('无法设置iframe上下文:', e);
+            }
+        };
+
+        iframe.src = pageInfo.url;
+    }
+
+    // 动态生成下拉选项
+    function buildSelect() {
+        const keys = Object.keys(pages);
+        if (keys.length === 0) {
+            selectEl.innerHTML = '<option disabled>—— 请配置文件 ——</option>';
+            return;
+        }
+        let options = '';
+        keys.forEach(key => {
+            options += `<option value="${escapeHtml(key)}">${escapeHtml(key)}</option>`;
+        });
+        selectEl.innerHTML = options;
+        selectEl.value = keys[0];
+        loadChildPage(pages[keys[0]]);
+    }
+
+    selectEl.addEventListener('change', (e) => {
+        const pageInfo = pages[e.target.value];
+        if (pageInfo) loadChildPage(pageInfo);
+    });
+
+    buildSelect();
+</script>
+</body>
+</html>
