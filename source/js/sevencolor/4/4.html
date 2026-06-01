@@ -8,26 +8,21 @@ layout: false
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
     <style>
-        /* CSS变量定义 */
-        :root {
-            --idea-border: #333;
-            --idea-text-primary: #e8e8e8;
-        }
-        /* 仅保留下拉框基础样式 */
+        /* 干净的下拉框样式 */
         .idea-select {
-flex:2;min-width:100px;
-cursor:pointer;
-padding:7px 10px;
-border:1px solid var(--idea-border, #333);
-border-radius:6px;
-background:transparent;
-color:var(--idea-text-primary, #e8e8e8);
-font-size:13px
+            flex: 2;
+            min-width: 100px;
+            cursor: pointer;
+            padding: 7px 10px;
+            border: 1px solid var(--border, #333);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-primary, #e8e8e8);
+            font-size: 13px;
         }
-        /* 宿主容器无样式，由内部页面决定 */
+        /* 宿主容器 */
         .idea-host {
             width: 100%;
-           /* min-height: 80vh; */
         }
     </style>
 </head>
@@ -39,20 +34,58 @@ font-size:13px
 <script>
     // ========== 配置：下拉选项及对应的 HTML 文件路径 ==========
     const pages = {
-        "美图盲盒": "/js/sevencolor/4/photo.html",
-        "五子连珠": "/js/sevencolor/4/five.html"
-        // 请根据实际文件路径修改
+        "美图盲盒": { url: "/js/sevencolor/4/photo.html", id: "photo" },
+        "五子连珠": { url: "/js/sevencolor/4/five.html", id: "five" }
+        // 后续可添加更多页面
     };
     // =====================================================
 
     const selectEl = document.querySelector('.idea-select');
     const host = document.querySelector('.idea-host');
+    let currentIframe = null;
+
+    // 转义HTML
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+    }
+
+    // 加载子页面（通过iframe嵌入，保持样式隔离）
+    function loadChildPage(pageInfo) {
+        // 清除旧iframe
+        if (currentIframe) {
+            host.removeChild(currentIframe);
+            currentIframe = null;
+        }
+        // 创建新iframe
+        const iframe = document.createElement('iframe');
+        iframe.style.border = 'none';
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.background = 'transparent';
+        host.appendChild(iframe);
+        currentIframe = iframe;
+
+        // sandbox允许脚本执行
+        iframe.sandbox = 'allow-scripts';
+
+        // iframe加载完成后设置变量
+        iframe.onload = function() {
+            try {
+                iframe.contentWindow.__SC_BASE_PATH = pageInfo.url.substring(0, pageInfo.url.lastIndexOf('/') + 1);
+                iframe.contentWindow.__SC_ID = pageInfo.id;
+            } catch(e) {
+                console.warn('无法设置iframe上下文:', e);
+            }
+        };
+
+        iframe.src = pageInfo.url;
+    }
 
     // 动态生成下拉选项
     function buildSelect() {
         const keys = Object.keys(pages);
         if (keys.length === 0) {
-            selectEl.innerHTML = '<option disabled>—— 请配置文件映射 ——</option>';
+            selectEl.innerHTML = '<option disabled>—— 请配置文件 ——</option>';
             return;
         }
         let options = '';
@@ -60,89 +93,13 @@ font-size:13px
             options += `<option value="${escapeHtml(key)}">${escapeHtml(key)}</option>`;
         });
         selectEl.innerHTML = options;
-        // 默认加载第一个
         selectEl.value = keys[0];
-        loadPageIntoIframe(pages[keys[0]]);
-    }
-
-    // 将 HTML 文件内容加载到页面中（CSS注入隔离）
-    async function loadPageContent(filePath) {
-        try {
-            const response = await fetch(filePath);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            let html = await response.text();
-
-            // 解析HTML
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-
-            // 提取CSS，给所有选择器添加 .idea-host 前缀隔离
-            const styles = doc.querySelectorAll('style');
-            let injectedCss = '';
-            styles.forEach(style => {
-                let css = style.textContent;
-                // 给CSS选择器添加前缀（排除@开头的规则）
-                css = css.replace(/([^{}]+)(\{[^}]*\})/g, function(match, selector, body) {
-                    if (selector.trim().startsWith('@')) return match;
-                    // body/html -> .idea-host
-                    if (/^(body|html)/i.test(selector.trim())) {
-                        return '.idea-host' + body;
-                    }
-                    return '.idea-host ' + selector.trim() + body;
-                });
-                injectedCss += css + '\n';
-            });
-
-            // 注入CSS到head（带唯一标识）
-            let styleEl = document.getElementById('idea-injected-style');
-            if (!styleEl) {
-                styleEl = document.createElement('style');
-                styleEl.id = 'idea-injected-style';
-                document.head.appendChild(styleEl);
-            }
-            styleEl.textContent = injectedCss;
-
-            // 清除旧内容
-            while (host.firstChild) {
-                host.removeChild(host.firstChild);
-            }
-
-            // 提取body内容
-            const bodyContent = doc.body ? doc.body.innerHTML : html;
-            host.innerHTML = bodyContent;
-
-            // 设置全局变量
-            window.__SC_BASE_PATH = filePath.substring(0, filePath.lastIndexOf('/') + 1);
-            window.__SC_ID = 'idea';
-
-            // 执行脚本
-            const scripts = host.querySelectorAll('script');
-            scripts.forEach(oldScript => {
-                const newScript = document.createElement('script');
-                if (oldScript.src) {
-                    newScript.src = oldScript.src;
-                    newScript.async = oldScript.async;
-                    newScript.defer = oldScript.defer;
-                } else {
-                    newScript.textContent = oldScript.textContent;
-                }
-                host.appendChild(newScript);
-                oldScript.remove();
-            });
-
-        } catch (err) {
-            console.error('加载失败:', err);
-            host.innerHTML = `<div style="color:red; padding:1rem;">加载失败: ${err.message}</div>`;
-        }
-    }
-
-    function escapeHtml(str) {
-        return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+        loadChildPage(pages[keys[0]]);
     }
 
     selectEl.addEventListener('change', (e) => {
-        const filePath = pages[e.target.value];
-        if (filePath) loadPageContent(filePath);
+        const pageInfo = pages[e.target.value];
+        if (pageInfo) loadChildPage(pageInfo);
     });
 
     buildSelect();
