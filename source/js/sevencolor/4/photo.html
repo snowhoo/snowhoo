@@ -9,9 +9,9 @@ layout: false
     <title>美图盲盒</title>
     <style>
         /* ---------- 完全继承 Hexo 主题，无预设明暗 ---------- */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        .picsum-embedded { width: 100%; max-width: 100%; margin: 0; }
-        .art-card { padding: 0rem 0 0.3rem 0 !important; border-radius: 0.6rem; }
+        .picsum-embedded { width: 100%; max-width: 100%; margin: 0; box-sizing: border-box; }
+        .picsum-embedded * { margin: 0; padding: 0; box-sizing: border-box; }
+        .art-card { padding: 0rem 0 0.3rem 0 !important; border-radius: 0.6rem; box-sizing: border-box; }
         .image-stage {
             position: relative; width: 100%; border-radius: 0.6rem; overflow: hidden;
             min-height: 280px; display: flex; align-items: center; justify-content: center;
@@ -44,7 +44,7 @@ layout: false
     </style>
 </head>
 <body style="background: transparent; margin: 0 !important; padding: 0 !important;">
-<div class="picsum-embedded">
+<div class="picsum-embedded" style="background: transparent; margin: 0; padding: 0;">
     <div class="art-card">
         <div class="image-stage">
             <img id="picsumDynamicImg" class="dynamic-img" alt="Random Picsum"

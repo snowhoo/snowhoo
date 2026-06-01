@@ -8,15 +8,20 @@ layout: false
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
     <style>
+        /* CSS变量定义 */
+        :root {
+            --idea-border: #333;
+            --idea-text-primary: #e8e8e8;
+        }
         /* 仅保留下拉框基础样式 */
         .idea-select {
 flex:2;min-width:100px;
 cursor:pointer;
 padding:7px 10px;
-border:1px solid var(--border);
+border:1px solid var(--idea-border, #333);
 border-radius:6px;
 background:transparent;
-color:var(--text-primary);
+color:var(--idea-text-primary, #e8e8e8);
 font-size:13px
         }
         /* 宿主容器无样式，由内部页面决定 */
