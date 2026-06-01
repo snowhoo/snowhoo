@@ -220,12 +220,17 @@ function doSearchImpl(kw, ver){
     return found;
   }
 
+  // 进度条始终更新
+  function updateProgress(){
+    setStatus('📡 搜索中 '+doneCount+'/'+totalPages+' · 已找到 '+results.length+' 条');
+    $('pwCatBar').innerHTML='<span style="font-size:12px">🔍 '+doneCount+'/'+totalPages+'</span>';
+  }
+
+  // 内容只在有新结果时渲染
   function doRender(){
     if(ver!==searchVersion || !needRender) return;
     needRender = false;
     currentSearchResults = results.slice();
-    setStatus('📡 搜索中 '+doneCount+'/'+totalPages+' · 已找到 '+results.length+' 条');
-    $('pwCatBar').innerHTML='<span style="font-size:12px">🔍 '+doneCount+'/'+totalPages+'</span>';
     renderSearchResult(false);
   }
 
@@ -234,7 +239,6 @@ function doSearchImpl(kw, ver){
     isSearching=false;
     $('pwSearchBtn').style.display='inline';
     $('pwStopSearchBtn').style.display='none';
-    needRender = true;
     currentSearchResults = results.slice();
     setStatus('✅ 搜索完成：关键词 '+(currentSearchKeyword||'-')+' - 结果：'+results.length+' 条');
     $('pwCatBar').innerHTML='';
@@ -251,6 +255,7 @@ function doSearchImpl(kw, ver){
       if(loadedSources[task.fname]){
         var found = searchOne(loadedSources[task.fname], task.fname);
         doneCount++;
+        updateProgress();
         if(found) needRender = true;
       } else {
         running++;
@@ -258,6 +263,7 @@ function doSearchImpl(kw, ver){
           if(data) loadedSources[task.fname]=data;
           var found = searchOne(data, task.fname);
           doneCount++;
+          updateProgress();
           if(found) needRender = true;
           running--;
           doRender();
@@ -776,18 +782,9 @@ function loadIndex(){
 document.addEventListener('click',function(e){
   var t=e.target;
   var epDel=t.closest('.pw-ep-delete');
-  if(epDel && !t.closest('.pw-search-result-delete')){
-    e.stopPropagation();
-    var sKey=epDel.dataset.sourcekey, vName=epDel.dataset.vodname, type=epDel.dataset.type;
-    if(type==='history'){
-      var h=getStorage(STORAGE.HISTORY); delete h[sKey+'_'+vName];
-      setStorage(STORAGE.HISTORY,h); setStatus('✓ 已删除'); renderSpecialView('__history__');
-    }else if(type==='bookmark'){
-      saveBookmarks(getBookmarks().filter(function(b){ return !(b.videoName===vName&&b.sourceKey===sKey); }));
-      setStatus('✓ 影签已删除'); renderSpecialView('__bookmarks__');
-    }
-    return;
-  }
+  if(epDel){ e.stopPropagation(); var sKey=epDel.dataset.sourcekey, vName=epDel.dataset.vodname, type=epDel.dataset.type; if(type==='history'){ var h=getStorage(STORAGE.HISTORY); delete h[sKey+'_'+vName]; setStorage(STORAGE.HISTORY,h); setStatus('✓ 已删除'); renderSpecialView('__history__'); }else if(type==='bookmark'){ saveBookmarks(getBookmarks().filter(function(b){ return !(b.videoName===vName&&b.sourceKey===sKey); })); setStatus('✓ 影签已删除'); renderSpecialView('__bookmarks__'); } return; }
+  var srDel=t.closest('.pw-search-result-delete');
+  if(srDel){ e.stopPropagation(); removeSearchItem(srDel.dataset.sourcekey, srDel.dataset.vodname); setStatus('✓ 已从搜索结果中删除'); return; }
   var fav=t.closest('.pw-fav-btn');
   if(fav){
     e.stopPropagation();
