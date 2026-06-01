@@ -31,15 +31,13 @@ layout: false
 #player-wrap .pw-player-box{background:var(--bg-player);border-radius:10px;overflow:hidden;position:relative;height:0;transition:height .3s;margin:0;padding:0;max-width:100%}
 #player-wrap .pw-player-box.pw-playing{height:auto}
 #player-wrap .pw-player{width:100%;aspect-ratio:16/9;background:#000;display:block;max-height:100%}
-/* 浮动播放器 - 小屏模式（嵌入模式使用 absolute 代替 fixed） */
-#player-wrap .pw-float-player{position:absolute;bottom:20px;right:20px;width:320px;background:#1a1a2e;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.5);z-index:9999;overflow:hidden;display:none}
+/* 浮动播放器 - 小屏模式（始终使用 fixed 定位，相对于浏览器视口，避免被父容器裁剪） */
+#player-wrap .pw-float-player{position:fixed;bottom:20px;right:20px;width:320px;background:#1a1a2e;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.5);z-index:9999;overflow:hidden;display:none}
 #player-wrap .pw-float-header{display:flex;align-items:center;padding:8px 10px;background:#16213e;gap:8px}
 #player-wrap .pw-float-title{flex:1;font-size:13px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #player-wrap .pw-float-btn{width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
 #player-wrap .pw-float-close{color:#ff6b6b}
 #player-wrap .pw-float-video{width:100%;height:auto;aspect-ratio:16/9;background:#000;display:block;max-height:180px;object-fit:contain}
-/* 嵌入模式检测 - 如果在 iframe 内，使用 fixed 定位 */
-html:not(:has(body)) #player-wrap .pw-float-player{position:fixed}
 /* 视频网格 */
 #player-wrap .pw-video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px;margin:12px 0;padding:0;max-width:100%;overflow:hidden}
 #player-wrap .pw-video-grid *{box-sizing:border-box}
@@ -390,22 +388,13 @@ function returnFromFloat(){ if(!playerInFloat) return; $('pwFloatPlayer').style.
 function closeFloatPlayer(){ if(!playerInFloat) return; let v=$('pwFloatVideo'); v.pause(); v.src=''; if(currentHls){ currentHls.destroy(); currentHls=null; } playerInFloat=false; floatReturn=null; $('pwFloatPlayer').style.display='none'; pw$('.pw-player-box').classList.remove('pw-playing');
  currentPlayingVideo=null; setStatus('⏹ 已关闭'); }
 
-// ===== 初始化与主题 + 嵌入模式检测 =====
+// ===== 初始化与主题 =====
 (function(){
   let wrap=$('player-wrap');
   let t=wrap.getAttribute('data-theme');
   if(!t){ try{ let pt=window.parent.document.documentElement.getAttribute('data-theme'); if(pt==='dark'||pt==='light') t=pt; }catch(e){} }
   if(!t) t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';
   wrap.setAttribute('data-theme',t);
-  
-  // 检测是否为嵌入模式（在 iframe 内）
-  let isEmbedded = (window.self !== window.top);
-  if(isEmbedded){
-    // 嵌入模式：浮动播放器使用 fixed 定位，相对于浏览器视口
-    let style = document.createElement('style');
-    style.textContent = '#player-wrap .pw-float-player{position:fixed !important; bottom:20px; right:20px;}';
-    document.head.appendChild(style);
-  }
 })();
 function setEmpty(t,s){ $('pwContent').innerHTML=`<div class="pw-empty-state">📺 ${t}${s?`<div class="sub">${s}</div>`:''}</div>`; }
 function loadIndex(){ loadData('index.js',data=>{ if(!data){ setEmpty('无数据','请运行爬虫'); return; } sourceIndex=data; if(!sourceIndex.length){ setEmpty('无数据源','请检查 data/目录'); return; } let sel=$('pwSourceSelect'), ta=0,pa=0; sel.innerHTML=''; sel.appendChild(new Option('🕒 最近观看','__history__')); sel.appendChild(new Option('❤️ 我的收藏','__favorites__')); sel.appendChild(new Option('📌 我的影签','__bookmarks__')); sel.appendChild(new Option('📋 搜索结果','__search_result__')); sel.appendChild(new Option('— 数据源 —','',true,true)); let nameCnt={}; sourceIndex.forEach(s=>nameCnt[s.name]=(nameCnt[s.name]||0)+1); let nameSeen={}; sourceIndex.forEach(s=>{ ta+=s.total||0; pa+=s.playable||0; let dn=s.name; if(nameCnt[s.name]>1){ nameSeen[s.name]=(nameSeen[s.name]||0)+1; dn=s.name+'（站'+['一','二','三','四','五','六','七','八','九'][nameSeen[s.name]-1]+'）'; } sel.appendChild(new Option('📀 '+dn,s.prefix)); sourceMeta[s.prefix]={ page_count:s.page_count||1, name:dn, total:s.total, playable_videos:s.playable_videos||0, categories:s.categories||{}, fileBase:s.file.replace(/\.js$/,'').replace(/-\d+$/,''), prefix:s.prefix }; }); $('pwTvboxFooter').innerHTML=`<span>数据源 ${sourceIndex.length}</span><span>总地址 ${ta}</span><span>可播放 ${pa}</span>`; startPreload(); sel.value='__history__'; renderSpecialView('__history__'); }); }
