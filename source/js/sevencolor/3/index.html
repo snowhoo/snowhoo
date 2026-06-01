@@ -16,7 +16,7 @@
 <div id="pwStatus" class="pw-status-bar">
   <div class="pw-cat-bar" id="pwCatBar"></div>
   <span id="pwStatusText">[STOP] 选择一个数据源</span>
-  <div style="display:flex; gap:6px"><button id="pwClearSearchResultBtn" class="pw-clear-search-btn" style="display:none">清空</button><button id="pwBookmarkBtn" class="pw-next-ep-btn" style="background:#4caf50">签</button><button id="pwNextEpBtn" class="pw-next-ep-btn">下集</button></div>
+  <div style="display:flex; gap:6px"><button id="pwClearSearchResultBtn" class="pw-clear-search-btn" style="display:none">清空</button><button id="pwBookmarkBtn" class="pw-next-ep-btn" style="display:none">影签</button><button id="pwNextEpBtn" class="pw-next-ep-btn">下集</button></div>
 </div>
 <div id="pwContent"></div>
 <div class="pw-pagination" id="pwPagination"></div>
@@ -35,9 +35,9 @@
 #player-wrap .pw-cat-bar{margin:0 8px 0 0;display:flex;align-items:center;gap:8px}
 #player-wrap .pw-cat-bar select{max-width:160px;min-width:80px;padding:7px 10px;background:transparent;color:var(--text-primary);border:1px solid var(--border);border-radius:6px;cursor:pointer;margin:0}
 #player-wrap .pw-status-bar{padding:2px 0;margin:6px 0;font-size:12px;color:var(--text-secondary);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-#player-wrap .pw-status-bar .pw-next-ep-btn{flex-shrink:0;padding:2px 10px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;display:none;margin:0}
+#player-wrap .pw-status-bar .pw-next-ep-btn{flex-shrink:0;padding:2px 10px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;margin:0}#player-wrap .pw-status-bar #pwNextEpBtn{display:none}#player-wrap .pw-status-bar #pwBookmarkBtn{display:none}
 #player-wrap .pw-status-bar .pw-clear-search-btn{padding:2px 10px;background:#555;color:#fff;border:none;border-radius:4px;cursor:pointer;margin:0}
-#player-wrap .pw-player-box{background:var(--bg-player);border-radius:10px;overflow:hidden;position:relative;aspect-ratio:16/9;height:auto;max-width:100%;width:100%}
+#player-wrap .pw-player-box{display:none;background:var(--bg-player);border-radius:10px;overflow:hidden;position:relative;aspect-ratio:16/9;height:auto;max-width:100%;width:100%}#player-wrap .pw-player-box.pw-playing{display:block}
 #player-wrap .pw-player{width:100%;height:100%;background:#000;display:block;object-fit:contain}
 #player-wrap .pw-float-player{position:fixed;bottom:20px;right:20px;width:320px;background:#1a1a2e;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.5);z-index:9999;overflow:hidden;display:none}
 #player-wrap .pw-float-header{display:flex;align-items:center;padding:8px 10px;background:#16213e;gap:8px}
@@ -59,9 +59,9 @@
 #player-wrap .pw-video-card .pw-card-info{padding:8px 10px}
 #player-wrap .pw-video-card .pw-card-title{font-size:13px;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;margin:0}
 #player-wrap .pw-video-card .pw-card-meta{font-size:11px;color:var(--text-secondary);margin-top:3px;display:flex;gap:6px}
-#player-wrap .pw-video-card .pw-fav-btn{position:absolute;top:4px;width:28px;height:28px;border-radius:50%;background:transparent;color:#ff6b6b;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;border:none;padding:0}
-#player-wrap .pw-video-card .pw-fav-btn.pw-faved{color:#ff6b6b}
-#player-wrap .pw-video-card .pw-card-delete{left:calc(6px + 28px + 6px);color:#f44}
+#player-wrap .pw-video-card .pw-fav-btn{position:absolute;top:6px;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,0.25);color:rgba(255,255,255,0.7);font-size:11px;font-weight:500;cursor:pointer;z-index:2;border:1px solid rgba(255,255,255,0.15);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:all .15s;line-height:1.2}
+#player-wrap .pw-video-card .pw-fav-btn:hover{background:rgba(255,255,255,0.45);color:#fff;border-color:rgba(255,255,255,0.35);transform:translateY(-1px)}#player-wrap .pw-video-card .pw-fav-btn.pw-faved{color:#ff4757;background:rgba(255,255,255,0.35)}#player-wrap .pw-video-card .pw-fav-btn.pw-faved:hover{color:#ff6b81;background:rgba(255,255,255,0.5)}
+#player-wrap .pw-video-card .pw-card-delete{left:40px;color:rgba(255,255,255,0.5)}#player-wrap .pw-video-card .pw-card-delete:hover{color:#ff4757;background:rgba(255,100,100,0.3);border-color:rgba(255,100,100,0.4)}
 #player-wrap .pw-video-card .pw-progress-bar{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(0,0,0,0.5)}
 #player-wrap .pw-video-card .pw-progress-fill{height:100%;background:var(--accent)}
 #player-wrap .pw-video-card .pw-bookmark-note{position:absolute;bottom:4px;left:4px;right:4px;background:rgba(0,0,0,0.7);color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -77,7 +77,7 @@
 #player-wrap .pw-pagination button:disabled{opacity:0.5;cursor:default}
 #player-wrap .pw-empty-state{text-align:center;padding:50px 20px;color:var(--text-muted)}
 #player-wrap .pw-tvbox-footer{text-align:center;padding:12px 0 6px;margin-top:12px;font-size:11px;color:var(--text-muted)}
-#player-wrap .pw-preload-bar{width:100%;height:1px;background:transparent;margin:0;position:relative;display:block}
+#player-wrap .pw-preload-bar{width:100%;height:1px;background:transparent;margin:0 0 6px 0;position:relative;display:block}
 #player-wrap .pw-preload-fill{width:0%;height:100%;background:#aaa;transition:width .2s;display:block}
 #player-wrap .pw-video-grid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px}
 #player-wrap.pw-narrow .pw-video-grid{grid-template-columns:repeat(2,1fr) !important;gap:8px}
@@ -188,53 +188,91 @@ function doSearch(){
   doSearchImpl(kw, ver);
 }
 function doSearchImpl(kw, ver){
-  var totalPages = 0;
-  sourceIndex.forEach(function(s){ totalPages += (s.page_count||1); });
-  var loadedPages = 0, results = [];
-  function checkDone(){
-    if(ver!==searchVersion) return;
-    if(loadedPages >= totalPages){
-      currentSearchResults=results;
-      isSearching=false;
-      $('pwSearchBtn').style.display='inline';
-      $('pwStopSearchBtn').style.display='none';
-      if(ver===searchVersion) renderSearchResult(false);
-    }
-  }
+  var tasks = [];
+
   sourceIndex.forEach(function(src){
     var pc = src.page_count||1;
     for(var p=1; p<=pc; p++){
       var base=(sourceMeta[src.prefix]?.fileBase)||src.prefix;
       var fname=base+'-'+String(p).padStart(2,'0')+'.js';
-      if(loadedSources[fname]){
-        var d=loadedSources[fname];
-        if(d?.videos){
-          d.videos.forEach(function(v){
-            if(v.vod_name.includes(kw)||(v.vod_class||'').includes(kw)){
-              results.push({vod_name:v.vod_name, vod_pic:v.vod_pic, ep_count:v.ep_count, playable_count:v.playable_count, episodes:v.episodes, vod_class:v.vod_class, sourceKey:fname, sourceName:d.name});
-            }
-          });
-        }
-        loadedPages++;
-        setStatus('📡 搜索中 '+loadedPages+'/'+totalPages+'...');
-        checkDone();
-      } else {
-        loadData(fname, function(data){
-          if(data) loadedSources[fname]=data;
-          if(data?.videos){
-            data.videos.forEach(function(v){
-              if(v.vod_name.includes(kw)||(v.vod_class||'').includes(kw)){
-                results.push({vod_name:v.vod_name, vod_pic:v.vod_pic, ep_count:v.ep_count, playable_count:v.playable_count, episodes:v.episodes, vod_class:v.vod_class, sourceKey:fname, sourceName:data.name});
-              }
-            });
-          }
-          loadedPages++;
-          setStatus('📡 搜索中 '+loadedPages+'/'+totalPages+'...');
-          checkDone();
-        }, 4000);
-      }
+      tasks.push({ fname: fname });
     }
   });
+
+  var totalPages = tasks.length;
+  var doneCount = 0;
+  var results = [];
+  var needRender = false;
+
+  function searchOne(data, fname){
+    var found = false;
+    if(data?.videos){
+      data.videos.forEach(function(v){
+        if(v.vod_name.includes(kw)||(v.vod_class||'').includes(kw)){
+          results.push({vod_name:v.vod_name, vod_pic:v.vod_pic, ep_count:v.ep_count, playable_count:v.playable_count, episodes:v.episodes, vod_class:v.vod_class, sourceKey:fname, sourceName:data.name});
+          found = true;
+        }
+      });
+    }
+    return found;
+  }
+
+  // 进度条始终更新
+  function updateProgress(){
+    setStatus('📡 搜索中 '+doneCount+'/'+totalPages+' · 已找到 '+results.length+' 条');
+  }
+
+  // 内容只在有新结果时渲染
+  function doRender(){
+    if(ver!==searchVersion || !needRender) return;
+    needRender = false;
+    currentSearchResults = results.slice();
+    renderSearchResult(false);
+  }
+
+  function finish(){
+    if(ver!==searchVersion) return;
+    isSearching=false;
+    $('pwSearchBtn').style.display='inline';
+    $('pwStopSearchBtn').style.display='none';
+    currentSearchResults = results.slice();
+    setStatus('✅ 搜索完成：关键词 '+(currentSearchKeyword||'-')+' - 结果：'+results.length+' 条');
+    $('pwCatBar').innerHTML='';
+    renderSearchResult(false);
+  }
+
+  var running = 0;
+  var idx = 0;
+
+  function loadNext(){
+    if(ver!==searchVersion) return;
+    while(idx < tasks.length){
+      var task = tasks[idx++];
+      if(loadedSources[task.fname]){
+        var found = searchOne(loadedSources[task.fname], task.fname);
+        doneCount++;
+        updateProgress();
+        if(found) needRender = true;
+      } else {
+        running++;
+        loadData(task.fname, function(data){
+          if(data) loadedSources[task.fname]=data;
+          var found = searchOne(data, task.fname);
+          doneCount++;
+          updateProgress();
+          if(found) needRender = true;
+          running--;
+          doRender();
+          loadNext();
+        }, 5000);
+        if(running >= CONCURRENT) break;
+      }
+    }
+    doRender();
+    if(idx >= tasks.length && running <= 0) finish();
+  }
+
+  for(var i=0; i<CONCURRENT; i++) loadNext();
 }
 function stopSearch(){
   if(!isSearching) return;
@@ -257,7 +295,9 @@ function refreshSearchDisplay(){
 function buildSearchCatBar(){
   var cats={};
   currentSearchResults.forEach(function(v){
-    var cls=(v.vod_class||'').trim();
+    var cls=v.vod_class;
+    if(Array.isArray(cls)) cls=cls.join(',');
+    cls=(cls||'').trim();
     if(!cls) cats['未分类']=(cats['未分类']||0)+1;
     else cls.split(',').forEach(function(c){ c=c.trim(); if(c) cats[c]=(cats[c]||0)+1; });
   });
@@ -271,7 +311,7 @@ function buildSearchCatBar(){
 function renderSearchResult(loading){
   currentPrefix='__search_result__';
   if(loading && (!currentSearchResults.length||isSearching)){
-    $('pwContent').innerHTML='<div class="pw-empty-state">🔍 搜索中…</div>';
+    $('pwContent').innerHTML='<div class="pw-empty-state">🔍 搜索中<br><span style="font-size:12px;color:var(--text-muted)">'+$('pwStatusText').textContent+'</span></div>';
     $('pwPagination').innerHTML='';
     setStatus('关键词：'+currentSearchKeyword+' - 结果：0');
     $('pwClearSearchResultBtn').style.display='none';
@@ -279,9 +319,14 @@ function renderSearchResult(loading){
     return;
   }
   if(!currentSearchResults.length){
-    setEmpty('暂无搜索结果','请尝试其他关键词');
-    $('pwPagination').innerHTML='';
-    setStatus('关键词：'+currentSearchKeyword+' - 结果：0');
+    if(isSearching){
+      $('pwContent').innerHTML='<div class="pw-empty-state">🔍 搜索中<br><span style="font-size:12px;color:var(--text-muted)">'+$('pwStatusText').textContent+'</span></div>';
+      $('pwPagination').innerHTML='';
+    } else {
+      setEmpty('暂无搜索结果','请尝试其他关键词');
+      $('pwPagination').innerHTML='';
+    }
+    setStatus('关键词：'+currentSearchKeyword+' - 结果：'+currentSearchResults.length);
     $('pwClearSearchResultBtn').style.display='none';
     $('pwCatBar').innerHTML='';
     return;
@@ -411,9 +456,17 @@ function ensureFullCategoryStats(prefix){
         totalVideos+=pageData.videos.length;
         pageData.videos.forEach(function(v){
           if(v.playable_count>0) playableVideos++;
-          var cls=(v.vod_class||'').trim();
-          if(!cls) catMap['未分类']=(catMap['未分类']||0)+1;
-          else cls.split(',').forEach(function(c){ c=c.trim(); if(c) catMap[c]=(catMap[c]||0)+1; });
+          // 兼容 vod_class 为数组或字符串
+          var cls=v.vod_class;
+          if(Array.isArray(cls)) cls=cls.join(',');
+          cls=(cls||'').trim();
+          if(!cls){ catMap['未分类']=(catMap['未分类']||0)+1; }
+          else {
+            cls.split(',').forEach(function(c){
+              c=c.trim().replace(/^\s+|\s+$/g,'');
+              if(c) catMap[c]=(catMap[c]||0)+1;
+            });
+          }
         });
       }
       loadedCount++;
@@ -482,13 +535,14 @@ function collectCat(src,cat,out){
   if(!src?.videos) return;
   src.videos.forEach(function(v){
     var matched = false;
+    var clsRaw = v.vod_class;
+    if(Array.isArray(clsRaw)) clsRaw = clsRaw.join(',');
     if(cat === '未分类') {
-      var clsRaw = v.vod_class;
       if(!clsRaw || (typeof clsRaw === 'string' && clsRaw.trim() === '')) matched = true;
     } else {
-      var clsRaw = v.vod_class || '';
+      clsRaw = (clsRaw || '').toString();
       var classes = clsRaw.split(',').map(function(c){ return c.trim(); }).filter(function(c){ return c; });
-      if(classes.includes(cat)) matched = true;
+      if(classes.indexOf(cat) !== -1) matched = true;
     }
     if(matched){
       out.push({
@@ -550,7 +604,7 @@ function render(){
       pg+='<button class="pw-pg-go" data-page="'+(currentPage+1)+'"'+(currentPage>=pgs?' disabled':'')+'>›</button><button class="pw-pg-go" data-page="'+pgs+'"'+(currentPage>=pgs?' disabled':'')+'>»</button>';
     }
     if(isSearch){
-      setStatus('关键词：'+(currentSearchKeyword||'-')+' - 结果：'+currentSearchResults.length+(currentSearchCategory?' · 分类：'+currentSearchCategory:'')+' · 第 '+currentPage+' 页');
+      if(!isSearching) setStatus('关键词：'+(currentSearchKeyword||'-')+' - 结果：'+currentSearchResults.length+(currentSearchCategory?' · 分类：'+currentSearchCategory:'')+' · 第 '+currentPage+' 页');
       $('pwClearSearchResultBtn').style.display=currentSearchResults.length?'inline-block':'none';
     }
     else if(isSpecial) setStatus((currentPrefix==='__history__'?'最近观看':currentPrefix==='__favorites__'?'我的收藏':'我的影签')+' — '+total+' 条记录 · 第 '+currentPage+' 页');
@@ -621,6 +675,7 @@ function playEp(el){
   }
   currentPlayingVideo=currentOpenVideo;
   currentPlayingEpIndex=epIdx;
+  $('pwBookmarkBtn').style.display='inline-block';
   doPlay(url,el.dataset.name);
 }
 function doPlay(url,name){
@@ -681,6 +736,7 @@ function closeFloatPlayer(){
   $('pwFloatPlayer').style.display='none';
   pw$('.pw-player-box').classList.remove('pw-playing');
   currentPlayingVideo=null;
+  $('pwBookmarkBtn').style.display='none';
   setStatus('⏹ 已关闭');
 }
 
@@ -735,18 +791,9 @@ function loadIndex(){
 document.addEventListener('click',function(e){
   var t=e.target;
   var epDel=t.closest('.pw-ep-delete');
-  if(epDel && !t.closest('.pw-search-result-delete')){
-    e.stopPropagation();
-    var sKey=epDel.dataset.sourcekey, vName=epDel.dataset.vodname, type=epDel.dataset.type;
-    if(type==='history'){
-      var h=getStorage(STORAGE.HISTORY); delete h[sKey+'_'+vName];
-      setStorage(STORAGE.HISTORY,h); setStatus('✓ 已删除'); renderSpecialView('__history__');
-    }else if(type==='bookmark'){
-      saveBookmarks(getBookmarks().filter(function(b){ return !(b.videoName===vName&&b.sourceKey===sKey); }));
-      setStatus('✓ 影签已删除'); renderSpecialView('__bookmarks__');
-    }
-    return;
-  }
+  if(epDel){ e.stopPropagation(); var sKey=epDel.dataset.sourcekey, vName=epDel.dataset.vodname, type=epDel.dataset.type; if(type==='history'){ var h=getStorage(STORAGE.HISTORY); delete h[sKey+'_'+vName]; setStorage(STORAGE.HISTORY,h); setStatus('✓ 已删除'); renderSpecialView('__history__'); }else if(type==='bookmark'){ saveBookmarks(getBookmarks().filter(function(b){ return !(b.videoName===vName&&b.sourceKey===sKey); })); setStatus('✓ 影签已删除'); renderSpecialView('__bookmarks__'); } return; }
+  var srDel=t.closest('.pw-search-result-delete');
+  if(srDel){ e.stopPropagation(); removeSearchItem(srDel.dataset.sourcekey, srDel.dataset.vodname); setStatus('✓ 已从搜索结果中删除'); return; }
   var fav=t.closest('.pw-fav-btn');
   if(fav){
     e.stopPropagation();

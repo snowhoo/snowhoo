@@ -298,7 +298,9 @@ function refreshSearchDisplay(){
 function buildSearchCatBar(){
   var cats={};
   currentSearchResults.forEach(function(v){
-    var cls=(v.vod_class||'').trim();
+    var cls=v.vod_class;
+    if(Array.isArray(cls)) cls=cls.join(',');
+    cls=(cls||'').trim();
     if(!cls) cats['未分类']=(cats['未分类']||0)+1;
     else cls.split(',').forEach(function(c){ c=c.trim(); if(c) cats[c]=(cats[c]||0)+1; });
   });
@@ -457,9 +459,17 @@ function ensureFullCategoryStats(prefix){
         totalVideos+=pageData.videos.length;
         pageData.videos.forEach(function(v){
           if(v.playable_count>0) playableVideos++;
-          var cls=(v.vod_class||'').trim();
-          if(!cls) catMap['未分类']=(catMap['未分类']||0)+1;
-          else cls.split(',').forEach(function(c){ c=c.trim(); if(c) catMap[c]=(catMap[c]||0)+1; });
+          // 兼容 vod_class 为数组或字符串
+          var cls=v.vod_class;
+          if(Array.isArray(cls)) cls=cls.join(',');
+          cls=(cls||'').trim();
+          if(!cls){ catMap['未分类']=(catMap['未分类']||0)+1; }
+          else {
+            cls.split(',').forEach(function(c){
+              c=c.trim().replace(/^\s+|\s+$/g,'');
+              if(c) catMap[c]=(catMap[c]||0)+1;
+            });
+          }
         });
       }
       loadedCount++;
@@ -528,13 +538,14 @@ function collectCat(src,cat,out){
   if(!src?.videos) return;
   src.videos.forEach(function(v){
     var matched = false;
+    var clsRaw = v.vod_class;
+    if(Array.isArray(clsRaw)) clsRaw = clsRaw.join(',');
     if(cat === '未分类') {
-      var clsRaw = v.vod_class;
       if(!clsRaw || (typeof clsRaw === 'string' && clsRaw.trim() === '')) matched = true;
     } else {
-      var clsRaw = v.vod_class || '';
+      clsRaw = (clsRaw || '').toString();
       var classes = clsRaw.split(',').map(function(c){ return c.trim(); }).filter(function(c){ return c; });
-      if(classes.includes(cat)) matched = true;
+      if(classes.indexOf(cat) !== -1) matched = true;
     }
     if(matched){
       out.push({
