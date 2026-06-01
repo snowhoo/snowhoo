@@ -119,15 +119,83 @@ function findVideoInCache(sKey,vName){
   return null;
 }
 
+// ===== IndexedDB 缓存 =====
+var CACHE_DB = null;
+var CACHE_DB_READY = false;
+
+function initCacheDB(cb){
+  if(CACHE_DB_READY && CACHE_DB){ cb(CACHE_DB); return; }
+  var req = indexedDB.open('tvbox_cache', 1);
+  req.onupgradeneeded = function(e){ e.target.result.createObjectStore('files', { keyPath: 'file' }); };
+  req.onsuccess = function(e){
+    CACHE_DB = e.target.result;
+    CACHE_DB_READY = true;
+    cb(CACHE_DB);
+  };
+  req.onerror = function(){ CACHE_DB = null; CACHE_DB_READY = true; cb(null); };
+}
+
+function loadFromCache(file, cb){
+  initCacheDB(function(db){
+    if(!db){ cb(null); return; }
+    try {
+      var tx = db.transaction('files','readonly');
+      var req = tx.objectStore('files').get(file);
+      req.onsuccess = function(){ var r=req.result; cb(r&&r._d?r._d:null); };
+      req.onerror = function(){ cb(null); };
+    } catch(e){ cb(null); }
+  });
+}
+
+function saveToCache(file, data){
+  if(!data) return;
+  initCacheDB(function(db){
+    if(!db) return;
+    var fp = (data.videos?data.videos.length:0)+'|'+((data.videos||[])[0]?.vod_name||'');
+    var entry = { file:file, _d:data, _fp:fp, _t:Date.now() };
+    try { db.transaction('files','readwrite').objectStore('files').put(entry); } catch(e){}
+  });
+}
+
 function loadData(file,cb,to){
   if (typeof to === 'undefined') to = 3000;
-  var key=file==='index.js'?'_TVBOX_INDEX':'_TVBOX_SITE_DATA';
-  var s=document.createElement('script');
-  var t=setTimeout(function(){ s.onload=s.onerror=null; s.remove(); cb(null); },to);
-  s.onerror=function(){ clearTimeout(t); cb(null); };
-  s.onload=function(){ clearTimeout(t); var d=window[key]; delete window[key]; cb(d||null); };
-  var bp=(typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '');
-  s.src=bp+'data/'+file;
+
+  // 先查 IndexedDB 缓存
+  if(file !== 'index.js'){
+    loadFromCache(file, function(cached){
+      if(cached){
+        if(!loadedSources[file]) loadedSources[file] = cached;
+        setTimeout(function(){ cb(cached); }, 0);
+        // 后台静默刷新
+        loadFresh(file);
+        return;
+      }
+      // 无缓存，走网络
+      loadFresh(file, cb, to);
+    });
+    return;
+  }
+
+  // index.js 不缓存，直接加载
+  loadFresh(file, cb, to);
+}
+
+function loadFresh(file, cb, to){
+  if (typeof to === 'undefined') to = 3000;
+  var key = file==='index.js'?'_TVBOX_INDEX':'_TVBOX_SITE_DATA';
+  var s = document.createElement('script');
+  var t = setTimeout(function(){ s.onerror=s.onload=null; s.remove(); if(cb) cb(null); },to);
+  s.onerror = function(){ clearTimeout(t); if(cb) cb(null); };
+  s.onload = function(){
+    clearTimeout(t);
+    var d = window[key]; delete window[key];
+    d = d || null;
+    if(d && file !== 'index.js') saveToCache(file, d);
+    if(!loadedSources[file] && d) loadedSources[file] = d;
+    if(cb) cb(d);
+  };
+  var bp = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '');
+  s.src = bp + 'data/' + file;
   document.head.appendChild(s);
 }
 
@@ -145,20 +213,38 @@ function startPreload(){
   preloadTotal=arr.length; preloadCompleted=0;
   $('pwPreloadProgressBar').style.display='block';
   updatePreload(0);
+
+  // 从 IndexedDB 批量预热
+  var remain = arr.length;
+  arr.forEach(function(f){
+    loadFromCache(f, function(cached){
+      if(cached && !loadedSources[f]) loadedSources[f] = cached;
+      remain--;
+      if(remain <= 0) startLoadUncached(arr);
+    });
+  });
+}
+function startLoadUncached(arr){
+  var toLoad = arr.filter(function(f){ return !loadedSources[f]; });
+  if(toLoad.length === 0){
+    updatePreload(100);
+    setTimeout(function(){ $('pwPreloadProgressBar').style.display='none'; },300);
+    return;
+  }
+
   var idx=0,running=0;
   function loadOne(){
-    if(idx>=arr.length){
+    if(idx>=toLoad.length){
       if(running===0){ updatePreload(100); setTimeout(function(){ $('pwPreloadProgressBar').style.display='none'; },500); }
       return;
     }
-    var f=arr[idx++]; running++;
-    loadData(f,function(data){
-      if(data) loadedSources[f]=data;
+    var f=toLoad[idx++]; running++;
+    loadFresh(f,function(data){
       preloadCompleted++;
-      updatePreload(Math.floor(preloadCompleted/preloadTotal*100));
+      updatePreload(Math.floor((arr.length - toLoad.length + preloadCompleted)/preloadTotal*100));
       running--;
       loadOne();
-    },5000);
+    });
   }
   for(var i=0;i<CONCURRENT;i++) loadOne();
 }

@@ -1,6 +1,3 @@
----
-layout: false
----
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <div id="player-wrap">
@@ -122,83 +119,101 @@ function findVideoInCache(sKey,vName){
   return null;
 }
 
-// ===== IndexedDB 缓存 =====
-var CACHE_DB = null;
-var CACHE_DB_READY = false;
+var CACHE_PREFIX = 'tvbox_cache_';
 
-function initCacheDB(cb){
-  if(CACHE_DB_READY && CACHE_DB){ cb(CACHE_DB); return; }
-  var req = indexedDB.open('tvbox_cache', 1);
-  req.onupgradeneeded = function(e){ e.target.result.createObjectStore('files', { keyPath: 'file' }); };
-  req.onsuccess = function(e){
-    CACHE_DB = e.target.result;
-    CACHE_DB_READY = true;
-    cb(CACHE_DB);
-  };
-  req.onerror = function(){ CACHE_DB = null; CACHE_DB_READY = true; cb(null); };
-}
-
-function loadFromCache(file, cb){
-  initCacheDB(function(db){
-    if(!db){ cb(null); return; }
-    try {
-      var tx = db.transaction('files','readonly');
-      var req = tx.objectStore('files').get(file);
-      req.onsuccess = function(){ var r=req.result; cb(r&&r._d?r._d:null); };
-      req.onerror = function(){ cb(null); };
-    } catch(e){ cb(null); }
-  });
+function loadFromCache(file){
+  try {
+    var raw = localStorage.getItem(CACHE_PREFIX + file);
+    if(raw){
+      var entry = JSON.parse(raw);
+      // 兼容旧缓存（无 meta 字段的纯数据）
+      if(entry && entry._d) return entry._d;
+      return entry; // 旧格式
+    }
+  } catch(e) {}
+  return null;
 }
 
 function saveToCache(file, data){
-  if(!data) return;
-  initCacheDB(function(db){
-    if(!db) return;
-    var fp = (data.videos?data.videos.length:0)+'|'+((data.videos||[])[0]?.vod_name||'');
-    var entry = { file:file, _d:data, _fp:fp, _t:Date.now() };
-    try { db.transaction('files','readwrite').objectStore('files').put(entry); } catch(e){}
-  });
+  // 用 videos 数量 + 第一个 title 做简单指纹
+  var fp = (data?.videos?.length || 0) + '|' + ((data?.videos||[])[0]?.vod_name || '');
+  var entry = { _d: data, _fp: fp, _t: Date.now() };
+  try {
+    localStorage.setItem(CACHE_PREFIX + file, JSON.stringify(entry));
+  } catch(e) {
+    var keys = [];
+    for(var k in localStorage){
+      if(k.indexOf(CACHE_PREFIX) === 0) keys.push(k);
+    }
+    if(keys.length > 2){
+      keys.sort(function(a,b){ return (JSON.parse(localStorage.getItem(a)||'{}')._t||0) - (JSON.parse(localStorage.getItem(b)||'{}')._t||0); });
+      var toRemove = keys.slice(0, Math.ceil(keys.length / 2));
+      toRemove.forEach(function(k){ localStorage.removeItem(k); });
+      try { localStorage.setItem(CACHE_PREFIX + file, JSON.stringify(entry)); } catch(e2) {}
+    }
+  }
+}
+
+function isCacheStale(file, cachedData){
+  // 无指纹的旧缓存视为过期
+  try {
+    var raw = localStorage.getItem(CACHE_PREFIX + file);
+    if(!raw) return true;
+    var entry = JSON.parse(raw);
+    if(!entry._fp) return true;
+    return false; // 指纹还在就不是真正的 stale（后台校验会更新）
+  } catch(e) { return true; }
 }
 
 function loadData(file,cb,to){
   if (typeof to === 'undefined') to = 3000;
 
-  // 先查 IndexedDB 缓存
-  if(file !== 'index.js'){
-    loadFromCache(file, function(cached){
-      if(cached){
-        if(!loadedSources[file]) loadedSources[file] = cached;
-        setTimeout(function(){ cb(cached); }, 0);
-        // 后台静默刷新
-        loadFresh(file);
-        return;
+  // 先查缓存，秒返
+  var cached = loadFromCache(file);
+  if(cached && file !== 'index.js'){
+    setTimeout(function(){ cb(cached); }, 0);
+
+    // 后台静默加载最新版对比指纹
+    var key = '_TVBOX_SITE_DATA';
+    var s = document.createElement('script');
+    var t = setTimeout(function(){ s.onload=s.onerror=null; s.remove(); }, to);
+    s.onerror = function(){ clearTimeout(t); };
+    s.onload = function(){
+      clearTimeout(t);
+      var fresh = window[key]; delete window[key];
+      if(fresh){
+        var fp = (fresh.videos?.length || 0) + '|' + ((fresh.videos||[])[0]?.vod_name || '');
+        try {
+          var raw = localStorage.getItem(CACHE_PREFIX + file);
+          var entry = raw ? JSON.parse(raw) : {};
+          if(entry._fp !== fp){
+            // 内容变了，更新缓存和 loadedSources
+            saveToCache(file, fresh);
+            loadedSources[file] = fresh;
+          }
+        } catch(e) {}
       }
-      // 无缓存，走网络
-      loadFresh(file, cb, to);
-    });
+    };
+    var bp = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '');
+    s.src = bp + 'data/' + file;
+    document.head.appendChild(s);
     return;
   }
 
-  // index.js 不缓存，直接加载
-  loadFresh(file, cb, to);
-}
-
-function loadFresh(file, cb, to){
-  if (typeof to === 'undefined') to = 3000;
-  var key = file==='index.js'?'_TVBOX_INDEX':'_TVBOX_SITE_DATA';
-  var s = document.createElement('script');
-  var t = setTimeout(function(){ s.onerror=s.onload=null; s.remove(); if(cb) cb(null); },to);
-  s.onerror = function(){ clearTimeout(t); if(cb) cb(null); };
-  s.onload = function(){
+  // 无缓存，正常加载
+  var key=file==='index.js'?'_TVBOX_INDEX':'_TVBOX_SITE_DATA';
+  var s=document.createElement('script');
+  var t=setTimeout(function(){ s.onload=s.onerror=null; s.remove(); cb(null); },to);
+  s.onerror=function(){ clearTimeout(t); cb(null); };
+  s.onload=function(){
     clearTimeout(t);
-    var d = window[key]; delete window[key];
+    var d=window[key]; delete window[key];
     d = d || null;
     if(d && file !== 'index.js') saveToCache(file, d);
-    if(!loadedSources[file] && d) loadedSources[file] = d;
-    if(cb) cb(d);
+    cb(d);
   };
-  var bp = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '');
-  s.src = bp + 'data/' + file;
+  var bp=(typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '');
+  s.src=bp+'data/'+file;
   document.head.appendChild(s);
 }
 
@@ -217,17 +232,14 @@ function startPreload(){
   $('pwPreloadProgressBar').style.display='block';
   updatePreload(0);
 
-  // 从 IndexedDB 批量预热
-  var remain = arr.length;
+  // 先从持久化缓存预热 loadedSources
   arr.forEach(function(f){
-    loadFromCache(f, function(cached){
-      if(cached && !loadedSources[f]) loadedSources[f] = cached;
-      remain--;
-      if(remain <= 0) startLoadUncached(arr);
-    });
+    if(!loadedSources[f]){
+      var c = loadFromCache(f);
+      if(c) loadedSources[f] = c;
+    }
   });
-}
-function startLoadUncached(arr){
+  // 跳过已从缓存加载的
   var toLoad = arr.filter(function(f){ return !loadedSources[f]; });
   if(toLoad.length === 0){
     updatePreload(100);
@@ -242,12 +254,13 @@ function startLoadUncached(arr){
       return;
     }
     var f=toLoad[idx++]; running++;
-    loadFresh(f,function(data){
+    loadData(f,function(data){
+      if(data) loadedSources[f]=data;
       preloadCompleted++;
       updatePreload(Math.floor((arr.length - toLoad.length + preloadCompleted)/preloadTotal*100));
       running--;
       loadOne();
-    });
+    },5000);
   }
   for(var i=0;i<CONCURRENT;i++) loadOne();
 }
