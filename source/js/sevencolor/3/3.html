@@ -106,7 +106,7 @@ layout: false
 <div id="pwStatus" class="pw-status-bar">
   <div class="pw-cat-bar" id="pwCatBar"></div>
   <span id="pwStatusText">[STOP] 选择一个数据源</span>
-  <div style="display:flex; gap:6px"><button id="pwClearSearchResultBtn" class="pw-clear-search-btn" style="display:none">清空</button><button id="pwBookmarkBtn" class="pw-next-ep-btn" style="background:#4caf50">签</button><button id="pwNextEpBtn" class="pw-next-ep-btn">下集</button></div>
+  <div style="display:flex; gap:6px"><button id="pwClearSearchResultBtn" class="pw-clear-search-btn" style="display:none">清空</button><button id="pwBookmarkBtn" class="pw-next-ep-btn" style="background:#4caf50;display:none">签</button><button id="pwNextEpBtn" class="pw-next-ep-btn">下集</button></div>
 </div>
 <div id="pwContent"></div>
 <div class="pw-pagination" id="pwPagination"></div>
@@ -202,6 +202,9 @@ function doSearchImpl(kw, ver){
         }
         loadedPages++;
         setStatus(`📡 搜索中 ${loadedPages}/${totalPages}...`);
+        currentSearchResults=results.slice();
+        buildSearchCatBar();
+        refreshSearchDisplay();
         checkDone();
       } else {
         loadData(fname, data=>{
@@ -215,6 +218,9 @@ function doSearchImpl(kw, ver){
           }
           loadedPages++;
           setStatus(`📡 搜索中 ${loadedPages}/${totalPages}...`);
+          currentSearchResults=results.slice();
+          buildSearchCatBar();
+          refreshSearchDisplay();
           checkDone();
         }, 4000);
       }
@@ -472,7 +478,7 @@ function toggleEpisodes(el,eid){
 }
 
 // ===== 播放相关 =====
-function playEp(el){ let url=el.dataset.url; if(!url) return; let items=el.parentElement.querySelectorAll('.pw-ep-item'), idx=Array.from(items).indexOf(el), epIdx=parseInt(el.dataset.epindex)||idx; currentEpNext=idx<items.length-1?items[idx+1]:null; $('pwNextEpBtn').style.display=currentEpNext?'inline':'none'; if(currentPlayingVideo){ let v=$('pwPlayer'); if(v.currentTime>5) updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime)); } currentPlayingVideo=currentOpenVideo; currentPlayingEpIndex=epIdx; doPlay(url,el.dataset.name); }
+function playEp(el){ let url=el.dataset.url; if(!url) return; let items=el.parentElement.querySelectorAll('.pw-ep-item'), idx=Array.from(items).indexOf(el), epIdx=parseInt(el.dataset.epindex)||idx; currentEpNext=idx<items.length-1?items[idx+1]:null; $('pwNextEpBtn').style.display=currentEpNext?'inline':'none'; if(currentPlayingVideo){ let v=$('pwPlayer'); if(v.currentTime>5) updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime)); } currentPlayingVideo=currentOpenVideo; currentPlayingEpIndex=epIdx; $('pwBookmarkBtn').style.display='inline-block'; doPlay(url,el.dataset.name); }
 function doPlay(url,name){ if(currentHls) currentHls.destroy(); let v=$('pwPlayer'); v.pause(); v.removeAttribute('src'); v.load(); pw$('.pw-player-box').classList.add('pw-playing'); if(url.includes('.m3u8') && window.Hls?.isSupported()){ let hls=new Hls(); hls.loadSource(url); hls.attachMedia(v); currentHls=hls; } else v.src=url; v.play().catch(()=>{}); let saved=currentOpenVideo?(currentOpenVideo.historyProgress||currentOpenVideo.bookmarkProgress||0):0; if(saved>5) v.addEventListener('canplay',function once(){ v.removeEventListener('canplay',once); v.currentTime=saved; }); setStatus(`▶ ${name}`); }
 function playNext(){ if(currentEpNext) playEp(currentEpNext); }
 function addBookmarkHandler(){ if(!currentPlayingVideo || (currentPlayingEpIndex===undefined)){ setStatus('⚠ 请先选择剧集'); return; } let v=$('pwPlayer'); updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime)); let note=prompt('影签备注：',''); if(note===null) return; addBookmark(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime),note); setStatus('✓ 影签已添加'); }
