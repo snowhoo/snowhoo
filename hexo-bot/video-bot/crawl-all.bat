@@ -27,11 +27,11 @@ echo [%DATE% %TIME%] CRAWL DONE >> "%LOG%"
 
 REM Git push
 cd /d "%HEXO_DIR%"
-git diff --quiet -- "source/js/sevencolor/3/video"
+git diff --quiet -- "source/js/sevencolor/3/data"
 if %ERRORLEVEL% EQU 1 (
     echo Pushing...
     echo [%DATE% %TIME%] Pushing >> "%LOG%"
-    git add "source/video"
+    git add "source/js/sevencolor/3/data"
     git commit -m "chore: auto-update TVBox video data"
     git push origin source
     if %ERRORLEVEL% EQU 0 (

@@ -19,13 +19,27 @@ const HEXO_DIR = 'D:\\hexo';
 
 // ---------- 节日定义 ----------
 // type: fixed(公历固定) | lunar(农历) | chuxi(除夕=春节前一天) | jieqi(节气)
+// type: weekday(第N个星期几) | nth: 第几个(-1表示最后一个), dow: 星期几(0=日,1=一...)
 const FESTIVAL_DEFS = {
-  birthday:    { type: 'fixed', m: 4,  d: 9  },
   yuandan:     { type: 'fixed', m: 1,  d: 1  },
   qingren:     { type: 'fixed', m: 2,  d: 14 },
+  funvjie:     { type: 'fixed', m: 3,  d: 8  },
+  'zhi shujie':   { type: 'fixed', m: 3,  d: 12 },
+  yurenjie:    { type: 'fixed', m: 4,  d: 1  },
+  birthday:    { type: 'fixed', m: 4,  d: 9  },
   laodong:     { type: 'fixed', m: 5,  d: 1  },
+  qingnianjie: { type: 'fixed', m: 5,  d: 4  },
+  muqinjie:    { type: 'weekday', m: 5,  nth: 2, dow: 0 },  // 5月第2个周日
+  ertongjie:   { type: 'fixed', m: 6,  d: 1  },
+  fuqinjie:    { type: 'weekday', m: 6,  nth: 3, dow: 0 },  // 6月第3个周日
+  'jian dangjie': { type: 'fixed', m: 7,  d: 1  },
+  'jian junjie':  { type: 'fixed', m: 8,  d: 1  },
+  jiaoshijie:  { type: 'fixed', m: 9,  d: 10 },
   guoqing:     { type: 'fixed', m: 10, d: 1  },
+  wanshengjie: { type: 'fixed', m: 10, d: 31 },
+  'gan enjie':    { type: 'weekday', m: 11, nth: 4, dow: 4 }, // 11月第4个周四
   shengdan:    { type: 'fixed', m: 12, d: 25 },
+
   chunjie:     { type: 'lunar', lm: 1,  ld: 1  },
   yuanxiao:    { type: 'lunar', lm: 1,  ld: 15 },
   duanwu:      { type: 'lunar', lm: 5,  ld: 5  },
@@ -34,6 +48,7 @@ const FESTIVAL_DEFS = {
   chongyang:   { type: 'lunar', lm: 9,  ld: 9  },
   labajie:     { type: 'lunar', lm: 12, ld: 8  },
   chuxi:       { type: 'chuxi' },
+
   qingmingjie: { type: 'jieqi', name: '清明' }
 };
 
@@ -88,6 +103,16 @@ function findNext(def, today, jieQiCache) {
         r = { month: jd.month, day: jd.day, year: y };
         break;
       }
+      case 'weekday': {
+        // 计算 m 月第 nth 个星期 dow (0=周日, 1=周一...)
+        const first = new Date(y, def.m - 1, 1);
+        const firstDow = first.getDay();
+        const offset = (def.dow - firstDow + 7) % 7;
+        const d = 1 + offset + (def.nth - 1) * 7;
+        if (d > new Date(y, def.m, 0).getDate()) continue;
+        r = { month: def.m, day: d, year: y };
+        break;
+      }
     }
     if (!r) continue;
     const dt = new Date(r.year, r.month - 1, r.day, 0, 0, 0);
@@ -107,7 +132,7 @@ function fmtRange(m, d) {
          pad2(a.getUTCMonth() + 1) + '-' + pad2(a.getUTCDate());
 }
 
-function fmtDisplay(m, d) { return m + '月' + d + '日'; }
+function fmtDisplay(m, d) { return m + ' 月 ' + d + ' 日'; }
 
 function git(c) {
   try {
