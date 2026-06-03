@@ -677,7 +677,7 @@ function render(){
   var isSpecial=['__history__','__favorites__','__bookmarks__'].includes(currentPrefix);
   items.forEach(function(v,i){
     var eid='eps_'+currentPage+'_'+i;
-    var img=v.vod_pic||'', badge=v.playable_count>0?'可播放':'待验证';
+    var img=v.vod_pic||'https://picsum.photos/seed/'+encodeURIComponent(v.vod_name)+'/300/400', badge=v.playable_count>0?'可播放':'待验证';
     var epInfo=(v.ep_count||0)+'集'+(v.playable_count?' · '+v.playable_count+'可播放':'');
     var isFav=isFavorited(v.sourceKey, v.vod_name);
     h+='<div class="pw-video-card" data-eid="'+eid+'" data-vodname="'+escAttr(v.vod_name)+'" data-sourcekey="'+escAttr(v.sourceKey)+'">';
