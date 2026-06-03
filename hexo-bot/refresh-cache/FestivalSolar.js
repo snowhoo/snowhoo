@@ -40,6 +40,9 @@ const FESTIVAL_DEFS = {
   'gan enjie':    { type: 'weekday', m: 11, nth: 4, dow: 4 }, // 11月第4个周四
   shengdan:    { type: 'fixed', m: 12, d: 25 },
 
+  // 高考：全国统一固定 6月7日
+  gaokao:      { type: 'fixed', m: 6,  d: 7  },
+
   chunjie:     { type: 'lunar', lm: 1,  ld: 1  },
   yuanxiao:    { type: 'lunar', lm: 1,  ld: 15 },
   duanwu:      { type: 'lunar', lm: 5,  ld: 5  },
