@@ -155,7 +155,22 @@ function saveToCache(file, data){
     if(!db) return;
     var fp = (data.videos?data.videos.length:0)+'|'+((data.videos||[])[0]?.vod_name||'');
     var entry = { file:file, _d:data, _fp:fp, _t:Date.now() };
-    try { db.transaction('files','readwrite').objectStore('files').put(entry); } catch(e){}
+    var MAX_CACHE=520;
+    try {
+      var tx=db.transaction('files','readwrite');
+      var countReq=db.transaction('files','readonly').objectStore('files').count();
+      countReq.onsuccess=function(){
+        if(countReq.result>=MAX_CACHE){
+          var delReq=db.transaction('files','readwrite').objectStore('files').openCursor();
+          var deleted=0;
+          delReq.onsuccess=function(e2){
+            var cursor=e2.target.result;
+            if(cursor&&deleted<Math.ceil(MAX_CACHE/4)){ cursor.delete(); deleted++; cursor.continue(); }
+            else if(!delReq._done){ delReq._done=true; try{db.transaction('files','readwrite').objectStore('files').put(entry);}catch(_){} }
+          };
+        }else{ try{db.transaction('files','readwrite').objectStore('files').put(entry);}catch(_){} }
+      };
+    } catch(e){}
   });
 }
 
