@@ -919,7 +919,7 @@ document.addEventListener('click',function(e){
     e.stopPropagation();
     var sKey=fav.dataset.sourcekey, vName=fav.dataset.vodname, vPic=fav.dataset.vodpic, eCnt=parseInt(fav.dataset.epcount)||0, pCnt=parseInt(fav.dataset.playablecount)||0;
     if(isFavorited(sKey,vName)){
-      removeFavorite(sKey,vName); fav.classList.remove('pw-faved'); fav.innerHTML='♡'; fav.title='收藏';
+      removeFavorite(sKey,vName); fav.classList.remove('pw-faved'); fav.innerHTML='♡收藏'; fav.title='收藏';
       if(currentPrefix==='__favorites__') renderSpecialView('__favorites__');
     }else{
       var full=currentFiltered.find(function(v){ return v.vod_name===vName&&v.sourceKey===sKey; });
@@ -934,7 +934,7 @@ document.addEventListener('click',function(e){
         playable_count:full?.playable_count||pCnt, episodes:full?.episodes||[],
         vod_class:full?.vod_class||''
       });
-      fav.classList.add('pw-faved'); fav.innerHTML='❤'; fav.title='取消收藏';
+      fav.classList.add('pw-faved'); fav.innerHTML='❤收藏'; fav.title='取消收藏';
     }
     return;
   }
