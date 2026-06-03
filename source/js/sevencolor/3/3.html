@@ -34,7 +34,7 @@ layout: false
 #player-wrap .pw-toolbar select option{background:var(--bg-card);color:var(--text-primary)}
 #player-wrap .pw-toolbar select{flex:2;min-width:100px;cursor:pointer}
 #player-wrap .pw-toolbar input{flex:2;min-width:120px}
-#player-wrap .pw-toolbar button{flex-shrink:0;background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:500}
+#player-wrap .pw-toolbar button{flex-shrink:0;background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:500;padding:7px 10px;font-size:13px;height:34px;box-sizing:border-box;border-radius:6px}
 #player-wrap .pw-toolbar button:hover{background:var(--accent-hover)}
 #player-wrap .pw-cat-bar{margin:0 8px 0 0;display:flex;align-items:center;gap:8px}
 #player-wrap .pw-cat-bar select{max-width:160px;min-width:80px;padding:7px 10px;background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;cursor:pointer;margin:0}
@@ -865,10 +865,26 @@ function closeFloatPlayer(){
 // ===== 初始化与主题 =====
 (function(){
   var wrap=$('player-wrap');
-  var t=wrap.getAttribute('data-theme');
-  if(!t){ try{ var pt=window.parent.document.documentElement.getAttribute('data-theme'); if(pt==='dark'||pt==='light') t=pt; }catch(e){} }
-  if(!t) t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';
-  wrap.setAttribute('data-theme',t);
+  function syncTheme(t){
+    if(!t||(t!=='dark'&&t!=='light')){
+      try{ t=window.parent.document.documentElement.getAttribute('data-theme'); }catch(e){}
+    }
+    if(!t||(t!=='dark'&&t!=='light')) t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';
+    wrap.setAttribute('data-theme',t);
+  }
+  syncTheme(wrap.getAttribute('data-theme'));
+
+  // 监听父页面主题切换
+  try{
+    var parentEl=window.parent.document.documentElement;
+    new MutationObserver(function(){
+      syncTheme(parentEl.getAttribute('data-theme'));
+    }).observe(parentEl,{attributes:true,attributeFilter:['data-theme']});
+  }catch(e){}
+  // 兜底：监听系统主题变化
+  window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(e){
+    syncTheme(e.matches?'dark':'light');
+  });
 
   function checkContainerWidth(){
     var width = wrap.offsetWidth;
