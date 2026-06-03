@@ -690,7 +690,7 @@ function render(){
     h+='<span class="pw-card-badge '+(v.playable_count>0?'pw-playable':'pw-unplayable')+'">'+badge+'</span>';
     if(v.isHistory && v.historyProgress) h+='<div class="pw-progress-bar"><div class="pw-progress-fill" style="width:'+Math.min(100,Math.round(v.historyProgress/300*100))+'%"></div></div>';
     if(v.isBookmark && v.bookmarkNote) h+='<div class="pw-bookmark-note">'+escHtml(v.bookmarkNote)+'</div>';
-    h+='</div><div class="pw-card-info"><div class="pw-card-title">'+escHtml(v.vod_name)+'</div><div class="pw-card-meta">'+(v.sourceName?escHtml(v.sourceName)+' · ':'')+epInfo+(v.isHistory && v.historyProgress?' · 第'+(parseInt(v.historyEpIndex)+1)+'集 '+Math.floor(v.historyProgress/60)+'\''+Math.floor(v.historyProgress%60)+'\'\'':'')+(v.isBookmark && v.bookmarkNote?' · "'+v.bookmarkNote+'"':'')+'</div></div></div>';
+    h+='</div><div class="pw-card-info"><div class="pw-card-title">'+escHtml(v.vod_name)+'</div><div class="pw-card-meta">'+(v.sourceName?escHtml(v.sourceName)+' · ':'')+epInfo+(v.isHistory && v.historyProgress?' · 第'+(parseInt(v.historyEpIndex)+1)+'集 '+Math.floor(v.historyProgress/60)+'\''+Math.floor(v.historyProgress%60)+'\'\'':'')+(v.isBookmark && v.bookmarkProgress?' · 第'+(parseInt(v.bookmarkEpIndex)+1)+'集 '+Math.floor(v.bookmarkProgress/60)+'\''+Math.floor(v.bookmarkProgress%60)+'\'\'':'')+(v.isBookmark && v.bookmarkNote?' · "'+v.bookmarkNote+'"':'')+'</div></div></div>';
     h+='<div class="pw-ep-panel" id="'+eid+'"><div class="pw-ep-header"><span>剧集 ('+((v.episodes||[]).length)+')</span><button class="pw-ep-close" data-eid="'+eid+'">✖</button></div>';
     (v.episodes||[]).forEach(function(e,ei){
       var isCurr=(v.isHistory && ei===v.historyEpIndex)||(v.isBookmark && ei===v.bookmarkEpIndex);
