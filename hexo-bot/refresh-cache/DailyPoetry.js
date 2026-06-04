@@ -7,15 +7,51 @@ const HEXO = "D:\\hexo";
 const TARGET = path.join(HEXO, "source", "js", "DailyPoetry.json");
 const CWD = HEXO;
 
-function fetchPoem() {
+const TOKEN_FILE = path.join(__dirname, "poetry_token.json");
+
+function loadToken() {
+  try { return JSON.parse(fs.readFileSync(TOKEN_FILE, "utf8")).token || ""; } catch(e) { return ""; }
+}
+function saveToken(token) {
+  if (!token) return;
+  fs.writeFileSync(TOKEN_FILE, JSON.stringify({ token, updatedAt: Date.now() }), "utf8");
+}
+
+// 获取或加载 token
+async function getToken() {
+  var token = loadToken();
+  if (token) return token;
   return new Promise((resolve) => {
-    https.get("https://v2.jinrishici.com/one.json", { headers: { "Accept": "application/json" } }, (res) => {
+    https.get("https://v2.jinrishici.com/token", { headers: { "Accept": "application/json" } }, (res) => {
+      let data = "";
+      res.on("data", chunk => data += chunk);
+      res.on("end", () => {
+        try {
+          var j = JSON.parse(data);
+          if (j.status === "success" && j.data) { saveToken(j.data); resolve(j.data); }
+          else resolve("");
+        } catch(e) { resolve(""); }
+      });
+    }).on("error", () => resolve(""));
+  });
+}
+
+function fetchPoem() {
+  return new Promise(async (resolve) => {
+    var token = await getToken();
+    if (!token) { resolve(null); return; }
+    // 使用高级 JSON 接口，通过 X-User-Token 头部保持同一身份，服务端自动去重
+    var url = "https://v2.jinrishici.com/sentence";
+    var headers = { "Accept": "application/json", "X-User-Token": token };
+    https.get(url, { headers: headers }, (res) => {
       let data = "";
       res.on("data", chunk => data += chunk);
       res.on("end", () => {
         try {
           const j = JSON.parse(data);
           if (j.status === "success" && j.data) {
+            // 保存 token，下次请求带上避免地理定位固定池
+            if (j.token) saveToken(j.token);
             const d = j.data;
             resolve({
               fetchedAt: new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" }),
