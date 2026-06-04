@@ -170,12 +170,13 @@ function loadFromCache(file, cb, maxAge){
 
 function saveToCache(file, data){
   if(!data) return;
-  // 记录分文件字节数，供预加载指纹比对
-  try { localStorage.setItem('tvbox_fsize_'+file, JSON.stringify(data).length); } catch(e){}
+  var now = Date.now();
+  // 记录分文件字节数和最后更新时间，供预加载逐文件判断
+  try { localStorage.setItem('tvbox_fsize_'+file, JSON.stringify(data).length + '|' + now); } catch(e){}
   initCacheDB(function(db){
     if(!db) return;
     var fp = (data.videos?data.videos.length:0)+'|'+((data.videos||[])[0]?.vod_name||'');
-    var entry = { file:file, _d:data, _fp:fp, _t:Date.now() };
+    var entry = { file:file, _d:data, _fp:fp, _t:now };
     var MAX_CACHE=520;
     try {
       var tx=db.transaction('files','readwrite');
@@ -254,42 +255,30 @@ function startPreload(){
   $('pwPreloadProgressBar').style.display='block';
   updatePreload(0);
 
-  // 指纹：index.js 字节数 + 各分文件上次缓存时的字节数，任一变化即触发刷新
-  var fpParts = [ JSON.stringify(sourceIndex).length ];
-  arr.forEach(function(f){ fpParts.push(localStorage.getItem('tvbox_fsize_'+f)||'?'); });
-  var currentFp = fpParts.join('|');
-  var savedFp = localStorage.getItem('tvbox_preload_fp')||'';
-
-  var done=0;
-  if(currentFp===savedFp){
-    // 指纹未变 → 纯 IndexedDB 缓存，不发网络
-    arr.forEach(function(f){
-      loadFromCache(f, function(data){
-        done++;
-        if(data && !loadedSources[f]) loadedSources[f]=data;
-        preloadCompleted=done;
-        updatePreload(Math.floor(done/preloadTotal*100));
-        if(done>=arr.length){
-          updatePreload(100);
-          setTimeout(function(){ $('pwPreloadProgressBar').style.display='none'; },300);
-        }
-      });
+  // 逐文件比对字节数：fetch 服务器上的文件，对比本地缓存的字节数，有变化才刷新
+  var bp = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '');
+  arr.forEach(function(f){
+    loadFromCache(f, function(data){
+      done++;
+      if(data && !loadedSources[f]) loadedSources[f]=data;
+      preloadCompleted=done;
+      updatePreload(Math.floor(done/preloadTotal*100));
+      if(done>=arr.length){
+        updatePreload(100);
+        setTimeout(function(){ $('pwPreloadProgressBar').style.display='none'; },300);
+      }
     });
-  } else {
-    // 指纹变化 → 缓存优先即时可用 + 后台静默联网刷新
-    localStorage.setItem('tvbox_preload_fp',currentFp);
-    arr.forEach(function(f){
-      loadData(f, function(){
-        done++;
-        preloadCompleted=done;
-        updatePreload(Math.floor(done/preloadTotal*100));
-        if(done>=arr.length){
-          updatePreload(100);
-          setTimeout(function(){ $('pwPreloadProgressBar').style.display='none'; },500);
-        }
-      });
-    });
-  }
+    // fetch 文件文本，比对字节数，变化才刷新
+    fetch(bp + 'data/' + f)
+      .then(function(r){ return r.text(); })
+      .then(function(t){
+        var newSize = t.length;
+        var entry = (localStorage.getItem('tvbox_fsize_'+f)||'').split('|');
+        var oldSize = parseInt(entry[0]||'0');
+        if(newSize !== oldSize) loadFresh(f);
+      })
+      .catch(function(){});
+  });
 }
 
 // ===== 搜索 =====
