@@ -507,6 +507,13 @@ function renderSpecialView(type){
   }
   currentFiltered = list.map(function(item){
     var base={ sourceKey:item.sourceKey, sourceName:item.sourceName, vod_name:item.videoName||item.videoName, vod_pic:item.vodPic, ep_count:item.ep_count, playable_count:item.playable_count, episodes:item.episodes };
+    // 尝试从缓存中获取最新数据，更新集数等信息
+    var cached = findVideoInCache(item.sourceKey, base.vod_name);
+    if(cached){
+      if(cached.ep_count != null) base.ep_count = cached.ep_count;
+      if(cached.playable_count != null) base.playable_count = cached.playable_count;
+      if(cached.episodes && cached.episodes.length) base.episodes = cached.episodes;
+    }
     if(type==='__history__'){ base.isHistory=true; base.historyEpIndex=item.epIndex; base.historyProgress=item.progress; }
     else if(type==='__bookmarks__'){ base.isBookmark=true; base.bookmarkNote=item.note; base.bookmarkProgress=item.progress; base.bookmarkEpIndex=item.epIndex; }
     return base;
