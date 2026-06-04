@@ -110,8 +110,18 @@ var addFavorite = function(v) { if(isFavorited(v.sourceKey,v.vod_name)) return; 
 var removeFavorite = function(k,n) { setStorage(STORAGE.FAVORITES, getStorage(STORAGE.FAVORITES).filter(function(f){ return !(f.sourceKey===k&&f.videoName===n); })); };
 var getBookmarks = function() { return getStorage(STORAGE.BOOKMARKS); };
 var saveBookmarks = function(list) { setStorage(STORAGE.BOOKMARKS,list); };
-var addBookmark = function(video,epIdx,prog,note) { var list=getBookmarks(); var epsCopy=video.episodes?video.episodes.map(function(e){ return {title:e.title,url:e.url,playable:e.playable}; }):[]; list.unshift({ videoName:video.vod_name, sourceKey:video.sourceKey, sourceName:video.sourceName, vodPic:video.vod_pic, ep_count:video.ep_count||epsCopy.length, playable_count:video.playable_count||epsCopy.filter(function(e){ return e.playable; }).length, episodes:epsCopy, epIndex:epIdx, epTitle:(video.episodes||[])[epIdx]?.title||'', epUrl:(video.episodes||[])[epIdx]?.url||'', progress:prog, note:note||'', createdAt:Date.now() }); saveBookmarks(list); };
-var updateHistory = function(video,epIdx,prog) { var key=video.sourceKey+'_'+video.vod_name; var epsCopy=video.episodes?video.episodes.map(function(e){ return {title:e.title,url:e.url,playable:e.playable}; }):[]; saveHistory(key,{ videoName:video.vod_name, sourceKey:video.sourceKey, sourceName:video.sourceName, vodPic:video.vod_pic, ep_count:video.ep_count||epsCopy.length, playable_count:video.playable_count||epsCopy.filter(function(e){ return e.playable; }).length, episodes:epsCopy, epIndex:epIdx, epTitle:(video.episodes||[])[epIdx]?.title||'', epUrl:(video.episodes||[])[epIdx]?.url||'', progress:prog, updatedAt:Date.now() }); };
+var addBookmark = function(video,epIdx,prog,note) { 
+  var list=getBookmarks();
+  // 优先使用缓存中的最新数据
+  var fresh=findVideoInCache(video.sourceKey, video.vod_name)||video;
+  var epsCopy=fresh.episodes?fresh.episodes.map(function(e){ return {title:e.title,url:e.url,playable:e.playable}; }):[];
+  list.unshift({ videoName:fresh.vod_name, sourceKey:fresh.sourceKey, sourceName:fresh.sourceName, vodPic:fresh.vod_pic, ep_count:fresh.ep_count||epsCopy.length, playable_count:fresh.playable_count||epsCopy.filter(function(e){ return e.playable; }).length, episodes:epsCopy, epIndex:epIdx, epTitle:(fresh.episodes||[])[epIdx]?.title||'', epUrl:(fresh.episodes||[])[epIdx]?.url||'', progress:prog, note:note||'', createdAt:Date.now() }); saveBookmarks(list); };
+var updateHistory = function(video,epIdx,prog) { 
+  var key=video.sourceKey+'_'+video.vod_name;
+  // 优先使用缓存中的最新数据
+  var fresh=findVideoInCache(video.sourceKey, video.vod_name)||video;
+  var eps=fresh.episodes?fresh.episodes.map(function(e){ return {title:e.title,url:e.url,playable:e.playable}; }):[];
+  saveHistory(key,{ videoName:fresh.vod_name, sourceKey:fresh.sourceKey, sourceName:fresh.sourceName, vodPic:fresh.vod_pic, ep_count:fresh.ep_count||eps.length, playable_count:fresh.playable_count||eps.filter(function(e){ return e.playable; }).length, episodes:eps, epIndex:epIdx, epTitle:(fresh.episodes||[])[epIdx]?.title||'', epUrl:(fresh.episodes||[])[epIdx]?.url||'', progress:prog, updatedAt:Date.now() }); };
 
 function findVideoInCache(sKey,vName){
   for(var k in loadedSources){
@@ -140,13 +150,19 @@ function initCacheDB(cb){
   req.onerror = function(){ CACHE_DB = null; CACHE_DB_READY = true; cb(null); };
 }
 
-function loadFromCache(file, cb){
+function loadFromCache(file, cb, maxAge){
   initCacheDB(function(db){
     if(!db){ cb(null); return; }
     try {
       var tx = db.transaction('files','readonly');
       var req = tx.objectStore('files').get(file);
-      req.onsuccess = function(){ var r=req.result; cb(r&&r._d?r._d:null); };
+      req.onsuccess = function(){ 
+        var r=req.result;
+        if(!r||!r._d){ cb(null); return; }
+        // 超过 maxAge 视为过期，返回 null 触发网络加载
+        if(maxAge && Date.now()-r._t > maxAge){ cb(null); return; }
+        cb(r._d);
+      };
       req.onerror = function(){ cb(null); };
     } catch(e){ cb(null); }
   });
@@ -154,6 +170,8 @@ function loadFromCache(file, cb){
 
 function saveToCache(file, data){
   if(!data) return;
+  // 记录分文件字节数，供预加载指纹比对
+  try { localStorage.setItem('tvbox_fsize_'+file, JSON.stringify(data).length); } catch(e){}
   initCacheDB(function(db){
     if(!db) return;
     var fp = (data.videos?data.videos.length:0)+'|'+((data.videos||[])[0]?.vod_name||'');
@@ -180,7 +198,9 @@ function saveToCache(file, data){
 function loadData(file,cb,to){
   if (typeof to === 'undefined') to = 3000;
 
-  // 先查 IndexedDB 缓存
+  var CACHE_MAX_AGE = 86400000; // 24小时，超时缓存失效走网络
+
+  // 先查 IndexedDB 缓存（带过期时间）
   if(file !== 'index.js'){
     loadFromCache(file, function(cached){
       if(cached){
@@ -190,9 +210,9 @@ function loadData(file,cb,to){
         loadFresh(file);
         return;
       }
-      // 无缓存，走网络
+      // 无缓存或已过期，走网络
       loadFresh(file, cb, to);
-    });
+    }, CACHE_MAX_AGE);
     return;
   }
 
@@ -234,15 +254,15 @@ function startPreload(){
   $('pwPreloadProgressBar').style.display='block';
   updatePreload(0);
 
-  // 计算数据源指纹：如果没变，跳过网络请求（永久缓存）
-  var currentFp=sourceIndex.map(function(s){
-    return s.prefix+':'+(s.total||0)+':'+(s.playable||0)+':'+(s.page_count||1);
-  }).join('|');
-  var savedFp=localStorage.getItem('tvbox_preload_fp')||'';
+  // 指纹：index.js 字节数 + 各分文件上次缓存时的字节数，任一变化即触发刷新
+  var fpParts = [ JSON.stringify(sourceIndex).length ];
+  arr.forEach(function(f){ fpParts.push(localStorage.getItem('tvbox_fsize_'+f)||'?'); });
+  var currentFp = fpParts.join('|');
+  var savedFp = localStorage.getItem('tvbox_preload_fp')||'';
 
   var done=0;
   if(currentFp===savedFp){
-    // 指纹未变 → 仅从 IndexedDB 缓存加载，不走网络
+    // 指纹未变 → 纯 IndexedDB 缓存，不发网络
     arr.forEach(function(f){
       loadFromCache(f, function(data){
         done++;
