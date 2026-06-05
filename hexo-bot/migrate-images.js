@@ -67,7 +67,11 @@ log.push('');
 const pathMapping = new Map(); // old path -> new filename
 
 imagePaths.forEach(oldPath => {
-    // 将 /images/xxx 或 /xxx 转换为实际路径
+    // 如果已经是 /images/posts/ 路径，说明已迁移过，跳过
+    if (oldPath.startsWith('/images/posts/')) {
+        stats.skipped++;
+        return;
+    }
     const sourcePath = path.join('d:\\hexo\\source', oldPath.replace(/^\//, ''));
     
     if (!fs.existsSync(sourcePath)) {
