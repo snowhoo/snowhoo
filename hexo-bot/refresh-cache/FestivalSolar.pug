@@ -1,14 +1,13 @@
-#festival-solar-widget(style="display: none")
-  style.
-    #festival-solar-widget {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    }
-    .fs-item {
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      margin-bottom: 12px;
-    }
+style.
+  #festival-solar-widget {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  .fs-item {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    margin-bottom: 12px;
+  }
     .fs-item:last-child { margin-bottom: 0; }
     .fs-banner {
       position: relative;
@@ -52,17 +51,17 @@
       //margin-bottom: 6px;
       background: rgba(255,255,255,0.25);
       backdrop-filter: blur(4px);
-	  vertical-align: bottom;
+    vertical-align: bottom;
     }
     .fs-name {
       font-size: 28px; 
-	  font-weight: 700; 
-	  //margin-bottom: 4px;
+    font-weight: 700; 
+    //margin-bottom: 4px;
       text-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
     .fs-date {
       font-size: 13px; opacity: 0.9; 
-	  //margin-bottom: 4px;
+    //margin-bottom: 4px;
     }
     .fs-desc {
       font-size: 14px; opacity: 0.85;
@@ -131,6 +130,7 @@
       .fs-banner-content { padding: 8px 16px; }
     }
 
+#festival-solar-widget(style="display: none")
   script.
     (function() {
       var JSON_FILE = '/js/FestivalSolar/FestivalSolar.json';
