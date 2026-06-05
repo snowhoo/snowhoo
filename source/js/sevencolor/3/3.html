@@ -112,16 +112,16 @@ var getBookmarks = function() { return getStorage(STORAGE.BOOKMARKS); };
 var saveBookmarks = function(list) { setStorage(STORAGE.BOOKMARKS,list); };
 var addBookmark = function(video,epIdx,prog,note) { 
   var list=getBookmarks();
-  // 优先使用缓存中的最新数据
+  // 优先使用缓存中的最新数据（episodes/ep_count 等），但 sourceKey/sourceName 始终用原始 video 的
   var fresh=findVideoInCache(video.sourceKey, video.vod_name)||video;
   var epsCopy=fresh.episodes?fresh.episodes.map(function(e){ return {title:e.title,url:e.url,playable:e.playable}; }):[];
-  list.unshift({ videoName:fresh.vod_name, sourceKey:fresh.sourceKey, sourceName:fresh.sourceName, vodPic:fresh.vod_pic, ep_count:fresh.ep_count||epsCopy.length, playable_count:fresh.playable_count||epsCopy.filter(function(e){ return e.playable; }).length, episodes:epsCopy, epIndex:epIdx, epTitle:(fresh.episodes||[])[epIdx]?.title||'', epUrl:(fresh.episodes||[])[epIdx]?.url||'', progress:prog, note:note||'', createdAt:Date.now() }); saveBookmarks(list); };
+  list.unshift({ videoName:fresh.vod_name, sourceKey:video.sourceKey, sourceName:video.sourceName, vodPic:fresh.vod_pic, ep_count:fresh.ep_count||epsCopy.length, playable_count:fresh.playable_count||epsCopy.filter(function(e){ return e.playable; }).length, episodes:epsCopy, epIndex:epIdx, epTitle:(fresh.episodes||[])[epIdx]?.title||'', epUrl:(fresh.episodes||[])[epIdx]?.url||'', progress:prog, note:note||'', createdAt:Date.now() }); saveBookmarks(list); };
 var updateHistory = function(video,epIdx,prog) { 
   var key=video.sourceKey+'_'+video.vod_name;
-  // 优先使用缓存中的最新数据
+  // 优先使用缓存中的最新数据（episodes/ep_count 等），但 sourceKey/sourceName 始终用原始 video 的
   var fresh=findVideoInCache(video.sourceKey, video.vod_name)||video;
   var eps=fresh.episodes?fresh.episodes.map(function(e){ return {title:e.title,url:e.url,playable:e.playable}; }):[];
-  saveHistory(key,{ videoName:fresh.vod_name, sourceKey:fresh.sourceKey, sourceName:fresh.sourceName, vodPic:fresh.vod_pic, ep_count:fresh.ep_count||eps.length, playable_count:fresh.playable_count||eps.filter(function(e){ return e.playable; }).length, episodes:eps, epIndex:epIdx, epTitle:(fresh.episodes||[])[epIdx]?.title||'', epUrl:(fresh.episodes||[])[epIdx]?.url||'', progress:prog, updatedAt:Date.now() }); };
+  saveHistory(key,{ videoName:fresh.vod_name, sourceKey:video.sourceKey, sourceName:video.sourceName, vodPic:fresh.vod_pic, ep_count:fresh.ep_count||eps.length, playable_count:fresh.playable_count||eps.filter(function(e){ return e.playable; }).length, episodes:eps, epIndex:epIdx, epTitle:(fresh.episodes||[])[epIdx]?.title||'', epUrl:(fresh.episodes||[])[epIdx]?.url||'', progress:prog, updatedAt:Date.now() }); };
 
 function findVideoInCache(sKey,vName){
   for(var k in loadedSources){
