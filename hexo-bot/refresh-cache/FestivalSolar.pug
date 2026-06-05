@@ -224,7 +224,6 @@
   script.
     (function() {
       var JSON_FILE = '/js/FestivalSolar/FestivalSolar.json';
-      var currentItem = null;
       var isPanelOpen = false;
 
       function getTodayStr() {
@@ -250,39 +249,47 @@
       }
 
       function render(item, type) {
-        currentItem = { item: item, type: type };
-        var bannerImg = document.getElementById('fsBannerImg').querySelector('img');
+        var bannerWrapper = document.getElementById('fsBannerImg');
+        if (!bannerWrapper) return;
+        var bannerImg = bannerWrapper.querySelector('img');
+        if (!bannerImg) return;
         bannerImg.src = item.banner || ('https://picsum.photos/1200/300?random=' + Math.floor(Math.random() * 100));
         bannerImg.alt = item.name;
         var typeBadge = document.getElementById('fsTypeBadge');
-        typeBadge.innerText = type === 'festival' ? '节日' : '节气';
-        typeBadge.style.background = type === 'festival' ? 'rgba(231,76,60,0.7)' : 'rgba(76,175,80,0.7)';
-        document.getElementById('fsName').innerText = item.name;
-        document.getElementById('fsDate').innerText = item.displayDate || item.date;
-        document.getElementById('fsDesc').innerText = item.description || '';
-        // 详情面板
-        document.getElementById('fsDetailTitle').innerText = item.name;
-        var poetryDiv = document.getElementById('fsPoetry');
-        if (item.poetry) {
-          poetryDiv.innerText = item.poetry;
-          poetryDiv.style.display = 'block';
-        } else {
-          poetryDiv.style.display = 'none';
+        if (typeBadge) {
+          typeBadge.textContent = type === 'festival' ? '节日' : '节气';
+          typeBadge.style.background = type === 'festival' ? 'rgba(231,76,60,0.7)' : 'rgba(76,175,80,0.7)';
         }
-        document.getElementById('fsDetailText').innerText = item.details || '';
+        var el;
+        el = document.getElementById('fsName'); if (el) el.textContent = item.name;
+        el = document.getElementById('fsDate'); if (el) el.textContent = item.displayDate || item.date;
+        el = document.getElementById('fsDesc'); if (el) el.textContent = item.description || '';
+        el = document.getElementById('fsDetailTitle'); if (el) el.textContent = item.name;
+        var poetryDiv = document.getElementById('fsPoetry');
+        if (poetryDiv) {
+          if (item.poetry) {
+            poetryDiv.textContent = item.poetry;
+            poetryDiv.style.display = 'block';
+          } else {
+            poetryDiv.style.display = 'none';
+          }
+        }
+        el = document.getElementById('fsDetailText'); if (el) el.textContent = item.details || '';
         var customsContainer = document.getElementById('fsCustoms');
-        var customsList = customsContainer.querySelector('.fs-customs-list');
-        customsList.innerHTML = '';
-        if (item.customs && item.customs.length > 0) {
-          customsContainer.style.display = 'block';
-          item.customs.forEach(function(c) {
-            var span = document.createElement('span');
-            span.className = 'fs-customs-item';
-            span.innerText = c;
-            customsList.appendChild(span);
-          });
-        } else {
-          customsContainer.style.display = 'none';
+        var customsList = customsContainer ? customsContainer.querySelector('.fs-customs-list') : null;
+        if (customsList) {
+          customsList.innerHTML = '';
+          if (item.customs && item.customs.length > 0) {
+            if (customsContainer) customsContainer.style.display = 'block';
+            item.customs.forEach(function(c) {
+              var span = document.createElement('span');
+              span.className = 'fs-customs-item';
+              span.textContent = c;
+              customsList.appendChild(span);
+            });
+          } else {
+            if (customsContainer) customsContainer.style.display = 'none';
+          }
         }
       }
 
@@ -307,11 +314,10 @@
 
       async function loadData() {
         var widget = document.getElementById('festival-solar-widget');
-        // 强制初始隐藏，避免闪现
         if (widget) widget.style.display = 'none';
         try {
           var controller = new AbortController();
-          var tid = setTimeout(function() { controller.abort(); }, 5000);
+          var tid = setTimeout(function() { controller.abort(); }, 10000);
           var r = await fetch(JSON_FILE, { signal: controller.signal });
           clearTimeout(tid);
           if (r.ok) {
@@ -319,12 +325,13 @@
             var result = findCurrentFestival(data);
             if (result) {
               render(result.item, result.type);
-              if (widget) widget.style.display = 'block'; // 匹配成功才显示
+              if (widget) widget.style.display = 'block';
               return;
             }
           }
         } catch(e) {
-          // 静默失败，保持隐藏
+          if (e.name === 'AbortError') console.warn('[FestivalSolar] 加载超时');
+          else console.warn('[FestivalSolar] 加载失败: ' + e.message);
         }
         if (widget) widget.style.display = 'none';
       }
