@@ -126,15 +126,6 @@ function findNext(def, today, jieQiCache) {
 
 function fmtDate(m, d) { return pad2(m) + '-' + pad2(d); }
 
-function fmtRange(m, d) {
-  const t = Date.UTC(2024, m - 1, d);
-  const b = new Date(t - 86400000);
-  const a = new Date(t + 86400000);
-  return pad2(b.getUTCMonth() + 1) + '-' + pad2(b.getUTCDate()) +
-         '~' +
-         pad2(a.getUTCMonth() + 1) + '-' + pad2(a.getUTCDate());
-}
-
 function fmtDisplay(m, d) { return m + ' 月 ' + d + ' 日'; }
 
 function git(c) {
@@ -189,15 +180,15 @@ function main() {
   for (const t of data.solarTerms) {
     const next = findNext({ type: 'jieqi', name: t.name }, today, jieQiCache);
     if (!next) { console.log('  [ERR]  ' + t.name + ': no next date found'); continue; }
-    const nr = fmtRange(next.month, next.day);
+    const nd = fmtDate(next.month, next.day);
     const ndd = fmtDisplay(next.month, next.day);
-    if (t.date !== nr || t.displayDate !== ndd) {
-      console.log('  [UPD]  ' + t.name + ': ' + t.date + ' -> ' + nr + ' (' + next.year + ')');
-      t.date = nr;
+    if (t.date !== nd || t.displayDate !== ndd) {
+      console.log('  [UPD]  ' + t.name + ': ' + t.date + ' -> ' + nd + ' (' + next.year + ')');
+      t.date = nd;
       t.displayDate = ndd;
       changed = true;
     } else {
-      console.log('  [OK]   ' + t.name + ': ' + nr + ' (' + next.year + ')');
+      console.log('  [OK]   ' + t.name + ': ' + nd + ' (' + next.year + ')');
     }
   }
 
