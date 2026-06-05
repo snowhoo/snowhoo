@@ -109,16 +109,16 @@ var getBookmarks = function() { return getStorage(STORAGE.BOOKMARKS); };
 var saveBookmarks = function(list) { setStorage(STORAGE.BOOKMARKS,list); };
 var addBookmark = function(video,epIdx,prog,note) { 
   var list=getBookmarks();
-  // 优先使用缓存中的最新数据
+  // 优先使用缓存中的最新数据（episodes/ep_count 等），但 sourceKey/sourceName 始终用原始 video 的
   var fresh=findVideoInCache(video.sourceKey, video.vod_name)||video;
   var epsCopy=fresh.episodes?fresh.episodes.map(function(e){ return {title:e.title,url:e.url,playable:e.playable}; }):[];
-  list.unshift({ videoName:fresh.vod_name, sourceKey:fresh.sourceKey, sourceName:fresh.sourceName, vodPic:fresh.vod_pic, ep_count:fresh.ep_count||epsCopy.length, playable_count:fresh.playable_count||epsCopy.filter(function(e){ return e.playable; }).length, episodes:epsCopy, epIndex:epIdx, epTitle:(fresh.episodes||[])[epIdx]?.title||'', epUrl:(fresh.episodes||[])[epIdx]?.url||'', progress:prog, note:note||'', createdAt:Date.now() }); saveBookmarks(list); };
+  list.unshift({ videoName:fresh.vod_name, sourceKey:video.sourceKey, sourceName:video.sourceName, vodPic:fresh.vod_pic, ep_count:fresh.ep_count||epsCopy.length, playable_count:fresh.playable_count||epsCopy.filter(function(e){ return e.playable; }).length, episodes:epsCopy, epIndex:epIdx, epTitle:(fresh.episodes||[])[epIdx]?.title||'', epUrl:(fresh.episodes||[])[epIdx]?.url||'', progress:prog, note:note||'', createdAt:Date.now() }); saveBookmarks(list); };
 var updateHistory = function(video,epIdx,prog) { 
   var key=video.sourceKey+'_'+video.vod_name;
-  // 优先使用缓存中的最新数据
+  // 优先使用缓存中的最新数据（episodes/ep_count 等），但 sourceKey/sourceName 始终用原始 video 的
   var fresh=findVideoInCache(video.sourceKey, video.vod_name)||video;
   var eps=fresh.episodes?fresh.episodes.map(function(e){ return {title:e.title,url:e.url,playable:e.playable}; }):[];
-  saveHistory(key,{ videoName:fresh.vod_name, sourceKey:fresh.sourceKey, sourceName:fresh.sourceName, vodPic:fresh.vod_pic, ep_count:fresh.ep_count||eps.length, playable_count:fresh.playable_count||eps.filter(function(e){ return e.playable; }).length, episodes:eps, epIndex:epIdx, epTitle:(fresh.episodes||[])[epIdx]?.title||'', epUrl:(fresh.episodes||[])[epIdx]?.url||'', progress:prog, updatedAt:Date.now() }); };
+  saveHistory(key,{ videoName:fresh.vod_name, sourceKey:video.sourceKey, sourceName:video.sourceName, vodPic:fresh.vod_pic, ep_count:fresh.ep_count||eps.length, playable_count:fresh.playable_count||eps.filter(function(e){ return e.playable; }).length, episodes:eps, epIndex:epIdx, epTitle:(fresh.episodes||[])[epIdx]?.title||'', epUrl:(fresh.episodes||[])[epIdx]?.url||'', progress:prog, updatedAt:Date.now() }); };
 
 function findVideoInCache(sKey,vName){
   for(var k in loadedSources){
@@ -147,19 +147,13 @@ function initCacheDB(cb){
   req.onerror = function(){ CACHE_DB = null; CACHE_DB_READY = true; cb(null); };
 }
 
-function loadFromCache(file, cb, maxAge){
+function loadFromCache(file, cb){
   initCacheDB(function(db){
     if(!db){ cb(null); return; }
     try {
       var tx = db.transaction('files','readonly');
       var req = tx.objectStore('files').get(file);
-      req.onsuccess = function(){ 
-        var r=req.result;
-        if(!r||!r._d){ cb(null); return; }
-        // 超过 maxAge 视为过期，返回 null 触发网络加载
-        if(maxAge && Date.now()-r._t > maxAge){ cb(null); return; }
-        cb(r._d);
-      };
+      req.onsuccess = function(){ var r=req.result; cb(r&&r._d?r._d:null); };
       req.onerror = function(){ cb(null); };
     } catch(e){ cb(null); }
   });
@@ -196,9 +190,7 @@ function saveToCache(file, data){
 function loadData(file,cb,to){
   if (typeof to === 'undefined') to = 3000;
 
-  var CACHE_MAX_AGE = 86400000; // 24小时，超时缓存失效走网络
-
-  // 先查 IndexedDB 缓存（带过期时间）
+  // 先查 IndexedDB 缓存
   if(file !== 'index.js'){
     loadFromCache(file, function(cached){
       if(cached){
@@ -208,9 +200,9 @@ function loadData(file,cb,to){
         loadFresh(file);
         return;
       }
-      // 无缓存或已过期，走网络
+      // 无缓存，走网络
       loadFresh(file, cb, to);
-    }, CACHE_MAX_AGE);
+    });
     return;
   }
 
@@ -254,6 +246,7 @@ function startPreload(){
 
   // 逐文件比对字节数：fetch 服务器上的文件，对比本地缓存的字节数，有变化才刷新
   var bp = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '');
+  var done=0;
   arr.forEach(function(f){
     loadFromCache(f, function(data){
       done++;
