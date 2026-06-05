@@ -150,19 +150,13 @@ function initCacheDB(cb){
   req.onerror = function(){ CACHE_DB = null; CACHE_DB_READY = true; cb(null); };
 }
 
-function loadFromCache(file, cb, maxAge){
+function loadFromCache(file, cb){
   initCacheDB(function(db){
     if(!db){ cb(null); return; }
     try {
       var tx = db.transaction('files','readonly');
       var req = tx.objectStore('files').get(file);
-      req.onsuccess = function(){ 
-        var r=req.result;
-        if(!r||!r._d){ cb(null); return; }
-        // 超过 maxAge 视为过期，返回 null 触发网络加载
-        if(maxAge && Date.now()-r._t > maxAge){ cb(null); return; }
-        cb(r._d);
-      };
+      req.onsuccess = function(){ var r=req.result; cb(r&&r._d?r._d:null); };
       req.onerror = function(){ cb(null); };
     } catch(e){ cb(null); }
   });
@@ -199,9 +193,7 @@ function saveToCache(file, data){
 function loadData(file,cb,to){
   if (typeof to === 'undefined') to = 3000;
 
-  var CACHE_MAX_AGE = 86400000; // 24小时，超时缓存失效走网络
-
-  // 先查 IndexedDB 缓存（带过期时间）
+  // 先查 IndexedDB 缓存
   if(file !== 'index.js'){
     loadFromCache(file, function(cached){
       if(cached){
@@ -211,9 +203,9 @@ function loadData(file,cb,to){
         loadFresh(file);
         return;
       }
-      // 无缓存或已过期，走网络
+      // 无缓存，走网络
       loadFresh(file, cb, to);
-    }, CACHE_MAX_AGE);
+    });
     return;
   }
 
