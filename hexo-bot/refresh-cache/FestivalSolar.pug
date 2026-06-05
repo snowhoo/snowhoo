@@ -1,44 +1,16 @@
 #festival-solar-widget(style="display: none")
-  .fs-container
-    .fs-banner-wrapper#fsBannerWrapper
-      .fs-banner-img#fsBannerImg
-        img(src="https://picsum.photos/1200/300?random=1" alt="节日节气" loading="lazy")
-      .fs-banner-overlay
-      .fs-banner-content
-        .fs-type-badge#fsTypeBadge
-        .fs-name#fsName
-        .fs-date#fsDate
-        .fs-desc#fsDesc
-      .fs-expand-btn#fsExpandBtn
-        i.fas.fa-chevron-down
-        span 点击详情
-
-    .fs-detail-panel#fsDetailPanel
-      .fs-detail-inner
-        .fs-detail-header
-          h3.fs-detail-title#fsDetailTitle
-          .fs-close-btn#fsCloseBtn
-            i.fas.fa-times
-        .fs-detail-body
-          .fs-poetry#fsPoetry
-          .fs-detail-text#fsDetailText
-          .fs-customs#fsCustoms
-            .fs-customs-title 传统习俗
-            .fs-customs-list
-
   style.
-    /* 修复：正确选择器，去掉无效括号 */
     #festival-solar-widget {
-      margin: 0 0 16px 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
-    .fs-container {
-      position: relative;
+    .fs-item {
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 12px;
     }
-    .fs-banner-wrapper {
+    .fs-item:last-child { margin-bottom: 0; }
+    .fs-banner {
       position: relative;
       height: 160px;
       cursor: pointer;
@@ -54,7 +26,7 @@
       object-fit: cover;
       transition: transform 0.4s ease;
     }
-    .fs-banner-wrapper:hover .fs-banner-img img {
+    .fs-banner:hover .fs-banner-img img {
       transform: scale(1.05);
     }
     .fs-banner-overlay {
@@ -64,167 +36,104 @@
     }
     .fs-banner-content {
       position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: 0; left: 0; right: 0;
       padding: 16px 20px;
       color: #fff;
       z-index: 2;
     }
     .fs-type-badge {
       display: inline-block;
-      padding: 2px 10px;
-      border-radius: 20px;
+      padding: 0px 10px;
+      //border-radius: 20px;
       font-size: 11px;
-      font-weight: 600;
+      //font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 6px;
+      //margin-bottom: 6px;
       background: rgba(255,255,255,0.25);
       backdrop-filter: blur(4px);
+	  vertical-align: bottom;
     }
     .fs-name {
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 4px;
+      font-size: 28px; 
+	  font-weight: 700; 
+	  //margin-bottom: 4px;
       text-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
     .fs-date {
-      font-size: 13px;
-      opacity: 0.9;
-      margin-bottom: 4px;
+      font-size: 13px; opacity: 0.9; 
+	  //margin-bottom: 4px;
     }
     .fs-desc {
-      font-size: 14px;
-      opacity: 0.85;
+      font-size: 14px; opacity: 0.85;
     }
     .fs-expand-btn {
       position: absolute;
-      top: 12px;
-      right: 12px;
-      padding: 6px 12px;
+      top: 10px; right: 10px;
+      padding: 0px 12px;
       background: rgba(0,0,0,0.4);
       backdrop-filter: blur(4px);
       border-radius: 20px;
       color: #fff;
       font-size: 12px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      display: flex; align-items: center; gap: 4px;
       transition: background 0.2s;
       z-index: 3;
       cursor: pointer;
     }
-    .fs-expand-btn:hover {
-      background: rgba(0,0,0,0.6);
-    }
-    .fs-expand-btn i {
-      transition: transform 0.3s;
-    }
-    .fs-expand-btn.open i {
-      transform: rotate(180deg);
-    }
+    .fs-expand-btn:hover { background: rgba(0,0,0,0.6); }
+    .fs-expand-btn i { transition: transform 0.3s; }
+    .fs-expand-btn.open i { transform: rotate(180deg); }
     .fs-detail-panel {
       display: none;
       background: #fff;
       border-top: 1px solid rgba(0,0,0,0.05);
     }
-    html[data-theme=dark] .fs-detail-panel {
-      background: #1a1a2e;
-    }
-    .fs-detail-inner {
-      padding: 20px;
-    }
+    html[data-theme=dark] .fs-detail-panel { background: #1a1a2e; }
+    .fs-detail-inner { padding: 20px; }
     .fs-detail-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 16px;
     }
-    .fs-detail-title {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 700;
-    }
+    .fs-detail-title { margin: 0; font-size: 18px; font-weight: 700; }
     .fs-close-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
+      width: 32px; height: 32px; border-radius: 50%;
       background: #f0f0f0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: background 0.2s;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: background 0.2s;
     }
-    html[data-theme=dark] .fs-close-btn {
-      background: #2d2d44;
-      color: #fff;
-    }
-    .fs-close-btn:hover {
-      background: #e0e0e0;
-    }
-    html[data-theme=dark] .fs-close-btn:hover {
-      background: #3d3d5c;
-    }
+    html[data-theme=dark] .fs-close-btn { background: #2d2d44; color: #fff; }
+    .fs-close-btn:hover { background: #e0e0e0; }
+    html[data-theme=dark] .fs-close-btn:hover { background: #3d3d5c; }
     .fs-poetry {
-      font-size: 15px;
-      color: #666;
-      font-style: italic;
-      padding: 12px 16px;
-      background: #f8f8f8;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      border-left: 3px solid #ddd;
+      font-size: 15px; color: #666; font-style: italic;
+      padding: 12px 16px; background: #f8f8f8; border-radius: 8px;
+      margin-bottom: 16px; border-left: 3px solid #ddd;
     }
-    html[data-theme=dark] .fs-poetry {
-      background: #252540;
-      color: #aaa;
-      border-left-color: #555;
-    }
+    html[data-theme=dark] .fs-poetry { background: #252540; color: #aaa; border-left-color: #555; }
     .fs-detail-text {
-      font-size: 14px;
-      line-height: 1.7;
-      color: #444;
-      margin-bottom: 16px;
+      font-size: 14px; line-height: 1.7; color: #444; margin-bottom: 16px;
     }
-    html[data-theme=dark] .fs-detail-text {
-      color: #ccc;
-    }
+    html[data-theme=dark] .fs-detail-text { color: #ccc; }
     .fs-customs-title {
-      font-size: 13px;
-      font-weight: 600;
-      color: #888;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      font-size: 13px; font-weight: 600; color: #888;
+      margin-bottom: 10px; letter-spacing: 0.5px;
     }
-    .fs-customs-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
+    .fs-customs-list { display: flex; flex-wrap: wrap; gap: 8px; }
     .fs-customs-item {
-      padding: 4px 12px;
-      background: #f0f0f0;
-      border-radius: 16px;
-      font-size: 13px;
-      color: #555;
+      padding: 4px 12px; background: #f0f0f0;
+      border-radius: 16px; font-size: 13px; color: #555;
     }
-    html[data-theme=dark] .fs-customs-item {
-      background: #252540;
-      color: #aaa;
-    }
+    html[data-theme=dark] .fs-customs-item { background: #252540; color: #aaa; }
     @media (max-width: 600px) {
-      .fs-banner-wrapper { height: 140px; }
+      .fs-banner { height: 140px; }
       .fs-name { font-size: 20px; }
-      .fs-banner-content { padding: 12px 16px; }
+      .fs-banner-content { padding: 8px 16px; }
     }
 
   script.
     (function() {
       var JSON_FILE = '/js/FestivalSolar/FestivalSolar.json';
-      var isPanelOpen = false;
 
       function getTodayStr() {
         var d = new Date();
@@ -233,83 +142,84 @@
         return m + '-' + day;
       }
 
-      function findCurrentFestival(data) {
+      function escHTML(s) { return String(s).replace(/[&<>"']/g, function(m) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+      }); }
+
+      function findMatches(data) {
         var today = getTodayStr();
+        var results = [];
         for (var i = 0; i < data.festivals.length; i++) {
           if (data.festivals[i].date === today) {
-            return { item: data.festivals[i], type: 'festival' };
+            results.push({ item: data.festivals[i], type: 'festival' });
           }
         }
         for (var i = 0; i < data.solarTerms.length; i++) {
           if (data.solarTerms[i].date === today) {
-            return { item: data.solarTerms[i], type: 'solarTerm' };
+            results.push({ item: data.solarTerms[i], type: 'solarTerm' });
           }
         }
-        return null;
+        return results;
       }
 
-      function render(item, type) {
-        var bannerWrapper = document.getElementById('fsBannerImg');
-        if (!bannerWrapper) return;
-        var bannerImg = bannerWrapper.querySelector('img');
-        if (!bannerImg) return;
-        bannerImg.src = item.banner || ('https://picsum.photos/1200/300?random=' + Math.floor(Math.random() * 100));
-        bannerImg.alt = item.name;
-        var typeBadge = document.getElementById('fsTypeBadge');
-        if (typeBadge) {
-          typeBadge.textContent = type === 'festival' ? '节日' : '节气';
-          typeBadge.style.background = type === 'festival' ? 'rgba(231,76,60,0.7)' : 'rgba(76,175,80,0.7)';
+      function buildOneHTML(item, type, idx) {
+        var badgeType = type === 'festival' ? 'rgba(231,76,60,0.7)' : 'rgba(76,175,80,0.7)';
+        var badgeTxt = type === 'festival' ? '节日' : '节气';
+        var banner = escHTML(item.banner || '');
+        var h = '<div class="fs-item" data-idx="' + idx + '">';
+        h += '<div class="fs-banner js-banner" data-idx="' + idx + '">';
+        h += '<div class="fs-banner-img"><img src="' + (banner || 'https://picsum.photos/1200/300?random=' + idx) + '" alt="' + escHTML(item.name) + '" loading="lazy"></div>';
+        h += '<div class="fs-banner-overlay"></div>';
+        h += '<div class="fs-banner-content">';
+        h += '<div class="fs-type-badge" style="background:' + badgeType + '">' + badgeTxt + '</div>';
+        h += '<div class="fs-name">' + escHTML(item.name) + '</div>';
+        h += '<div class="fs-date">' + escHTML(item.displayDate || item.date) + '</div>';
+        h += '<div class="fs-desc">' + escHTML(item.description || '') + '</div>';
+        h += '</div>';
+        h += '<div class="fs-expand-btn js-expand" data-idx="' + idx + '"><i class="fas fa-chevron-down"></i><span>点击详情</span></div>';
+        h += '</div>';
+        // 详情面板
+        h += '<div class="fs-detail-panel" data-idx="' + idx + '">';
+        h += '<div class="fs-detail-inner">';
+        h += '<div class="fs-detail-header"><h3 class="fs-detail-title">' + escHTML(item.name) + '</h3><div class="fs-close-btn js-close" data-idx="' + idx + '"><i class="fas fa-times"></i></div></div>';
+        h += '<div class="fs-detail-body">';
+        if (item.poetry) h += '<div class="fs-poetry">' + escHTML(item.poetry) + '</div>';
+        h += '<div class="fs-detail-text">' + escHTML(item.details || '') + '</div>';
+        if (item.customs && item.customs.length) {
+          h += '<div class="fs-customs"><div class="fs-customs-title">传统习俗</div><div class="fs-customs-list">';
+          item.customs.forEach(function(c) { h += '<span class="fs-customs-item">' + escHTML(c) + '</span>'; });
+          h += '</div></div>';
         }
-        var el;
-        el = document.getElementById('fsName'); if (el) el.textContent = item.name;
-        el = document.getElementById('fsDate'); if (el) el.textContent = item.displayDate || item.date;
-        el = document.getElementById('fsDesc'); if (el) el.textContent = item.description || '';
-        el = document.getElementById('fsDetailTitle'); if (el) el.textContent = item.name;
-        var poetryDiv = document.getElementById('fsPoetry');
-        if (poetryDiv) {
-          if (item.poetry) {
-            poetryDiv.textContent = item.poetry;
-            poetryDiv.style.display = 'block';
-          } else {
-            poetryDiv.style.display = 'none';
-          }
-        }
-        el = document.getElementById('fsDetailText'); if (el) el.textContent = item.details || '';
-        var customsContainer = document.getElementById('fsCustoms');
-        var customsList = customsContainer ? customsContainer.querySelector('.fs-customs-list') : null;
-        if (customsList) {
-          customsList.innerHTML = '';
-          if (item.customs && item.customs.length > 0) {
-            if (customsContainer) customsContainer.style.display = 'block';
-            item.customs.forEach(function(c) {
-              var span = document.createElement('span');
-              span.className = 'fs-customs-item';
-              span.textContent = c;
-              customsList.appendChild(span);
-            });
-          } else {
-            if (customsContainer) customsContainer.style.display = 'none';
-          }
-        }
+        h += '</div></div></div></div>';
+        return h;
       }
 
-      function toggleDetail() {
-        var panel = document.getElementById('fsDetailPanel');
-        var btn = document.getElementById('fsExpandBtn');
-        isPanelOpen = !isPanelOpen;
-        if (isPanelOpen) {
-          panel.style.display = 'block';
-          btn.classList.add('open');
-          btn.innerHTML = '<i class="fas fa-chevron-up"></i><span>收起详情</span>';
-        } else {
-          panel.style.display = 'none';
+      function render(matches) {
+        var widget = document.getElementById('festival-solar-widget');
+        if (!widget) return;
+        var h = '';
+        for (var i = 0; i < matches.length; i++) {
+          h += buildOneHTML(matches[i].item, matches[i].type, i);
+        }
+        widget.innerHTML = h;
+        widget.style.display = 'block';
+      }
+
+      function toggleDetail(idx) {
+        var widget = document.getElementById('festival-solar-widget');
+        if (!widget) return;
+        var panel = widget.querySelector('.fs-detail-panel[data-idx="' + idx + '"]');
+        var btn = widget.querySelector('.js-expand[data-idx="' + idx + '"]');
+        if (!panel || !btn) return;
+        var open = panel.style.display === 'block';
+        panel.style.display = open ? 'none' : 'block';
+        if (open) {
           btn.classList.remove('open');
           btn.innerHTML = '<i class="fas fa-chevron-down"></i><span>点击详情</span>';
+        } else {
+          btn.classList.add('open');
+          btn.innerHTML = '<i class="fas fa-chevron-up"></i><span>收起详情</span>';
         }
-      }
-
-      function closeDetail() {
-        if (isPanelOpen) toggleDetail();
       }
 
       async function loadData() {
@@ -322,10 +232,9 @@
           clearTimeout(tid);
           if (r.ok) {
             var data = await r.json();
-            var result = findCurrentFestival(data);
-            if (result) {
-              render(result.item, result.type);
-              if (widget) widget.style.display = 'block';
+            var matches = findMatches(data);
+            if (matches.length) {
+              render(matches);
               return;
             }
           }
@@ -337,17 +246,28 @@
       }
 
       document.addEventListener('DOMContentLoaded', function() {
-        var bannerWrapper = document.getElementById('fsBannerWrapper');
-        var expandBtn = document.getElementById('fsExpandBtn');
-        var closeBtn = document.getElementById('fsCloseBtn');
-        if (bannerWrapper) bannerWrapper.addEventListener('click', toggleDetail);
-        if (expandBtn) {
-          expandBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            toggleDetail();
-          });
-        }
-        if (closeBtn) closeBtn.addEventListener('click', closeDetail);
         loadData();
+        // 事件委托：点击横幅/展开按钮/关闭按钮
+        document.getElementById('festival-solar-widget').addEventListener('click', function(e) {
+          var idx;
+          // 展开按钮
+          var expandBtn = e.target.closest('.js-expand');
+          if (expandBtn) {
+            idx = expandBtn.getAttribute('data-idx');
+            if (idx != null) { toggleDetail(idx); return; }
+          }
+          // 关闭按钮
+          var closeBtn = e.target.closest('.js-close');
+          if (closeBtn) {
+            idx = closeBtn.getAttribute('data-idx');
+            if (idx != null) { toggleDetail(idx); return; }
+          }
+          // 点击横幅
+          var banner = e.target.closest('.js-banner');
+          if (banner) {
+            idx = banner.getAttribute('data-idx');
+            if (idx != null) toggleDetail(idx);
+          }
+        });
       });
     })();
