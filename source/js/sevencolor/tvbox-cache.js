@@ -62,6 +62,8 @@
     var fp = (data.videos ? data.videos.length : 0) + '|' +
              ((data.videos || [])[0] ? (data.videos[0].vod_name || '') : '');
     var entry = { file: file, _d: data, _fp: fp, _t: Date.now() };
+    // 记录字节数，供 warm 逐文件比对
+    try { localStorage.setItem('tvbox_fsize_' + file, JSON.stringify(data).length); } catch(e) {}
 
     try {
       var countReq = db.transaction(STORE, 'readonly').objectStore(STORE).count();
@@ -127,13 +129,7 @@
   function warm(fileList, progress, done, timeout) {
     var total = fileList.length, finished = 0;
     var CONCURRENT = 10;
-
-    // 指纹检测：文件列表变了才联网刷新
-    var fp = fileList.join('|');
-    var oldFp = '';
-    try { oldFp = localStorage.getItem('tvbox_cache_fp') || ''; } catch(e) {}
-    var changed = (fp !== oldFp);
-    if (changed) try { localStorage.setItem('tvbox_cache_fp', fp); } catch(e) {}
+    var basePath = window.__TVBOX_BASE || '';
 
     // 底部进度条
     var bar = document.createElement('div');
@@ -160,50 +156,46 @@
       if (done) done();
     }
 
-    if (changed) {
-      // 数据更新：先 IndexedDB 快速加载 → 再后台联网刷新
-      var dbLoaded = 0;
-      fileList.forEach(function(f) {
-        loadFromDB(f).then(function(cached) {
-          if (cached && !loaded[f]) loaded[f] = cached;
-          dbLoaded++;
-          if (dbLoaded >= total) {
-            // 全量联网刷新
-            var idx = 0, running = 0;
-            function refresh() {
-              if (idx >= fileList.length) {
-                if (running <= 0) finish();
-                return;
-              }
-              if (running >= CONCURRENT) return;
-              var f = fileList[idx++]; running++;
-              loadFresh(f, function() {
-                running--; bump(); refresh();
-                if (idx >= fileList.length && running <= 0) finish();
-              }, timeout);
+    // 第一步：从 IndexedDB 快速加载
+    var dbLoaded = 0;
+    fileList.forEach(function(f) {
+      loadFromDB(f).then(function(cached) {
+        if (cached && !loaded[f]) loaded[f] = cached;
+        dbLoaded++;
+        bump();
+      });
+    });
+
+    // 第二步：逐文件 fetch 比对字节数，变化才联网刷新
+    var checkDone = 0, needRefresh = [];
+    fileList.forEach(function(f) {
+      fetch(basePath + 'data/' + f)
+        .then(function(r) { return r.text(); })
+        .then(function(t) {
+          var newSize = t.length;
+          var oldSize = parseInt((localStorage.getItem('tvbox_fsize_' + f) || '').split('|')[0] || '0');
+          if (newSize !== oldSize) needRefresh.push(f);
+        })
+        .catch(function() {})
+        .then(function() {
+          checkDone++;
+          if (checkDone >= fileList.length) {
+            // 第三步：仅刷新变化的文件
+            if (needRefresh.length === 0) {
+              finish();
+              return;
             }
-            for (var i = 0; i < CONCURRENT; i++) refresh();
+            var ri = 0, rr = 0;
+            function doRefresh() {
+              if (ri >= needRefresh.length) { if (rr <= 0) finish(); return; }
+              if (rr >= CONCURRENT) return;
+              var f = needRefresh[ri++]; rr++;
+              loadFresh(f, function() { rr--; doRefresh(); }, timeout);
+            }
+            for (var i = 0; i < CONCURRENT; i++) doRefresh();
           }
         });
-      });
-    } else {
-      // 数据未变：仅从 IndexedDB 加载，不走网络
-      var idx = 0, running = 0;
-      function loadNext() {
-        while (idx < fileList.length && loaded[fileList[idx]]) { bump(); idx++; }
-        if (idx >= fileList.length) { if (running <= 0) finish(); return; }
-        if (running >= CONCURRENT) return;
-        var f = fileList[idx++]; running++;
-        loadFromDB(f).then(function(cached) {
-          if (cached && !loaded[f]) loaded[f] = cached;
-          running--; bump(); loadNext();
-          if (idx >= fileList.length && running <= 0) finish();
-        }).catch(function() {
-          running--; bump(); loadNext();
-        });
-      }
-      for (var i = 0; i < CONCURRENT; i++) loadNext();
-    }
+    });
   }
 
   return { load: load, warm: warm, loadData: load, loadedSources: loaded };
