@@ -105,9 +105,9 @@ var setStatus = function(t) { $('pwStatusText').textContent = t; };
 var getStorage = function(key) { try{ return JSON.parse(localStorage.getItem(key))||(key===STORAGE.HISTORY?{}:[]); }catch(e){ return key===STORAGE.HISTORY?{}:[]; } };
 var setStorage = function(key,val) { localStorage.setItem(key,JSON.stringify(val)); };
 var saveHistory = function(key,val) { var h=getStorage(STORAGE.HISTORY); h[key]=val; setStorage(STORAGE.HISTORY,h); };
-var isFavorited = function(k,n) { return getStorage(STORAGE.FAVORITES).some(function(f){ return f.sourceKey===k&&f.videoName===n; }); };
+var isFavorited = function(k,n) { return getStorage(STORAGE.FAVORITES).some(function(f){ return f.videoName===n&&(!f.sourceKey||!k||f.sourceKey===k); }); };
 var addFavorite = function(v) { if(isFavorited(v.sourceKey,v.vod_name)) return; var fav=getStorage(STORAGE.FAVORITES); fav.push({ videoName:v.vod_name, sourceKey:v.sourceKey, sourceName:v.sourceName, vodPic:v.vod_pic, ep_count:v.ep_count, playable_count:v.playable_count, episodes:v.episodes, vod_class:v.vod_class }); setStorage(STORAGE.FAVORITES,fav); };
-var removeFavorite = function(k,n) { setStorage(STORAGE.FAVORITES, getStorage(STORAGE.FAVORITES).filter(function(f){ return !(f.sourceKey===k&&f.videoName===n); })); };
+var removeFavorite = function(k,n) { setStorage(STORAGE.FAVORITES, getStorage(STORAGE.FAVORITES).filter(function(f){ return !(f.videoName===n&&(!f.sourceKey||!k||f.sourceKey===k)); })); };
 var getBookmarks = function() { return getStorage(STORAGE.BOOKMARKS); };
 var saveBookmarks = function(list) { setStorage(STORAGE.BOOKMARKS,list); };
 var addBookmark = function(video,epIdx,prog,note) { 
@@ -497,7 +497,8 @@ function renderSpecialView(type){
   $('pwSearchInput').value='';
   $('pwClearSearchResultBtn').style.display='none';
   var list=[];
-  if(type==='__history__') list=Object.values(getStorage(STORAGE.HISTORY)).sort(function(a,b){ return b.updatedAt-a.updatedAt; });
+  var histObj=null;
+  if(type==='__history__'){ histObj=getStorage(STORAGE.HISTORY); list=Object.keys(histObj).map(function(k){ var v=histObj[k]; if(!v.sourceKey){ var i=k.lastIndexOf('_'); if(i>0) v.sourceKey=k.slice(0,i); } return v; }).sort(function(a,b){ return b.updatedAt-a.updatedAt; }); }
   else if(type==='__favorites__') list=getStorage(STORAGE.FAVORITES);
   else if(type==='__bookmarks__') list=getBookmarks();
   if(!list.length){
