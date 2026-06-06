@@ -6,221 +6,185 @@ layout: false
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>APK Builder 远程下单</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --blue: #0984e3; --green: #00b894; --red: #d63031; --bg: #f5f6fa; --card: #fff; --text: #2d3436; --sub: #636e72; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-        .container { max-width: 560px; margin: 0 auto; padding: 20px 16px 40px; }
-        .header { text-align: center; padding: 20px 0 8px; }
-        .header h1 { font-size: 22px; color: var(--blue); }
-        .header p { color: var(--sub); font-size: 12px; margin-top: 4px; }
-        .card { background: #fff; border-radius: 14px; padding: 20px; margin-bottom: 14px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
-        .card-title { font-size: 14px; font-weight: 600; margin-bottom: 14px; display:flex; align-items:center; gap:6px; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--sub); margin-bottom: 4px; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 9px 11px; border: 1.5px solid #e0e0e0; border-radius: 9px; font-size: 14px; outline: none; transition: border-color 0.2s; font-family: inherit; }
-        .form-group textarea { resize: vertical; min-height: 60px; }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--blue); }
-        .form-group .hint { font-size: 11px; color: #b2bec3; margin-top: 2px; }
-        .form-row { display: flex; gap: 10px; }
-        .form-row .form-group { flex: 1; }
-
-        .file-upload { border: 1.5px dashed #ddd; border-radius: 10px; padding: 14px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafafa; position: relative; }
-        .file-upload:hover { border-color: var(--blue); background: #f0f7ff; }
-        .file-upload.has-file { border-style: solid; border-color: var(--green); }
-        .file-upload input { display: none; }
-        .preview-img { max-width: 70px; max-height: 70px; border-radius: 8px; margin: 0 auto 6px; display: none; object-fit: cover; }
-        .has-file .preview-img { display: block; }
-        .file-placeholder { font-size: 12px; color: #b2bec3; }
-        .has-file .file-placeholder { color: var(--green); font-weight: 500; }
-        .has-file .file-placeholder .dim { color: #b2bec3; font-weight: 400; }
-
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 11px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 10px; }
-        .btn-primary { background: linear-gradient(135deg, #0984e3, #6c5ce7); color: #fff; }
-        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(9,132,227,0.3); }
-        .btn-green { background: var(--green); color: #fff; display: none; }
-        .btn-green:hover { background: #00a381; }
-
-        .json-box { background: #f8f9fa; border-radius: 10px; padding: 12px; margin-top: 10px; max-height: 180px; overflow: auto; font-family: 'Consolas', monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; display: none; }
-        .json-box.show { display: block; }
-        .note { font-size: 11px; color: #e17055; background: #fff5f5; border-radius: 8px; padding: 10px; margin-top: 10px; line-height: 1.6; }
-        .size-warn { color: #e17055; font-size: 11px; margin-top: 4px; display: none; }
-    </style>
+    <title>APK 远程下单</title>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📱 APK 远程下单</h1>
-            <p>填写配置 → 点「生成并发送」→ 邮件客户端自动打开 → 发送到 9187541@qq.com</p>
+<body style="margin:0;font-family:inherit;color:inherit;background:transparent">
+    <div style="max-width:560px;margin:0 auto;padding:16px">
+
+        <div style="text-align:center;margin-bottom:20px">
+            <h2 style="margin:0 0 4px">📱 APK 远程下单</h2>
+            <p style="margin:0;font-size:.85em;opacity:.7">填写配置 → 点「生成并发送」→ 邮件自动打开 → 发送到 9187541@qq.com</p>
         </div>
 
         <!-- 基本信息 -->
-        <div class="card">
-            <div class="card-title">📋 基本信息</div>
-            <div class="form-group">
-                <label>应用名称 *</label>
-                <input type="text" id="appName" placeholder="例如：小红故事" value="小红故事" maxlength="30">
+        <fieldset style="border:1px solid;border-color:inherit;border-radius:10px;padding:16px;margin-bottom:12px;opacity:.85">
+            <legend style="font-weight:600;padding:0 6px">📋 基本信息</legend>
+            <div style="margin-bottom:10px">
+                <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">应用名称 *</label>
+                <input type="text" id="appName" placeholder="例如：小红故事" maxlength="30"
+                    style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
             </div>
-            <div class="form-group">
-                <label>包名 *</label>
-                <input type="text" id="packageName" placeholder="com.example.app" value="net.snowhoo.app">
-                <span class="hint">唯一标识，不能含中文</span>
+            <div style="margin-bottom:10px">
+                <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">包名 *</label>
+                <input type="text" id="packageName" placeholder="com.example.app"
+                    style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
+                <span style="font-size:.7em;opacity:.5">唯一标识，不能含中文</span>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>版本号</label>
-                    <input type="text" id="versionName" value="1.0.0">
+            <div style="display:flex;gap:10px">
+                <div style="flex:1">
+                    <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">版本号</label>
+                    <input type="text" id="versionName" placeholder="1.0.0"
+                        style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
                 </div>
-                <div class="form-group">
-                    <label>版本代码</label>
-                    <input type="number" id="versionCode" value="1">
+                <div style="flex:1">
+                    <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">版本代码</label>
+                    <input type="number" id="versionCode" placeholder="1"
+                        style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
                 </div>
             </div>
-        </div>
+        </fieldset>
 
         <!-- 数据源 -->
-        <div class="card">
-            <div class="card-title">🔗 数据源</div>
-            <div class="form-group">
-                <label>模式</label>
-                <select id="sourceMode">
+        <fieldset style="border:1px solid;border-color:inherit;border-radius:10px;padding:16px;margin-bottom:12px;opacity:.85">
+            <legend style="font-weight:600;padding:0 6px">🔗 数据源</legend>
+            <div style="margin-bottom:10px">
+                <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">模式</label>
+                <select id="sourceMode"
+                    style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
                     <option value="url">🌐 在线网址</option>
                     <option value="local">📁 本地文件</option>
                 </select>
             </div>
-            <div class="form-group" id="urlGroup">
-                <label>网站 URL *</label>
-                <input type="url" id="url" placeholder="https://your-site.com" value="https://snowhoo.net">
+            <div id="urlGroup" style="margin-bottom:10px">
+                <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">网站 URL *</label>
+                <input type="url" id="url" placeholder="https://your-site.com"
+                    style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
             </div>
-            <div class="form-group" id="localGroup" style="display:none">
-                <label>ZIP 下载地址</label>
-                <input type="url" id="zipUrl" placeholder="https://your-server.com/site.zip">
-                <span class="hint">或邮件附带 ZIP 附件</span>
+            <div id="localGroup" style="display:none;margin-bottom:10px">
+                <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">ZIP 下载地址</label>
+                <input type="url" id="zipUrl" placeholder="https://your-server.com/site.zip"
+                    style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
+                <span style="font-size:.7em;opacity:.5">或邮件附带 ZIP 附件</span>
             </div>
-            <div class="form-group">
-                <label>签名模式</label>
-                <select id="signMode">
+            <div style="margin-bottom:10px">
+                <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">签名模式</label>
+                <select id="signMode"
+                    style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
                     <option value="debug">Debug（测试）</option>
                     <option value="release">Release（发布版）</option>
                 </select>
             </div>
-            <div class="form-group" id="releaseGroup" style="display:none">
-                <label>密钥别名</label>
-                <input type="text" id="keystoreAlias" placeholder="例如：xiaohong">
-                <span class="hint">需已在本机构建器中创建</span>
+            <div id="releaseGroup" style="display:none">
+                <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">密钥别名</label>
+                <input type="text" id="keystoreAlias" placeholder="例如：xiaohong"
+                    style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
+                <span style="font-size:.7em;opacity:.5">需已在本机构建器中创建</span>
             </div>
-        </div>
+        </fieldset>
 
-        <!-- 图标与截图（上传方式，base64编码进JSON） -->
-        <div class="card">
-            <div class="card-title">🎨 图标与截图</div>
-            <div class="form-row">
-                <div class="file-upload" id="iconBox" onclick="document.getElementById('iconFile').click()">
-                    <input type="file" id="iconFile" accept="image/png,image/jpeg,image/webp" onchange="handleFile(this,'iconBox','iconSize')">
-                    <img class="preview-img" id="iconPreview" src="">
-                    <div class="file-placeholder">📷 应用图标<br><span class="dim">512×512 建议</span></div>
+        <!-- 图标与截图 -->
+        <fieldset style="border:1px solid;border-color:inherit;border-radius:10px;padding:16px;margin-bottom:12px;opacity:.85">
+            <legend style="font-weight:600;padding:0 6px">🎨 图标与截图</legend>
+            <div style="margin-bottom:10px">
+                <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">应用图标</label>
+                <div id="iconBox" class="fu-box" onclick="document.getElementById('iconFile').click()"
+                    style="border:1.5px dashed;border-color:inherit;border-radius:10px;padding:14px;text-align:center;cursor:pointer;opacity:.7">
+                    <input type="file" id="iconFile" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleFile(this,'iconBox')">
+                    <img id="iconPreview" style="max-width:70px;max-height:70px;border-radius:8px;margin:0 auto 6px;display:none;object-fit:cover">
+                    <div class="fu-text">📷 点击上传<br><span style="font-size:.8em;opacity:.6">512×512 建议</span></div>
                 </div>
             </div>
-            <span class="hint" id="iconSize"></span>
-            <div class="form-row" style="margin-top:10px">
-                <div class="file-upload" id="ss1Box" onclick="document.getElementById('ss1File').click()">
-                    <input type="file" id="ss1File" accept="image/png,image/jpeg,image/webp" onchange="handleFile(this,'ss1Box','')">
-                    <img class="preview-img" id="ss1Preview" src="">
-                    <div class="file-placeholder">📱 首页<br><span class="dim">1280×720</span></div>
+            <div style="display:flex;gap:10px">
+                <div id="ss1Box" class="fu-box" onclick="document.getElementById('ss1File').click()"
+                    style="flex:1;border:1.5px dashed;border-color:inherit;border-radius:10px;padding:12px;text-align:center;cursor:pointer;opacity:.7">
+                    <input type="file" id="ss1File" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleFile(this,'ss1Box')">
+                    <img id="ss1Preview" style="max-width:60px;max-height:60px;border-radius:8px;margin:0 auto 4px;display:none;object-fit:cover">
+                    <div class="fu-text">📱 首页<br><span style="font-size:.8em;opacity:.6">1280×720</span></div>
                 </div>
-                <div class="file-upload" id="ss2Box" onclick="document.getElementById('ss2File').click()">
-                    <input type="file" id="ss2File" accept="image/png,image/jpeg,image/webp" onchange="handleFile(this,'ss2Box','')">
-                    <img class="preview-img" id="ss2Preview" src="">
-                    <div class="file-placeholder">📱 内容页<br><span class="dim">1280×720</span></div>
+                <div id="ss2Box" class="fu-box" onclick="document.getElementById('ss2File').click()"
+                    style="flex:1;border:1.5px dashed;border-color:inherit;border-radius:10px;padding:12px;text-align:center;cursor:pointer;opacity:.7">
+                    <input type="file" id="ss2File" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleFile(this,'ss2Box')">
+                    <img id="ss2Preview" style="max-width:60px;max-height:60px;border-radius:8px;margin:0 auto 4px;display:none;object-fit:cover">
+                    <div class="fu-text">📱 内容页<br><span style="font-size:.8em;opacity:.6">1280×720</span></div>
                 </div>
-                <div class="file-upload" id="ss3Box" onclick="document.getElementById('ss3File').click()">
-                    <input type="file" id="ss3File" accept="image/png,image/jpeg,image/webp" onchange="handleFile(this,'ss3Box','')">
-                    <img class="preview-img" id="ss3Preview" src="">
-                    <div class="file-placeholder">📱 其他<br><span class="dim">1280×720</span></div>
+                <div id="ss3Box" class="fu-box" onclick="document.getElementById('ss3File').click()"
+                    style="flex:1;border:1.5px dashed;border-color:inherit;border-radius:10px;padding:12px;text-align:center;cursor:pointer;opacity:.7">
+                    <input type="file" id="ss3File" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleFile(this,'ss3Box')">
+                    <img id="ss3Preview" style="max-width:60px;max-height:60px;border-radius:8px;margin:0 auto 4px;display:none;object-fit:cover">
+                    <div class="fu-text">📱 其他<br><span style="font-size:.8em;opacity:.6">1280×720</span></div>
                 </div>
             </div>
-        </div>
+        </fieldset>
 
         <!-- 应用介绍 -->
-        <div class="card">
-            <div class="card-title">📝 应用介绍</div>
-            <div class="form-group">
-                <label>一句话简介（各市场展示用）</label>
-                <input type="text" id="shortDesc" placeholder="例如：小红故事—记录美好生活的文字社区" maxlength="80">
-                <span class="hint">最多 80 字，显示在应用列表</span>
+        <fieldset style="border:1px solid;border-color:inherit;border-radius:10px;padding:16px;margin-bottom:12px;opacity:.85">
+            <legend style="font-weight:600;padding:0 6px">📝 应用介绍</legend>
+            <div style="margin-bottom:10px">
+                <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">一句话简介</label>
+                <input type="text" id="shortDesc" placeholder="例如：小红故事—记录美好生活的文字社区" maxlength="80"
+                    style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
+                <span style="font-size:.7em;opacity:.5">最多 80 字，显示在应用列表</span>
             </div>
-            <div class="form-group">
-                <label>完整介绍（应用详情页）</label>
-                <textarea id="fullDesc" rows="4" placeholder="例如：&#10;小红故事是一款专注于文字创作的社区应用...&#10;&#10;主要功能：&#10;• 浏览精选文章&#10;• 收藏喜欢的作者&#10;• 个性化推荐&#10;&#10;联系我们：admin@snowhoo.net"></textarea>
-                <span class="hint">支持换行，各市场上架时直接粘贴</span>
+            <div>
+                <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">完整介绍</label>
+                <textarea id="fullDesc" rows="4" placeholder="例如：&#10;小红故事是一款文字创作社区...&#10;&#10;主要功能：&#10;• 浏览精选文章&#10;• 收藏喜欢的作者"
+                    style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;resize:vertical;box-sizing:border-box"></textarea>
+                <span style="font-size:.7em;opacity:.5">支持换行，上架时直接粘贴到各市场</span>
             </div>
-        </div>
+        </fieldset>
 
-        <!-- 操作按钮 -->
-        <button class="btn btn-primary" onclick="generateAndSend()">
+        <!-- 按钮 -->
+        <button onclick="generateAndSend()"
+            style="width:100%;padding:12px;border:none;border-radius:10px;font-size:1em;font-weight:600;cursor:pointer;font-family:inherit;color:#fff;background:var(--btn-bg, #0984e3);margin-bottom:8px">
             📝 生成 JSON 并打开邮件
         </button>
-        <div class="json-box" id="jsonPreview"></div>
-        <div class="size-warn" id="sizeWarn"></div>
 
-        <button class="btn btn-green" id="btnSend" onclick="openMail()">
+        <pre id="jsonPreview" style="display:none;padding:12px;border-radius:8px;max-height:160px;overflow:auto;font-size:.75em;font-family:'Consolas',monospace;white-space:pre-wrap;word-break:break-all;border:1px solid;border-color:inherit;opacity:.7"></pre>
+        <p id="sizeWarn" style="display:none;font-size:.75em;color:#e17055;margin:4px 0"></p>
+
+        <button id="btnSend" onclick="openMail()"
+            style="display:none;width:100%;padding:12px;border:none;border-radius:10px;font-size:1em;font-weight:600;cursor:pointer;font-family:inherit;color:#fff;background:var(--btn-green, #00b894);margin-bottom:8px">
             📧 重新打开邮件
         </button>
 
-        <div class="note">
-            ⚠ 邮件主题：<b>@webview 应用名称</b><br>
-            邮件正文：自动生成的 JSON 配置<br>
-            发件人需为可信邮箱（目前你自己发的自动构建，他人需审核）
-        </div>
+        <p style="font-size:.7em;opacity:.6;padding:8px;border-radius:8px;margin-top:8px;border:1px solid;border-color:inherit">
+            ⚠ 邮件主题：<b>@webview 应用名称</b>　正文：自动生成的 JSON 配置
+        </p>
     </div>
 
 <script>
-    // Toggle URL/local
-    document.getElementById('sourceMode').addEventListener('change', function() {
+    document.getElementById('sourceMode').onchange = function() {
         document.getElementById('urlGroup').style.display = this.value === 'url' ? 'block' : 'none';
         document.getElementById('localGroup').style.display = this.value === 'local' ? 'block' : 'none';
-    });
-    document.getElementById('signMode').addEventListener('change', function() {
+    };
+    document.getElementById('signMode').onchange = function() {
         document.getElementById('releaseGroup').style.display = this.value === 'release' ? 'block' : 'none';
-    });
+    };
 
-    // File handling
-    const fileData = { icon: null, ss1: null, ss2: null, ss3: null };
+    var fileData = { icon: null, ss1: null, ss2: null, ss3: null };
 
-    function handleFile(input, boxId, sizeId) {
-        const file = input.files[0];
+    function handleFile(input, boxId) {
+        var file = input.files[0];
         if (!file) return;
-        const key = input.id.replace('File', '');
-        const box = document.getElementById(boxId);
-        const reader = new FileReader();
+        var key = input.id.replace('File', '');
+        var box = document.getElementById(boxId);
+        var reader = new FileReader();
         reader.onload = function(e) {
-            // Store base64
             fileData[key] = e.target.result;
-            box.classList.add('has-file');
-            // Show preview
-            const previewId = key + 'Preview';
-            const preview = document.getElementById(previewId);
-            if (preview) preview.src = e.target.result;
-            // Update placeholder
-            const placeholder = box.querySelector('.file-placeholder');
-            if (placeholder) {
-                const sizeKB = (file.size / 1024).toFixed(1);
-                placeholder.innerHTML = `${file.name}<br><span class="dim">${sizeKB} KB</span>`;
-            }
-            // Show size warning for icon
-            if (sizeId) {
-                const sizeEl = document.getElementById(sizeId);
-                if (sizeEl) sizeEl.textContent = `图标: ${(file.size/1024).toFixed(1)} KB`;
-            }
+            box.style.borderStyle = 'solid';
+            box.style.opacity = '1';
+            var preview = document.getElementById(key + 'Preview');
+            if (preview) { preview.src = e.target.result; preview.style.display = 'block'; }
+            var text = box.querySelector('.fu-text');
+            if (text) text.innerHTML = file.name + '<br><span style="font-size:.8em;opacity:.6">' + (file.size / 1024).toFixed(1) + ' KB</span>';
         };
         reader.readAsDataURL(file);
     }
 
-    let jsonConfig = '';
+    var jsonConfig = '';
 
     function generateAndSend() {
-        const config = {
+        var config = {
             appName: document.getElementById('appName').value.trim(),
             packageName: document.getElementById('packageName').value.trim(),
             sourceMode: document.getElementById('sourceMode').value,
@@ -233,44 +197,34 @@ layout: false
             shortDesc: document.getElementById('shortDesc').value.trim(),
             fullDesc: document.getElementById('fullDesc').value.trim(),
             requestedAt: new Date().toISOString(),
-            source: 'webview-builder-remote',
+            source: 'webview-builder-remote'
         };
-
         if (!config.appName || !config.packageName) return alert('请填写应用名称和包名');
         if (config.sourceMode === 'url' && !config.url) return alert('请输入网站URL');
-
-        // Add base64 images if uploaded
         if (fileData.icon) config.iconBase64 = fileData.icon;
-        config.screenshotBase64List = [];
-        if (fileData.ss1) config.screenshotBase64List.push(fileData.ss1);
-        if (fileData.ss2) config.screenshotBase64List.push(fileData.ss2);
-        if (fileData.ss3) config.screenshotBase64List.push(fileData.ss3);
+        config.screenshotBase64List = [fileData.ss1, fileData.ss2, fileData.ss3].filter(Boolean);
 
         jsonConfig = JSON.stringify(config, null, 2);
+        var preview = document.getElementById('jsonPreview');
+        preview.textContent = jsonConfig;
+        preview.style.display = 'block';
+        document.getElementById('btnSend').style.display = 'block';
 
-        // Show preview
-        document.getElementById('jsonPreview').textContent = jsonConfig;
-        document.getElementById('jsonPreview').classList.add('show');
-        document.getElementById('btnSend').style.display = 'flex';
-
-        // Warn if JSON is too large
-        const sizeKB = (jsonConfig.length / 1024).toFixed(1);
-        const warn = document.getElementById('sizeWarn');
+        var sizeKB = (jsonConfig.length / 1024).toFixed(1);
+        var warn = document.getElementById('sizeWarn');
         if (jsonConfig.length > 500000) {
             warn.style.display = 'block';
-            warn.textContent = `⚠ JSON ${sizeKB} KB，较大！邮件可能被截断，建议减少截图数量`;
+            warn.textContent = '⚠ JSON ' + sizeKB + ' KB，较大！邮件可能被截断，建议减少截图';
         } else {
             warn.style.display = 'none';
         }
-
         openMail();
     }
 
     function openMail() {
         if (!jsonConfig) return generateAndSend();
-        const subject = '@webview ' + document.getElementById('appName').value.trim();
-        const mailto = `mailto:9187541@qq.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(jsonConfig)}`;
-        window.open(mailto, '_blank');
+        var subject = '@webview ' + document.getElementById('appName').value.trim();
+        window.open('mailto:9187541@qq.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(jsonConfig), '_blank');
     }
 </script>
 </body>
