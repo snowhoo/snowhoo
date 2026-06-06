@@ -68,12 +68,17 @@
    LOGO 显示优化 - 标语垂直居中
    ======================================== */
 
+/* 导航栏整体垂直居中 */
+html body #nav {
+  align-items: center !important;
+}
+
 /* LOGO 图片高度 */
 #nav #blog-info .site-icon {
   height: 55px !important;
   width: auto !important;
   object-fit: contain !important;
-  vertical-align: middle !important;
+  align-self: center !important;
 }
 
 /* LOGO + 标语容器：flexbox 垂直居中 */
@@ -113,7 +118,7 @@ html body #nav #blog-info a.nav-site-title .site-slogan {
   font-size: 12px !important;
   font-weight: bold !important;
   white-space: nowrap !important;
-  vertical-align: middle !important;
+  line-height: 1.4 !important;
   padding: 4px 10px !important;
   border-radius: 6px !important;
 }
