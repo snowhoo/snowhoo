@@ -745,6 +745,7 @@ inject:
 }
 
 </style>"
+    - "<style>/* LOGO + 标语垂直居中 */html body #nav{align-items:center!important}#nav #blog-info .site-icon{height:55px!important;width:auto!important;object-fit:contain!important;align-self:center!important}html body #nav #blog-info a.nav-site-title{display:flex!important;align-items:center!important;flex-direction:row!important}html body #nav #blog-info{display:flex!important;align-items:center!important;height:100%!important;line-height:1!important}html body #nav #blog-info a.nav-site-title .site-slogan{display:inline-block!important;margin-left:1em!important;font-size:12px!important;font-weight:bold!important;white-space:nowrap!important;line-height:1.4!important;padding:4px 10px!important;border-radius:6px!important}html[data-theme=light] body #nav #blog-info .site-slogan{background:linear-gradient(135deg,#c41e3a,#8b0000)!important;color:#fff!important}html[data-theme=dark] body #nav #blog-info .site-slogan{background:linear-gradient(135deg,#9a1b30,#5c0011)!important;color:#fff!important}@media(max-width:768px){#nav #blog-info .site-slogan{display:none!important}}</style>"
   bottom:
     - |
       <script>
