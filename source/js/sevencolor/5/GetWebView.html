@@ -9,140 +9,135 @@ layout: false
     <title>APK 远程下单</title>
 </head>
 <body style="margin:0;font-family:inherit;color:inherit;background:transparent">
-    <div style="padding:16px">
+    <div style="padding:16px" id="apk-form-root">
 
         <div style="text-align:center;margin-bottom:20px">
             <h2 style="margin:0 0 4px">📱 APK 远程下单</h2>
             <p style="margin:0;font-size:.85em;opacity:.7">填写配置 → 点「生成并发送」→ 邮件自动打开 → 发送到 9187541@qq.com</p>
         </div>
 
-        <!-- 基本信息 -->
         <fieldset style="border:1px solid;border-color:inherit;border-radius:10px;padding:16px;margin-bottom:12px;opacity:.85">
             <legend style="font-weight:600;padding:0 6px">📋 基本信息</legend>
             <div style="margin-bottom:10px">
                 <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">应用名称 *</label>
-                <input type="text" id="appName" placeholder="例如：小红故事" maxlength="30"
+                <input type="text" id="af-appName" placeholder="例如：小红故事" maxlength="30"
                     style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
             </div>
             <div style="margin-bottom:10px">
                 <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">包名 *</label>
-                <input type="text" id="packageName" placeholder="com.example.app"
+                <input type="text" id="af-packageName" placeholder="com.example.app"
                     style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
                 <span style="font-size:.7em;opacity:.5">唯一标识，不能含中文</span>
             </div>
             <div style="display:flex;gap:10px">
                 <div style="flex:1">
                     <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">版本号</label>
-                    <input type="text" id="versionName" placeholder="1.0.0"
+                    <input type="text" id="af-versionName" placeholder="1.0.0"
                         style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
                 </div>
                 <div style="flex:1">
                     <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">版本代码</label>
-                    <input type="number" id="versionCode" placeholder="1"
+                    <input type="number" id="af-versionCode" placeholder="1"
                         style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
                 </div>
             </div>
         </fieldset>
 
-        <!-- 数据源 -->
         <fieldset style="border:1px solid;border-color:inherit;border-radius:10px;padding:16px;margin-bottom:12px;opacity:.85">
             <legend style="font-weight:600;padding:0 6px">🔗 数据源</legend>
             <div style="margin-bottom:10px">
                 <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">模式</label>
-                <select id="sourceMode"
+                <select id="af-sourceMode"
                     style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
                     <option value="url">🌐 在线网址</option>
                     <option value="local">📁 本地文件</option>
                 </select>
             </div>
-            <div id="urlGroup" style="margin-bottom:10px">
+            <div id="af-urlGroup" style="margin-bottom:10px">
                 <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">网站 URL *</label>
-                <input type="url" id="url" placeholder="https://your-site.com"
+                <input type="url" id="af-url" placeholder="https://your-site.com"
                     style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
             </div>
-            <div id="localGroup" style="display:none;margin-bottom:10px">
+            <div id="af-localGroup" style="display:none;margin-bottom:10px">
                 <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">ZIP 下载地址</label>
-                <input type="url" id="zipUrl" placeholder="https://your-server.com/site.zip"
+                <input type="url" id="af-zipUrl" placeholder="https://your-server.com/site.zip"
                     style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
                 <span style="font-size:.7em;opacity:.5">或邮件附带 ZIP 附件</span>
             </div>
             <div style="margin-bottom:10px">
                 <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">签名模式</label>
-                <select id="signMode"
+                <select id="af-signMode"
                     style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
                     <option value="debug">Debug（测试）</option>
                     <option value="release">Release（发布版）</option>
                 </select>
             </div>
-            <div id="releaseGroup" style="display:none">
+            <div id="af-releaseGroup" style="display:none">
                 <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">密钥别名</label>
-                <input type="text" id="keystoreAlias" placeholder="例如：xiaohong"
+                <input type="text" id="af-keystoreAlias" placeholder="例如：xiaohong"
                     style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
                 <span style="font-size:.7em;opacity:.5">需已在本机构建器中创建</span>
             </div>
         </fieldset>
 
-        <!-- 图标与截图 -->
         <fieldset style="border:1px solid;border-color:inherit;border-radius:10px;padding:16px;margin-bottom:12px;opacity:.85">
             <legend style="font-weight:600;padding:0 6px">🎨 图标与截图</legend>
             <div style="margin-bottom:10px">
                 <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">应用图标</label>
-                <div id="iconBox" class="fu-box" onclick="document.getElementById('iconFile').click()"
+                <div class="af-upload" data-file="iconFile" data-box="iconBox" data-preview="iconPreview"
                     style="border:1.5px dashed;border-color:inherit;border-radius:10px;padding:14px;text-align:center;cursor:pointer;opacity:.7">
-                    <input type="file" id="iconFile" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleFile(this,'iconBox')">
-                    <img id="iconPreview" style="max-width:70px;max-height:70px;border-radius:8px;margin:0 auto 6px;display:none;object-fit:cover">
-                    <div class="fu-text">📷 点击上传<br><span style="font-size:.8em;opacity:.6">512×512 建议</span></div>
+                    <input type="file" id="af-iconFile" accept="image/png,image/jpeg,image/webp" style="display:none">
+                    <img id="af-iconPreview" style="max-width:70px;max-height:70px;border-radius:8px;margin:0 auto 6px;display:none;object-fit:cover">
+                    <div class="af-fu-text">📷 点击上传<br><span style="font-size:.8em;opacity:.6">512×512 建议</span></div>
                 </div>
             </div>
             <div style="display:flex;gap:10px">
-                <div id="ss1Box" class="fu-box" onclick="document.getElementById('ss1File').click()"
+                <div class="af-upload" data-file="ss1File" data-box="ss1Box" data-preview="ss1Preview"
                     style="flex:1;border:1.5px dashed;border-color:inherit;border-radius:10px;padding:12px;text-align:center;cursor:pointer;opacity:.7">
-                    <input type="file" id="ss1File" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleFile(this,'ss1Box')">
-                    <img id="ss1Preview" style="max-width:60px;max-height:60px;border-radius:8px;margin:0 auto 4px;display:none;object-fit:cover">
-                    <div class="fu-text">📱 首页<br><span style="font-size:.8em;opacity:.6">1280×720</span></div>
+                    <input type="file" id="af-ss1File" accept="image/png,image/jpeg,image/webp" style="display:none">
+                    <img id="af-ss1Preview" style="max-width:60px;max-height:60px;border-radius:8px;margin:0 auto 4px;display:none;object-fit:cover">
+                    <div class="af-fu-text">📱 首页<br><span style="font-size:.8em;opacity:.6">1280×720</span></div>
                 </div>
-                <div id="ss2Box" class="fu-box" onclick="document.getElementById('ss2File').click()"
+                <div class="af-upload" data-file="ss2File" data-box="ss2Box" data-preview="ss2Preview"
                     style="flex:1;border:1.5px dashed;border-color:inherit;border-radius:10px;padding:12px;text-align:center;cursor:pointer;opacity:.7">
-                    <input type="file" id="ss2File" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleFile(this,'ss2Box')">
-                    <img id="ss2Preview" style="max-width:60px;max-height:60px;border-radius:8px;margin:0 auto 4px;display:none;object-fit:cover">
-                    <div class="fu-text">📱 内容页<br><span style="font-size:.8em;opacity:.6">1280×720</span></div>
+                    <input type="file" id="af-ss2File" accept="image/png,image/jpeg,image/webp" style="display:none">
+                    <img id="af-ss2Preview" style="max-width:60px;max-height:60px;border-radius:8px;margin:0 auto 4px;display:none;object-fit:cover">
+                    <div class="af-fu-text">📱 内容页<br><span style="font-size:.8em;opacity:.6">1280×720</span></div>
                 </div>
-                <div id="ss3Box" class="fu-box" onclick="document.getElementById('ss3File').click()"
+                <div class="af-upload" data-file="ss3File" data-box="ss3Box" data-preview="ss3Preview"
                     style="flex:1;border:1.5px dashed;border-color:inherit;border-radius:10px;padding:12px;text-align:center;cursor:pointer;opacity:.7">
-                    <input type="file" id="ss3File" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="handleFile(this,'ss3Box')">
-                    <img id="ss3Preview" style="max-width:60px;max-height:60px;border-radius:8px;margin:0 auto 4px;display:none;object-fit:cover">
-                    <div class="fu-text">📱 其他<br><span style="font-size:.8em;opacity:.6">1280×720</span></div>
+                    <input type="file" id="af-ss3File" accept="image/png,image/jpeg,image/webp" style="display:none">
+                    <img id="af-ss3Preview" style="max-width:60px;max-height:60px;border-radius:8px;margin:0 auto 4px;display:none;object-fit:cover">
+                    <div class="af-fu-text">📱 其他<br><span style="font-size:.8em;opacity:.6">1280×720</span></div>
                 </div>
             </div>
         </fieldset>
 
-        <!-- 应用介绍 -->
         <fieldset style="border:1px solid;border-color:inherit;border-radius:10px;padding:16px;margin-bottom:12px;opacity:.85">
             <legend style="font-weight:600;padding:0 6px">📝 应用介绍</legend>
             <div style="margin-bottom:10px">
                 <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">一句话简介</label>
-                <input type="text" id="shortDesc" placeholder="例如：小红故事—记录美好生活的文字社区" maxlength="80"
+                <input type="text" id="af-shortDesc" placeholder="例如：小红故事—记录美好生活的文字社区" maxlength="80"
                     style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;box-sizing:border-box">
                 <span style="font-size:.7em;opacity:.5">最多 80 字，显示在应用列表</span>
             </div>
             <div>
                 <label style="display:block;font-size:.8em;opacity:.7;margin-bottom:3px">完整介绍</label>
-                <textarea id="fullDesc" rows="4" placeholder="例如：&#10;小红故事是一款文字创作社区...&#10;&#10;主要功能：&#10;• 浏览精选文章&#10;• 收藏喜欢的作者"
+                <textarea id="af-fullDesc" rows="4" placeholder="主要功能：&#10;• 浏览精选文章&#10;• 收藏喜欢的作者"
                     style="width:100%;padding:9px 11px;border:1px solid;border-color:inherit;border-radius:8px;font-size:1em;font-family:inherit;color:inherit;background:transparent;resize:vertical;box-sizing:border-box"></textarea>
                 <span style="font-size:.7em;opacity:.5">支持换行，上架时直接粘贴到各市场</span>
             </div>
         </fieldset>
 
-        <!-- 按钮 -->
-        <button onclick="generateAndSend()"
+        <button id="af-btnGenerate"
             style="width:100%;padding:12px;border:none;border-radius:10px;font-size:1em;font-weight:600;cursor:pointer;font-family:inherit;color:#fff;background:var(--btn-bg, #0984e3);margin-bottom:8px">
             📝 生成 JSON 并打开邮件
         </button>
 
-        <pre id="jsonPreview" style="display:none;padding:12px;border-radius:8px;font-size:.75em;font-family:'Consolas',monospace;white-space:pre-wrap;word-break:break-all;border:1px solid;border-color:inherit;opacity:.7"></pre>
-        <p id="sizeWarn" style="display:none;font-size:.75em;color:#e17055;margin:4px 0"></p>
+        <pre id="af-jsonPreview" style="display:none;padding:12px;border-radius:8px;font-size:.75em;font-family:'Consolas',monospace;white-space:pre-wrap;word-break:break-all;border:1px solid;border-color:inherit;opacity:.7"></pre>
+        <p id="af-sizeWarn" style="display:none;font-size:.75em;color:#e17055;margin:4px 0"></p>
 
-        <button id="btnSend" onclick="openMail()"
+        <button id="af-btnSend"
             style="display:none;width:100%;padding:12px;border:none;border-radius:10px;font-size:1em;font-weight:600;cursor:pointer;font-family:inherit;color:#fff;background:var(--btn-green, #00b894);margin-bottom:8px">
             📧 重新打开邮件
         </button>
@@ -153,80 +148,105 @@ layout: false
     </div>
 
 <script>
-    document.getElementById('sourceMode').onchange = function() {
-        document.getElementById('urlGroup').style.display = this.value === 'url' ? 'block' : 'none';
-        document.getElementById('localGroup').style.display = this.value === 'local' ? 'block' : 'none';
-    };
-    document.getElementById('signMode').onchange = function() {
-        document.getElementById('releaseGroup').style.display = this.value === 'release' ? 'block' : 'none';
-    };
+(function() {
+    var $ = function(id) { return document.getElementById(id); };
+    var fileData = { iconFile: null, ss1File: null, ss2File: null, ss3File: null };
+    var jsonConfig = '';
 
-    var fileData = { icon: null, ss1: null, ss2: null, ss3: null };
+    // Mode toggles
+    $('af-sourceMode').addEventListener('change', function() {
+        $('af-urlGroup').style.display = this.value === 'url' ? 'block' : 'none';
+        $('af-localGroup').style.display = this.value === 'local' ? 'block' : 'none';
+    });
+    $('af-signMode').addEventListener('change', function() {
+        $('af-releaseGroup').style.display = this.value === 'release' ? 'block' : 'none';
+    });
 
-    function handleFile(input, boxId) {
-        var file = input.files[0];
+    // File upload: delegated click on .af-upload
+    document.getElementById('apk-form-root').addEventListener('click', function(e) {
+        var up = e.target.closest('.af-upload');
+        if (!up) return;
+        var fileId = up.getAttribute('data-file');
+        if (fileId) $('af-' + fileId).click();
+    });
+
+    // File change handler
+    document.getElementById('apk-form-root').addEventListener('change', function(e) {
+        var inp = e.target;
+        if (!inp.id || !inp.id.startsWith('af-') || inp.type !== 'file') return;
+        var file = inp.files[0];
         if (!file) return;
-        var key = input.id.replace('File', '');
-        var box = document.getElementById(boxId);
+        var key = inp.id.replace('af-', '');
+        var boxId = key.replace('File', 'Box');
+        var previewId = key.replace('File', 'Preview');
+        var box = $(boxId);
         var reader = new FileReader();
-        reader.onload = function(e) {
-            fileData[key] = e.target.result;
+        reader.onload = function(ev) {
+            fileData[key] = ev.target.result;
             box.style.borderStyle = 'solid';
             box.style.opacity = '1';
-            var preview = document.getElementById(key + 'Preview');
-            if (preview) { preview.src = e.target.result; preview.style.display = 'block'; }
-            var text = box.querySelector('.fu-text');
+            var preview = $(previewId);
+            if (preview) { preview.src = ev.target.result; preview.style.display = 'block'; }
+            var text = box.querySelector('.af-fu-text');
             if (text) text.innerHTML = file.name + '<br><span style="font-size:.8em;opacity:.6">' + (file.size / 1024).toFixed(1) + ' KB</span>';
         };
         reader.readAsDataURL(file);
-    }
+    });
 
-    var jsonConfig = '';
-
-    function generateAndSend() {
+    // Generate
+    $('af-btnGenerate').addEventListener('click', function() {
         var config = {
-            appName: document.getElementById('appName').value.trim(),
-            packageName: document.getElementById('packageName').value.trim(),
-            sourceMode: document.getElementById('sourceMode').value,
-            url: document.getElementById('url').value.trim(),
-            zipUrl: document.getElementById('zipUrl').value.trim(),
-            versionName: document.getElementById('versionName').value.trim() || '1.0.0',
-            versionCode: parseInt(document.getElementById('versionCode').value) || 1,
-            signMode: document.getElementById('signMode').value,
-            keystoreAlias: document.getElementById('keystoreAlias').value.trim(),
-            shortDesc: document.getElementById('shortDesc').value.trim(),
-            fullDesc: document.getElementById('fullDesc').value.trim(),
+            appName: $('af-appName').value.trim(),
+            packageName: $('af-packageName').value.trim(),
+            sourceMode: $('af-sourceMode').value,
+            url: $('af-url').value.trim(),
+            zipUrl: $('af-zipUrl').value.trim(),
+            versionName: $('af-versionName').value.trim() || '1.0.0',
+            versionCode: parseInt($('af-versionCode').value) || 1,
+            signMode: $('af-signMode').value,
+            keystoreAlias: $('af-keystoreAlias').value.trim(),
+            shortDesc: $('af-shortDesc').value.trim(),
+            fullDesc: $('af-fullDesc').value.trim(),
             requestedAt: new Date().toISOString(),
             source: 'webview-builder-remote'
         };
         if (!config.appName || !config.packageName) return alert('请填写应用名称和包名');
         if (config.sourceMode === 'url' && !config.url) return alert('请输入网站URL');
-        if (fileData.icon) config.iconBase64 = fileData.icon;
-        config.screenshotBase64List = [fileData.ss1, fileData.ss2, fileData.ss3].filter(Boolean);
+
+        if (fileData.iconFile) config.iconBase64 = fileData.iconFile;
+        config.screenshotBase64List = [fileData.ss1File, fileData.ss2File, fileData.ss3File].filter(Boolean);
 
         jsonConfig = JSON.stringify(config, null, 2);
-        var preview = document.getElementById('jsonPreview');
-        preview.textContent = jsonConfig;
-        preview.style.display = 'block';
-        document.getElementById('btnSend').style.display = 'block';
+        $('af-jsonPreview').textContent = jsonConfig;
+        $('af-jsonPreview').style.display = 'block';
+        $('af-btnSend').style.display = 'block';
 
         var sizeKB = (jsonConfig.length / 1024).toFixed(1);
-        var warn = document.getElementById('sizeWarn');
         if (jsonConfig.length > 500000) {
-            warn.style.display = 'block';
-            warn.textContent = '⚠ JSON ' + sizeKB + ' KB，较大！邮件可能被截断，建议减少截图';
+            $('af-sizeWarn').style.display = 'block';
+            $('af-sizeWarn').textContent = '⚠ JSON ' + sizeKB + ' KB，较大！邮件可能被截断，建议减少截图';
         } else {
-            warn.style.display = 'none';
+            $('af-sizeWarn').style.display = 'none';
         }
         openMail();
-    }
+    });
 
     function openMail() {
-        if (!jsonConfig) return generateAndSend();
-        var subject = '@webview ' + document.getElementById('appName').value.trim();
+        var subject = '@webview ' + $('af-appName').value.trim();
         window.open('mailto:9187541@qq.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(jsonConfig), '_blank');
     }
+
+    $('af-btnSend').addEventListener('click', function() {
+        if (!jsonConfig) $('af-btnGenerate').click();
+        else openMail();
+    });
+
+    // Trigger initial mode state
+    $('af-sourceMode').dispatchEvent(new Event('change'));
+    $('af-signMode').dispatchEvent(new Event('change'));
+})();
 </script>
 </body>
 </html>
+
 
