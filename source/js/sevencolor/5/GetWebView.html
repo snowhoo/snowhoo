@@ -152,6 +152,13 @@ layout: false
     });
 
     function download(filename, content) {
+        // Native Android download (WebView APK)
+        if (window.AndroidDownload && window.AndroidDownload.download) {
+            var base64 = 'data:application/json;base64,' + btoa(unescape(encodeURIComponent(content)));
+            window.AndroidDownload.download(base64, filename);
+            return;
+        }
+        // Browser fallback
         var blob = new Blob([content], {type:'application/json'});
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
