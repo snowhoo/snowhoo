@@ -1,13 +1,10 @@
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"></head><body>
 <script>
-// TVBox 预热 Worker — 通过隐藏 iframe 独立运行，避免抢占主页连接池
 (function() {
-  var bp = '/js/sevencolor/3/', BATCH = 10, DELAY = 150;
-  var idxUrl = bp + 'data/index.js';
+  var bp = '/js/sevencolor/3/', BATCH = 10, DELAY = 200;
 
-  var DB_NAME = 'tvbox_cache', STORE = 'files';
-  var db = null;
+  var DB_NAME = 'tvbox_cache', STORE = 'files', db = null;
 
   function openDB(cb) {
     var req = indexedDB.open(DB_NAME, 1);
@@ -15,17 +12,13 @@
       e.target.result.createObjectStore(STORE, { keyPath: 'file' });
     };
     req.onsuccess = function(e) { db = e.target.result; cb(); };
-    req.onerror = function() { db = null; cb(); };
+    req.onerror = function() { cb(); };
   }
 
   function saveToDB(file, data) {
     if (!db || !data) return;
-    var entry = { file: file, _d: data, _t: Date.now() };
     try { localStorage.setItem('tvbox_fsize_' + file, JSON.stringify(data).length); } catch(e) {}
-    try {
-      var tx = db.transaction(STORE, 'readwrite');
-      tx.objectStore(STORE).put(entry);
-    } catch(e) {}
+    try { db.transaction(STORE, 'readwrite').objectStore(STORE).put({ file: file, _d: data, _t: Date.now() }); } catch(e) {}
   }
 
   function loadFresh(file, cb) {
@@ -45,7 +38,6 @@
 
   function run(files) {
     var total = files.length, done = 0, pos = 0;
-
     function runBatch() {
       var end = Math.min(pos + BATCH, total);
       for (var i = pos; i < end; i++) (function(f) {
@@ -58,21 +50,16 @@
           if (parent && parent.postMessage) {
             parent.postMessage({ type: 'tvbox-warm-progress', done: done, total: total }, '*');
           }
-          if (done >= total && parent && parent.postMessage) {
-            parent.postMessage({ type: 'tvbox-warm-done' }, '*');
-          }
         });
       })(files[i]);
       pos = end;
       if (pos < total) setTimeout(runBatch, DELAY);
     }
-
     openDB(function() { runBatch(); });
   }
 
-  // 加载 index.js
   var s = document.createElement('script');
-  s.src = idxUrl;
+  s.src = bp + 'data/index.js';
   s.onload = function() {
     var idx = window._TVBOX_INDEX;
     delete window._TVBOX_INDEX;

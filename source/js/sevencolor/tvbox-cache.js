@@ -202,31 +202,22 @@
 })();
 
 // ── 自动预热触发器 ──
-// 通过隐藏 iframe 独立运行，连接池与主页隔离，不抢七彩按钮请求
+// 通过隐藏 iframe 独立运行，与主页连接池隔离
 if (!window.__TVBOX_WARM_RUN) {
   window.__TVBOX_WARM_RUN = true;
 
   // 底部 1px 进度条
   var bar = document.createElement('div');
-  bar.innerHTML = '<div style="position:fixed;bottom:0;left:0;right:0;z-index:99998;height:1px;background:transparent"><div class="tvbox-iframe-fill" style="height:100%;width:0;background:rgba(0,0,0,0.8);transition:width .3s"></div></div>';
-  window.addEventListener('load', function() {
-    setTimeout(function() {
-      document.body.appendChild(bar.firstElementChild);
-    }, 3000);
-  });
+  bar.innerHTML = '<div style="position:fixed;bottom:0;left:0;right:0;z-index:99997;height:1px;background:transparent"><div class="tvbox-warm-fill" style="height:100%;width:0;background:rgba(0,0,0,0.8);transition:width .3s"></div></div>';
+  document.body.appendChild(bar.firstElementChild);
 
   window.addEventListener('message', function(e) {
     if (!e.data || e.data.type !== 'tvbox-warm-progress') return;
-    var fill = document.querySelector('.tvbox-iframe-fill');
+    var fill = document.querySelector('.tvbox-warm-fill');
     if (fill) fill.style.width = Math.floor(e.data.done / e.data.total * 100) + '%';
-  });
-  window.addEventListener('message', function(e) {
-    if (!e.data || e.data.type !== 'tvbox-warm-done') return;
-    var fill = document.querySelector('.tvbox-iframe-fill');
-    if (fill && fill.parentElement) {
-      fill.style.width = '100%';
+    if (e.data.done >= e.data.total) {
       setTimeout(function() {
-        if (fill.parentElement && fill.parentElement.parentNode) {
+        if (fill && fill.parentElement && fill.parentElement.parentNode) {
           fill.parentElement.parentNode.removeChild(fill.parentElement);
         }
       }, 500);
@@ -234,12 +225,10 @@ if (!window.__TVBOX_WARM_RUN) {
   });
 
   // 创建隐藏 iframe，独立连接池运行预热
-  window.addEventListener('load', function() {
-    setTimeout(function() {
-      var iframe = document.createElement('iframe');
-      iframe.src = '/js/sevencolor/tvbox-warm.html';
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
-    }, 3000);
-  });
+  setTimeout(function() {
+    var iframe = document.createElement('iframe');
+    iframe.src = '/js/sevencolor/tvbox-warm.html';
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+  }, 3000);
 }
