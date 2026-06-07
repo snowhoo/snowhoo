@@ -202,7 +202,7 @@
 })();
 
 // ── 自动预热触发器 ──
-// 通过隐藏 iframe 独立运行，与主页连接池隔离
+// 隐藏 iframe 独立连接池运行，逐文件比对字节数，仅刷新变化的文件
 if (!window.__TVBOX_WARM_RUN) {
   window.__TVBOX_WARM_RUN = true;
 
@@ -224,7 +224,6 @@ if (!window.__TVBOX_WARM_RUN) {
     }
   });
 
-  // 创建隐藏 iframe，独立连接池运行预热
   setTimeout(function() {
     var iframe = document.createElement('iframe');
     iframe.src = '/js/sevencolor/tvbox-warm.html';
