@@ -260,9 +260,8 @@ def categories():
 # ── 启动 ──────────────────────────────
 
 if __name__ == '__main__':
-    import ssl
     cert_dir = os.path.dirname(os.path.abspath(__file__))
-
+    
     idx = load_index()
     site_count = len(idx) if idx else 0
     file_count = len([f for f in os.listdir(DATA_DIR) if f.endswith('.js') and f != 'index.js'])
@@ -271,17 +270,17 @@ if __name__ == '__main__':
     print(f'  数据目录: {DATA_DIR}')
     print(f'  站点数: {site_count}')
     print(f'  数据文件: {file_count}')
-    print(f'  监听端口: {PORT} (HTTP + HTTPS)')
+    print(f'  监听端口: {PORT}')
     print(f'  跨域: 已启用')
     print(f'=' * 50)
 
-    # HTTP
-    from threading import Thread
-    Thread(target=lambda: app.run(host='0.0.0.0', port=PORT, debug=False), daemon=True).start()
-    # HTTPS
-    app.run(
-        host='0.0.0.0',
-        port=PORT,
-        debug=False,
-        ssl_context=(os.path.join(cert_dir, 'cert.pem'), os.path.join(cert_dir, 'key.pem'))
-    )
+    # Get SSL cert/key paths
+    cert_path = os.path.join(cert_dir, 'cert.pem')
+    key_path = os.path.join(cert_dir, 'key.pem')
+    if os.path.exists(cert_path) and os.path.exists(key_path):
+        print(f'  HTTPS: 已启用 (自签名证书)')
+        app.run(host='0.0.0.0', port=PORT, debug=False,
+                ssl_context=(cert_path, key_path))
+    else:
+        print(f'  HTTP: 未找到证书，使用HTTP模式')
+        app.run(host='0.0.0.0', port=PORT, debug=False)
