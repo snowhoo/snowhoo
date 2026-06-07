@@ -236,6 +236,7 @@ function loadFresh(file, cb, to){
 var preloadTotal=0,preloadCompleted=0;
 function updatePreload(p){ $('pwPreloadProgressFill').style.width=p+'%'; }
 function startPreload(){
+  window.__TVBOX_WARM_RUN = true;  // 阻止全局预热重复触发
   if(!sourceIndex.length) return;
   var files=new Set();
   sourceIndex.forEach(function(s){

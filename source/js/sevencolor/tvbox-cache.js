@@ -156,17 +156,16 @@
       if (done) done();
     }
 
-    // 第一步：从 IndexedDB 快速加载
+    // 第一步：从 IndexedDB 快速加载（不推进进度，避免瞬间100%）
     var dbLoaded = 0;
     fileList.forEach(function(f) {
       loadFromDB(f).then(function(cached) {
         if (cached && !loaded[f]) loaded[f] = cached;
         dbLoaded++;
-        bump();
       });
     });
 
-    // 第二步：逐文件 fetch 比对字节数，变化才联网刷新
+    // 第二步：逐文件 fetch 比对字节数（推进进度），变化才联网刷新
     var checkDone = 0, needRefresh = [];
     fileList.forEach(function(f) {
       fetch(basePath + 'data/' + f)
@@ -179,6 +178,7 @@
         .catch(function() {})
         .then(function() {
           checkDone++;
+          bump();  // 每个文件比对完才推进进度
           if (checkDone >= fileList.length) {
             // 第三步：仅刷新变化的文件
             if (needRefresh.length === 0) {
