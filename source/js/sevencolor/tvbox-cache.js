@@ -202,70 +202,44 @@
 })();
 
 // ── 自动预热触发器 ──
+// 通过隐藏 iframe 独立运行，连接池与主页隔离，不抢七彩按钮请求
 if (!window.__TVBOX_WARM_RUN) {
   window.__TVBOX_WARM_RUN = true;
-  window.__TVBOX_BASE = window.__TVBOX_BASE || '/js/sevencolor/3/';
 
-  setTimeout(function() {
-    var s = document.createElement('script');
-    s.src = window.__TVBOX_BASE + 'data/index.js';
-    s.onload = function() {
-      var idx = window._TVBOX_INDEX;
-      delete window._TVBOX_INDEX;
-      if (!idx || !idx.length) return;
-      var files = [];
-      idx.forEach(function(site) {
-        if (site.page_count) {
-          for (var pg = 1; pg <= site.page_count; pg++) {
-            var n = String(pg);
-            if (n.length < 2) n = '0' + n;
-            files.push(site.file.replace(/-01\.js$/, '-' + n + '.js'));
-          }
-        }
-      });
-      if (!files.length) return;
-
-      // 先从 IndexedDB 加载缓存
-      files.forEach(function(f) {
-        TVCache.load(f, function() {});
-      });
-
-      var total = files.length, done = 0;
-      var BATCH = 10, DELAY = 150;
-
-      // 底部 1px 低调进度条
-      var bar = document.createElement('div');
-      bar.innerHTML = '<div style="position:fixed;bottom:0;left:0;right:0;z-index:99998;height:1px;background:transparent"><div class="tvbox-slow-fill" style="height:100%;width:0;background:rgba(0,0,0,0.8);transition:width .4s"></div></div>';
+  // 底部 1px 进度条
+  var bar = document.createElement('div');
+  bar.innerHTML = '<div style="position:fixed;bottom:0;left:0;right:0;z-index:99998;height:1px;background:transparent"><div class="tvbox-iframe-fill" style="height:100%;width:0;background:rgba(0,0,0,0.8);transition:width .3s"></div></div>';
+  window.addEventListener('load', function() {
+    setTimeout(function() {
       document.body.appendChild(bar.firstElementChild);
-      var fill = document.querySelector('.tvbox-slow-fill');
-      var wrap = fill.parentElement;
+    }, 3000);
+  });
 
-      function bump() {
-        done++;
-        if (fill) fill.style.width = Math.floor(done / total * 100) + '%';
-        if (done >= total) {
-          setTimeout(function() {
-            if (wrap && wrap.parentNode) wrap.parentNode.removeChild(wrap);
-          }, 600);
+  window.addEventListener('message', function(e) {
+    if (!e.data || e.data.type !== 'tvbox-warm-progress') return;
+    var fill = document.querySelector('.tvbox-iframe-fill');
+    if (fill) fill.style.width = Math.floor(e.data.done / e.data.total * 100) + '%';
+  });
+  window.addEventListener('message', function(e) {
+    if (!e.data || e.data.type !== 'tvbox-warm-done') return;
+    var fill = document.querySelector('.tvbox-iframe-fill');
+    if (fill && fill.parentElement) {
+      fill.style.width = '100%';
+      setTimeout(function() {
+        if (fill.parentElement && fill.parentElement.parentNode) {
+          fill.parentElement.parentNode.removeChild(fill.parentElement);
         }
-      }
+      }, 500);
+    }
+  });
 
-      // 分批 fetch，批次间延迟 150ms 释放连接给其他请求
-      var bp = window.__TVBOX_BASE, pos = 0;
-      function runBatch() {
-        var end = Math.min(pos + BATCH, total);
-        for (var i = pos; i < end; i++) (function(f) {
-          fetch(bp + 'data/' + f).then(function(r) { return r.text(); }).then(function(t) {
-            var newSize = t.length;
-            var oldSize = parseInt((localStorage.getItem('tvbox_fsize_' + f) || '0'));
-            if (newSize !== oldSize) loadFresh(f, function() {}, 8000);
-          }).catch(function() {}).then(function() { bump(); });
-        })(files[i]);
-        pos = end;
-        if (pos < total) setTimeout(runBatch, DELAY);
-      }
-      runBatch();
-    };
-    document.head.appendChild(s);
-  }, 3000);
+  // 创建隐藏 iframe，独立连接池运行预热
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      var iframe = document.createElement('iframe');
+      iframe.src = '/js/sevencolor/tvbox-warm.html';
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+    }, 3000);
+  });
 }

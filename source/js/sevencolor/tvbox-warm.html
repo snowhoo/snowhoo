@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head><body>
+<script>
+// TVBox 预热 Worker — 通过隐藏 iframe 独立运行，避免抢占主页连接池
+(function() {
+  var bp = '/js/sevencolor/3/', BATCH = 10, DELAY = 150;
+  var idxUrl = bp + 'data/index.js';
+
+  var DB_NAME = 'tvbox_cache', STORE = 'files';
+  var db = null;
+
+  function openDB(cb) {
+    var req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = function(e) {
+      e.target.result.createObjectStore(STORE, { keyPath: 'file' });
+    };
+    req.onsuccess = function(e) { db = e.target.result; cb(); };
+    req.onerror = function() { db = null; cb(); };
+  }
+
+  function saveToDB(file, data) {
+    if (!db || !data) return;
+    var entry = { file: file, _d: data, _t: Date.now() };
+    try { localStorage.setItem('tvbox_fsize_' + file, JSON.stringify(data).length); } catch(e) {}
+    try {
+      var tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).put(entry);
+    } catch(e) {}
+  }
+
+  function loadFresh(file, cb) {
+    var s = document.createElement('script');
+    var t = setTimeout(function() { s.onerror = s.onload = null; s.remove(); cb(); }, 8000);
+    s.onerror = function() { clearTimeout(t); cb(); };
+    s.onload = function() {
+      clearTimeout(t);
+      var d = window._TVBOX_SITE_DATA;
+      delete window._TVBOX_SITE_DATA;
+      if (d) saveToDB(file, d);
+      cb();
+    };
+    s.src = bp + 'data/' + file;
+    document.head.appendChild(s);
+  }
+
+  function run(files) {
+    var total = files.length, done = 0, pos = 0;
+
+    function runBatch() {
+      var end = Math.min(pos + BATCH, total);
+      for (var i = pos; i < end; i++) (function(f) {
+        fetch(bp + 'data/' + f).then(function(r) { return r.text(); }).then(function(t) {
+          var newSize = t.length;
+          var oldSize = parseInt((localStorage.getItem('tvbox_fsize_' + f) || '0'));
+          if (newSize !== oldSize) loadFresh(f, function() {});
+        }).catch(function() {}).then(function() {
+          done++;
+          if (parent && parent.postMessage) {
+            parent.postMessage({ type: 'tvbox-warm-progress', done: done, total: total }, '*');
+          }
+          if (done >= total && parent && parent.postMessage) {
+            parent.postMessage({ type: 'tvbox-warm-done' }, '*');
+          }
+        });
+      })(files[i]);
+      pos = end;
+      if (pos < total) setTimeout(runBatch, DELAY);
+    }
+
+    openDB(function() { runBatch(); });
+  }
+
+  // 加载 index.js
+  var s = document.createElement('script');
+  s.src = idxUrl;
+  s.onload = function() {
+    var idx = window._TVBOX_INDEX;
+    delete window._TVBOX_INDEX;
+    if (!idx || !idx.length) return;
+    var files = [];
+    idx.forEach(function(site) {
+      if (site.page_count) {
+        for (var pg = 1; pg <= site.page_count; pg++) {
+          var n = String(pg);
+          if (n.length < 2) n = '0' + n;
+          files.push(site.file.replace(/-01\.js$/, '-' + n + '.js'));
+        }
+      }
+    });
+    if (files.length) run(files);
+  };
+  document.head.appendChild(s);
+})();
+</script>
+</body></html>
