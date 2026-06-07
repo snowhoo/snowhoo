@@ -36,8 +36,32 @@
     document.head.appendChild(s);
   }
 
+  function loadFromDB(file, cb) {
+    if (!db) return cb(null);
+    try {
+      var tx = db.transaction(STORE, 'readonly');
+      var req = tx.objectStore(STORE).get(file);
+      req.onsuccess = function() {
+        var entry = req.result;
+        cb(entry && entry._d ? entry._d : null);
+      };
+      req.onerror = function() { cb(null); };
+    } catch(e) { cb(null); }
+  }
+
   function run(files) {
     var total = files.length, done = 0, ri = 0, rr = 0;
+
+    // 先从 IndexedDB 秒加载已有缓存
+    files.forEach(function(f) {
+      loadFromDB(f, function(data) {
+        done++;
+        if (parent && parent.postMessage) {
+          parent.postMessage({ type: 'tvbox-warm-progress', done: done, total: total }, '*');
+        }
+      });
+    });
+
     function checkNext() {
       if (ri >= total) { if (rr <= 0) return; else return; }
       if (rr >= CONCURRENT) return;
