@@ -202,8 +202,6 @@
 })();
 
 // ── 自动预热触发器 ──
-// __TVBOX_WARM_RUN 防止重复启动（3.html 也会触发自己的预热）
-// 延迟启动，后台静默运行，不显示进度条
 if (!window.__TVBOX_WARM_RUN) {
   window.__TVBOX_WARM_RUN = true;
   window.__TVBOX_BASE = window.__TVBOX_BASE || '/js/sevencolor/3/';
@@ -225,18 +223,48 @@ if (!window.__TVBOX_WARM_RUN) {
           }
         }
       });
-      // 后台静默预热：逐个比对字节数，仅刷新变化的文件
       if (!files.length) return;
-      var bp = window.__TVBOX_BASE;
-      var done = 0;
+
+      // 先从 IndexedDB 加载缓存
       files.forEach(function(f) {
-        fetch(bp + 'data/' + f).then(function(r) { return r.text(); }).then(function(t) {
-          var newSize = t.length;
-          var oldSize = parseInt((localStorage.getItem('tvbox_fsize_' + f) || '0'));
-          if (newSize !== oldSize) loadFresh(f, function() {}, 8000);
-        }).catch(function() {})
-          .then(function() { done++; });
+        TVCache.load(f, function() {});
       });
+
+      var total = files.length, done = 0;
+      var BATCH = 10, DELAY = 150;
+
+      // 底部 1px 低调进度条
+      var bar = document.createElement('div');
+      bar.innerHTML = '<div style="position:fixed;bottom:0;left:0;right:0;z-index:99998;height:1px;background:transparent"><div class="tvbox-slow-fill" style="height:100%;width:0;background:rgba(0,0,0,0.8);transition:width .4s"></div></div>';
+      document.body.appendChild(bar.firstElementChild);
+      var fill = document.querySelector('.tvbox-slow-fill');
+      var wrap = fill.parentElement;
+
+      function bump() {
+        done++;
+        if (fill) fill.style.width = Math.floor(done / total * 100) + '%';
+        if (done >= total) {
+          setTimeout(function() {
+            if (wrap && wrap.parentNode) wrap.parentNode.removeChild(wrap);
+          }, 600);
+        }
+      }
+
+      // 分批 fetch，批次间延迟 150ms 释放连接给其他请求
+      var bp = window.__TVBOX_BASE, pos = 0;
+      function runBatch() {
+        var end = Math.min(pos + BATCH, total);
+        for (var i = pos; i < end; i++) (function(f) {
+          fetch(bp + 'data/' + f).then(function(r) { return r.text(); }).then(function(t) {
+            var newSize = t.length;
+            var oldSize = parseInt((localStorage.getItem('tvbox_fsize_' + f) || '0'));
+            if (newSize !== oldSize) loadFresh(f, function() {}, 8000);
+          }).catch(function() {}).then(function() { bump(); });
+        })(files[i]);
+        pos = end;
+        if (pos < total) setTimeout(runBatch, DELAY);
+      }
+      runBatch();
     };
     document.head.appendChild(s);
   }, 3000);
