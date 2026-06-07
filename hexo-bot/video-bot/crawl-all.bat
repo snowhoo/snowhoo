@@ -3,49 +3,20 @@ chcp 65001 >nul
 setlocal
 title TVBox Crawl
 
+REM ── 环境配置 ──────────────────────────────────────────
 set "BOT_DIR=%~dp0"
-set "HEXO_DIR=D:\hexo"
-set "LOG=%BOT_DIR%crawl-log.txt"
 set "PATH=C:\Program Files\Git\cmd;C:\Program Files\Git\usr\bin;%PATH%"
 set "HOME=%USERPROFILE%"
 set "PYTHONIOENCODING=utf-8"
+set "PYTHONUTF8=1"
 
-echo ========================================
-echo TVBox Crawl - %DATE% %TIME%
-echo ========================================
-echo [%DATE% %TIME%] START >> "%LOG%"
-
+REM ── 进入项目目录并运行编排脚本 ──────────────────────────
 cd /d "%BOT_DIR%"
-python tvbox-crawler-optimized.py
+python run.py %*
 if %ERRORLEVEL% NEQ 0 (
-    echo [%DATE% %TIME%] CRAWL FAILED >> "%LOG%"
-    echo CRAWL FAILED!
-    pause
-    exit /b 1
-)
-echo [%DATE% %TIME%] CRAWL DONE >> "%LOG%"
-
-REM Git push
-cd /d "%HEXO_DIR%"
-git diff --quiet -- "source/js/sevencolor/3/data"
-if %ERRORLEVEL% EQU 1 (
-    echo Pushing...
-    echo [%DATE% %TIME%] Pushing >> "%LOG%"
-    git add "source/js/sevencolor/3/data"
-    git commit -m "chore: auto-update TVBox video data"
-    git push origin source
-    if %ERRORLEVEL% EQU 0 (
-        echo [%DATE% %TIME%] PUSH OK >> "%LOG%"
-    ) else (
-        echo [%DATE% %TIME%] PUSH FAILED >> "%LOG%"
-    )
-) else (
-    echo No changes, skip push.
-    echo [%DATE% %TIME%] No changes >> "%LOG%"
+    echo 运行出错，检查上方日志
 )
 
-echo [%DATE% %TIME%] DONE >> "%LOG%"
-echo ========================================
-echo Done! Log: %LOG%
-echo ========================================
+REM ── 无论成败都暂停以便查看 ─────────────────────────────
 pause
+exit /b %ERRORLEVEL%

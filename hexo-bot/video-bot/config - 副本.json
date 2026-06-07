@@ -1,0 +1,25 @@
+﻿{
+  "_说明": "TVBox 数据源配置文件",
+  "_用法": "修改 sources 列表，添加或移除数据源地址，然后运行 python tvbox-crawler.py",
+
+  "sources": [
+    "http://xhztv.top/xhz",
+    "https://fastly.jsdelivr.net/gh/qirenzhidao/tvbox18@main/app.json",
+    "https://fastly.jsdelivr.net/gh/gaotianliuyun/gao@master/0827.json",
+    "https://gitlab.com/duomv/dzhipy/-/raw/main/index.json",
+    "https://fastly.jsdelivr.net/gh/liu673cn/box@main/m.json",
+    "https://360zy.com/api.php/provide/vod?",
+    "https://api.guangsuapi.com/api.php/provide/vod/",
+    "https://bfzyapi.com/api.php/provide/vod/",
+    "https://jszyapi.com/api.php/provide/vod/at/json",
+    "https://nos.netease.com/ysf/0075389dca9afadd4614e9713765ff17.txt"
+  ],
+
+  "crawler": {
+    "max_workers": 5,
+    "max_pages": 80,
+    "videos_per_page": 10,
+    "request_timeout": 15,
+    "test_mode": false
+  }
+}

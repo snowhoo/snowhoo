@@ -16,6 +16,7 @@ import os
 import sys
 import json
 import time
+import re
 import requests
 import traceback
 from datetime import datetime
@@ -129,6 +130,20 @@ def fetch_json_text(url, timeout=15):
         return None
 
 
+def _extract_source_name(url):
+    """从数据源 URL 提取可读的源名称"""
+    # 去掉协议和尾斜杠
+    clean = re.sub(r'^https?://', '', url).rstrip('/')
+    # 取最后一节，限制长度
+    parts = clean.rsplit('/', 1)
+    name = parts[-1] if parts else clean
+    # 如果最后一节很短或是纯数字/哈希，多取一节
+    if len(name) < 3 or name.isalnum():
+        if len(parts) > 1:
+            name = parts[-2].rsplit('/', 1)[-1] + '/' + name
+    return name[:30]
+
+
 def collect_cmsv10_sites():
     """
     从配置文件读取数据源，获取并解析所有 CMSV10 兼容的 API 站点。
@@ -149,23 +164,37 @@ def collect_cmsv10_sites():
 
     all_sites = []
     seen_keys = set()
+    timeout = crawler_config.get('request_timeout', 15)
+
+    # 数据源解析统计
+    src_success = 0
+    src_fail = 0
 
     # 方式一：从配置文件中的 URL 直接获取
     if source_urls:
-        for url in source_urls:
-            text = fetch_json_text(url, crawler_config.get('request_timeout', 15))
+        total = len(source_urls)
+        for idx, url in enumerate(source_urls, 1):
+            total_before = len(all_sites)
+
+            text = fetch_json_text(url, timeout)
             if not text:
-                print(f'  ⏭️ 获取失败: {url}')
+                print(f'  [{idx}/{total}] {url}')
+                print(f'    → ❌ 获取失败（网络超时或非200）')
+                src_fail += 1
                 continue
             try:
                 data = json.loads(text)
-            except json.JSONDecodeError:
-                print(f'  ⏭️ JSON解析失败: {url}')
+            except json.JSONDecodeError as e:
+                print(f'  [{idx}/{total}] {url}')
+                print(f'    → ❌ JSON解析失败: {str(e)[:80]}')
+                src_fail += 1
                 continue
 
-            sname = url.split('/')[-1].split('.')[0][:20]
             # 处理JSON数组
             if isinstance(data, list):
+                item_count = len(data)
+                child_ok = 0
+                child_fail = 0
                 for item in data:
                     if not isinstance(item, dict):
                         continue
@@ -173,56 +202,86 @@ def collect_cmsv10_sites():
                     item_api = item.get('api', '')
 
                     if item_url:
-                        # 有 url 字段 → 多仓：url 指向子聚合 JSON，fetch 后取 sites
-                        child_text = fetch_json_text(item_url, crawler_config.get('request_timeout', 15))
+                        child_text = fetch_json_text(item_url, timeout)
                         if child_text:
                             try:
                                 child_data = json.loads(child_text)
                                 child_sites = child_data.get('sites', []) if isinstance(child_data, dict) else []
                                 for site in child_sites:
-                                    _add_site(site, sname, all_sites, seen_keys)
+                                    _add_site(site, url, all_sites, seen_keys)
+                                child_ok += 1
                             except json.JSONDecodeError:
-                                pass
+                                child_fail += 1
+                        else:
+                            child_fail += 1
                     elif item_api.startswith(('http://', 'https://')):
-                        # api 是完整 HTTP URL → 直接作为 CMS V10 API 站点使用
-                        _add_site(item, sname, all_sites, seen_keys)
+                        _add_site(item, url, all_sites, seen_keys)
+                        child_ok += 1
                     elif item_api:
-                        # 相对路径 / 特殊值（如 ./drpy_libs/xxx.js）→ 尝试 fetch 后取 sites
-                        child_text = fetch_json_text(item_api, crawler_config.get('request_timeout', 15))
+                        child_text = fetch_json_text(item_api, timeout)
                         if child_text:
                             try:
                                 child_data = json.loads(child_text)
                                 child_sites = child_data.get('sites', []) if isinstance(child_data, dict) else []
                                 for site in child_sites:
-                                    _add_site(site, sname, all_sites, seen_keys)
+                                    _add_site(site, url, all_sites, seen_keys)
+                                child_ok += 1
                             except json.JSONDecodeError:
-                                pass
+                                child_fail += 1
+                        else:
+                            child_fail += 1
+                    else:
+                        child_fail += 1
+
+                sites_from_this = len(all_sites) - total_before
+                new_names = ', '.join(s['name'] for s in all_sites[total_before:])
+                print(f'  [{idx}/{total}] {url}')
+                if sites_from_this:
+                    print(f'    → 聚合源({item_count}条) {child_ok}成功/{child_fail}失败 新增 {sites_from_this} 站点: {new_names}')
+                else:
+                    print(f'    → 聚合源({item_count}条) {child_ok}成功/{child_fail}失败 无新增（均已存在）')
+                src_success += 1
                 continue
 
             # 单仓：优先提取 sites 格式，其次检测直接视频列表格式
             sites = data.get('sites', []) if isinstance(data, dict) else []
             if sites:
                 for site in sites:
-                    _add_site(site, sname, all_sites, seen_keys)
+                    _add_site(site, url, all_sites, seen_keys)
+                sites_from_this = len(all_sites) - total_before
+                new_names = ', '.join(s['name'] for s in all_sites[total_before:])
+                print(f'  [{idx}/{total}] {url}')
+                if sites_from_this:
+                    print(f'    → 单仓源({len(sites)}站点) 新增 {sites_from_this} 站点: {new_names}')
+                else:
+                    print(f'    → 单仓源({len(sites)}站点) 无新增（均已存在）')
+                src_success += 1
             elif isinstance(data, dict) and 'list' in data and 'sites' not in data:
-                # 直接视频列表格式（如 360zy.com）：源本身就是可爬 API
-                # 从 URL 提取站点名（取域名部分）
                 parsed = urlparse(url)
-                direct_name = parsed.netloc.split('.')[-2] if parsed.netloc else sname
+                direct_name = parsed.netloc.split('.')[-2] if parsed.netloc else url.split('/')[-1][:20]
                 direct_key = f"direct_{len(all_sites)}"
                 all_sites.append({
                     'key': direct_key,
                     'name': direct_name,
-                    'api': url,          # 完整 URL（含 ac=list 等参数）
+                    'api': url,
                     'type': -1,
-                    'source': sname,
-                    'is_direct': True,   # 标记为直接视频源
+                    'source': url,
+                    'is_direct': True,
                 })
                 seen_keys.add(direct_key)
+                print(f'  [{idx}/{total}] {url}')
+                print(f'    → 直接视频源（{direct_name}）')
+                src_success += 1
+            else:
+                print(f'  [{idx}/{total}] {url}')
+                print(f'    → ⚠️ 未知JSON格式（无sites/list字段）')
+                src_fail += 1
     else:
         print('[WARN] config.json 中无有效数据源配置，爬虫将无法获取站点')
 
-    print(f'  → 发现 {len(all_sites)} 个 API 站点（其中 {sum(1 for s in all_sites if s.get("is_direct"))} 个直接视频源）')
+    direct_count = sum(1 for s in all_sites if s.get('is_direct'))
+    api_count = len(all_sites) - direct_count
+    print(f'  ── 汇总: {len(source_urls)}个数据源 → {src_success}成功/{src_fail}失败 → {len(all_sites)}个站点（{api_count}API + {direct_count}直接源）')
     return all_sites
 
 

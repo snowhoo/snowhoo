@@ -1,0 +1,21 @@
+============================================================
+  TVBox 爬虫编排 v2.0
+  开始时间: 2026-06-07 08:09:10.717
+  日志文件: D:\hexo\hexo-bot\video-bot\202606070809107.log
+============================================================
+[FATAL] 未捕获异常: 'TeeLogger' object is not callable
+Traceback (most recent call last):
+  File "D:\hexo\hexo-bot\video-bot\run.py", line 369, in main
+    setup_ssh_agent(logger)
+    ~~~~~~~~~~~~~~~^^^^^^^^
+  File "D:\hexo\hexo-bot\video-bot\run.py", line 155, in setup_ssh_agent
+    log('─' * 50)
+    ~~~^^^^^^^^^^
+TypeError: 'TeeLogger' object is not callable
+
+============================================================
+  结束时间: 2026-06-07 08:09:10.731
+  总耗时: 0:00:00
+  结果: ❌ 失败
+  日志: D:\hexo\hexo-bot\video-bot\202606070809107.log
+============================================================

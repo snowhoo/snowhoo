@@ -1,0 +1,58 @@
+数据源解析检查
+============================================================
+[SRC] 从 config.json 读取 10 个数据源
+  [1/10] http://xhztv.top/xhz
+    → 单仓源(54站点) 新增 4 站点: 🐯虎牙直播, 🐠斗鱼直播, 有声小说吧, JRKAN直播
+  [2/10] https://fastly.jsdelivr.net/gh/qirenzhidao/tvbox18@main/app.json
+    → 单仓源(4站点) 无新增（均已存在）
+  [3/10] https://fastly.jsdelivr.net/gh/gaotianliuyun/gao@master/0827.json
+    → 单仓源(33站点) 新增 6 站点: 海外看, 暴風, 索尼 , 快帆, 量子, 非凡
+  [4/10] https://gitlab.com/duomv/dzhipy/-/raw/main/index.json
+    → 单仓源(435站点) 新增 1 站点: 电视┃MTV
+  [5/10] https://fastly.jsdelivr.net/gh/liu673cn/box@main/m.json
+    → 单仓源(234站点) 新增 13 站点: 👒┃小胡┃资源┃, 🐉┃索尼┃高清, 🕹️淘片┃采集, 🥗┃非凡┃资源, 🥑┃量子┃资源, 🦁┃四九┃资源, 🛰️飞速┃采集, 🐯┃奇虎┃采集, ⛱┃可可┃采集, 🐯虎牙采集, 🦊火狐采集, 🌪️暴风影音, 🎏百度┃采集
+  [6/10] https://360zy.com/api.php/provide/vod?
+    → 直接视频源（360zy）
+  [7/10] https://api.guangsuapi.com/api.php/provide/vod/
+    → 直接视频源（guangsuapi）
+  [8/10] https://bfzyapi.com/api.php/provide/vod/
+    → 直接视频源（bfzyapi）
+  [9/10] https://jszyapi.com/api.php/provide/vod/at/json
+    → 直接视频源（jszyapi）
+  [10/10] https://nos.netease.com/ysf/0075389dca9afadd4614e9713765ff17.txt
+    → ⚠️ 未知JSON格式（无sites/list字段）
+  ── 汇总: 10个数据源 → 9成功/1失败 → 28个站点（24API + 4直接源）
+
+站点列表:
+   1. [API] 🐯虎牙直播                           api=http://xhztv.top/xhz/js/lib/drpy2.min.js
+   2. [API] 🐠斗鱼直播                           api=http://xhztv.top/xhz/js/lib/drpy2.min.js
+   3. [API] 有声小说吧                           api=http://xhztv.top/xhz/js/lib/drpy2.min.js
+   4. [API] JRKAN直播                         api=http://xhztv.top/xhz/js/lib/drpy.min.js
+   5. [API] 海外看                             api=https://haiwaikan.com/api.php/provide/vod
+   6. [API] 暴風                              api=https://bfzyapi.com/api.php/provide/vod
+   7. [API] 索尼                              api=https://suoniapi.com/api.php/provide/vod
+   8. [API] 快帆                              api=https://api.kuaifan.tv/api.php/provide/vod
+   9. [API] 量子                              api=https://cj.lziapi.com/api.php/provide/vod
+  10. [API] 非凡                              api=http://cj.ffzyapi.com/api.php/provide/vod
+  11. [API] 电视┃MTV                          api=https://mv.wogg.link/mv/vod
+  12. [API] 👒┃小胡┃资源┃                        api=http://c.xn--yetu07f.icu/api.php/provide/vod/
+  13. [API] 🐉┃索尼┃高清                         api=https://suoniapi.com/api.php/provide/vod/?ac=list
+  14. [API] 🕹️淘片┃采集                         api=https://taopianapi.com/cjapi/mc/vod/json.html
+  15. [API] 🥗┃非凡┃资源                         api=http://ffzy1.tv/api.php/provide/vod/
+  16. [API] 🥑┃量子┃资源                         api=https://lzizy1.com/api.php/provide/vod/
+  17. [API] 🦁┃四九┃资源                         api=https://49zy1.com/api.php/provide/vod/?ac=list
+  18. [API] 🛰️飞速┃采集                         api=https://www.feisuzyapi.com/api.php/provide/vod/?ac=list
+  19. [API] 🐯┃奇虎┃采集                         api=https://caiji.qhzyapi.com/api.php/provide/vod/
+  20. [API] ⛱┃可可┃采集                         api=https://kekezy1.com/api.php/provide/vod/?ac=list
+  21. [API] 🐯虎牙采集                           api=https://www.huyaapi.com/api.php/provide/vod/from/hym3u8
+  22. [API] 🦊火狐采集                           api=https://hhzyapi.com/api.php/provide/vod/
+  23. [API] 🌪️暴风影音                          api=https://app.bfzyapi.com/api.php/provide/vod/
+  24. [API] 🎏百度┃采集                          api=https://api.apibdzy.com/api.php/provide/vod/?ac=list
+  25. [直接源] 360zy                           api=https://360zy.com/api.php/provide/vod?
+  26. [直接源] guangsuapi                      api=https://api.guangsuapi.com/api.php/provide/vod/
+  27. [直接源] bfzyapi                         api=https://bfzyapi.com/api.php/provide/vod/
+  28. [直接源] jszyapi                         api=https://jszyapi.com/api.php/provide/vod/at/json
+
+共 28 个站点
+
+日志: D:\hexo\hexo-bot\video-bot\202606070957333-source-check.log
