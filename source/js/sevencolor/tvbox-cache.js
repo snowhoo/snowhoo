@@ -200,3 +200,30 @@
 
   return { load: load, warm: warm, loadData: load, loadedSources: loaded };
 })();
+
+// ── 自动预热触发器 ──
+// 如果页面未设置 __TVBOX_BASE，默认指向 /js/sevencolor/3/
+// __TVBOX_WARM_RUN 防止重复启动（3.html 也会触发自己的预热）
+if (!window.__TVBOX_WARM_RUN) {
+  window.__TVBOX_WARM_RUN = true;
+  window.__TVBOX_BASE = window.__TVBOX_BASE || '/js/sevencolor/3/';
+  var warmScript = document.createElement('script');
+  warmScript.src = window.__TVBOX_BASE + 'data/index.js';
+  warmScript.onload = function() {
+    var idx = window._TVBOX_INDEX;
+    delete window._TVBOX_INDEX;
+    if (!idx || !idx.length) return;
+    var files = [];
+    idx.forEach(function(site) {
+      if (site.page_count) {
+        for (var pg = 1; pg <= site.page_count; pg++) {
+          var n = String(pg);
+          if (n.length < 2) n = '0' + n;
+          files.push(site.file.replace(/-01\.js$/, '-' + n + '.js'));
+        }
+      }
+    });
+    if (files.length) TVCache.warm(files);
+  };
+  document.head.appendChild(warmScript);
+}
