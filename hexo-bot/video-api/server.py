@@ -282,5 +282,5 @@ if __name__ == '__main__':
         app.run(host='0.0.0.0', port=PORT, debug=False,
                 ssl_context=(cert_path, key_path))
     else:
-        print(f'  HTTP: 未找到证书，使用HTTP模式')
+        print(f'  HTTP 模式')
         app.run(host='0.0.0.0', port=PORT, debug=False)

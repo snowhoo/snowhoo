@@ -1,0 +1,15 @@
+数据源解析检查
+============================================================
+[SRC] 从 config.json 读取 2 个数据源
+  [1/2] https://bfzyapi.com/api.php/provide/vod/
+    → 直接视频源（bfzyapi）
+  [2/2] https://360zy.com/api.php/provide/vod
+    → ❌ 获取失败（网络超时或非200）
+  ── 汇总: 2个数据源 → 1成功/1失败 → 1个站点（0API + 1直接源）
+
+站点列表:
+   1. [直接源] bfzyapi                         api=https://bfzyapi.com/api.php/provide/vod/
+
+共 1 个站点
+
+日志: D:\hexo\hexo-bot\video-bot\202606080906128-source-check.log
