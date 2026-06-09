@@ -3,16 +3,16 @@ layout: false
 ---
 <div id="af-root">
     <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px 15px">
-        <div style="display:flex;gap:24px;padding:14px;margin-bottom:16px;justify-content:center">
-            <div style="border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;align-items:center">
-                <img id="qrcode-img" alt="扫描下载APP" style="display:block;width:180px;height:180px;margin:0 auto">
-                <div style="font-size:13px;margin-top:10px;color:var(--sub)">手机扫描二维码下载</div>
-                <a id="download-link" style="display:inline-block;margin-top:12px;padding:10px 28px;color:#fff;background:var(--red);text-decoration:none;border-radius:6px;font-size:15px;cursor:pointer">获取本站APP</a>
+        <div class="dl-cards">
+            <div class="dl-card">
+                <img id="qrcode-img" alt="扫描下载APP" class="dl-qr">
+                <div class="dl-label">手机扫描二维码下载</div>
+                <a id="download-link" class="dl-btn dl-btn-red">获取本站APP</a>
             </div>
-            <div style="border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;align-items:center">
-                <img id="qrcode-img-xhbb" alt="扫描下载小红播霸" style="display:block;width:180px;height:180px;margin:0 auto">
-                <div style="font-size:13px;margin-top:10px;color:var(--sub)">扫描下载小红播霸</div>
-                <a id="download-link-xhbb" style="display:inline-block;margin-top:12px;padding:10px 28px;color:#fff;background:var(--green);text-decoration:none;border-radius:6px;font-size:15px;cursor:pointer">下载 小红播霸</a>
+            <div class="dl-card">
+                <img id="qrcode-img-xhbb" alt="扫描下载小红播霸" class="dl-qr">
+                <div class="dl-label">扫描下载小红播霸</div>
+                <a id="download-link-xhbb" class="dl-btn dl-btn-green">下载 小红播霸</a>
             </div>
         </div>
     </div>
@@ -21,6 +21,13 @@ layout: false
 <style>
 #af-root{--green:#00b894;--sub:#888;--red:#c0392b;--border:#ddd}
 #af-root[data-theme="dark"]{--green:#00cec9;--sub:#90a4ae;--red:#e74c3c;--border:#444}
+.dl-cards{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;padding:14px;margin-bottom:16px}
+.dl-card{border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;align-items:center}
+.dl-qr{display:block;width:180px;height:180px;margin:0 auto}
+.dl-label{font-size:13px;margin-top:10px;color:var(--sub)}
+.dl-btn{display:inline-block;margin-top:12px;padding:10px 28px;color:#fff;text-decoration:none;border-radius:6px;font-size:15px;cursor:pointer}
+.dl-btn-red{background:var(--red)}
+.dl-btn-green{background:var(--green)}
 </style>
 
 <script>
