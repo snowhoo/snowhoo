@@ -272,7 +272,6 @@ layout: false
             flex: 1;
         }
 
-        /* 删除按钮（仅特殊视图显示） */
         .delete-item-btn {
             position: absolute;
             top: 8px;
@@ -294,7 +293,6 @@ layout: false
         }
         .delete-item-btn:hover { background: #e74c3c; }
 
-        /* 数据来源小字 */
         .source-label {
             position: absolute;
             top: 6px;
@@ -382,6 +380,23 @@ layout: false
         .preload-bar { height: 3px; background: var(--border); border-radius: 4px; margin-bottom: 12px; overflow: hidden; }
         .preload-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
 
+        /* 底部版权信息 */
+        .copyright {
+            text-align: center;
+            margin-top: 40px;
+            padding: 12px 0;
+            font-size: 12px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+        }
+        .copyright a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .copyright a:hover {
+            text-decoration: underline;
+        }
+
         @media (max-width: 640px) {
             #app { padding: 10px; }
             .detail-header { flex-direction: column; align-items: center; text-align: center; }
@@ -391,6 +406,7 @@ layout: false
             .toolbar input { max-width: 100px; }
             .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; }
             .source-label { font-size: 9px; top: 4px; right: 4px; }
+            .copyright { margin-top: 30px; }
         }
     </style>
 </head>
@@ -464,6 +480,11 @@ layout: false
         </div>
         <video id="floatVideo" style="width:100%; aspect-ratio:16/9;" playsinline></video>
     </div>
+
+    <!-- 底部版权信息 -->
+    <div class="copyright">
+        小红播霸 by <a href="https://snowhoo.net" target="_blank" rel="noopener noreferrer">SnowHoo.NET</a> 小红故事 · <span id="currentYear"></span>
+    </div>
 </div>
 
 <script>
@@ -520,6 +541,9 @@ layout: false
     const escHtml = s => String(s).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
     const escAttr = s => String(s).replace(/[&"']/g, m => ({'&':'&amp;','"':'&quot;',"'":'&#39;'}[m]));
     const setStatus = txt => { const st = document.getElementById('statusText'); if(st) st.textContent = txt; };
+    
+    // 设置当前年份
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
     
     // 主题
     function initTheme() {
