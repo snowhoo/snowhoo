@@ -353,7 +353,7 @@ layout: false
         .preload-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
 
         @media (max-width: 640px) {
-            #app { padding: 12px; }
+            #app { padding: 10px; }
             .detail-header { flex-direction: column; align-items: center; text-align: center; }
             .toolbar { padding: 6px 0; gap: 8px; }
             .toolbar select, .toolbar input, .toolbar button { padding: 3px 6px; font-size: 13px; }
@@ -409,7 +409,7 @@ layout: false
                         </div>
                         <div class="detail-desc" id="detailDesc"></div>
                         <div style="margin-top: 20px; display: flex; gap: 12px;">
-                            <button id="detailBookmarkBtn" style="background:var(--accent); border:none; padding:8px 18px; border-radius:40px; cursor:pointer; color:white; font-weight:500;">📌 影签</button>
+                            <button id="detailBookmarkBtn" style="background:var(--bg-elevated); border:none; padding:8px 18px; border-radius:40px; cursor:pointer; font-weight:500;">📌 影签</button>
                             <button id="detailNextEpBtn" style="background:var(--bg-elevated); border:1px solid var(--border); padding:8px 18px; border-radius:40px; cursor:pointer;">⏩ 下集</button>
                         </div>
                     </div>
@@ -1217,7 +1217,7 @@ layout: false
     
     function loadIndexData(){
         loadData('index.js',data=>{
-            if(!data){ homeContent.innerHTML='<div class="empty-state">❌ 无数据源，请检查 data/ 目录</div>'; return; }
+            if(!data){ homeContent.innerHTML='<div class="empty-state">❌ 暂无数据源！</div>'; return; }
             sourceIndex=data;
             sourceSelect.innerHTML='';
             // 添加提示选项
@@ -1239,7 +1239,7 @@ layout: false
                 // 可以默认显示最近观看
                 renderSpecialView('__history__');
             } else {
-                homeContent.innerHTML='<div class="empty-state">暂无数据源，请运行爬虫生成 data/ 目录</div>';
+                homeContent.innerHTML='<div class="empty-state">❌ 暂无数据源！</div>';
             }
         });
     }
