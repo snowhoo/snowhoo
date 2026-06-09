@@ -43,12 +43,12 @@ layout: false
             --radius-sm: 12px;
         }
 
-        /* 明亮模式：白/浅灰背景 */
+        /* 明亮模式：白色/浅灰背景 */
         #app[data-theme="light"] {
-            --bg-body: #f8f9fc;
+            --bg-body: #ffffff;
             --bg-surface: #ffffff;
             --bg-card: #ffffff;
-            --bg-card-hover: #f1f5f9;
+            --bg-card-hover: #f8fafc;
             --bg-elevated: #f1f5f9;
             --border: #e2e8f0;
             --text-primary: #0f172a;
@@ -67,23 +67,19 @@ layout: false
         .view { transition: opacity 0.2s; }
         .view.hidden { display: none; }
 
-        /* 工具栏：窄屏下保持一行 + 横向滚动 */
+        /* 工具栏：无外框，清爽 */
         .toolbar {
-            background: var(--bg-surface);
-            backdrop-filter: blur(12px);
-            padding: 10px 16px;
-            border-radius: 48px;
-            margin-bottom: 20px;
+            background: transparent;
+            padding: 8px 0 12px 0;
+            margin-bottom: 16px;
             display: flex;
             gap: 10px;
             align-items: center;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
             overflow-x: auto;
             flex-wrap: nowrap;
             scrollbar-width: thin;
         }
-        .toolbar::-webkit-scrollbar { display: none; } /* 可选隐藏滚动条，保留功能 */
+        .toolbar::-webkit-scrollbar { height: 3px; }
         .toolbar select, .toolbar input, .toolbar button {
             border-radius: 40px;
             padding: 8px 16px;
@@ -120,12 +116,11 @@ layout: false
         }
         .toolbar .secondary-btn:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
 
-        /* 状态栏：分类与按钮组自动换行，按钮组内强制一行 */
+        /* 状态栏：分类区域可水平滚动，避免版面撑破 */
         .status-bar {
             background: var(--bg-surface);
-            backdrop-filter: blur(8px);
-            padding: 12px 18px;
             border-radius: 48px;
+            padding: 12px 18px;
             margin: 16px 0 24px;
             display: flex;
             justify-content: space-between;
@@ -133,14 +128,18 @@ layout: false
             flex-wrap: wrap;
             gap: 12px;
             border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
         }
         .cat-filters {
             display: flex;
             gap: 8px;
-            flex-wrap: wrap;
             align-items: center;
             flex: 1;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: thin;
         }
+        .cat-filters::-webkit-scrollbar { height: 3px; }
         .cat-badge {
             background: var(--bg-elevated);
             padding: 5px 14px;
@@ -150,6 +149,7 @@ layout: false
             border: 1px solid var(--border);
             transition: all 0.1s;
             white-space: nowrap;
+            flex-shrink: 0;
         }
         .cat-badge.active, .cat-badge:hover {
             background: var(--accent);
@@ -294,7 +294,7 @@ layout: false
         }
         .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* 播放页样式保持不变 */
+        /* 播放页样式 */
         .player-layout { display: flex; flex-direction: column; gap: 28px; }
         .player-container { background: #000; border-radius: 32px; overflow: hidden; aspect-ratio: 16/9; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
         .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 24px; border: 1px solid var(--border); }
@@ -319,7 +319,7 @@ layout: false
         @media (max-width: 640px) {
             #app { padding: 12px; }
             .detail-header { flex-direction: column; align-items: center; text-align: center; }
-            .toolbar { padding: 8px 12px; gap: 8px; }
+            .toolbar { padding: 6px 0; gap: 8px; }
             .toolbar select, .toolbar input, .toolbar button { padding: 6px 12px; font-size: 12px; }
             .status-bar { flex-direction: column; align-items: stretch; }
             .action-buttons { justify-content: flex-start; }
@@ -342,11 +342,11 @@ layout: false
         <div class="status-bar">
             <div id="catBar" class="cat-filters"></div>
             <div class="action-buttons">
-                <button id="historyBtn" class="secondary-btn">🕒 最近观看</button>
+                <button id="historyBtn" class="secondary-btn">🕒 最近</button>
                 <button id="favoritesBtn" class="secondary-btn">❤️ 收藏</button>
                 <button id="bookmarksBtn" class="secondary-btn">📌 影签</button>
-                <button id="searchResultBtn" class="secondary-btn">🔍 搜索结果</button>
-                <button id="clearSpecialBtn" class="clear-all-btn" style="display:none;">清空全部</button>
+                <button id="searchResultBtn" class="secondary-btn">🔍 结果</button>
+                <button id="clearSpecialBtn" class="clear-all-btn" style="display:none;">清空</button>
             </div>
         </div>
         <div id="homeContent" class="video-grid"></div>
@@ -408,7 +408,7 @@ layout: false
     let currentSearchKeyword='', currentSearchResults=[], currentSearchCategory='', isSearching=false, searchVersion=0;
     let currentPlayingVideo=null, currentPlayingEpIndex=0, currentOpenVideo=null, currentEpNext=null, currentHls=null, playerInFloat=false;
     
-    // 全量影片缓存 (每个数据源)
+    // 全量影片缓存
     let fullVideosCache = {};
     
     let currentView = 'home';
@@ -633,7 +633,6 @@ layout: false
         currentFiltered = filtered; currentPage=1;
         renderHomeGrid();
         sourceSelect.value='__search_result__';
-        // 显示清空全部按钮
         clearSpecialBtn.style.display = 'inline-block';
         clearSpecialBtn.onclick = () => clearAllSpecial('__search_result__');
     }
@@ -786,7 +785,7 @@ layout: false
         if(!currentSearchResults.length) clearSpecialBtn.style.display = 'none';
     }
     
-    // ========== 全量分类统计（修复） ==========
+    // ========== 全量分类统计 ==========
     function ensureFullCategoryStats(prefix, callback) {
         if (fullVideosCache[prefix] && fullVideosCache[prefix].ready) {
             if (callback) callback(fullVideosCache[prefix]);
@@ -913,7 +912,7 @@ layout: false
         });
     }
     
-    // 数据源切换（主入口）
+    // 数据源切换
     function switchSource(){
         if(isSearching) stopSearch();
         let val=sourceSelect.value;
@@ -925,11 +924,9 @@ layout: false
         clearSpecialBtn.style.display = 'none';
         currentCategory = '';
         
-        // 清空当前显示，显示加载
         homeContent.innerHTML='<div class="empty-state">⏳ 加载数据中...</div>';
         catBar.innerHTML = '<span class="cat-badge">统计分类中...</span>';
         
-        // 第一步：快速加载第一页数据显示（保证即时响应）
         const meta = sourceMeta[val];
         if (meta) {
             const baseFile = (meta.fileBase) || val;
@@ -944,7 +941,6 @@ layout: false
             }
         }
         
-        // 第二步：异步统计全量分类和影片
         ensureFullCategoryStats(val, function(cache) {
             if (currentPrefix === val) {
                 buildFullCatBar(val);
@@ -976,7 +972,7 @@ layout: false
         setStatus(`${data.name} — 第${page}页（正在统计全部分类...）`);
     }
     
-    // 播放页（完整保留）
+    // 播放页
     function openPlayerView(video){
         currentPlayerVideo = video;
         currentPlayerSourceKey = video.sourceKey;
@@ -1107,7 +1103,6 @@ layout: false
         clearSpecialBtn.style.display = 'none';
     });
     
-    // 加载索引
     function loadIndexData(){
         loadData('index.js',data=>{
             if(!data){ homeContent.innerHTML='<div class="empty-state">❌ 无数据源，请检查 data/ 目录</div>'; return; }
@@ -1124,7 +1119,6 @@ layout: false
         });
     }
     
-    // 事件绑定
     searchBtn.addEventListener('click', doSearch);
     stopSearchBtn.addEventListener('click', stopSearch);
     sourceSelect.addEventListener('change', switchSource);
