@@ -3,8 +3,8 @@
   "_用法": "修改 sources 列表，添加或移除数据源地址，然后运行 python tvbox-crawler.py",
 
   "sources": [
-    "https://bfzyapi.com/api.php/provide/vod/",
-    "https://360zy.com/api.php/provide/vod"
+    {"name": "暴风┃采二", "url": "https://bfzyapi.com/api.php/provide/vod/"},
+    {"name": "三六┃采九", "url": "https://360zy.com/api.php/provide/vod"}
   ],
 
   "crawler": {
