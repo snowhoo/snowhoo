@@ -9,22 +9,8 @@ layout: false
     <title>小红播霸</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: var(--bg-body);
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            transition: background 0.2s, color 0.2s;
-        }
-
-        #app {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px 24px 48px;
+        /* 全局变量 —— 确保 body 也能继承 */
+        :root {
             --bg-body: #0a0a0f;
             --bg-surface: #14141e;
             --bg-card: #1c1c26;
@@ -38,12 +24,12 @@ layout: false
             --accent-hover: #fd7e2e;
             --shadow-sm: 0 4px 12px rgba(0,0,0,0.3);
             --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
-            --radius-card: 10px;        /* 影片卡片圆角10px */
+            --radius-card: 10px;
             --radius-md: 16px;
             --radius-sm: 12px;
         }
 
-        /* 暗黑模式：纯黑背景 + 纯白文字 */
+        /* 暗黑模式覆盖 */
         #app[data-theme="dark"] {
             --bg-body: #000000;
             --bg-surface: #0a0a0f;
@@ -75,6 +61,18 @@ layout: false
             --accent-hover: #ea580c;
             --shadow-sm: 0 2px 6px rgba(0,0,0,0.05);
             --shadow-md: 0 8px 20px rgba(0,0,0,0.08);
+        }
+
+        body {
+            background: var(--bg-body);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        #app {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 24px 48px;
         }
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -346,7 +344,21 @@ layout: false
         .episodes-grid { display: flex; flex-wrap: wrap; gap: 10px; max-height: 340px; overflow-y: auto; padding: 4px 0; }
         .episode-item { background: var(--bg-elevated); border-radius: 40px; padding: 6px 18px; font-size: 13px; cursor: pointer; transition: all 0.1s; border: 1px solid var(--border); color: var(--text-secondary); }
         .episode-item:hover, .episode-item.current-ep { background: var(--accent); color: white; border-color: var(--accent); }
-        .back-home { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; background: var(--bg-card); padding: 8px 20px; border-radius: 40px; cursor: pointer; width: fit-content; border: 1px solid var(--border); font-weight: 500; transition: 0.1s; }
+        .back-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 20px;
+            background: var(--bg-card);
+            padding: 8px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            width: fit-content;
+            border: 1px solid var(--border);
+            font-weight: 500;
+            transition: 0.1s;
+            color: var(--text-primary);
+        }
         .back-home:hover { background: var(--accent); color: white; }
         .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
         .preload-bar { height: 3px; background: var(--border); border-radius: 4px; margin-bottom: 12px; overflow: hidden; }
@@ -356,9 +368,9 @@ layout: false
             #app { padding: 10px; }
             .detail-header { flex-direction: column; align-items: center; text-align: center; }
             .toolbar { padding: 6px 0; gap: 8px; }
-            .toolbar select, .toolbar input, .toolbar button { padding: 3px 6px; font-size: 13px; }
-            .toolbar select { min-width: 120px; }
-            .toolbar input { max-width: 120px; }
+            .toolbar select, .toolbar input, .toolbar button { padding: 3px 6px; font-size: 12px; }
+            .toolbar select { min-width: 100px; }
+            .toolbar input { max-width: 100px; }
             .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; }
         }
     </style>
@@ -409,8 +421,10 @@ layout: false
                         </div>
                         <div class="detail-desc" id="detailDesc"></div>
                         <div style="margin-top: 20px; display: flex; gap: 12px;">
-                            <button id="detailBookmarkBtn" style="background:var(--bg-elevated); border:none; padding:8px 18px; border-radius:40px; cursor:pointer; font-weight:500;">📌 影签</button>
-                            <button id="detailNextEpBtn" style="background:var(--bg-elevated); border:1px solid var(--border); padding:8px 18px; border-radius:40px; cursor:pointer;">⏩ 下集</button>
+                            <!-- 影签按钮：橙色背景白色文字 -->
+                            <button id="detailBookmarkBtn" style="background:var(--accent); border:none; padding:8px 18px; border-radius:40px; cursor:pointer; color:white; font-weight:500;">📌 影签</button>
+                            <!-- 下集按钮：跟随主题文字颜色 -->
+                            <button id="detailNextEpBtn" style="background:var(--bg-elevated); border:1px solid var(--border); padding:8px 18px; border-radius:40px; cursor:pointer; color:var(--text-primary);">⏩ 下集</button>
                         </div>
                     </div>
                 </div>
