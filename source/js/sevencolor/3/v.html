@@ -15,7 +15,6 @@ layout: false
             box-sizing: border-box;
         }
 
-        /* 主题变量：基础背景跟随主题 */
         body {
             background: var(--bg-body);
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -44,7 +43,24 @@ layout: false
             --radius-sm: 12px;
         }
 
-        /* 明亮模式：背景纯白，所有卡片及文字颜色舒适 */
+        /* 暗黑模式：纯黑背景 + 纯白文字 */
+        #app[data-theme="dark"] {
+            --bg-body: #000000;
+            --bg-surface: #0a0a0f;
+            --bg-card: #111115;
+            --bg-card-hover: #1a1a20;
+            --bg-elevated: #15151c;
+            --border: #2a2a33;
+            --text-primary: #ffffff;
+            --text-secondary: #c0c0cf;
+            --text-muted: #8a8a99;
+            --accent: #f97316;
+            --accent-hover: #fd7e2e;
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.5);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.6);
+        }
+
+        /* 明亮模式 */
         #app[data-theme="light"] {
             --bg-body: #f8fafc;
             --bg-surface: #ffffff;
@@ -68,7 +84,7 @@ layout: false
         .view { transition: opacity 0.2s; }
         .view.hidden { display: none; }
 
-        /* 工具栏：窄屏自动缩放，搜索输入框弹性适应 */
+        /* 工具栏 */
         .toolbar {
             background: transparent;
             padding: 8px 0 12px 0;
@@ -94,7 +110,6 @@ layout: false
             white-space: nowrap;
             flex-shrink: 0;
         }
-        /* 搜索输入框在窄屏下弹性占用剩余宽度 */
         .toolbar input {
             flex: 1;
             min-width: 80px;
@@ -122,12 +137,10 @@ layout: false
         }
         .toolbar .secondary-btn:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
 
-        /* 状态栏：分类与按钮区域，宽屏下自动换行，窄屏保持灵活 */
+        /* 状态栏：分类独占一行 */
         .status-bar {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 12px;
             margin: 16px 0 24px;
             padding: 0;
@@ -139,11 +152,10 @@ layout: false
             display: flex;
             gap: 8px;
             align-items: center;
-            flex: 1;
+            width: 100%;
             overflow-x: auto;
             padding-bottom: 4px;
             scrollbar-width: thin;
-            min-width: 0; /* 允许收缩 */
         }
         .cat-filters::-webkit-scrollbar { height: 3px; }
         .cat-badge {
@@ -156,6 +168,7 @@ layout: false
             transition: all 0.1s;
             white-space: nowrap;
             flex-shrink: 0;
+            color: var(--text-primary);
         }
         .cat-badge.active, .cat-badge:hover {
             background: var(--accent);
@@ -166,7 +179,6 @@ layout: false
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-            flex-shrink: 0;
         }
         .action-buttons button {
             background: var(--bg-elevated);
@@ -194,14 +206,14 @@ layout: false
         /* 影片网格 */
         .video-grid {
             display: grid;
-            gap: 20px;
+            gap: 14px;
             margin-top: 8px;
         }
         @media (max-width: 767px) {
-            .video-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+            .video-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
         }
         @media (min-width: 768px) {
-            .video-grid { grid-template-columns: repeat(6, 1fr); gap: 20px; }
+            .video-grid { grid-template-columns: repeat(6, 1fr); gap: 14px; }
         }
         .video-card {
             background: var(--bg-card);
@@ -229,10 +241,14 @@ layout: false
         .video-title {
             font-weight: 600;
             font-size: 13px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.4;
             color: var(--text-primary);
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         .video-meta {
             font-size: 11px;
@@ -243,19 +259,17 @@ layout: false
             align-items: center;
         }
         .fav-home-btn {
-            background: none;
-            border: 1px solid var(--border);
-            border-radius: 30px;
-            padding: 3px 8px;
-            font-size: 11px;
+            background: transparent;
+            border: none;
+            font-size: 16px;
             cursor: pointer;
-            transition: 0.1s;
+            transition: transform 0.1s;
+            padding: 4px;
             color: var(--text-secondary);
         }
         .fav-home-btn:hover {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
+            transform: scale(1.1);
+            color: var(--accent);
         }
         .delete-item-btn {
             position: absolute;
@@ -333,8 +347,6 @@ layout: false
             .detail-header { flex-direction: column; align-items: center; text-align: center; }
             .toolbar { padding: 6px 0; gap: 8px; }
             .toolbar select, .toolbar input, .toolbar button { padding: 6px 12px; font-size: 12px; }
-            .status-bar { flex-direction: column; align-items: stretch; }
-            .action-buttons { justify-content: flex-start; }
             .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; }
         }
     </style>
@@ -348,7 +360,7 @@ layout: false
             <input type="text" id="searchInput" placeholder="影片名">
             <button id="searchBtn">🔍 搜索</button>
             <button id="stopSearchBtn" style="display:none">⏹️ 停止</button>
-            <button id="themeToggleBtn" class="secondary-btn">🌓 主题</button>
+            <button id="themeToggleBtn" class="secondary-btn" title="切换主题"></button>
         </div>
         <div class="preload-bar" id="preloadBar" style="display:none"><div class="preload-fill" id="preloadFill"></div></div>
         <div class="status-bar">
@@ -464,13 +476,14 @@ layout: false
     const escAttr = s => String(s).replace(/[&"']/g, m => ({'&':'&amp;','"':'&quot;',"'":'&#39;'}[m]));
     const setStatus = txt => { const st = document.getElementById('statusText'); if(st) st.textContent = txt; };
     
-    // 主题
+    // 主题（只保留图标）
     function initTheme() {
         const saved = localStorage.getItem(STORAGE.THEME);
         const wrap = document.getElementById('app');
         let theme = saved || (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
         wrap.setAttribute('data-theme', theme);
-        themeToggle.textContent = theme === 'dark' ? '☀️ 明亮' : '🌙 暗黑';
+        themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        themeToggle.title = theme === 'dark' ? '切换到明亮模式' : '切换到暗黑模式';
     }
     function toggleTheme() {
         const wrap = document.getElementById('app');
@@ -478,7 +491,8 @@ layout: false
         const next = cur === 'dark' ? 'light' : 'dark';
         wrap.setAttribute('data-theme', next);
         localStorage.setItem(STORAGE.THEME, next);
-        themeToggle.textContent = next === 'dark' ? '☀️ 明亮' : '🌙 暗黑';
+        themeToggle.textContent = next === 'dark' ? '☀️' : '🌙';
+        themeToggle.title = next === 'dark' ? '切换到明亮模式' : '切换到暗黑模式';
     }
     themeToggle.addEventListener('click', toggleTheme);
     initTheme();
@@ -681,7 +695,7 @@ layout: false
                     <div class="video-title">${escHtml(v.vod_name)}</div>
                     <div class="video-meta">
                         <span>${v.ep_count||0}集 · ${v.playable_count||0}可播</span>
-                        <button class="fav-home-btn" data-sourcekey="${escAttr(v.sourceKey)}" data-name="${escAttr(v.vod_name)}">${isFav?'❤️ 已藏':'🤍 收藏'}</button>
+                        <button class="fav-home-btn" data-sourcekey="${escAttr(v.sourceKey)}" data-name="${escAttr(v.vod_name)}">${isFav?'❤️':'🤍'}</button>
                     </div>
                 </div>
             </div>`;
@@ -714,8 +728,8 @@ layout: false
             card.querySelector('.fav-home-btn')?.addEventListener('click',(e)=>{
                 e.stopPropagation();
                 let sKey=card.dataset.sourcekey, vName=card.dataset.name;
-                if(isFavorited(sKey,vName)){ removeFavorite(sKey,vName); e.target.textContent='🤍 收藏'; if(currentPrefix==='__favorites__') renderSpecialView('__favorites__'); }
-                else{ addFavorite({ sourceKey:sKey, vod_name:vName, vod_pic:card.dataset.pic, sourceName:card.dataset.sourcename, ep_count:parseInt(card.dataset.epcount), playable_count:parseInt(card.dataset.playable), episodes:JSON.parse(card.dataset.episodes), vod_class:card.dataset.class }); e.target.textContent='❤️ 已藏'; }
+                if(isFavorited(sKey,vName)){ removeFavorite(sKey,vName); e.target.textContent='🤍'; if(currentPrefix==='__favorites__') renderSpecialView('__favorites__'); }
+                else{ addFavorite({ sourceKey:sKey, vod_name:vName, vod_pic:card.dataset.pic, sourceName:card.dataset.sourcename, ep_count:parseInt(card.dataset.epcount), playable_count:parseInt(card.dataset.playable), episodes:JSON.parse(card.dataset.episodes), vod_class:card.dataset.class }); e.target.textContent='❤️'; }
             });
             card.querySelector('.delete-item-btn')?.addEventListener('click',(e)=>{
                 e.stopPropagation();
