@@ -3,17 +3,24 @@ layout: false
 ---
 <div id="af-root">
     <div style="display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px 15px">
-        <div style="padding:14px;margin-bottom:16px">
-            <img id="qrcode-img" alt="扫描下载APP" style="display:block;width:180px;height:180px;margin:0 auto">
-            <div style="font-size:13px;margin-top:10px;color:var(--sub)">手机扫描二维码下载</div>
+        <div style="display:flex;gap:24px;padding:14px;margin-bottom:16px;justify-content:center">
+            <div style="border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;align-items:center">
+                <img id="qrcode-img" alt="扫描下载APP" style="display:block;width:180px;height:180px;margin:0 auto">
+                <div style="font-size:13px;margin-top:10px;color:var(--sub)">手机扫描二维码下载</div>
+                <a id="download-link" style="display:inline-block;margin-top:12px;padding:10px 28px;color:#fff;background:var(--red);text-decoration:none;border-radius:6px;font-size:15px;cursor:pointer">获取本站APP</a>
+            </div>
+            <div style="border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;flex-direction:column;align-items:center">
+                <img id="qrcode-img-xhbb" alt="扫描下载小红播霸" style="display:block;width:180px;height:180px;margin:0 auto">
+                <div style="font-size:13px;margin-top:10px;color:var(--sub)">扫描下载小红播霸</div>
+                <a id="download-link-xhbb" style="display:inline-block;margin-top:12px;padding:10px 28px;color:#fff;background:var(--green);text-decoration:none;border-radius:6px;font-size:15px;cursor:pointer">下载 小红播霸</a>
+            </div>
         </div>
-        <a id="download-link" style="display:inline-block;padding:10px 28px;color:#fff;background:var(--green);text-decoration:none;border-radius:6px;font-size:15px;cursor:pointer">获取本站APP</a>
     </div>
 </div>
 
 <style>
-#af-root{--green:#00b894;--sub:#888}
-#af-root[data-theme="dark"]{--green:#00cec9;--sub:#90a4ae}
+#af-root{--green:#00b894;--sub:#888;--red:#c0392b;--border:#ddd}
+#af-root[data-theme="dark"]{--green:#00cec9;--sub:#90a4ae;--red:#e74c3c;--border:#444}
 </style>
 
 <script>
@@ -38,5 +45,9 @@ layout: false
     var fullUrl = window.location.origin + apkPath;
     document.getElementById('qrcode-img').src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(fullUrl);
     document.getElementById('download-link').href = apkPath;
+
+    var xhbbUrl = 'https://snowhoo.net/snowhoo.net.v.apk';
+    document.getElementById('qrcode-img-xhbb').src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(xhbbUrl);
+    document.getElementById('download-link-xhbb').href = xhbbUrl;
 })();
 </script>
