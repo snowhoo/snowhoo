@@ -43,19 +43,20 @@ layout: false
             --radius-sm: 12px;
         }
 
+        /* 明亮模式：白/浅灰背景 */
         #app[data-theme="light"] {
-            --bg-body: #f5f7fb;
+            --bg-body: #f8f9fc;
             --bg-surface: #ffffff;
             --bg-card: #ffffff;
-            --bg-card-hover: #f8fafc;
+            --bg-card-hover: #f1f5f9;
             --bg-elevated: #f1f5f9;
             --border: #e2e8f0;
             --text-primary: #0f172a;
             --text-secondary: #475569;
-            --text-muted: #94a3b8;
+            --text-muted: #64748b;
             --accent: #f97316;
             --accent-hover: #ea580c;
-            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+            --shadow-sm: 0 2px 6px rgba(0,0,0,0.05);
             --shadow-md: 0 8px 20px rgba(0,0,0,0.08);
         }
 
@@ -66,29 +67,35 @@ layout: false
         .view { transition: opacity 0.2s; }
         .view.hidden { display: none; }
 
+        /* 工具栏：窄屏下保持一行 + 横向滚动 */
         .toolbar {
             background: var(--bg-surface);
             backdrop-filter: blur(12px);
-            padding: 12px 20px;
-            border-radius: 60px;
-            margin-bottom: 24px;
+            padding: 10px 16px;
+            border-radius: 48px;
+            margin-bottom: 20px;
             display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
+            gap: 10px;
             align-items: center;
             border: 1px solid var(--border);
             box-shadow: var(--shadow-sm);
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            scrollbar-width: thin;
         }
+        .toolbar::-webkit-scrollbar { display: none; } /* 可选隐藏滚动条，保留功能 */
         .toolbar select, .toolbar input, .toolbar button {
             border-radius: 40px;
-            padding: 8px 18px;
+            padding: 8px 16px;
             font-weight: 500;
-            font-size: 14px;
+            font-size: 13px;
             border: 1px solid var(--border);
             background: var(--bg-card);
             color: var(--text-primary);
             outline: none;
             transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         .toolbar select {
             cursor: pointer;
@@ -113,11 +120,12 @@ layout: false
         }
         .toolbar .secondary-btn:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
 
+        /* 状态栏：分类与按钮组自动换行，按钮组内强制一行 */
         .status-bar {
             background: var(--bg-surface);
             backdrop-filter: blur(8px);
-            padding: 12px 20px;
-            border-radius: 60px;
+            padding: 12px 18px;
+            border-radius: 48px;
             margin: 16px 0 24px;
             display: flex;
             justify-content: space-between;
@@ -131,22 +139,36 @@ layout: false
             gap: 8px;
             flex-wrap: wrap;
             align-items: center;
+            flex: 1;
         }
         .cat-badge {
             background: var(--bg-elevated);
-            padding: 4px 14px;
+            padding: 5px 14px;
             border-radius: 40px;
             font-size: 13px;
             cursor: pointer;
             border: 1px solid var(--border);
             transition: all 0.1s;
+            white-space: nowrap;
         }
         .cat-badge.active, .cat-badge:hover {
             background: var(--accent);
             color: white;
             border-color: var(--accent);
         }
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+        .action-buttons button {
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
 
+        /* 影片网格 */
         .video-grid {
             display: grid;
             gap: 20px;
@@ -235,13 +257,12 @@ layout: false
         .clear-all-btn {
             background: #e74c3c;
             border: none;
-            padding: 6px 14px;
+            padding: 5px 14px;
             border-radius: 40px;
             color: white;
             cursor: pointer;
             font-size: 12px;
             font-weight: 500;
-            margin-left: 8px;
         }
         .clear-all-btn:hover { background: #c0392b; }
 
@@ -273,142 +294,35 @@ layout: false
         }
         .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        .player-layout {
-            display: flex;
-            flex-direction: column;
-            gap: 28px;
-        }
-        .player-container {
-            background: #000;
-            border-radius: 32px;
-            overflow: hidden;
-            aspect-ratio: 16/9;
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--border);
-        }
-        .video-detail {
-            background: var(--bg-surface);
-            border-radius: var(--radius-md);
-            padding: 24px;
-            border: 1px solid var(--border);
-        }
-        .detail-header {
-            display: flex;
-            gap: 24px;
-            flex-wrap: wrap;
-        }
-        .detail-poster {
-            width: 140px;
-            border-radius: var(--radius-sm);
-            aspect-ratio: 2/3;
-            object-fit: cover;
-            box-shadow: var(--shadow-sm);
-        }
+        /* 播放页样式保持不变 */
+        .player-layout { display: flex; flex-direction: column; gap: 28px; }
+        .player-container { background: #000; border-radius: 32px; overflow: hidden; aspect-ratio: 16/9; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
+        .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 24px; border: 1px solid var(--border); }
+        .detail-header { display: flex; gap: 24px; flex-wrap: wrap; }
+        .detail-poster { width: 140px; border-radius: var(--radius-sm); aspect-ratio: 2/3; object-fit: cover; box-shadow: var(--shadow-sm); }
         .detail-info { flex: 1; }
-        .detail-title {
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            color: var(--text-primary);
-        }
-        .detail-meta {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin: 12px 0;
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-        .detail-desc {
-            margin-top: 16px;
-            line-height: 1.5;
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
+        .detail-title { font-size: 26px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
+        .detail-meta { display: flex; gap: 20px; flex-wrap: wrap; margin: 12px 0; color: var(--text-secondary); font-size: 14px; }
+        .detail-desc { margin-top: 16px; line-height: 1.5; color: var(--text-secondary); font-size: 14px; }
         .episodes-section { margin-top: 28px; }
-        .episodes-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        .source-switch {
-            background: var(--bg-elevated);
-            border: 1px solid var(--border);
-            border-radius: 40px;
-            padding: 6px 16px;
-            font-size: 13px;
-            cursor: pointer;
-            color: var(--text-primary);
-        }
-        .episodes-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            max-height: 340px;
-            overflow-y: auto;
-            padding: 4px 0;
-        }
-        .episode-item {
-            background: var(--bg-elevated);
-            border-radius: 40px;
-            padding: 6px 18px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.1s;
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-        }
-        .episode-item:hover, .episode-item.current-ep {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
-        .back-home {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 20px;
-            background: var(--bg-card);
-            padding: 8px 20px;
-            border-radius: 40px;
-            cursor: pointer;
-            width: fit-content;
-            border: 1px solid var(--border);
-            font-weight: 500;
-            transition: 0.1s;
-        }
-        .back-home:hover {
-            background: var(--accent);
-            color: white;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 80px 20px;
-            color: var(--text-muted);
-            background: var(--bg-surface);
-            border-radius: var(--radius-md);
-        }
-        .preload-bar {
-            height: 3px;
-            background: var(--border);
-            border-radius: 4px;
-            margin-bottom: 12px;
-            overflow: hidden;
-        }
-        .preload-fill {
-            width: 0%;
-            height: 100%;
-            background: var(--accent);
-            transition: width 0.2s;
-        }
+        .episodes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+        .source-switch { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 6px 16px; font-size: 13px; cursor: pointer; color: var(--text-primary); }
+        .episodes-grid { display: flex; flex-wrap: wrap; gap: 10px; max-height: 340px; overflow-y: auto; padding: 4px 0; }
+        .episode-item { background: var(--bg-elevated); border-radius: 40px; padding: 6px 18px; font-size: 13px; cursor: pointer; transition: all 0.1s; border: 1px solid var(--border); color: var(--text-secondary); }
+        .episode-item:hover, .episode-item.current-ep { background: var(--accent); color: white; border-color: var(--accent); }
+        .back-home { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; background: var(--bg-card); padding: 8px 20px; border-radius: 40px; cursor: pointer; width: fit-content; border: 1px solid var(--border); font-weight: 500; transition: 0.1s; }
+        .back-home:hover { background: var(--accent); color: white; }
+        .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
+        .preload-bar { height: 3px; background: var(--border); border-radius: 4px; margin-bottom: 12px; overflow: hidden; }
+        .preload-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
+
         @media (max-width: 640px) {
             #app { padding: 12px; }
             .detail-header { flex-direction: column; align-items: center; text-align: center; }
-            .toolbar { padding: 12px; }
+            .toolbar { padding: 8px 12px; gap: 8px; }
+            .toolbar select, .toolbar input, .toolbar button { padding: 6px 12px; font-size: 12px; }
             .status-bar { flex-direction: column; align-items: stretch; }
+            .action-buttons { justify-content: flex-start; }
             .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; }
         }
     </style>
@@ -427,11 +341,11 @@ layout: false
         <div class="preload-bar" id="preloadBar" style="display:none"><div class="preload-fill" id="preloadFill"></div></div>
         <div class="status-bar">
             <div id="catBar" class="cat-filters"></div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                <button id="historyBtn" class="secondary-btn" style="padding:6px 14px;">🕒 最近观看</button>
-                <button id="favoritesBtn" class="secondary-btn" style="padding:6px 14px;">❤️ 收藏</button>
-                <button id="bookmarksBtn" class="secondary-btn" style="padding:6px 14px;">📌 影签</button>
-                <button id="searchResultBtn" class="secondary-btn" style="padding:6px 14px;">🔍 搜索结果</button>
+            <div class="action-buttons">
+                <button id="historyBtn" class="secondary-btn">🕒 最近观看</button>
+                <button id="favoritesBtn" class="secondary-btn">❤️ 收藏</button>
+                <button id="bookmarksBtn" class="secondary-btn">📌 影签</button>
+                <button id="searchResultBtn" class="secondary-btn">🔍 搜索结果</button>
                 <button id="clearSpecialBtn" class="clear-all-btn" style="display:none;">清空全部</button>
             </div>
         </div>
@@ -475,7 +389,7 @@ layout: false
         </div>
     </div>
 
-    <!-- 悬浮播放器（保留，未启用） -->
+    <!-- 悬浮播放器（保留未启用） -->
     <div id="floatPlayer" style="position:fixed; bottom:20px; right:20px; width:320px; background:rgba(0,0,0,0.9); border-radius:16px; display:none; z-index:9999;">
         <div style="display:flex; justify-content:space-between; padding:8px 12px; background:#16213e; border-radius:16px 16px 0 0;">
             <span id="floatTitle">浮窗播放</span>
@@ -495,7 +409,7 @@ layout: false
     let currentPlayingVideo=null, currentPlayingEpIndex=0, currentOpenVideo=null, currentEpNext=null, currentHls=null, playerInFloat=false;
     
     // 全量影片缓存 (每个数据源)
-    let fullVideosCache = {}; // { prefix: { videos: [], categories: {}, total: 0, playable: 0, ready: false } }
+    let fullVideosCache = {};
     
     let currentView = 'home';
     let currentPlayerVideo = null;
@@ -699,18 +613,29 @@ layout: false
     }
     function stopSearch(){ if(!isSearching) return; searchVersion++; isSearching=false; searchBtn.style.display='inline'; stopSearchBtn.style.display='none'; if(currentSearchKeyword) renderHomeSearch(false); }
     
-    // 首页渲染（支持特殊视图删除和清空）
+    // 首页渲染（搜索及特殊视图）
     function renderHomeSearch(loading){
         if(loading && (!currentSearchResults.length||isSearching)){
             homeContent.innerHTML='<div class="empty-state">🔍 搜索中，请稍候...</div>';
-            homePagination.innerHTML=''; catBar.innerHTML=''; setStatus('搜索中...'); return;
+            homePagination.innerHTML=''; catBar.innerHTML=''; setStatus('搜索中...');
+            clearSpecialBtn.style.display = 'none';
+            return;
         }
-        if(!currentSearchResults.length){ homeContent.innerHTML='<div class="empty-state">✨ 暂无搜索结果，尝试其他关键词</div>'; homePagination.innerHTML=''; catBar.innerHTML=''; return; }
+        if(!currentSearchResults.length){ 
+            homeContent.innerHTML='<div class="empty-state">✨ 暂无搜索结果，尝试其他关键词</div>'; 
+            homePagination.innerHTML=''; catBar.innerHTML=''; 
+            setStatus('搜索结果为空');
+            clearSpecialBtn.style.display = 'none';
+            return; 
+        }
         buildSearchCatBar();
         let filtered = currentSearchCategory==='' ? currentSearchResults.slice() : currentSearchCategory==='未分类' ? currentSearchResults.filter(v=>!(v.vod_class||'').trim()) : currentSearchResults.filter(v=>(v.vod_class||'').split(',').some(c=>c.trim()===currentSearchCategory));
         currentFiltered = filtered; currentPage=1;
         renderHomeGrid();
         sourceSelect.value='__search_result__';
+        // 显示清空全部按钮
+        clearSpecialBtn.style.display = 'inline-block';
+        clearSpecialBtn.onclick = () => clearAllSpecial('__search_result__');
     }
     function buildSearchCatBar(){
         let cats={};
@@ -815,8 +740,6 @@ layout: false
                 return;
             }
             renderHomeSearch(false);
-            clearSpecialBtn.style.display = 'inline-block';
-            clearSpecialBtn.onclick = () => clearAllSpecial(type);
             return;
         }
         let list=[];
@@ -863,8 +786,7 @@ layout: false
         if(!currentSearchResults.length) clearSpecialBtn.style.display = 'none';
     }
     
-    // ========== 全量分类统计与筛选（核心修复） ==========
-    // 异步加载数据源所有页面，收集全量影片和分类统计
+    // ========== 全量分类统计（修复） ==========
     function ensureFullCategoryStats(prefix, callback) {
         if (fullVideosCache[prefix] && fullVideosCache[prefix].ready) {
             if (callback) callback(fullVideosCache[prefix]);
@@ -882,7 +804,6 @@ layout: false
         
         function processPage(p) {
             if (p > pageCount) {
-                // 统计完成
                 fullVideosCache[prefix] = {
                     videos: allVideos,
                     categories: catMap,
@@ -895,25 +816,24 @@ layout: false
             }
             const fname = baseFile + '-' + String(p).padStart(2, '0') + '.js';
             if (loadedSources[fname]) {
-                collectFromPage(loadedSources[fname]);
+                collectFromPage(loadedSources[fname], fname);
                 loadedPages++;
                 processPage(p+1);
             } else {
                 loadData(fname, function(data) {
                     if (data) loadedSources[fname] = data;
-                    if (data) collectFromPage(data);
+                    if (data) collectFromPage(data, fname);
                     loadedPages++;
                     processPage(p+1);
                 }, 5000);
             }
         }
         
-        function collectFromPage(data) {
+        function collectFromPage(data, fname) {
             if (!data?.videos) return;
             totalVideos += data.videos.length;
             data.videos.forEach(v => {
                 if (v.playable_count > 0) playableVideos++;
-                // 收集影片信息（保留原始字段）
                 allVideos.push({
                     vod_name: v.vod_name,
                     vod_pic: v.vod_pic,
@@ -924,7 +844,6 @@ layout: false
                     sourceKey: fname,
                     sourceName: data.name
                 });
-                // 统计分类
                 let cls = v.vod_class;
                 if (Array.isArray(cls)) cls = cls.join(',');
                 cls = (cls || '').trim();
@@ -942,7 +861,6 @@ layout: false
         processPage(1);
     }
     
-    // 构建分类栏（基于全量数据）
     function buildFullCatBar(prefix) {
         const cache = fullVideosCache[prefix];
         if (!cache || !cache.ready) {
@@ -951,13 +869,11 @@ layout: false
         }
         const cats = cache.categories;
         let html = '';
-        // 添加“全部”选项
         html += `<span class="cat-badge ${currentCategory === '' ? 'active' : ''}" data-cat="">全部 (${cache.total})</span>`;
         Object.keys(cats).sort((a,b) => cats[b] - cats[a]).forEach(c => {
             html += `<span class="cat-badge ${currentCategory === c ? 'active' : ''}" data-cat="${c.replace(/&/g,'&amp;')}">${c} (${cats[c]})</span>`;
         });
         catBar.innerHTML = html;
-        // 绑定点击事件
         document.querySelectorAll('.cat-badge').forEach(el => {
             el.addEventListener('click', () => {
                 const cat = el.dataset.cat || '';
@@ -966,7 +882,6 @@ layout: false
         });
     }
     
-    // 根据分类筛选影片（基于全量数据）
     function filterByCategory(prefix, category) {
         const cache = fullVideosCache[prefix];
         if (!cache || !cache.ready) {
@@ -990,7 +905,7 @@ layout: false
         currentPage = 1;
         renderHomeGrid();
         setStatus(`${category || '全部'}分类 · 共 ${filteredVideos.length} 部影片`);
-        // 更新分类栏高亮
+        // 更新高亮
         document.querySelectorAll('.cat-badge').forEach(el => {
             const catVal = el.dataset.cat || '';
             if (catVal === category) el.classList.add('active');
@@ -1010,7 +925,7 @@ layout: false
         clearSpecialBtn.style.display = 'none';
         currentCategory = '';
         
-        // 先清空当前显示，显示加载提示
+        // 清空当前显示，显示加载
         homeContent.innerHTML='<div class="empty-state">⏳ 加载数据中...</div>';
         catBar.innerHTML = '<span class="cat-badge">统计分类中...</span>';
         
@@ -1033,18 +948,14 @@ layout: false
         ensureFullCategoryStats(val, function(cache) {
             if (currentPrefix === val) {
                 buildFullCatBar(val);
-                // 如果当前没有分类筛选，且当前显示的只是第一页数据，则替换为全量数据（保留筛选状态）
-                if (currentCategory === '' && currentFiltered && currentFiltered.length > 0 && currentFiltered.length !== cache.videos.length) {
-                    // 当前显示的是第一页数据，切换为全量数据
+                if (currentCategory === '' && currentFiltered && currentFiltered.length !== cache.videos.length) {
                     currentFiltered = cache.videos.slice();
                     currentPage = 1;
                     renderHomeGrid();
                     setStatus(`${meta.name} — 共 ${cache.total} 部影片`);
                 } else if (currentCategory !== '') {
-                    // 重新应用分类筛选
                     filterByCategory(val, currentCategory);
                 } else {
-                    // 没有筛选且当前已经是全量？确保分页正确
                     if (currentFiltered && currentFiltered.length !== cache.videos.length) {
                         currentFiltered = cache.videos.slice();
                         currentPage = 1;
@@ -1055,12 +966,10 @@ layout: false
         });
     }
     
-    // 快速显示第一页（即时反馈）
     function useSourceDataQuick(data, file, page) {
         if (!data?.videos) { setStatus('数据格式错误'); return; }
         currentData = data;
         currentFilePage = page;
-        // 暂时只显示当前页数据，全量统计完成后会替换
         currentFiltered = data.videos.map(v => ({ ...v, sourceKey: file, sourceName: data.name }));
         currentPage = 1;
         renderHomeGrid();
@@ -1193,7 +1102,6 @@ layout: false
         currentView = 'home';
         if(currentHls) currentHls.destroy();
         detailPlayer.pause();
-        // 刷新当前数据源视图
         if(sourceSelect.value && sourceMeta[sourceSelect.value]) switchSource();
         else loadIndexData();
         clearSpecialBtn.style.display = 'none';
