@@ -173,8 +173,22 @@ def collect_cmsv10_sites():
     # 方式一：从配置文件中的 URL 直接获取
     if source_urls:
         total = len(source_urls)
-        for idx, url in enumerate(source_urls, 1):
+        for idx, item in enumerate(source_urls, 1):
             total_before = len(all_sites)
+
+            # 兼容旧格式（纯字符串URL）和新格式（{"name":..., "url":...}）
+            if isinstance(item, str):
+                url = item
+                src_cfg_name = None
+            elif isinstance(item, dict):
+                url = item.get('url', '')
+                src_cfg_name = item.get('name', '')
+            else:
+                src_fail += 1
+                continue
+            if not url:
+                src_fail += 1
+                continue
 
             text = fetch_json_text(url, timeout)
             if not text:
@@ -258,7 +272,7 @@ def collect_cmsv10_sites():
                 src_success += 1
             elif isinstance(data, dict) and 'list' in data and 'sites' not in data:
                 parsed = urlparse(url)
-                direct_name = parsed.netloc.split('.')[-2] if parsed.netloc else url.split('/')[-1][:20]
+                direct_name = src_cfg_name or (parsed.netloc.split('.')[-2] if parsed.netloc else url.split('/')[-1][:20])
                 direct_key = f"direct_{len(all_sites)}"
                 all_sites.append({
                     'key': direct_key,
