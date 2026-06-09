@@ -6,67 +6,335 @@ layout: false
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>小红播霸</title>
+    <title>影迹 · 多源影视</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
-        /* 原有样式保持不变 ... */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: transparent; }
-        #app { max-width: 1400px; margin: 0 auto; padding: 20px 24px 48px; transition: background 0.2s, color 0.2s; --bg-body: #0a0a0f; --bg-surface: #14141e; --bg-card: #1c1c26; --bg-card-hover: #252532; --bg-elevated: #1e1e2a; --border: #2c2c3a; --text-primary: #f0f0f3; --text-secondary: #a0a0b0; --text-muted: #6e6e80; --accent: #f97316; --accent-hover: #fd7e2e; --shadow-sm: 0 4px 12px rgba(0,0,0,0.3); --shadow-md: 0 8px 24px rgba(0,0,0,0.4); --radius-card: 10px; --radius-md: 16px; --radius-sm: 12px; background: var(--bg-body); color: var(--text-primary); }
-        #app[data-theme="dark"] { --bg-body: #000000; --bg-surface: #0a0a0f; --bg-card: #111115; --bg-card-hover: #1a1a20; --bg-elevated: #15151c; --border: #2a2a33; --text-primary: #ffffff; --text-secondary: #c0c0cf; --text-muted: #8a8a99; --accent: #f97316; --accent-hover: #fd7e2e; --shadow-sm: 0 4px 12px rgba(0,0,0,0.5); --shadow-md: 0 8px 24px rgba(0,0,0,0.6); }
-        #app[data-theme="light"] { --bg-body: #f8fafc; --bg-surface: #ffffff; --bg-card: #ffffff; --bg-card-hover: #f8fafc; --bg-elevated: #f1f5f9; --border: #e2e8f0; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --accent: #f97316; --accent-hover: #ea580c; --shadow-sm: 0 2px 6px rgba(0,0,0,0.05); --shadow-md: 0 8px 20px rgba(0,0,0,0.08); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-body);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        #app {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 24px 48px;
+            --bg-body: #0a0a0f;
+            --bg-surface: #14141e;
+            --bg-card: #1c1c26;
+            --bg-card-hover: #252532;
+            --bg-elevated: #1e1e2a;
+            --border: #2c2c3a;
+            --text-primary: #f0f0f3;
+            --text-secondary: #a0a0b0;
+            --text-muted: #6e6e80;
+            --accent: #f97316;
+            --accent-hover: #fd7e2e;
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.4);
+            --radius-card: 10px;
+            --radius-md: 16px;
+            --radius-sm: 12px;
+        }
+
+        #app[data-theme="dark"] {
+            --bg-body: #000000;
+            --bg-surface: #0a0a0f;
+            --bg-card: #111115;
+            --bg-card-hover: #1a1a20;
+            --bg-elevated: #15151c;
+            --border: #2a2a33;
+            --text-primary: #ffffff;
+            --text-secondary: #c0c0cf;
+            --text-muted: #8a8a99;
+            --accent: #f97316;
+            --accent-hover: #fd7e2e;
+            --shadow-sm: 0 4px 12px rgba(0,0,0,0.5);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.6);
+        }
+
+        #app[data-theme="light"] {
+            --bg-body: #f8fafc;
+            --bg-surface: #ffffff;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8fafc;
+            --bg-elevated: #f1f5f9;
+            --border: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --accent: #f97316;
+            --accent-hover: #ea580c;
+            --shadow-sm: 0 2px 6px rgba(0,0,0,0.05);
+            --shadow-md: 0 8px 20px rgba(0,0,0,0.08);
+        }
+
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: var(--border); border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+
         .view { transition: opacity 0.2s; }
         .view.hidden { display: none; }
-        .toolbar { background: transparent; padding: 8px 0 12px 0; margin-bottom: 16px; display: flex; gap: 10px; align-items: center; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: thin; }
+
+        .toolbar {
+            background: transparent;
+            padding: 8px 0 12px 0;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            scrollbar-width: thin;
+        }
         .toolbar::-webkit-scrollbar { height: 3px; }
-        .toolbar select, .toolbar input, .toolbar button { border-radius: 40px; padding: 8px 16px; font-weight: 500; font-size: 13px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); outline: none; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
-        .toolbar select { min-width: 140px; cursor: pointer; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e6e80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>"); background-repeat: no-repeat; background-position: right 12px center; appearance: none; padding-right: 36px; }
-        .toolbar input { max-width: 200px; flex: 1; }
-        .toolbar button { background: var(--accent); border: none; color: white; cursor: pointer; font-weight: 600; }
+        .toolbar select, .toolbar input, .toolbar button {
+            border-radius: 40px;
+            padding: 8px 16px;
+            font-weight: 500;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .toolbar select {
+            min-width: 140px;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e6e80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            appearance: none;
+            padding-right: 36px;
+        }
+        .toolbar input {
+            max-width: 200px;
+            flex: 1;
+        }
+        .toolbar button {
+            background: var(--accent);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
         .toolbar button:hover { background: var(--accent-hover); transform: translateY(-1px); }
-        .toolbar .secondary-btn { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border); }
+        .toolbar .secondary-btn {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
         .toolbar .secondary-btn:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
-        .status-bar { display: flex; flex-direction: column; gap: 12px; margin: 16px 0 24px; padding: 0; background: transparent; border: none; box-shadow: none; }
-        .cat-filters { display: flex; gap: 8px; align-items: center; width: 100%; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+
+        .status-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 16px 0 24px;
+            padding: 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+        .cat-filters {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            scrollbar-width: thin;
+        }
         .cat-filters::-webkit-scrollbar { height: 3px; }
-        .cat-badge { background: var(--bg-elevated); padding: 3px 6px; border-radius: 40px; font-size: 13px; cursor: pointer; border: 1px solid var(--border); transition: all 0.1s; white-space: nowrap; flex-shrink: 0; color: var(--text-primary); }
-        .cat-badge.active, .cat-badge:hover { background: var(--accent); color: white; border-color: var(--accent); }
-        .action-buttons { display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; }
-        .action-buttons button { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 3px 6px; cursor: pointer; color: var(--text-primary); font-size: 13px; white-space: nowrap; flex-shrink: 0; }
-        .action-buttons button:hover { background: var(--accent); color: white; }
-        /* ========== 新增高亮样式 ========== */
-        .action-buttons button.active {
+        .cat-badge {
+            background: var(--bg-elevated);
+            padding: 5px 14px;
+            border-radius: 40px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            transition: all 0.1s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            color: var(--text-primary);
+        }
+        .cat-badge.active, .cat-badge:hover {
             background: var(--accent);
             color: white;
             border-color: var(--accent);
         }
-        /* ================================ */
-        .clear-all-btn { background: #e74c3c !important; color: white !important; border: none !important; }
-        .clear-all-btn:hover { background: #c0392b !important; }
-        .video-grid { display: grid; gap: 10px; margin-top: 8px; }
-        @media (max-width: 767px) { .video-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; } }
-        @media (min-width: 768px) { .video-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; } }
-        .video-card { background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; cursor: pointer; transition: all 0.25s ease; border: 1px solid var(--border); box-shadow: var(--shadow-sm); position: relative; }
-        .video-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); border-color: var(--accent); }
-        .video-poster { aspect-ratio: 2/3; width: 100%; object-fit: cover; background: linear-gradient(145deg, #2a2a35, #1a1a22); display: block; }
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+        }
+        .action-buttons button {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 5px 14px;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: 13px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .action-buttons button:hover {
+            background: var(--accent);
+            color: white;
+        }
+        .clear-all-btn {
+            background: #e74c3c !important;
+            color: white !important;
+            border: none !important;
+        }
+        .clear-all-btn:hover {
+            background: #c0392b !important;
+        }
+
+        .video-grid {
+            display: grid;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        @media (max-width: 767px) {
+            .video-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        }
+        @media (min-width: 768px) {
+            .video-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; }
+        }
+        .video-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-card);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            position: relative;
+        }
+        .video-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--accent);
+        }
+        .video-poster {
+            aspect-ratio: 2/3;
+            width: 100%;
+            object-fit: cover;
+            background: linear-gradient(145deg, #2a2a35, #1a1a22);
+            display: block;
+        }
         .video-info { padding: 12px; }
-        .video-title-row { display: flex; align-items: flex-start; gap: 6px; }
-        .fav-home-btn { background: transparent; border: none; font-size: 16px; cursor: pointer; transition: transform 0.1s; padding: 2px 0; color: var(--text-secondary); flex-shrink: 0; line-height: 1.4; }
-        .fav-home-btn:hover { transform: scale(1.1); color: var(--accent); }
-        .video-title { font-weight: 600; font-size: 13px; line-height: 1.4; color: var(--text-primary); word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
-        .delete-item-btn { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: none; border-radius: 30px; width: 28px; height: 28px; font-size: 16px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; transition: 0.1s; }
+        .video-title-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+        .fav-home-btn {
+            background: transparent;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            padding: 2px 0;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+            line-height: 1.4;
+        }
+        .fav-home-btn:hover {
+            transform: scale(1.1);
+            color: var(--accent);
+        }
+        .video-title {
+            font-weight: 600;
+            font-size: 13px;
+            line-height: 1.4;
+            color: var(--text-primary);
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex: 1;
+        }
+        .video-progress {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .delete-item-btn {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            border: none;
+            border-radius: 30px;
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            transition: 0.1s;
+        }
         .delete-item-btn:hover { background: #e74c3c; }
-        .source-label { position: absolute; top: 6px; right: 6px; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-size: 10px; background: transparent; border: none; z-index: 2; max-width: calc(100% - 70px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 36px; flex-wrap: wrap; }
-        .pagination button { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 6px 14px; border-radius: 40px; cursor: pointer; font-weight: 500; transition: all 0.1s; }
-        .pagination button.active { background: var(--accent); border-color: var(--accent); color: white; }
-        .pagination button:hover:not(:disabled) { background: var(--accent-hover); color: white; }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 36px;
+            flex-wrap: wrap;
+        }
+        .pagination button {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 6px 14px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.1s;
+        }
+        .pagination button.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        .pagination button:hover:not(:disabled) {
+            background: var(--accent-hover);
+            color: white;
+        }
         .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+
         .player-layout { display: flex; flex-direction: column; gap: 28px; }
-        .player-container { background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
+        .player-container { 
+            background: #000; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            aspect-ratio: 16/9; 
+            box-shadow: var(--shadow-md); 
+            border: 1px solid var(--border); 
+        }
         .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 24px; border: 1px solid var(--border); }
         .detail-header { display: flex; gap: 24px; flex-wrap: wrap; }
         .detail-poster { width: 140px; border-radius: var(--radius-sm); aspect-ratio: 2/3; object-fit: cover; box-shadow: var(--shadow-sm); }
@@ -78,22 +346,27 @@ layout: false
         .episodes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
         .source-switch { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 6px 16px; font-size: 13px; cursor: pointer; color: var(--text-primary); }
         .episodes-grid { display: flex; flex-wrap: wrap; gap: 10px; max-height: 340px; overflow-y: auto; padding: 4px 0; }
-        .episode-item { background: var(--bg-elevated); border-radius: 40px; padding: 6px 10px; font-size: 13px; cursor: pointer; transition: all 0.1s; border: 1px solid var(--border); color: var(--text-secondary); }
+        .episode-item { background: var(--bg-elevated); border-radius: 40px; padding: 6px 18px; font-size: 13px; cursor: pointer; transition: all 0.1s; border: 1px solid var(--border); color: var(--text-secondary); }
         .episode-item:hover, .episode-item.current-ep { background: var(--accent); color: white; border-color: var(--accent); }
-        .back-home { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; background: var(--bg-card); padding: 8px 20px; border-radius: 40px; cursor: pointer; width: fit-content; border: 1px solid var(--border); font-weight: 500; transition: 0.1s; color: var(--text-primary); }
+        .back-home { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; background: var(--bg-card); padding: 8px 20px; border-radius: 40px; cursor: pointer; width: fit-content; border: 1px solid var(--border); font-weight: 500; transition: 0.1s; }
         .back-home:hover { background: var(--accent); color: white; }
         .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
         .preload-bar { height: 3px; background: var(--border); border-radius: 4px; margin-bottom: 12px; overflow: hidden; }
         .preload-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
-        .copyright { text-align: center; margin-top: 40px; padding: 12px 0; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
-        .copyright a { color: var(--accent); text-decoration: none; }
-        .copyright a:hover { text-decoration: underline; }
-        @media (max-width: 640px) { #app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 3px 6px; font-size: 12px; } .toolbar select { min-width: 100px; } .toolbar input { max-width: 100px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } }
+
+        @media (max-width: 640px) {
+            #app { padding: 12px; }
+            .detail-header { flex-direction: column; align-items: center; text-align: center; }
+            .toolbar { padding: 6px 0; gap: 8px; }
+            .toolbar select, .toolbar input, .toolbar button { padding: 6px 12px; font-size: 12px; }
+            .toolbar select { min-width: 120px; }
+            .toolbar input { max-width: 150px; }
+            .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; }
+        }
     </style>
 </head>
 <body>
 <div id="app" data-theme="dark">
-    <!-- 首页视图 -->
     <div id="homeView" class="view">
         <div class="toolbar">
             <select id="sourceSelect"></select>
@@ -118,7 +391,6 @@ layout: false
         <div id="footer" style="text-align:center; margin-top:40px; font-size:12px; color:var(--text-muted);"></div>
     </div>
 
-    <!-- 播放页视图 -->
     <div id="playerView" class="view hidden">
         <div class="back-home" id="backHomeBtn">← 返回首页</div>
         <div class="player-layout">
@@ -136,9 +408,9 @@ layout: false
                             <span id="detailSource"></span>
                         </div>
                         <div class="detail-desc" id="detailDesc"></div>
-                        <div style="margin-top: 20px; gap: 12px;">
-                            <button id="detailBookmarkBtn" style="background:var(--bg-elevated); border:none; padding:8px 18px; border-radius:40px; cursor:pointer; font-weight:500; color:var(--text-primary);">📌 影签</button>
-                            <button id="detailNextEpBtn" style="background:var(--bg-elevated); border:1px solid var(--border); padding:8px 18px; border-radius:40px; cursor:pointer; color:var(--text-primary);">⏩ 下集</button>
+                        <div style="margin-top: 20px; display: flex; gap: 12px;">
+                            <button id="detailBookmarkBtn" style="background:var(--accent); border:none; padding:8px 18px; border-radius:40px; cursor:pointer; color:white; font-weight:500;">📌 影签</button>
+                            <button id="detailNextEpBtn" style="background:var(--bg-elevated); border:1px solid var(--border); padding:8px 18px; border-radius:40px; cursor:pointer;">⏩ 下集</button>
                         </div>
                     </div>
                 </div>
@@ -153,7 +425,6 @@ layout: false
         </div>
     </div>
 
-    <!-- 悬浮播放器 -->
     <div id="floatPlayer" style="position:fixed; bottom:20px; right:20px; width:320px; background:rgba(0,0,0,0.9); border-radius:16px; display:none; z-index:9999;">
         <div style="display:flex; justify-content:space-between; padding:8px 12px; background:#16213e; border-radius:16px 16px 0 0;">
             <span id="floatTitle">浮窗播放</span>
@@ -161,16 +432,10 @@ layout: false
         </div>
         <video id="floatVideo" style="width:100%; aspect-ratio:16/9;" playsinline></video>
     </div>
-
-    <!-- 底部版权信息 -->
-    <div class="copyright">
-        小红播霸 by <a href="https://snowhoo.net" target="_blank" rel="noopener noreferrer">SnowHoo.NET</a> 小红故事 · <span id="currentYear"></span>
-    </div>
 </div>
 
 <script>
 (function(){
-    // ---------- 存储与核心变量 ----------
     const STORAGE = { HISTORY:'tvbox_history', FAVORITES:'tvbox_favorites', BOOKMARKS:'tvbox_bookmarks', SEARCH:'tvbox_search_results', THEME:'tvbox_theme' };
     const PAGE_SIZE = 12, CONCURRENT = 10;
     let sourceIndex=[], loadedSources={}, sourceMeta={}, currentData=null, currentPrefix='', currentFilePage=1, currentPage=1, currentFiltered=[], currentCategory='';
@@ -181,13 +446,15 @@ layout: false
     let currentSpecialType = null;
     let currentSpecialFullData = [];
     let currentSpecialCategory = '';
+    
     let currentView = 'home';
     let currentPlayerVideo = null;
     let currentPlayerEpisodes = [];
     let currentPlayerSourceKey = '';
     let currentPlayerSourceName = '';
+    let pendingRestoreEpIndex = null;
+    let pendingRestoreProgress = null;
 
-    // DOM 元素
     const homeView = document.getElementById('homeView');
     const playerView = document.getElementById('playerView');
     const sourceSelect = document.getElementById('sourceSelect');
@@ -223,10 +490,15 @@ layout: false
     const escAttr = s => String(s).replace(/[&"']/g, m => ({'&':'&amp;','"':'&quot;',"'":'&#39;'}[m]));
     const setStatus = txt => { const st = document.getElementById('statusText'); if(st) st.textContent = txt; };
     
-    // 设置当前年份
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
+    function formatTime(sec) {
+        if (!sec || sec <= 0) return '';
+        const h = Math.floor(sec / 3600);
+        const m = Math.floor((sec % 3600) / 60);
+        const s = sec % 60;
+        if (h > 0) return `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        return `${m}:${s.toString().padStart(2,'0')}`;
+    }
     
-    // 主题
     function initTheme() {
         const saved = localStorage.getItem(STORAGE.THEME);
         const wrap = document.getElementById('app');
@@ -247,16 +519,6 @@ layout: false
     themeToggle.addEventListener('click', toggleTheme);
     initTheme();
     
-    // 高亮顶部按钮
-    function setActiveButton(type) {
-        [historyBtn, favoritesBtn, bookmarksBtn, searchResultBtn].forEach(btn => btn.classList.remove('active'));
-        if (type === '__history__') historyBtn.classList.add('active');
-        else if (type === '__favorites__') favoritesBtn.classList.add('active');
-        else if (type === '__bookmarks__') bookmarksBtn.classList.add('active');
-        else if (type === '__search_result__') searchResultBtn.classList.add('active');
-    }
-    
-    // 存储操作
     const getStorage = key => { try{ return JSON.parse(localStorage.getItem(key))||(key===STORAGE.HISTORY?{}:[]); }catch(e){ return key===STORAGE.HISTORY?{}:[]; } };
     const setStorage = (key,val) => localStorage.setItem(key,JSON.stringify(val));
     const saveHistory = (key,val) => { let h=getStorage(STORAGE.HISTORY); h[key]=val; setStorage(STORAGE.HISTORY,h); };
@@ -289,7 +551,6 @@ layout: false
         return null;
     }
     
-    // IndexedDB 缓存
     let CACHE_DB = null, CACHE_READY = false;
     function initCacheDB(cb){
         if(CACHE_READY && CACHE_DB){ cb(CACHE_DB); return; }
@@ -357,7 +618,6 @@ layout: false
         });
     }
     
-    // 搜索
     function doSearch(){
         let kw=searchInput.value.trim();
         if(!kw) return;
@@ -379,17 +639,7 @@ layout: false
             }
         }
         function flushRender(){ if(ver===searchVersion && needRender){ currentSearchResults=results.slice(); renderHomeSearch(false); needRender=false; } }
-        function finish(){
-            if(ver!==searchVersion) return;
-            isSearching=false;
-            searchBtn.style.display='inline';
-            stopSearchBtn.style.display='none';
-            if(currentSearchResults.length){
-                searchResultBtn.click();
-            } else {
-                renderSpecialView('__search_result__');
-            }
-        }
+        function finish(){ if(ver!==searchVersion) return; isSearching=false; searchBtn.style.display='inline'; stopSearchBtn.style.display='none'; currentSearchResults=results.slice(); setStatus(`✅ 搜索完成 · ${kw} 共 ${results.length} 条`); renderHomeSearch(false); }
         function loadNext(){
             if(ver!==searchVersion) return;
             while(idx<tasks.length && running<CONCURRENT){
@@ -411,7 +661,6 @@ layout: false
             homeContent.innerHTML='<div class="empty-state">🔍 搜索中，请稍候...</div>';
             homePagination.innerHTML=''; catBar.innerHTML=''; setStatus('搜索中...');
             clearSpecialBtn.style.display = 'none';
-            sourceSelect.value = '';
             return;
         }
         if(!currentSearchResults.length){ 
@@ -419,14 +668,13 @@ layout: false
             homePagination.innerHTML=''; catBar.innerHTML=''; 
             setStatus('搜索结果为空');
             clearSpecialBtn.style.display = 'none';
-            sourceSelect.value = '';
             return; 
         }
         buildSearchCatBar();
         let filtered = currentSearchCategory==='' ? currentSearchResults.slice() : currentSearchCategory==='未分类' ? currentSearchResults.filter(v=>!(v.vod_class||'').trim()) : currentSearchResults.filter(v=>(v.vod_class||'').split(',').some(c=>c.trim()===currentSearchCategory));
         currentFiltered = filtered; currentPage=1;
         renderHomeGrid();
-        sourceSelect.value = '';
+        sourceSelect.value='__search_result__';
         clearSpecialBtn.style.display = 'inline-block';
         clearSpecialBtn.onclick = () => clearAllSpecial('__search_result__');
     }
@@ -480,7 +728,6 @@ layout: false
         currentPrefix = type;
         currentCategory = '';
         sourceSelect.value = '';
-        setActiveButton(type);
         
         let list = [];
         if(type === '__search_result__'){
@@ -512,8 +759,8 @@ layout: false
             let base={ sourceKey:item.sourceKey, sourceName:item.sourceName, vod_name:item.videoName, vod_pic:item.vodPic, ep_count:item.ep_count, playable_count:item.playable_count, episodes:item.episodes, vod_class:item.vod_class || '' };
             let cached=findVideoInCache(item.sourceKey, base.vod_name);
             if(cached){ if(cached.ep_count!=null) base.ep_count=cached.ep_count; if(cached.playable_count!=null) base.playable_count=cached.playable_count; if(cached.episodes?.length) base.episodes=cached.episodes; if(cached.vod_class) base.vod_class=cached.vod_class; }
-            if(type==='__history__'){ base.isHistory=true; base.historyEpIndex=item.epIndex; base.historyProgress=item.progress; }
-            else if(type==='__bookmarks__'){ base.isBookmark=true; base.bookmarkNote=item.note; base.bookmarkProgress=item.progress; base.bookmarkEpIndex=item.epIndex; }
+            if(type==='__history__'){ base.isHistory=true; base.historyEpIndex=item.epIndex; base.historyProgress=item.progress; base.updatedAt = item.updatedAt; }
+            else if(type==='__bookmarks__'){ base.isBookmark=true; base.bookmarkNote=item.note; base.bookmarkProgress=item.progress; base.bookmarkEpIndex=item.epIndex; base.createdAt = item.createdAt; }
             return base;
         });
         currentSpecialCategory = '';
@@ -535,7 +782,7 @@ layout: false
         }
         currentFiltered = filtered;
         currentPage = 1;
-        renderHomeGrid();
+        renderHomeGrid(); 
         buildSpecialCatBar(currentSpecialFullData, currentSpecialCategory, (cat) => {
             currentSpecialCategory = cat;
             renderSpecialGridAndCat();
@@ -561,7 +808,6 @@ layout: false
         } else if(type === '__favorites__'){
             setStatus('收藏不支持一键清空，请单独移除');
         }
-        sourceSelect.value = '';
     }
     
     function renderHomeGrid(){
@@ -577,20 +823,27 @@ layout: false
             if(isSpecial){
                 deleteBtn = `<button class="delete-item-btn" data-sourcekey="${escAttr(v.sourceKey)}" data-name="${escAttr(v.vod_name)}" data-type="${currentPrefix}">✕</button>`;
             }
-            let sourceName = v.sourceName || (v.sourceKey ? '数据源' : '未知');
-            if (sourceName.length > 12) sourceName = sourceName.slice(0,10)+'…';
-            
-            html+=`<div class="video-card" data-name="${escAttr(v.vod_name)}" data-sourcekey="${escAttr(v.sourceKey)}" data-sourcename="${escAttr(v.sourceName||'')}" data-pic="${escAttr(img)}" data-epcount="${v.ep_count||0}" data-playable="${v.playable_count||0}" data-episodes='${escAttr(JSON.stringify(v.episodes||[]))}' data-class="${escAttr(v.vod_class||'')}">
+            let progressHtml = '';
+            if(v.isHistory && v.historyProgress > 0){
+                progressHtml = `<div class="video-progress">⏱️ 上次看到 ${formatTime(v.historyProgress)}</div>`;
+            } else if(v.isBookmark && v.bookmarkProgress > 0){
+                progressHtml = `<div class="video-progress">📍 标记时 ${formatTime(v.bookmarkProgress)}${v.bookmarkNote ? ' · ' + escHtml(v.bookmarkNote) : ''}</div>`;
+            }
+            let restoreData = '';
+            if(v.isHistory){
+                restoreData = ` data-restore-ep="${v.historyEpIndex}" data-restore-prog="${v.historyProgress || 0}"`;
+            } else if(v.isBookmark){
+                restoreData = ` data-restore-ep="${v.bookmarkEpIndex}" data-restore-prog="${v.bookmarkProgress || 0}"`;
+            }
+            html+=`<div class="video-card" data-name="${escAttr(v.vod_name)}" data-sourcekey="${escAttr(v.sourceKey)}" data-sourcename="${escAttr(v.sourceName||'')}" data-pic="${escAttr(img)}" data-epcount="${v.ep_count||0}" data-playable="${v.playable_count||0}" data-episodes='${escAttr(JSON.stringify(v.episodes||[]))}' data-class="${escAttr(v.vod_class||'')}"${restoreData}>
                 ${deleteBtn}
-                <div class="pw-poster-wrap">
-                    <img class="video-poster" src="${img}" loading="lazy" onerror="this.src='https://picsum.photos/seed/default/300/400'">
-                    <span class="source-label">📀 ${escHtml(sourceName)}</span>
-                </div>
+                <img class="video-poster" src="${img}" loading="lazy" onerror="this.src='https://picsum.photos/seed/default/300/400'">
                 <div class="video-info">
                     <div class="video-title-row">
                         <button class="fav-home-btn" data-sourcekey="${escAttr(v.sourceKey)}" data-name="${escAttr(v.vod_name)}">${isFav?'❤️':'🤍'}</button>
                         <div class="video-title">${escHtml(v.vod_name)}</div>
                     </div>
+                    ${progressHtml}
                 </div>
             </div>`;
         });
@@ -617,6 +870,13 @@ layout: false
                     episodes: JSON.parse(card.dataset.episodes),
                     vod_class: card.dataset.class
                 };
+                if(card.dataset.restoreEp !== undefined && card.dataset.restoreProg !== undefined){
+                    pendingRestoreEpIndex = parseInt(card.dataset.restoreEp);
+                    pendingRestoreProgress = parseInt(card.dataset.restoreProg);
+                } else {
+                    pendingRestoreEpIndex = null;
+                    pendingRestoreProgress = null;
+                }
                 openPlayerView(videoData);
             });
             card.querySelector('.fav-home-btn')?.addEventListener('click',(e)=>{
@@ -654,7 +914,6 @@ layout: false
         renderSpecialView('__search_result__');
     }
     
-    // 全量分类统计
     function ensureFullCategoryStats(prefix, callback) {
         if (fullVideosCache[prefix] && fullVideosCache[prefix].ready) {
             if (callback) callback(fullVideosCache[prefix]);
@@ -791,7 +1050,8 @@ layout: false
         clearSpecialBtn.style.display = 'none';
         currentCategory = '';
         currentSpecialType = null;
-        setActiveButton(null);
+        pendingRestoreEpIndex = null;
+        pendingRestoreProgress = null;
         
         homeContent.innerHTML='<div class="empty-state">⏳ 加载数据中...</div>';
         catBar.innerHTML = '<span class="cat-badge">统计分类中...</span>';
@@ -841,14 +1101,16 @@ layout: false
         setStatus(`${data.name} — 第${page}页（正在统计全部分类...）`);
     }
     
-    // 播放页函数
     function openPlayerView(video){
         currentPlayerVideo = video;
         currentPlayerSourceKey = video.sourceKey;
         currentPlayerSourceName = video.sourceName;
         currentPlayerEpisodes = video.episodes || [];
         currentPlayingVideo = video;
-        currentPlayingEpIndex = 0;
+        let restoreEp = (pendingRestoreEpIndex !== null && pendingRestoreEpIndex < currentPlayerEpisodes.length) ? pendingRestoreEpIndex : 0;
+        currentPlayingEpIndex = restoreEp;
+        let savedProgress = (pendingRestoreProgress !== null && pendingRestoreProgress > 0) ? pendingRestoreProgress : 0;
+        
         detailPoster.src = video.vod_pic || '';
         detailTitle.textContent = video.vod_name;
         detailEpCount.textContent = `${video.ep_count || 0}集`;
@@ -856,17 +1118,32 @@ layout: false
         detailSource.textContent = `来源：${video.sourceName || '未知'}`;
         detailDesc.textContent = video.vod_class ? `分类：${video.vod_class}` : '暂无简介';
         renderEpisodesList();
+        setTimeout(() => {
+            let items = document.querySelectorAll('#episodesList .episode-item');
+            if(items[restoreEp]) items[restoreEp].classList.add('current-ep');
+        }, 50);
         buildSourceSwitchOptions();
         homeView.classList.add('hidden');
         playerView.classList.remove('hidden');
         currentView = 'player';
         if(currentHls) currentHls.destroy();
         detailPlayer.pause(); detailPlayer.removeAttribute('src');
-        if(currentPlayerEpisodes.length){
+        if(currentPlayerEpisodes.length && currentPlayerEpisodes[restoreEp]){
+            let ep = currentPlayerEpisodes[restoreEp];
+            if(ep.playable !== false){
+                playEpInPlayer(ep.url, ep.title, restoreEp, savedProgress);
+            } else {
+                let firstPlayable = currentPlayerEpisodes.find(e=>e.playable!==false) || currentPlayerEpisodes[0];
+                if(firstPlayable) playEpInPlayer(firstPlayable.url, firstPlayable.title, currentPlayerEpisodes.indexOf(firstPlayable), 0);
+            }
+        } else if(currentPlayerEpisodes.length){
             let firstPlayable = currentPlayerEpisodes.find(e=>e.playable!==false) || currentPlayerEpisodes[0];
-            if(firstPlayable) playEpInPlayer(firstPlayable.url, firstPlayable.title, 0);
+            if(firstPlayable) playEpInPlayer(firstPlayable.url, firstPlayable.title, 0, 0);
         }
+        pendingRestoreEpIndex = null;
+        pendingRestoreProgress = null;
     }
+    
     function renderEpisodesList(){
         if(!currentPlayerEpisodes.length){ episodesList.innerHTML='<div class="empty-state" style="padding:20px;">暂无剧集信息</div>'; return; }
         let html='';
@@ -879,19 +1156,38 @@ layout: false
             el.addEventListener('click',()=>{
                 let url=el.dataset.url, title=el.dataset.title, idx=parseInt(el.dataset.idx);
                 if(el.dataset.playable==='false'){ setStatus('⚠️ 该集无法播放'); return; }
-                playEpInPlayer(url, title, idx);
+                playEpInPlayer(url, title, idx, 0);
             });
         });
     }
-    function playEpInPlayer(url, title, idx){
+    
+    function playEpInPlayer(url, title, idx, seekTo = 0){
         if(currentHls) currentHls.destroy();
         detailPlayer.pause(); detailPlayer.removeAttribute('src');
+        const setSeek = () => {
+            if(seekTo > 0 && detailPlayer.readyState >= 1){
+                detailPlayer.currentTime = seekTo;
+            }
+        };
         if(url.includes('.m3u8') && window.Hls?.isSupported()){
             let hls=new Hls();
             hls.loadSource(url);
             hls.attachMedia(detailPlayer);
+            if(seekTo > 0){
+                hls.on(Hls.Events.MANIFEST_PARSED, function(){
+                    detailPlayer.currentTime = seekTo;
+                });
+            }
             currentHls=hls;
-        } else detailPlayer.src=url;
+        } else {
+            detailPlayer.src=url;
+            if(seekTo > 0){
+                detailPlayer.addEventListener('loadedmetadata', function once(){
+                    detailPlayer.removeEventListener('loadedmetadata', once);
+                    detailPlayer.currentTime = seekTo;
+                });
+            }
+        }
         detailPlayer.play().catch(e=>setStatus('播放失败，请检查链接'));
         setStatus(`▶ ${title}`);
         currentPlayingEpIndex=idx;
@@ -903,6 +1199,7 @@ layout: false
         detailNextEpBtn.style.display = currentEpNext?'inline-block':'none';
         if(currentPlayingVideo) updateHistory(currentPlayingVideo, idx, 0);
     }
+    
     function buildSourceSwitchOptions(){
         if(!currentPlayerVideo) return;
         let sameNameVideos = [];
@@ -937,12 +1234,16 @@ layout: false
                 detailEpCount.textContent = `${selected.ep_count||0}集`;
                 detailPlayable.textContent = `${selected.playable_count||0}可播放`;
                 renderEpisodesList();
+                currentPlayingEpIndex = 0;
+                if(currentPlayerEpisodes.length && currentPlayerEpisodes[0]){
+                    playEpInPlayer(currentPlayerEpisodes[0].url, currentPlayerEpisodes[0].title, 0, 0);
+                }
             }
         };
     }
     detailNextEpBtn.addEventListener('click',()=>{
         if(currentEpNext){
-            playEpInPlayer(currentEpNext.url, currentEpNext.title, currentEpNext.idx);
+            playEpInPlayer(currentEpNext.url, currentEpNext.title, currentEpNext.idx, 0);
         }
     });
     detailBookmarkBtn.addEventListener('click',()=>{
@@ -974,7 +1275,7 @@ layout: false
     
     function loadIndexData(){
         loadData('index.js',data=>{
-            if(!data){ homeContent.innerHTML='<div class="empty-state">❌ 暂无数据源！</div>'; return; }
+            if(!data){ homeContent.innerHTML='<div class="empty-state">❌ 无数据源，请检查 data/ 目录</div>'; return; }
             sourceIndex=data;
             sourceSelect.innerHTML='';
             let hintOption = document.createElement('option');
@@ -989,21 +1290,11 @@ layout: false
                 sourceMeta[s.prefix]={ page_count:s.page_count||1, name:s.name, fileBase:s.file.replace(/\.js$/,'').replace(/-\d+$/,''), prefix:s.prefix };
             });
             startPreload();
-            // 添加统计信息
-            let totalAddress = 0, playableTotal = 0;
-            sourceIndex.forEach(s => {
-                totalAddress += s.total || 0;
-                playableTotal += s.playable || 0;
-            });
-            const footerDiv = document.getElementById('footer');
-            if (footerDiv) {
-                footerDiv.innerHTML = `<span>数据源 ${sourceIndex.length}</span> | <span>总地址 ${totalAddress}</span> | <span>可播放 ${playableTotal}</span>`;
-            }
             if(sourceIndex.length) {
                 sourceSelect.value = '';
                 renderSpecialView('__history__');
             } else {
-                homeContent.innerHTML='<div class="empty-state">❌ 暂无数据源！</div>';
+                homeContent.innerHTML='<div class="empty-state">暂无数据源，请运行爬虫生成 data/ 目录</div>';
             }
         });
     }
