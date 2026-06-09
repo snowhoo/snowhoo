@@ -9,8 +9,23 @@ layout: false
     <title>小红播霸</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
-        /* 全局变量 —— 确保 body 也能继承 */
-        :root {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: transparent;  /* 背景由 #app 接管 */
+        }
+
+        /* 所有变量定义在 #app 内部，并随 data-theme 切换 */
+        #app {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 24px 48px;
+            transition: background 0.2s, color 0.2s;
             --bg-body: #0a0a0f;
             --bg-surface: #14141e;
             --bg-card: #1c1c26;
@@ -27,6 +42,8 @@ layout: false
             --radius-card: 10px;
             --radius-md: 16px;
             --radius-sm: 12px;
+            background: var(--bg-body);
+            color: var(--text-primary);
         }
 
         /* 暗黑模式覆盖 */
@@ -61,18 +78,6 @@ layout: false
             --accent-hover: #ea580c;
             --shadow-sm: 0 2px 6px rgba(0,0,0,0.05);
             --shadow-md: 0 8px 20px rgba(0,0,0,0.08);
-        }
-
-        body {
-            background: var(--bg-body);
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            transition: background 0.2s, color 0.2s;
-        }
-
-        #app {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px 24px 48px;
         }
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -421,9 +426,7 @@ layout: false
                         </div>
                         <div class="detail-desc" id="detailDesc"></div>
                         <div style="margin-top: 20px; display: flex; gap: 12px;">
-                            <!-- 影签按钮：橙色背景白色文字 -->
                             <button id="detailBookmarkBtn" style="background:var(--accent); border:none; padding:8px 18px; border-radius:40px; cursor:pointer; color:white; font-weight:500;">📌 影签</button>
-                            <!-- 下集按钮：跟随主题文字颜色 -->
                             <button id="detailNextEpBtn" style="background:var(--bg-elevated); border:1px solid var(--border); padding:8px 18px; border-radius:40px; cursor:pointer; color:var(--text-primary);">⏩ 下集</button>
                         </div>
                     </div>
