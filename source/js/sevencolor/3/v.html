@@ -485,7 +485,7 @@ layout: false
         let list = [];
         if(type === '__search_result__'){
             if(!currentSearchResults.length){
-                homeContent.innerHTML='<div class="empty-state">暂无最近的搜索结果，请先搜索影片</div>';
+                homeContent.innerHTML='<div class="empty-state">暂无记录</div>';
                 homePagination.innerHTML=''; catBar.innerHTML=''; setStatus('搜索结果为空');
                 clearSpecialBtn.style.display = 'none';
                 return;
