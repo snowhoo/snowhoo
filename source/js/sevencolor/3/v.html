@@ -15,8 +15,9 @@ layout: false
             box-sizing: border-box;
         }
 
+        /* 主题变量：基础背景跟随主题 */
         body {
-            background: #0a0a0f;
+            background: var(--bg-body);
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             transition: background 0.2s, color 0.2s;
         }
@@ -43,9 +44,9 @@ layout: false
             --radius-sm: 12px;
         }
 
-        /* 明亮模式：白色/浅灰背景 */
+        /* 明亮模式：背景纯白，所有卡片及文字颜色舒适 */
         #app[data-theme="light"] {
-            --bg-body: #ffffff;
+            --bg-body: #f8fafc;
             --bg-surface: #ffffff;
             --bg-card: #ffffff;
             --bg-card-hover: #f8fafc;
@@ -67,7 +68,7 @@ layout: false
         .view { transition: opacity 0.2s; }
         .view.hidden { display: none; }
 
-        /* 工具栏：无外框，清爽 */
+        /* 工具栏：窄屏自动缩放，搜索输入框弹性适应 */
         .toolbar {
             background: transparent;
             padding: 8px 0 12px 0;
@@ -93,6 +94,11 @@ layout: false
             white-space: nowrap;
             flex-shrink: 0;
         }
+        /* 搜索输入框在窄屏下弹性占用剩余宽度 */
+        .toolbar input {
+            flex: 1;
+            min-width: 80px;
+        }
         .toolbar select {
             cursor: pointer;
             background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e6e80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
@@ -116,19 +122,18 @@ layout: false
         }
         .toolbar .secondary-btn:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
 
-        /* 状态栏：分类区域可水平滚动，避免版面撑破 */
+        /* 状态栏：分类与按钮区域，宽屏下自动换行，窄屏保持灵活 */
         .status-bar {
-            background: var(--bg-surface);
-            border-radius: 48px;
-            padding: 12px 18px;
-            margin: 16px 0 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 12px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
+            margin: 16px 0 24px;
+            padding: 0;
+            background: transparent;
+            border: none;
+            box-shadow: none;
         }
         .cat-filters {
             display: flex;
@@ -138,6 +143,7 @@ layout: false
             overflow-x: auto;
             padding-bottom: 4px;
             scrollbar-width: thin;
+            min-width: 0; /* 允许收缩 */
         }
         .cat-filters::-webkit-scrollbar { height: 3px; }
         .cat-badge {
@@ -159,13 +165,30 @@ layout: false
         .action-buttons {
             display: flex;
             gap: 8px;
-            flex-wrap: nowrap;
-            overflow-x: auto;
+            flex-wrap: wrap;
             flex-shrink: 0;
         }
         .action-buttons button {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 5px 14px;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: 13px;
             white-space: nowrap;
-            flex-shrink: 0;
+        }
+        .action-buttons button:hover {
+            background: var(--accent);
+            color: white;
+        }
+        .clear-all-btn {
+            background: #e74c3c !important;
+            color: white !important;
+            border: none !important;
+        }
+        .clear-all-btn:hover {
+            background: #c0392b !important;
         }
 
         /* 影片网格 */
@@ -254,17 +277,6 @@ layout: false
             transition: 0.1s;
         }
         .delete-item-btn:hover { background: #e74c3c; }
-        .clear-all-btn {
-            background: #e74c3c;
-            border: none;
-            padding: 5px 14px;
-            border-radius: 40px;
-            color: white;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .clear-all-btn:hover { background: #c0392b; }
 
         .pagination {
             display: flex;
@@ -333,7 +345,7 @@ layout: false
     <div id="homeView" class="view">
         <div class="toolbar">
             <select id="sourceSelect"></select>
-            <input type="text" id="searchInput" placeholder="搜索影片、演员、分类...">
+            <input type="text" id="searchInput" placeholder="影片名">
             <button id="searchBtn">🔍 搜索</button>
             <button id="stopSearchBtn" style="display:none">⏹️ 停止</button>
             <button id="themeToggleBtn" class="secondary-btn">🌓 主题</button>
@@ -342,10 +354,10 @@ layout: false
         <div class="status-bar">
             <div id="catBar" class="cat-filters"></div>
             <div class="action-buttons">
-                <button id="historyBtn" class="secondary-btn">🕒 最近</button>
-                <button id="favoritesBtn" class="secondary-btn">❤️ 收藏</button>
-                <button id="bookmarksBtn" class="secondary-btn">📌 影签</button>
-                <button id="searchResultBtn" class="secondary-btn">🔍 结果</button>
+                <button id="historyBtn">🕒 最近</button>
+                <button id="favoritesBtn">❤️ 收藏</button>
+                <button id="bookmarksBtn">📌 影签</button>
+                <button id="searchResultBtn">🔍 结果</button>
                 <button id="clearSpecialBtn" class="clear-all-btn" style="display:none;">清空</button>
             </div>
         </div>
@@ -408,7 +420,6 @@ layout: false
     let currentSearchKeyword='', currentSearchResults=[], currentSearchCategory='', isSearching=false, searchVersion=0;
     let currentPlayingVideo=null, currentPlayingEpIndex=0, currentOpenVideo=null, currentEpNext=null, currentHls=null, playerInFloat=false;
     
-    // 全量影片缓存
     let fullVideosCache = {};
     
     let currentView = 'home';
@@ -559,7 +570,6 @@ layout: false
         document.head.appendChild(s);
     }
     
-    // 预加载
     function startPreload(){
         if(!sourceIndex.length) return;
         let files=new Set();
@@ -613,7 +623,6 @@ layout: false
     }
     function stopSearch(){ if(!isSearching) return; searchVersion++; isSearching=false; searchBtn.style.display='inline'; stopSearchBtn.style.display='none'; if(currentSearchKeyword) renderHomeSearch(false); }
     
-    // 首页渲染（搜索及特殊视图）
     function renderHomeSearch(loading){
         if(loading && (!currentSearchResults.length||isSearching)){
             homeContent.innerHTML='<div class="empty-state">🔍 搜索中，请稍候...</div>';
@@ -622,7 +631,7 @@ layout: false
             return;
         }
         if(!currentSearchResults.length){ 
-            homeContent.innerHTML='<div class="empty-state">✨ 暂无搜索结果，尝试其他关键词</div>'; 
+            homeContent.innerHTML='<div class="empty-state">✨ 暂无搜索结果，尝试其他影片名</div>'; 
             homePagination.innerHTML=''; catBar.innerHTML=''; 
             setStatus('搜索结果为空');
             clearSpecialBtn.style.display = 'none';
@@ -728,7 +737,6 @@ layout: false
         });
     }
     
-    // 特殊视图（历史/收藏/影签/搜索结果）
     function renderSpecialView(type){
         currentPrefix=type; currentCategory='';
         if(type === '__search_result__'){
@@ -785,7 +793,7 @@ layout: false
         if(!currentSearchResults.length) clearSpecialBtn.style.display = 'none';
     }
     
-    // ========== 全量分类统计 ==========
+    // 全量分类统计
     function ensureFullCategoryStats(prefix, callback) {
         if (fullVideosCache[prefix] && fullVideosCache[prefix].ready) {
             if (callback) callback(fullVideosCache[prefix]);
@@ -904,7 +912,6 @@ layout: false
         currentPage = 1;
         renderHomeGrid();
         setStatus(`${category || '全部'}分类 · 共 ${filteredVideos.length} 部影片`);
-        // 更新高亮
         document.querySelectorAll('.cat-badge').forEach(el => {
             const catVal = el.dataset.cat || '';
             if (catVal === category) el.classList.add('active');
@@ -912,7 +919,6 @@ layout: false
         });
     }
     
-    // 数据源切换
     function switchSource(){
         if(isSearching) stopSearch();
         let val=sourceSelect.value;
@@ -972,7 +978,7 @@ layout: false
         setStatus(`${data.name} — 第${page}页（正在统计全部分类...）`);
     }
     
-    // 播放页
+    // 播放页函数（完整保留）
     function openPlayerView(video){
         currentPlayerVideo = video;
         currentPlayerSourceKey = video.sourceKey;
