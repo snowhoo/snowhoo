@@ -1092,8 +1092,8 @@ layout: false
                 footerDiv.innerHTML = `<span>数据源 ${sourceIndex.length}</span> | <span>总地址 ${totalAddress}</span> | <span>可播放 ${playableTotal}</span>`;
             }
             if(sourceIndex.length) {
-                sourceSelect.value = '';
-                renderSpecialView('__history__');
+                sourceSelect.value = sourceIndex[0].prefix;
+                switchSource();
             } else {
                 homeContent.innerHTML='<div class="empty-state">❌ 暂无数据源！</div>';
             }
