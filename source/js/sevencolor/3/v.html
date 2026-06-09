@@ -17,10 +17,9 @@ layout: false
 
         body {
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            background: transparent;  /* 背景由 #app 接管 */
+            background: transparent;
         }
 
-        /* 所有变量定义在 #app 内部，并随 data-theme 切换 */
         #app {
             max-width: 1400px;
             margin: 0 auto;
@@ -46,7 +45,6 @@ layout: false
             color: var(--text-primary);
         }
 
-        /* 暗黑模式覆盖 */
         #app[data-theme="dark"] {
             --bg-body: #000000;
             --bg-surface: #0a0a0f;
@@ -63,7 +61,6 @@ layout: false
             --shadow-md: 0 8px 24px rgba(0,0,0,0.6);
         }
 
-        /* 明亮模式 */
         #app[data-theme="light"] {
             --bg-body: #f8fafc;
             --bg-surface: #ffffff;
@@ -87,7 +84,6 @@ layout: false
         .view { transition: opacity 0.2s; }
         .view.hidden { display: none; }
 
-        /* 工具栏 */
         .toolbar {
             background: transparent;
             padding: 8px 0 12px 0;
@@ -141,7 +137,6 @@ layout: false
         }
         .toolbar .secondary-btn:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
 
-        /* 状态栏：分类独占一行 */
         .status-bar {
             display: flex;
             flex-direction: column;
@@ -209,7 +204,6 @@ layout: false
             background: #c0392b !important;
         }
 
-        /* 影片网格 */
         .video-grid {
             display: grid;
             gap: 10px;
@@ -277,6 +271,8 @@ layout: false
             overflow: hidden;
             flex: 1;
         }
+
+        /* 删除按钮（仅特殊视图显示） */
         .delete-item-btn {
             position: absolute;
             top: 8px;
@@ -297,6 +293,24 @@ layout: false
             transition: 0.1s;
         }
         .delete-item-btn:hover { background: #e74c3c; }
+
+        /* 数据来源小字 */
+        .source-label {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+            font-size: 10px;
+            background: transparent;
+            border: none;
+            z-index: 2;
+            max-width: calc(100% - 70px);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            pointer-events: none;
+        }
 
         .pagination {
             display: flex;
@@ -326,7 +340,6 @@ layout: false
         }
         .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* 播放页样式 - 播放器圆角10px */
         .player-layout { display: flex; flex-direction: column; gap: 28px; }
         .player-container { 
             background: #000; 
@@ -377,7 +390,7 @@ layout: false
             .toolbar select { min-width: 100px; }
             .toolbar input { max-width: 100px; }
             .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; }
-			.detail-header > div:last-child { justify-content: center; }
+            .source-label { font-size: 9px; top: 4px; right: 4px; }
         }
     </style>
 </head>
@@ -427,7 +440,7 @@ layout: false
                         </div>
                         <div class="detail-desc" id="detailDesc"></div>
                         <div style="margin-top: 20px; gap: 12px;">
-                            <button id="detailBookmarkBtn" style="background:var(--bg-elevated); border:none; padding:8px 18px; border-radius:40px; cursor:pointer; font-weight:500;">📌 影签</button>
+                            <button id="detailBookmarkBtn" style="background:var(--bg-elevated); border:none; padding:8px 18px; border-radius:40px; cursor:pointer; font-weight:500; color:var(--text-primary);">📌 影签</button>
                             <button id="detailNextEpBtn" style="background:var(--bg-elevated); border:1px solid var(--border); padding:8px 18px; border-radius:40px; cursor:pointer; color:var(--text-primary);">⏩ 下集</button>
                         </div>
                     </div>
@@ -443,7 +456,7 @@ layout: false
         </div>
     </div>
 
-    <!-- 悬浮播放器（保留未启用） -->
+    <!-- 悬浮播放器 -->
     <div id="floatPlayer" style="position:fixed; bottom:20px; right:20px; width:320px; background:rgba(0,0,0,0.9); border-radius:16px; display:none; z-index:9999;">
         <div style="display:flex; justify-content:space-between; padding:8px 12px; background:#16213e; border-radius:16px 16px 0 0;">
             <span id="floatTitle">浮窗播放</span>
@@ -463,12 +476,9 @@ layout: false
     let currentPlayingVideo=null, currentPlayingEpIndex=0, currentOpenVideo=null, currentEpNext=null, currentHls=null, playerInFloat=false;
     
     let fullVideosCache = {};
-    
-    // 特殊视图相关
-    let currentSpecialType = null;        // '__history__', '__favorites__', '__bookmarks__', '__search_result__'
-    let currentSpecialFullData = [];      // 当前特殊视图的全量原始数据（未筛选）
-    let currentSpecialCategory = '';      // 特殊视图当前选中的分类
-    
+    let currentSpecialType = null;
+    let currentSpecialFullData = [];
+    let currentSpecialCategory = '';
     let currentView = 'home';
     let currentPlayerVideo = null;
     let currentPlayerEpisodes = [];
@@ -511,7 +521,7 @@ layout: false
     const escAttr = s => String(s).replace(/[&"']/g, m => ({'&':'&amp;','"':'&quot;',"'":'&#39;'}[m]));
     const setStatus = txt => { const st = document.getElementById('statusText'); if(st) st.textContent = txt; };
     
-    // 主题（只保留图标）
+    // 主题
     function initTheme() {
         const saved = localStorage.getItem(STORAGE.THEME);
         const wrap = document.getElementById('app');
@@ -532,7 +542,16 @@ layout: false
     themeToggle.addEventListener('click', toggleTheme);
     initTheme();
     
-    // 存储操作（原版）
+    // 高亮顶部按钮
+    function setActiveButton(type) {
+        [historyBtn, favoritesBtn, bookmarksBtn, searchResultBtn].forEach(btn => btn.classList.remove('active'));
+        if (type === '__history__') historyBtn.classList.add('active');
+        else if (type === '__favorites__') favoritesBtn.classList.add('active');
+        else if (type === '__bookmarks__') bookmarksBtn.classList.add('active');
+        else if (type === '__search_result__') searchResultBtn.classList.add('active');
+    }
+    
+    // 存储操作
     const getStorage = key => { try{ return JSON.parse(localStorage.getItem(key))||(key===STORAGE.HISTORY?{}:[]); }catch(e){ return key===STORAGE.HISTORY?{}:[]; } };
     const setStorage = (key,val) => localStorage.setItem(key,JSON.stringify(val));
     const saveHistory = (key,val) => { let h=getStorage(STORAGE.HISTORY); h[key]=val; setStorage(STORAGE.HISTORY,h); };
@@ -655,7 +674,17 @@ layout: false
             }
         }
         function flushRender(){ if(ver===searchVersion && needRender){ currentSearchResults=results.slice(); renderHomeSearch(false); needRender=false; } }
-        function finish(){ if(ver!==searchVersion) return; isSearching=false; searchBtn.style.display='inline'; stopSearchBtn.style.display='none'; currentSearchResults=results.slice(); setStatus(`✅ 搜索完成 · ${kw} 共 ${results.length} 条`); renderHomeSearch(false); }
+        function finish(){
+            if(ver!==searchVersion) return;
+            isSearching=false;
+            searchBtn.style.display='inline';
+            stopSearchBtn.style.display='none';
+            if(currentSearchResults.length){
+                searchResultBtn.click();
+            } else {
+                renderSpecialView('__search_result__');
+            }
+        }
         function loadNext(){
             if(ver!==searchVersion) return;
             while(idx<tasks.length && running<CONCURRENT){
@@ -677,6 +706,7 @@ layout: false
             homeContent.innerHTML='<div class="empty-state">🔍 搜索中，请稍候...</div>';
             homePagination.innerHTML=''; catBar.innerHTML=''; setStatus('搜索中...');
             clearSpecialBtn.style.display = 'none';
+            sourceSelect.value = '';
             return;
         }
         if(!currentSearchResults.length){ 
@@ -684,13 +714,14 @@ layout: false
             homePagination.innerHTML=''; catBar.innerHTML=''; 
             setStatus('搜索结果为空');
             clearSpecialBtn.style.display = 'none';
+            sourceSelect.value = '';
             return; 
         }
         buildSearchCatBar();
         let filtered = currentSearchCategory==='' ? currentSearchResults.slice() : currentSearchCategory==='未分类' ? currentSearchResults.filter(v=>!(v.vod_class||'').trim()) : currentSearchResults.filter(v=>(v.vod_class||'').split(',').some(c=>c.trim()===currentSearchCategory));
         currentFiltered = filtered; currentPage=1;
         renderHomeGrid();
-        sourceSelect.value='__search_result__';
+        sourceSelect.value = '';
         clearSpecialBtn.style.display = 'inline-block';
         clearSpecialBtn.onclick = () => clearAllSpecial('__search_result__');
     }
@@ -711,7 +742,6 @@ layout: false
         });
     }
     
-    // 通用：为特殊视图构建分类栏（基于全量数据）
     function buildSpecialCatBar(fullData, currentCat, onSelect) {
         let cats = {};
         fullData.forEach(v => {
@@ -739,14 +769,13 @@ layout: false
         });
     }
     
-    // 特殊视图渲染（历史/收藏/影签/搜索结果）带分类
     function renderSpecialView(type){
         if(isSearching) stopSearch();
         currentSpecialType = type;
         currentPrefix = type;
         currentCategory = '';
-        // 设置数据源下拉框显示“选择数据源”
         sourceSelect.value = '';
+        setActiveButton(type);
         
         let list = [];
         if(type === '__search_result__'){
@@ -787,7 +816,6 @@ layout: false
     }
     
     function renderSpecialGridAndCat(){
-        // 根据当前分类筛选
         let filtered = currentSpecialFullData;
         if(currentSpecialCategory !== ''){
             if(currentSpecialCategory === '未分类'){
@@ -802,8 +830,7 @@ layout: false
         }
         currentFiltered = filtered;
         currentPage = 1;
-        renderHomeGrid();  // 复用首页网格渲染
-        // 构建分类栏
+        renderHomeGrid();
         buildSpecialCatBar(currentSpecialFullData, currentSpecialCategory, (cat) => {
             currentSpecialCategory = cat;
             renderSpecialGridAndCat();
@@ -827,9 +854,9 @@ layout: false
             currentSearchCategory = '';
             renderSpecialView('__search_result__');
         } else if(type === '__favorites__'){
-            // 收藏不支持一键清空，仅提示
             setStatus('收藏不支持一键清空，请单独移除');
         }
+        sourceSelect.value = '';
     }
     
     function renderHomeGrid(){
@@ -845,9 +872,15 @@ layout: false
             if(isSpecial){
                 deleteBtn = `<button class="delete-item-btn" data-sourcekey="${escAttr(v.sourceKey)}" data-name="${escAttr(v.vod_name)}" data-type="${currentPrefix}">✕</button>`;
             }
+            let sourceName = v.sourceName || (v.sourceKey ? '数据源' : '未知');
+            if (sourceName.length > 12) sourceName = sourceName.slice(0,10)+'…';
+            
             html+=`<div class="video-card" data-name="${escAttr(v.vod_name)}" data-sourcekey="${escAttr(v.sourceKey)}" data-sourcename="${escAttr(v.sourceName||'')}" data-pic="${escAttr(img)}" data-epcount="${v.ep_count||0}" data-playable="${v.playable_count||0}" data-episodes='${escAttr(JSON.stringify(v.episodes||[]))}' data-class="${escAttr(v.vod_class||'')}">
                 ${deleteBtn}
-                <img class="video-poster" src="${img}" loading="lazy" onerror="this.src='https://picsum.photos/seed/default/300/400'">
+                <div class="pw-poster-wrap">
+                    <img class="video-poster" src="${img}" loading="lazy" onerror="this.src='https://picsum.photos/seed/default/300/400'">
+                    <span class="source-label">📀 ${escHtml(sourceName)}</span>
+                </div>
                 <div class="video-info">
                     <div class="video-title-row">
                         <button class="fav-home-btn" data-sourcekey="${escAttr(v.sourceKey)}" data-name="${escAttr(v.vod_name)}">${isFav?'❤️':'🤍'}</button>
@@ -1045,7 +1078,7 @@ layout: false
     function switchSource(){
         if(isSearching) stopSearch();
         let val=sourceSelect.value;
-        if(!val || val === '') return; // 提示选项不做任何操作
+        if(!val || val === '') return;
         currentPrefix=val; 
         currentFilePage=1; 
         currentPage=1; 
@@ -1053,6 +1086,7 @@ layout: false
         clearSpecialBtn.style.display = 'none';
         currentCategory = '';
         currentSpecialType = null;
+        setActiveButton(null);
         
         homeContent.innerHTML='<div class="empty-state">⏳ 加载数据中...</div>';
         catBar.innerHTML = '<span class="cat-badge">统计分类中...</span>';
@@ -1102,7 +1136,7 @@ layout: false
         setStatus(`${data.name} — 第${page}页（正在统计全部分类...）`);
     }
     
-    // 播放页函数（完整保留）
+    // 播放页函数
     function openPlayerView(video){
         currentPlayerVideo = video;
         currentPlayerSourceKey = video.sourceKey;
@@ -1238,7 +1272,6 @@ layout: false
             if(!data){ homeContent.innerHTML='<div class="empty-state">❌ 暂无数据源！</div>'; return; }
             sourceIndex=data;
             sourceSelect.innerHTML='';
-            // 添加提示选项
             let hintOption = document.createElement('option');
             hintOption.value = '';
             hintOption.textContent = '选择数据源';
@@ -1252,9 +1285,7 @@ layout: false
             });
             startPreload();
             if(sourceIndex.length) {
-                // 默认不选中任何数据源，显示提示
                 sourceSelect.value = '';
-                // 可以默认显示最近观看
                 renderSpecialView('__history__');
             } else {
                 homeContent.innerHTML='<div class="empty-state">❌ 暂无数据源！</div>';
