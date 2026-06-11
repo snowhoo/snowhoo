@@ -13,17 +13,12 @@ echo.
 
 cd /d "%SCRIPTS_DIR%"
 
-echo [1/2] 正在爬取增量文章...
+echo [1/1] 正在爬取增量文章，输出 data.js ...
 python album_scraper.py --incremental --outdir "%OUTPUT_DIR%"
 
 echo.
-echo [2/2] 复制 index.html 到输出目录...
-copy /Y "%SCRIPTS_DIR%index.html" "%OUTPUT_DIR%\zjsz.html" >nul
-
-echo.
 echo ============ 完成！============
-echo 输出文件:
-echo   %OUTPUT_DIR%\zjsz.html
-echo   %OUTPUT_DIR%\data.js
+echo 输出文件: %OUTPUT_DIR%\data.js
+echo 页面文件: %OUTPUT_DIR%\zjsz.html（保持不变）
 echo.
 pause
