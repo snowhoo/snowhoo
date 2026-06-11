@@ -17,28 +17,14 @@ body {
 
 /* ===== Header ===== */
 .header {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  color: #fff;
-  text-align: center;
-  padding: 48px 20px 36px;
-  position: relative;
-  overflow: hidden;
+  max-width: 960px; margin: 0 auto; padding: 6px 20px 0px;
+  display: flex; justify-content: space-between; align-items: baseline;
 }
-.header::after {
-  content: '';
-  position: absolute;
-  top: -60%; left: -20%;
-  width: 140%; height: 140%;
-  background: radial-gradient(ellipse, rgba(255,255,255,0.04) 0%, transparent 70%);
-  pointer-events: none;
+.header h1 {
+  font-size: 20px; font-weight: 700; color: #1a1a2e;
 }
-.header h1 { font-size: 34px; font-weight: 700; letter-spacing: 6px; position: relative; }
-.header .subtitle { font-size: 15px; opacity: 0.75; margin-top: 8px; letter-spacing: 2px; position: relative; }
-.header .subtitle .source { font-weight: 600; }
-.header .stats { margin-top: 14px; font-size: 13px; opacity: 0.55; position: relative; display: none; }
-/* ===== Update date below subtitle ===== */
-.header .update-date {
-  font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; position: relative;
+.header .header-stats {
+  font-size: 15px; color: #999;
 }
 
 /* ===== Toolbar ===== */
@@ -48,9 +34,6 @@ body {
 }
 .toolbar .info { font-size: 14px; color: #666; }
 .toolbar .info strong { color: #1a1a2e; }
-.toolbar-status { font-size: 12px; color: #999; padding: 4px 12px; background: #f5f5f5; border-radius: 20px; }
-.toolbar-status.ok { color: #27ae60; background: #e8f8f0; }
-
 /* ===== Gallery ===== */
 .gallery { max-width: 960px; margin: 0 auto; padding: 12px 20px 60px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
 
@@ -78,6 +61,9 @@ body {
 .article-card .info h2 {
   font-size: 15px; font-weight: 600; line-height: 1.4; color: #1a1a2e;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.article-card .info .card-date {
+  font-size: 12px; color: #aaa; margin-top: 4px;
 }
 
 /* ===== Lightbox (大图 + 文章详情) ===== */
@@ -147,8 +133,8 @@ body {
 
 /* ===== Responsive ===== */
 @media (min-width: 1024px) {
-  .header { padding: 56px 20px 40px; }
-  .header h1 { font-size: 40px; }
+  .header { padding: 6px 20px 0px; }
+  .header h1 { font-size: 20px; }
 }
 </style>
 </head>
@@ -169,15 +155,8 @@ body {
 
 <!-- Header -->
 <div class="header">
-  <h1>照见苏州</h1>
-  <p class="subtitle"><span class="source">苏州日报</span> · 摄影专辑</p>
-  <p class="update-date" id="updateDate">更新于 --</p>
-</div>
-
-<!-- Toolbar -->
-<div class="toolbar">
-  <div class="info">共 <strong id="pageInfo">0</strong> 篇 &nbsp;·&nbsp; 第 <strong id="currentPageDisplay">1</strong> / <strong id="totalPages">1</strong> 页</div>
-  <div class="toolbar-status" id="statusBadge">加载中...</div>
+  <h1>照见苏州 · 摄影专辑</h1>
+  <span class="header-stats" id="headerStats"></span>
 </div>
 
 <!-- Loading State -->
@@ -216,9 +195,7 @@ var $ = function(id) { return document.getElementById(id); };
 var dom = {
   gallery: $('gallery'), pagination: $('pagination'),
   loading: $('loadingState'), empty: $('emptyState'),
-  pageInfo: $('pageInfo'), currentPageDisplay: $('currentPageDisplay'),
-  totalPages: $('totalPages'), statusBadge: $('statusBadge'),
-  updateDate: $('updateDate'),
+  headerStats: $('headerStats'),
   lightbox: $('lightbox'), lightboxImg: $('lightboxImg'),
   lbTitle: $('lbTitle'), lbDate: $('lbDate'), lbDesc: $('lbDesc'),
 };
@@ -284,7 +261,8 @@ function renderPage(page) {
     var art = pageArts[i];
     var title = esc(art.title || '无标题');
     var img = art.image_url || '';
-    var idx = articles.indexOf(art); // global index for lookup
+    var date = fmtDate(art.create_time);
+    var idx = articles.indexOf(art);
 
     html +=
       '<div class="article-card" data-idx="' + idx + '">' +
@@ -294,17 +272,15 @@ function renderPage(page) {
                ' onload="this.parentNode.querySelector(\'.img-placeholder\').style.display=\'none\'"' +
                ' onerror="this.style.display=\'none\'; this.parentNode.querySelector(\'.img-placeholder\').textContent=\'\uD83D\uDDBC\uFE0F\'">' +
         '</div>' +
-        '<div class="info"><h2>' + title + '</h2></div>' +
+        '<div class="info"><h2>' + title + '</h2><div class="card-date">' + date + '</div></div>' +
       '</div>';
   }
   dom.gallery.innerHTML = html;
   showState('gallery');
 
-  dom.currentPageDisplay.textContent = page;
-  dom.pageInfo.textContent = total;
+  dom.headerStats.textContent = '共 ' + total + ' 篇 · 第 ' + page + ' / ' + totalPages + ' 页';
 
   renderPagination(page);
-  setStatus('第 ' + page + '/' + totalPages + ' 页', 'ok');
 }
 
 // =========================== 事件委托：卡片点击 ============================
@@ -363,7 +339,6 @@ function init() {
   var data = window.ARTICLE_DATA;
   if (!data || !Array.isArray(data) || data.length === 0) {
     showState('empty');
-    setStatus('暂无数据', '');
     return;
   }
   articles = data;
@@ -371,12 +346,6 @@ function init() {
   totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
   currentPage = 1;
 
-  // Update date
-  var now = new Date();
-  var dateStr = now.getFullYear() + '-' + (now.getMonth()+1+'').padStart(2,'0') + '-' + (now.getDate()+'').padStart(2,'0');
-  dom.updateDate.textContent = '更新于 ' + dateStr;
-
-  dom.totalPages.textContent = totalPages;
   renderPage(1);
 }
 
