@@ -1,149 +1,93 @@
 ---
 layout: false
 ---
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>照见苏州</title>
 <script src="data.js"></script>
-<style>
-/* ===== Reset & Base ===== */
-*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  font-family: -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
-  background: #f0f2f5;
-  color: #1a1a2e;
-  min-height: 100vh;
-}
 
-/* ===== Header ===== */
-.header {
-  max-width: 960px; margin: 0 auto; padding: 6px 20px 0px;
+<style>
+#zjsz-app *, #zjsz-app *::before, #zjsz-app *::after { margin: 0; padding: 0; box-sizing: border-box; }
+#zjsz-app {
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  background: #f0f2f5; color: #1a1a2e; min-height: 100vh;
+}
+#zjsz-app .header {
+  max-width: 960px; margin: 0 auto; padding: 16px 20px 10px;
   display: flex; justify-content: space-between; align-items: baseline;
 }
-.header h1 {
-  font-size: 20px; font-weight: 700; color: #1a1a2e;
-}
-.header .header-stats {
-  font-size: 15px; color: #999;
-}
-
-/* ===== Toolbar ===== */
-.toolbar {
-  max-width: 960px; margin: 0 auto; padding: 18px 20px 8px;
-  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
-}
-.toolbar .info { font-size: 14px; color: #666; }
-.toolbar .info strong { color: #1a1a2e; }
-/* ===== Gallery ===== */
-.gallery { max-width: 960px; margin: 0 auto; padding: 12px 20px 60px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-
-/* ===== Card (仅图片+标题) ===== */
-.article-card {
+#zjsz-app .header h1 { font-size: 15px; font-weight: 700; color: #1a1a2e; }
+#zjsz-app .header .header-stats { font-size: 15px; color: #999; }
+#zjsz-app .gallery { max-width: 960px; margin: 0 auto; padding: 12px 20px 60px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+#zjsz-app .article-card {
   background: #fff; border-radius: 12px; overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.06); transition: transform 0.25s, box-shadow 0.25s;
-  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06); transition: transform 0.25s, box-shadow 0.25s; cursor: pointer;
 }
-.article-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(0,0,0,0.1); }
-.article-card .cover-wrap {
+#zjsz-app .article-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(0,0,0,0.1); }
+#zjsz-app .article-card .cover-wrap {
   width: 100%; aspect-ratio: 3 / 4; overflow: hidden; background: #e8ecf1; position: relative;
 }
-.article-card .cover-wrap .img-placeholder {
-  position: absolute; inset: 0; display: flex; align-items: center;
-  justify-content: center; color: #bbb; font-size: 14px;
+#zjsz-app .article-card .cover-wrap .img-placeholder {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #bbb; font-size: 14px;
 }
-.article-card .cover-wrap img {
+#zjsz-app .article-card .cover-wrap img {
   width: 100%; height: 100%; object-fit: cover; display: block;
   transition: transform 0.4s; position: relative; z-index: 1;
 }
-.article-card:hover .cover-wrap img { transform: scale(1.05); }
-.article-card .cover-wrap img[src=""] { visibility: hidden; }
-.article-card .info { padding: 12px 14px 14px; }
-.article-card .info h2 {
+#zjsz-app .article-card:hover .cover-wrap img { transform: scale(1.05); }
+#zjsz-app .article-card .cover-wrap img[src=""] { visibility: hidden; }
+#zjsz-app .article-card .info { padding: 12px 14px 14px; }
+#zjsz-app .article-card .info h2 {
   font-size: 15px; font-weight: 600; line-height: 1.4; color: #1a1a2e;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.article-card .info .card-date {
-  font-size: 12px; color: #aaa; margin-top: 4px;
-}
-
-/* ===== Lightbox (大图 + 文章详情) ===== */
-.lightbox {
-  display: none; position: fixed; z-index: 9999;
-  inset: 0; background: rgba(0,0,0,0.92);
+#zjsz-app .article-card .info .card-date { font-size: 12px; color: #aaa; margin-top: 4px; }
+#zjsz-app .lightbox {
+  display: none; position: fixed; z-index: 9999; inset: 0; background: rgba(0,0,0,0.92);
   flex-direction: column; padding: 0;
 }
-.lightbox.show { display: flex; }
-
-.lightbox .lb-close {
-  position: absolute; top: 16px; right: 20px;
-  color: rgba(255,255,255,0.6); font-size: 28px; cursor: pointer;
-  z-index: 10; line-height: 1; transition: color 0.2s;
+#zjsz-app .lightbox.show { display: flex; }
+#zjsz-app .lightbox .lb-close {
+  position: absolute; top: 16px; right: 20px; color: rgba(255,255,255,0.6);
+  font-size: 28px; cursor: pointer; z-index: 10; line-height: 1; transition: color 0.2s;
 }
-.lightbox .lb-close:hover { color: #fff; }
-
-.lightbox .lb-image-area {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  padding: 20px; min-height: 0;
+#zjsz-app .lightbox .lb-close:hover { color: #fff; }
+#zjsz-app .lightbox .lb-image-area {
+  flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; min-height: 0;
 }
-.lightbox .lb-image-area img {
-  max-width: 100%; max-height: 100%; object-fit: contain;
-  border-radius: 6px; box-shadow: 0 4px 40px rgba(0,0,0,0.4);
+#zjsz-app .lightbox .lb-image-area img {
+  max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; box-shadow: 0 4px 40px rgba(0,0,0,0.4);
 }
-
-.lightbox .lb-detail {
-  background: rgba(30,30,50,0.95);
-  padding: 20px 24px 28px;
-  max-height: 35vh; overflow-y: auto;
-  border-top: 1px solid rgba(255,255,255,0.08);
+#zjsz-app .lightbox .lb-detail {
+  background: rgba(30,30,50,0.95); padding: 20px 24px 28px;
+  max-height: 35vh; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.08);
 }
-.lightbox .lb-detail h2 {
-  font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 10px; line-height: 1.5;
-}
-.lightbox .lb-detail .lb-date {
-  font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 12px;
-}
-.lightbox .lb-detail .lb-desc {
-  font-size: 15px; color: rgba(255,255,255,0.8); line-height: 1.8;
-  white-space: pre-wrap;
-}
-
-/* ===== Pagination ===== */
-.pagination {
+#zjsz-app .lightbox .lb-detail h2 { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 10px; line-height: 1.5; }
+#zjsz-app .lightbox .lb-detail .lb-date { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 12px; }
+#zjsz-app .lightbox .lb-detail .lb-desc { font-size: 15px; color: rgba(255,255,255,0.8); line-height: 1.8; white-space: pre-wrap; }
+#zjsz-app .pagination {
   max-width: 960px; margin: 0 auto; padding: 0 20px 40px;
   display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap;
 }
-.pagination .page-btn {
+#zjsz-app .pagination .page-btn {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 36px; height: 36px; padding: 0 10px; border: 1px solid #e0e0e0; border-radius: 8px;
   background: #fff; color: #555; font-size: 14px; cursor: pointer; transition: all 0.2s; user-select: none;
 }
-.pagination .page-btn:hover:not(.active):not(.disabled) { border-color: #0f3460; color: #0f3460; }
-.pagination .page-btn.active { background: #0f3460; border-color: #0f3460; color: #fff; font-weight: 600; }
-.pagination .page-btn.disabled { opacity: 0.35; cursor: not-allowed; }
-.pagination .page-ellipsis { padding: 0 4px; color: #999; font-size: 14px; }
-
-/* ===== Footer ===== */
-.footer { text-align: center; padding: 24px 20px; color: #bbb; font-size: 12px; border-top: 1px solid #e8e8e8; margin-top: 10px; }
-
-/* ===== States ===== */
-.state-msg { max-width: 900px; margin: 0 auto; padding: 80px 20px; text-align: center; }
-.state-msg .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
-.state-msg p { font-size: 16px; color: #999; line-height: 1.6; }
-.state-msg p strong { color: #555; }
-
-/* ===== Responsive ===== */
+#zjsz-app .pagination .page-btn:hover:not(.active):not(.disabled) { border-color: #0f3460; color: #0f3460; }
+#zjsz-app .pagination .page-btn.active { background: #0f3460; border-color: #0f3460; color: #fff; font-weight: 600; }
+#zjsz-app .pagination .page-btn.disabled { opacity: 0.35; cursor: not-allowed; }
+#zjsz-app .pagination .page-ellipsis { padding: 0 4px; color: #999; font-size: 14px; }
+#zjsz-app .footer { text-align: center; padding: 24px 20px; color: #bbb; font-size: 12px; border-top: 1px solid #e8e8e8; margin-top: 10px; }
+#zjsz-app .state-msg { max-width: 900px; margin: 0 auto; padding: 80px 20px; text-align: center; }
+#zjsz-app .state-msg .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+#zjsz-app .state-msg p { font-size: 16px; color: #999; line-height: 1.6; }
+#zjsz-app .state-msg p strong { color: #555; }
 @media (min-width: 1024px) {
-  .header { padding: 6px 20px 0px; }
-  .header h1 { font-size: 20px; }
+  #zjsz-app .header { padding: 6px 20px 0px; }
+  #zjsz-app .header h1 { font-size: 20px; }
 }
 </style>
-</head>
-<body>
 
-<!-- Lightbox -->
+<div id="zjsz-app">
+
 <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
   <span class="lb-close" onclick="closeLightbox()">✕</span>
   <div class="lb-image-area">
@@ -156,44 +100,35 @@ body {
   </div>
 </div>
 
-<!-- Header -->
 <div class="header">
   <h1>照见苏州 · 摄影专辑</h1>
   <span class="header-stats" id="headerStats"></span>
 </div>
 
-<!-- Loading State -->
 <div class="state-msg" id="loadingState">
   <div class="icon">📷</div>
   <p>正在加载文章数据...</p>
 </div>
 
-<!-- Empty State -->
 <div class="state-msg" id="emptyState" style="display:none;">
   <div class="icon">📭</div>
   <p><strong>暂无文章</strong></p>
 </div>
 
-<!-- Gallery -->
 <div class="gallery" id="gallery" style="display:none;"></div>
-
-<!-- Pagination -->
 <div class="pagination" id="pagination" style="display:none;"></div>
-
-<!-- Footer -->
 <div class="footer">图片来源：苏州日报 / 视觉苏州</div>
 
-<script>
-// =========================== 配置 ============================
-var PER_PAGE = 8;
+</div>
 
-// =========================== 数据 ============================
+<script>
+(function() {
+var PER_PAGE = 8;
 var articles = [];
 var total = 0;
 var totalPages = 0;
 var currentPage = 1;
 
-// =========================== DOM 引用 ============================
 var $ = function(id) { return document.getElementById(id); };
 var dom = {
   gallery: $('gallery'), pagination: $('pagination'),
@@ -203,7 +138,6 @@ var dom = {
   lbTitle: $('lbTitle'), lbDate: $('lbDate'), lbDesc: $('lbDesc'),
 };
 
-// =========================== Lightbox ============================
 function closeLightbox() {
   dom.lightbox.classList.remove('show');
   dom.lightboxImg.src = '';
@@ -212,17 +146,13 @@ function closeLightbox() {
   dom.lbDesc.textContent = '';
   document.body.style.overflow = '';
 }
-
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeLightbox();
 });
-
-// Click backdrop to close
 dom.lightbox.addEventListener('click', function(e) {
   if (e.target === dom.lightbox || e.target.classList.contains('lb-image-area')) closeLightbox();
 });
 
-// =========================== 工具函数 ============================
 function showState(active) {
   var ids = ['loading', 'empty', 'gallery', 'pagination'];
   for (var i = 0; i < ids.length; i++) {
@@ -248,12 +178,6 @@ function fmtDate(s) {
   return s;
 }
 
-function setStatus(text, type) {
-  dom.statusBadge.textContent = text;
-  dom.statusBadge.className = 'toolbar-status' + (type ? ' ' + type : '');
-}
-
-// =========================== 渲染 ============================
 function renderPage(page) {
   var start = (page - 1) * PER_PAGE;
   var end = Math.min(start + PER_PAGE, total);
@@ -282,11 +206,9 @@ function renderPage(page) {
   showState('gallery');
 
   dom.headerStats.textContent = '共 ' + total + ' 篇 · 第 ' + page + ' / ' + totalPages + ' 页';
-
   renderPagination(page);
 }
 
-// =========================== 事件委托：卡片点击 ============================
 dom.gallery.addEventListener('click', function(e) {
   var card = e.target.closest('.article-card');
   if (!card) return;
@@ -337,7 +259,6 @@ function buildRange(cur, t) {
   return [1,'...',cur-1,cur,cur+1,'...',t];
 }
 
-// =========================== 启动 ============================
 function init() {
   var data = window.ARTICLE_DATA;
   if (!data || !Array.isArray(data) || data.length === 0) {
@@ -348,11 +269,13 @@ function init() {
   total = data.length;
   totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
   currentPage = 1;
-
   renderPage(1);
 }
 
-document.addEventListener('DOMContentLoaded', init);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+})();
 </script>
-</body>
-</html>
