@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>照见苏州 - 苏州日报摄影专辑</title>
+<script src="data.js"></script>
+<style>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  background: #f0f2f5;
+  color: #1a1a2e;
+  min-height: 100vh;
+}
+
+/* ===== Header ===== */
+.header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #fff;
+  text-align: center;
+  padding: 48px 20px 36px;
+  position: relative;
+  overflow: hidden;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  top: -60%; left: -20%;
+  width: 140%; height: 140%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+.header h1 { font-size: 34px; font-weight: 700; letter-spacing: 6px; position: relative; }
+.header .subtitle { font-size: 15px; opacity: 0.75; margin-top: 8px; letter-spacing: 2px; position: relative; }
+.header .subtitle .source { font-weight: 600; }
+.header .stats { margin-top: 14px; font-size: 13px; opacity: 0.55; position: relative; display: none; }
+/* ===== Update date below subtitle ===== */
+.header .update-date {
+  font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; position: relative;
+}
+
+/* ===== Toolbar ===== */
+.toolbar {
+  max-width: 960px; margin: 0 auto; padding: 18px 20px 8px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+}
+.toolbar .info { font-size: 14px; color: #666; }
+.toolbar .info strong { color: #1a1a2e; }
+.toolbar-status { font-size: 12px; color: #999; padding: 4px 12px; background: #f5f5f5; border-radius: 20px; }
+.toolbar-status.ok { color: #27ae60; background: #e8f8f0; }
+
+/* ===== Gallery ===== */
+.gallery { max-width: 960px; margin: 0 auto; padding: 12px 20px 60px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+/* ===== Card (仅图片+标题) ===== */
+.article-card {
+  background: #fff; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06); transition: transform 0.25s, box-shadow 0.25s;
+  cursor: pointer;
+}
+.article-card:hover { transform: translateY(-3px); box-shadow: 0 6px 24px rgba(0,0,0,0.1); }
+.article-card .cover-wrap {
+  width: 100%; aspect-ratio: 3 / 4; overflow: hidden; background: #e8ecf1; position: relative;
+}
+.article-card .cover-wrap .img-placeholder {
+  position: absolute; inset: 0; display: flex; align-items: center;
+  justify-content: center; color: #bbb; font-size: 14px;
+}
+.article-card .cover-wrap img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform 0.4s; position: relative; z-index: 1;
+}
+.article-card:hover .cover-wrap img { transform: scale(1.05); }
+.article-card .cover-wrap img[src=""] { visibility: hidden; }
+.article-card .info { padding: 12px 14px 14px; }
+.article-card .info h2 {
+  font-size: 15px; font-weight: 600; line-height: 1.4; color: #1a1a2e;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* ===== Lightbox (大图 + 文章详情) ===== */
+.lightbox {
+  display: none; position: fixed; z-index: 9999;
+  inset: 0; background: rgba(0,0,0,0.92);
+  flex-direction: column; padding: 0;
+}
+.lightbox.show { display: flex; }
+
+.lightbox .lb-close {
+  position: absolute; top: 16px; right: 20px;
+  color: rgba(255,255,255,0.6); font-size: 28px; cursor: pointer;
+  z-index: 10; line-height: 1; transition: color 0.2s;
+}
+.lightbox .lb-close:hover { color: #fff; }
+
+.lightbox .lb-image-area {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 20px; min-height: 0;
+}
+.lightbox .lb-image-area img {
+  max-width: 100%; max-height: 100%; object-fit: contain;
+  border-radius: 6px; box-shadow: 0 4px 40px rgba(0,0,0,0.4);
+}
+
+.lightbox .lb-detail {
+  background: rgba(30,30,50,0.95);
+  padding: 20px 24px 28px;
+  max-height: 35vh; overflow-y: auto;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.lightbox .lb-detail h2 {
+  font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 10px; line-height: 1.5;
+}
+.lightbox .lb-detail .lb-date {
+  font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 12px;
+}
+.lightbox .lb-detail .lb-desc {
+  font-size: 15px; color: rgba(255,255,255,0.8); line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+/* ===== Pagination ===== */
+.pagination {
+  max-width: 960px; margin: 0 auto; padding: 0 20px 40px;
+  display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.pagination .page-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 36px; height: 36px; padding: 0 10px; border: 1px solid #e0e0e0; border-radius: 8px;
+  background: #fff; color: #555; font-size: 14px; cursor: pointer; transition: all 0.2s; user-select: none;
+}
+.pagination .page-btn:hover:not(.active):not(.disabled) { border-color: #0f3460; color: #0f3460; }
+.pagination .page-btn.active { background: #0f3460; border-color: #0f3460; color: #fff; font-weight: 600; }
+.pagination .page-btn.disabled { opacity: 0.35; cursor: not-allowed; }
+.pagination .page-ellipsis { padding: 0 4px; color: #999; font-size: 14px; }
+
+/* ===== Footer ===== */
+.footer { text-align: center; padding: 24px 20px; color: #bbb; font-size: 12px; border-top: 1px solid #e8e8e8; margin-top: 10px; }
+
+/* ===== States ===== */
+.state-msg { max-width: 900px; margin: 0 auto; padding: 80px 20px; text-align: center; }
+.state-msg .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+.state-msg p { font-size: 16px; color: #999; line-height: 1.6; }
+.state-msg p strong { color: #555; }
+
+/* ===== Responsive ===== */
+@media (min-width: 1024px) {
+  .header { padding: 56px 20px 40px; }
+  .header h1 { font-size: 40px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <span class="lb-close" onclick="closeLightbox()">✕</span>
+  <div class="lb-image-area">
+    <img id="lightboxImg" src="" alt="">
+  </div>
+  <div class="lb-detail">
+    <h2 id="lbTitle"></h2>
+    <div class="lb-date" id="lbDate"></div>
+    <div class="lb-desc" id="lbDesc"></div>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <h1>照见苏州</h1>
+  <p class="subtitle"><span class="source">苏州日报</span> · 摄影专辑</p>
+  <p class="update-date" id="updateDate">更新于 --</p>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <div class="info">共 <strong id="pageInfo">0</strong> 篇 &nbsp;·&nbsp; 第 <strong id="currentPageDisplay">1</strong> / <strong id="totalPages">1</strong> 页</div>
+  <div class="toolbar-status" id="statusBadge">加载中...</div>
+</div>
+
+<!-- Loading State -->
+<div class="state-msg" id="loadingState">
+  <div class="icon">📷</div>
+  <p>正在加载文章数据...</p>
+</div>
+
+<!-- Empty State -->
+<div class="state-msg" id="emptyState" style="display:none;">
+  <div class="icon">📭</div>
+  <p><strong>暂无文章</strong></p>
+</div>
+
+<!-- Gallery -->
+<div class="gallery" id="gallery" style="display:none;"></div>
+
+<!-- Pagination -->
+<div class="pagination" id="pagination" style="display:none;"></div>
+
+<!-- Footer -->
+<div class="footer">图片来源：苏州日报 / 视觉苏州</div>
+
+<script>
+// =========================== 配置 ============================
+var PER_PAGE = 8;
+
+// =========================== 数据 ============================
+var articles = [];
+var total = 0;
+var totalPages = 0;
+var currentPage = 1;
+
+// =========================== DOM 引用 ============================
+var $ = function(id) { return document.getElementById(id); };
+var dom = {
+  gallery: $('gallery'), pagination: $('pagination'),
+  loading: $('loadingState'), empty: $('emptyState'),
+  pageInfo: $('pageInfo'), currentPageDisplay: $('currentPageDisplay'),
+  totalPages: $('totalPages'), statusBadge: $('statusBadge'),
+  updateDate: $('updateDate'),
+  lightbox: $('lightbox'), lightboxImg: $('lightboxImg'),
+  lbTitle: $('lbTitle'), lbDate: $('lbDate'), lbDesc: $('lbDesc'),
+};
+
+// =========================== Lightbox ============================
+function closeLightbox() {
+  dom.lightbox.classList.remove('show');
+  dom.lightboxImg.src = '';
+  dom.lbTitle.textContent = '';
+  dom.lbDate.textContent = '';
+  dom.lbDesc.textContent = '';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+
+// Click backdrop to close
+dom.lightbox.addEventListener('click', function(e) {
+  if (e.target === dom.lightbox || e.target.classList.contains('lb-image-area')) closeLightbox();
+});
+
+// =========================== 工具函数 ============================
+function showState(active) {
+  var ids = ['loading', 'empty', 'gallery', 'pagination'];
+  for (var i = 0; i < ids.length; i++) {
+    var id = ids[i];
+    var el = (id === 'gallery' || id === 'pagination') ? $(id) : $(id + 'State');
+    if (el) el.style.display = (id === active) ? '' : 'none';
+  }
+  if (active === 'gallery') dom.pagination.style.display = '';
+}
+
+function esc(text) {
+  var d = document.createElement('div');
+  d.textContent = text;
+  return d.innerHTML;
+}
+
+function fmtDate(s) {
+  if (!s) return '';
+  if (/^\d{10}$/.test(s)) {
+    var d = new Date(parseInt(s) * 1000);
+    return d.getFullYear() + '-' + (d.getMonth()+1+'').padStart(2,'0') + '-' + (d.getDate()+'').padStart(2,'0');
+  }
+  return s;
+}
+
+function setStatus(text, type) {
+  dom.statusBadge.textContent = text;
+  dom.statusBadge.className = 'toolbar-status' + (type ? ' ' + type : '');
+}
+
+// =========================== 渲染 ============================
+function renderPage(page) {
+  var start = (page - 1) * PER_PAGE;
+  var end = Math.min(start + PER_PAGE, total);
+  var pageArts = articles.slice(start, end);
+
+  var html = '';
+  for (var i = 0; i < pageArts.length; i++) {
+    var art = pageArts[i];
+    var title = esc(art.title || '无标题');
+    var img = art.image_url || '';
+    var idx = articles.indexOf(art); // global index for lookup
+
+    html +=
+      '<div class="article-card" data-idx="' + idx + '">' +
+        '<div class="cover-wrap">' +
+          '<div class="img-placeholder">加载中...</div>' +
+          '<img src="' + esc(img) + '" alt="' + title + '" loading="lazy"' +
+               ' onload="this.parentNode.querySelector(\'.img-placeholder\').style.display=\'none\'"' +
+               ' onerror="this.style.display=\'none\'; this.parentNode.querySelector(\'.img-placeholder\').textContent=\'\uD83D\uDDBC\uFE0F\'">' +
+        '</div>' +
+        '<div class="info"><h2>' + title + '</h2></div>' +
+      '</div>';
+  }
+  dom.gallery.innerHTML = html;
+  showState('gallery');
+
+  dom.currentPageDisplay.textContent = page;
+  dom.pageInfo.textContent = total;
+
+  renderPagination(page);
+  setStatus('第 ' + page + '/' + totalPages + ' 页', 'ok');
+}
+
+// =========================== 事件委托：卡片点击 ============================
+dom.gallery.addEventListener('click', function(e) {
+  var card = e.target.closest('.article-card');
+  if (!card) return;
+  var idx = parseInt(card.dataset.idx, 10);
+  var art = articles[idx];
+  if (!art) return;
+
+  dom.lightboxImg.src = art.image_url || '';
+  dom.lbTitle.textContent = art.title || '';
+  dom.lbDate.textContent = fmtDate(art.create_time);
+  dom.lbDesc.textContent = (art.description || '').replace(/\\n/g, '\n');
+  dom.lightbox.classList.add('show');
+  document.body.style.overflow = 'hidden';
+});
+
+function renderPagination(activePage) {
+  var t = totalPages;
+  if (t <= 1) { dom.pagination.innerHTML = ''; dom.pagination.style.display = 'none'; return; }
+  dom.pagination.style.display = '';
+
+  var html = '<span class="page-btn' + (activePage === 1 ? ' disabled' : '') + '" data-page="' + (activePage - 1) + '">‹</span>';
+  var range = buildRange(activePage, t);
+  for (var i = 0; i < range.length; i++) {
+    var item = range[i];
+    if (item === '...') { html += '<span class="page-ellipsis">…</span>'; }
+    else { html += '<span class="page-btn' + (item === activePage ? ' active' : '') + '" data-page="' + item + '">' + item + '</span>'; }
+  }
+  html += '<span class="page-btn' + (activePage === t ? ' disabled' : '') + '" data-page="' + (activePage + 1) + '">›</span>';
+  dom.pagination.innerHTML = html;
+
+  var btns = dom.pagination.querySelectorAll('.page-btn:not(.disabled)');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function() {
+      var p = parseInt(this.dataset.page, 10);
+      if (p >= 1 && p <= t) {
+        currentPage = p;
+        renderPage(p);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  }
+}
+
+function buildRange(cur, t) {
+  if (t <= 7) { var r = []; for (var i = 1; i <= t; i++) r.push(i); return r; }
+  if (cur <= 4) return [1,2,3,4,5,'...',t];
+  if (cur >= t - 3) return [1,'...',t-4,t-3,t-2,t-1,t];
+  return [1,'...',cur-1,cur,cur+1,'...',t];
+}
+
+// =========================== 启动 ============================
+function init() {
+  var data = window.ARTICLE_DATA;
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    showState('empty');
+    setStatus('暂无数据', '');
+    return;
+  }
+  articles = data;
+  total = data.length;
+  totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+  currentPage = 1;
+
+  // Update date
+  var now = new Date();
+  var dateStr = now.getFullYear() + '-' + (now.getMonth()+1+'').padStart(2,'0') + '-' + (now.getDate()+'').padStart(2,'0');
+  dom.updateDate.textContent = '更新于 ' + dateStr;
+
+  dom.totalPages.textContent = totalPages;
+  renderPage(1);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
