@@ -3,9 +3,10 @@
 照见苏州 - 微信文章专辑增量爬取脚本
 =====================================
 用法:
-  python album_scraper.py               # 全量爬取（首次使用）
-  python album_scraper.py --incremental  # 增量爬取（每日更新）
-  python album_scraper.py --force        # 强制全部重爬
+  python album_scraper.py                         # 全量爬取（首次使用）
+  python album_scraper.py --incremental            # 增量爬取（每日更新）
+  python album_scraper.py --force                  # 强制全部重爬
+  python album_scraper.py -i -o D:/path/to/output  # 指定输出目录
 
 爬取策略:
   微信专辑 API 最多返回 20 篇（最旧的），无法拿到最新文章。
@@ -48,7 +49,16 @@ API_HEADERS = {
 }
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_JS_FILE = os.path.join(DATA_DIR, "data.js")
+
+
+def data_js_path(outdir=None):
+    """返回 data.js 的完整路径。"""
+    if outdir:
+        d = os.path.abspath(outdir)
+    else:
+        d = DATA_DIR
+    os.makedirs(d, exist_ok=True)
+    return os.path.join(d, "data.js")
 
 
 def log(msg):
@@ -282,21 +292,22 @@ def sort_articles(articles: list) -> list:
     return articles
 
 
-def save_articles(articles: list):
+def save_articles(articles: list, outdir=None):
     """写入 data.js"""
     sort_articles(articles)
+    outpath = data_js_path(outdir)
     js = "// 照见苏州 - 文章数据\n// 由 album_scraper.py 自动生成\nvar ARTICLE_DATA = " + json.dumps(articles, ensure_ascii=False) + ";\n"
-    with open(DATA_JS_FILE, "w", encoding="utf-8") as f:
+    with open(outpath, "w", encoding="utf-8") as f:
         f.write(js)
-    log(f"已保存 {len(articles)} 条数据到 data.js")
+    log(f"已保存 {len(articles)} 条数据到 {outpath}")
 
 
 # ============================================================
 #  主流程
 # ============================================================
 
-def scrape_all(incremental: bool = False, force_content: bool = False):
-    existing = {} if force_content else load_existing_data()
+def scrape_all(incremental: bool = False, force_content: bool = False, outdir: str = None):
+    existing = {} if force_content else load_existing_data(outdir)
 
     if incremental and existing:
         # ---- 增量模式：只从最新文章向前爬 ----
@@ -317,7 +328,7 @@ def scrape_all(incremental: bool = False, force_content: bool = False):
         # 合并
         for art in new_articles:
             existing[art["msgid"]] = art
-        save_articles(list(existing.values()))
+        save_articles(list(existing.values()), outdir)
         log(f"新增 {len(new_articles)} 篇，总计 {len(existing)} 篇 🎉")
 
     else:
@@ -337,7 +348,7 @@ def scrape_all(incremental: bool = False, force_content: bool = False):
             for art in new_articles:
                 all_articles[art["msgid"]] = art
 
-        save_articles(list(all_articles.values()))
+        save_articles(list(all_articles.values()), outdir)
         log(f"全量爬取完成！总计 {len(all_articles)} 篇")
 
 
@@ -345,13 +356,14 @@ def scrape_all(incremental: bool = False, force_content: bool = False):
 #  加载已有数据
 # ============================================================
 
-def load_existing_data() -> dict:
+def load_existing_data(outdir=None) -> dict:
     """从 data.js 加载已有文章，返回 {msgid: article}"""
     result = {}
-    if not os.path.exists(DATA_JS_FILE):
+    inpath = data_js_path(outdir)
+    if not os.path.exists(inpath):
         return result
     try:
-        with open(DATA_JS_FILE, "r", encoding="utf-8") as f:
+        with open(inpath, "r", encoding="utf-8") as f:
             js_text = f.read()
         m = re.search(r"var ARTICLE_DATA\s*=\s*(\[.*?\])\s*;", js_text, re.DOTALL)
         if m:
@@ -360,7 +372,7 @@ def load_existing_data() -> dict:
                 mid = art.get("msgid", "")
                 if mid:
                     result[mid] = art
-        log(f"已加载 {len(result)} 条现有数据")
+        log(f"已加载 {len(result)} 条现有数据 (来自 {inpath})")
     except Exception as e:
         log(f"现有数据文件读取失败: {e}")
     return result
@@ -374,5 +386,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="微信文章专辑增量爬取工具")
     parser.add_argument("--incremental", "-i", action="store_true", help="增量：只爬新增")
     parser.add_argument("--force", "-f", action="store_true", help="强制全部重爬")
+    parser.add_argument("--outdir", "-o", default=None, help="输出目录（data.js 的存放路径）")
     args = parser.parse_args()
-    scrape_all(incremental=args.incremental, force_content=args.force)
+    scrape_all(incremental=args.incremental, force_content=args.force, outdir=args.outdir)
