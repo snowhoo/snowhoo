@@ -49,20 +49,74 @@ API_HEADERS = {
 }
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
+IMG_DIR_NAME = "zjsz_images"  # 图片存放的子目录名 (相对于 outdir)
 
 
 def data_js_path(outdir=None):
     """返回 data.js 的完整路径。"""
+    d = _resolve_dir(outdir)
+    return os.path.join(d, "data.js")
+
+
+def img_dir_path(outdir=None):
+    """返回图片存放目录。"""
+    d = _resolve_dir(outdir)
+    img_dir = os.path.join(d, IMG_DIR_NAME)
+    os.makedirs(img_dir, exist_ok=True)
+    return img_dir
+
+
+def _resolve_dir(outdir=None):
     if outdir:
         d = os.path.abspath(outdir)
     else:
         d = DATA_DIR
     os.makedirs(d, exist_ok=True)
-    return os.path.join(d, "data.js")
+    return d
 
 
 def log(msg):
     print(f"[album_scraper] {msg}", file=sys.stderr)
+
+
+# ============================================================
+#  图片下载
+# ============================================================
+
+def download_image(url: str, msgid: str, outdir: str) -> str:
+    """
+    下载文章封面图到本地，返回本地相对路径（如 zjsz_images/xxx.jpg）。
+    如果已存在则直接返回路径。
+    """
+    if not url:
+        return ""
+    img_dir = img_dir_path(outdir)
+    # 从 URL 推断扩展名
+    ext = ".jpg"
+    m = re.search(r"wx_fmt=(\w+)", url)
+    if m:
+        ext = "." + m.group(1)
+    local_name = f"{msgid}{ext}"
+    local_path = os.path.join(img_dir, local_name)
+    relative_path = f"{IMG_DIR_NAME}/{local_name}"
+
+    if os.path.exists(local_path):
+        return relative_path  # 已存在，跳过
+
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=30)
+        if resp.status_code == 200:
+            with open(local_path, "wb") as f:
+                f.write(resp.content)
+            log(f"  图片已下载: {relative_path}")
+        else:
+            log(f"  图片下载失败 (HTTP {resp.status_code}): {url[:60]}")
+            return url  # 下载失败，保留原 URL
+    except Exception as e:
+        log(f"  图片下载异常: {e}")
+        return url
+
+    return relative_path
 
 
 # ============================================================
@@ -293,9 +347,24 @@ def sort_articles(articles: list) -> list:
 
 
 def save_articles(articles: list, outdir=None):
-    """写入 data.js"""
+    """下载图片并写入 data.js"""
     sort_articles(articles)
     outpath = data_js_path(outdir)
+
+    # 下载每篇文章的封面图到本地
+    for art in articles:
+        if not art.get("image_url"):
+            continue
+        msgid = art.get("msgid", "")
+        if not msgid:
+            continue
+        # 已经是本地路径则跳过
+        if art["image_url"].startswith(IMG_DIR_NAME):
+            continue
+        local_path = download_image(art["image_url"], msgid, outdir)
+        if local_path:
+            art["image_url"] = local_path
+
     js = "// 照见苏州 - 文章数据\n// 由 album_scraper.py 自动生成\nvar ARTICLE_DATA = " + json.dumps(articles, ensure_ascii=False) + ";\n"
     with open(outpath, "w", encoding="utf-8") as f:
         f.write(js)
