@@ -98,7 +98,7 @@ def download_image(url: str, msgid: str, outdir: str) -> str:
         ext = "." + m.group(1)
     local_name = f"{msgid}{ext}"
     local_path = os.path.join(img_dir, local_name)
-    relative_path = f"{IMG_DIR_NAME}/{local_name}"
+    relative_path = f"./{IMG_DIR_NAME}/{local_name}"
 
     if os.path.exists(local_path):
         return relative_path  # 已存在，跳过
@@ -184,7 +184,6 @@ def extract_article(block: str, url: str) -> dict:
 
     return {
         "title": get_val("title"),
-        "url": url,
         "description": get_val("content_noencode") or get_val("desc"),
         "image_url": get_val("cdn_url"),
         "create_time": get_val("create_time"),
@@ -260,7 +259,6 @@ def crawl_forward_from(start_url: str, known_msgids: set) -> list:
             # 保底：保留标题和封面
             fallback = {
                 "title": next_title or f"文章{next_msgid}",
-                "url": next_url,
                 "description": "",
                 "image_url": "",
                 "create_time": "",
@@ -315,7 +313,6 @@ def fetch_from_album_api() -> list:
         # 保底
         items.append({
             "title": art.get("title", ""),
-            "url": url,
             "description": "",
             "image_url": art.get("cover_img_first", ""),
             "create_time": art.get("create_time", ""),
@@ -324,7 +321,14 @@ def fetch_from_album_api() -> list:
         })
         time.sleep(0.5)
 
-    return items
+    # 找到最新一篇文章的 URL 用于后续 next_article 链
+    newest_url = ""
+    for art in article_list:
+        u = art.get("url", "")
+        if u:
+            newest_url = u  # API 按时间升序返回，最后一个就是最新的
+
+    return items, newest_url
 
 
 # ============================================================
@@ -359,7 +363,7 @@ def save_articles(articles: list, outdir=None):
         if not msgid:
             continue
         # 已经是本地路径则跳过
-        if art["image_url"].startswith(IMG_DIR_NAME):
+        if art["image_url"].startswith(f"./{IMG_DIR_NAME}"):
             continue
         local_path = download_image(art["image_url"], msgid, outdir)
         if local_path:
@@ -403,12 +407,8 @@ def scrape_all(incremental: bool = False, force_content: bool = False, outdir: s
     else:
         # ---- 全量模式：专辑 API + next_article 链 ----
         log("全量模式：先通过专辑 API 获取基础数据")
-        album_articles = fetch_from_album_api()
+        album_articles, newest_from_api = fetch_from_album_api()
         all_articles = {a["msgid"]: a for a in album_articles}
-
-        # 从专辑 API 返回的最新一篇开始 follow
-        # album API 按旧→新排序，最后一篇是最新的
-        newest_from_api = album_articles[-1]["url"] if album_articles else None
 
         if newest_from_api:
             log(f"开始 follow next_article 链获取更新文章...")
