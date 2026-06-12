@@ -254,10 +254,17 @@ function renderPagination(activePage) {
 }
 
 function buildRange(cur, t) {
-  if (t <= 7) { var r = []; for (var i = 1; i <= t; i++) r.push(i); return r; }
-  if (cur <= 4) return [1,2,3,4,5,'...',t];
-  if (cur >= t - 3) return [1,'...',t-4,t-3,t-2,t-1,t];
-  return [1,'...',cur-1,cur,cur+1,'...',t];
+  var max = window.innerWidth < 768 ? 5 : 7;
+  if (t <= max) { var r = []; for (var i = 1; i <= t; i++) r.push(i); return r; }
+  if (max === 5) {
+    if (cur <= 3) return [1,2,3,'...',t];
+    if (cur >= t - 2) return [1,'...',t-2,t-1,t];
+    return [1,'...',cur,'...',t];
+  } else {
+    if (cur <= 4) return [1,2,3,4,5,'...',t];
+    if (cur >= t - 3) return [1,'...',t-4,t-3,t-2,t-1,t];
+    return [1,'...',cur-1,cur,cur+1,'...',t];
+  }
 }
 
 // 动态加载 data.js
