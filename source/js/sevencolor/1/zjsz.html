@@ -1,8 +1,6 @@
 ---
 layout: false
 ---
-<script src="/js/sevencolor/1/data.js"></script>
-
 <style>
 #zjsz-app *, #zjsz-app *::before, #zjsz-app *::after { margin: 0; padding: 0; box-sizing: border-box; }
 #zjsz-app {
@@ -123,6 +121,7 @@ layout: false
 
 <script>
 (function() {
+var BASE = (typeof window.__ZJSZ_BASE_PATH !== 'undefined' ? window.__ZJSZ_BASE_PATH : './');
 var PER_PAGE = 8;
 var articles = [];
 var total = 0;
@@ -178,6 +177,12 @@ function fmtDate(s) {
   return s;
 }
 
+function resolvePath(path) {
+  if (!path) return '';
+  if (path.indexOf('://') > 0 || path.startsWith('//') || path.startsWith('/') || path.startsWith('http')) return path;
+  return BASE + path.replace(/^\.\//, '');
+}
+
 function renderPage(page) {
   var start = (page - 1) * PER_PAGE;
   var end = Math.min(start + PER_PAGE, total);
@@ -187,7 +192,7 @@ function renderPage(page) {
   for (var i = 0; i < pageArts.length; i++) {
     var art = pageArts[i];
     var title = esc(art.title || '无标题');
-    var img = art.image_url || '';
+    var img = resolvePath(art.image_url || '');
     var date = fmtDate(art.create_time);
     var idx = articles.indexOf(art);
 
@@ -216,7 +221,7 @@ dom.gallery.addEventListener('click', function(e) {
   var art = articles[idx];
   if (!art) return;
 
-  dom.lightboxImg.src = art.image_url || '';
+  dom.lightboxImg.src = resolvePath(art.image_url || '');
   dom.lbTitle.textContent = art.title || '';
   dom.lbDate.textContent = fmtDate(art.create_time);
   dom.lbDesc.textContent = (art.description || '').replace(/\\n/g, '\n');
@@ -259,23 +264,40 @@ function buildRange(cur, t) {
   return [1,'...',cur-1,cur,cur+1,'...',t];
 }
 
-function init() {
-  var data = window.ARTICLE_DATA;
-  if (!data || !Array.isArray(data) || data.length === 0) {
-    showState('empty');
-    return;
-  }
-  articles = data;
-  total = data.length;
-  totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
-  currentPage = 1;
-  renderPage(1);
+// 动态加载 data.js
+function loadData() {
+  fetch(BASE + 'data.js?_=' + Date.now())
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    })
+    .then(function(text) {
+      try { 
+        // data.js 格式: var ARTICLE_DATA = [...];
+        var match = text.match(/var ARTICLE_DATA\s*=\s*(\[.*?\])\s*;/);
+        if (!match) throw new Error('data.js 格式错误');
+        eval('window.__ZJSZ_DATA = ' + match[1] + ';');
+      } catch(e) {
+        throw new Error('解析失败: ' + e.message);
+      }
+      
+      var data = window.__ZJSZ_DATA;
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        showState('empty');
+        return;
+      }
+      articles = data;
+      total = data.length;
+      totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+      currentPage = 1;
+      renderPage(1);
+    })
+    .catch(function(e) {
+      var c = document.getElementById('loadingState');
+      if (c) c.innerHTML = '<div class="icon">⚠️</div><p>加载失败：' + e.message + '</p>';
+    });
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
+loadData();
 })();
 </script>

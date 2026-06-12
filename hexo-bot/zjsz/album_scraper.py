@@ -182,10 +182,37 @@ def extract_article(block: str, url: str) -> dict:
     if m:
         msgid = m.group(1)
 
+    # 优先使用 widescreen 原图
+    # 1. picture_page_info_list[0].cdn_url（文章轮播原图，widescreen）
+    # 2. share_cover.cdn_url（分享封面）
+    # 3. cdn_url（最终保底）
+    image_url = ""
+
+    # 尝试从 picture_page_info_list 取第一张原图
+    m_pic = re.search(
+        r"picture_page_info_list\s*:\s*\[\s*(?:\{[^}]*cdn_url\s*:\s*'([^']*)'[^}]*\})",
+        block, re.DOTALL
+    )
+    if m_pic:
+        image_url = m_pic.group(1).replace("\\x26amp;", "&").replace("\\x26 ", "&")
+
+    # 尝试从 share_cover 取图
+    if not image_url:
+        m_share = re.search(
+            r"share_cover\s*:\s*\{[^}]*cdn_url\s*:\s*'([^']*)'",
+            block, re.DOTALL
+        )
+        if m_share:
+            image_url = m_share.group(1)
+
+    # 保底：用 cdn_url
+    if not image_url:
+        image_url = get_val("cdn_url")
+
     return {
         "title": get_val("title"),
         "description": get_val("content_noencode") or get_val("desc"),
-        "image_url": get_val("cdn_url"),
+        "image_url": image_url,
         "create_time": get_val("create_time"),
         "nick_name": get_val("nick_name") or "苏州日报",
         "msgid": msgid,
