@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 chcp 65001 >nul
 set PYTHONIOENCODING=utf-8
 echo ============================================
@@ -15,7 +15,7 @@ echo.
 cd /d "%SCRIPTS_DIR%"
 
 echo [1/1] 正在爬取增量文章，输出 data.js ...
-python album_scraper.py --incremental --outdir "%OUTPUT_DIR%"
+py -3 album_scraper.py --incremental --outdir "%OUTPUT_DIR%"
 
 echo.
 echo ============ 完成！============
