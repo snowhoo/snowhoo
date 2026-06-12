@@ -121,7 +121,8 @@ layout: false
 
 <script>
 (function() {
-var BASE = (typeof window.__ZJSZ_BASE_PATH !== 'undefined' ? window.__ZJSZ_BASE_PATH : './');
+var BASE = (typeof window.__ZJSZ_BASE_PATH !== 'undefined' ? window.__ZJSZ_BASE_PATH : 
+           (location.protocol === 'file:' ? './' : '/js/sevencolor/1/'));
 var PER_PAGE = 8;
 var articles = [];
 var total = 0;
