@@ -7,12 +7,13 @@ layout: false
   /*min-height: 100vh;*/
 }
 #zjsz-app .header {
-  /*max-width: 960px; */margin: 0 auto; padding: 10px 0px 10px;
+  /*max-width: 960px; */margin: 0 auto; padding: 0px 0px 10px;
   display: flex; justify-content: space-between; align-items: baseline;
 }
 #zjsz-app .header h1 { font-size: 13px; font-weight: 700; color: inherit; }
 #zjsz-app .header .header-stats { font-size: 13px; color: var(--text-secondary, #999); }
 #zjsz-app .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+@media (min-width: 768px) { #zjsz-app .gallery { grid-template-columns: repeat(4, 1fr); } }
 #zjsz-app .article-card { cursor: pointer; }
 #zjsz-app .article-card .cover-wrap {
   width: 100%; aspect-ratio: 3 / 4; overflow: hidden; background: var(--cover-bg, #e8ecf1); position: relative;
@@ -113,7 +114,7 @@ layout: false
 (function() {
 var BASE = (typeof window.__ZJSZ_BASE_PATH !== 'undefined' ? window.__ZJSZ_BASE_PATH : 
            (location.protocol === 'file:' ? './' : '/js/sevencolor/1/'));
-var PER_PAGE = 2;
+var PER_PAGE = 4;
 var articles = [];
 var total = 0;
 var totalPages = 0;
