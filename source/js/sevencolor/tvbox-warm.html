@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head><body>
+<script>
+(function() {
+  var bp = '/js/sevencolor/3/', CONCURRENT = 10;
+
+  var DB_NAME = 'tvbox_cache', STORE = 'files', db = null;
+
+  function openDB(cb) {
+    var req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = function(e) {
+      e.target.result.createObjectStore(STORE, { keyPath: 'file' });
+    };
+    req.onsuccess = function(e) { db = e.target.result; cb(); };
+    req.onerror = function() { cb(); };
+  }
+
+  function saveToDB(file, data) {
+    if (!db || !data) return;
+    try { localStorage.setItem('tvbox_fsize_' + file, JSON.stringify(data).length); } catch(e) {}
+    try { db.transaction(STORE, 'readwrite').objectStore(STORE).put({ file: file, _d: data, _t: Date.now() }); } catch(e) {}
+  }
+
+  function loadFresh(file, cb) {
+    var s = document.createElement('script');
+    var t = setTimeout(function() { s.onerror = s.onload = null; s.remove(); cb(); }, 8000);
+    s.onerror = function() { clearTimeout(t); cb(); };
+    s.onload = function() {
+      clearTimeout(t);
+      var d = window._TVBOX_SITE_DATA;
+      delete window._TVBOX_SITE_DATA;
+      if (d) saveToDB(file, d);
+      cb();
+    };
+    s.src = bp + 'data/' + file;
+    document.head.appendChild(s);
+  }
+
+  function loadFromDB(file, cb) {
+    if (!db) return cb(null);
+    try {
+      var tx = db.transaction(STORE, 'readonly');
+      var req = tx.objectStore(STORE).get(file);
+      req.onsuccess = function() {
+        var entry = req.result;
+        cb(entry && entry._d ? entry._d : null);
+      };
+      req.onerror = function() { cb(null); };
+    } catch(e) { cb(null); }
+  }
+
+  function run(files) {
+    var total = files.length, done = 0, ri = 0, rr = 0;
+
+    // 先从 IndexedDB 秒加载已有缓存
+    files.forEach(function(f) {
+      loadFromDB(f, function(data) {
+        done++;
+        if (parent && parent.postMessage) {
+          parent.postMessage({ type: 'tvbox-warm-progress', done: done, total: total }, '*');
+        }
+      });
+    });
+
+    function checkNext() {
+      if (ri >= total) { if (rr <= 0) return; else return; }
+      if (rr >= CONCURRENT) return;
+      var f = files[ri++]; rr++;
+      fetch(bp + 'data/' + f).then(function(r) { return r.text(); }).then(function(t) {
+        var newSize = t.length;
+        var oldSize = parseInt((localStorage.getItem('tvbox_fsize_' + f) || '0'));
+        if (newSize !== oldSize) loadFresh(f, function() {});
+      }).catch(function() {}).then(function() {
+        done++; rr--;
+        if (parent && parent.postMessage) {
+          parent.postMessage({ type: 'tvbox-warm-progress', done: done, total: total }, '*');
+        }
+        checkNext();
+      });
+    }
+    openDB(function() {
+      for (var i = 0; i < CONCURRENT; i++) checkNext();
+    });
+  }
+
+  var s = document.createElement('script');
+  s.src = bp + 'data/index.js';
+  s.onload = function() {
+    var idx = window._TVBOX_INDEX;
+    delete window._TVBOX_INDEX;
+    if (!idx || !idx.length) return;
+    var files = [];
+    idx.forEach(function(site) {
+      if (site.page_count) {
+        for (var pg = 1; pg <= site.page_count; pg++) {
+          var n = String(pg);
+          if (n.length < 2) n = '0' + n;
+          files.push(site.file.replace(/-01\.js$/, '-' + n + '.js'));
+        }
+      }
+    });
+    if (files.length) run(files);
+  };
+  document.head.appendChild(s);
+})();
+</script>
+</body></html>

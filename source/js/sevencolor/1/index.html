@@ -1,0 +1,132 @@
+<div id="shibei-wrap">
+<select class="shibei-select"></select>
+<div class="shibei-host"></div>
+</div>
+
+<style>
+#shibei-wrap{--bg-page:#0f0f0f;--bg-card:#1a1a2e;--bg-input:#1a1a2e;--text-primary:#e8e8e8;--text-secondary:#90a4ae;--border:#333;--accent:#ff6b35;--accent-hover:#e85d2a;font-family:-apple-system,'Microsoft YaHei','PingFang SC',sans-serif;font-size:14px;color:var(--text-primary)}
+#shibei-wrap[data-theme="light"]{--bg-page:#f5f5f5;--bg-card:#fff;--bg-input:#fff;--text-primary:#212121;--text-secondary:#546e7a;--border:#ddd;--accent:#e65100;--accent-hover:#d84315}
+.shibei-select {
+   flex: 2;
+    min-width: 100%;
+    cursor: pointer;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 13px;
+    height: 34px;
+    box-sizing: border-box;
+}
+.shibei-select option {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+.shibei-host {
+    width: 100%;
+	padding: 10px 0px 0px 0px;
+}
+</style>
+
+<script>
+(function() {
+    const pages = {
+        "人民夜读": "/js/sevencolor/1/yedu.html",
+        "照见苏州": "/js/sevencolor/1/zjsz.html"
+    };
+
+    const selectEl = document.querySelector('#shibei-wrap .shibei-select');
+    const host = document.querySelector('#shibei-wrap .shibei-host');
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            return {'&':'&amp;','<':'&lt;','>':'&gt;'}[m];
+        });
+    }
+
+    async function loadPage(url) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const html = await response.text();
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const headStyles = Array.from(doc.head.querySelectorAll('style'));
+
+            const bodyContent = doc.body.innerHTML;
+
+            const scripts = doc.querySelectorAll('script');
+            var scriptContent = '';
+            scripts.forEach(function(s) {
+                if (s.src) return;
+                scriptContent += s.textContent + '\n';
+            });
+
+            headStyles.forEach(function(styleTag) {
+                const style = document.createElement('style');
+                style.textContent = styleTag.textContent;
+                document.head.appendChild(style);
+            });
+
+            host.innerHTML = bodyContent;
+
+            if (scriptContent.trim()) {
+                try {
+                    const fn = new Function(scriptContent);
+                    fn();
+                } catch(e) {
+                    console.warn('脚本执行失败:', e);
+                }
+            }
+        } catch(e) {
+            console.warn('加载失败:', e);
+            host.innerHTML = '<div style="padding:20px;text-align:center;">加载失败</div>';
+        }
+    }
+
+    function buildSelect() {
+        const keys = Object.keys(pages);
+        if (keys.length === 0) {
+            selectEl.innerHTML = '<option disabled>—— 请配置文件 ——</option>';
+            return;
+        }
+        var options = '';
+        keys.forEach(function(key) {
+            options += '<option value="' + escapeHtml(key) + '">' + escapeHtml(key) + '</option>';
+        });
+        selectEl.innerHTML = options;
+        selectEl.value = keys[0];
+        loadPage(pages[keys[0]]);
+    }
+
+    selectEl.addEventListener('change', function(e) {
+        const url = pages[e.target.value];
+        if (url) loadPage(url);
+    });
+
+    buildSelect();
+
+    // 主题同步
+    var wrap=document.getElementById('shibei-wrap');
+    function syncTheme(t){
+        if(!t||(t!=='dark'&&t!=='light')){
+            try{ t=window.parent.document.documentElement.getAttribute('data-theme'); }catch(e){}
+        }
+        if(!t||(t!=='dark'&&t!=='light')) t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';
+        wrap.setAttribute('data-theme',t);
+    }
+    syncTheme();
+    try{
+        var parentEl=window.parent.document.documentElement;
+        new MutationObserver(function(){
+            syncTheme(parentEl.getAttribute('data-theme'));
+        }).observe(parentEl,{attributes:true,attributeFilter:['data-theme']});
+    }catch(e){}
+    window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(e){
+        syncTheme(e.matches?'dark':'light');
+    });
+})();
+</script>

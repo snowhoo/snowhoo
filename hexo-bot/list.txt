@@ -1,0 +1,81 @@
+# Hexo 脚本工具说明
+
+本目录存放用于批量处理 Hexo 博客的自动化脚本。
+
+---
+
+## 📜 脚本文件
+
+### add-cover-frontmatter.js
+**用途**：批量为文章添加封面图（cover）字段
+
+**功能说明**：
+- 扫描 `source/_posts/` 目录下所有文章
+- 提取每篇文章正文中的第一张图片 `![alt](src)`
+- 将图片路径写入文章 front-matter 的 `cover:` 字段
+- 已有 cover 字段的文章会自动跳过
+
+**使用场景**：当文章发布后补充添加图片，但封面图未自动更新时使用
+
+**运行方式**：
+```bash
+node d:\hexo\scripts\add-cover-frontmatter.js
+```
+
+---
+
+### add-cover-frontmatter.ps1
+**用途**：与 `add-cover-frontmatter.js` 功能相同，PowerShell 版本
+
+**说明**：备用脚本，优先推荐使用 Node.js 版本（跨平台兼容性更好）
+
+---
+
+### migrate-images.js
+**用途**：批量迁移文章图片到统一目录
+
+**功能说明**：
+- 收集所有文章中引用的图片路径
+- 将图片复制到 `source/images/posts/` 目录
+- 自动更新所有文章中的图片引用路径为 `/images/posts/xxx`
+- 同时更新 front-matter 中的 `cover:` 字段
+
+**使用场景**：
+- 整理分散在不同目录的图片（如 `/images/repost/`、`/images/email-attachments/` 等）
+- 统一图片管理，简化目录结构
+
+**运行方式**：
+```bash
+node d:\hexo\scripts\migrate-images.js
+```
+
+---
+
+## 📋 日志文件
+
+### cover-update-log.txt
+**用途**：`add-cover-frontmatter.js` 的执行日志
+
+**内容**：记录每篇文章的处理状态（已处理/跳过/错误）
+
+---
+
+### migrate-images-log.txt
+**用途**：`migrate-images.js` 的执行日志
+
+**内容**：
+- 图片迁移记录（原路径 → 新路径）
+- 文章更新记录
+- 错误信息（如有）
+
+---
+
+## 📝 使用说明
+
+1. **运行脚本前**：建议先备份 `source/_posts/` 目录
+2. **执行后**：检查日志文件确认处理结果
+3. **确认无误后**：提交 git 并推送触发 GitHub Actions 部署
+
+---
+
+*最后更新：2026-05-28*

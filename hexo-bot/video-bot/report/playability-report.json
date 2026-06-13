@@ -1,0 +1,124 @@
+{
+  "generated_at": "2026-05-13T01:15:41.341Z",
+  "sites_tested": 10,
+  "playable_count": 3,
+  "direct_urls_found": 3,
+  "results": [
+    {
+      "site": "👒┃小胡┃资源┃",
+      "key": "csp_小胡",
+      "playable": false,
+      "error": "fetch failed"
+    },
+    {
+      "site": "🐉┃索尼┃高清",
+      "key": "csp_SNzy",
+      "api": "https://suoniapi.com/api.php/provide/vod/?ac=list",
+      "playable": false,
+      "first_video": "闲隐圣尊：开篇拾得幼灵本相",
+      "play_from": [],
+      "episode_count": 0,
+      "direct_count": 0,
+      "sample_url": null,
+      "method": "standard_api",
+      "note": "可直接通过标准API获取播放地址"
+    },
+    {
+      "site": "🕹️淘片┃采集",
+      "key": "taopian",
+      "playable": false,
+      "error": "返回格式异常"
+    },
+    {
+      "site": "🥗┃非凡┃资源",
+      "key": "csp_非凡资源",
+      "api": "http://ffzy1.tv/api.php/provide/vod/",
+      "playable": true,
+      "first_video": "红色珍珠",
+      "play_from": [
+        "feifan",
+        "ffm3u8"
+      ],
+      "episode_count": 96,
+      "direct_count": 48,
+      "sample_url": "https://vip.ffzy-online3.com/share/9d1e3e755ef2d97e58d14db50656b596",
+      "method": "standard_api",
+      "note": "可直接通过标准API获取播放地址"
+    },
+    {
+      "site": "🥑┃量子┃资源",
+      "key": "量子资源",
+      "api": "https://lzizy1.com/api.php/provide/vod/",
+      "playable": true,
+      "first_video": "心动预测",
+      "play_from": [
+        "liangzi",
+        "lzm3u8"
+      ],
+      "episode_count": 8,
+      "direct_count": 4,
+      "sample_url": "https://v.lzcdn31.com/share/1a3650aedfdd3a21444047ed2d89458f",
+      "method": "standard_api",
+      "note": "可直接通过标准API获取播放地址"
+    },
+    {
+      "site": "🦁┃四九┃资源",
+      "key": "49zy",
+      "playable": false,
+      "error": "fetch failed"
+    },
+    {
+      "site": "🛰️飞速┃采集",
+      "key": "feisu",
+      "playable": false,
+      "error": "fetch failed"
+    },
+    {
+      "site": "🐯┃奇虎┃采集",
+      "key": "奇虎资源",
+      "playable": false,
+      "error": "fetch failed"
+    },
+    {
+      "site": "⛱┃可可┃采集",
+      "key": "可可资源",
+      "playable": false,
+      "error": "fetch failed"
+    },
+    {
+      "site": "🐯虎牙采集",
+      "key": "虎牙",
+      "api": "https://www.huyaapi.com/api.php/provide/vod/from/hym3u8",
+      "playable": true,
+      "first_video": "法律与秩序：特殊受害者 第二十七季",
+      "play_from": [
+        "hym3u8"
+      ],
+      "episode_count": 20,
+      "direct_count": 20,
+      "sample_url": "https://1080p.huyall.com/play/DdwY8Qga/index.m3u8",
+      "method": "standard_api",
+      "note": "可直接通过标准API获取播放地址"
+    }
+  ],
+  "all_playable_items": [
+    {
+      "source": "🥗┃非凡┃资源",
+      "name": "红色珍珠",
+      "url": "https://vip.ffzy-online3.com/share/9d1e3e755ef2d97e58d14db50656b596",
+      "direct": true
+    },
+    {
+      "source": "🥑┃量子┃资源",
+      "name": "心动预测",
+      "url": "https://v.lzcdn31.com/share/1a3650aedfdd3a21444047ed2d89458f",
+      "direct": true
+    },
+    {
+      "source": "🐯虎牙采集",
+      "name": "法律与秩序：特殊受害者 第二十七季",
+      "url": "https://1080p.huyall.com/play/DdwY8Qga/index.m3u8",
+      "direct": true
+    }
+  ]
+}
