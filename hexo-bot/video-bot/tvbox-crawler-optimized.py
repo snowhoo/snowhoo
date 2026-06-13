@@ -180,14 +180,31 @@ def collect_cmsv10_sites():
             if isinstance(item, str):
                 url = item
                 src_cfg_name = None
+                src_type = None
             elif isinstance(item, dict):
                 url = item.get('url', '')
                 src_cfg_name = item.get('name', '')
+                src_type = item.get('type', '')
             else:
                 src_fail += 1
                 continue
             if not url:
                 src_fail += 1
+                continue
+
+            # 直播源：直接作为站点添加，不走 CMS JSON 解析
+            if src_type == 'live':
+                name = src_cfg_name or url
+                site = {
+                    'name': name,
+                    'api': url,
+                    'source': url,
+                    'key': re.sub(r'[^\w]', '_', name).lower()[:30],
+                    'is_live': True,
+                }
+                all_sites.append(site)
+                print(f'  [{idx}/{total}] [{name}] → ✅ 直播源 (M3U)')
+                src_success += 1
                 continue
 
             text = fetch_json_text(url, timeout)
@@ -385,6 +402,123 @@ def fetch_cmsv10_detail(api, vod_id):
         return None
     except Exception:
         return None
+
+
+
+
+def fetch_url_text(url, max_retries=3):
+    """通用 URL 文本抓取（用于 M3U 等非 JSON 内容）"""
+    for attempt in range(max_retries):
+        try:
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            with requests.get(url, headers=headers, timeout=30) as r:
+                if r.status_code == 200:
+                    r.encoding = 'utf-8'
+                    return r.text
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(2)
+    return None
+
+
+def crawl_live_m3u(site, data_dir=None, videos_per_page=50):
+    """
+    爬取 M3U 直播源
+    从 M3U 中解析频道，按分组归类，每页约 videos_per_page 个频道，输出 JS 文件
+    """
+    import re
+
+    name = site['name']
+    url = site['api']
+    source = site['source']
+    safe_prefix = re.sub(r'[^\w\u4e00-\u9fff]', '_', name).strip('_')[:50]
+
+    print(f'  [直播] {name}: 正在抓取 M3U...', flush=True)
+
+    content = fetch_url_text(url)
+    if not content:
+        return {
+            'name': name, 'api': url, 'source': source, 'prefix': safe_prefix,
+            'total_videos': 0, 'total_episodes': 0, 'playable_episodes': 0,
+            'playable_videos': 0, 'pages_written': 0, 'category_counts': {},
+            'error': 'M3U 获取失败',
+        }
+
+    # 解析 M3U 为视频格式
+    lines = content.split('\n')
+    channels = []  # [(group, name, url, logo)]
+    current_group = None
+    current_name = None
+    current_logo = None
+
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith('#EXTM3U'):
+            continue
+        if line.startswith('#EXTINF:'):
+            m_name = re.search(r'tvg-name="([^"]*)"', line)
+            m_group = re.search(r'group-title="([^"]*)"', line)
+            m_logo = re.search(r'tvg-logo="([^"]*)"', line)
+            if m_name: current_name = m_name.group(1)
+            if m_group: current_group = m_group.group(1)
+            current_logo = m_logo.group(1) if m_logo else ''
+            continue
+        if current_name and current_group and not line.startswith('#'):
+            channels.append((current_group, current_name, line, current_logo))
+            current_name = None
+
+    print(f'  [直播] {name}: 解析到 {len(channels)} 个频道', flush=True)
+
+    # 按分组统计
+    group_counts = {}
+    for g, _, _, _ in channels:
+        group_counts[g] = group_counts.get(g, 0) + 1
+
+    # 分页：每页约 videos_per_page 个频道，同一页混合不同分组
+    total_videos = len(channels)
+    total_pages = max(1, (total_videos + videos_per_page - 1) // videos_per_page)
+    pages_written = 0
+    category_counts = {}
+
+    for pg in range(1, total_pages + 1):
+        start = (pg - 1) * videos_per_page
+        end = min(start + videos_per_page, total_videos)
+        page_channels = channels[start:end]
+
+        # 转为 TVBox video 格式
+        page_videos = []
+        for group, ch_name, ch_url, ch_logo in page_channels:
+            category_counts[group] = category_counts.get(group, 0) + 1
+            page_videos.append({
+                'name': ch_name,
+                'pic': ch_logo or '',
+                'vod_class': group,
+                'remarks': '直播',
+                'play_list': [
+                    {'title': '直播', 'url': ch_url, 'from': 'hls'},
+                ],
+            })
+
+        # 复用 save_site_page 写文件
+        fpath = save_site_page(name, url, source, page_videos, pg, total_pages, data_dir, safe_prefix)
+        if fpath:
+            pages_written += 1
+
+    print(f'  [直播] {name}: {total_videos}个频道, {pages_written}页', flush=True)
+
+    return {
+        'name': name,
+        'api': url,
+        'source': source,
+        'prefix': safe_prefix,
+        'total_videos': total_videos,
+        'total_episodes': total_videos,
+        'playable_episodes': total_videos,
+        'playable_videos': total_videos,
+        'pages_written': pages_written,
+        'category_counts': group_counts,
+        'error': None,
+    }
 
 
 def crawl_site(site, data_dir=None, max_pages=40, videos_per_page=12):
@@ -658,8 +792,14 @@ def main():
         """供线程池调用的单站爬取函数"""
         name = site['name']
         print(f'  [CRAWL] {name}... ', flush=True)
-        result = crawl_site(site, data_dir, max_pages, videos_per_page)
-        # 记录统计，videos 已在 crawl_site 内逐页释放
+
+        # 直播源走独立处理（M3U 抓取 → 分页输出）
+        if site.get('is_live'):
+            result = crawl_live_m3u(site, data_dir, videos_per_page=50)
+        else:
+            result = crawl_site(site, data_dir, max_pages, videos_per_page)
+
+        # 记录统计，videos 已在 crawl_site/crawl_live_m3u 内逐页释放
         stats = {
             'name': result['name'],
             'api': result['api'],

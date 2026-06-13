@@ -216,6 +216,7 @@ def extract_article(block: str, url: str) -> dict:
         "create_time": get_val("create_time"),
         "nick_name": get_val("nick_name") or "苏州日报",
         "msgid": msgid,
+        "url": url,
     }
 
 
@@ -291,6 +292,7 @@ def crawl_forward_from(start_url: str, known_msgids: set) -> list:
                 "create_time": "",
                 "nick_name": "苏州日报",
                 "msgid": next_msgid,
+                "url": next_url,
             }
             new_articles.append(fallback)
             known.add(next_msgid)
@@ -345,6 +347,7 @@ def fetch_from_album_api() -> list:
             "create_time": art.get("create_time", ""),
             "nick_name": "苏州日报",
             "msgid": msgid,
+            "url": url,
         })
         time.sleep(0.5)
 
@@ -396,10 +399,31 @@ def save_articles(articles: list, outdir=None):
         if local_path:
             art["image_url"] = local_path
 
-    js = "// 照见苏州 - 文章数据\n// 由 album_scraper.py 自动生成\nvar ARTICLE_DATA = " + json.dumps(articles, ensure_ascii=False) + ";\n"
+    # 输出 data.js（去掉 url 字段，前端不需要）
+    clean = []
+    for art in articles:
+        a = {k: v for k, v in art.items() if k != "url"}
+        clean.append(a)
+    js = "// 照见苏州 - 文章数据\n// 由 album_scraper.py 自动生成\nvar ARTICLE_DATA = " + json.dumps(clean, ensure_ascii=False) + ";\n"
     with open(outpath, "w", encoding="utf-8") as f:
         f.write(js)
-    log(f"已保存 {len(articles)} 条数据到 {outpath}")
+    log(f"已保存 {len(clean)} 条数据到 {outpath}")
+
+
+def get_latest_article_url() -> str:
+    """从专辑 API 获取最新文章的 URL（仅用于增量模式起点）"""
+    params = {"action": "getalbum", "__biz": BIZ, "album_id": ALBUM_ID, "count": 50, "begin": 0, "f": "json"}
+    try:
+        resp = requests.get(API_URL, params=params, headers=API_HEADERS, timeout=30)
+        data = resp.json()
+        article_list = data.get("getalbum_resp", {}).get("article_list", [])
+        for art in reversed(article_list):
+            u = art.get("url", "")
+            if u:
+                return u
+    except Exception as e:
+        log(f"获取专辑 API 最新 URL 失败: {e}")
+    return ""
 
 
 # ============================================================
@@ -413,9 +437,26 @@ def scrape_all(incremental: bool = False, force_content: bool = False, outdir: s
         # ---- 增量模式：只从最新文章向前爬 ----
         log("增量模式：从最新文章向前爬取")
         sorted_arts = sort_articles(list(existing.values()))
-        newest_url = sorted_arts[0]["url"]  # 最新的排第一
-        newest_title = sorted_arts[0]["title"]
-        newest_time = sorted_arts[0].get("create_time", "")
+
+        # 找第一篇有 url 的文章作为爬取起点
+        newest_url = ""
+        newest_title = ""
+        newest_time = ""
+        for art in sorted_arts:
+            u = art.get("url", "")
+            if u:
+                newest_url = u
+                newest_title = art.get("title", "")
+                newest_time = art.get("create_time", "")
+                break
+        if not newest_url:
+            log("现有数据无 url 字段，从专辑 API 获取最新文章 URL")
+            newest_url = get_latest_article_url()
+            if not newest_url:
+                log("无法获取起始 URL，降级为全量模式重新构建")
+                return scrape_all(incremental=False, force_content=force_content, outdir=outdir)
+            newest_title = "(从专辑 API 获取起点)"
+            newest_time = ""
         log(f"最新已知: {newest_title[:25]} ({newest_time})")
 
         known_ids = set(existing.keys())
