@@ -1,7 +1,14 @@
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>小红播霸</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         /* 原有样式保持不变 ... */
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: transparent; }
         #app { max-width: 1400px; margin: 0 auto; padding: 20px 24px 48px; transition: background 0.2s, color 0.2s; --bg-body: #0a0a0f; --bg-surface: #14141e; --bg-card: #1c1c26; --bg-card-hover: #252532; --bg-elevated: #1e1e2a; --border: #2c2c3a; --text-primary: #f0f0f3; --text-secondary: #a0a0b0; --text-muted: #6e6e80; --accent: #f97316; --accent-hover: #fd7e2e; --shadow-sm: 0 4px 12px rgba(0,0,0,0.3); --shadow-md: 0 8px 24px rgba(0,0,0,0.4); --radius-card: 10px; --radius-md: 16px; --radius-sm: 12px; background: var(--bg-body); color: var(--text-primary); }
         #app[data-theme="dark"] { --bg-body: #000000; --bg-surface: #0a0a0f; --bg-card: #111115; --bg-card-hover: #1a1a20; --bg-elevated: #15151c; --border: #2a2a33; --text-primary: #ffffff; --text-secondary: #c0c0cf; --text-muted: #8a8a99; --accent: #f97316; --accent-hover: #fd7e2e; --shadow-sm: 0 4px 12px rgba(0,0,0,0.5); --shadow-md: 0 8px 24px rgba(0,0,0,0.6); }
         #app[data-theme="light"] { --bg-body: #f8fafc; --bg-surface: #ffffff; --bg-card: #ffffff; --bg-card-hover: #f8fafc; --bg-elevated: #f1f5f9; --border: #e2e8f0; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --accent: #f97316; --accent-hover: #ea580c; --shadow-sm: 0 2px 6px rgba(0,0,0,0.05); --shadow-md: 0 8px 20px rgba(0,0,0,0.08); }
@@ -83,16 +90,20 @@
         .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
         .preload-bar { height: 3px; background: var(--border); border-radius: 4px; margin-bottom: 12px; overflow: hidden; }
         .preload-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
+        .copyright { text-align: center; margin-top: 40px; padding: 12px 0; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
+        .copyright a { color: var(--accent); text-decoration: none; }
+        .copyright a:hover { text-decoration: underline; }
         @media (max-width: 640px) { #app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 3px 6px; font-size: 12px; } .toolbar select { min-width: 110px; } .toolbar input { max-width: 110px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } }
     </style>
-
+</head>
+<body>
 <div id="app" data-theme="dark">
     <!-- 首页视图 -->
     <div id="homeView" class="view">
         <div class="toolbar">
             <select id="sourceSelect"></select>
             <input type="text" id="searchInput" placeholder="影片名">
-            <button id="searchBtn">🔍</button>
+            <button id="searchBtn">🔍 搜索</button>
             <button id="stopSearchBtn" style="display:none">⏹️ 停止</button>
             <button id="themeToggleBtn" class="secondary-btn" title="切换主题"></button>
         </div>
@@ -156,6 +167,10 @@
         <video id="floatVideo" style="width:100%; aspect-ratio:16/9;" playsinline></video>
     </div>
 
+    <!-- 底部版权信息 -->
+    <div class="copyright">
+        小红播霸 by <a href="https://snowhoo.net" target="_blank" rel="noopener noreferrer">SnowHoo.NET</a> 小红故事 · <span id="currentYear"></span>
+    </div>
 </div>
 
 <script>
@@ -1130,3 +1145,5 @@
     loadIndexData();
 })();
 </script>
+</body>
+</html>
