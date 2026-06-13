@@ -2,34 +2,37 @@
 <style>
     /* 嵌入加载，所有样式均限定在 .tvbox-app 内，杜绝泄露 */
         .tvbox-app,.tvbox-app *,.tvbox-app *::before,.tvbox-app *::after { margin: 0; padding: 0; box-sizing: border-box; }
-        .tvbox-app { max-width: 1400px; margin: 0 auto; padding: 20px 24px 48px; transition: background 0.2s, color 0.2s; --bg-body: #0a0a0f; --bg-surface: #14141e; --bg-card: #1c1c26; --bg-card-hover: #252532; --bg-elevated: #1e1e2a; --border: #2c2c3a; --text-primary: #f0f0f3; --text-secondary: #a0a0b0; --text-muted: #6e6e80; --accent: #f97316; --accent-hover: #fd7e2e; --shadow-sm: 0 4px 12px rgba(0,0,0,0.3); --shadow-md: 0 8px 24px rgba(0,0,0,0.4); --radius-card: 10px; --radius-md: 16px; --radius-sm: 12px; background: var(--bg-body); color: var(--text-primary); font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+        .tvbox-app { max-width: 1400px; margin: 0 auto; transition: color 0.2s; --bg-body: #0a0a0f; --bg-surface: #14141e; --bg-card: #1c1c26; --bg-card-hover: #252532; --bg-elevated: #1e1e2a; --border: #2c2c3a; --text-primary: #f0f0f3; --text-secondary: #a0a0b0; --text-muted: #6e6e80; --accent: #f97316; --accent-hover: #fd7e2e; --shadow-sm: 0 4px 12px rgba(0,0,0,0.3); --shadow-md: 0 8px 24px rgba(0,0,0,0.4); --radius-card: 10px; --radius-md: 16px; --radius-sm: 12px; color: var(--text-primary); font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+        /* 重置 Hexo 主题对表单元素的影响 */
+        .tvbox-app select, .tvbox-app input, .tvbox-app button { background: none; border: none; color: inherit; outline: none; }
         .tvbox-app ::-webkit-scrollbar { width: 6px; height: 6px; }
         .tvbox-app ::-webkit-scrollbar-track { background: transparent; }
         .tvbox-app ::-webkit-scrollbar-thumb { background: var(--bg-card-hover); border-radius: 3px; }
         .tvbox-app ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-        .tvbox-app[data-theme="dark"] { --bg-body: #000000; --bg-surface: #0a0a0f; --bg-card: #111115; --bg-card-hover: #1a1a20; --bg-elevated: #15151c; --border: #2a2a33; --text-primary: #ffffff; --text-secondary: #c0c0cf; --text-muted: #8a8a99; --accent: #f97316; --accent-hover: #fd7e2e; --shadow-sm: 0 4px 12px rgba(0,0,0,0.5); --shadow-md: 0 8px 24px rgba(0,0,0,0.6); }
-        .tvbox-app[data-theme="light"] { --bg-body: #f8fafc; --bg-surface: #ffffff; --bg-card: #ffffff; --bg-card-hover: #f8fafc; --bg-elevated: #f1f5f9; --border: #e2e8f0; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --accent: #f97316; --accent-hover: #ea580c; --shadow-sm: 0 2px 6px rgba(0,0,0,0.05); --shadow-md: 0 8px 20px rgba(0,0,0,0.08); }
+        /* 跟随 Hexo 主题（html[data-theme] 由 Hexo Butterfly 控制） */
+        html[data-theme="dark"] .tvbox-app { --bg-body: #000000; --bg-surface: #0a0a0f; --bg-card: #111115; --bg-card-hover: #1a1a20; --bg-elevated: #15151c; --border: #2a2a33; --text-primary: #ffffff; --text-secondary: #c0c0cf; --text-muted: #8a8a99; --accent: #f97316; --accent-hover: #fd7e2e; --shadow-sm: 0 4px 12px rgba(0,0,0,0.5); --shadow-md: 0 8px 24px rgba(0,0,0,0.6); }
+        html[data-theme="light"] .tvbox-app { --bg-body: #f8fafc; --bg-surface: #ffffff; --bg-card: #ffffff; --bg-card-hover: #f8fafc; --bg-elevated: #f1f5f9; --border: #e2e8f0; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --accent: #f97316; --accent-hover: #ea580c; --shadow-sm: 0 2px 6px rgba(0,0,0,0.05); --shadow-md: 0 8px 20px rgba(0,0,0,0.08); }
         .tvbox-app ::-webkit-scrollbar { width: 6px; height: 6px; }
         .tvbox-app ::-webkit-scrollbar-track { background: var(--border); border-radius: 4px; }
         .tvbox-app ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
         .tvbox-app .view { transition: opacity 0.2s; }
         .tvbox-app .view.hidden { display: none; }
-        .tvbox-app .toolbar { background: transparent; padding: 8px 0 12px 0; margin-bottom: 16px; display: flex; gap: 10px; align-items: center; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: thin; }
+        .tvbox-app .toolbar { background: transparent; padding: 0px; margin-bottom: 6px; display: flex; gap: 10px; align-items: center; overflow-x: auto; flex-wrap: nowrap; }
         .tvbox-app .toolbar::-webkit-scrollbar { height: 3px; }
-        .tvbox-app .toolbar select, .tvbox-app .toolbar input, .tvbox-app .toolbar button { border-radius: 40px; padding: 8px 16px; font-weight: 500; font-size: 13px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); outline: none; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
-        .tvbox-app .toolbar select { min-width: 140px; cursor: pointer; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e6e80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>"); background-repeat: no-repeat; background-position: right 12px center; appearance: none; padding-right: 36px; }
-        .tvbox-app .toolbar input { max-width: 200px; flex: 1; }
-        .tvbox-app .toolbar button { background: var(--accent); border: none; color: white; cursor: pointer; font-weight: 600; }
+        .tvbox-app .toolbar select, .tvbox-app .toolbar input, .tvbox-app .toolbar button { padding: 0 10px; border-radius: 40px; font-weight: 500; font-size: 13px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); outline: none; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
+        .tvbox-app .toolbar select { cursor: pointer; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e6e80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>"); background-repeat: no-repeat; background-position: right 4px center; appearance: none; padding-right: 0px; }
+        .tvbox-app .toolbar input { flex: 1; }
+        .tvbox-app .toolbar button { background: var(--accent); border: none; color: white; cursor: pointer; }
         .tvbox-app .toolbar button:hover { background: var(--accent-hover); transform: translateY(-1px); }
         .tvbox-app .toolbar .secondary-btn { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border); }
         .tvbox-app .toolbar .secondary-btn:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
-        .tvbox-app .status-bar { display: flex; flex-direction: column; gap: 12px; margin: 16px 0 24px; padding: 0; background: transparent; border: none; box-shadow: none; }
-        .tvbox-app .cat-filters { display: flex; gap: 8px; align-items: center; width: 100%; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+        .tvbox-app .status-bar { display: flex; flex-direction: column; gap: 12px; margin: 0px 0px 0px; padding: 0; background: transparent; border: none; box-shadow: none; }
+        .tvbox-app .cat-filters { display: flex; gap: 8px; align-items: center; width: 100%; overflow-x: auto; padding-bottom: 4px; }
         .tvbox-app .cat-filters::-webkit-scrollbar { height: 3px; }
-        .tvbox-app .cat-badge { background: var(--bg-elevated); padding: 3px 6px; border-radius: 40px; font-size: 13px; cursor: pointer; border: 1px solid var(--border); transition: all 0.1s; white-space: nowrap; flex-shrink: 0; color: var(--text-primary); }
+        .tvbox-app .cat-badge { background: var(--bg-elevated); padding: 0px 6px; border-radius: 40px; font-size: 13px; cursor: pointer; border: 1px solid var(--border); transition: all 0.1s; white-space: nowrap; flex-shrink: 0; color: var(--text-primary); }
         .tvbox-app .cat-badge.active, .tvbox-app .cat-badge:hover { background: var(--accent); color: white; border-color: var(--accent); }
         .tvbox-app .action-buttons { display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; }
-        .tvbox-app .action-buttons button { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 3px 6px; cursor: pointer; color: var(--text-primary); font-size: 13px; white-space: nowrap; flex-shrink: 0; }
+        .tvbox-app .action-buttons button { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 0px 6px; cursor: pointer; color: var(--text-primary); font-size: 13px; white-space: nowrap; flex-shrink: 0; }
         .tvbox-app .action-buttons button:hover { background: var(--accent); color: white; }
         /* ========== 新增高亮样式 ========== */
         .tvbox-app .action-buttons button.active {
@@ -42,7 +45,8 @@
         .tvbox-app .clear-all-btn:hover { background: #c0392b !important; }
         .tvbox-app .video-grid { display: grid; gap: 10px; margin-top: 8px; }
         @media (max-width: 767px) { .tvbox-app .video-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; } }
-        @media (min-width: 768px) { .tvbox-app .video-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; } }
+        @media (min-width: 768px) { .tvbox-app .video-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; } }
+		@media (min-width: 1024px) { .tvbox-app .video-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; } }
         .tvbox-app .video-card { background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; cursor: pointer; transition: all 0.25s ease; border: 1px solid var(--border); box-shadow: var(--shadow-sm); position: relative; }
         .tvbox-app .video-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); border-color: var(--accent); }
         .tvbox-app .video-poster { aspect-ratio: 2/3; width: 100%; object-fit: cover; background: linear-gradient(145deg, #2a2a35, #1a1a22); display: block; }
@@ -87,7 +91,8 @@
         .tvbox-app .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
         .tvbox-app .preload-bar { height: 3px; background: var(--border); border-radius: 4px; margin-bottom: 12px; overflow: hidden; }
         .tvbox-app .preload-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
-        @media (max-width: 640px) { .tvbox-app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 3px 6px; font-size: 12px; } .toolbar select { min-width: 110px; } .toolbar input { max-width: 110px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } }
+        .tvbox-app .tvbox-footer { text-align: center; margin-top: 40px; font-size: 12px; color: var(--text-muted); }
+        @media (max-width: 640px) { .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 0px 10px; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 0px 6px; font-size: 12px; } .toolbar select { min-width: 110px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } }
     </style>
 
 <div class="tvbox-app">
@@ -112,7 +117,7 @@
         </div>
         <div id="homeContent" class="video-grid"></div>
         <div id="homePagination" class="pagination"></div>
-        <div id="footer" style="text-align:center; margin-top:40px; font-size:12px; color:var(--text-muted);"></div>
+        <div class="tvbox-footer"></div>
     </div>
 
     <!-- 播放页视图 -->
@@ -231,12 +236,6 @@
     }
     
     
-    // 继承 Hexo 主题
-    (function inheritTheme() {
-        const wrap = document.querySelector('.tvbox-app');
-        const htmlTheme = document.documentElement.getAttribute('data-theme');
-        wrap.setAttribute('data-theme', htmlTheme || 'dark');
-    })();
     
     // 高亮顶部按钮
     function setActiveButton(type) {
@@ -1085,7 +1084,7 @@
             // 底部统计
             let totalAddress = 0, playableTotal = 0;
             sourceIndex.forEach(s => { totalAddress += s.total || 0; playableTotal += s.playable || 0; });
-            const footerDiv = document.getElementById('footer');
+            const footerDiv = document.querySelector('.tvbox-footer');
             if(footerDiv) footerDiv.innerHTML = `<span>数据源 ${sourceIndex.length}</span> | <span>总地址 ${totalAddress}</span> | <span>可播放 ${playableTotal}</span>`;
             if(sourceIndex.length) {
                 sourceSelect.value = sourceIndex[0].prefix;
