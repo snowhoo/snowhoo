@@ -921,6 +921,8 @@ layout: false
         currentPlayerSourceName = video.sourceName;
         currentPlayerEpisodes = video.episodes || [];
         currentPlayingVideo = video;
+        // 直播源隐藏影签按钮
+        detailBookmarkBtn.style.display = isLive(video) ? 'none' : '';
         
         // 确定要播放的剧集索引和进度
         let restoreEp = (pendingRestoreEpIndex !== null && pendingRestoreEpIndex < currentPlayerEpisodes.length) ? pendingRestoreEpIndex : 0;
@@ -1010,6 +1012,8 @@ layout: false
         detailPlayer.play().catch(e=>setStatus('播放失败，请检查链接'));
         setStatus(`▶ ${title}`);
         currentPlayingEpIndex=idx;
+        // 直播源隐藏影签按钮
+        detailBookmarkBtn.style.display = (currentPlayingVideo && isLive(currentPlayingVideo)) ? 'none' : '';
         document.querySelectorAll('.episode-item').forEach(el=>el.classList.remove('current-ep'));
         if(episodesList.children[idx]) episodesList.children[idx].classList.add('current-ep');
         let nextIdx=idx+1;

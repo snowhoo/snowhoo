@@ -812,7 +812,7 @@ function playEp(el){
   }
   currentPlayingVideo=currentOpenVideo;
   currentPlayingEpIndex=epIdx;
-  if(!isLive(currentOpenVideo)) $('pwBookmarkBtn').style.display='inline-block';
+  $('pwBookmarkBtn').style.display = isLive(currentOpenVideo) ? 'none' : 'inline-block';
   doPlay(url,el.dataset.name);
 }
 function doPlay(url,name){
