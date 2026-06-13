@@ -19,7 +19,7 @@
         .tvbox-app .view.hidden { display: none; }
         .tvbox-app .toolbar { background: transparent; padding: 0px; margin-bottom: 6px; display: flex; gap: 10px; align-items: center; overflow-x: auto; flex-wrap: nowrap; }
         .tvbox-app .toolbar::-webkit-scrollbar { height: 3px; }
-        .tvbox-app .toolbar select, .tvbox-app .toolbar input, .tvbox-app .toolbar button { padding: 0 10px; border-radius: 40px; font-weight: 500; font-size: 13px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); outline: none; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
+        .tvbox-app .toolbar select, .tvbox-app .toolbar input, .tvbox-app .toolbar button { padding: 6px; border-radius: 40px; font-weight: 500; font-size: 13px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); outline: none; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
         .tvbox-app .toolbar select { cursor: pointer; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e6e80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>"); background-repeat: no-repeat; background-position: right 4px center; appearance: none; padding-right: 0px; }
         .tvbox-app .toolbar input { flex: 1; }
         .tvbox-app .toolbar button { background: var(--accent); border: none; color: white; cursor: pointer; }
@@ -101,7 +101,7 @@
         <div class="toolbar">
             <select id="sourceSelect"></select>
             <input type="text" id="searchInput" placeholder="影片名">
-            <button id="searchBtn">🔍 搜索</button>
+            <button id="searchBtn">🔍</button>
             <button id="stopSearchBtn" style="display:none">⏹️ 停止</button>
         </div>
         <div class="preload-bar" id="preloadBar" style="display:none"><div class="preload-fill" id="preloadFill"></div></div>
