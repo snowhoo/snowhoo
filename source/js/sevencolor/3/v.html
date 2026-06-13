@@ -233,6 +233,7 @@ layout: false
     const $ = id => document.getElementById(id);
     const escHtml = s => String(s).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
     const escAttr = s => String(s).replace(/[&"']/g, m => ({'&':'&amp;','"':'&quot;',"'":'&#39;'}[m]));
+    const isLive = video => video && (video.sourceName === '直播┃电视' || (video.sourceKey && video.sourceKey.indexOf('直播_电视') >= 0));
     const setStatus = txt => { const st = document.getElementById('statusText'); if(st) st.textContent = txt; };
     
     // 辅助函数：格式化时间（秒 -> 分:秒 或 时:分:秒）
@@ -1015,7 +1016,7 @@ layout: false
         while(nextIdx<currentPlayerEpisodes.length && currentPlayerEpisodes[nextIdx].playable===false) nextIdx++;
         currentEpNext = (nextIdx<currentPlayerEpisodes.length) ? {url:currentPlayerEpisodes[nextIdx].url, title:currentPlayerEpisodes[nextIdx].title, idx:nextIdx} : null;
         detailNextEpBtn.style.display = currentEpNext?'inline-block':'none';
-        if(currentPlayingVideo) updateHistory(currentPlayingVideo, idx, 0);
+        if(currentPlayingVideo && !isLive(currentPlayingVideo)) updateHistory(currentPlayingVideo, idx, 0);
     }
     
     function buildSourceSwitchOptions(){
@@ -1066,7 +1067,7 @@ layout: false
         }
     });
     detailBookmarkBtn.addEventListener('click',()=>{
-        if(!currentPlayingVideo || currentPlayingEpIndex===undefined){ setStatus('请先选择剧集'); return; }
+        if(!currentPlayingVideo || isLive(currentPlayingVideo) || currentPlayingEpIndex===undefined){ setStatus('直播源不支持此功能'); return; }
         let prog=Math.floor(detailPlayer.currentTime);
         updateHistory(currentPlayingVideo, currentPlayingEpIndex, prog);
         let note=prompt('影签备注：');
@@ -1074,11 +1075,11 @@ layout: false
         setStatus('影签已添加');
     });
     detailPlayer.addEventListener('ended',()=>{
-        if(currentPlayingVideo) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
+        if(currentPlayingVideo && !isLive(currentPlayingVideo)) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
         if(currentEpNext) detailNextEpBtn.click();
     });
     detailPlayer.addEventListener('pause',()=>{
-        if(currentPlayingVideo && detailPlayer.currentTime>5) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
+        if(currentPlayingVideo && !isLive(currentPlayingVideo) && detailPlayer.currentTime>5) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
     });
     
     backHomeBtn.addEventListener('click',()=>{
@@ -1137,7 +1138,7 @@ layout: false
     searchResultBtn.addEventListener('click',()=>{ renderSpecialView('__search_result__'); });
     
     window.addEventListener('beforeunload',()=>{
-        if(currentPlayingVideo && detailPlayer.currentTime>5) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
+        if(currentPlayingVideo && !isLive(currentPlayingVideo) && detailPlayer.currentTime>5) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
     });
     
     loadIndexData();

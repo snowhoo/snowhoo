@@ -98,6 +98,7 @@ var pw$ = function(sel) { return document.querySelector('#player-wrap ' + sel); 
 var $ = function(id) { return document.getElementById(id); };
 var escHtml = function(s) { return String(s).replace(/[&<>]/g, function(m) { return {'&':'&amp;','<':'&lt;','>':'&gt;'}[m]; }); };
 var escAttr = function(s) { return String(s).replace(/[&"']/g, function(m) { return {'&':'&amp;','"':'&quot;',"'":'&#39;'}[m]; }); };
+var isLive = function(video) { return video && (video.sourceName === '直播┃电视' || (video.sourceKey && video.sourceKey.indexOf('直播_电视') >= 0)); };
 var setStatus = function(t) { $('pwStatusText').textContent = t; };
 var getStorage = function(key) { try{ return JSON.parse(localStorage.getItem(key))||(key===STORAGE.HISTORY?{}:[]); }catch(e){ return key===STORAGE.HISTORY?{}:[]; } };
 var setStorage = function(key,val) { localStorage.setItem(key,JSON.stringify(val)); };
@@ -803,11 +804,11 @@ function playEp(el){
   $('pwNextEpBtn').style.display=currentEpNext?'inline':'none';
   if(currentPlayingVideo){
     var vv=$('pwPlayer');
-    if(vv.currentTime>5) updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(vv.currentTime));
+    if(!isLive(currentPlayingVideo) && vv.currentTime>5) updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(vv.currentTime));
   }
   currentPlayingVideo=currentOpenVideo;
   currentPlayingEpIndex=epIdx;
-  $('pwBookmarkBtn').style.display='inline-block';
+  if(!isLive(currentOpenVideo)) $('pwBookmarkBtn').style.display='inline-block';
   doPlay(url,el.dataset.name);
 }
 function doPlay(url,name){
@@ -1006,16 +1007,16 @@ document.addEventListener('keydown',function(e){
   if((e.key==='n'||e.key==='N') && currentEpNext){ e.preventDefault(); playNext(); }
 });
 $('pwPlayer').addEventListener('ended',function(){
-  if(currentPlayingVideo){ var v=$('pwPlayer'); updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime)); }
+  if(currentPlayingVideo && !isLive(currentPlayingVideo)){ var v=$('pwPlayer'); updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime)); }
   playNext();
   if(!currentEpNext) pw$('.pw-player-box').classList.remove('pw-playing');
 });
 $('pwPlayer').addEventListener('pause',function(){
-  if(currentPlayingVideo){ var v=$('pwPlayer'); if(v.currentTime>5) updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime)); }
+  if(currentPlayingVideo && !isLive(currentPlayingVideo)){ var v=$('pwPlayer'); if(v.currentTime>5) updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime)); }
 });
 // 页面退出/刷新/切走时自动保存播放位置
 function saveOnExit(){
-  if(currentPlayingVideo){ var v=$('pwPlayer'); if(v.currentTime>5) updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime)); }
+  if(currentPlayingVideo && !isLive(currentPlayingVideo)){ var v=$('pwPlayer'); if(v.currentTime>5) updateHistory(currentPlayingVideo,currentPlayingEpIndex,Math.floor(v.currentTime)); }
 }
 window.addEventListener('beforeunload',saveOnExit);
 window.addEventListener('pagehide',saveOnExit);
