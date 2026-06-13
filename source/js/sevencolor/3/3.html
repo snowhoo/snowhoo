@@ -90,10 +90,7 @@ layout: false
         .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
         .preload-bar { height: 3px; background: var(--border); border-radius: 4px; margin-bottom: 12px; overflow: hidden; }
         .preload-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
-        .copyright { text-align: center; margin-top: 40px; padding: 12px 0; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
-        .copyright a { color: var(--accent); text-decoration: none; }
-        .copyright a:hover { text-decoration: underline; }
-        @media (max-width: 640px) { .tvbox-app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 3px 6px; font-size: 12px; } .toolbar select { min-width: 110px; } .toolbar input { max-width: 110px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } }
+        @media (max-width: 640px) { .tvbox-app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 3px 6px; font-size: 12px; } .toolbar select { min-width: 110px; } .toolbar input { max-width: 110px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } }
     </style>
 
 <div class="tvbox-app">
@@ -118,7 +115,6 @@ layout: false
         </div>
         <div id="homeContent" class="video-grid"></div>
         <div id="homePagination" class="pagination"></div>
-        <div id="footer" style="text-align:center; margin-top:40px; font-size:12px; color:var(--text-muted);"></div>
     </div>
 
     <!-- 播放页视图 -->
@@ -165,10 +161,6 @@ layout: false
         <video id="floatVideo" style="width:100%; aspect-ratio:16/9;" playsinline></video>
     </div>
 
-    <!-- 底部版权信息 -->
-    <div class="copyright">
-        小红播霸 by <a href="https://snowhoo.net" target="_blank" rel="noopener noreferrer">SnowHoo.NET</a> 小红故事 · <span id="currentYear"></span>
-    </div>
 </div>
 
 <script>
@@ -240,8 +232,6 @@ layout: false
         return `${m}:${s.toString().padStart(2,'0')}`;
     }
     
-    // 设置当前年份
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
     
     // 继承 Hexo 主题
     (function inheritTheme() {
@@ -1094,16 +1084,6 @@ layout: false
                 sourceMeta[s.prefix]={ page_count:s.page_count||1, name:s.name, fileBase:s.file.replace(/\.js$/,'').replace(/-\d+$/,''), prefix:s.prefix };
             });
             startPreload();
-            // 添加统计信息
-            let totalAddress = 0, playableTotal = 0;
-            sourceIndex.forEach(s => {
-                totalAddress += s.total || 0;
-                playableTotal += s.playable || 0;
-            });
-            const footerDiv = document.getElementById('footer');
-            if (footerDiv) {
-                footerDiv.innerHTML = `<span>数据源 ${sourceIndex.length}</span> | <span>总地址 ${totalAddress}</span> | <span>可播放 ${playableTotal}</span>`;
-            }
             if(sourceIndex.length) {
                 sourceSelect.value = sourceIndex[0].prefix;
                 switchSource();
