@@ -1,1 +1,0 @@
- python rename_hexo_posts.py
