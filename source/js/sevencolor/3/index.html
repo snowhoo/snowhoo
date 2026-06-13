@@ -12,46 +12,46 @@
         .tvbox-app ::-webkit-scrollbar { width: 6px; height: 6px; }
         .tvbox-app ::-webkit-scrollbar-track { background: var(--border); border-radius: 4px; }
         .tvbox-app ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
-        .view { transition: opacity 0.2s; }
-        .view.hidden { display: none; }
-        .toolbar { background: transparent; padding: 8px 0 12px 0; margin-bottom: 16px; display: flex; gap: 10px; align-items: center; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: thin; }
-        .toolbar::-webkit-scrollbar { height: 3px; }
-        .toolbar select, .toolbar input, .toolbar button { border-radius: 40px; padding: 8px 16px; font-weight: 500; font-size: 13px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); outline: none; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
-        .toolbar select { min-width: 140px; cursor: pointer; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e6e80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>"); background-repeat: no-repeat; background-position: right 12px center; appearance: none; padding-right: 36px; }
-        .toolbar input { max-width: 200px; flex: 1; }
-        .toolbar button { background: var(--accent); border: none; color: white; cursor: pointer; font-weight: 600; }
-        .toolbar button:hover { background: var(--accent-hover); transform: translateY(-1px); }
-        .toolbar .secondary-btn { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border); }
-        .toolbar .secondary-btn:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
-        .status-bar { display: flex; flex-direction: column; gap: 12px; margin: 16px 0 24px; padding: 0; background: transparent; border: none; box-shadow: none; }
-        .cat-filters { display: flex; gap: 8px; align-items: center; width: 100%; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
-        .cat-filters::-webkit-scrollbar { height: 3px; }
-        .cat-badge { background: var(--bg-elevated); padding: 3px 6px; border-radius: 40px; font-size: 13px; cursor: pointer; border: 1px solid var(--border); transition: all 0.1s; white-space: nowrap; flex-shrink: 0; color: var(--text-primary); }
-        .cat-badge.active, .cat-badge:hover { background: var(--accent); color: white; border-color: var(--accent); }
-        .action-buttons { display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; }
-        .action-buttons button { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 3px 6px; cursor: pointer; color: var(--text-primary); font-size: 13px; white-space: nowrap; flex-shrink: 0; }
-        .action-buttons button:hover { background: var(--accent); color: white; }
+        .tvbox-app .view { transition: opacity 0.2s; }
+        .tvbox-app .view.hidden { display: none; }
+        .tvbox-app .toolbar { background: transparent; padding: 8px 0 12px 0; margin-bottom: 16px; display: flex; gap: 10px; align-items: center; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: thin; }
+        .tvbox-app .toolbar::-webkit-scrollbar { height: 3px; }
+        .tvbox-app .toolbar select, .tvbox-app .toolbar input, .tvbox-app .toolbar button { border-radius: 40px; padding: 8px 16px; font-weight: 500; font-size: 13px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); outline: none; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
+        .tvbox-app .toolbar select { min-width: 140px; cursor: pointer; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e6e80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>"); background-repeat: no-repeat; background-position: right 12px center; appearance: none; padding-right: 36px; }
+        .tvbox-app .toolbar input { max-width: 200px; flex: 1; }
+        .tvbox-app .toolbar button { background: var(--accent); border: none; color: white; cursor: pointer; font-weight: 600; }
+        .tvbox-app .toolbar button:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .tvbox-app .toolbar .secondary-btn { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border); }
+        .tvbox-app .toolbar .secondary-btn:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
+        .tvbox-app .status-bar { display: flex; flex-direction: column; gap: 12px; margin: 16px 0 24px; padding: 0; background: transparent; border: none; box-shadow: none; }
+        .tvbox-app .cat-filters { display: flex; gap: 8px; align-items: center; width: 100%; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+        .tvbox-app .cat-filters::-webkit-scrollbar { height: 3px; }
+        .tvbox-app .cat-badge { background: var(--bg-elevated); padding: 3px 6px; border-radius: 40px; font-size: 13px; cursor: pointer; border: 1px solid var(--border); transition: all 0.1s; white-space: nowrap; flex-shrink: 0; color: var(--text-primary); }
+        .tvbox-app .cat-badge.active, .tvbox-app .cat-badge:hover { background: var(--accent); color: white; border-color: var(--accent); }
+        .tvbox-app .action-buttons { display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; }
+        .tvbox-app .action-buttons button { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 3px 6px; cursor: pointer; color: var(--text-primary); font-size: 13px; white-space: nowrap; flex-shrink: 0; }
+        .tvbox-app .action-buttons button:hover { background: var(--accent); color: white; }
         /* ========== 新增高亮样式 ========== */
-        .action-buttons button.active {
+        .tvbox-app .action-buttons button.active {
             background: var(--accent);
             color: white;
             border-color: var(--accent);
         }
         /* ================================ */
-        .clear-all-btn { background: #e74c3c !important; color: white !important; border: none !important; }
-        .clear-all-btn:hover { background: #c0392b !important; }
-        .video-grid { display: grid; gap: 10px; margin-top: 8px; }
-        @media (max-width: 767px) { .video-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; } }
-        @media (min-width: 768px) { .video-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; } }
-        .video-card { background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; cursor: pointer; transition: all 0.25s ease; border: 1px solid var(--border); box-shadow: var(--shadow-sm); position: relative; }
-        .video-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); border-color: var(--accent); }
-        .video-poster { aspect-ratio: 2/3; width: 100%; object-fit: cover; background: linear-gradient(145deg, #2a2a35, #1a1a22); display: block; }
-        .video-info { padding: 12px; }
-        .video-title-row { display: flex; align-items: flex-start; gap: 6px; }
-        .fav-home-btn { background: transparent; border: none; font-size: 16px; cursor: pointer; transition: transform 0.1s; padding: 2px 0; color: var(--text-secondary); flex-shrink: 0; line-height: 1.4; }
-        .fav-home-btn:hover { transform: scale(1.1); color: var(--accent); }
-        .video-title { font-weight: 600; font-size: 13px; line-height: 1.4; color: var(--text-primary); word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
-        .video-progress {
+        .tvbox-app .clear-all-btn { background: #e74c3c !important; color: white !important; border: none !important; }
+        .tvbox-app .clear-all-btn:hover { background: #c0392b !important; }
+        .tvbox-app .video-grid { display: grid; gap: 10px; margin-top: 8px; }
+        @media (max-width: 767px) { .tvbox-app .video-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; } }
+        @media (min-width: 768px) { .tvbox-app .video-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; } }
+        .tvbox-app .video-card { background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; cursor: pointer; transition: all 0.25s ease; border: 1px solid var(--border); box-shadow: var(--shadow-sm); position: relative; }
+        .tvbox-app .video-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); border-color: var(--accent); }
+        .tvbox-app .video-poster { aspect-ratio: 2/3; width: 100%; object-fit: cover; background: linear-gradient(145deg, #2a2a35, #1a1a22); display: block; }
+        .tvbox-app .video-info { padding: 12px; }
+        .tvbox-app .video-title-row { display: flex; align-items: flex-start; gap: 6px; }
+        .tvbox-app .fav-home-btn { background: transparent; border: none; font-size: 16px; cursor: pointer; transition: transform 0.1s; padding: 2px 0; color: var(--text-secondary); flex-shrink: 0; line-height: 1.4; }
+        .tvbox-app .fav-home-btn:hover { transform: scale(1.1); color: var(--accent); }
+        .tvbox-app .video-title { font-weight: 600; font-size: 13px; line-height: 1.4; color: var(--text-primary); word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+        .tvbox-app .video-progress {
             font-size: 10px;
             color: var(--text-muted);
             margin-top: 4px;
@@ -59,35 +59,35 @@
             align-items: center;
             gap: 6px;
         }
-        .delete-item-btn { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: none; border-radius: 30px; width: 28px; height: 28px; font-size: 16px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; transition: 0.1s; }
-        .delete-item-btn:hover { background: #e74c3c; }
-        .source-label { position: absolute; top: 6px; right: 6px; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-size: 10px; background: transparent; border: none; z-index: 2; max-width: calc(100% - 50px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 36px; flex-wrap: wrap; }
-        .pagination button { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 6px 14px; border-radius: 40px; cursor: pointer; font-weight: 500; transition: all 0.1s; }
-        .pagination button.active { background: var(--accent); border-color: var(--accent); color: white; }
-        .pagination button:hover:not(:disabled) { background: var(--accent-hover); color: white; }
-        .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
-        .player-layout { display: flex; flex-direction: column; gap: 28px; }
-        .player-container { background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
-        .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 24px; border: 1px solid var(--border); }
-        .detail-header { display: flex; gap: 24px; flex-wrap: wrap; }
-        .detail-poster { width: 140px; border-radius: var(--radius-sm); aspect-ratio: 2/3; object-fit: cover; box-shadow: var(--shadow-sm); background: linear-gradient(145deg, #2a2a35, #1a1a22); }
-        .detail-info { flex: 1; }
-        .detail-title { font-size: 26px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
-        .detail-meta { display: flex; gap: 20px; flex-wrap: wrap; margin: 12px 0; color: var(--text-secondary); font-size: 14px; }
-        .detail-desc { margin-top: 16px; line-height: 1.5; color: var(--text-secondary); font-size: 14px; }
-        .episodes-section { margin-top: 28px; }
-        .episodes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
-        .source-switch { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 6px 16px; font-size: 13px; cursor: pointer; color: var(--text-primary); }
-        .episodes-grid { display: flex; flex-wrap: wrap; gap: 10px; max-height: 340px; overflow-y: auto; padding: 4px 0; }
-        .episode-item { background: var(--bg-elevated); border-radius: 40px; padding: 6px 10px; font-size: 13px; cursor: pointer; transition: all 0.1s; border: 1px solid var(--border); color: var(--text-secondary); }
-        .episode-item:hover, .episode-item.current-ep { background: var(--accent); color: white; border-color: var(--accent); }
-        .back-home { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; background: var(--bg-card); padding: 8px 20px; border-radius: 40px; cursor: pointer; width: fit-content; border: 1px solid var(--border); font-weight: 500; transition: 0.1s; color: var(--text-primary); }
-        .back-home:hover { background: var(--accent); color: white; }
-        .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
-        .preload-bar { height: 3px; background: var(--border); border-radius: 4px; margin-bottom: 12px; overflow: hidden; }
-        .preload-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
-         @media (max-width: 640px) { .tvbox-app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 3px 6px; font-size: 12px; } .toolbar select { min-width: 110px; } .toolbar input { max-width: 110px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } }
+        .tvbox-app .delete-item-btn { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: none; border-radius: 30px; width: 28px; height: 28px; font-size: 16px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; transition: 0.1s; }
+        .tvbox-app .delete-item-btn:hover { background: #e74c3c; }
+        .tvbox-app .source-label { position: absolute; top: 6px; right: 6px; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-size: 10px; background: transparent; border: none; z-index: 2; max-width: calc(100% - 50px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+        .tvbox-app .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 36px; flex-wrap: wrap; }
+        .tvbox-app .pagination button { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 6px 14px; border-radius: 40px; cursor: pointer; font-weight: 500; transition: all 0.1s; }
+        .tvbox-app .pagination button.active { background: var(--accent); border-color: var(--accent); color: white; }
+        .tvbox-app .pagination button:hover:not(:disabled) { background: var(--accent-hover); color: white; }
+        .tvbox-app .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .tvbox-app .player-layout { display: flex; flex-direction: column; gap: 28px; }
+        .tvbox-app .player-container { background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
+        .tvbox-app .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 24px; border: 1px solid var(--border); }
+        .tvbox-app .detail-header { display: flex; gap: 24px; flex-wrap: wrap; }
+        .tvbox-app .detail-poster { width: 140px; border-radius: var(--radius-sm); aspect-ratio: 2/3; object-fit: cover; box-shadow: var(--shadow-sm); background: linear-gradient(145deg, #2a2a35, #1a1a22); }
+        .tvbox-app .detail-info { flex: 1; }
+        .tvbox-app .detail-title { font-size: 26px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
+        .tvbox-app .detail-meta { display: flex; gap: 20px; flex-wrap: wrap; margin: 12px 0; color: var(--text-secondary); font-size: 14px; }
+        .tvbox-app .detail-desc { margin-top: 16px; line-height: 1.5; color: var(--text-secondary); font-size: 14px; }
+        .tvbox-app .episodes-section { margin-top: 28px; }
+        .tvbox-app .episodes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+        .tvbox-app .source-switch { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 6px 16px; font-size: 13px; cursor: pointer; color: var(--text-primary); }
+        .tvbox-app .episodes-grid { display: flex; flex-wrap: wrap; gap: 10px; max-height: 340px; overflow-y: auto; padding: 4px 0; }
+        .tvbox-app .episode-item { background: var(--bg-elevated); border-radius: 40px; padding: 6px 10px; font-size: 13px; cursor: pointer; transition: all 0.1s; border: 1px solid var(--border); color: var(--text-secondary); }
+        .tvbox-app .episode-item:hover, .tvbox-app .episode-item.current-ep { background: var(--accent); color: white; border-color: var(--accent); }
+        .tvbox-app .back-home { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; background: var(--bg-card); padding: 8px 20px; border-radius: 40px; cursor: pointer; width: fit-content; border: 1px solid var(--border); font-weight: 500; transition: 0.1s; color: var(--text-primary); }
+        .tvbox-app .back-home:hover { background: var(--accent); color: white; }
+        .tvbox-app .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
+        .tvbox-app .preload-bar { height: 3px; background: var(--border); border-radius: 4px; margin-bottom: 12px; overflow: hidden; }
+        .tvbox-app .preload-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
+        @media (max-width: 640px) { .tvbox-app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 3px 6px; font-size: 12px; } .toolbar select { min-width: 110px; } .toolbar input { max-width: 110px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } }
     </style>
 
 <div class="tvbox-app">
@@ -158,6 +158,7 @@
         </div>
         <video id="floatVideo" style="width:100%; aspect-ratio:16/9;" playsinline></video>
     </div>
+
 </div>
 
 <script>
@@ -229,8 +230,6 @@
         return `${m}:${s.toString().padStart(2,'0')}`;
     }
     
-    // 设置当前年份
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
     
     // 继承 Hexo 主题
     (function inheritTheme() {
@@ -1083,16 +1082,11 @@
                 sourceMeta[s.prefix]={ page_count:s.page_count||1, name:s.name, fileBase:s.file.replace(/\.js$/,'').replace(/-\d+$/,''), prefix:s.prefix };
             });
             startPreload();
-            // 添加统计信息
+            // 底部统计
             let totalAddress = 0, playableTotal = 0;
-            sourceIndex.forEach(s => {
-                totalAddress += s.total || 0;
-                playableTotal += s.playable || 0;
-            });
+            sourceIndex.forEach(s => { totalAddress += s.total || 0; playableTotal += s.playable || 0; });
             const footerDiv = document.getElementById('footer');
-            if (footerDiv) {
-                footerDiv.innerHTML = `<span>数据源 ${sourceIndex.length}</span> | <span>总地址 ${totalAddress}</span> | <span>可播放 ${playableTotal}</span>`;
-            }
+            if(footerDiv) footerDiv.innerHTML = `<span>数据源 ${sourceIndex.length}</span> | <span>总地址 ${totalAddress}</span> | <span>可播放 ${playableTotal}</span>`;
             if(sourceIndex.length) {
                 sourceSelect.value = sourceIndex[0].prefix;
                 switchSource();
