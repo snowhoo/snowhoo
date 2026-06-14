@@ -96,7 +96,7 @@ layout: false
         .copyright { text-align: center; margin-top: 40px; padding: 12px 0; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
         .copyright a { color: var(--accent); text-decoration: none; }
         .copyright a:hover { text-decoration: underline; }
-        @media (max-width: 640px) { #app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 3px 6px; font-size: 12px; } .toolbar select { min-width: 100px; } .toolbar input { max-width: 100px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } }
+        @media (max-width: 640px) { #app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 3px 6px; font-size: 12px; } .toolbar select { min-width: 110px; } .toolbar input { max-width: 110px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } }
     </style>
 </head>
 <body>
@@ -586,6 +586,25 @@ layout: false
         sourceSelect.value = '';
     }
     
+    // 懒加载封面图：先用 picsum 占位，有实际封面再替换
+    function loadPosterImages() {
+        document.querySelectorAll('.video-poster[data-src]').forEach(function(img) {
+            var realSrc = img.getAttribute('data-src');
+            if (!realSrc) return;
+            var temp = new Image();
+            temp.onload = function() {
+                img.src = realSrc;
+                img.removeAttribute('data-src');
+                temp = null;
+            };
+            temp.onerror = function() {
+                img.removeAttribute('data-src');
+                temp = null;
+            };
+            temp.src = realSrc;
+        });
+    }
+
     function renderHomeGrid(){
         let total=currentFiltered.length, pages=Math.ceil(total/PAGE_SIZE)||1;
         if(currentPage>pages) currentPage=pages;
@@ -594,6 +613,8 @@ layout: false
         const isSpecial = (currentPrefix === '__history__' || currentPrefix === '__bookmarks__' || currentPrefix === '__search_result__' || currentPrefix === '__favorites__');
         items.forEach(v=>{
             let img=v.vod_pic||`https://picsum.photos/seed/${encodeURIComponent(v.vod_name)}/300/400`;
+            let placeholderSrc = `https://picsum.photos/seed/${encodeURIComponent(v.vod_name)}/300/400`;
+            let realPoster = v.vod_pic || '';
             let isFav=isFavorited(v.sourceKey, v.vod_name);
             let deleteBtn = '';
             if(isSpecial){
@@ -624,7 +645,7 @@ layout: false
             html+=`<div class="video-card" data-name="${escAttr(v.vod_name)}" data-sourcekey="${escAttr(v.sourceKey)}" data-sourcename="${escAttr(v.sourceName||'')}" data-pic="${escAttr(img)}" data-epcount="${v.ep_count||0}" data-playable="${v.playable_count||0}" data-episodes='${escAttr(JSON.stringify(v.episodes||[]))}' data-class="${escAttr(v.vod_class||'')}"${restoreData}>
                 ${deleteBtn}
                 <div class="pw-poster-wrap">
-                    <img class="video-poster" src="${img}" loading="lazy" onerror="this.src='https://picsum.photos/seed/default/300/400'">
+                    <img class="video-poster" src="${placeholderSrc}"${realPoster ? ` data-src="${realPoster}"` : ''} loading="lazy">
                     <span class="source-label">📀 ${escHtml(sourceName)}</span>
                 </div>
                 <div class="video-info">
@@ -637,6 +658,7 @@ layout: false
             </div>`;
         });
         homeContent.innerHTML=html || '<div class="empty-state">📺 暂无影片</div>';
+        loadPosterImages();
         let pgHtml='';
         if(pages>1){
             pgHtml+=`<button class="page-go" data-page="1" ${currentPage<=1?'disabled':''}>«</button><button class="page-go" data-page="${currentPage-1}" ${currentPage<=1?'disabled':''}>‹</button>`;
@@ -904,7 +926,13 @@ layout: false
         let savedProgress = (pendingRestoreProgress !== null && pendingRestoreProgress > 0) ? pendingRestoreProgress : 0;
         currentPlayingEpIndex = restoreEp;
         
-        detailPoster.src = video.vod_pic || '';
+        detailPoster.src = `https://picsum.photos/seed/${encodeURIComponent(video.vod_name)}/280/420`;
+        if (video.vod_pic) {
+            var temp = new Image();
+            temp.onload = function() { detailPoster.src = video.vod_pic; temp = null; };
+            temp.onerror = function() { temp = null; };
+            temp.src = video.vod_pic;
+        }
         detailTitle.textContent = video.vod_name;
         detailEpCount.textContent = `${video.ep_count || 0}集`;
         detailPlayable.textContent = `${video.playable_count || 0}可播放`;
