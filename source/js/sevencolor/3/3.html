@@ -54,13 +54,13 @@ layout: false
 		@media (min-width: 1024px) { .tvbox-app .video-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; } }
         .tvbox-app .video-card { background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; cursor: pointer; transition: all 0.25s ease; border: 1px solid var(--border); box-shadow: var(--shadow-sm); position: relative; }
         .tvbox-app .video-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); border-color: var(--accent); }
-        .tvbox-app .video-poster { aspect-ratio: 2/3; width: 100%; object-fit: cover; display: block; }
+        .tvbox-app .video-poster { margin: 0 auto 0px; aspect-ratio: 2/3; width: 100%; object-fit: cover; display: block; }
         .tvbox-app .video-poster-text { aspect-ratio: 2/3; width: 100%; display: flex; align-items: center; justify-content: center; padding: 10px; font-size: 14px; font-weight: 600; color: var(--text-muted); text-align: center; word-break: break-all; box-sizing: border-box; }
         .tvbox-app .video-info { padding: 6px; }
         .tvbox-app .video-title-row { display: flex; align-items: flex-start; gap: 6px; }
         .tvbox-app .fav-home-btn { background: transparent; border: none; font-size: 16px; cursor: pointer; transition: transform 0.1s; padding: 2px 0; color: var(--text-secondary); flex-shrink: 0; line-height: 1.4; }
         .tvbox-app .fav-home-btn:hover { transform: scale(1.1); color: var(--accent); }
-        .tvbox-app .video-title { font-weight: 400; font-size: 11px; line-height: 1.2; color: var(--text-primary); word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+        .tvbox-app .video-title { font-weight: 600; font-size: 12px; line-height: 1.2; color: var(--text-primary); word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
         .tvbox-app .video-progress {
             font-size: 10px;
             color: var(--text-muted);
@@ -71,9 +71,9 @@ layout: false
         }
         .tvbox-app .delete-item-btn { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: none; border-radius: 30px; width: 28px; height: 28px; font-size: 16px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; transition: 0.1s; }
         .tvbox-app .delete-item-btn:hover { background: #e74c3c; }
-        .tvbox-app .source-label { position: absolute; top: 6px; right: 6px; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-size: 10px; background: transparent; border: none; z-index: 2; max-width: calc(100% - 50px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-        .tvbox-app .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 36px; flex-wrap: wrap; }
-        .tvbox-app .pagination button { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 6px 14px; border-radius: 40px; cursor: pointer; font-weight: 500; transition: all 0.1s; }
+        .tvbox-app .source-label { position: absolute; top: 6px; right: 6px; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-size: 10px; background: transparent; border: none; z-index: 2; max-width: calc(100% - 30px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+        .tvbox-app .pagination { display: flex; justify-content: center; gap: 0px; margin-top: 18px; flex-wrap: nowrap; }
+        .tvbox-app .pagination button { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 0px 0px; border-radius: 40px; cursor: pointer; font-weight: 500; transition: all 0.1s; }
         .tvbox-app .pagination button.active { background: var(--accent); border-color: var(--accent); color: white; }
         .tvbox-app .pagination button:hover:not(:disabled) { background: var(--accent-hover); color: white; }
         .tvbox-app .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
