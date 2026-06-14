@@ -51,8 +51,7 @@ layout: false
         @media (min-width: 768px) { .video-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; } }
         .video-card { background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; cursor: pointer; transition: all 0.25s ease; border: 1px solid var(--border); box-shadow: var(--shadow-sm); position: relative; }
         .video-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); border-color: var(--accent); }
-        .video-poster { aspect-ratio: 2/3; width: 100%; object-fit: cover; display: block; }
-        .video-poster-text { aspect-ratio: 2/3; width: 100%; display: flex; align-items: center; justify-content: center; padding: 10px; font-size: 14px; font-weight: 600; color: var(--text-muted); text-align: center; word-break: break-all; box-sizing: border-box; }
+        .video-poster { aspect-ratio: 2/3; width: 100%; object-fit: cover; background: linear-gradient(145deg, #2a2a35, #1a1a22); display: block; }
         .video-info { padding: 12px; }
         .video-title-row { display: flex; align-items: flex-start; gap: 6px; }
         .fav-home-btn { background: transparent; border: none; font-size: 16px; cursor: pointer; transition: transform 0.1s; padding: 2px 0; color: var(--text-secondary); flex-shrink: 0; line-height: 1.4; }
@@ -117,6 +116,7 @@ layout: false
             <div class="action-buttons">
                 <button id="historyBtn">🕒 最近</button>
                 <button id="favoritesBtn">❤️ 收藏</button>
+                <button id="bookmarksBtn">📌 影签</button>
                 <button id="searchResultBtn">🔍 结果</button>
                 <button id="clearSpecialBtn" class="clear-all-btn" style="display:none;">清空</button>
             </div>
@@ -145,6 +145,7 @@ layout: false
                         </div>
                         <div class="detail-desc" id="detailDesc"></div>
                         <div style="margin-top: 20px; gap: 12px;">
+                            <button id="detailBookmarkBtn" style="background:var(--bg-elevated); border:none; padding:8px 18px; border-radius:40px; cursor:pointer; font-weight:500; color:var(--text-primary);">📌 影签</button>
                             <button id="detailNextEpBtn" style="background:var(--bg-elevated); border:1px solid var(--border); padding:8px 18px; border-radius:40px; cursor:pointer; color:var(--text-primary);">⏩ 下集</button>
                         </div>
                     </div>
@@ -178,7 +179,7 @@ layout: false
 <script>
 (function(){
     // ---------- 存储与核心变量 ----------
-    const STORAGE = { HISTORY:'tvbox_history', FAVORITES:'tvbox_favorites', SEARCH:'tvbox_search_results', THEME:'tvbox_theme' };
+    const STORAGE = { HISTORY:'tvbox_history', FAVORITES:'tvbox_favorites', BOOKMARKS:'tvbox_bookmarks', SEARCH:'tvbox_search_results', THEME:'tvbox_theme' };
     const PAGE_SIZE = 12, CONCURRENT = 10;
     let sourceIndex=[], loadedSources={}, sourceMeta={}, currentData=null, currentPrefix='', currentFilePage=1, currentPage=1, currentFiltered=[], currentCategory='';
     let currentSearchKeyword='', currentSearchResults=[], currentSearchCategory='', isSearching=false, searchVersion=0;
@@ -208,6 +209,7 @@ layout: false
     const themeToggle = document.getElementById('themeToggleBtn');
     const historyBtn = document.getElementById('historyBtn');
     const favoritesBtn = document.getElementById('favoritesBtn');
+    const bookmarksBtn = document.getElementById('bookmarksBtn');
     const searchResultBtn = document.getElementById('searchResultBtn');
     const clearSpecialBtn = document.getElementById('clearSpecialBtn');
     const backHomeBtn = document.getElementById('backHomeBtn');
@@ -223,6 +225,7 @@ layout: false
     const detailPlayable = document.getElementById('detailPlayable');
     const detailSource = document.getElementById('detailSource');
     const detailDesc = document.getElementById('detailDesc');
+    const detailBookmarkBtn = document.getElementById('detailBookmarkBtn');
     const detailNextEpBtn = document.getElementById('detailNextEpBtn');
     const episodesList = document.getElementById('episodesList');
     const sourceSwitchSelect = document.getElementById('sourceSwitchSelect');
@@ -231,8 +234,6 @@ layout: false
     const escHtml = s => String(s).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
     const escAttr = s => String(s).replace(/[&"']/g, m => ({'&':'&amp;','"':'&quot;',"'":'&#39;'}[m]));
     const setStatus = txt => { const st = document.getElementById('statusText'); if(st) st.textContent = txt; };
-    const isLive = video => video && (video.sourceName === '直播┃电视' || (video.sourceKey && video.sourceKey.indexOf('直播_电视') >= 0));
-    const logoUrl = url => { if (!url || !url.startsWith('http')) return url || ''; var f=url.split('/').pop(); var bp=(typeof __SC_BASE_PATH!=='undefined'?__SC_BASE_PATH:''); return bp+'data/TV-LOGO/'+f; };
     
     // 辅助函数：格式化时间（秒 -> 分:秒 或 时:分:秒）
     function formatTime(sec) {
@@ -270,9 +271,10 @@ layout: false
     
     // 高亮顶部按钮
     function setActiveButton(type) {
-        [historyBtn, favoritesBtn, searchResultBtn].forEach(btn => btn.classList.remove('active'));
+        [historyBtn, favoritesBtn, bookmarksBtn, searchResultBtn].forEach(btn => btn.classList.remove('active'));
         if (type === '__history__') historyBtn.classList.add('active');
         else if (type === '__favorites__') favoritesBtn.classList.add('active');
+        else if (type === '__bookmarks__') bookmarksBtn.classList.add('active');
         else if (type === '__search_result__') searchResultBtn.classList.add('active');
     }
     
@@ -283,9 +285,15 @@ layout: false
     const isFavorited = (k,n) => getStorage(STORAGE.FAVORITES).some(f=> f.videoName===n && (!f.sourceKey||!k||f.sourceKey===k));
     const addFavorite = (v) => { if(isFavorited(v.sourceKey, v.vod_name)) return; let fav=getStorage(STORAGE.FAVORITES); fav.push({ videoName:v.vod_name, sourceKey:v.sourceKey, sourceName:v.sourceName, vodPic:v.vod_pic, ep_count:v.ep_count, playable_count:v.playable_count, episodes:v.episodes, vod_class:v.vod_class }); setStorage(STORAGE.FAVORITES,fav); };
     const removeFavorite = (k,n) => setStorage(STORAGE.FAVORITES, getStorage(STORAGE.FAVORITES).filter(f=> !(f.videoName===n && (!f.sourceKey||!k||f.sourceKey===k))));
-    const getBookmarks = () => [];
-    const saveBookmarks = () => {};
-    const addBookmark = () => {};
+    const getBookmarks = () => getStorage(STORAGE.BOOKMARKS);
+    const saveBookmarks = list => setStorage(STORAGE.BOOKMARKS,list);
+    const addBookmark = (video,epIdx,prog,note) => { 
+        let list=getBookmarks();
+        let fresh=findVideoInCache(video.sourceKey, video.vod_name)||video;
+        let epsCopy=fresh.episodes?fresh.episodes.map(e=>({title:e.title,url:e.url,playable:e.playable})):[];
+        list.unshift({ videoName:fresh.vod_name, sourceKey:video.sourceKey, sourceName:video.sourceName, vodPic:fresh.vod_pic, ep_count:fresh.ep_count||epsCopy.length, playable_count:fresh.playable_count||epsCopy.filter(e=>e.playable).length, episodes:epsCopy, epIndex:epIdx, epTitle:(fresh.episodes||[])[epIdx]?.title||'', epUrl:(fresh.episodes||[])[epIdx]?.url||'', progress:prog, note:note||'', createdAt:Date.now() }); 
+        saveBookmarks(list);
+    };
     const updateHistory = (video,epIdx,prog) => { 
         let key=video.sourceKey+'_'+video.vod_name;
         let fresh=findVideoInCache(video.sourceKey, video.vod_name)||video;
@@ -578,33 +586,22 @@ layout: false
         sourceSelect.value = '';
     }
     
-    // 封面图：直播源显示频道名字，静默加载本地 Logo 替换；其他源 picsum + 在线加载
+    // 懒加载封面图：先用 picsum 占位，有实际封面再替换
     function loadPosterImages() {
-        // 非直播：<img data-src> → 预载在线
         document.querySelectorAll('.video-poster[data-src]').forEach(function(img) {
-            var src = img.getAttribute('data-src');
-            img.removeAttribute('data-src');
-            var t = new Image();
-            t.onload = function() { img.src = src; t = null; };
-            t.onerror = function() { t = null; };
-            t.src = src;
-        });
-        // 直播：.video-poster-text[data-src] → 预载本地 Logo → 替换为 <img>
-        document.querySelectorAll('.video-poster-text[data-src]').forEach(function(div) {
-            var onlineSrc = div.getAttribute('data-src');
-            div.removeAttribute('data-src');
-            var localSrc = logoUrl(onlineSrc);
-            var t = new Image();
-            t.onload = function() {
-                var img = document.createElement('img');
-                img.className = 'video-poster';
-                img.src = localSrc;
-                img.loading = 'lazy';
-                div.parentNode.replaceChild(img, div);
-                t = null;
+            var realSrc = img.getAttribute('data-src');
+            if (!realSrc) return;
+            var temp = new Image();
+            temp.onload = function() {
+                img.src = realSrc;
+                img.removeAttribute('data-src');
+                temp = null;
             };
-            t.onerror = function() { t = null; };
-            t.src = localSrc;
+            temp.onerror = function() {
+                img.removeAttribute('data-src');
+                temp = null;
+            };
+            temp.src = realSrc;
         });
     }
 
@@ -615,8 +612,9 @@ layout: false
         let html='';
         const isSpecial = (currentPrefix === '__history__' || currentPrefix === '__bookmarks__' || currentPrefix === '__search_result__' || currentPrefix === '__favorites__');
         items.forEach(v=>{
-            let onlinePic = v.vod_pic || '';
+            let img=v.vod_pic||`https://picsum.photos/seed/${encodeURIComponent(v.vod_name)}/300/400`;
             let placeholderSrc = `https://picsum.photos/seed/${encodeURIComponent(v.vod_name)}/300/400`;
+            let realPoster = v.vod_pic || '';
             let isFav=isFavorited(v.sourceKey, v.vod_name);
             let deleteBtn = '';
             if(isSpecial){
@@ -644,12 +642,10 @@ layout: false
             }
             // ======================================
             
-            html+=`<div class="video-card" data-name="${escAttr(v.vod_name)}" data-sourcekey="${escAttr(v.sourceKey)}" data-sourcename="${escAttr(v.sourceName||'')}" data-pic="${escAttr(onlinePic || placeholderSrc)}" data-epcount="${v.ep_count||0}" data-playable="${v.playable_count||0}" data-episodes='${escAttr(JSON.stringify(v.episodes||[]))}' data-class="${escAttr(v.vod_class||'')}"${restoreData}>
+            html+=`<div class="video-card" data-name="${escAttr(v.vod_name)}" data-sourcekey="${escAttr(v.sourceKey)}" data-sourcename="${escAttr(v.sourceName||'')}" data-pic="${escAttr(img)}" data-epcount="${v.ep_count||0}" data-playable="${v.playable_count||0}" data-episodes='${escAttr(JSON.stringify(v.episodes||[]))}' data-class="${escAttr(v.vod_class||'')}"${restoreData}>
                 ${deleteBtn}
                 <div class="pw-poster-wrap">
-                    ${isLive(v) 
-                        ? `<div class="video-poster-text" data-poster="${escAttr(v.vod_name)}" data-src="${escAttr(onlinePic)}">${escHtml(v.vod_name)}</div>` 
-                        : `<img class="video-poster" src="${placeholderSrc}"${onlinePic ? ` data-src="${escAttr(onlinePic)}"` : ''} loading="lazy">`}
+                    <img class="video-poster" src="${placeholderSrc}"${realPoster ? ` data-src="${realPoster}"` : ''} loading="lazy">
                     <span class="source-label">📀 ${escHtml(sourceName)}</span>
                 </div>
                 <div class="video-info">
@@ -1069,6 +1065,14 @@ layout: false
             playEpInPlayer(currentEpNext.url, currentEpNext.title, currentEpNext.idx, 0);
         }
     });
+    detailBookmarkBtn.addEventListener('click',()=>{
+        if(!currentPlayingVideo || currentPlayingEpIndex===undefined){ setStatus('请先选择剧集'); return; }
+        let prog=Math.floor(detailPlayer.currentTime);
+        updateHistory(currentPlayingVideo, currentPlayingEpIndex, prog);
+        let note=prompt('影签备注：');
+        if(note!==null) addBookmark(currentPlayingVideo, currentPlayingEpIndex, prog, note);
+        setStatus('影签已添加');
+    });
     detailPlayer.addEventListener('ended',()=>{
         if(currentPlayingVideo) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
         if(currentEpNext) detailNextEpBtn.click();
@@ -1129,6 +1133,7 @@ layout: false
     sourceSelect.addEventListener('change', switchSource);
     historyBtn.addEventListener('click',()=>{ renderSpecialView('__history__'); });
     favoritesBtn.addEventListener('click',()=>{ renderSpecialView('__favorites__'); });
+    bookmarksBtn.addEventListener('click',()=>{ renderSpecialView('__bookmarks__'); });
     searchResultBtn.addEventListener('click',()=>{ renderSpecialView('__search_result__'); });
     
     window.addEventListener('beforeunload',()=>{
