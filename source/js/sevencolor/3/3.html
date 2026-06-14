@@ -567,31 +567,29 @@ layout: false
     
     // 封面图：先显示 picsum 占位，后台静默加载本地 Logo → 在线 Logo
     function loadPosterImages() {
-        document.querySelectorAll('.video-poster[data-local]').forEach(function(img) {
+        document.querySelectorAll('.video-poster[data-local],.video-poster[data-online]').forEach(function(img) {
             var localSrc = img.getAttribute('data-local');
             var onlineSrc = img.getAttribute('data-online') || '';
             img.removeAttribute('data-local');
-            var t = new Image();
-            t.onload = function() { img.src = localSrc; t = null; };
-            t.onerror = function() {
-                // 本地失败，尝试在线
-                if (!onlineSrc) { t = null; return; }
-                var t2 = new Image();
-                t2.onload = function() { img.src = onlineSrc; t2 = null; };
-                t2.onerror = function() { t2 = null; };
-                t2.src = onlineSrc;
-                t = null;
-            };
-            t.src = localSrc;
-        });
-        // 同样处理只有 data-online 的（没有本地 Logo）
-        document.querySelectorAll('.video-poster[data-online]:not([data-local])').forEach(function(img) {
-            var onlineSrc = img.getAttribute('data-online');
             img.removeAttribute('data-online');
-            var t = new Image();
-            t.onload = function() { img.src = onlineSrc; t = null; };
-            t.onerror = function() { t = null; };
-            t.src = onlineSrc;
+            if (localSrc) {
+                var t = new Image();
+                t.onload = function() { img.src = localSrc; t = null; };
+                t.onerror = function() {
+                    if (!onlineSrc) { t = null; return; }
+                    var t2 = new Image();
+                    t2.onload = function() { img.src = onlineSrc; t2 = null; };
+                    t2.onerror = function() { t2 = null; };
+                    t2.src = onlineSrc;
+                    t = null;
+                };
+                t.src = localSrc;
+            } else if (onlineSrc) {
+                var t = new Image();
+                t.onload = function() { img.src = onlineSrc; t = null; };
+                t.onerror = function() { t = null; };
+                t.src = onlineSrc;
+            }
         });
     }
 
