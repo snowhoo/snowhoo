@@ -561,7 +561,8 @@ layout: false
     function logoUrl(url) {
         if (!url || !url.startsWith('http')) return url || '';
         var filename = url.split('/').pop();
-        return 'data/TV-LOGO/' + filename;
+        var bp = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '');
+        return bp + 'data/TV-LOGO/' + filename;
     }
     
     // 懒加载封面图：先用 picsum 占位，然后尝试本地 Logo，最后后台静默加载在线 Logo
