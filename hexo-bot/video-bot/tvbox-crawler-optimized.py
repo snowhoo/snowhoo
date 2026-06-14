@@ -782,10 +782,15 @@ def main():
     # 直接生成到 Hexo source/js/sevencolor/3/data，不再用中间目录
     data_dir = os.path.normpath(os.path.join(BASE_DIR, '..', '..', 'source', 'js', 'sevencolor' , '3' , 'data'))
     if os.path.exists(data_dir):
-        import shutil
+        # 只清理 .js 文件，保留 TV-LOGO 等非脚本目录
         for item in os.listdir(data_dir):
+            if not item.endswith('.js'):
+                continue
             path = os.path.join(data_dir, item)
-            shutil.rmtree(path) if os.path.isdir(path) else os.remove(path)
+            try:
+                os.remove(path)
+            except Exception as e:
+                print(f'  ⚠️ 无法删除 {item}: {e}')
     os.makedirs(data_dir, exist_ok=True)
 
     def crawl_one(site):
