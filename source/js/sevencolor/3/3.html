@@ -565,22 +565,33 @@ layout: false
         return bp + 'data/TV-LOGO/' + filename;
     }
     
-    // 封面图：本地 Logo 优先，加载失败则尝试在线地址
+    // 封面图：先显示 picsum 占位，后台静默加载本地 Logo → 在线 Logo
     function loadPosterImages() {
-        document.querySelectorAll('.video-poster[data-online]').forEach(function(img) {
+        document.querySelectorAll('.video-poster[data-local]').forEach(function(img) {
+            var localSrc = img.getAttribute('data-local');
+            var onlineSrc = img.getAttribute('data-online') || '';
+            img.removeAttribute('data-local');
+            var t = new Image();
+            t.onload = function() { img.src = localSrc; t = null; };
+            t.onerror = function() {
+                // 本地失败，尝试在线
+                if (!onlineSrc) { t = null; return; }
+                var t2 = new Image();
+                t2.onload = function() { img.src = onlineSrc; t2 = null; };
+                t2.onerror = function() { t2 = null; };
+                t2.src = onlineSrc;
+                t = null;
+            };
+            t.src = localSrc;
+        });
+        // 同样处理只有 data-online 的（没有本地 Logo）
+        document.querySelectorAll('.video-poster[data-online]:not([data-local])').forEach(function(img) {
             var onlineSrc = img.getAttribute('data-online');
-            img.addEventListener('error', function onImgError() {
-                img.removeEventListener('error', onImgError);
-                img.removeAttribute('data-online');
-                var t = new Image();
-                t.onload = function() { img.src = onlineSrc; t = null; };
-                t.onerror = function() { t = null; };
-                t.src = onlineSrc;
-            });
-            // 如果浏览器已经加载失败，手动触发 error
-            if (img.complete && (img.naturalWidth === 0 || img.naturalHeight === 0)) {
-                img.dispatchEvent(new Event('error'));
-            }
+            img.removeAttribute('data-online');
+            var t = new Image();
+            t.onload = function() { img.src = onlineSrc; t = null; };
+            t.onerror = function() { t = null; };
+            t.src = onlineSrc;
         });
     }
 
@@ -624,7 +635,7 @@ layout: false
             html+=`<div class="video-card" data-name="${escAttr(v.vod_name)}" data-sourcekey="${escAttr(v.sourceKey)}" data-sourcename="${escAttr(v.sourceName||'')}" data-pic="${escAttr(onlinePic || placeholderSrc)}" data-epcount="${v.ep_count||0}" data-playable="${v.playable_count||0}" data-episodes='${escAttr(JSON.stringify(v.episodes||[]))}' data-class="${escAttr(v.vod_class||'')}"${restoreData}>
                 ${deleteBtn}
                 <div class="pw-poster-wrap">
-                    <img class="video-poster" src="${localPic || placeholderSrc}"${onlinePic ? ` data-online="${escAttr(onlinePic)}"` : ''} loading="lazy">
+                    <img class="video-poster" src="${placeholderSrc}"${localPic ? ` data-local="${escAttr(localPic)}"` : ''}${onlinePic ? ` data-online="${escAttr(onlinePic)}"` : ''} loading="lazy">
                     <span class="source-label">📀 ${escHtml(sourceName)}</span>
                 </div>
                 <div class="video-info">
