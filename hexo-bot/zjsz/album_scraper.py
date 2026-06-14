@@ -58,6 +58,37 @@ def data_js_path(outdir=None):
     return os.path.join(d, "data.js")
 
 
+def latest_url_path(outdir=None):
+    """返回 latest_url.txt 的完整路径（存储最新文章的 URL）。"""
+    d = _resolve_dir(outdir)
+    return os.path.join(d, "latest_url.txt")
+
+
+def save_latest_url(url: str, outdir=None):
+    """保存最新文章的 URL 到独立的 latest_url.txt。"""
+    if not url:
+        return
+    p = latest_url_path(outdir)
+    try:
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(url.strip())
+        log(f"已保存最新 URL 到 {p}")
+    except Exception as e:
+        log(f"保存 latest_url 失败: {e}")
+
+
+def load_latest_url(outdir=None) -> str:
+    """从 latest_url.txt 读取最新文章的 URL。"""
+    p = latest_url_path(outdir)
+    if not os.path.exists(p):
+        return ""
+    try:
+        with open(p, "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except Exception:
+        return ""
+
+
 def img_dir_path(outdir=None):
     """返回图片存放目录。"""
     d = _resolve_dir(outdir)
@@ -399,7 +430,12 @@ def save_articles(articles: list, outdir=None):
         if local_path:
             art["image_url"] = local_path
 
-    # 输出 data.js（去掉 url 字段，前端不需要）
+    # 保存最新文章的 URL 到独立文件（增量模式需要它做起点，不挤占 data.js）
+    if articles:
+        first = articles[0]  # save_articles 前已按时间倒序排序
+        save_latest_url(first.get("url", ""), outdir)
+
+    # 输出 data.js（去掉 url 字段，前端不需要，通过 latest_url.txt 记录起点）
     clean = []
     for art in articles:
         a = {k: v for k, v in art.items() if k != "url"}
@@ -407,7 +443,7 @@ def save_articles(articles: list, outdir=None):
     js = "// 照见苏州 - 文章数据\n// 由 album_scraper.py 自动生成\nvar ARTICLE_DATA = " + json.dumps(clean, ensure_ascii=False) + ";\n"
     with open(outpath, "w", encoding="utf-8") as f:
         f.write(js)
-    log(f"已保存 {len(clean)} 条数据到 {outpath}")
+    log(f"已保存 {len(articles)} 条数据到 {outpath}")
 
 
 def get_latest_article_url() -> str:
@@ -450,13 +486,20 @@ def scrape_all(incremental: bool = False, force_content: bool = False, outdir: s
                 newest_time = art.get("create_time", "")
                 break
         if not newest_url:
-            log("现有数据无 url 字段，从专辑 API 获取最新文章 URL")
-            newest_url = get_latest_article_url()
-            if not newest_url:
-                log("无法获取起始 URL，降级为全量模式重新构建")
-                return scrape_all(incremental=False, force_content=force_content, outdir=outdir)
-            newest_title = "(从专辑 API 获取起点)"
-            newest_time = ""
+            # 尝试从 latest_url.txt 读取起点
+            newest_url = load_latest_url(outdir)
+            if newest_url:
+                log(f"从 latest_url.txt 获取起点 URL")
+                newest_title = "(从 latest_url.txt 获取起点)"
+                newest_time = ""
+            else:
+                log("现有数据无 url 字段，从专辑 API 获取最新文章 URL")
+                newest_url = get_latest_article_url()
+                if not newest_url:
+                    log("无法获取起始 URL，降级为全量模式重新构建")
+                    return scrape_all(incremental=False, force_content=force_content, outdir=outdir)
+                newest_title = "(从专辑 API 获取起点)"
+                newest_time = ""
         log(f"最新已知: {newest_title[:25]} ({newest_time})")
 
         known_ids = set(existing.keys())
