@@ -14,7 +14,7 @@ layout: false
         .tvbox-app ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
         /* 跟随 Hexo 主题（html[data-theme] 由 Hexo Butterfly 控制） */
         html[data-theme="dark"] .tvbox-app { --bg-body: #000000; --bg-surface: #0a0a0f; --bg-card: #111115; --bg-card-hover: #1a1a20; --bg-elevated: #15151c; --border: #2a2a33; --text-primary: #ffffff; --text-secondary: #c0c0cf; --text-muted: #8a8a99; --accent: #f97316; --accent-hover: #fd7e2e; --shadow-sm: 0 4px 12px rgba(0,0,0,0.5); --shadow-md: 0 8px 24px rgba(0,0,0,0.6); }
-        html[data-theme="light"] .tvbox-app { --bg-body: #f8fafc; --bg-surface: #ffffff; --bg-card: #ffffff; --bg-card-hover: #f8fafc; --bg-elevated: #f1f5f9; --border: #e2e8f0; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --accent: #f97316; --accent-hover: #ea580c; --shadow-sm: 0 2px 6px rgba(0,0,0,0.05); --shadow-md: 0 8px 20px rgba(0,0,0,0.08); }
+        html[data-theme="light"] .tvbox-app { --bg-body: #f8fafc; --bg-surface: #ffffff; --bg-card: #f0f2f5; --bg-card-hover: #e8eaed; --bg-elevated: #f1f5f9; --border: #e2e8f0; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --accent: #f97316; --accent-hover: #ea580c; --shadow-sm: 0 2px 6px rgba(0,0,0,0.05); --shadow-md: 0 8px 20px rgba(0,0,0,0.08); }
         .tvbox-app ::-webkit-scrollbar { width: 6px; height: 6px; }
         .tvbox-app ::-webkit-scrollbar-track { background: var(--border); border-radius: 4px; }
         .tvbox-app ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
@@ -52,7 +52,7 @@ layout: false
 		@media (min-width: 1024px) { .tvbox-app .video-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; } }
         .tvbox-app .video-card { background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; cursor: pointer; transition: all 0.25s ease; border: 1px solid var(--border); box-shadow: var(--shadow-sm); position: relative; }
         .tvbox-app .video-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); border-color: var(--accent); }
-        .tvbox-app .video-poster { aspect-ratio: 2/3; width: 100%; object-fit: cover; background: linear-gradient(145deg, #2a2a35, #1a1a22); display: block; }
+        .tvbox-app .video-poster { aspect-ratio: 2/3; width: 100%; object-fit: cover; display: block; }
         .tvbox-app .video-poster-text { aspect-ratio: 2/3; width: 100%; display: flex; align-items: center; justify-content: center; padding: 10px; font-size: 14px; font-weight: 600; color: var(--text-muted); text-align: center; word-break: break-all; box-sizing: border-box; }
         .tvbox-app .video-info { padding: 6px; }
         .tvbox-app .video-title-row { display: flex; align-items: flex-start; gap: 6px; }
