@@ -77,7 +77,7 @@ layout: false
         .player-container { background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
         .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 24px; border: 1px solid var(--border); }
         .detail-header { display: flex; gap: 24px; flex-wrap: wrap; }
-        .detail-poster { width: 140px; border-radius: var(--radius-sm); aspect-ratio: 2/3; object-fit: cover; box-shadow: var(--shadow-sm); background: linear-gradient(145deg, #2a2a35, #1a1a22); }
+        .detail-poster { width: 140px; border-radius: var(--radius-sm); aspect-ratio: 2/3; object-fit: cover; box-shadow: var(--shadow-sm); }
         .detail-info { flex: 1; }
         .detail-title { font-size: 26px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
         .detail-meta { display: flex; gap: 20px; flex-wrap: wrap; margin: 12px 0; color: var(--text-secondary); font-size: 14px; }
@@ -96,7 +96,7 @@ layout: false
         .copyright { text-align: center; margin-top: 40px; padding: 12px 0; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
         .copyright a { color: var(--accent); text-decoration: none; }
         .copyright a:hover { text-decoration: underline; }
-        @media (max-width: 640px) { #app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 3px 6px; font-size: 12px; } .toolbar select { min-width: 110px; } .toolbar input { max-width: 110px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } }
+        @media (max-width: 640px) { #app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 3px 6px; font-size: 12px; } .toolbar select { min-width: 100px; } .toolbar input { max-width: 100px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } }
     </style>
 </head>
 <body>
@@ -233,7 +233,6 @@ layout: false
     const $ = id => document.getElementById(id);
     const escHtml = s => String(s).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
     const escAttr = s => String(s).replace(/[&"']/g, m => ({'&':'&amp;','"':'&quot;',"'":'&#39;'}[m]));
-    const isLive = video => video && (video.sourceName === '直播┃电视' || (video.sourceKey && video.sourceKey.indexOf('直播_电视') >= 0));
     const setStatus = txt => { const st = document.getElementById('statusText'); if(st) st.textContent = txt; };
     
     // 辅助函数：格式化时间（秒 -> 分:秒 或 时:分:秒）
@@ -587,52 +586,6 @@ layout: false
         sourceSelect.value = '';
     }
     
-    // 直播 Logo：优先使用本地图片，失败则回退到在线地址
-    function logoUrl(url) {
-        if (!url || !url.startsWith('http')) return url || '';
-        var filename = url.split('/').pop();
-        return 'data/TV-LOGO/' + filename;
-    }
-    
-    // 懒加载封面图：先用 picsum 占位，然后尝试本地 Logo，最后后台静默加载在线 Logo
-    function loadPosterImages() {
-        document.querySelectorAll('.video-poster[data-src]').forEach(function(img) {
-            var onlineSrc = img.getAttribute('data-src');
-            if (!onlineSrc) return;
-            var localSrc = logoUrl(onlineSrc);
-            var temp = new Image();
-            temp.onload = function() {
-                img.src = localSrc;
-                img.removeAttribute('data-src');
-                temp = null;
-            };
-            temp.onerror = function() {
-                // 本地失败，保持 picsum 占位，后台静默尝试在线 Logo
-                img.removeAttribute('data-src');
-                var temp2 = new Image();
-                temp2.onload = function() { img.src = onlineSrc; temp2 = null; };
-                temp2.onerror = function() { temp2 = null; };
-                temp2.src = onlineSrc;
-                temp = null;
-            };
-            temp.src = localSrc;
-        });
-    }
-                    img.src = onlineSrc;
-                    img.removeAttribute('data-src');
-                    temp2 = null;
-                };
-                temp2.onerror = function() {
-                    img.removeAttribute('data-src');
-                    temp2 = null;
-                };
-                temp2.src = onlineSrc;
-                temp = null;
-            };
-            temp.src = localSrc;
-        });
-    }
-
     function renderHomeGrid(){
         let total=currentFiltered.length, pages=Math.ceil(total/PAGE_SIZE)||1;
         if(currentPage>pages) currentPage=pages;
@@ -641,8 +594,6 @@ layout: false
         const isSpecial = (currentPrefix === '__history__' || currentPrefix === '__bookmarks__' || currentPrefix === '__search_result__' || currentPrefix === '__favorites__');
         items.forEach(v=>{
             let img=v.vod_pic||`https://picsum.photos/seed/${encodeURIComponent(v.vod_name)}/300/400`;
-            let placeholderSrc = `https://picsum.photos/seed/${encodeURIComponent(v.vod_name)}/300/400`;
-            let realPoster = v.vod_pic || '';
             let isFav=isFavorited(v.sourceKey, v.vod_name);
             let deleteBtn = '';
             if(isSpecial){
@@ -673,7 +624,7 @@ layout: false
             html+=`<div class="video-card" data-name="${escAttr(v.vod_name)}" data-sourcekey="${escAttr(v.sourceKey)}" data-sourcename="${escAttr(v.sourceName||'')}" data-pic="${escAttr(img)}" data-epcount="${v.ep_count||0}" data-playable="${v.playable_count||0}" data-episodes='${escAttr(JSON.stringify(v.episodes||[]))}' data-class="${escAttr(v.vod_class||'')}"${restoreData}>
                 ${deleteBtn}
                 <div class="pw-poster-wrap">
-                    <img class="video-poster" src="${placeholderSrc}"${realPoster ? ` data-src="${realPoster}"` : ''} loading="lazy">
+                    <img class="video-poster" src="${img}" loading="lazy" onerror="this.src='https://picsum.photos/seed/default/300/400'">
                     <span class="source-label">📀 ${escHtml(sourceName)}</span>
                 </div>
                 <div class="video-info">
@@ -686,7 +637,6 @@ layout: false
             </div>`;
         });
         homeContent.innerHTML=html || '<div class="empty-state">📺 暂无影片</div>';
-        loadPosterImages();
         let pgHtml='';
         if(pages>1){
             pgHtml+=`<button class="page-go" data-page="1" ${currentPage<=1?'disabled':''}>«</button><button class="page-go" data-page="${currentPage-1}" ${currentPage<=1?'disabled':''}>‹</button>`;
@@ -948,29 +898,13 @@ layout: false
         currentPlayerSourceName = video.sourceName;
         currentPlayerEpisodes = video.episodes || [];
         currentPlayingVideo = video;
-        // 直播源隐藏影签按钮
-        detailBookmarkBtn.style.display = isLive(video) ? 'none' : '';
         
         // 确定要播放的剧集索引和进度
         let restoreEp = (pendingRestoreEpIndex !== null && pendingRestoreEpIndex < currentPlayerEpisodes.length) ? pendingRestoreEpIndex : 0;
         let savedProgress = (pendingRestoreProgress !== null && pendingRestoreProgress > 0) ? pendingRestoreProgress : 0;
         currentPlayingEpIndex = restoreEp;
         
-        detailPoster.src = `https://picsum.photos/seed/${encodeURIComponent(video.vod_name)}/280/420`;
-        if (video.vod_pic) {
-            var localSrc = logoUrl(video.vod_pic);
-            var temp = new Image();
-            temp.onload = function() { detailPoster.src = localSrc; temp = null; };
-            temp.onerror = function() {
-                // 本地失败，保持 picsum，后台静默尝试在线 Logo
-                var temp2 = new Image();
-                temp2.onload = function() { detailPoster.src = video.vod_pic; temp2 = null; };
-                temp2.onerror = function() { temp2 = null; };
-                temp2.src = video.vod_pic;
-                temp = null;
-            };
-            temp.src = localSrc;
-        }
+        detailPoster.src = video.vod_pic || '';
         detailTitle.textContent = video.vod_name;
         detailEpCount.textContent = `${video.ep_count || 0}集`;
         detailPlayable.textContent = `${video.playable_count || 0}可播放`;
@@ -1047,15 +981,13 @@ layout: false
         detailPlayer.play().catch(e=>setStatus('播放失败，请检查链接'));
         setStatus(`▶ ${title}`);
         currentPlayingEpIndex=idx;
-        // 直播源隐藏影签按钮
-        detailBookmarkBtn.style.display = (currentPlayingVideo && isLive(currentPlayingVideo)) ? 'none' : '';
         document.querySelectorAll('.episode-item').forEach(el=>el.classList.remove('current-ep'));
         if(episodesList.children[idx]) episodesList.children[idx].classList.add('current-ep');
         let nextIdx=idx+1;
         while(nextIdx<currentPlayerEpisodes.length && currentPlayerEpisodes[nextIdx].playable===false) nextIdx++;
         currentEpNext = (nextIdx<currentPlayerEpisodes.length) ? {url:currentPlayerEpisodes[nextIdx].url, title:currentPlayerEpisodes[nextIdx].title, idx:nextIdx} : null;
         detailNextEpBtn.style.display = currentEpNext?'inline-block':'none';
-        if(currentPlayingVideo && !isLive(currentPlayingVideo)) updateHistory(currentPlayingVideo, idx, 0);
+        if(currentPlayingVideo) updateHistory(currentPlayingVideo, idx, 0);
     }
     
     function buildSourceSwitchOptions(){
@@ -1106,7 +1038,7 @@ layout: false
         }
     });
     detailBookmarkBtn.addEventListener('click',()=>{
-        if(!currentPlayingVideo || isLive(currentPlayingVideo) || currentPlayingEpIndex===undefined){ setStatus('直播源不支持此功能'); return; }
+        if(!currentPlayingVideo || currentPlayingEpIndex===undefined){ setStatus('请先选择剧集'); return; }
         let prog=Math.floor(detailPlayer.currentTime);
         updateHistory(currentPlayingVideo, currentPlayingEpIndex, prog);
         let note=prompt('影签备注：');
@@ -1114,11 +1046,11 @@ layout: false
         setStatus('影签已添加');
     });
     detailPlayer.addEventListener('ended',()=>{
-        if(currentPlayingVideo && !isLive(currentPlayingVideo)) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
+        if(currentPlayingVideo) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
         if(currentEpNext) detailNextEpBtn.click();
     });
     detailPlayer.addEventListener('pause',()=>{
-        if(currentPlayingVideo && !isLive(currentPlayingVideo) && detailPlayer.currentTime>5) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
+        if(currentPlayingVideo && detailPlayer.currentTime>5) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
     });
     
     backHomeBtn.addEventListener('click',()=>{
@@ -1177,7 +1109,7 @@ layout: false
     searchResultBtn.addEventListener('click',()=>{ renderSpecialView('__search_result__'); });
     
     window.addEventListener('beforeunload',()=>{
-        if(currentPlayingVideo && !isLive(currentPlayingVideo) && detailPlayer.currentTime>5) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
+        if(currentPlayingVideo && detailPlayer.currentTime>5) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
     });
     
     loadIndexData();
