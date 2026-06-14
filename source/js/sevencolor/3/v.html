@@ -587,22 +587,49 @@ layout: false
         sourceSelect.value = '';
     }
     
-    // 懒加载封面图：先用 picsum 占位，有实际封面再替换
+    // 直播 Logo：优先使用本地图片，失败则回退到在线地址
+    function logoUrl(url) {
+        if (!url || !url.startsWith('http')) return url || '';
+        var filename = url.split('/').pop();
+        return 'data/TV-LOGO/' + filename;
+    }
+    
+    // 懒加载封面图：先用 picsum 占位，然后尝试本地 Logo，最后后台静默加载在线 Logo
     function loadPosterImages() {
         document.querySelectorAll('.video-poster[data-src]').forEach(function(img) {
-            var realSrc = img.getAttribute('data-src');
-            if (!realSrc) return;
+            var onlineSrc = img.getAttribute('data-src');
+            if (!onlineSrc) return;
+            var localSrc = logoUrl(onlineSrc);
             var temp = new Image();
             temp.onload = function() {
-                img.src = realSrc;
+                img.src = localSrc;
                 img.removeAttribute('data-src');
                 temp = null;
             };
             temp.onerror = function() {
+                // 本地失败，保持 picsum 占位，后台静默尝试在线 Logo
                 img.removeAttribute('data-src');
+                var temp2 = new Image();
+                temp2.onload = function() { img.src = onlineSrc; temp2 = null; };
+                temp2.onerror = function() { temp2 = null; };
+                temp2.src = onlineSrc;
                 temp = null;
             };
-            temp.src = realSrc;
+            temp.src = localSrc;
+        });
+    }
+                    img.src = onlineSrc;
+                    img.removeAttribute('data-src');
+                    temp2 = null;
+                };
+                temp2.onerror = function() {
+                    img.removeAttribute('data-src');
+                    temp2 = null;
+                };
+                temp2.src = onlineSrc;
+                temp = null;
+            };
+            temp.src = localSrc;
         });
     }
 
@@ -931,10 +958,18 @@ layout: false
         
         detailPoster.src = `https://picsum.photos/seed/${encodeURIComponent(video.vod_name)}/280/420`;
         if (video.vod_pic) {
+            var localSrc = logoUrl(video.vod_pic);
             var temp = new Image();
-            temp.onload = function() { detailPoster.src = video.vod_pic; temp = null; };
-            temp.onerror = function() { temp = null; };
-            temp.src = video.vod_pic;
+            temp.onload = function() { detailPoster.src = localSrc; temp = null; };
+            temp.onerror = function() {
+                // 本地失败，保持 picsum，后台静默尝试在线 Logo
+                var temp2 = new Image();
+                temp2.onload = function() { detailPoster.src = video.vod_pic; temp2 = null; };
+                temp2.onerror = function() { temp2 = null; };
+                temp2.src = video.vod_pic;
+                temp = null;
+            };
+            temp.src = localSrc;
         }
         detailTitle.textContent = video.vod_name;
         detailEpCount.textContent = `${video.ep_count || 0}集`;
