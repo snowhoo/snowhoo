@@ -70,9 +70,9 @@ layout: false
         }
         .delete-item-btn { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: none; border-radius: 30px; width: 28px; height: 28px; font-size: 16px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; transition: 0.1s; }
         .delete-item-btn:hover { background: #e74c3c; }
-        .source-label { position: absolute; top: 6px; right: 6px; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-size: 10px; background: transparent; border: none; z-index: 2; max-width: calc(100% - 50px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 36px; flex-wrap: wrap; }
-        .pagination button { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 6px 14px; border-radius: 40px; cursor: pointer; font-weight: 500; transition: all 0.1s; }
+        .source-label { position: absolute; top: 6px; right: 6px; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-size: 10px; background: transparent; border: none; z-index: 2; max-width: calc(100% - 30px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+        .pagination { display: flex; justify-content: center; gap: 6px; margin-top: 18px; flex-wrap: nowrap; }
+        .pagination button { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 6px 10px; border-radius: 40px; cursor: pointer; font-weight: 500; transition: all 0.1s; }
         .pagination button.active { background: var(--accent); border-color: var(--accent); color: white; }
         .pagination button:hover:not(:disabled) { background: var(--accent-hover); color: white; }
         .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -173,7 +173,7 @@ layout: false
 
     <!-- 底部版权信息 -->
     <div class="copyright">
-        小红播霸 by <a href="https://snowhoo.net" target="_blank" rel="noopener noreferrer">SnowHoo.NET</a> 小红故事 · <span id="currentYear"></span>
+        小红播霸 by <a href="https://snowhoo.net" target="_blank" rel="noopener">SnowHoo.NET</a> 小红故事 · <span id="currentYear"></span>
     </div>
 </div>
 
