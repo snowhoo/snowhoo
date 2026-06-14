@@ -565,31 +565,23 @@ layout: false
         return bp + 'data/TV-LOGO/' + filename;
     }
     
-    // 封面图：先显示 picsum 占位，后台静默加载本地 Logo → 在线 Logo
+    // 封面图：picsum 占位，后台先试本地 Logo，失败再试在线
     function loadPosterImages() {
-        document.querySelectorAll('.video-poster[data-local],.video-poster[data-online]').forEach(function(img) {
-            var localSrc = img.getAttribute('data-local');
-            var onlineSrc = img.getAttribute('data-online') || '';
-            img.removeAttribute('data-local');
-            img.removeAttribute('data-online');
-            if (localSrc) {
-                var t = new Image();
-                t.onload = function() { img.src = localSrc; t = null; };
-                t.onerror = function() {
-                    if (!onlineSrc) { t = null; return; }
-                    var t2 = new Image();
-                    t2.onload = function() { img.src = onlineSrc; t2 = null; };
-                    t2.onerror = function() { t2 = null; };
-                    t2.src = onlineSrc;
-                    t = null;
-                };
-                t.src = localSrc;
-            } else if (onlineSrc) {
-                var t = new Image();
-                t.onload = function() { img.src = onlineSrc; t = null; };
-                t.onerror = function() { t = null; };
-                t.src = onlineSrc;
-            }
+        document.querySelectorAll('.video-poster[data-src]').forEach(function(img) {
+            var onlineSrc = img.getAttribute('data-src');
+            img.removeAttribute('data-src');
+            var localSrc = logoUrl(onlineSrc);
+            var t = new Image();
+            t.onload = function() { img.src = localSrc; t = null; };
+            t.onerror = function() {
+                // 本地失败，尝试在线
+                var t2 = new Image();
+                t2.onload = function() { img.src = onlineSrc; t2 = null; };
+                t2.onerror = function() { t2 = null; };
+                t2.src = onlineSrc;
+                t = null;
+            };
+            t.src = localSrc;
         });
     }
 
@@ -601,7 +593,6 @@ layout: false
         const isSpecial = (currentPrefix === '__history__' || currentPrefix === '__bookmarks__' || currentPrefix === '__search_result__' || currentPrefix === '__favorites__');
         items.forEach(v=>{
             let onlinePic = v.vod_pic || '';
-            let localPic = onlinePic ? logoUrl(onlinePic) : '';
             let placeholderSrc = `https://picsum.photos/seed/${encodeURIComponent(v.vod_name)}/300/400`;
             let isFav=isFavorited(v.sourceKey, v.vod_name);
             let deleteBtn = '';
@@ -633,7 +624,7 @@ layout: false
             html+=`<div class="video-card" data-name="${escAttr(v.vod_name)}" data-sourcekey="${escAttr(v.sourceKey)}" data-sourcename="${escAttr(v.sourceName||'')}" data-pic="${escAttr(onlinePic || placeholderSrc)}" data-epcount="${v.ep_count||0}" data-playable="${v.playable_count||0}" data-episodes='${escAttr(JSON.stringify(v.episodes||[]))}' data-class="${escAttr(v.vod_class||'')}"${restoreData}>
                 ${deleteBtn}
                 <div class="pw-poster-wrap">
-                    <img class="video-poster" src="${placeholderSrc}"${localPic ? ` data-local="${escAttr(localPic)}"` : ''}${onlinePic ? ` data-online="${escAttr(onlinePic)}"` : ''} loading="lazy">
+                    <img class="video-poster" src="${placeholderSrc}"${onlinePic ? ` data-src="${escAttr(onlinePic)}"` : ''} loading="lazy">
                     <span class="source-label">📀 ${escHtml(sourceName)}</span>
                 </div>
                 <div class="video-info">
