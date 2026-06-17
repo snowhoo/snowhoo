@@ -3,6 +3,7 @@ chcp 65001 >nul
 set PYTHONIOENCODING=utf-8
 echo ============================================
 echo  洞见 - 文章数据更新脚本
+echo  参考 yedu 模式，使用 Playwright 提取音频
 echo ============================================
 
 set SCRIPTS_DIR=%~dp0
@@ -14,25 +15,23 @@ echo.
 
 cd /d "%SCRIPTS_DIR%"
 
-echo [1/1] 正在爬取增量文章，输出 dongjian.js ...
+echo [1/2] 正在增量爬取（含音频提取）...
 py -3 dongjian_scraper.py --incremental --outdir "%OUTPUT_DIR%"
 
 echo.
-echo [2/2] 检查是否有更新，自动提交推送 ...
+echo [2/2] 提交推送 ...
 cd /d "D:\hexo"
 git add -A source/js/sevencolor/1/
 git diff --cached --quiet
 if %errorlevel% equ 0 (
   echo 无数据变更，跳过提交
 ) else (
-  git commit -m "dongjian: auto update data (%date%)"
-  echo 正在推送到 GitHub ...
+  git commit -m "dongjian: auto update (%date%)"
+  echo 正在推送到 GitHub...
   git push
-  echo ✓ 已推送更新到 GitHub
+  echo ✓ 已推送
 )
 
 echo.
-echo ============ 完成！============
-echo 输出文件: %OUTPUT_DIR%\dongjian.js
-echo 页面文件: %OUTPUT_DIR%\dongjian.html（保持不变）
+echo ============ 完成 ============
 echo.

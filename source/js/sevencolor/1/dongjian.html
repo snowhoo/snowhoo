@@ -3,11 +3,9 @@ layout: false
 ---
 <style>
 #dongjian-app *, #dongjian-app *::before, #dongjian-app *::after { margin: 0; padding: 0; box-sizing: border-box; }
-#dongjian-app {
-  /*min-height: 100vh;*/
-}
+#dongjian-app { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 #dongjian-app .header {
-  /*max-width: 960px; */margin: 0 auto; padding: 0px 0px 10px;
+  margin: 0 auto; padding: 0px 0px 10px;
   display: flex; justify-content: space-between; align-items: baseline;
 }
 #dongjian-app .header h1 { font-size: 13px; font-weight: 700; color: inherit; }
@@ -33,35 +31,75 @@ layout: false
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 #dongjian-app .article-card .info .card-date { font-size: 12px; color: var(--text-secondary, #aaa); margin-top: 2px; }
+
+/* 音频标记 */
+#dongjian-app .article-card .audio-badge {
+  position: absolute; top: 8px; right: 8px; z-index: 2;
+  background: rgba(0,0,0,0.6); color: #fff; font-size: 11px;
+  padding: 3px 8px; border-radius: 10px; display: none; align-items: center; gap: 4px;
+  backdrop-filter: blur(4px);
+}
+#dongjian-app .article-card .audio-badge.show { display: flex; }
+#dongjian-app .article-card .audio-badge::before { content: "🎧"; font-size: 10px; }
+
+/* Lightbox */
 #dongjian-app .lightbox {
   display: none; position: fixed; z-index: 9999; inset: 0; background: rgba(0,0,0,0.92);
   flex-direction: column; padding: 0;
 }
 #dongjian-app .lightbox.show { display: flex; }
+#dongjian-app .lightbox .lb-header {
+  position: relative; z-index: 10;
+}
 #dongjian-app .lightbox .lb-close {
   position: absolute; top: 16px; right: 20px; color: rgba(255,255,255,0.6);
-  font-size: 28px; cursor: pointer; z-index: 10; line-height: 1; transition: color 0.2s;
+  font-size: 28px; cursor: pointer; line-height: 1; transition: color 0.2s;
 }
 #dongjian-app .lightbox .lb-close:hover { color: #fff; }
 #dongjian-app .lightbox .lb-image-area {
-  flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; min-height: 0;
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: center; padding: 20px 20px 0; max-height: 45vh;
 }
 #dongjian-app .lightbox .lb-image-area img {
-  max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; box-shadow: 0 4px 40px rgba(0,0,0,0.4);
+  max-width: 100%; max-height: 40vh; object-fit: contain; border-radius: 6px; box-shadow: 0 4px 40px rgba(0,0,0,0.4);
 }
 #dongjian-app .lightbox .lb-detail {
-  background: rgba(30,30,50,0.95); padding: 20px 24px 28px;
-  max-height: 35vh; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.08);
+  background: rgba(30,30,50,0.95); padding: 20px 24px 20px;
+  overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.08); flex: 1;
 }
-#dongjian-app .lightbox .lb-detail h2 { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 10px; line-height: 1.5; }
+#dongjian-app .lightbox .lb-detail h2 { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 6px; line-height: 1.5; }
 #dongjian-app .lightbox .lb-detail .lb-date { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 12px; }
 #dongjian-app .lightbox .lb-detail .lb-desc { font-size: 15px; color: rgba(255,255,255,0.8); line-height: 1.8; white-space: pre-wrap; }
-#dongjian-app .lightbox .lb-link-wrap { margin-top: 14px; }
-#dongjian-app .lightbox .lb-link-wrap a {
-  display: inline-block; padding: 8px 20px; background: rgba(255,255,255,0.12);
-  color: #fff; border-radius: 6px; text-decoration: none; font-size: 13px; transition: background 0.2s;
+
+/* 音频播放器 */
+#dongjian-app .lightbox .lb-audio-wrap {
+  margin: 0 -24px 14px; padding: 14px 24px; background: rgba(255,255,255,0.06);
+  border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06);
 }
-#dongjian-app .lightbox .lb-link-wrap a:hover { background: rgba(255,255,255,0.25); }
+#dongjian-app .lightbox .lb-audio-wrap audio {
+  width: 100%; height: 40px; display: block;
+}
+#dongjian-app .lightbox .lb-audio-wrap .lb-audio-label {
+  font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+}
+
+/* 阅读原文 & 查看详情按钮 */
+#dongjian-app .lightbox .lb-actions {
+  display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;
+}
+#dongjian-app .lightbox .lb-actions a {
+  display: inline-flex; align-items: center; gap: 4px; padding: 8px 16px;
+  border-radius: 6px; text-decoration: none; font-size: 13px; transition: all 0.2s;
+}
+#dongjian-app .lightbox .lb-actions .lb-link-original {
+  background: rgba(255,255,255,0.12); color: #fff;
+}
+#dongjian-app .lightbox .lb-actions .lb-link-original:hover { background: rgba(255,255,255,0.25); }
+#dongjian-app .lightbox .lb-actions .lb-link-jtk {
+  background: transparent; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.15);
+}
+#dongjian-app .lightbox .lb-actions .lb-link-jtk:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+
+/* 分页 */
 #dongjian-app .pagination {
   display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; padding: 16px 0;
 }
@@ -85,16 +123,25 @@ layout: false
 <div id="dongjian-app">
 
 <div class="lightbox" id="lightbox">
-  <span class="lb-close" id="lbCloseBtn">✕</span>
+  <div class="lb-header">
+    <span class="lb-close" id="lbCloseBtn">✕</span>
+  </div>
   <div class="lb-image-area">
     <img id="lightboxImg" src="" alt="">
   </div>
   <div class="lb-detail">
+    <!-- 音频播放器 -->
+    <div class="lb-audio-wrap" id="lbAudioWrap" style="display:none;">
+      <div class="lb-audio-label">🎧 音频</div>
+      <audio id="lbAudioPlayer" controls preload="none"></audio>
+    </div>
+
     <h2 id="lbTitle"></h2>
     <div class="lb-date" id="lbDate"></div>
     <div class="lb-desc" id="lbDesc"></div>
-    <div class="lb-link-wrap" id="lbLinkWrap" style="display:none;">
-      <a id="lbArticleLink" href="" target="_blank" rel="noopener">阅读原文 →</a>
+    
+    <div class="lb-actions" id="lbActions">
+      <a id="lbLinkJtk" class="lb-link-jtk" target="_blank" rel="noopener">📄 查看原文</a>
     </div>
   </div>
 </div>
@@ -137,7 +184,8 @@ var dom = {
   headerStats: $('headerStats'),
   lightbox: $('lightbox'), lightboxImg: $('lightboxImg'),
   lbTitle: $('lbTitle'), lbDate: $('lbDate'), lbDesc: $('lbDesc'),
-  lbLinkWrap: $('lbLinkWrap'), lbArticleLink: $('lbArticleLink'),
+  lbLinkJtk: $('lbLinkJtk'),
+  lbAudioWrap: $('lbAudioWrap'), lbAudioPlayer: $('lbAudioPlayer'),
 };
 
 function closeLightbox() {
@@ -146,17 +194,18 @@ function closeLightbox() {
   dom.lbTitle.textContent = '';
   dom.lbDate.textContent = '';
   dom.lbDesc.textContent = '';
-  dom.lbLinkWrap.style.display = 'none';
-  dom.lbArticleLink.href = '';
+  dom.lbLinkJtk.href = '';
+  dom.lbAudioWrap.style.display = 'none';
+  dom.lbAudioPlayer.pause();
+  dom.lbAudioPlayer.src = '';
   document.body.style.overflow = '';
 }
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeLightbox();
 });
 
-// 事件委托：关闭 lightbox
 dom.lightbox.addEventListener('click', function(e) {
-  if (e.target === dom.lightbox || e.target.id === 'lbCloseBtn' || e.target.classList.contains('lb-image-area')) {
+  if (e.target === dom.lightbox || e.target.id === 'lbCloseBtn') {
     closeLightbox();
   }
 });
@@ -204,11 +253,13 @@ function renderPage(page) {
     var img = resolvePath(art.image_url || '');
     var date = fmtDate(art.create_time);
     var idx = articles.indexOf(art);
+    var hasAudio = art.audio_url ? 'show' : '';
 
     html +=
       '<div class="article-card" data-idx="' + idx + '">' +
         '<div class="cover-wrap">' +
           '<div class="img-placeholder">加载中...</div>' +
+          '<div class="audio-badge ' + hasAudio + '">音频</div>' +
           '<img src="' + esc(img) + '" alt="' + title + '" loading="lazy"' +
                ' onload="this.parentNode.querySelector(\'.img-placeholder\').style.display=\'none\'"' +
                ' onerror="this.style.display=\'none\'; this.parentNode.querySelector(\'.img-placeholder\').textContent=\'\uD83D\uDDBC\uFE0F\'">' +
@@ -234,13 +285,18 @@ dom.gallery.addEventListener('click', function(e) {
   dom.lbTitle.textContent = art.title || '';
   dom.lbDate.textContent = fmtDate(art.create_time);
   dom.lbDesc.textContent = (art.description || '').replace(/\\n/g, '\n');
-  
-  if (art.url) {
-    dom.lbLinkWrap.style.display = '';
-    dom.lbArticleLink.href = art.url;
+
+  // 音频
+  if (art.audio_url) {
+    dom.lbAudioWrap.style.display = '';
+    dom.lbAudioPlayer.src = art.audio_url;
   } else {
-    dom.lbLinkWrap.style.display = 'none';
+    dom.lbAudioWrap.style.display = 'none';
+    dom.lbAudioPlayer.src = '';
   }
+
+  // 查看原文链接（跳转到 jintiankansha 的文章详情页）
+  dom.lbLinkJtk.href = art.url || '';
   
   dom.lightbox.classList.add('show');
   document.body.style.overflow = 'hidden';
@@ -297,7 +353,6 @@ function loadData() {
     })
     .then(function(text) {
       try { 
-        // dongjian.js 格式: var DONGJIAN_DATA = [...];
         var match = text.match(/var DONGJIAN_DATA\s*=\s*(\[.*?\])\s*;/);
         if (!match) throw new Error('dongjian.js 格式错误');
         eval('window.__DONGJIAN_DATA = ' + match[1] + ';');
