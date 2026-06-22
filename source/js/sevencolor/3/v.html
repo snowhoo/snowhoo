@@ -113,7 +113,6 @@ layout: false
             <button id="stopSearchBtn" style="display:none">⏹️ 停止</button>
             <button id="themeToggleBtn" class="secondary-btn" title="切换主题"></button>
         </div>
-        <div class="preload-bar" id="preloadBar" style="display:none"><div class="preload-fill" id="preloadFill"></div></div>
         <div class="status-bar">
             <div id="catBar" class="cat-filters"></div>
             <div class="action-buttons">
@@ -216,8 +215,6 @@ layout: false
     const catBar = document.getElementById('catBar');
     const homeContent = document.getElementById('homeContent');
     const homePagination = document.getElementById('homePagination');
-    const preloadBar = document.getElementById('preloadBar');
-    const preloadFill = document.getElementById('preloadFill');
     const detailPlayer = document.getElementById('detailPlayer');
     const detailPoster = document.getElementById('detailPoster');
     const detailTitle = document.getElementById('detailTitle');
@@ -309,7 +306,7 @@ layout: false
     let CACHE_DB = null, CACHE_READY = false;
     function initCacheDB(cb){
         if(CACHE_READY && CACHE_DB){ cb(CACHE_DB); return; }
-        let req = indexedDB.open('tvbox_cache', 1);
+        let req = indexedDB.open('snowhoonetbbcache', 1);
         req.onupgradeneeded = e => { e.target.result.createObjectStore('files', { keyPath: 'file' }); };
         req.onsuccess = e => { CACHE_DB = e.target.result; CACHE_READY = true; cb(CACHE_DB); };
         req.onerror = () => { CACHE_DB=null; CACHE_READY=true; cb(null); };
@@ -335,7 +332,6 @@ layout: false
                 if(cached){
                     if(!loadedSources[file]) loadedSources[file] = cached;
                     setTimeout(()=> cb(cached), 0);
-                    loadFresh(file, null);
                     return;
                 }
                 loadFresh(file, cb, to);
@@ -357,20 +353,6 @@ layout: false
         let bp = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '');
         s.src = bp + 'data/' + file;
         document.head.appendChild(s);
-    }
-    
-    function startPreload(){
-        if(!sourceIndex.length) return;
-        let files=new Set();
-        sourceIndex.forEach(s=>{ let pc=s.page_count||1, base=(sourceMeta[s.prefix]?.fileBase)||s.prefix;
-            for(let i=1;i<=pc;i++) files.add(base+'-'+String(i).padStart(2,'0')+'.js');
-        });
-        let arr=Array.from(files);
-        let total=arr.length, done=0;
-        preloadBar.style.display='block';
-        arr.forEach(f=>{
-            loadFromCache(f, cached=>{ if(cached && !loadedSources[f]) loadedSources[f]=cached; done++; preloadFill.style.width = Math.floor(done/total*100)+'%'; if(done===total) setTimeout(()=>{ preloadBar.style.display='none'; }, 400); });
-        });
     }
     
     // 搜索
@@ -1106,7 +1088,6 @@ layout: false
                 sourceSelect.appendChild(opt);
                 sourceMeta[s.prefix]={ page_count:s.page_count||1, name:s.name, fileBase:s.file.replace(/\.js$/,'').replace(/-\d+$/,''), prefix:s.prefix };
             });
-            startPreload();
             // 添加统计信息
             let totalAddress = 0, playableTotal = 0;
             sourceIndex.forEach(s => {

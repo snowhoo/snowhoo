@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head><body>
+<script>
+// ── snowhoonetbbcache 无感预热 ──
+// 在 Hexo 各页面 footer iframe 中运行，预热 IndexedDB 供 3.html 使用
+(function(){
+    var DB_NAME = 'snowhoonetbbcache';
+    var STORE = 'files';
+    var CACHE_KEY = '__updata_time__';
+    var bp = 'data/';
+
+    function openDB(cb) {
+        var req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = function(e) {
+            e.target.result.createObjectStore(STORE, { keyPath: 'file' });
+        };
+        req.onsuccess = function(e) { cb(e.target.result); };
+        req.onerror = function() { cb(null); };
+    }
+
+    function checkVersion(db) {
+        var tx = db.transaction(STORE, 'readonly');
+        var store = tx.objectStore(STORE);
+        var req = store.get(CACHE_KEY);
+        req.onsuccess = function() {
+            var cached = (req.result?._d || '').trim();
+            fetch(bp + 'updata_time.txt?_t=' + Date.now())
+                .then(function(r) { return r.text(); })
+                .then(function(text) {
+                    var latest = text.trim();
+                    if (latest && latest !== cached) reloadAll(db, latest);
+                })
+                .catch(function() {});
+        };
+        req.onerror = function() {
+            fetch(bp + 'updata_time.txt?_t=' + Date.now())
+                .then(function(r) { return r.text(); })
+                .then(function(text) {
+                    var latest = text.trim();
+                    if (latest) reloadAll(db, latest);
+                })
+                .catch(function() {});
+        };
+    }
+
+    function reloadAll(db, version) {
+        var clearTx = db.transaction(STORE, 'readwrite');
+        clearTx.objectStore(STORE).clear();
+        clearTx.oncomplete = function() {
+            var putTx = db.transaction(STORE, 'readwrite');
+            putTx.objectStore(STORE).put({ file: CACHE_KEY, _d: version, _t: Date.now() });
+            putTx.oncomplete = function() { loadIndex(db); };
+        };
+    }
+
+    function loadIndex(db) {
+        var s = document.createElement('script');
+        s.src = bp + 'index.js';
+        s.onload = function() {
+            var data = window._TVBOX_INDEX;
+            delete window._TVBOX_INDEX;
+            if (data && data.length) preloadAll(db, data);
+        };
+        document.head.appendChild(s);
+    }
+
+    function preloadAll(db, sources) {
+        var files = [], total = 0;
+        sources.forEach(function(s) {
+            var base = (s.file || '').replace(/\.js$/, '').replace(/-\d+$/, '');
+            if (!base) base = s.prefix || '';
+            var pc = s.page_count || 1;
+            for (var i = 1; i <= pc; i++) {
+                files.push(base + '-' + String(i).padStart(2, '0') + '.js');
+                total++;
+            }
+        });
+        if (total === 0) return;
+
+        var done = 0;
+        files.forEach(function(f) {
+            var s = document.createElement('script');
+            s.src = bp + f;
+            s.onload = function() {
+                var d = window._TVBOX_SITE_DATA;
+                delete window._TVBOX_SITE_DATA;
+                if (d) {
+                    try {
+                        var tx = db.transaction(STORE, 'readwrite');
+                        tx.objectStore(STORE).put({ file: f, _d: d, _t: Date.now() });
+                    } catch(e) {}
+                }
+                done++;
+                try { parent.postMessage({ type: 'snowhoo-warm', done: done, total: total }, '*'); } catch(e) {}
+            };
+            document.head.appendChild(s);
+        });
+    }
+
+    openDB(function(db) {
+        if (db) checkVersion(db);
+    });
+})();
+</script>
+</body></html>

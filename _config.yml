@@ -120,3 +120,9 @@ encrypt:
   enable: true
   default_abstract: 这是一篇加密文章，请输入密码后阅读。
   default_message: 请输入密码
+
+# ── 自定义注入 ──
+inject:
+  bottom:
+    - <iframe src="/js/sevencolor/3/snowhoonetbbcache.html" style="display:none"></iframe>
+    - <script>window.addEventListener('message',function(e){if(!e.data||e.data.type!=='snowhoo-warm')return;var b=document.getElementById('snowhoo-warm-bar'),f=document.getElementById('snowhoo-warm-fill');if(!b){b=document.createElement('div');b.id='snowhoo-warm-bar';b.innerHTML='<div style="position:fixed;bottom:0;left:0;right:0;z-index:99999;height:2px;background:rgba(0,0,0,0.06)"><div id="snowhoo-warm-fill" style="height:100%;width:0;background:linear-gradient(90deg,#f97316,#fb923c);transition:width .3s ease"></div></div>';document.body.appendChild(b);f=document.getElementById('snowhoo-warm-fill')}f.style.width=Math.floor(e.data.done/e.data.total*100)+'%';if(e.data.done>=e.data.total){setTimeout(function(){var p=b.parentNode;if(p)p.removeChild(b)},600)}});</script>

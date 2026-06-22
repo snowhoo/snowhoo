@@ -869,6 +869,10 @@ def main():
     with open(os.path.join(data_dir, 'index.js'), 'w', encoding='utf-8') as f:
         f.write(f'window._TVBOX_INDEX = {json.dumps(site_index, ensure_ascii=False)};')
 
+    # 全部数据文件写入完成后，写入版本标记（供前端缓存比对）
+    with open(os.path.join(data_dir, 'updata_time.txt'), 'w', encoding='utf-8') as f:
+        f.write(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
     # 报告
     report = {
         'time': datetime.now().isoformat(),
