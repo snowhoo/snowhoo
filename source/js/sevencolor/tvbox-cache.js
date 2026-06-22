@@ -190,13 +190,16 @@
 
     // 第二步：用 HEAD 请求逐文件比对 Last-Modified / Content-Length
     var checkDone = 0, needRefresh = [];
+    function tryProcessRefresh() {
+        if (checkDone >= fileList.length) processRefresh();
+    }
     fileList.forEach(function(f) {
-      if (_checkedSession[f]) { checkDone++; bump(); return; }
+      if (_checkedSession[f]) { checkDone++; bump(); tryProcessRefresh(); return; }
       fetchHeadMeta(_basePath + 'data/' + f, function(srvMeta) {
-        if (!srvMeta) { checkDone++; bump(); return; }
+        if (!srvMeta) { checkDone++; bump(); tryProcessRefresh(); return; }
         // 从缓存中获取旧元信息
         (function(localFile, serverMeta) {
-          if (!db) { needRefresh.push({ file: localFile, meta: serverMeta }); checkDone++; bump(); return; }
+          if (!db) { needRefresh.push({ file: localFile, meta: serverMeta }); checkDone++; bump(); tryProcessRefresh(); return; }
           try {
             var tx = db.transaction(STORE, 'readonly');
             var store = tx.objectStore(STORE);
@@ -210,13 +213,15 @@
               if (changed) needRefresh.push({ file: localFile, meta: serverMeta });
               checkDone++;
               bump();
-              if (checkDone >= fileList.length) processRefresh();
+              tryProcessRefresh();
             };
-            req.onerror = function() { needRefresh.push({ file: localFile, meta: serverMeta }); checkDone++; bump(); if (checkDone >= fileList.length) processRefresh(); };
-          } catch(e) { needRefresh.push({ file: localFile, meta: serverMeta }); checkDone++; bump(); if (checkDone >= fileList.length) processRefresh(); }
+            req.onerror = function() { needRefresh.push({ file: localFile, meta: serverMeta }); checkDone++; bump(); tryProcessRefresh(); };
+          } catch(e) { needRefresh.push({ file: localFile, meta: serverMeta }); checkDone++; bump(); tryProcessRefresh(); }
         })(f, srvMeta);
       });
     });
+    // 空列表兜底
+    if (fileList.length === 0) finish();
 
     function processRefresh() {
       if (needRefresh.length === 0) { finish(); return; }

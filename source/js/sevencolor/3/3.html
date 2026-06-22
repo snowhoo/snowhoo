@@ -429,7 +429,20 @@ layout: false
             if(ver!==searchVersion) return;
             while(idx<tasks.length && running<CONCURRENT){
                 let task=tasks[idx++];
-                if(loadedSources[task.fname]){
+                // 有 TVCache 时始终走 loadData（共享 HEAD 检测，保证搜索新鲜度）
+                if(typeof TVCache !== 'undefined'){
+                    running++;
+                    loadData(task.fname, function(data, refreshed){
+                        if(refreshed){
+                            if(data) searchOne(data, task.fname);
+                            flushRender();
+                            return;
+                        }
+                        if(data) loadedSources[task.fname]=data;
+                        if(data) searchOne(data,task.fname);
+                        doneCount++; running--; flushRender(); loadNext();
+                    }, 5000);
+                } else if(loadedSources[task.fname]){
                     searchOne(loadedSources[task.fname],task.fname);
                     doneCount++; flushRender(); loadNext();
                 } else {
@@ -1159,17 +1172,8 @@ layout: false
                 sourceSelect.appendChild(opt);
                 sourceMeta[s.prefix]={ page_count:s.page_count||1, name:s.name, fileBase:s.file.replace(/\.js$/,'').replace(/-\d+$/,''), prefix:s.prefix };
             });
-            // 预热缓存
+            // 预热缓存（从 IndexedDB 加载到内存 + HEAD 检测更新）
             startPreload();
-            // 同时触发 TVCache 预热（若可用）
-            if (typeof TVCache !== 'undefined') {
-                let warmFiles = [];
-                sourceIndex.forEach(s => {
-                    let pc = s.page_count||1, base = (sourceMeta[s.prefix]?.fileBase)||s.prefix;
-                    for(let i=1;i<=pc;i++) warmFiles.push(base+'-'+String(i).padStart(2,'0')+'.js');
-                });
-                TVCache.warm(warmFiles);
-            }
             // 底部统计
             let totalAddress = 0, playableTotal = 0;
             sourceIndex.forEach(s => { totalAddress += s.total || 0; playableTotal += s.playable || 0; });
