@@ -269,7 +269,7 @@ function buildRange(cur, t) {
 
 // 动态加载 data.js
 function loadData() {
-  fetch(BASE + 'data.js?_=' + Date.now())
+  fetch(BASE + 'zjsz_data/data.js?_=' + Date.now())
     .then(function(r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.text();

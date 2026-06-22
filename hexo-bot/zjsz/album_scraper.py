@@ -49,7 +49,8 @@ API_HEADERS = {
 }
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
-IMG_DIR_NAME = "zjsz_images"  # 图片存放的子目录名 (相对于 outdir)
+DATA_SUBDIR = "zjsz_data"  # 输出子目录（data.js、zjsz_images 都放在此目录下）
+IMG_DIR_NAME = "zjsz_images"  # 图片存放的子目录名 (相对于 DATA_SUBDIR)
 
 
 def data_js_path(outdir=None):
@@ -99,9 +100,9 @@ def img_dir_path(outdir=None):
 
 def _resolve_dir(outdir=None):
     if outdir:
-        d = os.path.abspath(outdir)
+        d = os.path.join(os.path.abspath(outdir), DATA_SUBDIR)
     else:
-        d = DATA_DIR
+        d = os.path.join(DATA_DIR, DATA_SUBDIR)
     os.makedirs(d, exist_ok=True)
     return d
 
@@ -129,7 +130,7 @@ def download_image(url: str, msgid: str, outdir: str) -> str:
         ext = "." + m.group(1)
     local_name = f"{msgid}{ext}"
     local_path = os.path.join(img_dir, local_name)
-    relative_path = f"./{IMG_DIR_NAME}/{local_name}"
+    relative_path = f"./{DATA_SUBDIR}/{IMG_DIR_NAME}/{local_name}"
 
     if os.path.exists(local_path):
         return relative_path  # 已存在，跳过

@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 chcp 65001 >nul
 set PYTHONIOENCODING=utf-8
 echo ============================================
@@ -33,6 +33,7 @@ if %errorlevel% equ 0 (
 
 echo.
 echo ============ 完成！============
-echo 输出文件: %OUTPUT_DIR%\data.js
+echo 输出目录: %OUTPUT_DIR%\zjsz_data\
+echo 数据文件: %OUTPUT_DIR%\zjsz_data\data.js
 echo 页面文件: %OUTPUT_DIR%\zjsz.html（保持不变）
 echo.

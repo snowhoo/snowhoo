@@ -14,8 +14,8 @@ const { execSync } = require('child_process');
 // ============ 配置 ============
 const ALBUM_URL = 'https://www.peopleapp.com/audiotopic/21622-10000002141';
 const OUTPUT_DIR = 'D:\\hexo\\source\\js\\sevencolor\\1';
-const DATA_DIR = path.join(OUTPUT_DIR, 'data');
-const IMAGES_DIR = path.join(OUTPUT_DIR, 'images');
+const DATA_DIR = path.join(OUTPUT_DIR, 'yedu_data');
+const IMAGES_DIR = path.join(OUTPUT_DIR, 'yedu_data', 'images');
 const HEXO_DIR = 'D:\\hexo';
 const sharp = require('sharp');
 
@@ -44,7 +44,7 @@ async function downloadImage(imgUrl, pubDate) {
   // 统一输出为 webp 格式，高压缩比
   const fileName = genImageName(pubDate, '.webp');
   const localPath = path.join(IMAGES_DIR, fileName);
-  const relativePath = `./images/${fileName}`;
+  const relativePath = `./yedu_data/images/${fileName}`;
 
   if (fs.existsSync(localPath)) {
     log(`  [跳过] 图片已存在: ${relativePath}`);
