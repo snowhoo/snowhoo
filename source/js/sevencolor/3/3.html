@@ -274,14 +274,8 @@ layout: false
         return null;
     }
     
-    // ---------- 缓存管理（可对接 TVCache） ----------
+    // IndexedDB 缓存
     let CACHE_DB = null, CACHE_READY = false;
-    let _checkedSession = new Set();
-    function fetchHeadMeta(url, cb){
-        fetch(url, { method: 'HEAD', cache: 'no-cache' })
-            .then(r => cb({ lm: r.headers.get('Last-Modified'), cl: r.headers.get('Content-Length') }))
-            .catch(() => cb(null));
-    }
     function initCacheDB(cb){
         if(CACHE_READY && CACHE_DB){ cb(CACHE_DB); return; }
         let req = indexedDB.open('tvbox_cache', 1);
@@ -292,24 +286,32 @@ layout: false
     function loadFromCache(file, cb){
         initCacheDB(db=>{ if(!db){ cb(null); return; }
             let tx = db.transaction('files','readonly'), req = tx.objectStore('files').get(file);
-            req.onsuccess = ()=> {
-                let entry = req.result;
-                if(entry) cb(entry._d, { _t: entry._t, _lm: entry._lm, _cl: entry._cl });
-                else cb(null, null);
-            };
-            req.onerror = ()=> cb(null, null);
+            req.onsuccess = ()=> cb(req.result?._d || null);
+            req.onerror = ()=> cb(null);
         });
     }
-    function saveToCache(file, data, meta){
+    function saveToCache(file, data){
         if(!data) return;
         initCacheDB(db=>{ if(!db) return;
             let entry = { file:file, _d:data, _t:Date.now() };
-            if(meta && (meta.lm || meta.cl)) { entry._lm = meta.lm || null; entry._cl = meta.cl || null; }
             let tx = db.transaction('files','readwrite');
             tx.objectStore('files').put(entry);
         });
     }
-    function loadFresh(file, cb, to=4000, meta){
+    function loadData(file, cb, to=4000){
+        if(file !== 'index.js'){
+            loadFromCache(file, cached => {
+                if(cached){
+                    if(!loadedSources[file]) loadedSources[file] = cached;
+                    setTimeout(()=> cb(cached), 0);
+                    loadFresh(file, null);
+                    return;
+                }
+                loadFresh(file, cb, to);
+            });
+        } else loadFresh(file, cb, to);
+    }
+    function loadFresh(file, cb, to=4000){
         let key = file==='index.js'?'_TVBOX_INDEX':'_TVBOX_SITE_DATA';
         let s = document.createElement('script');
         let t = setTimeout(()=>{ s.onerror=s.onload=null; s.remove(); if(cb) cb(null); }, to);
@@ -317,7 +319,7 @@ layout: false
         s.onload = ()=>{
             clearTimeout(t);
             let d = window[key]; delete window[key];
-            if(d && file !== 'index.js') saveToCache(file, d, meta);
+            if(d && file !== 'index.js') saveToCache(file, d);
             if(d) loadedSources[file] = d;
             if(cb) cb(d);
         };
@@ -325,42 +327,7 @@ layout: false
         s.src = bp + 'data/' + file;
         document.head.appendChild(s);
     }
-    function loadData(file, cb, to=4000){
-        // 如果 TVCache 可用且文件不是 index.js，委托给它（共享预热+HEAD 检测）
-        if(typeof TVCache !== 'undefined' && file !== 'index.js'){
-            TVCache.load(file, function(d, refreshed){
-                if(refreshed && cb) cb(d, true);
-                else if(cb) cb(d);
-            }, to);
-            return;
-        }
-        // fallback：内部缓存实现
-        if(file !== 'index.js'){
-            loadFromCache(file, (cached, meta) => {
-                if(cached){
-                    if(!loadedSources[file]) loadedSources[file] = cached;
-                    setTimeout(()=> cb(cached), 0);
-                    if(!_checkedSession.has(file)){
-                        _checkedSession.add(file);
-                        let bp = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '');
-                        fetchHeadMeta(bp + 'data/' + file, function(srvMeta) {
-                            if(!srvMeta) return;
-                            let changed = false;
-                            if(srvMeta.lm && srvMeta.lm !== (meta?._lm || null)) changed = true;
-                            else if(!changed && srvMeta.cl && srvMeta.cl !== (meta?._cl || null)) changed = true;
-                            if(!changed) return;
-                            loadFresh(file, function(d) {
-                                if(d) loadedSources[file] = d;
-                                if(d && cb) cb(d, true);
-                            }, to, srvMeta);
-                        });
-                    }
-                    return;
-                }
-                loadFresh(file, cb, to);
-            });
-        } else loadFresh(file, cb, to);
-    }
+    
     function startPreload(){
         if(!sourceIndex.length) return;
         let files=new Set();
@@ -371,24 +338,7 @@ layout: false
         let total=arr.length, done=0;
         preloadBar.style.display='block';
         arr.forEach(f=>{
-            loadFromCache(f, (cached, meta) => {
-                if(cached && !loadedSources[f]) loadedSources[f]=cached;
-                done++;
-                preloadFill.style.width = Math.floor(done/total*100)+'%';
-                if(done===total) setTimeout(()=>{ preloadBar.style.display='none'; }, 400);
-                if(!_checkedSession.has(f)){
-                    _checkedSession.add(f);
-                    let bp = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '');
-                    fetchHeadMeta(bp + 'data/' + f, function(srvMeta) {
-                        if(!srvMeta) return;
-                        let changed = false;
-                        if(srvMeta.lm && srvMeta.lm !== (meta?._lm || null)) changed = true;
-                        else if(!changed && srvMeta.cl && srvMeta.cl !== (meta?._cl || null)) changed = true;
-                        if(!changed) return;
-                        loadFresh(f, null, 4000, srvMeta);
-                    });
-                }
-            });
+            loadFromCache(f, cached=>{ if(cached && !loadedSources[f]) loadedSources[f]=cached; done++; preloadFill.style.width = Math.floor(done/total*100)+'%'; if(done===total) setTimeout(()=>{ preloadBar.style.display='none'; }, 400); });
         });
     }
     
@@ -429,34 +379,10 @@ layout: false
             if(ver!==searchVersion) return;
             while(idx<tasks.length && running<CONCURRENT){
                 let task=tasks[idx++];
-                // 有 TVCache 时始终走 loadData（共享 HEAD 检测，保证搜索新鲜度）
-                if(typeof TVCache !== 'undefined'){
+                if(loadedSources[task.fname]){ searchOne(loadedSources[task.fname],task.fname); doneCount++; flushRender(); loadNext(); }
+                else{
                     running++;
-                    loadData(task.fname, function(data, refreshed){
-                        if(refreshed){
-                            if(data) searchOne(data, task.fname);
-                            flushRender();
-                            return;
-                        }
-                        if(data) loadedSources[task.fname]=data;
-                        if(data) searchOne(data,task.fname);
-                        doneCount++; running--; flushRender(); loadNext();
-                    }, 5000);
-                } else if(loadedSources[task.fname]){
-                    searchOne(loadedSources[task.fname],task.fname);
-                    doneCount++; flushRender(); loadNext();
-                } else {
-                    running++;
-                    loadData(task.fname, function(data, refreshed){
-                        if(refreshed){
-                            if(data) searchOne(data, task.fname);
-                            flushRender();
-                            return;
-                        }
-                        if(data) loadedSources[task.fname]=data;
-                        if(data) searchOne(data,task.fname);
-                        doneCount++; running--; flushRender(); loadNext();
-                    }, 5000);
+                    loadData(task.fname, data=>{ if(data) loadedSources[task.fname]=data; if(data) searchOne(data,task.fname); doneCount++; running--; flushRender(); loadNext(); },5000);
                 }
             }
             if(idx>=tasks.length && running===0) finish();
@@ -1172,7 +1098,6 @@ layout: false
                 sourceSelect.appendChild(opt);
                 sourceMeta[s.prefix]={ page_count:s.page_count||1, name:s.name, fileBase:s.file.replace(/\.js$/,'').replace(/-\d+$/,''), prefix:s.prefix };
             });
-            // 预热缓存（从 IndexedDB 加载到内存 + HEAD 检测更新）
             startPreload();
             // 底部统计
             let totalAddress = 0, playableTotal = 0;
