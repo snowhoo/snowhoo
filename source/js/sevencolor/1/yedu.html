@@ -307,14 +307,14 @@ layout: false
 
   // 数据加载
   function loadData() {
-    fetch(basePath + 'data/index.json')
+    fetch(basePath + 'yedu_data/index.json')
       .then(function(r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       })
       .then(function(files) {
         return Promise.all(files.map(function(f) {
-          return fetch(basePath + 'data/' + f).then(function(r) {
+          return fetch(basePath + 'yedu_data/' + f).then(function(r) {
             if (!r.ok) throw new Error('HTTP ' + r.status);
             return r.text();
           });
