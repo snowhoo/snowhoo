@@ -77,6 +77,9 @@
         });
         if (total === 0) return;
 
+        // 通知父页面开始预热（发出实际总数）
+        try { parent.postMessage({ type: 'snowhoo-warm', done: 0, total: total }, '*'); } catch(e) {}
+
         var done = 0;
         files.forEach(function(f) {
             var s = document.createElement('script');
