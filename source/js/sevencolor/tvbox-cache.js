@@ -17,6 +17,14 @@
   var globalKey = '_TVBOX_SITE_DATA';
   var loaded = {};
   var MAX_CACHE = 520;
+  var _checkedSession = {};
+  var _basePath = (window.__TVBOX_BASE || '');
+
+  function fetchHeadMeta(url, cb) {
+    fetch(url, { method: 'HEAD', cache: 'no-cache' })
+      .then(function(r) { cb({ lm: r.headers.get('Last-Modified'), cl: r.headers.get('Content-Length') }); })
+      .catch(function() { cb(null); });
+  }
 
   function openDB() {
     if (dbReady) return dbReady;
@@ -49,7 +57,7 @@
           var entry = req.result;
           if (entry && entry._d) {
             entry._d._cached = true;
-            resolve(entry._d);
+            resolve({ data: entry._d, meta: { _t: entry._t, _lm: entry._lm, _cl: entry._cl, _fp: entry._fp } });
           } else resolve(null);
         };
         req.onerror = function() { resolve(null); };
@@ -57,11 +65,12 @@
     });
   }
 
-  function saveToDB(file, data) {
+  function saveToDB(file, data, meta) {
     if (!db || !data) return;
     var fp = (data.videos ? data.videos.length : 0) + '|' +
              ((data.videos || [])[0] ? (data.videos[0].vod_name || '') : '');
     var entry = { file: file, _d: data, _fp: fp, _t: Date.now() };
+    if (meta) { entry._lm = meta.lm || null; entry._cl = meta.cl || null; }
     // 记录字节数，供 warm 逐文件比对
     try { localStorage.setItem('tvbox_fsize_' + file, JSON.stringify(data).length); } catch(e) {}
 
@@ -89,7 +98,7 @@
     } catch(e) {}
   }
 
-  function loadFresh(file, callback, timeout) {
+  function loadFresh(file, callback, timeout, meta) {
     timeout = timeout || 5000;
     var s = document.createElement('script');
     var t = setTimeout(function() { s.onerror = s.onload = null; s.remove(); callback(null); }, timeout);
@@ -100,25 +109,42 @@
       delete window[globalKey];
       d = d || null;
       if (d) {
-        saveToDB(file, d);
+        saveToDB(file, d, meta);
         loaded[file] = d;
       }
       callback(d);
     };
-    s.src = (window.__TVBOX_BASE || '') + 'data/' + file;
+    s.src = _basePath + 'data/' + file;
     document.head.appendChild(s);
   }
 
   function load(file, callback, timeout) {
+    // index.js 始终重新加载，不走任何缓存
+    if (file === 'index.js') {
+      loadFresh(file, callback, timeout);
+      return;
+    }
     if (loaded[file]) { callback(loaded[file]); return; }
 
     openDB().then(function() {
       loadFromDB(file).then(function(cached) {
-        if (cached) {
-          loaded[file] = cached;
-          callback(cached);
-          // 后台无感刷新（load 总是刷新，因为用户主动请求）
-          loadFresh(file, function() {}, timeout);
+        if (cached && cached.data) {
+          loaded[file] = cached.data;
+          callback(cached.data);
+          // 仅当文件有更新时才后台刷新
+          if (!_checkedSession[file]) {
+            _checkedSession[file] = true;
+            fetchHeadMeta(_basePath + 'data/' + file, function(srvMeta) {
+              if (!srvMeta) return;
+              var changed = false;
+              if (srvMeta.lm && srvMeta.lm !== (cached.meta?._lm || null)) changed = true;
+              else if (!changed && srvMeta.cl && srvMeta.cl !== (cached.meta?._cl || null)) changed = true;
+              if (!changed) return;
+              loadFresh(file, function(d) {
+                if (d && callback) callback(d, true);
+              }, timeout, srvMeta);
+            });
+          }
           return;
         }
         loadFresh(file, callback, timeout);
@@ -129,7 +155,6 @@
   function warm(fileList, progress, done, timeout) {
     var total = fileList.length, finished = 0;
     var CONCURRENT = 10;
-    var basePath = window.__TVBOX_BASE || '';
 
     // 底部进度条
     var bar = document.createElement('div');
@@ -156,53 +181,63 @@
       if (done) done();
     }
 
-    // 第一步：从 IndexedDB 快速加载（不推进进度，避免瞬间100%）
-    var dbLoaded = 0;
+    // 第一步：从 IndexedDB 快速加载
     fileList.forEach(function(f) {
       loadFromDB(f).then(function(cached) {
-        if (cached && !loaded[f]) loaded[f] = cached;
-        dbLoaded++;
+        if (cached && cached.data && !loaded[f]) loaded[f] = cached.data;
       });
     });
 
-    // 第二步：逐文件 fetch 比对字节数（推进进度），变化才联网刷新
+    // 第二步：用 HEAD 请求逐文件比对 Last-Modified / Content-Length
     var checkDone = 0, needRefresh = [];
     fileList.forEach(function(f) {
-      fetch(basePath + 'data/' + f)
-        .then(function(r) { return r.text(); })
-        .then(function(t) {
-          var newSize = t.length;
-          var oldSize = parseInt((localStorage.getItem('tvbox_fsize_' + f) || '').split('|')[0] || '0');
-          if (newSize !== oldSize) needRefresh.push(f);
-        })
-        .catch(function() {})
-        .then(function() {
-          checkDone++;
-          bump();  // 每个文件比对完才推进进度
-          if (checkDone >= fileList.length) {
-            // 第三步：仅刷新变化的文件
-            if (needRefresh.length === 0) {
-              finish();
-              return;
-            }
-            var ri = 0, rr = 0;
-            function doRefresh() {
-              if (ri >= needRefresh.length) { if (rr <= 0) finish(); return; }
-              if (rr >= CONCURRENT) return;
-              var f = needRefresh[ri++]; rr++;
-              loadFresh(f, function() { rr--; doRefresh(); }, timeout);
-            }
-            for (var i = 0; i < CONCURRENT; i++) doRefresh();
-          }
-        });
+      if (_checkedSession[f]) { checkDone++; bump(); return; }
+      fetchHeadMeta(_basePath + 'data/' + f, function(srvMeta) {
+        if (!srvMeta) { checkDone++; bump(); return; }
+        // 从缓存中获取旧元信息
+        (function(localFile, serverMeta) {
+          if (!db) { needRefresh.push({ file: localFile, meta: serverMeta }); checkDone++; bump(); return; }
+          try {
+            var tx = db.transaction(STORE, 'readonly');
+            var store = tx.objectStore(STORE);
+            var req = store.get(localFile);
+            req.onsuccess = function() {
+              var entry = req.result;
+              var changed = false;
+              if (serverMeta.lm && serverMeta.lm !== (entry?._lm || null)) changed = true;
+              else if (!changed && serverMeta.cl && serverMeta.cl !== (entry?._cl || null)) changed = true;
+              _checkedSession[localFile] = true;
+              if (changed) needRefresh.push({ file: localFile, meta: serverMeta });
+              checkDone++;
+              bump();
+              if (checkDone >= fileList.length) processRefresh();
+            };
+            req.onerror = function() { needRefresh.push({ file: localFile, meta: serverMeta }); checkDone++; bump(); if (checkDone >= fileList.length) processRefresh(); };
+          } catch(e) { needRefresh.push({ file: localFile, meta: serverMeta }); checkDone++; bump(); if (checkDone >= fileList.length) processRefresh(); }
+        })(f, srvMeta);
+      });
     });
+
+    function processRefresh() {
+      if (needRefresh.length === 0) { finish(); return; }
+      var ri = 0, rr = 0;
+      function doRefresh() {
+        if (ri >= needRefresh.length) { if (rr <= 0) finish(); return; }
+        if (rr >= CONCURRENT) return;
+        var item = needRefresh[ri++]; rr++;
+        // 通知 iframe 进度
+        try { parent.postMessage({ type: 'tvbox-warm-progress', done: ri + checkDone, total: total }, '*'); } catch(e) {}
+        loadFresh(item.file, function() { rr--; doRefresh(); }, timeout, item.meta);
+      }
+      for (var i = 0; i < CONCURRENT; i++) doRefresh();
+    }
   }
 
   return { load: load, warm: warm, loadData: load, loadedSources: loaded };
 })();
 
 // ── 自动预热触发器 ──
-// 隐藏 iframe 独立连接池运行，逐文件比对字节数，仅刷新变化的文件
+// 隐藏 iframe 独立连接池运行，用 HEAD 请求逐文件检查 Last-Modified/Content-Length，仅刷新变化的文件
 if (!window.__TVBOX_WARM_RUN) {
   window.__TVBOX_WARM_RUN = true;
 

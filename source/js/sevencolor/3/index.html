@@ -1,3 +1,6 @@
+---
+layout: false
+---
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <style>
     /* 嵌入加载，所有样式均限定在 .tvbox-app 内，杜绝泄露 */
@@ -172,7 +175,8 @@
     // ---------- 存储与核心变量 ----------
     const STORAGE = { HISTORY:'tvbox_history', FAVORITES:'tvbox_favorites', SEARCH:'tvbox_search_results' };
     const PAGE_SIZE = 12, CONCURRENT = 10;
-    let sourceIndex=[], loadedSources={}, sourceMeta={}, currentData=null, currentPrefix='', currentFilePage=1, currentPage=1, currentFiltered=[], currentCategory='';
+    let sourceIndex=[], sourceMeta={}, currentData=null, currentPrefix='', currentFilePage=1, currentPage=1, currentFiltered=[], currentCategory='';
+    let loadedSources = (typeof TVCache !== 'undefined') ? TVCache.loadedSources : {};
     let currentSearchKeyword='', currentSearchResults=[], currentSearchCategory='', isSearching=false, searchVersion=0;
     let currentPlayingVideo=null, currentPlayingEpIndex=0, currentOpenVideo=null, currentEpNext=null, currentHls=null, playerInFloat=false;
     
@@ -271,74 +275,6 @@
         return null;
     }
     
-    // IndexedDB 缓存
-    let CACHE_DB = null, CACHE_READY = false;
-    function initCacheDB(cb){
-        if(CACHE_READY && CACHE_DB){ cb(CACHE_DB); return; }
-        let req = indexedDB.open('tvbox_cache', 1);
-        req.onupgradeneeded = e => { e.target.result.createObjectStore('files', { keyPath: 'file' }); };
-        req.onsuccess = e => { CACHE_DB = e.target.result; CACHE_READY = true; cb(CACHE_DB); };
-        req.onerror = () => { CACHE_DB=null; CACHE_READY=true; cb(null); };
-    }
-    function loadFromCache(file, cb){
-        initCacheDB(db=>{ if(!db){ cb(null); return; }
-            let tx = db.transaction('files','readonly'), req = tx.objectStore('files').get(file);
-            req.onsuccess = ()=> cb(req.result?._d || null);
-            req.onerror = ()=> cb(null);
-        });
-    }
-    function saveToCache(file, data){
-        if(!data) return;
-        initCacheDB(db=>{ if(!db) return;
-            let entry = { file:file, _d:data, _t:Date.now() };
-            let tx = db.transaction('files','readwrite');
-            tx.objectStore('files').put(entry);
-        });
-    }
-    function loadData(file, cb, to=4000){
-        if(file !== 'index.js'){
-            loadFromCache(file, cached => {
-                if(cached){
-                    if(!loadedSources[file]) loadedSources[file] = cached;
-                    setTimeout(()=> cb(cached), 0);
-                    loadFresh(file, null);
-                    return;
-                }
-                loadFresh(file, cb, to);
-            });
-        } else loadFresh(file, cb, to);
-    }
-    function loadFresh(file, cb, to=4000){
-        let key = file==='index.js'?'_TVBOX_INDEX':'_TVBOX_SITE_DATA';
-        let s = document.createElement('script');
-        let t = setTimeout(()=>{ s.onerror=s.onload=null; s.remove(); if(cb) cb(null); }, to);
-        s.onerror = ()=>{ clearTimeout(t); if(cb) cb(null); };
-        s.onload = ()=>{
-            clearTimeout(t);
-            let d = window[key]; delete window[key];
-            if(d && file !== 'index.js') saveToCache(file, d);
-            if(d) loadedSources[file] = d;
-            if(cb) cb(d);
-        };
-        let bp = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '');
-        s.src = bp + 'data/' + file;
-        document.head.appendChild(s);
-    }
-    
-    function startPreload(){
-        if(!sourceIndex.length) return;
-        let files=new Set();
-        sourceIndex.forEach(s=>{ let pc=s.page_count||1, base=(sourceMeta[s.prefix]?.fileBase)||s.prefix;
-            for(let i=1;i<=pc;i++) files.add(base+'-'+String(i).padStart(2,'0')+'.js');
-        });
-        let arr=Array.from(files);
-        let total=arr.length, done=0;
-        preloadBar.style.display='block';
-        arr.forEach(f=>{
-            loadFromCache(f, cached=>{ if(cached && !loadedSources[f]) loadedSources[f]=cached; done++; preloadFill.style.width = Math.floor(done/total*100)+'%'; if(done===total) setTimeout(()=>{ preloadBar.style.display='none'; }, 400); });
-        });
-    }
-    
     // 搜索
     function doSearch(){
         let kw=searchInput.value.trim();
@@ -376,10 +312,21 @@
             if(ver!==searchVersion) return;
             while(idx<tasks.length && running<CONCURRENT){
                 let task=tasks[idx++];
-                if(loadedSources[task.fname]){ searchOne(loadedSources[task.fname],task.fname); doneCount++; flushRender(); loadNext(); }
-                else{
+                if(loadedSources[task.fname]){
+                    searchOne(loadedSources[task.fname],task.fname);
+                    doneCount++; flushRender(); loadNext();
+                } else {
                     running++;
-                    loadData(task.fname, data=>{ if(data) loadedSources[task.fname]=data; if(data) searchOne(data,task.fname); doneCount++; running--; flushRender(); loadNext(); },5000);
+                    TVCache.load(task.fname, function(data, refreshed){
+                        if(refreshed){
+                            if(data) searchOne(data, task.fname);
+                            flushRender();
+                            return;
+                        }
+                        if(data) loadedSources[task.fname]=data;
+                        if(data) searchOne(data,task.fname);
+                        doneCount++; running--; flushRender(); loadNext();
+                    }, 5000);
                 }
             }
             if(idx>=tasks.length && running===0) finish();
@@ -743,7 +690,7 @@
                 loadedPages++;
                 processPage(p+1);
             } else {
-                loadData(fname, function(data) {
+                TVCache.load(fname, function(data) {
                     if (data) loadedSources[fname] = data;
                     if (data) collectFromPage(data, fname);
                     loadedPages++;
@@ -858,7 +805,7 @@
             if (loadedSources[firstPageFile]) {
                 useSourceDataQuick(loadedSources[firstPageFile], firstPageFile, 1);
             } else {
-                loadData(firstPageFile, function(data) {
+                TVCache.load(firstPageFile, function(data) {
                     if (data) loadedSources[firstPageFile] = data;
                     useSourceDataQuick(data, firstPageFile, 1);
                 });
@@ -1080,7 +1027,7 @@
     });
     
     function loadIndexData(){
-        loadData('index.js',data=>{
+        TVCache.load('index.js',data=>{
             if(!data){ homeContent.innerHTML='<div class="empty-state">❌ 暂无数据源！</div>'; return; }
             sourceIndex=data;
             sourceSelect.innerHTML='';
@@ -1095,7 +1042,15 @@
                 sourceSelect.appendChild(opt);
                 sourceMeta[s.prefix]={ page_count:s.page_count||1, name:s.name, fileBase:s.file.replace(/\.js$/,'').replace(/-\d+$/,''), prefix:s.prefix };
             });
-            startPreload();
+            // 预热缓存，由 TVCache 统一管理
+            if (typeof TVCache !== 'undefined') {
+                let warmFiles = [];
+                sourceIndex.forEach(s => {
+                    let pc = s.page_count||1, base = (sourceMeta[s.prefix]?.fileBase)||s.prefix;
+                    for(let i=1;i<=pc;i++) warmFiles.push(base+'-'+String(i).padStart(2,'0')+'.js');
+                });
+                TVCache.warm(warmFiles);
+            }
             // 底部统计
             let totalAddress = 0, playableTotal = 0;
             sourceIndex.forEach(s => { totalAddress += s.total || 0; playableTotal += s.playable || 0; });
