@@ -46,7 +46,7 @@
         .tvbox-app .clear-all-btn { background: #e74c3c !important; color: white !important; border: none !important; }
         .tvbox-app .clear-all-btn:hover { background: #c0392b !important; }
         .tvbox-app .video-grid { display: grid; gap: 10px; margin-top: 8px; }
-        @media (max-width: 767px) { .tvbox-app .video-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; } }
+        @media (max-width: 767px) { .tvbox-app .video-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; } }
         @media (min-width: 768px) { .tvbox-app .video-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; } }
 		@media (min-width: 1024px) { .tvbox-app .video-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; } }
         .tvbox-app .video-card { background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; cursor: pointer; transition: all 0.25s ease; border: 1px solid var(--border); box-shadow: var(--shadow-sm); position: relative; }
@@ -170,7 +170,7 @@
 (function(){
     // ---------- 存储与核心变量 ----------
     const STORAGE = { HISTORY:'tvbox_history', FAVORITES:'tvbox_favorites', SEARCH:'tvbox_search_results' };
-    const PAGE_SIZE = 6, CONCURRENT = 10;
+    const PAGE_SIZE = 4, CONCURRENT = 10;
     let sourceIndex=[], loadedSources={}, sourceMeta={}, currentData=null, currentPrefix='', currentFilePage=1, currentPage=1, currentFiltered=[], currentCategory='';
     let currentSearchKeyword='', currentSearchResults=[], currentSearchCategory='', isSearching=false, searchVersion=0;
     let currentPlayingVideo=null, currentPlayingEpIndex=0, currentOpenVideo=null, currentEpNext=null, currentHls=null, playerInFloat=false;
