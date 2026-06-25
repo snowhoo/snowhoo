@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 新七彩按钮组 - 展开式内容加载
  * 点击按钮展开/收起，内容通过 fetch HTML 动态加载
  */
@@ -365,6 +365,6 @@
   if (document.readyState === 'loading') {
     window.addEventListener('load', init);
   } else {
-    window.addEventListener('load', init);
+    init();
   }
 })();
