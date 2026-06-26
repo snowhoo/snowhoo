@@ -80,8 +80,6 @@ layout: false
         .episode-item.current-ep { background: var(--accent); color: white; border-color: var(--accent); }
         .back-home { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; background: var(--bg-card); padding: 8px 20px; border-radius: 40px; cursor: pointer; width: fit-content; border: 1px solid var(--border); font-weight: 500; transition: 0.1s; color: var(--text-primary); }
         .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
-        .preload-bar { height: 3px; background: var(--border); border-radius: 4px; margin-bottom: 12px; overflow: hidden; }
-        .preload-fill { width: 0%; height: 100%; background: var(--accent); transition: width 0.2s; }
         .copyright { text-align: center; margin-top: 40px; padding: 12px 0; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
         .copyright a { color: var(--accent); text-decoration: none; }
         
@@ -1071,5 +1069,22 @@ layout: false
     loadIndexData();
 })();
 </script>
+
+<!-- 缓存预热 iframe + 进度条 -->
+<iframe id="warmFrame" src="snowhoonetbbcache.html" style="display:none"></iframe>
+<div id="warmBar" style="position:fixed;bottom:0;left:0;width:0%;height:1px;background:#666;z-index:9999;transition:width 0.3s"></div>
+<script>
+(function(){
+    var bar = document.getElementById('warmBar');
+    window.addEventListener('message', function(e) {
+        if (e.data && e.data.type === 'snowhoo-warm') {
+            var done = e.data.done, total = e.data.total;
+            if (total > 0) {
+                bar.style.width = Math.min(100, (done / total) * 100) + '%';
+                if (done >= total) setTimeout(function(){ bar.style.opacity = '0'; }, 500);
+            }
+        }
+    });
+})();
+</script>
 </body>
-</html>
