@@ -1021,8 +1021,6 @@ layout: false
         currentView = 'home';
         if(currentHls) currentHls.destroy();
         detailPlayer.pause();
-        if(sourceSelect.value && sourceMeta[sourceSelect.value]) switchSource();
-        else loadIndexData();
     });
     
     function loadIndexData(){
