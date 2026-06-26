@@ -247,8 +247,9 @@ layout: false
     
     // 高亮顶部按钮
     function setActiveButton(type) {
-        [historyBtn, favoritesBtn].forEach(btn => btn.classList.remove('active'));
-        if (type === '__history__') historyBtn.classList.add('active');
+        [searchBtn, historyBtn, favoritesBtn].forEach(btn => btn.classList.remove('active'));
+        if (type === '__search_result__') searchBtn.classList.add('active');
+        else if (type === '__history__') historyBtn.classList.add('active');
         else if (type === '__favorites__') favoritesBtn.classList.add('active');
     }
     
