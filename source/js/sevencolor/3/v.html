@@ -38,8 +38,8 @@ layout: false
         .clear-all-btn { background: #e74c3c !important; color: white !important; border: none !important; }
         .clear-all-btn:hover { background: #c0392b !important; }
         .video-grid { display: grid; gap: 10px; margin-top: 8px; }
-        @media (max-width: 767px) { .video-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; } }
-        @media (min-width: 768px) { .video-grid { grid-template-columns: repeat(6, 1fr); gap: 10px; } }
+        @media (orientation: portrait) { .video-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; } }
+        @media (orientation: landscape) { .video-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; } }
         .video-card { background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; cursor: pointer; transition: all 0.25s ease; border: 1px solid var(--border); box-shadow: var(--shadow-sm); position: relative; }
         .video-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); border-color: var(--accent); }
         .video-poster { aspect-ratio: 2/3; width: 100%; object-fit: cover; display: block; }
@@ -88,7 +88,7 @@ layout: false
         .copyright { text-align: center; margin-top: 40px; padding: 12px 0; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
         .copyright a { color: var(--accent); text-decoration: none; }
         .copyright a:hover { text-decoration: underline; }
-        @media (max-width: 640px) { #app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 6px 6px; font-size: 12px; } .toolbar select { min-width: 110px; } .toolbar input { max-width: 110px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } }
+        @media (orientation: portrait) { #app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 6px 6px; font-size: 12px; } .toolbar select { min-width: 110px; } .toolbar input { max-width: 110px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } .toolbar .btn-text { display: none; } }
     </style>
 </head>
 <body>
@@ -98,12 +98,12 @@ layout: false
         <div class="toolbar">
             <select id="sourceSelect"></select>
             <input type="text" id="searchInput" placeholder="影片名">
-            <button id="searchBtn">🔍</button>
-            <button id="stopSearchBtn" style="display:none">⏹️</button>
-            <button id="historyBtn" class="secondary-btn">🕒 最近</button>
-            <button id="favoritesBtn" class="secondary-btn">❤️ 收藏</button>
-            <button id="clearSpecialBtn" class="clear-all-btn" style="display:none;">清空</button>
-            <button id="themeToggleBtn" class="secondary-btn" title="切换主题"></button>
+            <button id="searchBtn">🔍 <span class="btn-text">搜索</span></button>
+            <button id="stopSearchBtn" style="display:none">⏹️ <span class="btn-text">停止</span></button>
+            <button id="historyBtn" class="secondary-btn">🕒 <span class="btn-text">最近</span></button>
+            <button id="favoritesBtn" class="secondary-btn">❤️ <span class="btn-text">收藏</span></button>
+            <button id="clearSpecialBtn" class="clear-all-btn" style="display:none;">🗑️ <span class="btn-text">清空</span></button>
+            <button id="themeToggleBtn" class="secondary-btn" title="切换主题"><span id="themeIcon"></span><span class="btn-text">主题</span></button>
         </div>
         <div id="catBar" class="cat-filters"></div>
         <div id="homeContent" class="video-grid"></div>
@@ -235,7 +235,7 @@ layout: false
         const wrap = document.getElementById('app');
         let theme = saved || (window.matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
         wrap.setAttribute('data-theme', theme);
-        themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        document.getElementById('themeIcon').textContent = theme === 'dark' ? '☀️' : '🌙';
         themeToggle.title = theme === 'dark' ? '切换到明亮模式' : '切换到暗黑模式';
     }
     function toggleTheme() {
@@ -244,7 +244,7 @@ layout: false
         const next = cur === 'dark' ? 'light' : 'dark';
         wrap.setAttribute('data-theme', next);
         localStorage.setItem(STORAGE.THEME, next);
-        themeToggle.textContent = next === 'dark' ? '☀️' : '🌙';
+        document.getElementById('themeIcon').textContent = next === 'dark' ? '☀️' : '🌙';
         themeToggle.title = next === 'dark' ? '切换到明亮模式' : '切换到暗黑模式';
     }
     themeToggle.addEventListener('click', toggleTheme);
