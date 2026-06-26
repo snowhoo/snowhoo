@@ -12,7 +12,7 @@ layout: false
         /* 原有样式保持不变 ... */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: transparent; }
-        #app { max-width: 1400px; margin: 0 auto; padding: 20px 24px 48px; transition: background 0.2s, color 0.2s; --bg-body: #0a0a0f; --bg-surface: #14141e; --bg-card: #1c1c26; --bg-card-hover: #252532; --bg-elevated: #1e1e2a; --border: #2c2c3a; --text-primary: #f0f0f3; --text-secondary: #a0a0b0; --text-muted: #6e6e80; --accent: #f97316; --accent-hover: #fd7e2e; --shadow-sm: 0 4px 12px rgba(0,0,0,0.3); --shadow-md: 0 8px 24px rgba(0,0,0,0.4); --radius-card: 10px; --radius-md: 16px; --radius-sm: 12px; background: var(--bg-body); color: var(--text-primary); }
+        #app { max-width: 1400px; margin: 0 auto; padding: 0 24px 48px; transition: background 0.2s, color 0.2s; --bg-body: #0a0a0f; --bg-surface: #14141e; --bg-card: #1c1c26; --bg-card-hover: #252532; --bg-elevated: #1e1e2a; --border: #2c2c3a; --text-primary: #f0f0f3; --text-secondary: #a0a0b0; --text-muted: #6e6e80; --accent: #f97316; --accent-hover: #fd7e2e; --shadow-sm: 0 4px 12px rgba(0,0,0,0.3); --shadow-md: 0 8px 24px rgba(0,0,0,0.4); --radius-card: 10px; --radius-md: 16px; --radius-sm: 12px; background: var(--bg-body); color: var(--text-primary); }
         #app[data-theme="dark"] { --bg-body: #000000; --bg-surface: #0a0a0f; --bg-card: #111115; --bg-card-hover: #1a1a20; --bg-elevated: #15151c; --border: #2a2a33; --text-primary: #ffffff; --text-secondary: #c0c0cf; --text-muted: #8a8a99; --accent: #f97316; --accent-hover: #fd7e2e; --shadow-sm: 0 4px 12px rgba(0,0,0,0.5); --shadow-md: 0 8px 24px rgba(0,0,0,0.6); }
         #app[data-theme="light"] { --bg-body: #f8fafc; --bg-surface: #ffffff; --bg-card: #f0f2f5; --bg-card-hover: #e8eaed; --bg-elevated: #f1f5f9; --border: #e2e8f0; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --accent: #f97316; --accent-hover: #ea580c; --shadow-sm: 0 2px 6px rgba(0,0,0,0.05); --shadow-md: 0 8px 20px rgba(0,0,0,0.08); }
         #app[data-theme="light"] .pw-poster-wrap { background: linear-gradient(to bottom, #ffffff 0%, #9e9ea6 50%, #ffffff 100%); }
@@ -30,7 +30,7 @@ layout: false
         .toolbar button { cursor: pointer; font-weight: 600; }
         .toolbar button.active { background: var(--accent); border-color: var(--accent); color: white; }
         #themeToggleBtn { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); }
-        #stickyHeader { position: sticky; top: 10px; z-index: 100; background: var(--bg-body); }
+        #stickyHeader { position: sticky; top: 0; z-index: 100; background: var(--bg-body); }
         .cat-filters { display: flex; gap: 8px; align-items: center; width: 100%; overflow-x: auto; padding: 4px 0 8px; scrollbar-width: none; }
         .cat-filters::-webkit-scrollbar { display: none; }
         .cat-badge { background: var(--bg-elevated); padding: 3px 6px; border-radius: 40px; font-size: 13px; cursor: pointer; border: 1px solid var(--border); transition: all 0.1s; white-space: nowrap; flex-shrink: 0; color: var(--text-primary); }
@@ -85,8 +85,8 @@ layout: false
         .copyright { text-align: center; margin-top: 40px; padding: 12px 0; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
         .copyright a { color: var(--accent); text-decoration: none; }
         
-        @media (orientation: landscape) { #app { padding: 10px; } }
-        @media (orientation: portrait) { #app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 6px; overflow-x: hidden; flex-wrap: nowrap; } .toolbar select, .toolbar input, .toolbar button { padding: 6px 6px; font-size: 12px; flex-shrink: 1; min-width: 0; } .toolbar select { min-width: 80px; background-position: right 6px center; padding-right: 22px; } .toolbar input { max-width: 80px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } .toolbar .btn-text { display: none; } }
+        @media (orientation: landscape) { #app { padding: 0 10px 10px; } }
+        @media (orientation: portrait) { #app { padding: 0 10px 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 6px; overflow-x: hidden; flex-wrap: nowrap; } .toolbar select, .toolbar input, .toolbar button { padding: 6px 6px; font-size: 12px; flex-shrink: 1; min-width: 0; } .toolbar select { min-width: 80px; background-position: right 6px center; padding-right: 22px; } .toolbar input { max-width: 80px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } .toolbar .btn-text { display: none; } }
     </style>
 </head>
 <body>
