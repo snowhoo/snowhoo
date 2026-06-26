@@ -35,8 +35,6 @@ layout: false
         .cat-filters::-webkit-scrollbar { height: 3px; }
         .cat-badge { background: var(--bg-elevated); padding: 3px 6px; border-radius: 40px; font-size: 13px; cursor: pointer; border: 1px solid var(--border); transition: all 0.1s; white-space: nowrap; flex-shrink: 0; color: var(--text-primary); }
         .cat-badge.active, .cat-badge:hover { background: var(--accent); color: white; border-color: var(--accent); }
-        .clear-all-btn { background: #e74c3c !important; color: white !important; border: none !important; }
-        .clear-all-btn:hover { background: #c0392b !important; }
         .video-grid { display: grid; gap: 10px; margin-top: 8px; }
         @media (orientation: portrait) { .video-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; } }
         @media (orientation: landscape) { .video-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; } }
@@ -102,7 +100,6 @@ layout: false
             <button id="stopSearchBtn" style="display:none">⏹️ <span class="btn-text">停止</span></button>
             <button id="historyBtn" class="secondary-btn">🕒 <span class="btn-text">最近</span></button>
             <button id="favoritesBtn" class="secondary-btn">❤️ <span class="btn-text">收藏</span></button>
-            <button id="clearSpecialBtn" class="clear-all-btn" style="display:none;">🗑️ <span class="btn-text">清空</span></button>
             <button id="themeToggleBtn" class="secondary-btn" title="切换主题"><span id="themeIcon"></span><span class="btn-text">主题</span></button>
         </div>
         <div id="catBar" class="cat-filters"></div>
@@ -193,7 +190,6 @@ layout: false
     const themeToggle = document.getElementById('themeToggleBtn');
     const historyBtn = document.getElementById('historyBtn');
     const favoritesBtn = document.getElementById('favoritesBtn');
-    const clearSpecialBtn = document.getElementById('clearSpecialBtn');
     const backHomeBtn = document.getElementById('backHomeBtn');
     const catBar = document.getElementById('catBar');
     const homeContent = document.getElementById('homeContent');
@@ -390,7 +386,6 @@ layout: false
         if(loading && (!currentSearchResults.length||isSearching)){
             homeContent.innerHTML='<div class="empty-state">🔍 搜索中，请稍候...</div>';
             homePagination.innerHTML=''; catBar.innerHTML=''; setStatus('搜索中...');
-            clearSpecialBtn.style.display = 'none';
             sourceSelect.value = '';
             return;
         }
@@ -398,7 +393,6 @@ layout: false
             homeContent.innerHTML='<div class="empty-state">✨ 暂无搜索结果，尝试其他影片名</div>'; 
             homePagination.innerHTML=''; catBar.innerHTML=''; 
             setStatus('搜索结果为空');
-            clearSpecialBtn.style.display = 'none';
             sourceSelect.value = '';
             return; 
         }
@@ -407,8 +401,6 @@ layout: false
         currentFiltered = filtered; currentPage=1;
         renderHomeGrid();
         sourceSelect.value = '';
-        clearSpecialBtn.style.display = 'inline-block';
-        clearSpecialBtn.onclick = () => clearAllSpecial('__search_result__');
     }
     function buildSearchCatBar(){
         let cats={};
@@ -467,7 +459,6 @@ layout: false
             if(!currentSearchResults.length){
                 homeContent.innerHTML='<div class="empty-state">暂无记录</div>';
                 homePagination.innerHTML=''; catBar.innerHTML=''; setStatus('搜索结果为空');
-                clearSpecialBtn.style.display = 'none';
                 return;
             }
             currentSpecialFullData = currentSearchResults.slice();
@@ -484,7 +475,6 @@ layout: false
             homeContent.innerHTML='<div class="empty-state">暂无记录</div>'; 
             homePagination.innerHTML=''; catBar.innerHTML=''; 
             setStatus('0条记录'); 
-            clearSpecialBtn.style.display = 'none';
             return; 
         }
         
@@ -522,26 +512,6 @@ layout: false
         });
         let title = currentSpecialType === '__history__' ? '最近观看' : (currentSpecialType === '__favorites__' ? '收藏' : (currentSpecialType === '__bookmarks__' ? '影签' : '搜索结果'));
         setStatus(`${title} · ${filtered.length} 条记录`);
-        clearSpecialBtn.style.display = 'inline-block';
-        clearSpecialBtn.onclick = () => clearAllSpecial(currentSpecialType);
-    }
-    
-    function clearAllSpecial(type){
-        if(type === '__history__'){
-            setStorage(STORAGE.HISTORY, {});
-            renderSpecialView('__history__');
-        } else if(type === '__bookmarks__'){
-            saveBookmarks([]);
-            renderSpecialView('__bookmarks__');
-        } else if(type === '__search_result__'){
-            currentSearchResults = [];
-            currentSearchKeyword = '';
-            currentSearchCategory = '';
-            renderSpecialView('__search_result__');
-        } else if(type === '__favorites__'){
-            setStatus('收藏不支持一键清空，请单独移除');
-        }
-        sourceSelect.value = '';
     }
     
     // 封面图：直播源显示频道名字，静默加载本地 Logo 替换；其他源 picsum + 在线加载
@@ -830,7 +800,6 @@ layout: false
         currentFilePage=1; 
         currentPage=1; 
         searchInput.value='';
-        clearSpecialBtn.style.display = 'none';
         currentCategory = '';
         currentSpecialType = null;
         setActiveButton(null);
@@ -1051,7 +1020,6 @@ layout: false
         detailPlayer.pause();
         if(sourceSelect.value && sourceMeta[sourceSelect.value]) switchSource();
         else loadIndexData();
-        clearSpecialBtn.style.display = 'none';
     });
     
     function loadIndexData(){
