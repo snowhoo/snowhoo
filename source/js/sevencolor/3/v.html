@@ -86,7 +86,7 @@ layout: false
         .copyright { text-align: center; margin-top: 40px; padding: 12px 0; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
         .copyright a { color: var(--accent); text-decoration: none; }
         .copyright a:hover { text-decoration: underline; }
-        @media (orientation: portrait) { #app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 8px; } .toolbar select, .toolbar input, .toolbar button { padding: 6px 6px; font-size: 12px; } .toolbar select { min-width: 110px; } .toolbar input { max-width: 110px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } .toolbar .btn-text { display: none; } }
+        @media (orientation: portrait) { #app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 6px; overflow-x: hidden; flex-wrap: nowrap; } .toolbar select, .toolbar input, .toolbar button { padding: 6px 4px; font-size: 11px; flex-shrink: 1; min-width: 0; } .toolbar select { min-width: 80px; background-position: right 6px center; padding-right: 22px; } .toolbar input { max-width: 80px; } .toolbar button { padding: 6px 8px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } .toolbar .btn-text { display: none; } }
     </style>
 </head>
 <body>
