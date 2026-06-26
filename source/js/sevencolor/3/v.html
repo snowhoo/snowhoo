@@ -7,7 +7,7 @@ layout: false
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>小红播霸</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6"></script>
     <style>
         /* 原有样式保持不变 ... */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -31,21 +31,10 @@ layout: false
         .toolbar button:hover { background: var(--accent-hover); transform: translateY(-1px); }
         .toolbar .secondary-btn { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border); }
         .toolbar .secondary-btn:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
-        .status-bar { display: flex; flex-direction: column; gap: 12px; margin: 0px; padding: 0; background: transparent; border: none; box-shadow: none; }
-        .cat-filters { display: flex; gap: 8px; align-items: center; width: 100%; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+        .cat-filters { display: flex; gap: 8px; align-items: center; width: 100%; overflow-x: auto; padding: 4px 0 8px; scrollbar-width: thin; }
         .cat-filters::-webkit-scrollbar { height: 3px; }
         .cat-badge { background: var(--bg-elevated); padding: 3px 6px; border-radius: 40px; font-size: 13px; cursor: pointer; border: 1px solid var(--border); transition: all 0.1s; white-space: nowrap; flex-shrink: 0; color: var(--text-primary); }
         .cat-badge.active, .cat-badge:hover { background: var(--accent); color: white; border-color: var(--accent); }
-        .action-buttons { display: flex; gap: 8px; flex-wrap: nowrap; overflow-x: auto; }
-        .action-buttons button { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 3px 6px; cursor: pointer; color: var(--text-primary); font-size: 13px; white-space: nowrap; flex-shrink: 0; }
-        .action-buttons button:hover { background: var(--accent); color: white; }
-        /* ========== 新增高亮样式 ========== */
-        .action-buttons button.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
-        /* ================================ */
         .clear-all-btn { background: #e74c3c !important; color: white !important; border: none !important; }
         .clear-all-btn:hover { background: #c0392b !important; }
         .video-grid { display: grid; gap: 10px; margin-top: 8px; }
@@ -111,17 +100,12 @@ layout: false
             <input type="text" id="searchInput" placeholder="影片名">
             <button id="searchBtn">🔍</button>
             <button id="stopSearchBtn" style="display:none">⏹️</button>
+            <button id="historyBtn" class="secondary-btn">🕒 最近</button>
+            <button id="favoritesBtn" class="secondary-btn">❤️ 收藏</button>
+            <button id="clearSpecialBtn" class="clear-all-btn" style="display:none;">清空</button>
             <button id="themeToggleBtn" class="secondary-btn" title="切换主题"></button>
         </div>
-        <div class="status-bar">
-            <div id="catBar" class="cat-filters"></div>
-            <div class="action-buttons">
-                <button id="historyBtn">🕒 最近</button>
-                <button id="favoritesBtn">❤️ 收藏</button>
-                <button id="searchResultBtn">🔍 结果</button>
-                <button id="clearSpecialBtn" class="clear-all-btn" style="display:none;">清空</button>
-            </div>
-        </div>
+        <div id="catBar" class="cat-filters"></div>
         <div id="homeContent" class="video-grid"></div>
         <div id="homePagination" class="pagination"></div>
         <div id="footer" style="text-align:center; margin-top:40px; font-size:12px; color:var(--text-muted);"></div>
@@ -209,7 +193,6 @@ layout: false
     const themeToggle = document.getElementById('themeToggleBtn');
     const historyBtn = document.getElementById('historyBtn');
     const favoritesBtn = document.getElementById('favoritesBtn');
-    const searchResultBtn = document.getElementById('searchResultBtn');
     const clearSpecialBtn = document.getElementById('clearSpecialBtn');
     const backHomeBtn = document.getElementById('backHomeBtn');
     const catBar = document.getElementById('catBar');
@@ -269,10 +252,9 @@ layout: false
     
     // 高亮顶部按钮
     function setActiveButton(type) {
-        [historyBtn, favoritesBtn, searchResultBtn].forEach(btn => btn.classList.remove('active'));
+        [historyBtn, favoritesBtn].forEach(btn => btn.classList.remove('active'));
         if (type === '__history__') historyBtn.classList.add('active');
         else if (type === '__favorites__') favoritesBtn.classList.add('active');
-        else if (type === '__search_result__') searchResultBtn.classList.add('active');
     }
     
     // 存储操作
@@ -383,7 +365,7 @@ layout: false
             searchBtn.style.display='inline';
             stopSearchBtn.style.display='none';
             if(currentSearchResults.length){
-                searchResultBtn.click();
+                renderSpecialView('__search_result__');
             } else {
                 renderSpecialView('__search_result__');
             }
@@ -1112,7 +1094,6 @@ layout: false
     sourceSelect.addEventListener('change', switchSource);
     historyBtn.addEventListener('click',()=>{ renderSpecialView('__history__'); });
     favoritesBtn.addEventListener('click',()=>{ renderSpecialView('__favorites__'); });
-    searchResultBtn.addEventListener('click',()=>{ renderSpecialView('__search_result__'); });
     
     window.addEventListener('beforeunload',()=>{
         if(currentPlayingVideo && detailPlayer.currentTime>5) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
