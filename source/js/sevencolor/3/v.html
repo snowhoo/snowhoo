@@ -80,11 +80,11 @@ layout: false
         .episode-item.current-ep { background: var(--accent); color: white; border-color: var(--accent); }
         .back-home { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; background: var(--bg-card); padding: 8px 20px; border-radius: 40px; cursor: pointer; width: fit-content; border: 1px solid var(--border); font-weight: 500; transition: 0.1s; color: var(--text-primary); }
         .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
-        .copyright { text-align: center; margin-top: 40px; padding: 12px 0; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
+        .copyright { text-align: center; margin-top: 20px; padding: 12px 0; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
         .copyright a { color: var(--accent); text-decoration: none; }
         
         @media (orientation: landscape) { #app { padding: 0 10px 10px; } }
-        @media (orientation: portrait) { #app { padding: 0 10px 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 6px; overflow-x: hidden; flex-wrap: nowrap; } .toolbar select, .toolbar input, .toolbar button { padding: 6px 6px; font-size: 12px; flex-shrink: 1; min-width: 0; } .toolbar select { min-width: 80px; background-position: right 6px center; padding-right: 22px; } .toolbar input { max-width: 80px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } .toolbar .btn-text { display: none; } }
+        @media (orientation: portrait) { #app { padding: 0 10px 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 6px; overflow-x: hidden; flex-wrap: nowrap; } .toolbar select, .toolbar input, .toolbar button { padding: 6px 6px; font-size: 12px; flex-shrink: 1; min-width: 0; } .toolbar select { min-width: 80px; background-position: right 6px center; padding-right: 22px; } .toolbar input { max-width: 80px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 20px; } .toolbar .btn-text { display: none; } }
     </style>
 </head>
 <body>
@@ -105,7 +105,7 @@ layout: false
         </div>
         <div id="homeContent" class="video-grid"></div>
         <div id="homePagination" class="pagination"></div>
-        <div id="footer" style="text-align:center; margin-top:40px; font-size:12px; color:var(--text-muted);"></div>
+        <div id="footer" style="text-align:center; margin-top:20px; font-size:12px; color:var(--text-muted);"></div>
     </div>
 
     <!-- 播放页视图 -->
