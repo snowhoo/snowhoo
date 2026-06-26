@@ -27,10 +27,8 @@ layout: false
         .toolbar select, .toolbar input, .toolbar button { border-radius: 40px; padding: 8px 16px; font-weight: 500; font-size: 13px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); outline: none; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
         .toolbar select { min-width: 140px; cursor: pointer; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236e6e80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>"); background-repeat: no-repeat; background-position: right 12px center; appearance: none; padding-right: 36px; }
         .toolbar input { max-width: 200px; flex: 1; }
-        .toolbar button { background: var(--accent); border: none; color: white; cursor: pointer; font-weight: 600; }
-        .toolbar button:hover { background: var(--accent-hover); transform: translateY(-1px); }
-        .toolbar .secondary-btn { background: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border); }
-        .toolbar .secondary-btn:hover { background: var(--bg-card-hover); transform: translateY(-1px); }
+        .toolbar button { cursor: pointer; font-weight: 600; }
+        .toolbar button:hover, .toolbar button.active { background: var(--accent); border-color: var(--accent); color: white; transform: translateY(-1px); }
         .cat-filters { display: flex; gap: 8px; align-items: center; width: 100%; overflow-x: auto; padding: 4px 0 8px; scrollbar-width: none; }
         .cat-filters::-webkit-scrollbar { display: none; }
         .cat-badge { background: var(--bg-elevated); padding: 3px 6px; border-radius: 40px; font-size: 13px; cursor: pointer; border: 1px solid var(--border); transition: all 0.1s; white-space: nowrap; flex-shrink: 0; color: var(--text-primary); }
@@ -86,6 +84,7 @@ layout: false
         .copyright { text-align: center; margin-top: 40px; padding: 12px 0; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
         .copyright a { color: var(--accent); text-decoration: none; }
         .copyright a:hover { text-decoration: underline; }
+        @media (orientation: landscape) { #app { padding: 10px; } }
         @media (orientation: portrait) { #app { padding: 10px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0; gap: 6px; overflow-x: hidden; flex-wrap: nowrap; } .toolbar select, .toolbar input, .toolbar button { padding: 6px 6px; font-size: 12px; flex-shrink: 1; min-width: 0; } .toolbar select { min-width: 80px; background-position: right 6px center; padding-right: 22px; } .toolbar input { max-width: 80px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .copyright { margin-top: 30px; } .toolbar .btn-text { display: none; } }
     </style>
 </head>
