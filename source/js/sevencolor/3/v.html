@@ -97,9 +97,9 @@ layout: false
                 <input type="text" id="searchInput" placeholder="影片名">
                 <button id="searchBtn">🔍 <span class="btn-text">搜索</span></button>
                 <button id="stopSearchBtn" style="display:none">⏹️ <span class="btn-text">停止</span></button>
-                <button id="historyBtn" class="secondary-btn">🕒 <span class="btn-text">最近</span></button>
-                <button id="favoritesBtn" class="secondary-btn">❤️ <span class="btn-text">收藏</span></button>
-                <button id="themeToggleBtn" class="secondary-btn" title="切换主题"><span id="themeIcon"></span><span class="btn-text">主题</span></button>
+                <button id="historyBtn">🕒 <span class="btn-text">最近</span></button>
+                <button id="favoritesBtn">❤️ <span class="btn-text">收藏</span></button>
+                <button id="themeToggleBtn" title="切换主题"><span id="themeIcon"></span><span class="btn-text">主题</span></button>
             </div>
             <div id="catBar" class="cat-filters"></div>
         </div>
@@ -110,7 +110,7 @@ layout: false
 
     <!-- 播放页视图 -->
     <div id="playerView" class="view hidden">
-        <div class="back-home" id="backHomeBtn">← 返回首页</div>
+        <div class="back-home" id="backHomeBtn">← 返回</div>
         <div class="player-layout">
             <div class="player-container">
                 <video id="detailPlayer" style="width:100%;height:100%;display:block" controls playsinline></video>
@@ -140,15 +140,6 @@ layout: false
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- 悬浮播放器 -->
-    <div id="floatPlayer" style="position:fixed; bottom:20px; right:20px; width:320px; background:rgba(0,0,0,0.9); border-radius:16px; display:none; z-index:9999;">
-        <div style="display:flex; justify-content:space-between; padding:8px 12px; background:#16213e; border-radius:16px 16px 0 0;">
-            <span id="floatTitle">浮窗播放</span>
-            <div><button id="floatBackBtn" style="margin-right:8px;">←</button><button id="floatCloseBtn">✖</button></div>
-        </div>
-        <video id="floatVideo" style="width:100%; aspect-ratio:16/9;" playsinline></video>
     </div>
 
     <!-- 底部版权信息 -->
@@ -205,10 +196,9 @@ layout: false
     const episodesList = document.getElementById('episodesList');
     const sourceSwitchSelect = document.getElementById('sourceSwitchSelect');
     
-    const $ = id => document.getElementById(id);
     const escHtml = s => String(s).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
     const escAttr = s => String(s).replace(/[&"']/g, m => ({'&':'&amp;','"':'&quot;',"'":'&#39;'}[m]));
-    const setStatus = txt => { const st = document.getElementById('statusText'); if(st) st.textContent = txt; };
+    const setStatus = () => {};
     const isLive = video => video && (video.sourceName === '直播┃电视' || (video.sourceKey && video.sourceKey.indexOf('直播_电视') >= 0));
     const logoUrl = url => { if (!url || !url.startsWith('http')) return url || ''; var f=url.split('/').pop(); var bp=(typeof __SC_BASE_PATH!=='undefined'?__SC_BASE_PATH:''); return bp+'data/TV-LOGO/'+f; };
     
