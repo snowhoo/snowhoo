@@ -864,8 +864,8 @@ layout: false
             temp.src = video.vod_pic;
         }
         detailTitle.textContent = video.vod_name;
-        detailEpCount.textContent = `${video.ep_count || 0}集`;
-        detailPlayable.textContent = `${video.playable_count || 0}可播放`;
+        detailEpCount.textContent = `共${video.ep_count || 0}集`;
+        detailPlayable.textContent = `${video.playable_count || 0}集可播放`;
         detailSource.textContent = `来源：${video.sourceName || '未知'}`;
         detailDesc.textContent = video.vod_class ? `分类：${video.vod_class}` : '暂无简介';
         renderEpisodesList();
@@ -979,8 +979,8 @@ layout: false
                 currentPlayerVideo.ep_count = selected.ep_count;
                 currentPlayerVideo.playable_count = selected.playable_count;
                 detailSource.textContent = `来源：${selected.sourceName}`;
-                detailEpCount.textContent = `${selected.ep_count||0}集`;
-                detailPlayable.textContent = `${selected.playable_count||0}可播放`;
+                detailEpCount.textContent = `共${selected.ep_count||0}集`;
+                detailPlayable.textContent = `${selected.playable_count||0}集可播放`;
                 renderEpisodesList();
                 // 重置剧集索引
                 currentPlayingEpIndex = 0;
