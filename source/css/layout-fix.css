@@ -3,46 +3,6 @@
    覆盖原有的各 <style> 块，统一管理
    ============================================= */
 
-/* ---- 导航栏 slogan + 域名 ---- */
-#blog-info .site-slogan-wrap {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin-left: 0.6em;
-  line-height: 1;
-}
-
-#blog-info .site-slogan-wrap .site-slogan {
-  margin: 0 !important;
-}
-
-#blog-info .site-domain {
-  font-size: 10px;
-  font-weight: 400;
-  color: #888;
-  margin-top: 3px;
-  text-align: center;
-}
-
-html[data-theme='dark'] #blog-info .site-domain {
-  color: #666;
-}
-
-@media (max-width: 768px) {
-  #blog-info .site-slogan-wrap {
-    margin-left: 0.4em;
-  }
-  #nav #blog-info .site-slogan-wrap .site-slogan {
-    display: inline-block !important;
-    font-size: 10px !important;
-    padding: 2px 8px !important;
-  }
-  #blog-info .site-domain {
-    font-size: 9px;
-    margin-top: 2px;
-  }
-}
-
 /* ---- 首页 widgets 外层容器 ---- */
 #home-container {
   width: 100%;
