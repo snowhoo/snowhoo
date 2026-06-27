@@ -620,7 +620,6 @@ html[data-theme=dark] #history-today .expand-control:hover {
   height: 32px;
   background: transparent;
   border: none;
-  border-top: 1px solid var(--hr-border-color, #e8e8e8);
   border-bottom: 1px solid var(--hr-border-color, #e8e8e8);
   border-radius: 0;
   cursor: pointer;
@@ -630,7 +629,7 @@ html[data-theme=dark] #history-today .expand-control:hover {
 }
 
 #post-list-collapse-bar:hover {
-  background: var(--bg-card-hover, #f8f8f8);
+  background: transparent;
 }
 
 #post-list-collapse-bar .collapse-icon {
