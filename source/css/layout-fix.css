@@ -1,4 +1,4 @@
-﻿/* =============================================
+/* =============================================
    首页自定义组件统一样式
    覆盖原有的各 <style> 块，统一管理
    ============================================= */
@@ -602,4 +602,98 @@ html[data-theme=dark] #history-today .expand-control:hover {
 .layout {
     padding: 4px 10px !important;
     max-width: 1400px !important;
+}
+
+/* =============================================
+   首页文章列表折叠功能
+   ============================================= */
+
+#post-list-collapse {
+  margin-top: 20px;
+}
+
+#post-list-collapse-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 40px;
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 87, 34, 0.1));
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+  margin-bottom: 15px;
+}
+
+#post-list-collapse-bar:hover {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.15), rgba(255, 87, 34, 0.15));
+  border-color: rgba(255, 152, 0, 0.5);
+}
+
+#post-list-collapse-bar .collapse-icon {
+  color: #ff9800;
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+#post-list-collapse-bar .collapse-text {
+  color: #e65100;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#post-list-container {
+  overflow: hidden;
+  transition: max-height 0.5s ease, opacity 0.3s ease;
+  max-height: 5000px;
+  opacity: 1;
+}
+
+#post-list-container.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* 黑暗模式适配 */
+html[data-theme=dark] #post-list-collapse-bar {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.08), rgba(255, 87, 34, 0.08));
+  border-color: rgba(255, 152, 0, 0.2);
+}
+
+html[data-theme=dark] #post-list-collapse-bar:hover {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.12), rgba(255, 87, 34, 0.12));
+  border-color: rgba(255, 152, 0, 0.35);
+}
+
+html[data-theme=dark] #post-list-collapse-bar .collapse-text {
+  color: #ffb74d;
+}
+
+html[data-theme=dark] #post-list-collapse-bar .collapse-icon {
+  color: #ffb74d;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  #post-list-collapse {
+    margin-top: 15px;
+  }
+
+  #post-list-collapse-bar {
+    height: 36px;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  #post-list-collapse-bar .collapse-text {
+    font-size: 13px;
+  }
+
+  #post-list-collapse-bar .collapse-icon {
+    font-size: 11px;
+  }
 }
