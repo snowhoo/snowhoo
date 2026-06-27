@@ -83,15 +83,13 @@ div
   // 首页文章列表折叠功能（懒加载）
   script.
     (function() {
-      var STORAGE_KEY = 'postListCollapsed';
-
       function initCollapse() {
         var bar = document.getElementById('post-list-collapse-bar');
         var template = document.getElementById('post-list-template');
         if (!bar || !template) return;
 
         var containerId = 'post-list-container';
-        var container = document.getElementById(containerId);
+        var container = null;
         var text = bar.querySelector('.collapse-text');
         var icons = bar.querySelectorAll('.collapse-icon');
 
@@ -124,24 +122,13 @@ div
               });
             }
           }
-          try {
-            localStorage.setItem(STORAGE_KEY, collapsed ? 'true' : 'false');
-          } catch(e) {}
         }
 
-        try {
-          var saved = localStorage.getItem(STORAGE_KEY);
-          if (saved === 'false') {
-            setCollapsed(false);
-          } else {
-            setCollapsed(true);
-          }
-        } catch(e) {
-          setCollapsed(true);
-        }
+        // 默认折叠
+        setCollapsed(true);
 
         bar.addEventListener('click', function() {
-          var isCollapsed = !document.getElementById(containerId);
+          var isCollapsed = !container;
           setCollapsed(!isCollapsed);
         });
       }
