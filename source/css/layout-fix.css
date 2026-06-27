@@ -678,22 +678,6 @@ html[data-theme=dark] #post-list-collapse-bar .collapse-icon {
   color: #777;
 }
 
-/* =============================================
-   导航栏域名小字
-   ============================================= */
-html body #nav #blog-info a.nav-site-title .site-domain {
-  display: block;
-  font-size: 10px;
-  font-weight: 400;
-  color: #888;
-  margin-top: 2px;
-  line-height: 1.2;
-}
-
-html[data-theme=dark] body #nav #blog-info a.nav-site-title .site-domain {
-  color: #666;
-}
-
 /* 移动端适配 */
 @media (max-width: 768px) {
   #post-list-collapse {

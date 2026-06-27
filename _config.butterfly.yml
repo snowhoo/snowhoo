@@ -1,4 +1,4 @@
-﻿# --------------------------------------
+# --------------------------------------
 # Hexo Butterfly Theme Configuration
 # 持久保存配置 - 确保 npm install 后不丢失
 # --------------------------------------
@@ -1078,6 +1078,8 @@ inject:
     - <style>.swarm-wrap{position:fixed;bottom:0;left:0;right:0;z-index:99999;height:1px;background:transparent}.swarm-fill{height:100%;width:0;background:#888;transition:width .3s ease}</style>
     - <div class="swarm-wrap" id="swarmWrap" style="display:none"><div class="swarm-fill" id="swarmFill"></div></div>
     - <script>window.addEventListener('message',function(e){if(!e.data||e.data.type!=='snowhoo-warm')return;var w=document.getElementById('swarmWrap'),f=document.getElementById('swarmFill');if(w)w.style.display='block';if(f)f.style.width=Math.floor(e.data.done/e.data.total*100)+'%';if(e.data.done>=e.data.total){setTimeout(function(){if(w)setTimeout(function(){w.style.display='none'},500)},800)}});setTimeout(function(){var w=document.getElementById('swarmWrap');if(w&&w.style.display!=='block'){w.style.display='none'}},5000);</script>
+    - <style>.site-domain{display:block;font-size:10px;font-weight:400;color:#888;margin-top:2px;line-height:1.2}html[data-theme=dark] .site-domain{color:#666}@media(max-width:768px){.site-domain{display:none}}</style>
+    - <script>(function(){var s=document.querySelector('.site-slogan');if(!s)return;var d=document.createElement('span');d.className='site-domain';d.textContent='SnowHoo.NET';s.parentNode.appendChild(d)})();</script>
 # CDN Settings
 # CDN Settings
 CDN:
