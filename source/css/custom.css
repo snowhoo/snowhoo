@@ -356,3 +356,19 @@ html[data-theme="dark"] #lucky-visitor-tag .lucky-collapsed-icon {
 html[data-theme="dark"] .recent-post-item {
   border-color: #3a3a3a;
 }
+
+/* ========================================
+   导航栏域名小字
+   ======================================== */
+html body #nav #blog-info a.nav-site-title .site-domain {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: #888;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+html[data-theme="dark"] body #nav #blog-info a.nav-site-title .site-domain {
+  color: #666;
+}

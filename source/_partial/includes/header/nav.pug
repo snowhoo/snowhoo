@@ -6,6 +6,7 @@ nav#nav
       if theme.nav.display_title
         span.site-name=config.title
       span.site-slogan 一九七九年，春天
+      span.site-domain SnowHoo.NET
     if globalPageType === 'post' && theme.nav.display_post_title
       a.nav-page-title(href=url_for('/'))
         span.site-name=(page.title || config.title)
