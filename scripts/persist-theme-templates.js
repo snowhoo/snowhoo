@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 持久化主题模板修改
  * 在每次生成前，自动将 source/_partial 中的模板文件覆盖到 node_modules/hexo-theme-butterfly/layout/
  */
@@ -68,6 +68,14 @@ hexo.on('generateBefore', function() {
   if (fs.existsSync(mixinsSrc)) {
     fs.copyFileSync(mixinsSrc, mixinsDest);
     hexo.log.info('[持久化模板] 已覆盖: mixins/indexPostUI.pug');
+  }
+
+  // 复制 additional-js.pug
+  const additionalJsSrc = path.join(partialDir, 'includes/additional-js.pug');
+  const additionalJsDest = path.join(themeDir, 'includes/additional-js.pug');
+  if (fs.existsSync(additionalJsSrc)) {
+    fs.copyFileSync(additionalJsSrc, additionalJsDest);
+    hexo.log.info('[持久化模板] 已覆盖: additional-js.pug');
   }
 
   // 复制 index.pug

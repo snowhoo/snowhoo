@@ -79,3 +79,67 @@ div
         bar.style.setProperty('--sticky-color-light', color.light);
       });
     })();
+
+  // 首页文章列表折叠功能
+  script.
+    (function() {
+      var STORAGE_KEY = 'postListCollapsed';
+
+      function initCollapse() {
+        var bar = document.getElementById('post-list-collapse-bar');
+        var container = document.getElementById('post-list-container');
+        if (!bar || !container) return;
+
+        var text = bar.querySelector('.collapse-text');
+        var icons = bar.querySelectorAll('.collapse-icon');
+
+        function setCollapsed(collapsed) {
+          if (collapsed) {
+            container.classList.add('collapsed');
+            if (text) text.textContent = '展开文章列表';
+            if (icons) {
+              icons.forEach(function(icon) {
+                icon.style.transform = 'rotate(0deg)';
+              });
+            }
+          } else {
+            container.classList.remove('collapsed');
+            if (text) text.textContent = '收起文章列表';
+            if (icons) {
+              icons.forEach(function(icon) {
+                icon.style.transform = 'rotate(180deg)';
+              });
+            }
+          }
+          try {
+            localStorage.setItem(STORAGE_KEY, collapsed ? 'true' : 'false');
+          } catch(e) {}
+        }
+
+        try {
+          var saved = localStorage.getItem(STORAGE_KEY);
+          if (saved === 'false') {
+            setCollapsed(false);
+          } else {
+            setCollapsed(true);
+          }
+        } catch(e) {
+          setCollapsed(true);
+        }
+
+        bar.addEventListener('click', function() {
+          var isCollapsed = container.classList.contains('collapsed');
+          setCollapsed(!isCollapsed);
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCollapse);
+      } else {
+        initCollapse();
+      }
+
+      if (typeof pjax !== 'undefined') {
+        document.addEventListener('pjax:complete', initCollapse);
+      }
+    })();
