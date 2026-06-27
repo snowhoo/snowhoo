@@ -80,22 +80,28 @@ div
       });
     })();
 
-  // 首页文章列表折叠功能
+  // 首页文章列表折叠功能（懒加载）
   script.
     (function() {
       var STORAGE_KEY = 'postListCollapsed';
 
       function initCollapse() {
         var bar = document.getElementById('post-list-collapse-bar');
-        var container = document.getElementById('post-list-container');
-        if (!bar || !container) return;
+        var template = document.getElementById('post-list-template');
+        if (!bar || !template) return;
 
+        var containerId = 'post-list-container';
+        var container = document.getElementById(containerId);
         var text = bar.querySelector('.collapse-text');
         var icons = bar.querySelectorAll('.collapse-icon');
 
         function setCollapsed(collapsed) {
           if (collapsed) {
-            container.classList.add('collapsed');
+            // 收起：移除 DOM 中的内容
+            if (container) {
+              container.remove();
+              container = null;
+            }
             if (text) text.textContent = '展开文章列表';
             if (icons) {
               icons.forEach(function(icon) {
@@ -103,7 +109,14 @@ div
               });
             }
           } else {
-            container.classList.remove('collapsed');
+            // 展开：从 template 克隆内容并插入 DOM
+            if (!container) {
+              container = document.createElement('div');
+              container.id = containerId;
+              var clone = document.importNode(template.content, true);
+              container.appendChild(clone);
+              bar.parentNode.insertBefore(container, bar.nextSibling);
+            }
             if (text) text.textContent = '收起文章列表';
             if (icons) {
               icons.forEach(function(icon) {
@@ -128,7 +141,7 @@ div
         }
 
         bar.addEventListener('click', function() {
-          var isCollapsed = container.classList.contains('collapsed');
+          var isCollapsed = !document.getElementById(containerId);
           setCollapsed(!isCollapsed);
         });
       }
