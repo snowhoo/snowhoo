@@ -3,6 +3,44 @@
    覆盖原有的各 <style> 块，统一管理
    ============================================= */
 
+/* ---- 年度进度条 ---- */
+.year-progress-wrap {
+  text-align: center;
+  margin: 0.5rem 0;
+  padding: 0.5rem 0;
+}
+.year-progress-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.year-progress-bar {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-surface);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+.year-block {
+  width: 18px;
+  height: 18px;
+  border-radius: 2px;
+}
+.year-block.filled {
+  background: var(--accent);
+}
+.year-block.empty {
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+html[data-theme='dark'] .year-block.empty {
+  background: var(--bg-card);
+}
+
 /* ---- 首页 widgets 外层容器 ---- */
 #home-container {
   width: 100%;
