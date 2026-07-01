@@ -9,18 +9,29 @@
   margin: 0.5rem 0;
   padding: 0.5rem 0;
 }
-.year-progress {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.year-progress-label {
   font-size: 14px;
   font-weight: 500;
   color: var(--text-secondary);
+  margin-right: 4px;
+}
+.year-progress-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   background: var(--bg-surface);
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: 8px;
-  font-family: 'Courier New', 'Noto Sans SC', monospace;
-  letter-spacing: 1px;
+}
+.yr-block {
+  font-size: 16px;
+  line-height: 1;
+}
+.yr-filled {
+  color: var(--accent);
+}
+.yr-empty {
+  color: var(--border);
 }
 
 /* ---- 首页 widgets 外层容器 ---- */
