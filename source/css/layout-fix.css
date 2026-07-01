@@ -6,21 +6,22 @@
 /* ---- 年度进度条 ---- */
 .year-progress-wrap {
   text-align: center;
-  margin: 0.5rem 0;
-  padding: 0.5rem 0;
+  margin: 0;
+  padding: 0;
 }
 .year-progress-label {
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 300;
   color: var(--text-secondary);
-  margin-right: 4px;
+  margin-right: 0px;
+  font-family: '楷体', '华文楷书', 'KaiTi', 'Georgia', serif;
 }
 .year-progress-bar {
   display: inline-flex;
   align-items: center;
   gap: 0;
   background: var(--bg-surface);
-  padding: 6px 12px;
+  padding: 0px;
   border-radius: 8px;
 }
 .yr-block {

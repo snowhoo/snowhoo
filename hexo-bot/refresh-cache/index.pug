@@ -9,10 +9,10 @@ block home-widgets
       .sc-btn-row
         each item in [0,1,2,3]
           button.sc-btn.sc-btn-placeholder(disabled style="visibility:hidden")
-    // 年度进度条
-    include year.pug
     // 诗词
     include DailyPoetry.pug
+    // 年度进度条
+    include year.pug
     // 历史上的今天
     include HistoryToday.pug
     //include ArticleListHaed.pug
