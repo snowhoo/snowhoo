@@ -18,7 +18,7 @@
 .year-progress-bar {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 0;
   background: var(--bg-surface);
   padding: 6px 12px;
   border-radius: 8px;
@@ -26,12 +26,16 @@
 .yr-block {
   font-size: 16px;
   line-height: 1;
+  font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
 }
 .yr-filled {
-  color: var(--accent);
+  color: #f97316;
 }
 .yr-empty {
-  color: var(--border);
+  color: #d0d0d0;
+}
+html[data-theme='dark'] .yr-empty {
+  color: #4a4a5a;
 }
 
 /* ---- 首页 widgets 外层容器 ---- */
