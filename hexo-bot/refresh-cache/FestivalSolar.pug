@@ -203,6 +203,9 @@ style.
         }
         widget.innerHTML = h;
         widget.style.display = 'block';
+        for (var j = 0; j < matches.length; j++) {
+          toggleDetail(j);
+        }
       }
 
       function toggleDetail(idx) {
