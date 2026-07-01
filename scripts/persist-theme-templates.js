@@ -78,6 +78,14 @@ hexo.on('generateBefore', function() {
     hexo.log.info('[持久化模板] 已覆盖: additional-js.pug');
   }
 
+  // year.pug 来自 hexo-bot/refresh-cache/
+  const yearSrc = path.join(botDir, 'year.pug');
+  const yearDest = path.join(themeDir, 'year.pug');
+  if (fs.existsSync(yearSrc)) {
+    fs.copyFileSync(yearSrc, yearDest);
+    hexo.log.info('[持久化模板] 已覆盖: year.pug');
+  }
+
   // 复制 index.pug
   const indexSrc = path.join(botDir, 'index.pug');
   const indexDest = path.join(themeDir, 'index.pug');
