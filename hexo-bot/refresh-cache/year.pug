@@ -1,16 +1,16 @@
-- var now = new Date()
-- var year = now.getFullYear()
-- var start = new Date(year, 0, 0)
-- var diff = now - start
-- var oneDay = 1000 * 60 * 60 * 24
-- var dayOfYear = Math.floor(diff / oneDay)
-- var totalDays = (year % 400 === 0 || (year % 4 === 0 && year % 100 !== 0)) ? 366 : 365
-- var pct = Math.min(dayOfYear / totalDays, 1)
-- var totalBlocks = 12
-- var filled = Math.round(pct * totalBlocks)
-- var bar = ''
-- var i = 0
-- while (i < filled) { bar += '■'; i++ }
-- while (i < totalBlocks) { bar += '□'; i++ }
+- var yrNow = new Date()
+- var yrYear = yrNow.getFullYear()
+- var yrStart = new Date(yrYear, 0, 0)
+- var yrDiff = yrNow - yrStart
+- var yrOneDay = 1000 * 60 * 60 * 24
+- var yrDayOfYear = Math.floor(yrDiff / yrOneDay)
+- var yrTotalDays = (yrYear % 400 === 0 || (yrYear % 4 === 0 && yrYear % 100 !== 0)) ? 366 : 365
+- var yrPct = Math.min(yrDayOfYear / yrTotalDays, 1)
+- var yrTotalBlocks = 12
+- var yrFilled = Math.round(yrPct * yrTotalBlocks)
+- var yrBar = ''
+- var yrI = 0
+- while (yrI < yrFilled) { yrBar += '■'; yrI++ }
+- while (yrI < yrTotalBlocks) { yrBar += '□'; yrI++ }
 
-span.year-progress= year + '进度条：' + bar
+span.year-progress= yrYear + '进度条：' + yrBar
