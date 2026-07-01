@@ -8,11 +8,9 @@
 - var yrPct = Math.min(yrDayOfYear / yrTotalDays, 1)
 - var yrTotalBlocks = 12
 - var yrFilled = Math.round(yrPct * yrTotalBlocks)
+- var yrBar = ''
+- var yrI = 0
+- while (yrI < yrTotalBlocks) { yrBar += yrI < yrFilled ? '█' : '░'; yrI++ }
 
 .year-progress-wrap
-  .year-progress-label= yrYear + '进度条'
-  .year-progress-bar
-    - var yrI = 0
-    while yrI < yrTotalBlocks
-      .year-block(class= yrI < yrFilled ? 'filled' : 'empty')
-      - yrI++
+  span.year-progress= yrYear + ' 进度条 ' + yrBar

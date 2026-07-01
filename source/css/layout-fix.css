@@ -9,36 +9,18 @@
   margin: 0.5rem 0;
   padding: 0.5rem 0;
 }
-.year-progress-label {
-  display: block;
+.year-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 14px;
   font-weight: 500;
   color: var(--text-secondary);
-  margin-bottom: 6px;
-}
-.year-progress-bar {
-  display: inline-flex;
-  gap: 4px;
-  align-items: center;
-  justify-content: center;
   background: var(--bg-surface);
-  padding: 8px 12px;
+  padding: 6px 14px;
   border-radius: 8px;
-}
-.year-block {
-  width: 18px;
-  height: 18px;
-  border-radius: 2px;
-}
-.year-block.filled {
-  background: var(--accent);
-}
-.year-block.empty {
-  background: var(--border);
-  border: 1px solid var(--border);
-}
-html[data-theme='dark'] .year-block.empty {
-  background: var(--bg-card);
+  font-family: 'Courier New', 'Noto Sans SC', monospace;
+  letter-spacing: 1px;
 }
 
 /* ---- 首页 widgets 外层容器 ---- */
