@@ -1,9 +1,10 @@
-﻿/* =============================================
+/* =============================================
    新七彩按钮组 - 展开式组件样式
    ============================================= */
 
 #seven-color-card {
   width: 100%;
+  min-width: 0;
   margin: 0 auto;
   margin-top: 0 !important;
   font-family: system-ui, -apple-system, 'Segoe UI', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
@@ -164,6 +165,8 @@ html[data-theme=dark] #seven-color-card .sc-btn-6 { background: #c0392b !importa
 /* ---- 展开内容区 ---- */
 #seven-color-card .sc-content {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.35s ease, padding 0.35s ease;
