@@ -61,6 +61,7 @@ layout: false
   -webkit-overflow-scrolling: touch;
   white-space: nowrap;
   min-width: 0;
+  max-width: 100%;
 }
 .platform-tabs::-webkit-scrollbar {
   height: 4px;
@@ -159,8 +160,9 @@ html[data-theme=dark] .news-rank {
   color: white;
 }
 .news-info {
-  //flex: 1;
+  flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 .news-title h3, .news-title h3 a {
   font-weight: 400 !important;
