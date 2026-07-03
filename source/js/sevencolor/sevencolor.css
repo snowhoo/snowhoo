@@ -180,6 +180,7 @@ html[data-theme=dark] #seven-color-card .sc-btn-6 { background: #c0392b !importa
   max-height: none;
   padding: 0.5rem 0;
   background: var(--card-bg, rgba(255, 255, 255, 0.95));
+  overflow: hidden;
 }
 
 html[data-theme=dark] #seven-color-card .sc-content.sc-open {
