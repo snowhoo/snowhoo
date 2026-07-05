@@ -30,6 +30,7 @@ layout: false
         .toolbar button { cursor: pointer; font-weight: 600; }
         .toolbar button.active { background: var(--accent); border-color: var(--accent); color: white; }
         #themeToggleBtn { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); }
+        #toolbarLogo { height: 28px; width: auto; margin-left: auto; margin-right: 0; flex-shrink: 0; cursor: pointer; border-radius: 4px; }
         #stickyHeader { position: sticky; top: 0; z-index: 100; background: var(--bg-body); }
         .cat-filters { display: flex; gap: 8px; align-items: center; width: 100%; overflow-x: auto; padding: 4px 0 8px; scrollbar-width: none; }
         .cat-filters::-webkit-scrollbar { display: none; }
@@ -100,6 +101,7 @@ layout: false
                 <button id="historyBtn">🕒 <span class="btn-text">最近</span></button>
                 <button id="favoritesBtn">❤️ <span class="btn-text">收藏</span></button>
                 <button id="themeToggleBtn" title="切换主题"><span id="themeIcon"></span><span class="btn-text">主题</span></button>
+                <img id="toolbarLogo" src="/images/logo.png" alt="logo">
             </div>
             <div id="catBar" class="cat-filters"></div>
         </div>
