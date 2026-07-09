@@ -4,11 +4,8 @@
 
 'use strict';
 
-// 加载 managed workspace 中的 lunar-javascript
-module.paths.unshift(require('path').join(
-  process.env.USERPROFILE || process.env.HOME,
-  '.workbuddy', 'binaries', 'node', 'workspace', 'node_modules'
-));
+// 加载本地项目 node_modules 中的 lunar-javascript
+module.paths.unshift(require('path').join(__dirname, '..', '..', 'node_modules'));
 
 const { Solar, Lunar } = require('lunar-javascript');
 const fs = require('fs');

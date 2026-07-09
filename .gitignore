@@ -3,6 +3,8 @@ db.json
 *.tmp
 /.deploy_*/
 /public/
+# 本地诗词数据库，仅用于每日随机选诗，不推送
+/hexo-bot/refresh-cache/poetry_data/
 .source/
 *.orig
 _env*
