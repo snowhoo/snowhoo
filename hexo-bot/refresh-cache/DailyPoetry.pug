@@ -23,10 +23,36 @@
         var pb = document.getElementById('poetBio');
         if (current.fullDetail) {
           fd.innerText = current.fullDetail.fullText;
-          pb.innerText = current.fullDetail.poetBio;
+          current.fullBio = current.fullDetail.poetBio;
+          renderBio();
         } else {
           fd.innerText = '「' + current.line + '」';
-          pb.innerText = current.author + '，生平逸事待考。';
+          current.fullBio = current.author + '，生平逸事待考。';
+          renderBio();
+        }
+      }
+
+      function renderBio() {
+        var pb = document.getElementById('poetBio');
+        if (current.fullBio.length > 100) {
+          pb.innerText = current.fullBio.substring(0, 100) + '…';
+          pb.classList.add('bio-truncated');
+        } else {
+          pb.innerText = current.fullBio;
+          pb.classList.remove('bio-truncated');
+        }
+      }
+
+      function toggleBio() {
+        var pb = document.getElementById('poetBio');
+        if (pb.classList.contains('bio-expanded')) {
+          pb.innerText = current.fullBio.substring(0, 100) + '…';
+          pb.classList.remove('bio-expanded');
+          pb.classList.add('bio-truncated');
+        } else {
+          pb.innerText = current.fullBio;
+          pb.classList.remove('bio-truncated');
+          pb.classList.add('bio-expanded');
         }
       }
 
@@ -82,5 +108,6 @@
       document.addEventListener('DOMContentLoaded', function() {
         setTimeout(loadPoetry, 0);
         document.getElementById('expandToggle').addEventListener('click', toggleDetail);
+        document.getElementById('poetBio').addEventListener('click', toggleBio);
       });
     })();
