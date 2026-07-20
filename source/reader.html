@@ -211,31 +211,37 @@ async function main() {
     for (let i = 0; i < total; i += BATCH_SIZE) {
       const batch = mdFiles.slice(i, i + BATCH_SIZE);
       
-      // 并行读取当前批次
-      const results = await Promise.all(batch.map(async (filename) => {
+      // 并行读取当前批次（用 allSettled 避免单个失败卡死）
+      const results = await Promise.allSettled(batch.map(async (filename) => {
         loadedCount++;
         loadingSub.textContent = loadedCount + ' / ' + total + '  ' + filename.slice(0, 30);
-        const raw = await fetchRawContent(filename);
-        const { data, body } = parseFrontMatter(raw);
-        if (data.title) {
-          // 提取图片，并将封面图放在最前面
-          let images = extractImages(body);
-          if (data.cover && !images.includes(data.cover)) {
-            images.unshift(data.cover);
+        try {
+          const raw = await fetchRawContent(filename);
+          const { data, body } = parseFrontMatter(raw);
+          if (data.title) {
+            // 提取图片，并将封面图放在最前面
+            let images = extractImages(body);
+            if (data.cover && !images.includes(data.cover)) {
+              images.unshift(data.cover);
+            }
+            return {
+              title: data.title,
+              date: data.date ? data.date.split(' ')[0] : '',
+              cover: data.cover || '',
+              images: images,
+              content: body
+            };
           }
-          return {
-            title: data.title,
-            date: data.date ? data.date.split(' ')[0] : '',
-            cover: data.cover || '',
-            images: images,
-            content: body
-          };
+        } catch (e) {
+          console.warn('跳过 ' + filename + ': ' + e.message);
         }
         return null;
       }));
       
-      // 合并到总数组
-      const validPosts = results.filter(p => p !== null);
+      // 过滤出成功的文章
+      const validPosts = results
+        .filter(r => r.status === 'fulfilled' && r.value !== null)
+        .map(r => r.value);
       POSTS.push(...validPosts);
       
       // 按日期排序
