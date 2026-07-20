@@ -19,7 +19,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .card.right{transform:translateX(100%);opacity:0;pointer-events:none}
 
 .image-gallery{position:relative;width:100%;flex-shrink:0;overflow:hidden;background:#000}
-.image-gallery .gallery-track{display:flex;transition:transform .3s ease;height:36vw}
+.image-gallery .gallery-track{display:flex;transition:transform .3s ease;height:calc(100vh / 3)}
 .image-gallery img{width:100%;height:100%;object-fit:cover;flex-shrink:0}
 .image-gallery .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:rgba(255,255,255,.6);font-size:.95rem;flex-shrink:0}
 .image-dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:10}
@@ -151,10 +151,16 @@ function parseFrontMatter(content) {
 // ===== 提取正文中的图片 =====
 function extractImages(body) {
   const imgs = [];
-  const regex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+  // 匹配 Markdown 图片语法 ![]()
+  const mdRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
   let match;
-  while ((match = regex.exec(body)) !== null) {
+  while ((match = mdRegex.exec(body)) !== null) {
     if (!imgs.includes(match[2])) imgs.push(match[2]);
+  }
+  // 匹配 HTML <img> 标签
+  const htmlRegex = /<img[^>]+src="([^"]+)"[^>]*>/g;
+  while ((match = htmlRegex.exec(body)) !== null) {
+    if (!imgs.includes(match[1])) imgs.push(match[1]);
   }
   return imgs;
 }
@@ -163,6 +169,7 @@ function extractImages(body) {
 function mdToText(md) {
   return md
     .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '')
+    .replace(/<img[^>]+>/g, '')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
     .replace(/#{1,6}\s+(.+)$/gm, '$1')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -173,10 +180,9 @@ function mdToText(md) {
     .replace(/^/, '<p>').replace(/$/, '</p>');
 }
 
-// ===== 主流程 =====
+// ===== 主流程（分批加载，渐进渲染） =====
 async function main() {
   try {
-    // 1. 获取文件列表
     const files = await fetchFileList();
     const mdFiles = files
       .filter(f => f.name.endsWith('.md') && f.type === 'file')
@@ -184,47 +190,66 @@ async function main() {
       .sort()
       .reverse();
     
-    loadingText.textContent = '共 ' + mdFiles.length + ' 篇文章，正在读取...';
+    const total = mdFiles.length;
+    loadingText.textContent = '共 ' + total + ' 篇文章，正在读取...';
     
-    // 2. 逐篇读取和解析
-    for (let i = 0; i < mdFiles.length; i++) {
-      loadingSub.textContent = (i + 1) + ' / ' + mdFiles.length + '  ' + mdFiles[i].slice(0, 30);
-      const raw = await fetchRawContent(mdFiles[i]);
-      const { data, body } = parseFrontMatter(raw);
-      if (data.title) {
-        POSTS.push({
-          title: data.title,
-          date: data.date ? data.date.split(' ')[0] : '',
-          cover: data.cover || '',
-          images: extractImages(body),
-          content: body
-        });
+    const BATCH_SIZE = 5;
+    POSTS = [];
+    let loadedCount = 0;
+    let initialized = false;
+    
+    for (let i = 0; i < total; i += BATCH_SIZE) {
+      const batch = mdFiles.slice(i, i + BATCH_SIZE);
+      
+      // 并行读取当前批次
+      const results = await Promise.all(batch.map(async (filename) => {
+        loadedCount++;
+        loadingSub.textContent = loadedCount + ' / ' + total + '  ' + filename.slice(0, 30);
+        const raw = await fetchRawContent(filename);
+        const { data, body } = parseFrontMatter(raw);
+        if (data.title) {
+          return {
+            title: data.title,
+            date: data.date ? data.date.split(' ')[0] : '',
+            cover: data.cover || '',
+            images: extractImages(body),
+            content: body
+          };
+        }
+        return null;
+      }));
+      
+      // 合并到总数组
+      const validPosts = results.filter(p => p !== null);
+      POSTS.push(...validPosts);
+      
+      // 按日期排序
+      POSTS.sort((a, b) => {
+        const da = new Date(a.date), db = new Date(b.date);
+        return db - da || (da ? 1 : -1);
+      });
+      
+      // 重新渲染全部卡片（渐进式更新）
+      app.innerHTML = '';
+      dotsContainer.innerHTML = '';
+      createCards();
+      createDots();
+      
+      if (!initialized) {
+        bindEvents();
+        initialized = true;
       }
+      
+      updateCards();
     }
     
-    // 3. 按日期排序
-    POSTS.sort((a, b) => {
-      const da = new Date(a.date), db = new Date(b.date);
-      return db - da || (da ? 1 : -1);
-    });
-    
-    init();
+    // 全部加载完成
+    setTimeout(() => { loadingEl.classList.add('hide'); setTimeout(() => loadingEl.remove(), 500); }, 300);
+    setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 5000);
   } catch (e) {
     loadingText.textContent = '加载失败: ' + e.message;
     console.error(e);
   }
-}
-
-function init() {
-  if (POSTS.length === 0) {
-    loadingText.textContent = '没有找到文章';
-    return;
-  }
-  createCards();
-  createDots();
-  bindEvents();
-  setTimeout(() => { loadingEl.classList.add('hide'); setTimeout(() => loadingEl.remove(), 500); }, 300);
-  setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 5000);
 }
 
 function createCards() {
@@ -239,7 +264,7 @@ function createCards() {
     // Image gallery
     const galleryDiv = document.createElement('div');
     galleryDiv.className = 'image-gallery';
-    galleryDiv.style.height = '36vw';
+    galleryDiv.style.height = 'calc(100vh / 3)';
     
     if (post.images.length > 0) {
       const track = document.createElement('div');
