@@ -181,11 +181,11 @@ function mdToText(md) {
 }
 
 // ===== 图片路径解析（相对/绝对路径 → GitHub raw URL） =====
-const RAW_BASE = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}`;
-const POSTS_BASE = `${RAW_BASE}/${POSTS_PATH}/`;
+const SRC_BASE = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/source`;
+const POSTS_BASE = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${POSTS_PATH}/`;
 function resolveImageUrl(src) {
   if (src.startsWith('http://') || src.startsWith('https://')) return src;
-  if (src.startsWith('/')) return RAW_BASE + src;
+  if (src.startsWith('/')) return SRC_BASE + src;
   return POSTS_BASE + src;
 }
 
