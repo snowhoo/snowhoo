@@ -30,13 +30,15 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .card-title h1{font-size:1.15rem;font-weight:700;line-height:1.5;color:#222;margin-bottom:4px}
 .card-title .meta{font-size:.78rem;color:#999}
 
-.card-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 18px 40px;background:#fafafa}
+.card-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 18px 60px;background:#fafafa}
 .card-content::-webkit-scrollbar{width:0}
 .card-content .body p{line-height:1.9;margin-bottom:14px;font-size:.95rem;color:#333}
 .card-content .body strong,.card-content .body b{color:#222}
 .card-content .body br{display:block;content:"";margin-bottom:.4em}
 
-.page-counter{position:fixed;bottom:20px;right:20px;z-index:100;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.45);font-size:.75rem;font-weight:600;pointer-events:none;user-select:none}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:#fff;border-top:1px solid #eee;display:flex;align-items:center;justify-content:center;font-size:.8rem;user-select:none;-webkit-user-select:none}
+.bottom-nav .page-btn{display:flex;align-items:center;gap:4px;padding:4px 16px;border-radius:4px;cursor:pointer;color:#666}
+.bottom-nav .page-btn:active{background:rgba(0,0,0,.05)}
 
 .swipe-hint{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(0,0,0,.55);color:#fff;padding:6px 16px;border-radius:20px;font-size:.75rem;opacity:1;transition:opacity .5s;pointer-events:none;white-space:nowrap}
 .swipe-hint.hidden{opacity:0}
@@ -59,7 +61,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .card-content{background:#121212}
   .card-content .body p{color:#ccc}
   .card-content .body strong,.card-content .body b{color:#eee}
-  .page-counter{background:rgba(255,255,255,.15);color:rgba(255,255,255,.35)}
+  .bottom-nav{background:#1a1a1a;border-color:#333}
+  .bottom-nav .page-btn{color:#999}
+  .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
 }
 </style>
 </head>
@@ -75,7 +79,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 <div id="app"></div>
 
-<div class="page-counter" id="pageCounter">1</div>
+<div class="bottom-nav" id="bottomNav"><div class="page-btn" id="pageBtn">1</div></div>
 
 <script>
 const OWNER = 'snowhoo';
@@ -89,7 +93,7 @@ let startX = 0, startY = 0, moveX = 0, moveY = 0;
 let isDragging = false;
 let hintVisible = true;
 const app = document.getElementById('app');
-const pageCounter = document.getElementById('pageCounter');
+const pageBtn = document.getElementById('pageBtn');
 const hintEl = document.getElementById('hint');
 const loadingEl = document.getElementById('loading');
 const loadingText = document.getElementById('loadingText');
@@ -254,7 +258,7 @@ async function main() {
           return db - da || (da ? 1 : -1);
         });
         app.innerHTML = '';
-        createCounter();
+        createPageNav();
         createCards();
         bindEvents();
         initialized = true;
@@ -276,7 +280,7 @@ async function main() {
       return db - da || (da ? 1 : -1);
     });
     app.innerHTML = '';
-    createCounter();
+    createPageNav();
     createCards();
     updateCards();
     
@@ -369,9 +373,19 @@ function createCards() {
   });
 }
 
-function createCounter() {
-  pageCounter.textContent = '1';
+function createPageNav() {
+  pageBtn.textContent = '1 / ' + POSTS.length;
 }
+pageBtn.addEventListener('click', function() {
+  var input = prompt('输入页码 (1 - ' + POSTS.length + ')', (currentIndex + 1) + '');
+  if (input !== null) {
+    var num = parseInt(input, 10);
+    if (num >= 1 && num <= POSTS.length) {
+      currentIndex = num - 1;
+      updateCards();
+    }
+  }
+});
 
 function updateCards() {
   const cards = app.querySelectorAll('.card');
@@ -381,7 +395,7 @@ function updateCards() {
     if (i === currentIndex) card.classList.add('center');
     if (i > currentIndex) card.classList.add('right');
   });
-  pageCounter.textContent = (currentIndex + 1) + '';
+  pageBtn.textContent = (currentIndex + 1) + ' / ' + POSTS.length;
   if (hintVisible) {
     hintEl.classList.remove('hidden');
     setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);
