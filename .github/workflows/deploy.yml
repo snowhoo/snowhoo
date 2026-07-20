@@ -46,6 +46,11 @@ jobs:
       - name: Generate static files
         run: npx hexo generate
 
+      - name: Copy raw markdown posts for reader.html
+        run: |
+          mkdir -p public/_posts
+          cp source/_posts/*.md public/_posts/ 2>/dev/null || true
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
