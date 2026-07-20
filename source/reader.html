@@ -36,9 +36,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .card-content .body strong,.card-content .body b{color:#222}
 .card-content .body br{display:block;content:"";margin-bottom:.4em}
 
-.page-indicator{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:6px;align-items:center;pointer-events:none}
-.page-dot{width:6px;height:6px;border-radius:50%;background:rgba(0,0,0,.25);transition:all .3s}
-.page-dot.active{background:rgba(0,0,0,.6);width:18px;border-radius:3px}
+.page-counter{position:fixed;bottom:20px;right:20px;z-index:100;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.45);font-size:.75rem;font-weight:600;pointer-events:none;user-select:none}
 
 .swipe-hint{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(0,0,0,.55);color:#fff;padding:6px 16px;border-radius:20px;font-size:.75rem;opacity:1;transition:opacity .5s;pointer-events:none;white-space:nowrap}
 .swipe-hint.hidden{opacity:0}
@@ -52,7 +50,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 @media(min-width:769px){
   #app{max-width:480px;margin:0 auto;border-left:1px solid #eee;border-right:1px solid #eee}
-  .page-indicator{bottom:28px}
 }
 
 @media(prefers-color-scheme:dark){
@@ -62,8 +59,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .card-content{background:#121212}
   .card-content .body p{color:#ccc}
   .card-content .body strong,.card-content .body b{color:#eee}
-  .page-dot{background:rgba(255,255,255,.2)}
-  .page-dot.active{background:rgba(255,255,255,.5)}
+  .page-counter{background:rgba(255,255,255,.15);color:rgba(255,255,255,.35)}
 }
 </style>
 </head>
@@ -79,7 +75,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 <div id="app"></div>
 
-<div class="page-indicator" id="dots"></div>
+<div class="page-counter" id="pageCounter">1</div>
 
 <script>
 const OWNER = 'snowhoo';
@@ -93,7 +89,7 @@ let startX = 0, startY = 0, moveX = 0, moveY = 0;
 let isDragging = false;
 let hintVisible = true;
 const app = document.getElementById('app');
-const dotsContainer = document.getElementById('dots');
+const pageCounter = document.getElementById('pageCounter');
 const hintEl = document.getElementById('hint');
 const loadingEl = document.getElementById('loading');
 const loadingText = document.getElementById('loadingText');
@@ -258,9 +254,8 @@ async function main() {
           return db - da || (da ? 1 : -1);
         });
         app.innerHTML = '';
-        dotsContainer.innerHTML = '';
+        createCounter();
         createCards();
-        createDots();
         bindEvents();
         initialized = true;
         updateCards();
@@ -281,9 +276,8 @@ async function main() {
       return db - da || (da ? 1 : -1);
     });
     app.innerHTML = '';
-    dotsContainer.innerHTML = '';
+    createCounter();
     createCards();
-    createDots();
     updateCards();
     
     // 更新进度提示
@@ -371,13 +365,8 @@ function createCards() {
   });
 }
 
-function createDots() {
-  POSTS.forEach((_, i) => {
-    const dot = document.createElement('div');
-    dot.className = 'page-dot' + (i === currentIndex ? ' active' : '');
-    dot.dataset.index = i;
-    dotsContainer.appendChild(dot);
-  });
+function createCounter() {
+  pageCounter.textContent = '1';
 }
 
 function updateCards() {
@@ -388,9 +377,7 @@ function updateCards() {
     if (i === currentIndex) card.classList.add('center');
     if (i > currentIndex) card.classList.add('right');
   });
-  document.querySelectorAll('.page-dot').forEach((dot, i) => {
-    dot.classList.toggle('active', i === currentIndex);
-  });
+  pageCounter.textContent = (currentIndex + 1) + '';
   if (hintVisible) {
     hintEl.classList.remove('hidden');
     setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);
