@@ -51,6 +51,9 @@ jobs:
           mkdir -p public/_posts
           cp source/_posts/*.md public/_posts/ 2>/dev/null || true
 
+      - name: Generate posts list for reader.html
+        run: node -e "const fs=require('fs'); const files=fs.readdirSync('source/_posts').filter(f=>f.endsWith('.md')); fs.writeFileSync('public/posts.json', JSON.stringify(files))"
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 

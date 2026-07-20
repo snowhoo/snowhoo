@@ -99,12 +99,12 @@ const loadingEl = document.getElementById('loading');
 const loadingText = document.getElementById('loadingText');
 const loadingSub = document.getElementById('loadingSub');
 
-// ===== GitHub API 获取文章列表 =====
+// ===== 获取文章列表（从同域名 /posts.json 读取） =====
 async function fetchFileList() {
-  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${POSTS_PATH}?ref=${BRANCH}`;
-  const resp = await fetch(url);
+  const resp = await fetch('/posts.json');
   if (!resp.ok) throw new Error('获取文章列表失败 (HTTP ' + resp.status + ')');
-  return await resp.json();
+  const names = await resp.json();
+  return names.map(name => ({ name, type: 'file' }));
 }
 
 async function fetchRawContent(filename, signal) {
