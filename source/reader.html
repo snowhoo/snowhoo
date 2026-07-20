@@ -121,10 +121,14 @@ function parseFrontMatter(content) {
   let body = content;
   if (body.startsWith('---')) {
     const lines = body.split('\n');
-    const endIdx = lines.findIndex((l, i) => i > 0 && l.trim() === '---');
+    const endIdx = lines.findIndex((l, i) => i > 0 && l.trim().startsWith('---'));
     if (endIdx !== -1) {
       const head = lines.slice(1, endIdx);
-      body = lines.slice(endIdx + 1).join('\n').trim();
+      const closeLine = lines[endIdx].trim();
+      const restAfterClose = closeLine.slice(3); // 提取 "---" 之后的内容
+      const bodyLines = lines.slice(endIdx + 1);
+      if (restAfterClose) bodyLines.unshift(restAfterClose);
+      body = bodyLines.join('\n').trim();
       let currentKey = null, currentArr = [];
       head.forEach(line => {
         const arrMatch = line.match(/^\s+-\s+(.+)$/);
