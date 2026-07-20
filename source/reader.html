@@ -331,16 +331,20 @@ function createCards() {
         galleryDiv.addEventListener('touchstart', e => {
           e.stopPropagation();
           imgStartX = e.touches[0].clientX;
+          track.style.transition = 'none';
         }, { passive: true });
         galleryDiv.addEventListener('touchmove', e => {
           e.stopPropagation();
+          const dx = e.touches[0].clientX - imgStartX;
+          track.style.transform = 'translateX(' + (-imgIndex * galleryDiv.offsetWidth + dx) + 'px)';
         }, { passive: true });
         galleryDiv.addEventListener('touchend', e => {
           e.stopPropagation();
           const diff = e.changedTouches[0].clientX - imgStartX;
           if (diff < -30 && imgIndex < post.images.length - 1) imgIndex++;
           else if (diff > 30 && imgIndex > 0) imgIndex--;
-          track.style.transform = 'translateX(-' + (imgIndex * 100) + '%)';
+          track.style.transition = 'transform .3s ease';
+          track.style.transform = 'translateX(' + (-imgIndex * galleryDiv.offsetWidth) + 'px)';
           dots.querySelectorAll('.image-dot').forEach((d, idx) => d.classList.toggle('active', idx === imgIndex));
         });
       }
