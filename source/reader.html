@@ -180,6 +180,15 @@ function mdToText(md) {
     .replace(/^/, '<p>').replace(/$/, '</p>');
 }
 
+// ===== 图片路径解析（相对/绝对路径 → GitHub raw URL） =====
+const RAW_BASE = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}`;
+const POSTS_BASE = `${RAW_BASE}/${POSTS_PATH}/`;
+function resolveImageUrl(src) {
+  if (src.startsWith('http://') || src.startsWith('https://')) return src;
+  if (src.startsWith('/')) return RAW_BASE + src;
+  return POSTS_BASE + src;
+}
+
 // ===== 主流程（分批加载，渐进渲染） =====
 async function main() {
   try {
@@ -197,6 +206,7 @@ async function main() {
     POSTS = [];
     let loadedCount = 0;
     let initialized = false;
+    let firstBatch = true;
     
     for (let i = 0; i < total; i += BATCH_SIZE) {
       const batch = mdFiles.slice(i, i + BATCH_SIZE);
@@ -208,11 +218,16 @@ async function main() {
         const raw = await fetchRawContent(filename);
         const { data, body } = parseFrontMatter(raw);
         if (data.title) {
+          // 提取图片，并将封面图放在最前面
+          let images = extractImages(body);
+          if (data.cover && !images.includes(data.cover)) {
+            images.unshift(data.cover);
+          }
           return {
             title: data.title,
             date: data.date ? data.date.split(' ')[0] : '',
             cover: data.cover || '',
-            images: extractImages(body),
+            images: images,
             content: body
           };
         }
@@ -241,10 +256,18 @@ async function main() {
       }
       
       updateCards();
+      
+      // 第一批渲染后立即隐藏 loading，让用户看到内容
+      if (firstBatch) {
+        firstBatch = false;
+        loadingEl.classList.add('hide');
+        setTimeout(() => loadingEl.remove(), 500);
+        // 让浏览器有机会渲染新卡片
+        await new Promise(r => setTimeout(r, 50));
+      }
     }
     
-    // 全部加载完成
-    setTimeout(() => { loadingEl.classList.add('hide'); setTimeout(() => loadingEl.remove(), 500); }, 300);
+    // 全部加载完成后隐藏提示
     setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 5000);
   } catch (e) {
     loadingText.textContent = '加载失败: ' + e.message;
@@ -271,7 +294,7 @@ function createCards() {
       track.className = 'gallery-track';
       post.images.forEach(src => {
         const img = document.createElement('img');
-        img.src = src;
+        img.src = resolveImageUrl(src);
         img.alt = post.title;
         img.draggable = false;
         img.onerror = function() { this.style.display = 'none'; };
@@ -290,8 +313,15 @@ function createCards() {
         galleryDiv.appendChild(dots);
         
         let imgIndex = 0, imgStartX = 0;
-        galleryDiv.addEventListener('touchstart', e => { imgStartX = e.touches[0].clientX; }, { passive: true });
+        galleryDiv.addEventListener('touchstart', e => {
+          e.stopPropagation();
+          imgStartX = e.touches[0].clientX;
+        }, { passive: true });
+        galleryDiv.addEventListener('touchmove', e => {
+          e.stopPropagation();
+        }, { passive: true });
         galleryDiv.addEventListener('touchend', e => {
+          e.stopPropagation();
           const diff = e.changedTouches[0].clientX - imgStartX;
           if (diff < -30 && imgIndex < post.images.length - 1) imgIndex++;
           else if (diff > 30 && imgIndex > 0) imgIndex--;
