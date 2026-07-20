@@ -1,6 +1,3 @@
----
-layout: false
----
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -11,57 +8,50 @@ layout: false
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;background:#000;color:#1a1a1a;-webkit-tap-highlight-color:transparent}
 
-/* ===== 全屏容器 ===== */
 #app{position:relative;width:100%;height:100%;overflow:hidden}
 
-/* ===== 文章卡片（整张左右滑动） ===== */
 .card{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;transition:transform .38s cubic-bezier(.25,.46,.45,.94),opacity .38s}
 .card.left{transform:translateX(-100%);opacity:0;pointer-events:none}
 .card.center{transform:translateX(0);opacity:1;z-index:2}
 .card.right{transform:translateX(100%);opacity:0;pointer-events:none}
 
-/* ===== 图片区域（固定，不滚动） ===== */
-.card-image{width:100%;flex-shrink:0;position:relative;overflow:hidden;background:#000}
-.card-image img{width:100%;height:100%;object-fit:cover;display:block}
-.card-image .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:rgba(255,255,255,.6);font-size:.95rem}
+.image-gallery{position:relative;width:100%;flex-shrink:0;overflow:hidden;background:#000}
+.image-gallery .gallery-track{display:flex;transition:transform .3s ease;height:36vw}
+.image-gallery img{width:100%;height:100%;object-fit:cover;flex-shrink:0}
+.image-gallery .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:rgba(255,255,255,.6);font-size:.95rem;flex-shrink:0}
+.image-dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:10}
+.image-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.5)}
+.image-dot.active{background:#fff;width:14px;border-radius:2px}
 
-/* ===== 标题区域（固定，不滚动） ===== */
 .card-title{flex-shrink:0;padding:14px 18px 10px;background:#fff;border-bottom:1px solid #f0f0f0}
 .card-title h1{font-size:1.15rem;font-weight:700;line-height:1.5;color:#222;margin-bottom:4px}
 .card-title .meta{font-size:.78rem;color:#999}
 
-/* ===== 正文区域（可滚动） ===== */
 .card-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 18px 40px;background:#fafafa}
 .card-content::-webkit-scrollbar{width:0}
-.card-content .body p{line-height:1.9;margin-bottom:14px;font-size:.95rem;text-indent:2em;color:#333}
-.card-content .body img{max-width:100%;height:auto;border-radius:8px;margin:14px 0;display:block}
+.card-content .body p{line-height:1.9;margin-bottom:14px;font-size:.95rem;color:#333}
 .card-content .body strong,.card-content .body b{color:#222}
-.card-content .body span{font-size:inherit!important;color:inherit!important;font-family:inherit!important}
 .card-content .body br{display:block;content:"";margin-bottom:.4em}
 
-/* ===== 页码指示 ===== */
 .page-indicator{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:6px;align-items:center;pointer-events:none}
 .page-dot{width:6px;height:6px;border-radius:50%;background:rgba(0,0,0,.25);transition:all .3s}
 .page-dot.active{background:rgba(0,0,0,.6);width:18px;border-radius:3px}
 
-/* ===== 滑动提示 ===== */
 .swipe-hint{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(0,0,0,.55);color:#fff;padding:6px 16px;border-radius:20px;font-size:.75rem;opacity:1;transition:opacity .5s;pointer-events:none;white-space:nowrap}
 .swipe-hint.hidden{opacity:0}
 
-/* ===== 加载动画 ===== */
 .loading-overlay{position:fixed;inset:0;z-index:999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
 .loading-overlay.hide{opacity:0;pointer-events:none}
 .spinner{width:40px;height:40px;border:3px solid #eee;border-top-color:#764ba2;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{margin-top:16px;font-size:.9rem;color:#999}
+.loading-sub{font-size:.78rem;color:#bbb;margin-top:6px}
 
-/* ===== PC 端适配 ===== */
 @media(min-width:769px){
   #app{max-width:480px;margin:0 auto;border-left:1px solid #eee;border-right:1px solid #eee}
   .page-indicator{bottom:28px}
 }
 
-/* ===== 深色模式 ===== */
 @media(prefers-color-scheme:dark){
   .card-title{background:#1a1a1a;border-color:#333}
   .card-title h1{color:#eee}
@@ -76,140 +66,232 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 </head>
 <body>
 
-<!-- 加载动画 -->
 <div class="loading-overlay" id="loading">
   <div class="spinner"></div>
-  <div class="loading-text">正在加载文章...</div>
+  <div class="loading-text" id="loadingText">正在加载文章列表...</div>
+  <div class="loading-sub" id="loadingSub"></div>
 </div>
 
-<!-- 滑动提示 -->
 <div class="swipe-hint" id="hint">← 左滑看下一篇 · 右滑看上一篇 →</div>
 
-<!-- 主容器 -->
 <div id="app"></div>
 
-<!-- 页码指示 -->
 <div class="page-indicator" id="dots"></div>
 
 <script>
-// ===== Hexo 文章数据 =====
-const POSTS = [
-{
-  title: "守住钱，其实是一种被严重低估的本事",
-  date: "2026-07-18",
-  cover: "/images/email-attachments/20260718071503-b1000.jpg",
-  imageHeight: "36vw",
-  content: `<p>这几天，邹市明夫妇的热搜，让我看得唏嘘不已。</p><p>七年创业，亏损超过两个亿。</p><p>这个数字，是邹市明作为世界拳王，在拳台上挨了十几年揍，一拳一拳打出来的全部身家。</p><p>巅峰时期的邹市明是国民级体育明星，代言、综艺、赛事奖金拿到手软，是实打实的人生赢家。</p><img src="/images/email-attachments/20260718071503-b1000.jpg" alt="cover"><p>退役后他想把"拳王IP"做成商业帝国，一出手就是大手笔：上海黄浦江畔租下1.8万平方米高端拳馆，年租金五千万；配置了世界顶级教练团队，20万1台的进口跑步机，甚至还有一盏300万的吊灯。</p><p>情怀拉满，现实却骨感。拳击本就是国内小众运动，年卡8.8万的高价定位更是筛掉了绝大多数消费者，场馆每天一开门就亏14万。</p><p>拳馆这条路走不通，夫妻俩又忙着跨界布局：餐饮、电竞、奶茶。并且跟风投高风险理财，可惜全线溃败。</p><p>为了填窟窿，夫妻俩卖掉几套房产，邹市明也硬生生把自己从"拳王"变成了"债王"。</p><p>说实话，这个结果在我看来，是意料之外，也是情理之中。一个人赚钱靠的是机遇和长板，但能不能守住财富，靠的完全是另一套底层系统。</p><p>我们这辈子总在琢磨怎么赚钱，觉得赚得多就是有能力，却很少有人意识到：守住钱，其实是一种被严重低估的本事。</p><img src="/images/email-attachments/20260718071503-b1001.jpg" alt="section"><p>我认识一个老哥，就叫老刘吧。老刘是个典型的小镇做题家，一路卷进了互联网大厂，赶上了移动互联网的黄金十年，靠着期权和股票，三十多岁就攒下了小一千万的身家。</p><p>但平静的日子没过两年，他看着身边有人搞虚拟币一夜暴富，有人创业融资ABCD轮，他再也坐不住了。先是跟着一个所谓的大佬炒币，投了一百多万，几天之内就归零了。</p><p>后来兴起一阵火锅热，大街小巷都是火锅店。他在别人的一顿忽悠之下，拿了五百万，加盟了一个自己根本不熟的餐饮品牌。开业那天我们去了，排场挺大，但味道一言难尽。两年下来，五百万烧得渣都不剩，还跟合伙人闹得鸡飞狗跳。</p><p>折腾到现在，他从意气风发到沉默寡言，为了还债重新开始外包写代码了。</p><p>前阵子我们一起吃饭，他喝了点酒，红着眼跟我说了一句话，我至今印象深刻："兄弟，以前我觉得自己很牛，什么都能干成，其实我啥也不是。我就是风口上的一头猪，风停了，第一个摔死的就是我这种人。"</p><p>这句话让我想了很久。一个人很难赚到他认知以外的钱，却可以很容易地败光他认知以外的财富。大多数人的返贫，根本不是因为懒，恰恰是因为太"勤快"了。勤快地折腾，勤快地投资，勤快地把辛苦攒下的家底一点点败光。</p><p>对于普通人来说，挣到钱的同时，其实也进入了一场关于人性、心性、认知的综合测试。当你的智慧和定力，配不上手里的财富时，这个社会有一万种方法去收割你。</p><p>对于守财这件事，很多人打心底不重视。他们觉得我能挣一次，就能挣第二次。他们觉得整天担心手里的钱没了，这太掉价，太没魄力，太没本事了。这就是人性里最要命的地方，也是绝大多数人财富归零的起点。</p><p>洛克菲勒很多次说过类似的话：创造财富需要胆量，但守护财富需要的是智慧。到今天，洛克菲勒家族依然是美国最有钱的家族之一。凭什么？凭的就是他们家族代代相传的"守财基因"。</p><p>他们有一条规定：任何家族成员如果要动用信托基金里的钱做投资，必须经过家族办公室的风险委员会审批。你不是不能投，但你得说服一群人：你的逻辑是什么、你的安全边际在哪、你的止损线是多少。</p><p>这套规矩的本质，就是用集体的审慎与制度的理性，对冲掉个人的冲动与偏见。可绝大多数人不是这么想的。他们往往是草率地做各种决策，最后赢了就是本事，输了就是运气不好。</p><p>在我看来，挣钱的确需要魄力，是要敢在别人看不到的时候押注。但是守住钱，靠的是理性和克制，靠的是给自己定下一些不可逾越的铁律。</p><p>比如第一条铁律，一定是不要有赌性。很早之前，我看过一本书《邻家的百万富翁》，作者托马斯·斯坦利对比了两种人：一种是真正的富翁，他们大多通过长期的积蓄、严谨的预算和对低风险资产的坚持而守住财富；另一种则是那些渴望通过豪赌改变命运的人。</p><p>书里一个叫弗雷德的人，他手头攒了大约六十万美金。当时，一个所谓的内部消息告诉他，某家科技公司的股票即将暴涨。渴望财富翻倍的弗雷德，直接一把梭哈了进去。谁知，股价在短短一周内跌去了80%。弗雷德几十年积累下来的血汗钱，在瞬间灰飞烟灭。</p><p>这种事从来不是书里的特例。把时间拉到最近，韩国股市那边上演了一遍一模一样的剧本。大批散户加杠杆重仓SK海力士的两倍杠杆ETF，赌半导体行情能一直涨。有人砸进全部婚房款，有人把养老金都取出来，觉得自己马上就能财富自由。</p><p>可惜，他们只看见赢了之后的风光，却没想过输了之后的下场。这一两周，SK海力士高位暴跌下来，很多散户账户本金直接归零。</p><p>芒格有句很扎心的话：知道自己会死在哪里，就永远别去那里。所有能让你财富归零的事，哪怕收益再高，都别碰。宁可错过一万个机会，也绝不踩一次坑。人生不是赌场，你没有无限次重来的机会，一次赌输，可能就是一辈子的翻盘无望。</p><img src="/images/email-attachments/20260718071503-b1002.jpg" alt="section"><p>守住钱的第二条铁律呢，是要始终保持敬畏。无论是谁，首先得承认一件事：绝大多数人的财富，靠的是时代红利加个人运气。</p><p>邹市明能拿到上千万的出场费，是因为他赶上了中国体育商业化的窗口期，赶上了综艺爆发对体育明星的渴求。这就是时代的力量，个人的努力在里面占比很小。承认这一点有什么好处？好处是你会对钱产生敬畏，对时代和命运产生敬畏。</p><p>你知道这些钱是侥幸得到的，就不会太把自己当回事。不会因为碰上一波产业爆发，就觉得自己是稻盛和夫。不会因为赶上一波股市红利，就觉得自己是巴菲特。</p><p>所以，也许你能力真的很强，认知真的很高，但不妨也抱着这样的敬畏心态：自己的成功靠的是运气。这样子，你会老老实实把大部分钱放在低风险的地方。</p><p>守住钱的第三条铁律：做任何事，都要回归到底层逻辑。比如说邹市明开拳击馆为什么失败？我们要先回答另外一个问题：有没有足够多的人愿意为拳击付费。这个答案显然是"没有"，因为拳击在中国本来就是个超级小众的运动。</p><p>更要命的是，他还在一线城市核心地段砸重金搞重资产运营。可想而知，凭借所谓的拳王名号和明星效应，一定是撑不起这一摊子事的。</p><p>老刘开火锅店为什么失败？因为火锅店太卷了，从选址到装修，从口味到食材，从成本测算到利润预期，他都没有一一细致地考察和评估。那么，这个生意从签合同那天起就已经死了。</p><p>很多人的失败，大部分原因就在于，违背了最基本的做事逻辑。巴菲特和段永平有一个相同的理念：只做看得懂的生意。</p><p>是的，我们一定要秉持做事的底层逻辑：尊重常识，只做真正懂的事，只投算得清楚账的项目。把钱放在那些确定性强、你深度理解的领域里，财富在你构建的价值系统里，才能像雪球一样，越滚越稳，越滚越大。</p><p>我特别喜欢一个叫"财富守恒定律"的说法。你的财富水平，最终会和你的认知水平、风控能力，以及对人性的洞察力，达到一种动态平衡。</p><p>说到底，是否能守住兜里的钱，其实很考验一个人的本事。这个时代，机会很多，但深坑更多，只有稳住心性，深刻洞察，才能真正守住财富。</p>`
-},
-{
-  title: "我们从未忘记！",
-  date: "2026-07-07",
-  cover: "/images/email-attachments/20260707100703-b1000.jpg",
-  imageHeight: "36vw",
-  content: `<p>我们忘不了这一天</p><img src="/images/email-attachments/20260707100703-b1000.jpg" alt="cover"><p>驻守宛平城的中国军队奔赴卢沟桥抵抗日军（资料图）</p><p>我们忘不了这些前仆后继的身影</p><p><strong>"狼牙山五壮士"马宝玉、胡德林、胡福才、葛振林、宋学义:</strong>为掩护部队和群众，他们将日伪军引向峰顶绝路，最后关头勇士们宁死不屈将枪支全部损毁纵身跳下悬崖......</p><p><strong>"八女投江"冷云、胡秀芝、杨贵珍、郭桂琴、黄桂清、王惠民、李凤善、安顺福:</strong>在牡丹江地区乌斯浑河渡口与日伪军千余人遭遇，她们背水作战至弹尽援绝，面对日伪军逼降，誓死不屈。她们毁掉枪支，挽臂投入滚滚的乌斯浑河壮烈殉国。</p><p><strong>杨靖宇:</strong>在冰天雪地、弹尽粮绝的情况下食棉絮、啃树皮，孤身一人与大量日寇战斗周旋，最后壮烈牺牲，牺牲时仍然保持着射击姿势。</p><p><strong>赵一曼:</strong>被俘后日军对她施以酷刑，用钢针刺伤口，用烧红的烙铁烙皮肉，逼其招供。她宁死不屈，临刑前，她高呼"打倒日本帝国主义!""中国共产党万岁!"视死如归，从容就义，年仅31岁。</p><p><strong>我们忘不了</strong></p><p><strong>这段血色的岁月</strong></p><img src="/images/email-attachments/20260707100703-b1001.jpg" alt="section"><p>江边的屠杀（资料图）</p><p><b>铭记历史，珍爱和平</b></p><p><b>勿忘国耻，吾辈自强</b></p>`
-},
-{
-  title: "风雨过后的苏城",
-  date: "2026-07-05",
-  cover: "/images/email-attachments/20260705193011-b1000.jpg",
-  imageHeight: "36vw",
-  content: `<img src="/images/email-attachments/20260705193011-b1000.jpg" alt="cover"><img src="/images/email-attachments/20260705193011-b1001.jpg" alt="section">`
-},
-{
-  title: "2026年7月2日文章",
-  date: "2026-07-02",
-  cover: "",
-  imageHeight: "36vw",
-  content: `<p>这是一篇示例文章，用于展示滑动效果。</p><p>左滑可以查看下一篇文章，右滑可以查看上一篇文章。</p><p>这种交互方式类似于简讯APP的阅读体验。</p>`
-},
-{
-  title: "2026年7月1日文章",
-  date: "2026-07-01",
-  cover: "",
-  imageHeight: "36vw",
-  content: `<p>这是另一篇示例文章。</p><p>页面采用上下布局，上方展示封面图，下方展示文章内容。</p><p>在手机上可以流畅地左右滑动来切换文章。</p>`
-}
-];
+const OWNER = 'snowhoo';
+const REPO = 'snowhoo';
+const BRANCH = 'source';
+const POSTS_PATH = 'source/_posts';
 
-// ===== 状态管理 =====
+let POSTS = [];
 let currentIndex = 0;
 let startX = 0, startY = 0, moveX = 0, moveY = 0;
 let isDragging = false;
 let hintVisible = true;
-
 const app = document.getElementById('app');
 const dotsContainer = document.getElementById('dots');
 const hintEl = document.getElementById('hint');
 const loadingEl = document.getElementById('loading');
+const loadingText = document.getElementById('loadingText');
+const loadingSub = document.getElementById('loadingSub');
 
-// ===== 初始化 =====
+// ===== GitHub API 获取文章列表 =====
+async function fetchFileList() {
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${POSTS_PATH}?ref=${BRANCH}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error('获取文章列表失败 (HTTP ' + resp.status + ')');
+  return await resp.json();
+}
+
+async function fetchRawContent(filename) {
+  const url = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${POSTS_PATH}/${filename}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error('读取 ' + filename + ' 失败');
+  return await resp.text();
+}
+
+// ===== Front-matter 解析 =====
+function parseFrontMatter(content) {
+  let data = {};
+  let body = content;
+  if (body.startsWith('---')) {
+    const lines = body.split('\n');
+    const endIdx = lines.findIndex((l, i) => i > 0 && l.trim() === '---');
+    if (endIdx !== -1) {
+      const head = lines.slice(1, endIdx);
+      body = lines.slice(endIdx + 1).join('\n').trim();
+      let currentKey = null, currentArr = [];
+      head.forEach(line => {
+        const arrMatch = line.match(/^\s+-\s+(.+)$/);
+        if (arrMatch && currentKey) { currentArr.push(arrMatch[1].trim()); return; }
+        if (currentKey && currentArr.length > 0) { data[currentKey] = currentArr; currentArr = []; }
+        const colonIdx = line.indexOf(':');
+        if (colonIdx !== -1) {
+          const key = line.substring(0, colonIdx).trim();
+          const val = line.substring(colonIdx + 1).trim();
+          if (val) {
+            data[key] = val.replace(/^["']|["']$/g, '');
+            currentKey = null;
+          } else {
+            currentKey = key;
+            currentArr = [];
+          }
+        }
+      });
+      if (currentKey && currentArr.length > 0) data[currentKey] = currentArr;
+    }
+  }
+  return { data, body };
+}
+
+// ===== 提取正文中的图片 =====
+function extractImages(body) {
+  const imgs = [];
+  const regex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+  let match;
+  while ((match = regex.exec(body)) !== null) {
+    if (!imgs.includes(match[2])) imgs.push(match[2]);
+  }
+  return imgs;
+}
+
+// ===== Markdown 转 HTML（只保留文字） =====
+function mdToText(md) {
+  return md
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
+    .replace(/#{1,6}\s+(.+)$/gm, '$1')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^-\s+(.+)$/gm, '<li>$1</li>')
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/^/, '<p>').replace(/$/, '</p>');
+}
+
+// ===== 主流程 =====
+async function main() {
+  try {
+    // 1. 获取文件列表
+    const files = await fetchFileList();
+    const mdFiles = files
+      .filter(f => f.name.endsWith('.md') && f.type === 'file')
+      .map(f => f.name)
+      .sort()
+      .reverse();
+    
+    loadingText.textContent = '共 ' + mdFiles.length + ' 篇文章，正在读取...';
+    
+    // 2. 逐篇读取和解析
+    for (let i = 0; i < mdFiles.length; i++) {
+      loadingSub.textContent = (i + 1) + ' / ' + mdFiles.length + '  ' + mdFiles[i].slice(0, 30);
+      const raw = await fetchRawContent(mdFiles[i]);
+      const { data, body } = parseFrontMatter(raw);
+      if (data.title) {
+        POSTS.push({
+          title: data.title,
+          date: data.date ? data.date.split(' ')[0] : '',
+          cover: data.cover || '',
+          images: extractImages(body),
+          content: body
+        });
+      }
+    }
+    
+    // 3. 按日期排序
+    POSTS.sort((a, b) => {
+      const da = new Date(a.date), db = new Date(b.date);
+      return db - da || (da ? 1 : -1);
+    });
+    
+    init();
+  } catch (e) {
+    loadingText.textContent = '加载失败: ' + e.message;
+    console.error(e);
+  }
+}
+
 function init() {
+  if (POSTS.length === 0) {
+    loadingText.textContent = '没有找到文章';
+    return;
+  }
   createCards();
   createDots();
   bindEvents();
-  
-  // 延迟隐藏加载动画
-  setTimeout(() => {
-    loadingEl.classList.add('hide');
-    setTimeout(() => loadingEl.remove(), 500);
-  }, 600);
-  
-  // 5秒后隐藏提示
-  setTimeout(() => {
-    hintEl.classList.add('hidden');
-    hintVisible = false;
-  }, 5000);
+  setTimeout(() => { loadingEl.classList.add('hide'); setTimeout(() => loadingEl.remove(), 500); }, 300);
+  setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 5000);
 }
 
-// ===== 创建卡片 =====
 function createCards() {
   POSTS.forEach((post, i) => {
     const card = document.createElement('div');
     card.className = 'card';
     card.dataset.index = i;
-    
     if (i < currentIndex) card.classList.add('left');
     if (i === currentIndex) card.classList.add('center');
     if (i > currentIndex) card.classList.add('right');
+
+    // Image gallery
+    const galleryDiv = document.createElement('div');
+    galleryDiv.className = 'image-gallery';
+    galleryDiv.style.height = '36vw';
     
-    // 图片区域
-    const imageDiv = document.createElement('div');
-    imageDiv.className = 'card-image';
-    imageDiv.style.height = post.imageHeight || '36vw';
-    
-    if (post.cover) {
-      const img = document.createElement('img');
-      img.src = post.cover;
-      img.alt = post.title;
-      img.onerror = function() {
-        imageDiv.innerHTML = '<div class="placeholder">暂无图片</div>';
-      };
-      imageDiv.appendChild(img);
+    if (post.images.length > 0) {
+      const track = document.createElement('div');
+      track.className = 'gallery-track';
+      post.images.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = post.title;
+        img.draggable = false;
+        img.onerror = function() { this.style.display = 'none'; };
+        track.appendChild(img);
+      });
+      galleryDiv.appendChild(track);
+      
+      if (post.images.length > 1) {
+        const dots = document.createElement('div');
+        dots.className = 'image-dots';
+        post.images.forEach((_, j) => {
+          const dot = document.createElement('div');
+          dot.className = 'image-dot' + (j === 0 ? ' active' : '');
+          dots.appendChild(dot);
+        });
+        galleryDiv.appendChild(dots);
+        
+        let imgIndex = 0, imgStartX = 0;
+        galleryDiv.addEventListener('touchstart', e => { imgStartX = e.touches[0].clientX; }, { passive: true });
+        galleryDiv.addEventListener('touchend', e => {
+          const diff = e.changedTouches[0].clientX - imgStartX;
+          if (diff < -30 && imgIndex < post.images.length - 1) imgIndex++;
+          else if (diff > 30 && imgIndex > 0) imgIndex--;
+          track.style.transform = 'translateX(-' + (imgIndex * 100) + '%)';
+          dots.querySelectorAll('.image-dot').forEach((d, idx) => d.classList.toggle('active', idx === imgIndex));
+        });
+      }
     } else {
-      imageDiv.innerHTML = '<div class="placeholder">暂无图片</div>';
+      galleryDiv.innerHTML = '<div class="placeholder">暂无图片</div>';
     }
-    
-    // 标题区域
+
+    // Title
     const titleDiv = document.createElement('div');
     titleDiv.className = 'card-title';
-    titleDiv.innerHTML = `
-      <h1>${escapeHtml(post.title)}</h1>
-      <div class="meta">${post.date}</div>
-    `;
-    
-    // 内容区域
+    titleDiv.innerHTML = '<h1>' + escapeHtml(post.title) + '</h1><div class="meta">' + post.date + '</div>';
+
+    // Content
     const contentDiv = document.createElement('div');
     contentDiv.className = 'card-content';
-    contentDiv.innerHTML = '<div class="body">' + post.content + '</div>';
-    
-    card.appendChild(imageDiv);
+    contentDiv.innerHTML = '<div class="body">' + mdToText(post.content) + '</div>';
+
+    card.appendChild(galleryDiv);
     card.appendChild(titleDiv);
     card.appendChild(contentDiv);
     app.appendChild(card);
   });
 }
 
-// ===== 创建页码指示器 =====
 function createDots() {
   POSTS.forEach((_, i) => {
     const dot = document.createElement('div');
@@ -219,8 +301,7 @@ function createDots() {
   });
 }
 
-// ===== 更新卡片位置 =====
-function updateCards(direction) {
+function updateCards() {
   const cards = app.querySelectorAll('.card');
   cards.forEach((card, i) => {
     card.className = 'card';
@@ -228,132 +309,68 @@ function updateCards(direction) {
     if (i === currentIndex) card.classList.add('center');
     if (i > currentIndex) card.classList.add('right');
   });
-  
-  // 更新指示器
   document.querySelectorAll('.page-dot').forEach((dot, i) => {
     dot.classList.toggle('active', i === currentIndex);
   });
-  
-  // 重置提示
   if (hintVisible) {
     hintEl.classList.remove('hidden');
-    setTimeout(() => {
-      hintEl.classList.add('hidden');
-      hintVisible = false;
-    }, 3000);
+    setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);
   }
 }
 
-// ===== 事件绑定 =====
 function bindEvents() {
-  // 触摸事件
   app.addEventListener('touchstart', onTouchStart, { passive: true });
   app.addEventListener('touchmove', onTouchMove, { passive: false });
   app.addEventListener('touchend', onTouchEnd);
-  
-  // 鼠标事件（PC端也可拖拽）
   app.addEventListener('mousedown', onMouseDown);
   window.addEventListener('mousemove', onMouseMove);
   window.addEventListener('mouseup', onMouseUp);
-  
-  // 键盘事件
   document.addEventListener('keydown', onKeyDown);
 }
 
-// ===== 触摸事件处理 =====
-function onTouchStart(e) {
-  startX = e.touches[0].clientX;
-  startY = e.touches[0].clientY;
-  isDragging = true;
-}
-
+function onTouchStart(e) { startX = e.touches[0].clientX; startY = e.touches[0].clientY; isDragging = true; }
 function onTouchMove(e) {
   if (!isDragging) return;
   moveX = e.touches[0].clientX - startX;
   moveY = e.touches[0].clientY - startY;
-  
-  // 阻止纵向滚动（仅在横向滑动明显时）
-  if (Math.abs(moveX) > Math.abs(moveY)) {
-    e.preventDefault();
-  }
+  if (Math.abs(moveX) > Math.abs(moveY)) e.preventDefault();
 }
-
 function onTouchEnd(e) {
   if (!isDragging) return;
   isDragging = false;
-  
   const threshold = 60;
-  if (moveX < -threshold && currentIndex < POSTS.length - 1) {
-    // 左滑 → 下一篇
-    currentIndex++;
-    updateCards('next');
-  } else if (moveX > threshold && currentIndex > 0) {
-    // 右滑 → 上一篇
-    currentIndex--;
-    updateCards('prev');
-  }
-  
-  // 重置
-  moveX = 0;
-  moveY = 0;
+  if (moveX < -threshold && currentIndex < POSTS.length - 1) { currentIndex++; updateCards(); }
+  else if (moveX > threshold && currentIndex > 0) { currentIndex--; updateCards(); }
+  moveX = 0; moveY = 0;
 }
-
-// ===== 鼠标事件处理 =====
-function onMouseDown(e) {
-  startX = e.clientX;
-  startY = e.clientY;
-  isDragging = true;
-  app.style.cursor = 'grabbing';
-}
-
+function onMouseDown(e) { startX = e.clientX; startY = e.clientY; isDragging = true; app.style.cursor = 'grabbing'; }
 function onMouseMove(e) {
   if (!isDragging) return;
   moveX = e.clientX - startX;
   moveY = e.clientY - startY;
-  
-  if (Math.abs(moveX) > Math.abs(moveY)) {
-    e.preventDefault();
-  }
+  if (Math.abs(moveX) > Math.abs(moveY)) e.preventDefault();
 }
-
 function onMouseUp(e) {
   if (!isDragging) return;
   isDragging = false;
   app.style.cursor = '';
-  
   const threshold = 60;
-  if (moveX < -threshold && currentIndex < POSTS.length - 1) {
-    currentIndex++;
-    updateCards('next');
-  } else if (moveX > threshold && currentIndex > 0) {
-    currentIndex--;
-    updateCards('prev');
-  }
-  
-  moveX = 0;
-  moveY = 0;
+  if (moveX < -threshold && currentIndex < POSTS.length - 1) { currentIndex++; updateCards(); }
+  else if (moveX > threshold && currentIndex > 0) { currentIndex--; updateCards(); }
+  moveX = 0; moveY = 0;
 }
-
-// ===== 键盘事件处理 =====
 function onKeyDown(e) {
-  if (e.key === 'ArrowRight' && currentIndex < POSTS.length - 1) {
-    currentIndex++;
-    updateCards('next');
-  } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
-    currentIndex--;
-    updateCards('prev');
-  }
+  if (e.key === 'ArrowRight' && currentIndex < POSTS.length - 1) { currentIndex++; updateCards(); }
+  else if (e.key === 'ArrowLeft' && currentIndex > 0) { currentIndex--; updateCards(); }
 }
 
-// ===== 工具函数 =====
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
 }
 
-// ===== 启动 =====
-init();
+main();
 </script>
 </body>
 </html>
