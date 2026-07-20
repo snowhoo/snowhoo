@@ -336,10 +336,15 @@ function createCards() {
         galleryDiv.appendChild(dots);
         
         let imgIndex = 0, imgStartX = 0, imgPageWidth = 0, imgStartX2 = 0;
+        // 缓存图片实际渲染宽度
+        function getImgWidth() {
+          const first = track.firstElementChild;
+          return first ? first.getBoundingClientRect().width : galleryDiv.getBoundingClientRect().width;
+        }
         galleryDiv.addEventListener('touchstart', e => {
           e.stopPropagation();
           imgStartX = e.touches[0].clientX;
-          imgPageWidth = galleryDiv.getBoundingClientRect().width;
+          imgPageWidth = getImgWidth();
           track.style.transition = 'none';
         }, { passive: true });
         galleryDiv.addEventListener('touchmove', e => {
@@ -352,6 +357,8 @@ function createCards() {
           const diff = e.changedTouches[0].clientX - imgStartX;
           if (diff < -30 && imgIndex < post.images.length - 1) imgIndex++;
           else if (diff > 30 && imgIndex > 0) imgIndex--;
+          // 回到touchend时重新获取精确宽度（防止布局变化）
+          imgPageWidth = getImgWidth();
           track.style.transition = 'transform .3s ease';
           track.style.transform = 'translateX(' + (-imgIndex * imgPageWidth) + 'px)';
           dots.querySelectorAll('.image-dot').forEach((d, idx) => d.classList.toggle('active', idx === imgIndex));
@@ -360,7 +367,7 @@ function createCards() {
         galleryDiv.addEventListener('mousedown', e => {
           e.stopPropagation();
           imgStartX2 = e.clientX;
-          imgPageWidth = galleryDiv.getBoundingClientRect().width;
+          imgPageWidth = getImgWidth();
           track.style.transition = 'none';
         });
         galleryDiv.addEventListener('mousemove', e => {
@@ -375,6 +382,7 @@ function createCards() {
           const diff = e.clientX - imgStartX2;
           if (diff < -30 && imgIndex < post.images.length - 1) imgIndex++;
           else if (diff > 30 && imgIndex > 0) imgIndex--;
+          imgPageWidth = getImgWidth();
           track.style.transition = 'transform .3s ease';
           track.style.transform = 'translateX(' + (-imgIndex * imgPageWidth) + 'px)';
           imgStartX2 = 0;
@@ -385,6 +393,7 @@ function createCards() {
           const diff = e.clientX - imgStartX2;
           if (diff < -30 && imgIndex < post.images.length - 1) imgIndex++;
           else if (diff > 30 && imgIndex > 0) imgIndex--;
+          imgPageWidth = getImgWidth();
           track.style.transition = 'transform .3s ease';
           track.style.transform = 'translateX(' + (-imgIndex * imgPageWidth) + 'px)';
           imgStartX2 = 0;
