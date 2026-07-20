@@ -108,8 +108,22 @@ async function fetchFileList() {
 }
 
 async function fetchRawContent(filename, signal) {
-  const url = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${POSTS_PATH}/${encodeURIComponent(filename)}`;
-  const resp = await fetch(url, { signal });
+  // 优先使用 GitHub API（api.github.com 在国内访问更快）
+  const apiUrl = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${POSTS_PATH}/${encodeURIComponent(filename)}?ref=${BRANCH}`;
+  try {
+    const resp = await fetch(apiUrl, { signal });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.content) {
+        return atob(data.content.replace(/\n/g, ''));
+      }
+    }
+  } catch (e) {
+    console.warn('API 读取失败，降级到 raw:', e.message);
+  }
+  // 降级：raw.githubusercontent.com
+  const rawUrl = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${POSTS_PATH}/${encodeURIComponent(filename)}`;
+  const resp = await fetch(rawUrl, { signal });
   if (!resp.ok) throw new Error('读取 ' + filename + ' 失败');
   return await resp.text();
 }
