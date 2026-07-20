@@ -180,13 +180,14 @@ function mdToText(md) {
     .replace(/^/, '<p>').replace(/$/, '</p>');
 }
 
-// ===== 图片路径解析（相对/绝对路径 → GitHub raw URL） =====
-const SRC_BASE = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/source`;
-const POSTS_BASE = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${POSTS_PATH}/`;
+// ===== 图片路径解析 =====
 function resolveImageUrl(src) {
+  // 绝对URL → 直接使用
   if (src.startsWith('http://') || src.startsWith('https://')) return src;
-  if (src.startsWith('/')) return SRC_BASE + src;
-  return POSTS_BASE + src;
+  // 站内路径 → 直接使用（部署到 Pages 后 images 在站内根路径下）
+  if (src.startsWith('/')) return src;
+  // 相对路径 → 使用 GitHub raw 原始文件地址
+  return `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${POSTS_PATH}/${src}`;
 }
 
 // ===== 主流程（分批加载，渐进渲染） =====
