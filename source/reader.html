@@ -331,16 +331,17 @@ function createCards() {
         });
         galleryDiv.appendChild(dots);
         
-        let imgIndex = 0, imgStartX = 0;
+        let imgIndex = 0, imgStartX = 0, imgPageWidth = 0, imgStartX2 = 0;
         galleryDiv.addEventListener('touchstart', e => {
           e.stopPropagation();
           imgStartX = e.touches[0].clientX;
+          imgPageWidth = galleryDiv.getBoundingClientRect().width;
           track.style.transition = 'none';
         }, { passive: true });
         galleryDiv.addEventListener('touchmove', e => {
           e.stopPropagation();
           const dx = e.touches[0].clientX - imgStartX;
-          track.style.transform = 'translateX(' + (-imgIndex * galleryDiv.offsetWidth + dx) + 'px)';
+          track.style.transform = 'translateX(' + (-imgIndex * imgPageWidth + dx) + 'px)';
         }, { passive: true });
         galleryDiv.addEventListener('touchend', e => {
           e.stopPropagation();
@@ -348,7 +349,41 @@ function createCards() {
           if (diff < -30 && imgIndex < post.images.length - 1) imgIndex++;
           else if (diff > 30 && imgIndex > 0) imgIndex--;
           track.style.transition = 'transform .3s ease';
-          track.style.transform = 'translateX(' + (-imgIndex * galleryDiv.offsetWidth) + 'px)';
+          track.style.transform = 'translateX(' + (-imgIndex * imgPageWidth) + 'px)';
+          dots.querySelectorAll('.image-dot').forEach((d, idx) => d.classList.toggle('active', idx === imgIndex));
+        });
+        // 鼠标拖拽图片翻页（PC端）
+        galleryDiv.addEventListener('mousedown', e => {
+          e.stopPropagation();
+          imgStartX2 = e.clientX;
+          imgPageWidth = galleryDiv.getBoundingClientRect().width;
+          track.style.transition = 'none';
+        });
+        galleryDiv.addEventListener('mousemove', e => {
+          if (imgStartX2 === 0) return;
+          e.stopPropagation();
+          const dx = e.clientX - imgStartX2;
+          track.style.transform = 'translateX(' + (-imgIndex * imgPageWidth + dx) + 'px)';
+        });
+        galleryDiv.addEventListener('mouseup', e => {
+          if (imgStartX2 === 0) return;
+          e.stopPropagation();
+          const diff = e.clientX - imgStartX2;
+          if (diff < -30 && imgIndex < post.images.length - 1) imgIndex++;
+          else if (diff > 30 && imgIndex > 0) imgIndex--;
+          track.style.transition = 'transform .3s ease';
+          track.style.transform = 'translateX(' + (-imgIndex * imgPageWidth) + 'px)';
+          imgStartX2 = 0;
+          dots.querySelectorAll('.image-dot').forEach((d, idx) => d.classList.toggle('active', idx === imgIndex));
+        });
+        galleryDiv.addEventListener('mouseleave', e => {
+          if (imgStartX2 === 0) return;
+          const diff = e.clientX - imgStartX2;
+          if (diff < -30 && imgIndex < post.images.length - 1) imgIndex++;
+          else if (diff > 30 && imgIndex > 0) imgIndex--;
+          track.style.transition = 'transform .3s ease';
+          track.style.transform = 'translateX(' + (-imgIndex * imgPageWidth) + 'px)';
+          imgStartX2 = 0;
           dots.querySelectorAll('.image-dot').forEach((d, idx) => d.classList.toggle('active', idx === imgIndex));
         });
       }
