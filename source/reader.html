@@ -250,40 +250,45 @@ async function main() {
         .map(r => r.value);
       POSTS.push(...validPosts);
       
-      // 按日期排序
-      POSTS.sort((a, b) => {
-        const da = new Date(a.date), db = new Date(b.date);
-        return db - da || (da ? 1 : -1);
-      });
-      
-      // 重新渲染全部卡片（渐进式更新）
-      app.innerHTML = '';
-      dotsContainer.innerHTML = '';
-      createCards();
-      createDots();
-      
-      if (!initialized) {
+      if (firstBatch) {
+        // 第一批：按日期排序后统一渲染，绑定事件，隐藏 loading
+        POSTS.sort((a, b) => {
+          const da = new Date(a.date), db = new Date(b.date);
+          return db - da || (da ? 1 : -1);
+        });
+        app.innerHTML = '';
+        dotsContainer.innerHTML = '';
+        createCards();
+        createDots();
         bindEvents();
         initialized = true;
-      }
-      
-      updateCards();
-      
-      // 第一批渲染后立即隐藏 loading，让用户看到内容
-      if (firstBatch) {
+        updateCards();
+        
         firstBatch = false;
         loadingEl.classList.add('hide');
         setTimeout(() => loadingEl.remove(), 500);
-        // 让浏览器有机会渲染新卡片
         await new Promise(r => setTimeout(r, 50));
+      } else {
+        // 后续批次：只更新进度，不重新渲染（保持已有卡片可见）
+        // 全部加载完成后一次排序重绘
       }
     }
     
-    // 全部加载完成后隐藏提示
-    setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 5000);
-    // 加载完成，更新进度文字
+    // 全部加载完成：按日期排序并重新渲染
+    POSTS.sort((a, b) => {
+      const da = new Date(a.date), db = new Date(b.date);
+      return db - da || (da ? 1 : -1);
+    });
+    app.innerHTML = '';
+    dotsContainer.innerHTML = '';
+    createCards();
+    createDots();
+    updateCards();
+    
+    // 更新进度提示
     if (loadingSub) loadingSub.textContent = '全部加载完成，共 ' + POSTS.length + ' 篇文章';
     setTimeout(() => { if (loadingText) loadingText.textContent = '完成'; }, 100);
+    setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 5000);
   } catch (e) {
     console.error('main() 错误:', e);
     if (loadingText) loadingText.textContent = '加载失败: ' + e.message;
