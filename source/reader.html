@@ -107,9 +107,9 @@ async function fetchFileList() {
   return await resp.json();
 }
 
-async function fetchRawContent(filename) {
-  const url = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${POSTS_PATH}/${filename}`;
-  const resp = await fetch(url);
+async function fetchRawContent(filename, signal) {
+  const url = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${POSTS_PATH}/${encodeURIComponent(filename)}`;
+  const resp = await fetch(url, { signal });
   if (!resp.ok) throw new Error('读取 ' + filename + ' 失败');
   return await resp.text();
 }
@@ -210,13 +210,16 @@ async function main() {
     
     for (let i = 0; i < total; i += BATCH_SIZE) {
       const batch = mdFiles.slice(i, i + BATCH_SIZE);
+      console.log('加载批次: ' + (i / BATCH_SIZE + 1) + ', 文件: ' + batch[0]?.slice(0, 20) + '...');
       
       // 并行读取当前批次（用 allSettled 避免单个失败卡死）
       const results = await Promise.allSettled(batch.map(async (filename) => {
         loadedCount++;
-        loadingSub.textContent = loadedCount + ' / ' + total + '  ' + filename.slice(0, 30);
+        if (loadingSub) loadingSub.textContent = loadedCount + ' / ' + total + '  ' + filename.slice(0, 30);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
         try {
-          const raw = await fetchRawContent(filename);
+          const raw = await fetchRawContent(filename, controller.signal);
           const { data, body } = parseFrontMatter(raw);
           if (data.title) {
             // 提取图片，并将封面图放在最前面
@@ -234,6 +237,8 @@ async function main() {
           }
         } catch (e) {
           console.warn('跳过 ' + filename + ': ' + e.message);
+        } finally {
+          clearTimeout(timeoutId);
         }
         return null;
       }));
@@ -275,8 +280,12 @@ async function main() {
     
     // 全部加载完成后隐藏提示
     setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 5000);
+    // 加载完成，更新进度文字
+    if (loadingSub) loadingSub.textContent = '全部加载完成，共 ' + POSTS.length + ' 篇文章';
+    setTimeout(() => { if (loadingText) loadingText.textContent = '完成'; }, 100);
   } catch (e) {
-    loadingText.textContent = '加载失败: ' + e.message;
+    console.error('main() 错误:', e);
+    if (loadingText) loadingText.textContent = '加载失败: ' + e.message;
     console.error(e);
   }
 }
