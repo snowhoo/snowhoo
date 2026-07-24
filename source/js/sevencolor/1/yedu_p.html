@@ -42,9 +42,27 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .card-content .body p{line-height:1.9;margin-bottom:14px;font-size:1.05rem;color:#333}
 .card-content .body strong,.card-content .body b{color:#222}
 
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:#fff;border-top:1px solid #eee;display:flex;align-items:center;justify-content:center;font-size:.8rem;user-select:none;-webkit-user-select:none}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:#fff;border-top:1px solid #eee;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:.8rem;user-select:none;-webkit-user-select:none}
 .bottom-nav .page-btn{display:flex;align-items:center;gap:4px;padding:4px 16px;border-radius:4px;cursor:pointer;color:#666}
 .bottom-nav .page-btn:active{background:rgba(0,0,0,.05)}
+
+/* 底部导航右侧浮窗 */
+.yedu-float-wrap{position:relative;display:flex;align-items:center}
+.yedu-float-btn{width:32px;height:32px;border-radius:50%;background:#e94560;color:#fff;font-size:.65rem;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s,background .2s}
+.yedu-float-btn:active{transform:scale(.92)}
+.yedu-float-btn:hover{background:#d63850}
+
+/* 弹出菜单 */
+.yedu-float-menu{position:absolute;bottom:40px;right:0;z-index:200;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;opacity:0;transform:translateY(8px) scale(.95);pointer-events:none;transition:opacity .2s ease,transform .2s ease;transform-origin:bottom right}
+.yedu-float-menu.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.yedu-float-menu a{display:flex;align-items:center;padding:10px 16px;color:#333;text-decoration:none;font-size:.82rem;font-weight:500;white-space:nowrap;transition:background .2s}
+.yedu-float-menu a:hover{background:#f5f5f5}
+
+@media(prefers-color-scheme:dark){
+  .yedu-float-menu{background:#1e1e1e}
+  .yedu-float-menu a{color:#ddd}
+  .yedu-float-menu a:hover{background:#2a2a2a}
+}
 
 .swipe-hint{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(0,0,0,.55);color:#fff;padding:6px 16px;border-radius:20px;font-size:.75rem;opacity:1;transition:opacity .5s;pointer-events:none;white-space:nowrap}
 .swipe-hint.hidden{opacity:0}
@@ -62,24 +80,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .lightbox.show img{transform:scale(1)}
 .lightbox .close-btn{position:absolute;top:20px;right:20px;width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:50%;border:none;color:#fff;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
 .lightbox .close-btn:hover{background:rgba(255,255,255,.3)}
-
-/* 右下角浮窗按钮 */
-.yedu-float-btn{position:fixed;bottom:60px;right:16px;z-index:500;width:44px;height:44px;border-radius:50%;background:#e94560;color:#fff;font-size:.75rem;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(233,69,96,.4);transition:transform .2s,box-shadow .2s;user-select:none;-webkit-user-select:none}
-.yedu-float-btn:active{transform:scale(.92)}
-.yedu-float-btn:hover{box-shadow:0 4px 20px rgba(233,69,96,.5)}
-
-/* 弹出菜单 */
-.yedu-float-menu{position:fixed;bottom:112px;right:16px;z-index:499;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.15);overflow:hidden;opacity:0;transform:translateY(10px) scale(.95);pointer-events:none;transition:opacity .25s ease,transform .25s ease;transform-origin:bottom right}
-.yedu-float-menu.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
-.yedu-float-menu a{display:flex;align-items:center;gap:8px;padding:12px 18px;color:#333;text-decoration:none;font-size:.85rem;font-weight:500;white-space:nowrap;transition:background .2s}
-.yedu-float-menu a:hover{background:#f5f5f5}
-.yedu-float-menu a svg{width:18px;height:18px;fill:#e94560;flex-shrink:0}
-
-@media(prefers-color-scheme:dark){
-  .yedu-float-menu{background:#1e1e1e}
-  .yedu-float-menu a{color:#ddd}
-  .yedu-float-menu a:hover{background:#2a2a2a}
-}
 
 @media(min-width:769px){
   #app{max-width:480px;margin:0 auto;border-left:1px solid #eee;border-right:1px solid #eee}
@@ -112,15 +112,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 <!-- 图片放大 lightbox -->
 <div class="lightbox" id="lightbox"><button class="close-btn" id="lightboxClose">✕</button><img id="lightboxImg" src="" alt=""></div>
 
-<div class="bottom-nav" id="bottomNav"><div class="page-btn" id="pageBtn">1</div></div>
-
-<!-- 右下角浮窗 -->
-<button class="yedu-float-btn" id="yeduFloatBtn">夜读</button>
-<div class="yedu-float-menu" id="yeduFloatMenu">
-  <a href="https://snowhoo.net/js/sevencolor/1/zjsz_p.html" target="_blank">
-    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-    照见苏州
-  </a>
+<div class="bottom-nav" id="bottomNav">
+  <div class="page-btn" id="pageBtn">1</div>
+  <div class="yedu-float-wrap">
+    <button class="yedu-float-btn" id="yeduFloatBtn">夜读</button>
+    <div class="yedu-float-menu" id="yeduFloatMenu">
+      <a href="https://snowhoo.net/js/sevencolor/1/zjsz_p.html" target="_blank">照见苏州</a>
+    </div>
+  </div>
 </div>
 
 <script>
