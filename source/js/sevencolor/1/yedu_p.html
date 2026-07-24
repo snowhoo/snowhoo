@@ -20,7 +20,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 .yedu-cover{position:relative;width:100%;flex-shrink:0;overflow:hidden;background:#000}
 .yedu-cover-inner{height:calc(100vh / 4);width:100%;position:relative}
-.yedu-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.yedu-cover img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
 .yedu-cover .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e94560 0%,#2d4a6e 100%);color:rgba(255,255,255,.7);font-size:1.2rem;font-weight:600}
 
 .yedu-audio-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;background:rgba(233,69,96,.9);border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s ease;z-index:2}
@@ -55,6 +55,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{margin-top:16px;font-size:.9rem;color:#999}
 
+/* Lightbox 图片放大 */
+.lightbox{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;cursor:zoom-out;opacity:0;transition:opacity .3s ease}
+.lightbox.show{display:flex;opacity:1}
+.lightbox img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:4px;box-shadow:0 8px 40px rgba(0,0,0,.6);transform:scale(.9);transition:transform .3s ease}
+.lightbox.show img{transform:scale(1)}
+.lightbox .close-btn{position:absolute;top:20px;right:20px;width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:50%;border:none;color:#fff;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.lightbox .close-btn:hover{background:rgba(255,255,255,.3)}
+
 @media(min-width:769px){
   #app{max-width:480px;margin:0 auto;border-left:1px solid #eee;border-right:1px solid #eee}
 }
@@ -83,6 +91,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 <div id="app"></div>
 
+<!-- 图片放大 lightbox -->
+<div class="lightbox" id="lightbox"><button class="close-btn" id="lightboxClose">✕</button><img id="lightboxImg" src="" alt=""></div>
+
 <div class="bottom-nav" id="bottomNav"><div class="page-btn" id="pageBtn">1</div></div>
 
 <script>
@@ -102,6 +113,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   const pageBtn = document.getElementById('pageBtn');
   const hintEl = document.getElementById('hint');
   const loadingEl = document.getElementById('loading');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxClose = document.getElementById('lightboxClose');
 
   // 主题检测
   function detectTheme() {
@@ -185,6 +199,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         img.src = imgSrc;
         img.alt = post.title;
         img.draggable = false;
+        img.style.cursor = 'zoom-in';
         img.onerror = function() { this.style.display='none'; this.nextElementSibling.style.display='flex'; };
         coverInner.appendChild(img);
         
@@ -282,6 +297,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     
     // 更新音频按钮事件
     updateAudioButtons();
+    // 更新图片点击事件
+    updateImageClick();
   }
 
   function bindEvents() {
@@ -393,6 +410,33 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       btn.onclick = function(e) {
         e.stopPropagation();
         toggleAudio(parseInt(btn.dataset.index), btn);
+      };
+    });
+  }
+
+  // Lightbox 图片放大
+  function openLightbox(src) {
+    lightboxImg.src = src;
+    lightbox.classList.add('show');
+  }
+  function closeLightbox() {
+    lightbox.classList.remove('show');
+    setTimeout(function() { lightboxImg.src = ''; }, 300);
+  }
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
+  function updateImageClick() {
+    const imgs = app.querySelectorAll('.yedu-cover img');
+    imgs.forEach(function(img) {
+      img.onclick = function(e) {
+        e.stopPropagation();
+        openLightbox(img.src);
       };
     });
   }
