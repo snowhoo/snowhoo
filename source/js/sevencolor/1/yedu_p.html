@@ -236,7 +236,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       const imgSrc = post.coverSrc || '';
       if (imgSrc) {
         const img = document.createElement('img');
-        img.src = imgSrc;
+        img.dataset.src = imgSrc;
         img.alt = post.title;
         img.draggable = false;
         img.style.cursor = 'zoom-in';
@@ -337,8 +337,29 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     
     // 更新音频按钮事件
     updateAudioButtons();
+    // 懒加载图片
+    loadNearbyImages();
     // 更新图片点击事件
     updateImageClick();
+  }
+
+  // 懒加载当前及相邻卡片图片
+  function loadNearbyImages() {
+    var imgs = app.querySelectorAll('.yedu-cover img[data-src]');
+    imgs.forEach(function(img) {
+      var card = img.closest('.card');
+      if (!card) return;
+      var idx = parseInt(card.dataset.index, 10);
+      if (idx >= currentIndex - 1 && idx <= currentIndex + 1) {
+        if (!img.src) {
+          img.src = img.dataset.src;
+        }
+      } else {
+        if (img.src) {
+          img.src = '';
+        }
+      }
+    });
   }
 
   function bindEvents() {
@@ -476,7 +497,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     imgs.forEach(function(img) {
       img.onclick = function(e) {
         e.stopPropagation();
-        openLightbox(img.src);
+        var src = img.src || img.dataset.src || '';
+        if (src) openLightbox(src);
       };
     });
   }
