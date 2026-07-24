@@ -27,20 +27,44 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .image-dot.active{background:#fff;width:14px;border-radius:2px}
 
 .card-title{flex-shrink:0;padding:14px 18px 10px;background:#fff;border-bottom:1px solid #f0f0f0}
-.card-title h1{font-size:1.15rem;font-weight:700;line-height:1.5;color:#222;margin-bottom:4px}
+.card-title h1{font-size:1.2rem;font-weight:500;line-height:1.35;color:#222;margin-bottom:4px}
 .card-title .meta{font-size:.78rem;color:#999}
 
 .card-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 18px 60px;background:#fafafa}
 .card-content::-webkit-scrollbar{width:0}
-.card-content .body p{line-height:1.9;margin-bottom:14px;font-size:.95rem;color:#333}
+.card-content .body p{line-height:1.5;margin-bottom:10px;font-size:1.1rem;font-weight:300;color:#333}
 .card-content .body strong,.card-content .body b{color:#222}
-.card-content .body br{display:block;content:"";margin-bottom:.4em}
 
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:#fff;border-top:1px solid #eee;display:flex;align-items:center;justify-content:center;font-size:.8rem;user-select:none;-webkit-user-select:none}
+/* 底部导航右侧浮窗 */
+.reader-float-wrap{position:relative;display:flex;align-items:center}
+.reader-float-btn{width:32px;height:32px;border-radius:50%;background:#764ba2;color:#fff;font-size:.65rem;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s,background .2s}
+.reader-float-btn:active{transform:scale(.92)}
+.reader-float-btn:hover{background:#5a3d8a}
+
+.reader-float-menu{position:absolute;bottom:40px;right:0;z-index:200;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;opacity:0;transform:translateY(8px) scale(.95);pointer-events:none;transition:opacity .2s ease,transform .2s ease;transform-origin:bottom right}
+.reader-float-menu.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.reader-float-menu a{display:flex;align-items:center;padding:10px 16px;color:#333;text-decoration:none;font-size:.82rem;font-weight:500;white-space:nowrap;transition:background .2s}
+.reader-float-menu a:hover{background:#f5f5f5}
+
+@media(prefers-color-scheme:dark){
+  .reader-float-menu{background:#1e1e1e}
+  .reader-float-menu a{color:#ddd}
+  .reader-float-menu a:hover{background:#2a2a2a}
+}
+
+/* Lightbox 图片放大 */
+.lightbox{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;cursor:zoom-out;opacity:0;transition:opacity .3s ease}
+.lightbox.show{display:flex;opacity:1}
+.lightbox img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:4px;box-shadow:0 8px 40px rgba(0,0,0,.6);transform:scale(.9);transition:transform .3s ease}
+.lightbox.show img{transform:scale(1)}
+.lightbox .close-btn{position:absolute;top:20px;right:20px;width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:50%;border:none;color:#fff;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.lightbox .close-btn:hover{background:rgba(255,255,255,.3)}
+
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:#fff;border-top:1px solid #eee;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:.8rem;user-select:none;-webkit-user-select:none}
 .bottom-nav .page-btn{display:flex;align-items:center;gap:4px;padding:4px 16px;border-radius:4px;cursor:pointer;color:#666}
 .bottom-nav .page-btn:active{background:rgba(0,0,0,.05)}
 
-.swipe-hint{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(0,0,0,.55);color:#fff;padding:6px 16px;border-radius:20px;font-size:.75rem;opacity:1;transition:opacity .5s;pointer-events:none;white-space:nowrap}
+.swipe-hint{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100;background:rgba(0,0,0,.55);color:#fff;padding:6px 16px;border-radius:20px;font-size:.75rem;opacity:1;transition:opacity .5s;pointer-events:none;white-space:nowrap}
 .swipe-hint.hidden{opacity:0}
 
 .loading-overlay{position:fixed;inset:0;z-index:999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
@@ -64,6 +88,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .bottom-nav{background:#1a1a1a;border-color:#333}
   .bottom-nav .page-btn{color:#999}
   .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
+  .reader-float-menu{background:#1e1e1e}
+  .reader-float-menu a{color:#ddd}
+  .reader-float-menu a:hover{background:#2a2a2a}
 }
 </style>
 </head>
@@ -79,7 +106,19 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 <div id="app"></div>
 
-<div class="bottom-nav" id="bottomNav"><div class="page-btn" id="pageBtn">1</div></div>
+<!-- 图片放大 lightbox -->
+<div class="lightbox" id="lightbox"><button class="close-btn" id="lightboxClose">✕</button><img id="lightboxImg" src="" alt=""></div>
+
+<div class="bottom-nav" id="bottomNav">
+  <div class="page-btn" id="pageBtn">1</div>
+  <div class="reader-float-wrap">
+    <button class="reader-float-btn" id="readerFloatBtn">夜读</button>
+    <div class="reader-float-menu" id="readerFloatMenu">
+      <a href="https://snowhoo.net/js/sevencolor/1/yedu_p.html" target="_blank">夜读 · 每晚十点</a>
+      <a href="https://snowhoo.net/js/sevencolor/1/zjsz_p.html" target="_blank">照见苏州</a>
+    </div>
+  </div>
+</div>
 
 <script>
 const OWNER = 'snowhoo';
@@ -321,6 +360,11 @@ function createCards() {
         img.src = resolveImageUrl(src);
         img.alt = post.title;
         img.draggable = false;
+        img.style.cursor = 'zoom-in';
+        img.onclick = function(e) {
+          e.stopPropagation();
+          openLightbox(img.src);
+        };
         track.appendChild(img);
       });
       galleryDiv.appendChild(track);
@@ -501,6 +545,40 @@ function escapeHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
+
+// Lightbox 图片放大
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+const lightboxClose = document.getElementById('lightboxClose');
+function openLightbox(src) {
+  lightboxImg.src = src;
+  lightbox.classList.add('show');
+}
+function closeLightbox() {
+  lightbox.classList.remove('show');
+  setTimeout(function() { lightboxImg.src = ''; }, 300);
+}
+lightboxClose.addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', function(e) {
+  if (e.target === lightbox) closeLightbox();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeLightbox();
+});
+
+// 浮窗菜单
+var floatBtn = document.getElementById('readerFloatBtn');
+var floatMenu = document.getElementById('readerFloatMenu');
+floatBtn.addEventListener('click', function(e) {
+  e.stopPropagation();
+  floatMenu.classList.toggle('show');
+});
+document.addEventListener('click', function() {
+  floatMenu.classList.remove('show');
+});
+floatMenu.addEventListener('click', function(e) {
+  e.stopPropagation();
+});
 
 main();
 </script>
