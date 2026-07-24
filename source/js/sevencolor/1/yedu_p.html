@@ -1,0 +1,410 @@
+---
+layout: false
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>夜读</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;background:#000;color:#1a1a1a;-webkit-tap-highlight-color:transparent}
+
+#app{position:relative;width:100%;height:100%;overflow:hidden}
+
+.card{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;transition:transform .38s cubic-bezier(.25,.46,.45,.94),opacity .38s}
+.card.left{transform:translateX(-100%);opacity:0;pointer-events:none}
+.card.center{transform:translateX(0);opacity:1;z-index:2}
+.card.right{transform:translateX(100%);opacity:0;pointer-events:none}
+
+.yedu-cover{position:relative;width:100%;flex-shrink:0;overflow:hidden;background:#000}
+.yedu-cover-inner{height:calc(100vh / 4);width:100%;position:relative}
+.yedu-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.yedu-cover .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e94560 0%,#2d4a6e 100%);color:rgba(255,255,255,.7);font-size:1.2rem;font-weight:600}
+
+.yedu-audio-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;background:rgba(233,69,96,.9);border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s ease;z-index:2}
+.yedu-audio-btn:hover{background:rgba(233,69,96,1);transform:translate(-50%,-50%) scale(1.1)}
+.yedu-audio-btn svg{width:16px;height:16px;fill:#fff;margin-left:2px}
+.yedu-audio-btn.playing svg{margin-left:0}
+
+.yedu-corner-label{position:absolute;top:8px;left:8px;color:rgba(255,255,255,.95);font-size:.75rem;background:rgba(0,0,0,.15);padding:4px 12px;border-radius:18px;text-shadow:0 1px 2px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap}
+
+.yedu-audio-progress{position:absolute;bottom:0;left:0;width:100%;height:3px;background:rgba(255,255,255,.3);z-index:3}
+.yedu-audio-progress-bar{height:100%;background:#e94560;width:0;transition:width .1s linear}
+
+.card-title{flex-shrink:0;padding:14px 18px 10px;background:#fff;border-bottom:1px solid #f0f0f0}
+.card-title h1{font-size:1.15rem;font-weight:700;line-height:1.5;color:#222;margin-bottom:4px}
+.card-title .meta{font-size:.78rem;color:#999}
+
+.card-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 18px 60px;background:#fafafa}
+.card-content::-webkit-scrollbar{width:0}
+.card-content .body p{line-height:1.9;margin-bottom:14px;font-size:.95rem;color:#333}
+.card-content .body strong,.card-content .body b{color:#222}
+
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:#fff;border-top:1px solid #eee;display:flex;align-items:center;justify-content:center;font-size:.8rem;user-select:none;-webkit-user-select:none}
+.bottom-nav .page-btn{display:flex;align-items:center;gap:4px;padding:4px 16px;border-radius:4px;cursor:pointer;color:#666}
+.bottom-nav .page-btn:active{background:rgba(0,0,0,.05)}
+
+.swipe-hint{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:100;background:rgba(0,0,0,.55);color:#fff;padding:6px 16px;border-radius:20px;font-size:.75rem;opacity:1;transition:opacity .5s;pointer-events:none;white-space:nowrap}
+.swipe-hint.hidden{opacity:0}
+
+.loading-overlay{position:fixed;inset:0;z-index:999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
+.loading-overlay.hide{opacity:0;pointer-events:none}
+.spinner{width:40px;height:40px;border:3px solid #eee;border-top-color:#e94560;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{margin-top:16px;font-size:.9rem;color:#999}
+
+@media(min-width:769px){
+  #app{max-width:480px;margin:0 auto;border-left:1px solid #eee;border-right:1px solid #eee}
+}
+
+@media(prefers-color-scheme:dark){
+  .card-title{background:#1a1a1a;border-color:#333}
+  .card-title h1{color:#eee}
+  .card-title .meta{color:#666}
+  .card-content{background:#121212}
+  .card-content .body p{color:#ccc}
+  .card-content .body strong,.card-content .body b{color:#eee}
+  .bottom-nav{background:#1a1a1a;border-color:#333}
+  .bottom-nav .page-btn{color:#999}
+  .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">正在加载夜读内容...</div>
+</div>
+
+<div class="swipe-hint" id="hint">← 左滑看下一篇 · 右滑看上一篇 →</div>
+
+<div id="app"></div>
+
+<div class="bottom-nav" id="bottomNav"><div class="page-btn" id="pageBtn">1</div></div>
+
+<script>
+(function() {
+  var basePath = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : './');
+  var pausePath = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
+  var playPath = 'M8 5v14l11-7z';
+  
+  let articles = [];
+  let currentIndex = 0;
+  let startX = 0, startY = 0, moveX = 0, moveY = 0;
+  let isDragging = false;
+  let hintVisible = true;
+  let _scAudio, _scAudioBtn;
+  
+  const app = document.getElementById('app');
+  const pageBtn = document.getElementById('pageBtn');
+  const hintEl = document.getElementById('hint');
+  const loadingEl = document.getElementById('loading');
+
+  // 主题检测
+  function detectTheme() {
+    try {
+      var pt = window.parent.document.documentElement.getAttribute('data-theme');
+      if (pt === 'dark' || pt === 'light') {
+        document.documentElement.setAttribute('data-theme', pt);
+        return;
+      }
+    } catch(e) {}
+    var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  }
+  detectTheme();
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', detectTheme);
+
+  // 数据加载
+  function loadData() {
+    fetch(basePath + 'yedu_data/index.json')
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(files) {
+        return Promise.all(files.map(function(f) {
+          return fetch(basePath + 'yedu_data/' + f).then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.text();
+          });
+        }));
+      })
+      .then(function(texts) {
+        texts.forEach(function(text) {
+          text = text.replace(/"(\.[^"]+)"/g, function(m, path) {
+            if (path.startsWith('/') || path.startsWith('http')) return m;
+            return '"' + basePath + path.replace(/^\.\//, '') + '"';
+          });
+          var vn = text.match(/^var\s+(\w+)\s*=/);
+          if (vn) text = text.replace(/__([a-zA-Z])/g, '_$1');
+          try { eval(text); } catch(e) {}
+        });
+
+        var allKeys = Object.keys(window).filter(function(k) { return k.indexOf('__yedu_') === 0; }).sort().reverse();
+        articles = allKeys.map(function(k) { return window[k]; });
+
+        createPageNav();
+        createCards();
+        bindEvents();
+        updateCards();
+        
+        loadingEl.classList.add('hide');
+        setTimeout(() => loadingEl.remove(), 500);
+        setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 5000);
+      })
+      .catch(function(e) {
+        var loadingText = loadingEl.querySelector('.loading-text');
+        if (loadingText) loadingText.textContent = '加载失败：' + e.message;
+        console.error(e);
+      });
+  }
+
+  function createCards() {
+    articles.forEach(function(post, i) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.index = i;
+      if (i < currentIndex) card.classList.add('left');
+      if (i === currentIndex) card.classList.add('center');
+      if (i > currentIndex) card.classList.add('right');
+
+      // Cover image
+      const coverDiv = document.createElement('div');
+      coverDiv.className = 'yedu-cover';
+      
+      const coverInner = document.createElement('div');
+      coverInner.className = 'yedu-cover-inner';
+      
+      const imgSrc = post.coverSrc || '';
+      if (imgSrc) {
+        const img = document.createElement('img');
+        img.src = imgSrc;
+        img.alt = post.title;
+        img.draggable = false;
+        img.onerror = function() { this.style.display='none'; this.nextElementSibling.style.display='flex'; };
+        coverInner.appendChild(img);
+        
+        const placeholder = document.createElement('div');
+        placeholder.className = 'placeholder';
+        placeholder.style.display = 'none';
+        placeholder.textContent = '夜读';
+        coverInner.appendChild(placeholder);
+      } else {
+        coverInner.innerHTML = '<div class="placeholder">夜读</div>';
+      }
+
+      // Audio button
+      if (post.audioSrc) {
+        const audioBtn = document.createElement('button');
+        audioBtn.className = 'yedu-audio-btn';
+        audioBtn.dataset.index = i;
+        audioBtn.dataset.src = post.audioSrc;
+        audioBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + playPath + '"/></svg>';
+        coverInner.appendChild(audioBtn);
+      }
+
+      // Corner label
+      const cornerLabel = document.createElement('span');
+      cornerLabel.className = 'yedu-corner-label';
+      cornerLabel.textContent = '每晚十点 · 温暖相伴';
+      coverInner.appendChild(cornerLabel);
+
+      // Progress bar
+      if (post.audioSrc) {
+        const progressDiv = document.createElement('div');
+        progressDiv.className = 'yedu-audio-progress';
+        const progressBar = document.createElement('div');
+        progressBar.className = 'yedu-audio-progress-bar';
+        progressBar.id = 'yedu-progress-' + i;
+        progressDiv.appendChild(progressBar);
+        coverInner.appendChild(progressDiv);
+      }
+
+      coverDiv.appendChild(coverInner);
+
+      // Title
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'card-title';
+      const dateHtml = post.pubDate ? '<div class="meta">' + escapeHtml(post.pubDate) + '</div>' : '';
+      titleDiv.innerHTML = '<h1>' + escapeHtml(post.title) + '</h1>' + dateHtml;
+
+      // Content
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'card-content';
+      
+      let paragraphsHtml = '';
+      if (post.paragraphs && post.paragraphs.length) {
+        for (let j = 0; j < post.paragraphs.length; j++) {
+          paragraphsHtml += '<p>' + post.paragraphs[j] + '</p>';
+        }
+      }
+      contentDiv.innerHTML = '<div class="body">' + paragraphsHtml + '</div>';
+
+      card.appendChild(coverDiv);
+      card.appendChild(titleDiv);
+      card.appendChild(contentDiv);
+      app.appendChild(card);
+    });
+  }
+
+  function createPageNav() {
+    pageBtn.textContent = '1 / ' + articles.length;
+  }
+  
+  pageBtn.addEventListener('click', function() {
+    var input = prompt('输入页码 (1 - ' + articles.length + ')', (currentIndex + 1) + '');
+    if (input !== null) {
+      var num = parseInt(input, 10);
+      if (num >= 1 && num <= articles.length) {
+        currentIndex = num - 1;
+        updateCards();
+      }
+    }
+  });
+
+  function updateCards() {
+    const cards = app.querySelectorAll('.card');
+    cards.forEach((card, i) => {
+      card.className = 'card';
+      if (i < currentIndex) card.classList.add('left');
+      if (i === currentIndex) card.classList.add('center');
+      if (i > currentIndex) card.classList.add('right');
+    });
+    pageBtn.textContent = (currentIndex + 1) + ' / ' + articles.length;
+    if (hintVisible) {
+      hintEl.classList.remove('hidden');
+      setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);
+    }
+    
+    // 更新音频按钮事件
+    updateAudioButtons();
+  }
+
+  function bindEvents() {
+    app.addEventListener('touchstart', onTouchStart, { passive: true });
+    app.addEventListener('touchmove', onTouchMove, { passive: false });
+    app.addEventListener('touchend', onTouchEnd);
+    app.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('keydown', onKeyDown);
+  }
+
+  function onTouchStart(e) { startX = e.touches[0].clientX; startY = e.touches[0].clientY; isDragging = true; }
+  function onTouchMove(e) {
+    if (!isDragging) return;
+    moveX = e.touches[0].clientX - startX;
+    moveY = e.touches[0].clientY - startY;
+    if (Math.abs(moveX) > Math.abs(moveY)) e.preventDefault();
+  }
+  function onTouchEnd(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    const threshold = 60;
+    if (moveX < -threshold && currentIndex < articles.length - 1) { currentIndex++; updateCards(); }
+    else if (moveX > threshold && currentIndex > 0) { currentIndex--; updateCards(); }
+    moveX = 0; moveY = 0;
+  }
+  function onMouseDown(e) { startX = e.clientX; startY = e.clientY; isDragging = true; app.style.cursor = 'grabbing'; }
+  function onMouseMove(e) {
+    if (!isDragging) return;
+    moveX = e.clientX - startX;
+    moveY = e.clientY - startY;
+    if (Math.abs(moveX) > Math.abs(moveY)) e.preventDefault();
+  }
+  function onMouseUp(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    app.style.cursor = '';
+    const threshold = 60;
+    if (moveX < -threshold && currentIndex < articles.length - 1) { currentIndex++; updateCards(); }
+    else if (moveX > threshold && currentIndex > 0) { currentIndex--; updateCards(); }
+    moveX = 0; moveY = 0;
+  }
+  function onKeyDown(e) {
+    if (e.key === 'ArrowRight' && currentIndex < articles.length - 1) { currentIndex++; updateCards(); }
+    else if (e.key === 'ArrowLeft' && currentIndex > 0) { currentIndex--; updateCards(); }
+  }
+
+  function toggleAudio(index, btn) {
+    var src = btn.dataset.src;
+    var progressBar = document.getElementById('yedu-progress-' + index);
+    var svg = btn.querySelector('svg');
+    var pathEl = svg.querySelector('path');
+
+    if (_scAudio && _scAudio._scSrc === src) {
+      if (_scAudio.paused) {
+        _scAudio.play();
+        btn.classList.add('playing');
+        pathEl.setAttribute('d', pausePath);
+      } else {
+        _scAudio.pause();
+        btn.classList.remove('playing');
+        pathEl.setAttribute('d', playPath);
+      }
+      return;
+    }
+
+    if (_scAudio) {
+      _scAudio.pause();
+      if (_scAudioBtn) {
+        _scAudioBtn.classList.remove('playing');
+        var op = _scAudioBtn.querySelector('svg path');
+        if (op) op.setAttribute('d', playPath);
+      }
+    }
+
+    var audio = new Audio(src);
+    audio._scSrc = src;
+    _scAudio = audio;
+    _scAudioBtn = btn;
+
+    audio.addEventListener('timeupdate', function() {
+      if (audio.duration && progressBar) {
+        progressBar.style.width = (audio.currentTime / audio.duration * 100) + '%';
+      }
+    });
+    audio.addEventListener('ended', function() {
+      btn.classList.remove('playing');
+      pathEl.setAttribute('d', playPath);
+      if (progressBar) progressBar.style.width = '0%';
+    });
+    audio.addEventListener('error', function() {
+      btn.classList.remove('playing');
+      pathEl.setAttribute('d', playPath);
+      if (progressBar) progressBar.style.width = '0%';
+    });
+
+    btn.classList.add('playing');
+    pathEl.setAttribute('d', pausePath);
+    audio.play().catch(function() {
+      btn.classList.remove('playing');
+      pathEl.setAttribute('d', playPath);
+    });
+  }
+
+  function updateAudioButtons() {
+    const audioBtns = app.querySelectorAll('.yedu-audio-btn');
+    audioBtns.forEach(function(btn) {
+      btn.onclick = function(e) {
+        e.stopPropagation();
+        toggleAudio(parseInt(btn.dataset.index), btn);
+      };
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  loadData();
+})();
+</script>
+</body>
+</html>
