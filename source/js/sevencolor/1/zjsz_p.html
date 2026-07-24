@@ -231,7 +231,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       const imgSrc = resolvePath(art.image_url || '');
       if (imgSrc) {
         const img = document.createElement('img');
-        img.src = imgSrc;
+        img.dataset.src = imgSrc;
         img.alt = art.title || '';
         img.draggable = false;
         img.style.cursor = 'zoom-in';
@@ -310,7 +310,29 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       hintEl.classList.remove('hidden');
       setTimeout(function() { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);
     }
+    loadNearbyImages();
     updateImageClick();
+  }
+
+  // 懒加载当前及相邻卡片图片
+  function loadNearbyImages() {
+    var imgs = app.querySelectorAll('.zjsz-cover img[data-src]');
+    imgs.forEach(function(img) {
+      var card = img.closest('.card');
+      if (!card) return;
+      var idx = parseInt(card.dataset.index, 10);
+      // 只加载当前页和前后各1页的图片
+      if (idx >= currentIndex - 1 && idx <= currentIndex + 1) {
+        if (img.src !== img.dataset.src && !img.src) {
+          img.src = img.dataset.src;
+        }
+      } else {
+        // 移出可视范围的释放图片资源
+        if (img.src) {
+          img.src = '';
+        }
+      }
+    });
   }
 
   function bindEvents() {
@@ -381,7 +403,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     imgs.forEach(function(img) {
       img.onclick = function(e) {
         e.stopPropagation();
-        openLightbox(img.src);
+        var src = img.src || img.dataset.src || '';
+        if (src) openLightbox(src);
       };
     });
   }
