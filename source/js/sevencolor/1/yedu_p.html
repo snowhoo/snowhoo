@@ -24,7 +24,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 .yedu-audio-btn{width:32px;height:32px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .yedu-audio-btn:active{transform:scale(.92)}
-.yedu-audio-btn svg{width:32px;height:32px;fill:#999}
+.yedu-audio-btn svg{width:32px;height:32px;fill:#e94560}
 
 .yedu-corner-label{position:absolute;top:8px;left:8px;color:rgba(255,255,255,.95);font-size:.75rem;background:rgba(0,0,0,.15);padding:4px 12px;border-radius:18px;text-shadow:0 1px 2px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap}
 
@@ -102,8 +102,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
   .page-nav-btn{color:#666}
   .page-nav-btn:active{background:rgba(255,255,255,.08)}
-  .yedu-audio-btn svg{fill:#e94560}
-}
+  }
 [data-theme="dark"]{
   .card-title{background:#1a1a1a;border-color:#333}
   .card-title h1{color:#eee}
@@ -116,7 +115,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
   .page-nav-btn{color:#666}
   .page-nav-btn:active{background:rgba(255,255,255,.08)}
-  .yedu-audio-btn svg{fill:#e94560}
 }
 </style>
 </head>
@@ -135,6 +133,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 <div class="lightbox" id="lightbox"><button class="close-btn" id="lightboxClose">✕</button><img id="lightboxImg" src="" alt=""></div>
 
 <div class="bottom-nav" id="bottomNav">
+  <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
   <div class="page-nav-group">
     <span class="page-nav-btn" id="firstBtn">‹‹</span>
     <span class="page-btn" id="pageBtn">1</span>
@@ -142,7 +141,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   </div>
   <div class="yedu-float-wrap">
     <button class="yedu-audio-btn" id="yeduAudioBtn" style="display:none"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-    <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
     <button class="yedu-float-btn" id="yeduFloatBtn">夜读</button>
     <div class="yedu-float-menu" id="yeduFloatMenu">
       <a href="https://snowhoo.net/reader.html" target="_blank"><span class="menu-indicator circulated" style="background:#e94560">小</span>小红故事·Blog</a>
@@ -335,7 +333,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
           paragraphsHtml += '<p>' + post.paragraphs[j] + '</p>';
         }
       }
-      if (!paragraphsHtml) paragraphsHtml = '<p class="no-content">暂无正文</p>';
+      if (!paragraphsHtml) paragraphsHtml = '<p class="no-content">暂无正文<br>有的时候，留白比文字更具内涵；而沉默比呐喊更彰显力量。</p>';
       contentDiv.innerHTML = '<div class="body">' + paragraphsHtml + '</div>';
 
       card.appendChild(coverDiv);
