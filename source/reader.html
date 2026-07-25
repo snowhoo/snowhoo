@@ -70,6 +70,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:#fff;border-top:1px solid #eee;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:.8rem;user-select:none;-webkit-user-select:none}
 .bottom-nav .page-btn{display:flex;align-items:center;gap:4px;padding:4px 16px;border-radius:4px;cursor:pointer;color:#666}
 .bottom-nav .page-btn:active{background:rgba(0,0,0,.05)}
+.page-nav-group{display:flex;align-items:center;gap:2px}
+.page-nav-btn{padding:4px 6px;cursor:pointer;color:#999;font-size:.72rem;user-select:none}
+.page-nav-btn:active{background:rgba(0,0,0,.05)}
 
 .swipe-hint{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100;background:rgba(0,0,0,.55);color:#fff;padding:6px 16px;border-radius:20px;font-size:.75rem;opacity:1;transition:opacity .5s;pointer-events:none;white-space:nowrap}
 .swipe-hint.hidden{opacity:0}
@@ -95,6 +98,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .bottom-nav{background:#1a1a1a;border-color:#333}
   .bottom-nav .page-btn{color:#999}
   .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
+  .page-nav-btn{color:#666}
+  .page-nav-btn:active{background:rgba(255,255,255,.08)}
   .reader-float-menu{background:#1e1e1e}
   .reader-float-menu a{color:#ddd}
   .reader-float-menu a:hover{background:#2a2a2a}
@@ -123,7 +128,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 </div>
 
 <div class="bottom-nav" id="bottomNav">
-  <div class="page-btn" id="pageBtn">1</div>
+  <div class="page-nav-group">
+    <span class="page-nav-btn" id="firstBtn">‹‹</span>
+    <span class="page-btn" id="pageBtn">1</span>
+    <span class="page-nav-btn" id="lastBtn">››</span>
+  </div>
   <div class="reader-float-wrap">
     <button class="reader-float-btn" id="readerFloatBtn"><span>小红</span><span>故事</span></button>
     <div class="reader-float-menu" id="readerFloatMenu">
@@ -141,6 +150,7 @@ const POSTS_PATH = 'source/_posts';
 
 let POSTS = [];
 let currentIndex = 0;
+const STORAGE_KEY = 'reader_page_idx';
 let startX = 0, startY = 0, moveX = 0, moveY = 0;
 let isDragging = false;
 let hintVisible = true;
@@ -316,6 +326,12 @@ async function main() {
         });
         app.innerHTML = '';
         createPageNav();
+        // 恢复保存的页码
+        var savedIdx = localStorage.getItem(STORAGE_KEY);
+        if (savedIdx !== null) {
+          var n = parseInt(savedIdx, 10);
+          if (n >= 0 && n < POSTS.length) currentIndex = n;
+        }
         createCards();
         bindEvents();
         initialized = true;
@@ -338,6 +354,12 @@ async function main() {
     });
     app.innerHTML = '';
     createPageNav();
+    // 恢复保存的页码
+    var savedIdx = localStorage.getItem(STORAGE_KEY);
+    if (savedIdx !== null) {
+      var n = parseInt(savedIdx, 10);
+      if (n >= 0 && n < POSTS.length) currentIndex = n;
+    }
     createCards();
     updateCards();
     
@@ -497,6 +519,15 @@ pageBtn.addEventListener('click', function() {
   }
 });
 
+document.getElementById('firstBtn').addEventListener('click', function(e) {
+  e.stopPropagation();
+  if (currentIndex > 0) { currentIndex = 0; updateCards(); }
+});
+document.getElementById('lastBtn').addEventListener('click', function(e) {
+  e.stopPropagation();
+  if (currentIndex < POSTS.length - 1) { currentIndex = POSTS.length - 1; updateCards(); }
+});
+
 function updateCards() {
   const cards = app.querySelectorAll('.card');
   cards.forEach((card, i) => {
@@ -506,6 +537,7 @@ function updateCards() {
     if (i > currentIndex) card.classList.add('right');
   });
   pageBtn.textContent = (currentIndex + 1) + ' / ' + POSTS.length;
+  localStorage.setItem(STORAGE_KEY, currentIndex);
   if (hintVisible) {
     hintEl.classList.remove('hidden');
     setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);

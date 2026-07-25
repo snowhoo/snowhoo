@@ -38,6 +38,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:#fff;border-top:1px solid #eee;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:.8rem;user-select:none;-webkit-user-select:none}
 .bottom-nav .page-btn{display:flex;align-items:center;gap:4px;padding:4px 16px;border-radius:4px;cursor:pointer;color:#666}
 .bottom-nav .page-btn:active{background:rgba(0,0,0,.05)}
+.page-nav-group{display:flex;align-items:center;gap:2px}
+.page-nav-btn{padding:4px 6px;cursor:pointer;color:#999;font-size:.72rem;user-select:none}
+.page-nav-btn:active{background:rgba(0,0,0,.05)}
 
 /* 底部导航右侧浮窗 */
 .zjsz-float-wrap{position:relative;display:flex;align-items:center}
@@ -89,6 +92,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .bottom-nav{background:#1a1a1a;border-color:#333}
   .bottom-nav .page-btn{color:#999}
   .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
+  .page-nav-btn{color:#666}
+  .page-nav-btn:active{background:rgba(255,255,255,.08)}
 }
 </style>
 </head>
@@ -107,7 +112,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 <div class="lightbox" id="lightbox"><button class="close-btn" id="lightboxClose">✕</button><img id="lightboxImg" src="" alt=""></div>
 
 <div class="bottom-nav" id="bottomNav">
-  <div class="page-btn" id="pageBtn">1</div>
+  <div class="page-nav-group">
+    <span class="page-nav-btn" id="firstBtn">‹‹</span>
+    <span class="page-btn" id="pageBtn">1</span>
+    <span class="page-nav-btn" id="lastBtn">››</span>
+  </div>
   <div class="zjsz-float-wrap">
     <button class="zjsz-float-btn" id="zjszFloatBtn"><span>照</span><span>见</span><span>苏</span><span>州</span></button>
     <div class="zjsz-float-menu" id="zjszFloatMenu">
@@ -124,6 +133,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   
   let articles = [];
   let currentIndex = 0;
+  const STORAGE_KEY = 'zjsz_page_idx';
   let startX = 0, startY = 0, moveX = 0, moveY = 0;
   let isDragging = false;
   let hintVisible = true;
@@ -183,7 +193,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
           return;
         }
         articles = data;
-        
+
+        // 恢复保存的页码
+        var savedIdx = localStorage.getItem(STORAGE_KEY);
+        if (savedIdx !== null) {
+          var n = parseInt(savedIdx, 10);
+          if (n >= 0 && n < articles.length) currentIndex = n;
+        }
+
         createPageNav();
         createCards();
         bindEvents();
@@ -301,6 +318,15 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     }
   });
 
+  document.getElementById('firstBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (currentIndex > 0) { currentIndex = 0; updateCards(); }
+  });
+  document.getElementById('lastBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (currentIndex < articles.length - 1) { currentIndex = articles.length - 1; updateCards(); }
+  });
+
   function updateCards() {
     const cards = app.querySelectorAll('.card');
     cards.forEach(function(card, i) {
@@ -310,6 +336,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       if (i > currentIndex) card.classList.add('right');
     });
     pageBtn.textContent = (currentIndex + 1) + ' / ' + articles.length;
+    localStorage.setItem(STORAGE_KEY, currentIndex);
     if (hintVisible) {
       hintEl.classList.remove('hidden');
       setTimeout(function() { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);
