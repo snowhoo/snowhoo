@@ -23,15 +23,12 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .yedu-cover img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
 .yedu-cover .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e94560 0%,#2d4a6e 100%);color:rgba(255,255,255,.7);font-size:1.2rem;font-weight:600}
 
-.yedu-audio-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;background:rgba(233,69,96,.9);border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s ease;z-index:2}
-.yedu-audio-btn:hover{background:rgba(233,69,96,1);transform:translate(-50%,-50%) scale(1.1)}
-.yedu-audio-btn svg{width:16px;height:16px;fill:#fff;margin-left:2px}
-.yedu-audio-btn.playing svg{margin-left:0}
+.yedu-audio-btn{width:30px;height:30px;border-radius:50%;background:rgba(233,69,96,.9);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,transform .2s;flex-shrink:0}
+.yedu-audio-btn:hover{background:rgba(233,69,96,1)}
+.yedu-audio-btn:active{transform:scale(.92)}
+.yedu-audio-btn svg{width:14px;height:14px;fill:#fff}
 
 .yedu-corner-label{position:absolute;top:8px;left:8px;color:rgba(255,255,255,.95);font-size:.75rem;background:rgba(0,0,0,.15);padding:4px 12px;border-radius:18px;text-shadow:0 1px 2px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap}
-
-.yedu-audio-progress{position:absolute;bottom:0;left:0;width:100%;height:3px;background:rgba(255,255,255,.3);z-index:3}
-.yedu-audio-progress-bar{height:100%;background:#e94560;width:0;transition:width .1s linear}
 
 .card-title{flex-shrink:0;padding:14px 18px 10px;background:#fff;border-bottom:1px solid #f0f0f0}
 .card-title h1{font-size:1.2rem;font-weight:500;line-height:1.35;color:#222;margin-bottom:4px}
@@ -124,6 +121,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     <span class="page-btn" id="pageBtn">1</span>
     <span class="page-nav-btn" id="lastBtn">››</span>
   </div>
+  <button class="yedu-audio-btn" id="yeduAudioBtn" style="display:none"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
   <div class="yedu-float-wrap">
     <button class="yedu-float-btn" id="yeduFloatBtn">夜读</button>
     <div class="yedu-float-menu" id="yeduFloatMenu">
@@ -154,6 +152,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightboxImg');
   const lightboxClose = document.getElementById('lightboxClose');
+  const audioBtn = document.getElementById('yeduAudioBtn');
 
   // 主题检测
   function detectTheme() {
@@ -253,32 +252,22 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       coverInner.className = 'yedu-cover-inner';
       
       const imgSrc = post.coverSrc || '';
+      const picsumUrl = 'https://picsum.photos/seed/yedu_' + i + '/800/400';
       if (imgSrc) {
         const img = document.createElement('img');
         img.dataset.src = imgSrc;
         img.alt = post.title;
         img.draggable = false;
         img.style.cursor = 'zoom-in';
-        img.onerror = function() { this.style.display='none'; this.nextElementSibling.style.display='flex'; };
+        img.onerror = function() { this.src = picsumUrl; this.onerror = null; };
         coverInner.appendChild(img);
-        
-        const placeholder = document.createElement('div');
-        placeholder.className = 'placeholder';
-        placeholder.style.display = 'none';
-        placeholder.textContent = '夜读';
-        coverInner.appendChild(placeholder);
       } else {
-        coverInner.innerHTML = '<div class="placeholder">夜读</div>';
-      }
-
-      // Audio button
-      if (post.audioSrc) {
-        const audioBtn = document.createElement('button');
-        audioBtn.className = 'yedu-audio-btn';
-        audioBtn.dataset.index = i;
-        audioBtn.dataset.src = post.audioSrc;
-        audioBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + playPath + '"/></svg>';
-        coverInner.appendChild(audioBtn);
+        const img = document.createElement('img');
+        img.src = picsumUrl;
+        img.alt = post.title;
+        img.draggable = false;
+        img.style.cursor = 'zoom-in';
+        coverInner.appendChild(img);
       }
 
       // Corner label
@@ -286,17 +275,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       cornerLabel.className = 'yedu-corner-label';
       cornerLabel.textContent = '每晚十点 · 温暖相伴';
       coverInner.appendChild(cornerLabel);
-
-      // Progress bar
-      if (post.audioSrc) {
-        const progressDiv = document.createElement('div');
-        progressDiv.className = 'yedu-audio-progress';
-        const progressBar = document.createElement('div');
-        progressBar.className = 'yedu-audio-progress-bar';
-        progressBar.id = 'yedu-progress-' + i;
-        progressDiv.appendChild(progressBar);
-        coverInner.appendChild(progressDiv);
-      }
 
       coverDiv.appendChild(coverInner);
 
@@ -381,12 +359,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       if (!card) return;
       var idx = parseInt(card.dataset.index, 10);
       if (idx >= currentIndex - 1 && idx <= currentIndex + 1) {
-        if (!img.src) {
+        if (img.src !== img.dataset.src) {
           img.src = img.dataset.src;
-        }
-      } else {
-        if (img.src) {
-          img.src = '';
         }
       }
     });
@@ -496,13 +470,27 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   }
 
   function updateAudioButtons() {
-    const audioBtns = app.querySelectorAll('.yedu-audio-btn');
-    audioBtns.forEach(function(btn) {
-      btn.onclick = function(e) {
+    var post = articles[currentIndex];
+    if (post && post.audioSrc) {
+      audioBtn.style.display = 'flex';
+      audioBtn.dataset.src = post.audioSrc;
+      audioBtn.dataset.index = currentIndex;
+      var svg = audioBtn.querySelector('svg');
+      var pathEl = svg.querySelector('path');
+      if (_scAudio && _scAudio._scSrc === post.audioSrc && !_scAudio.paused) {
+        audioBtn.classList.add('playing');
+        pathEl.setAttribute('d', pausePath);
+      } else {
+        audioBtn.classList.remove('playing');
+        pathEl.setAttribute('d', playPath);
+      }
+      audioBtn.onclick = function(e) {
         e.stopPropagation();
-        toggleAudio(parseInt(btn.dataset.index), btn);
+        toggleAudio(parseInt(audioBtn.dataset.index), audioBtn);
       };
-    });
+    } else {
+      audioBtn.style.display = 'none';
+    }
   }
 
   // Lightbox 图片放大

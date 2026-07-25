@@ -483,7 +483,19 @@ function createCards() {
         });
       }
     } else {
-      galleryDiv.innerHTML = '<div class="placeholder">暂无图片</div>';
+      const track = document.createElement('div');
+      track.className = 'gallery-track';
+      const img = document.createElement('img');
+      img.src = 'https://picsum.photos/seed/reader_' + i + '/800/400';
+      img.alt = post.title;
+      img.draggable = false;
+      img.style.cursor = 'zoom-in';
+      img.onclick = function(e) {
+        e.stopPropagation();
+        openLightbox([img.src], 0);
+      };
+      track.appendChild(img);
+      galleryDiv.appendChild(track);
     }
 
     // Title

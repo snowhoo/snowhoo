@@ -249,22 +249,22 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       coverInner.className = 'zjsz-cover-inner';
       
       const imgSrc = resolvePath(art.image_url || '');
+      const picsumUrl = 'https://picsum.photos/seed/zjsz_' + i + '/800/400';
       if (imgSrc) {
         const img = document.createElement('img');
         img.dataset.src = imgSrc;
         img.alt = art.title || '';
         img.draggable = false;
         img.style.cursor = 'zoom-in';
-        img.onerror = function() { this.style.display='none'; this.nextElementSibling.style.display='flex'; };
+        img.onerror = function() { this.src = picsumUrl; this.onerror = null; };
         coverInner.appendChild(img);
-        
-        const placeholder = document.createElement('div');
-        placeholder.className = 'placeholder';
-        placeholder.style.display = 'none';
-        placeholder.textContent = '\u7167\u89C1\u82CF\u5DDE';
-        coverInner.appendChild(placeholder);
       } else {
-        coverInner.innerHTML = '<div class="placeholder">\u7167\u89C1\u82CF\u5DDE</div>';
+        const img = document.createElement('img');
+        img.src = picsumUrl;
+        img.alt = art.title || '';
+        img.draggable = false;
+        img.style.cursor = 'zoom-in';
+        coverInner.appendChild(img);
       }
 
       // Corner label
@@ -352,15 +352,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       var card = img.closest('.card');
       if (!card) return;
       var idx = parseInt(card.dataset.index, 10);
-      // 只加载当前页和前后各1页的图片
       if (idx >= currentIndex - 1 && idx <= currentIndex + 1) {
-        if (img.src !== img.dataset.src && !img.src) {
+        if (img.src !== img.dataset.src) {
           img.src = img.dataset.src;
-        }
-      } else {
-        // 移出可视范围的释放图片资源
-        if (img.src) {
-          img.src = '';
         }
       }
     });
