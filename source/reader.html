@@ -21,7 +21,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .image-gallery{position:relative;width:100%;flex-shrink:0;overflow:hidden;background:#000}
 .image-gallery .gallery-track{display:flex;transition:transform .3s ease;height:calc(100vh / 4);width:100%}
 .image-gallery .gallery-track img{flex:0 0 100%;height:100%;object-fit:cover}
-.image-gallery .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:rgba(255,255,255,.6);font-size:.95rem;flex-shrink:0}
 .image-dots{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:10}
 .image-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.5)}
 .image-dot.active{background:#fff;width:14px;border-radius:2px}
@@ -393,7 +392,7 @@ function createCards() {
       track.className = 'gallery-track';
       post.images.forEach(function(src, idx) {
         const img = document.createElement('img');
-        img.src = resolveImageUrl(src);
+        img.src = 'https://picsum.photos/seed/reader_' + i + '_' + idx + '/800/400';
         img.alt = post.title;
         img.draggable = false;
         img.style.cursor = 'zoom-in';
@@ -403,6 +402,11 @@ function createCards() {
           var list = post.images.map(function(s) { return resolveImageUrl(s); });
           openLightbox(list, idx);
         };
+        // Load real image
+        img.dataset.src = resolveImageUrl(src);
+        var loader = new Image();
+        loader.onload = function() { img.src = img.dataset.src; };
+        loader.src = img.dataset.src;
         track.appendChild(img);
       });
       galleryDiv.appendChild(track);
