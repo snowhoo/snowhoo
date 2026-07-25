@@ -43,11 +43,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* 底部导航右侧浮窗 */
 .zjsz-float-wrap{position:relative;display:flex;align-items:center}
-.zjsz-float-btn{width:32px;height:32px;border-radius:50%;background:#0f3460;color:#fff;border:none;cursor:pointer;display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;place-content:center;gap:0;padding:0;transition:transform .2s,background .2s;overflow:hidden}
+.zjsz-float-btn{width:32px;height:32px;border-radius:50%;background:#3b82f6;color:#fff;border:none;cursor:pointer;display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;place-content:center;gap:0;padding:0;transition:transform .2s,background .2s;overflow:hidden}
 .zjsz-float-btn:active{transform:scale(.92)}
-.zjsz-float-btn:hover{background:#16213e}
+.zjsz-float-btn:hover{background:#2563eb}
 .zjsz-float-btn span{display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;line-height:1}
-.theme-btn{width:32px;height:32px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#999}
+.theme-btn{width:32px;height:32px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .theme-btn:active{transform:scale(.92)}
 .theme-btn svg{width:16px;height:16px}
 
@@ -71,7 +71,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 .loading-overlay{position:fixed;inset:0;z-index:999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
 .loading-overlay.hide{opacity:0;pointer-events:none}
-.spinner{width:40px;height:40px;border:3px solid #eee;border-top-color:#0f3460;border-radius:50%;animation:spin .8s linear infinite}
+.spinner{width:40px;height:40px;border:3px solid #eee;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{margin-top:16px;font-size:.9rem;color:#999}
 
@@ -112,7 +112,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
   .page-nav-btn{color:#666}
   .page-nav-btn:active{background:rgba(255,255,255,.08)}
-  .theme-btn{color:#666}
 }
 </style>
 </head>
@@ -137,7 +136,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     <span class="page-nav-btn" id="lastBtn">››</span>
   </div>
   <div class="zjsz-float-wrap">
-    <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor"/></svg></button>
+    <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
     <button class="zjsz-float-btn" id="zjszFloatBtn"><span>照</span><span>见</span><span>苏</span><span>州</span></button>
     <div class="zjsz-float-menu" id="zjszFloatMenu">
       <a href="https://snowhoo.net/reader.html" target="_blank"><span class="menu-indicator circulated" style="background:#e94560">小</span>小红故事·Blog</a>
@@ -190,9 +189,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   function updateThemeBtn(theme) {
     var btn = document.getElementById('themeBtn');
     if (theme === 'dark') {
-      btn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="currentColor"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" fill="none"/></svg>';
+      btn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#f0a500"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#f0a500" stroke-width="2" fill="none"/></svg>';
     } else {
-      btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="currentColor"/></svg>';
+      btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg>';
     }
   }
   detectTheme();
