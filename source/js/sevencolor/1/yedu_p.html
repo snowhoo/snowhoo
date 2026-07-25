@@ -335,7 +335,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
           paragraphsHtml += '<p>' + post.paragraphs[j] + '</p>';
         }
       }
-      if (!paragraphsHtml) paragraphsHtml = '<p class="no-content">暂无正文<br>有的时候，留白比文字更具内涵；而沉默比呐喊更彰显力量。</p>';
+      if (!paragraphsHtml) paragraphsHtml = '<p class="no-content">暂无正文<br><br>有时候<br>适当留白比文字<br>更具内涵<br>而沉默比呐喊<br>更彰显力量</p>';
       contentDiv.innerHTML = '<div class="body">' + paragraphsHtml + '</div>';
 
       card.appendChild(coverDiv);

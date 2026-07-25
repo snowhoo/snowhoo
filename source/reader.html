@@ -537,7 +537,7 @@ function createCards() {
     const contentDiv = document.createElement('div');
     contentDiv.className = 'card-content';
     var bodyHtml = mdToText(post.content);
-    if (!bodyHtml.replace(/<[^>]+>/g, '').trim()) bodyHtml = '<p class="no-content">\u6682\u65E0\u6B63\u6587<br>\u6709\u7684\u65F6\u5019\uFF0C\u7559\u767D\u6BD4\u6587\u5B57\u66F4\u5177\u5185\u6DB5\uFF1B\u800C\u6C89\u9ED8\u6BD4\u5450\u558A\u66F4\u5F70\u663E\u529B\u91CF\u3002</p>';
+    if (!bodyHtml.replace(/<[^>]+>/g, '').trim()) bodyHtml = '<p class="no-content">\u6682\u65E0\u6B63\u6587<br><br>\u6709\u65F6\u5019<br>\u9002\u5F53\u7559\u767D\u6BD4\u6587\u5B57<br>\u66F4\u5177\u5185\u6DB5<br>\u800C\u6C89\u9ED8\u6BD4\u5450\u558A<br>\u66F4\u5F70\u663E\u529B\u91CF</p>';
     contentDiv.innerHTML = '<div class="body">' + bodyHtml + '</div>';
 
     card.appendChild(galleryDiv);
