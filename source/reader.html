@@ -291,7 +291,7 @@ function extractImages(body) {
   return imgs;
 }
 
-// ===== Markdown 转 HTML（只保留文字） =====
+// ===== Markdown 转 HTML（只保留粗体，清除其他格式） =====
 function mdToText(md) {
   return md
     .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '')
@@ -299,11 +299,15 @@ function mdToText(md) {
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
     .replace(/#{1,6}\s+(.+)$/gm, '$1')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^-\s+(.+)$/gm, '<li>$1</li>')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/^-\s+(.+)$/gm, '$1')
+    .replace(/<\/?span[^>]*>/g, '')
+    .replace(/<\/?font[^>]*>/g, '')
+    .replace(/<\/?em[^>]*>/g, '')
+    .replace(/<\/?i[^>]*>/g, '')
+    .replace(/\s*style\s*=\s*["'][^"']*["']/gi, '')
     .replace(/\n{2,}/g, '</p><p>')
     .replace(/\n/g, '<br>')
-    .replace(/\s*style\s*=\s*["'][^"']*["']/gi, '')
     .replace(/^/, '<p>').replace(/$/, '</p>');
 }
 
