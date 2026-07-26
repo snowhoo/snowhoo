@@ -901,20 +901,18 @@ function shareArticle() {
   var summary = body.replace(/<[^>]+>/g, '').replace(/#{1,6}\s+/g, '').replace(/!\[.*?\]\(.*?\)/g, '').trim().substring(0, 120);
   var imgUrl = post.cover || (post.images && post.images[0]) || '';
   var pageUrl = window.location.href;
-  var shareText = title;
-  if (summary) shareText += '\n' + summary;
-  if (imgUrl) shareText += '\n' + imgUrl;
-  if (navigator.share) {
-    try { navigator.share({ title: title, text: shareText, url: pageUrl }); } catch(e) {}
+  var shareData = { title: title, text: title + (summary ? '\n' + summary : ''), url: pageUrl };
+  if (typeof navigator.share === 'function') {
+    navigator.share(shareData).catch(function() {});
   } else {
     var copyText = title + '\n' + (summary || '') + '\n' + pageUrl;
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(copyText).then(function() {
         var tip = document.createElement('div');
-        tip.textContent = '链接已复制';
-        tip.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(0,0,0,.7);color:#fff;padding:6px 16px;border-radius:20px;font-size:.78rem;transition:opacity .3s';
+        tip.textContent = '\u5DF2\u590D\u5236\u94FE\u63A5\uFF0C\u53EF\u7C98\u8D34\u5206\u4EAB\u7ED9\u597D\u53CB';
+        tip.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(0,0,0,.7);color:#fff;padding:6px 16px;border-radius:20px;font-size:.78rem;transition:opacity .3s;white-space:nowrap';
         document.body.appendChild(tip);
-        setTimeout(function() { tip.style.opacity = '0'; setTimeout(function() { tip.remove(); }, 300); }, 1500);
+        setTimeout(function() { tip.style.opacity = '0'; setTimeout(function() { tip.remove(); }, 300); }, 2000);
       }).catch(function() {});
     }
   }
