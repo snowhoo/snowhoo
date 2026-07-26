@@ -45,6 +45,19 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .theme-btn:active{transform:scale(.92)}
 .theme-btn svg{width:16px;height:16px}
 
+/* 分类下拉框 */
+.cat-select{border:none;background:transparent;color:#666;font-size:.72rem;cursor:pointer;outline:none;padding:2px 4px;max-width:64px}
+.cat-select option{color:#333;font-size:.72rem;background:#fff}
+
+@media(prefers-color-scheme:dark){
+  .cat-select{color:#999}
+  .cat-select option{color:#ccc;background:#1e1e1e}
+}
+[data-theme="dark"]{
+  .cat-select{color:#999}
+  .cat-select option{color:#ccc;background:#1e1e1e}
+}
+
 .reader-float-menu{position:absolute;bottom:40px;right:0;z-index:200;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;opacity:0;transform:translateY(8px) scale(.95);pointer-events:none;transition:opacity .2s ease,transform .2s ease;transform-origin:bottom right}
 .reader-float-menu.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
 .reader-float-menu a{display:flex;align-items:center;padding:10px 16px;color:#333;text-decoration:none;font-size:.82rem;font-weight:500;white-space:nowrap;transition:background .2s}
@@ -157,6 +170,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       <span class="page-btn" id="pageBtn">1</span>
       <span class="page-nav-btn" id="lastBtn">››</span>
     </div>
+    <select class="cat-select" id="catSelect"><option value="">全部</option></select>
   </div>
   <div class="reader-float-wrap">
     <button class="reader-float-btn" id="readerFloatBtn"><span>小红</span><span>故事</span></button>
@@ -175,7 +189,9 @@ const POSTS_PATH = 'source/_posts';
 
 let POSTS = [];
 let currentIndex = 0;
+let currentCategory = '';
 const STORAGE_KEY = 'reader_page_idx';
+const CAT_KEY = 'reader_cat';
 let startX = 0, startY = 0, moveX = 0, moveY = 0;
 let isDragging = false;
 let hintVisible = true;
@@ -185,6 +201,7 @@ const hintEl = document.getElementById('hint');
 const loadingEl = document.getElementById('loading');
 const loadingText = document.getElementById('loadingText');
 const loadingSub = document.getElementById('loadingSub');
+const catSelect = document.getElementById('catSelect');
 
 // ===== 获取文章列表（从同域名 /posts.json 读取） =====
 async function fetchFileList() {
@@ -283,6 +300,37 @@ function resolveImageUrl(src) {
   return `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${POSTS_PATH}/${src}`;
 }
 
+// ===== 分类筛选 =====
+function getFilteredPosts() {
+  if (!currentCategory) return POSTS;
+  return POSTS.filter(function(p) {
+    return p.categories && p.categories.some(function(c) { return c === currentCategory; });
+  });
+}
+
+function buildCategoryList() {
+  var cats = {};
+  POSTS.forEach(function(p) {
+    if (p.categories) p.categories.forEach(function(c) {
+      if (c) cats[c] = (cats[c] || 0) + 1;
+    });
+  });
+  var keys = Object.keys(cats).sort();
+  catSelect.innerHTML = '<option value="">\u5168\u90E8</option>';
+  keys.forEach(function(k) {
+    var opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = k + ' (' + cats[k] + ')';
+    catSelect.appendChild(opt);
+  });
+  // 恢复保存的分类
+  var savedCat = localStorage.getItem(CAT_KEY);
+  if (savedCat && cats[savedCat]) {
+    currentCategory = savedCat;
+    catSelect.value = savedCat;
+  }
+}
+
 // ===== 主流程（分批加载，渐进渲染） =====
 async function main() {
   try {
@@ -326,6 +374,7 @@ async function main() {
               date: data.date ? data.date.split(' ')[0] : '',
               cover: data.cover || '',
               images: images,
+              categories: data.categories || [],
               content: body
             };
           }
@@ -360,6 +409,8 @@ async function main() {
         createCards();
         bindEvents();
         initialized = true;
+        // 第一批数据已加载，构建分类列表
+        buildCategoryList();
         updateCards();
         
         firstBatch = false;
@@ -385,6 +436,8 @@ async function main() {
       var n = parseInt(savedIdx, 10);
       if (n >= 0 && n < POSTS.length) currentIndex = n;
     }
+    // 构建分类列表（需先恢复保存的分类）
+    buildCategoryList();
     createCards();
     updateCards();
     
@@ -400,7 +453,8 @@ async function main() {
 }
 
 function createCards() {
-  POSTS.forEach((post, i) => {
+  var posts = getFilteredPosts();
+  posts.forEach(function(post, i) {
     const card = document.createElement('div');
     card.className = 'card';
     card.dataset.index = i;
@@ -548,13 +602,15 @@ function createCards() {
 }
 
 function createPageNav() {
-  pageBtn.textContent = '1 / ' + POSTS.length;
+  pageBtn.textContent = '1 / ' + getFilteredPosts().length;
 }
 pageBtn.addEventListener('click', function() {
-  var input = prompt('输入页码 (1 - ' + POSTS.length + ')', (currentIndex + 1) + '');
+  var total = getFilteredPosts().length;
+  if (total === 0) return;
+  var input = prompt('输入页码 (1 - ' + total + ')', (currentIndex + 1) + '');
   if (input !== null) {
     var num = parseInt(input, 10);
-    if (num >= 1 && num <= POSTS.length) {
+    if (num >= 1 && num <= total) {
       currentIndex = num - 1;
       updateCards();
     }
@@ -567,10 +623,14 @@ document.getElementById('firstBtn').addEventListener('click', function(e) {
 });
 document.getElementById('lastBtn').addEventListener('click', function(e) {
   e.stopPropagation();
-  if (currentIndex < POSTS.length - 1) { currentIndex = POSTS.length - 1; updateCards(); }
+  var total = getFilteredPosts().length;
+  if (currentIndex < total - 1) { currentIndex = total - 1; updateCards(); }
 });
 
 function updateCards() {
+  var total = getFilteredPosts().length;
+  if (total === 0) { pageBtn.textContent = '0 / 0'; return; }
+  if (currentIndex >= total) currentIndex = total - 1;
   const cards = app.querySelectorAll('.card');
   cards.forEach((card, i) => {
     card.className = 'card';
@@ -578,7 +638,7 @@ function updateCards() {
     if (i === currentIndex) card.classList.add('center');
     if (i > currentIndex) card.classList.add('right');
   });
-  pageBtn.textContent = (currentIndex + 1) + ' / ' + POSTS.length;
+  pageBtn.textContent = (currentIndex + 1) + ' / ' + total;
   localStorage.setItem(STORAGE_KEY, currentIndex);
   if (hintVisible) {
     hintEl.classList.remove('hidden');
@@ -712,6 +772,17 @@ document.addEventListener('click', function() {
 });
 floatMenu.addEventListener('click', function(e) {
   e.stopPropagation();
+});
+
+// 分类筛选变更
+catSelect.addEventListener('change', function() {
+  currentCategory = this.value;
+  localStorage.setItem(CAT_KEY, currentCategory);
+  currentIndex = 0;
+  app.innerHTML = '';
+  createPageNav();
+  createCards();
+  updateCards();
 });
 
 // ===== 主题切换 =====
