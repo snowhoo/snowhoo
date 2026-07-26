@@ -42,7 +42,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .page-nav-btn:active{background:rgba(0,0,0,.05)}
 
 /* 功能图标 - 浮动在导航栏上方 */
-.function-icons{position:fixed;bottom:48px;left:12px;z-index:99;display:flex;align-items:center;gap:16px;padding:6px 10px;background:rgba(0,0,0,0);pointer-events:auto}
+.function-icons{position:fixed;bottom:48px;left:12px;z-index:99;display:flex;align-items:center;gap:16px;padding:6px 0;background:rgba(0,0,0,0);pointer-events:auto}
 .func-btn{width:24px;height:24px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
 .func-btn:active{transform:scale(.92)}
 .func-btn svg{width:18px;height:18px;fill:#999}
@@ -490,6 +490,33 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     div.textContent = str;
     return div.innerHTML;
   }
+
+  // 分享功能
+  function shareArticle() {
+    var art = articles[currentIndex];
+    if (!art) return;
+    var title = art.title || '照见苏州';
+    var desc = art.description || '';
+    var summary = desc.split('\n').filter(function(l) { return l.trim(); })[0] || '';
+    summary = summary.substring(0, 120);
+    var imgUrl = resolvePath(art.image_url || '');
+    var pageUrl = window.location.href;
+    var shareText = title;
+    if (summary) shareText += '\n' + summary;
+    if (imgUrl) shareText += '\n' + imgUrl;
+    if (navigator.share) {
+      navigator.share({ title: title, text: shareText, url: pageUrl }).catch(function() {});
+    } else {
+      var copyText = title + '\n' + (summary || '') + '\n' + pageUrl;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(copyText).then(function() {}).catch(function() {});
+      }
+    }
+  }
+  document.querySelector('.func-btn[title="转发"]').addEventListener('click', function(e) {
+    e.stopPropagation();
+    shareArticle();
+  });
 
   loadData();
 })();
