@@ -321,14 +321,16 @@ function resolveImageUrl(src) {
 function getFilteredPosts() {
   if (!currentCategory) return POSTS;
   return POSTS.filter(function(p) {
-    return p.categories && p.categories.some(function(c) { return c === currentCategory; });
+    var cList = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []);
+    return cList.some(function(c) { return c === currentCategory; });
   });
 }
 
 function buildCategoryList() {
   var cats = {};
   POSTS.forEach(function(p) {
-    if (p.categories) p.categories.forEach(function(c) {
+    var cList = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []);
+    cList.forEach(function(c) {
       if (c) cats[c] = (cats[c] || 0) + 1;
     });
   });
@@ -412,7 +414,7 @@ async function main() {
               date: data.date ? data.date.split(' ')[0] : '',
               cover: data.cover || '',
               images: images,
-              categories: data.categories || [],
+              categories: Array.isArray(data.categories) ? data.categories : (data.categories ? [data.categories] : []),
               content: body
             };
           }
