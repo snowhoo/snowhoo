@@ -47,7 +47,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* 分类筛选菜单 */
 .cat-wrap{position:relative;display:flex;align-items:center}
-.cat-btn{border:none;background:transparent;color:#666;font-size:.72rem;cursor:pointer;outline:none;padding:2px 4px;white-space:nowrap;max-width:56px;overflow:hidden;text-overflow:ellipsis}
+.cat-btn{border:none;background:transparent;color:#666;font-size:.72rem;cursor:pointer;outline:none;padding:2px 4px;white-space:nowrap}
 .cat-btn:active{opacity:.6}
 .cat-menu{position:absolute;bottom:28px;left:0;z-index:200;background:#fff;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);overflow:hidden;opacity:0;transform:translateY(6px) scale(.95);pointer-events:none;transition:opacity .15s ease,transform .15s ease;transform-origin:bottom left;min-width:80px;max-height:240px;overflow-y:auto}
 .cat-menu.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
@@ -320,6 +320,12 @@ function resolveImageUrl(src) {
 // ===== 分类筛选 =====
 function getFilteredPosts() {
   if (!currentCategory) return POSTS;
+  if (currentCategory === '__uncategorized__') {
+    return POSTS.filter(function(p) {
+      var cList = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []);
+      return cList.length === 0;
+    });
+  }
   return POSTS.filter(function(p) {
     var cList = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []);
     return cList.some(function(c) { return c === currentCategory; });
@@ -328,11 +334,16 @@ function getFilteredPosts() {
 
 function buildCategoryList() {
   var cats = {};
+  var uncategorized = 0;
   POSTS.forEach(function(p) {
     var cList = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []);
-    cList.forEach(function(c) {
-      if (c) cats[c] = (cats[c] || 0) + 1;
-    });
+    if (cList.length === 0) {
+      uncategorized++;
+    } else {
+      cList.forEach(function(c) {
+        if (c) cats[c] = (cats[c] || 0) + 1;
+      });
+    }
   });
   var keys = Object.keys(cats).sort();
   catMenu.innerHTML = '';
@@ -352,14 +363,23 @@ function buildCategoryList() {
     item.addEventListener('click', function() { selectCategory(this.dataset.value); });
     catMenu.appendChild(item);
   });
-  catBtn.textContent = currentCategory || '全部';
+  // 未分类选项
+  if (uncategorized > 0) {
+    var uncatItem = document.createElement('button');
+    uncatItem.className = 'cat-menu-item' + (currentCategory === '__uncategorized__' ? ' active' : '');
+    uncatItem.textContent = '未分类 (' + uncategorized + ')';
+    uncatItem.dataset.value = '__uncategorized__';
+    uncatItem.addEventListener('click', function() { selectCategory(this.dataset.value); });
+    catMenu.appendChild(uncatItem);
+  }
+  catBtn.textContent = currentCategory === '__uncategorized__' ? '未分类' : (currentCategory || '全部');
 }
 
 function selectCategory(val) {
   currentCategory = val;
   localStorage.setItem(CAT_KEY, currentCategory);
   catMenu.classList.remove('show');
-  catBtn.textContent = currentCategory || '全部';
+  catBtn.textContent = currentCategory === '__uncategorized__' ? '未分类' : (currentCategory || '全部');
   // 更新菜单项高亮
   var items = catMenu.querySelectorAll('.cat-menu-item');
   items.forEach(function(item) { item.classList.toggle('active', item.dataset.value === currentCategory); });
