@@ -605,6 +605,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     h.textContent = '\u5206\u4EAB\u5230';
     panel.appendChild(h);
     var platforms = [
+      { label: '\u5FAE\u4FE1', color: '#07c160', icon: '\u4FE1', action: 'wechat' },
+      { label: '\u670B\u53CB\u5708', color: '#07c160', icon: '\u5708', action: 'moments' },
       { label: '\u5FAE\u535A', color: '#e6162d', icon: '\u5FAE', url: 'https://service.weibo.com/share/share.php?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(t + (s ? ' - ' + s : '')) + '&pic=' + encodeURIComponent(img) },
       { label: 'QQ', color: '#12b7f5', icon: 'Q', url: 'https://connect.qq.com/widget/shareqq/index.html?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(t) + '&desc=' + encodeURIComponent(s || t) },
       { label: 'QQ\u7A7A\u95F4', color: '#fec944', icon: '\u7A7A', url: 'https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(t) + '&pics=' + encodeURIComponent(img) + '&desc=' + encodeURIComponent(s || '') },
@@ -625,13 +627,13 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       item.appendChild(label);
       item.onclick = function() {
         closePanel();
-        if (p.action === 'copy') {
-          var ct = t + '\n' + (s || '') + '\n' + url;
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(ct).then(function() { showTip(); }).catch(function() { copyFallback(ct); });
-          } else {
-            copyFallback(ct);
-          }
+        var ct = t + '\n' + (s || '') + '\n' + url;
+        if (p.action === 'wechat') {
+          copyText(ct, '\u94FE\u63A5\u5DF2\u590D\u5236\uFF0C\u6253\u5F00\u5FAE\u4FE1\u7C98\u8D34\u5206\u4EAB\u7ED9\u597D\u53CB');
+        } else if (p.action === 'moments') {
+          copyText(ct, '\u94FE\u63A5\u5DF2\u590D\u5236\uFF0C\u6253\u5F00\u5FAE\u4FE1\u7C98\u8D34\u5206\u4EAB\u5230\u670B\u53CB\u5708');
+        } else if (p.action === 'copy') {
+          copyText(ct, '\u5DF2\u590D\u5236\u94FE\u63A5\uFF0C\u53EF\u7C98\u8D34\u5206\u4EAB\u7ED9\u597D\u53CB');
         } else {
           window.open(p.url, '_blank');
         }
@@ -653,18 +655,26 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     }
     overlay.onclick = function(e) { if (e.target === overlay) closePanel(); };
   }
-  function copyFallback(text) {
+  function copyText(text, msg) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() { showTip(msg); }).catch(function() { copyFallback(text, msg); });
+    } else {
+      copyFallback(text, msg);
+    }
+  }
+  function copyFallback(text, msg) {
     var ta = document.createElement('textarea');
     ta.value = text;
     ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand('copy'); showTip(); } catch(e) {}
+    try { document.execCommand('copy'); showTip(msg); } catch(e) {}
     document.body.removeChild(ta);
   }
-  function showTip() {
+  function showTip(msg) {
+    msg = msg || '\u5DF2\u590D\u5236\u94FE\u63A5\uFF0C\u53EF\u7C98\u8D34\u5206\u4EAB\u7ED9\u597D\u53CB';
     var tip = document.createElement('div');
-    tip.textContent = '\u5DF2\u590D\u5236\u94FE\u63A5\uFF0C\u53EF\u7C98\u8D34\u5206\u4EAB\u7ED9\u597D\u53CB';
+    tip.textContent = msg;
     tip.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(0,0,0,.7);color:#fff;padding:6px 16px;border-radius:20px;font-size:.78rem;opacity:1;transition:opacity .3s;white-space:nowrap';
     document.body.appendChild(tip);
     setTimeout(function() { tip.style.opacity = '0'; setTimeout(function() { tip.remove(); }, 300); }, 2000);
