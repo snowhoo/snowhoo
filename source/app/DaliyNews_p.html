@@ -1,0 +1,341 @@
+---
+layout: false
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>央视新闻</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;background:#000;color:#1a1a1a;-webkit-tap-highlight-color:transparent}
+
+#app{position:relative;width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column}
+
+/* ===== 顶部栏目Tab栏 ===== */
+.column-tabs{flex-shrink:0;display:flex;overflow-x:auto;background:#fff;border-bottom:1px solid #f0f0f0;scrollbar-width:none;-webkit-overflow-scrolling:touch;z-index:10;padding:0 4px}
+.column-tabs::-webkit-scrollbar{display:none}
+.column-tab{flex-shrink:0;padding:10px 14px;font-size:.85rem;color:#666;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;user-select:none;-webkit-user-select:none}
+.column-tab:active{background:rgba(0,0,0,.04)}
+.column-tab.active{color:#e94560;border-bottom-color:#e94560;font-weight:500}
+
+/* 日期栏 */
+.date-bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:6px 16px;background:#fafafa;font-size:.75rem;color:#999;border-bottom:1px solid #f0f0f0}
+.date-bar .count{font-size:.72rem}
+
+/* ===== 新闻列表 ===== */
+.news-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 12px 60px;background:#fafafa}
+.news-list::-webkit-scrollbar{width:0}
+
+.news-item{display:flex;gap:12px;padding:12px;margin-bottom:8px;background:#fff;border-radius:10px;transition:transform .15s;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.news-item:active{transform:scale(.98)}
+.news-item-img{flex-shrink:0;width:100px;height:70px;border-radius:6px;overflow:hidden;background:#f0f0f0}
+.news-item-img img{width:100%;height:100%;object-fit:cover;display:block}
+.news-item-img .no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#ddd}
+.news-item-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.news-item-title{font-size:.92rem;font-weight:500;line-height:1.35;color:#222;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.news-item-brief{font-size:.78rem;color:#888;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.news-item-meta{display:flex;align-items:center;gap:8px;font-size:.7rem;color:#bbb;margin-top:2px}
+.news-item-meta .source{color:#e94560}
+
+/* 空状态 / 加载失败 */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:#bbb;font-size:.9rem;text-align:center;gap:8px}
+.empty-state .icon{font-size:2.5rem;margin-bottom:4px}
+
+/* ===== 底部导航 ===== */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:#fff;border-top:1px solid #eee;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:.8rem;user-select:none;-webkit-user-select:none}
+.bottom-nav .page-btn{display:flex;align-items:center;gap:4px;padding:4px 16px;border-radius:4px;cursor:pointer;color:#666}
+.bottom-nav .page-btn:active{background:rgba(0,0,0,.05)}
+.page-nav-group{display:flex;align-items:center;gap:2px}
+.page-nav-btn{padding:4px 6px;cursor:pointer;color:#999;font-size:.72rem;user-select:none}
+.page-nav-btn:active{background:rgba(0,0,0,.05)}
+
+.theme-btn{width:32px;height:32px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.theme-btn:active{transform:scale(.92)}
+.theme-btn svg{width:16px;height:16px}
+
+/* ===== 加载 ===== */
+.loading-overlay{position:fixed;inset:0;z-index:999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
+.loading-overlay.hide{opacity:0;pointer-events:none}
+.spinner{width:40px;height:40px;border:3px solid #eee;border-top-color:#e94560;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{margin-top:16px;font-size:.9rem;color:#999}
+
+/* ===== 响应式 ===== */
+@media(min-width:769px){
+  #app{max-width:480px;margin:0 auto;border-left:1px solid #eee;border-right:1px solid #eee}
+}
+
+/* ===== 暗色主题 ===== */
+@media(prefers-color-scheme:dark){
+  .column-tabs{background:#1a1a1a;border-color:#333}
+  .column-tab{color:#888}
+  .column-tab.active{color:#e94560}
+  .date-bar{background:#181818;border-color:#333;color:#666}
+  .news-list{background:#121212}
+  .news-item{background:#1a1a1a}
+  .news-item-title{color:#eee}
+  .news-item-brief{color:#888}
+  .news-item-meta{color:#555}
+  .bottom-nav{background:#1a1a1a;border-color:#333}
+  .bottom-nav .page-btn{color:#999}
+  .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
+  .page-nav-btn{color:#666}
+  .page-nav-btn:active{background:rgba(255,255,255,.08)}
+  .empty-state{color:#666}
+}
+[data-theme="dark"]{
+  .column-tabs{background:#1a1a1a;border-color:#333}
+  .column-tab{color:#888}
+  .column-tab.active{color:#e94560}
+  .date-bar{background:#181818;border-color:#333;color:#666}
+  .news-list{background:#121212}
+  .news-item{background:#1a1a1a}
+  .news-item-title{color:#eee}
+  .news-item-brief{color:#888}
+  .news-item-meta{color:#555}
+  .bottom-nav{background:#1a1a1a;border-color:#333}
+  .bottom-nav .page-btn{color:#999}
+  .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
+  .page-nav-btn{color:#666}
+  .page-nav-btn:active{background:rgba(255,255,255,.08)}
+  .empty-state{color:#666}
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">正在加载央视新闻...</div>
+</div>
+
+<div id="app">
+  <div class="column-tabs" id="columnTabs"></div>
+  <div class="date-bar" id="dateBar">
+    <span id="dateLabel"></span>
+    <span class="count" id="countLabel"></span>
+  </div>
+  <div class="news-list" id="newsList"></div>
+</div>
+
+<div class="bottom-nav" id="bottomNav">
+  <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
+  <div class="page-nav-group">
+    <span class="page-nav-btn" id="scrollTopBtn">&#x2191;</span>
+  </div>
+  <div class="dn-float-wrap"></div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var today = new Date();
+  var dateStr = today.getFullYear() + '' + String(today.getMonth()+1).padStart(2,'0') + '' + String(today.getDate()).padStart(2,'0');
+  var dataBase = 'news_CCTV/' + dateStr + '/';
+
+  // 栏目定义（按菜单栏顺序）
+  var COLUMNS = ['新闻','国内','国际','经济','社会','法治','文娱','科技','生活','军事'];
+  var currentColumn = 0;
+  var allData = {};       // columnName -> items[]
+  var loaded = false;
+  var loadingCount = 0;
+
+  var app = document.getElementById('app');
+  var loadingEl = document.getElementById('loading');
+  var columnTabsEl = document.getElementById('columnTabs');
+  var dateBar = document.getElementById('dateBar');
+  var dateLabel = document.getElementById('dateLabel');
+  var countLabel = document.getElementById('countLabel');
+  var newsList = document.getElementById('newsList');
+
+  // ===== 主题 =====
+  function detectTheme() {
+    var saved = localStorage.getItem('dalynews_theme');
+    if (saved === 'dark' || saved === 'light') {
+      document.documentElement.setAttribute('data-theme', saved);
+      updateThemeBtn(saved);
+      return;
+    }
+    try {
+      var pt = window.parent.document.documentElement.getAttribute('data-theme');
+      if (pt === 'dark' || pt === 'light') {
+        document.documentElement.setAttribute('data-theme', pt);
+        updateThemeBtn(pt);
+        return;
+      }
+    } catch(e) {}
+    var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = isDark ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    updateThemeBtn(theme);
+  }
+  function updateThemeBtn(theme) {
+    var btn = document.getElementById('themeBtn');
+    if (theme === 'dark') {
+      btn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#f0a500"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#f0a500" stroke-width="2" fill="none"/></svg>';
+    } else {
+      btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg>';
+    }
+  }
+  detectTheme();
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+    var saved = localStorage.getItem('dalynews_theme');
+    if (!saved) detectTheme();
+  });
+  document.getElementById('themeBtn').addEventListener('click', function() {
+    var current = document.documentElement.getAttribute('data-theme');
+    var next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('dalynews_theme', next);
+    updateThemeBtn(next);
+  });
+
+  // ===== 数据加载 =====
+  function loadAll() {
+    loadingCount = COLUMNS.length;
+    COLUMNS.forEach(function(col) {
+      fetch(dataBase + encodeURIComponent(col) + '.json')
+        .then(function(r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function(data) {
+          allData[col] = data.items || [];
+          checkLoaded();
+        })
+        .catch(function(e) {
+          console.warn('[' + col + '] ' + e.message);
+          allData[col] = [];
+          checkLoaded();
+        });
+    });
+  }
+
+  function checkLoaded() {
+    loadingCount--;
+    if (loadingCount > 0) return;
+    loaded = true;
+    // 设置日期
+    var now = new Date();
+    var dStr = now.getFullYear() + '\u5E74' + (now.getMonth()+1) + '\u6708' + now.getDate() + '\u65E5';
+    var weekdays = ['\u5468\u65E5','\u5468\u4E00','\u5468\u4E8C','\u5468\u4E09','\u5468\u56DB','\u5468\u4E94','\u5468\u516D'];
+    dateLabel.textContent = dStr + ' ' + weekdays[now.getDay()];
+    renderTabs();
+    renderList(0);
+    loadingEl.classList.add('hide');
+    setTimeout(function() { loadingEl.remove(); }, 500);
+  }
+
+  // ===== 标签栏 =====
+  function renderTabs() {
+    columnTabsEl.innerHTML = '';
+    COLUMNS.forEach(function(col, idx) {
+      var tab = document.createElement('span');
+      tab.className = 'column-tab' + (idx === 0 ? ' active' : '');
+      tab.textContent = col;
+      tab.dataset.idx = idx;
+      tab.addEventListener('click', function() {
+        switchColumn(parseInt(this.dataset.idx, 10));
+      });
+      columnTabsEl.appendChild(tab);
+    });
+  }
+
+  function switchColumn(idx) {
+    if (idx === currentColumn) return;
+    currentColumn = idx;
+    // 更新tab样式
+    var tabs = columnTabsEl.querySelectorAll('.column-tab');
+    tabs.forEach(function(t, i) {
+      t.className = 'column-tab' + (i === idx ? ' active' : '');
+    });
+    // 滚动tab到可视区域
+    if (tabs[idx]) tabs[idx].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    renderList(idx);
+    newsList.scrollTop = 0;
+  }
+
+  // ===== 渲染列表 =====
+  function renderList(colIdx) {
+    var col = COLUMNS[colIdx];
+    var items = allData[col] || [];
+    countLabel.textContent = items.length + '\u6761\u65B0\u95FB';
+
+    if (!items.length) {
+      newsList.innerHTML = '<div class="empty-state"><div class="icon">&#x1F4F0;</div><div>\u6682\u65E0\u65B0\u95FB</div></div>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var title = item.title || '';
+      var brief = item.brief || '';
+      var time = item.dateTime || '';
+      var imgUrl = item.image || '';
+      var link = item.url || '';
+      var timeStr = time.length >= 16 ? time.slice(11, 16) : (time.length >= 10 ? time.slice(5, 10) : '');
+      var safeLink = escapeHtml(link);
+      var safeTitle = escapeHtml(title);
+      var safeBrief = escapeHtml(brief);
+      var safeCol = escapeHtml(col);
+      var safeTime = escapeHtml(timeStr);
+
+      html += '<div class="news-item" data-url="' + safeLink + '">';
+      if (imgUrl) {
+        html += '<div class="news-item-img"><img src="' + escapeHtml(imgUrl) + '" alt="" loading="lazy"></div>';
+      } else {
+        html += '<div class="news-item-img"><div class="no-img">&#x1F4F7;</div></div>';
+      }
+      html += '<div class="news-item-body">';
+      html += '<div class="news-item-title">' + safeTitle + '</div>';
+      if (brief) html += '<div class="news-item-brief">' + safeBrief + '</div>';
+      html += '<div class="news-item-meta">';
+      html += '<span class="source">' + safeCol + '</span>';
+      if (safeTime) html += '<span>' + safeTime + '</span>';
+      html += '</div></div></div>';
+    }
+    newsList.innerHTML = html;
+
+    // 图片加载失败时显示占位
+    newsList.querySelectorAll('.news-item-img img').forEach(function(img) {
+      img.addEventListener('error', function() {
+        var p = this.parentElement;
+        if (p) p.innerHTML = '<div class="no-img">&#x1F4F7;</div>';
+      });
+    });
+
+    // 绑定点击事件
+    var items_el = newsList.querySelectorAll('.news-item');
+    for (var j = 0; j < items_el.length; j++) {
+      (function(el) {
+        el.addEventListener('click', function() {
+          var url = this.dataset.url;
+          if (url) window.open(url, '_blank');
+        });
+      })(items_el[j]);
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ===== 回到顶部 =====
+  document.getElementById('scrollTopBtn').addEventListener('click', function() {
+    newsList.scrollTop = 0;
+  });
+
+  // ===== 启动 =====
+  loadAll();
+
+})();
+</script>
+</body>
+</html>
