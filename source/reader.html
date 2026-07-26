@@ -45,17 +45,30 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .theme-btn:active{transform:scale(.92)}
 .theme-btn svg{width:16px;height:16px}
 
-/* 分类下拉框 */
-.cat-select{border:none;background:transparent;color:#666;font-size:.72rem;cursor:pointer;outline:none;padding:2px 4px;max-width:64px}
-.cat-select option{color:#333;font-size:.72rem;background:#fff}
+/* 分类筛选菜单 */
+.cat-wrap{position:relative;display:flex;align-items:center}
+.cat-btn{border:none;background:transparent;color:#666;font-size:.72rem;cursor:pointer;outline:none;padding:2px 4px;white-space:nowrap;max-width:56px;overflow:hidden;text-overflow:ellipsis}
+.cat-btn:active{opacity:.6}
+.cat-menu{position:absolute;bottom:28px;left:0;z-index:200;background:#fff;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);overflow:hidden;opacity:0;transform:translateY(6px) scale(.95);pointer-events:none;transition:opacity .15s ease,transform .15s ease;transform-origin:bottom left;min-width:80px;max-height:240px;overflow-y:auto}
+.cat-menu.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.cat-menu::-webkit-scrollbar{width:0}
+.cat-menu-item{display:block;width:100%;padding:8px 14px;border:none;background:none;color:#333;font-size:.75rem;cursor:pointer;text-align:left;white-space:nowrap;transition:background .15s}
+.cat-menu-item:hover{background:#f5f5f5}
+.cat-menu-item.active{color:#e94560;font-weight:500}
 
 @media(prefers-color-scheme:dark){
-  .cat-select{color:#999}
-  .cat-select option{color:#ccc;background:#1e1e1e}
+  .cat-btn{color:#999}
+  .cat-menu{background:#1e1e1e}
+  .cat-menu-item{color:#ccc}
+  .cat-menu-item:hover{background:#2a2a2a}
+  .cat-menu-item.active{color:#e94560}
 }
 [data-theme="dark"]{
-  .cat-select{color:#999}
-  .cat-select option{color:#ccc;background:#1e1e1e}
+  .cat-btn{color:#999}
+  .cat-menu{background:#1e1e1e}
+  .cat-menu-item{color:#ccc}
+  .cat-menu-item:hover{background:#2a2a2a}
+  .cat-menu-item.active{color:#e94560}
 }
 
 .reader-float-menu{position:absolute;bottom:40px;right:0;z-index:200;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;opacity:0;transform:translateY(8px) scale(.95);pointer-events:none;transition:opacity .2s ease,transform .2s ease;transform-origin:bottom right}
@@ -170,7 +183,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       <span class="page-btn" id="pageBtn">1</span>
       <span class="page-nav-btn" id="lastBtn">››</span>
     </div>
-    <select class="cat-select" id="catSelect"><option value="">全部</option></select>
+    <div class="cat-wrap">
+      <button class="cat-btn" id="catBtn">全部</button>
+      <div class="cat-menu" id="catMenu"></div>
+    </div>
   </div>
   <div class="reader-float-wrap">
     <button class="reader-float-btn" id="readerFloatBtn"><span>小红</span><span>故事</span></button>
@@ -201,7 +217,8 @@ const hintEl = document.getElementById('hint');
 const loadingEl = document.getElementById('loading');
 const loadingText = document.getElementById('loadingText');
 const loadingSub = document.getElementById('loadingSub');
-const catSelect = document.getElementById('catSelect');
+const catBtn = document.getElementById('catBtn');
+const catMenu = document.getElementById('catMenu');
 
 // ===== 获取文章列表（从同域名 /posts.json 读取） =====
 async function fetchFileList() {
@@ -316,19 +333,40 @@ function buildCategoryList() {
     });
   });
   var keys = Object.keys(cats).sort();
-  catSelect.innerHTML = '<option value="">\u5168\u90E8</option>';
+  catMenu.innerHTML = '';
+  // 全部选项
+  var allItem = document.createElement('button');
+  allItem.className = 'cat-menu-item' + (!currentCategory ? ' active' : '');
+  allItem.textContent = '全部 (' + POSTS.length + ')';
+  allItem.dataset.value = '';
+  allItem.addEventListener('click', function() { selectCategory(this.dataset.value); });
+  catMenu.appendChild(allItem);
+  // 分类选项
   keys.forEach(function(k) {
-    var opt = document.createElement('option');
-    opt.value = k;
-    opt.textContent = k + ' (' + cats[k] + ')';
-    catSelect.appendChild(opt);
+    var item = document.createElement('button');
+    item.className = 'cat-menu-item' + (currentCategory === k ? ' active' : '');
+    item.textContent = k + ' (' + cats[k] + ')';
+    item.dataset.value = k;
+    item.addEventListener('click', function() { selectCategory(this.dataset.value); });
+    catMenu.appendChild(item);
   });
-  // 恢复保存的分类
-  var savedCat = localStorage.getItem(CAT_KEY);
-  if (savedCat && cats[savedCat]) {
-    currentCategory = savedCat;
-    catSelect.value = savedCat;
-  }
+  catBtn.textContent = currentCategory || '全部';
+}
+
+function selectCategory(val) {
+  currentCategory = val;
+  localStorage.setItem(CAT_KEY, currentCategory);
+  catMenu.classList.remove('show');
+  catBtn.textContent = currentCategory || '全部';
+  // 更新菜单项高亮
+  var items = catMenu.querySelectorAll('.cat-menu-item');
+  items.forEach(function(item) { item.classList.toggle('active', item.dataset.value === currentCategory); });
+  // 重绘卡片
+  currentIndex = 0;
+  app.innerHTML = '';
+  createPageNav();
+  createCards();
+  updateCards();
 }
 
 // ===== 主流程（分批加载，渐进渲染） =====
@@ -406,11 +444,11 @@ async function main() {
           var n = parseInt(savedIdx, 10);
           if (n >= 0 && n < POSTS.length) currentIndex = n;
         }
+        // 先构建分类列表（恢复保存的分类），再创建卡片
+        buildCategoryList();
         createCards();
         bindEvents();
         initialized = true;
-        // 第一批数据已加载，构建分类列表
-        buildCategoryList();
         updateCards();
         
         firstBatch = false;
@@ -774,15 +812,16 @@ floatMenu.addEventListener('click', function(e) {
   e.stopPropagation();
 });
 
-// 分类筛选变更
-catSelect.addEventListener('change', function() {
-  currentCategory = this.value;
-  localStorage.setItem(CAT_KEY, currentCategory);
-  currentIndex = 0;
-  app.innerHTML = '';
-  createPageNav();
-  createCards();
-  updateCards();
+// 分类筛选菜单
+catBtn.addEventListener('click', function(e) {
+  e.stopPropagation();
+  catMenu.classList.toggle('show');
+});
+document.addEventListener('click', function() {
+  catMenu.classList.remove('show');
+});
+catMenu.addEventListener('click', function(e) {
+  e.stopPropagation();
 });
 
 // ===== 主题切换 =====
