@@ -138,8 +138,8 @@ document.getElementById('bgImage').src = 'https://picsum.photos/1280/960?random=
   function sol2lunar(y,m,d) {
     var idx = y - 1900;
     if (idx < 0 || idx >= lInfo.length) return null;
-    // lInfo 编码: 位0-11=12个月(1=30天/0=29天), 位12-15=闰月(0=无闰), 位16=闰月天数
-    var leapMonth = (lInfo[idx] >> 12) & 0xf;
+    // lInfo 编码: 位0-3=闰月(0=无闰), 位4-15=12个月(1=30天/0=29天), 位16=闰月天数
+    var leapMonth = lInfo[idx] & 0xf; // 闰月编号(1-12), 0=无闰
     var leapDays = lInfo[idx] >> 16 & 1 ? 30 : 29;
     // 计算到1900年1月31日(农历正月初一)的天数差
     var base = new Date(1900,0,31);
@@ -149,11 +149,11 @@ document.getElementById('bgImage').src = 'https://picsum.photos/1280/960?random=
     var total = 12 + (leapMonth > 0 ? 1 : 0);
     for (i = 0; i < total; i++) {
       if (leapMonth > 0 && i === leapMonth) {
-        monthDays = leapDays;               // 闰月
+        monthDays = leapDays;
       } else if (leapMonth > 0 && i > leapMonth) {
-        monthDays = lInfo[idx] >> (i - 1) & 1 ? 30 : 29;  // 闰月后偏移一位
+        monthDays = lInfo[idx] >> (4 + i - 1) & 1 ? 30 : 29;
       } else {
-        monthDays = lInfo[idx] >> i & 1 ? 30 : 29;         // 常规月
+        monthDays = lInfo[idx] >> (4 + i) & 1 ? 30 : 29;
       }
       if (offset < yearDays + monthDays) break;
       yearDays += monthDays;
@@ -161,9 +161,10 @@ document.getElementById('bgImage').src = 'https://picsum.photos/1280/960?random=
     if (i >= total) return null;
     var day = offset - yearDays + 1;
     var mon, isLeap = false;
-    if (leapMonth > 0 && i >= leapMonth) {
-      if (i === leapMonth) { mon = leapMonth + 1; isLeap = true; }
-      else { mon = i; }
+    if (leapMonth > 0 && i === leapMonth) {
+      mon = leapMonth; isLeap = true;
+    } else if (leapMonth > 0 && i > leapMonth) {
+      mon = i;
     } else {
       mon = i + 1;
     }
