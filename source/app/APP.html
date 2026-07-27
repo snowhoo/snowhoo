@@ -81,7 +81,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   var total = (yr % 400 === 0 || (yr % 4 === 0 && yr % 100 !== 0)) ? 366 : 365;
   var pct = Math.min(day / total, 1);
   document.getElementById('yearFill').style.width = (pct * 100) + '%';
-  document.getElementById('yearText').textContent = yr + ' 已过 ' + Math.round(pct * 100) + '%';
+  document.getElementById('yearText').textContent = '把梦想写进日程 [ ' + yr + '已过' + Math.round(pct * 100) + '% ]';
 })();
 
 // 随机图片
