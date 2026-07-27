@@ -39,6 +39,20 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .news-item-meta{display:flex;align-items:center;gap:8px;font-size:.7rem;color:#bbb;margin-top:2px}
 .news-item-meta .source{color:#e94560}
 
+/* 展开全文 */
+.news-item.expanded .news-item-title{-webkit-line-clamp:unset;display:block;overflow:visible}
+.news-item.expanded .news-item-brief{-webkit-line-clamp:unset;display:block;overflow:visible}
+
+/* 日期下拉菜单 */
+.date-bar{cursor:pointer;position:relative}
+.date-dropdown{display:none;position:absolute;top:100%;left:0;right:0;z-index:50;background:#fff;border-radius:0 0 10px 10px;box-shadow:0 4px 12px rgba(0,0,0,.1);max-height:240px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.date-dropdown.show{display:block}
+.date-dropdown-item{padding:10px 16px;font-size:.8rem;color:#333;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background .15s}
+.date-dropdown-item:active{background:#f5f5f5}
+.date-dropdown-item.active{color:#e94560;font-weight:500}
+.date-dropdown-item .check{float:right;color:#e94560;display:none}
+.date-dropdown-item.active .check{display:inline}
+
 /* 空状态 / 加载失败 */
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:#bbb;font-size:.9rem;text-align:center;gap:8px}
 .empty-state .icon{font-size:2.5rem;margin-bottom:4px}
@@ -142,8 +156,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   <div class="date-bar" id="dateBar">
     <span id="dateLabel"></span>
     <span class="count" id="countLabel"></span>
+    <div class="date-dropdown" id="dateDropdown"></div>
   </div>
-  <div class="date-dropdown" id="dateDropdown"></div>
   <div class="news-list" id="newsList"></div>
 </div>
 
