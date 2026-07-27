@@ -270,13 +270,17 @@ def load_existing_items(column_name, date_stamp):
         return []
 
 def merge_items(existing, new_items):
-    """按 id 去重合并，新数据覆盖旧数据"""
+    """按 id 去重合并，新数据覆盖旧数据，按时间倒序排列"""
     seen = {}
-    for item in existing:
-        seen[item.get('id', '')] = item
     for item in new_items:
-        seen[item.get('id', '')] = item  # 新数据覆盖旧数据
-    return list(seen.values())
+        seen[item.get('id', '')] = item
+    for item in existing:
+        if item.get('id', '') not in seen:
+            seen[item.get('id', '')] = item
+    # 按 dateTime 倒序（最新的在前面）
+    result = list(seen.values())
+    result.sort(key=lambda x: x.get('dateTime', ''), reverse=True)
+    return result
 
 # ======================== 主流程 ========================
 

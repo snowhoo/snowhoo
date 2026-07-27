@@ -13,7 +13,7 @@ echo ============================
 echo   检查更新并推送至Git
 echo ============================
 cd /d D:\hexo
-git add -A
+git add source/app/news_CCTV/
 git diff --cached --quiet
 if %errorlevel% neq 0 (
     git commit -m "每日新闻自动更新 %date%"
