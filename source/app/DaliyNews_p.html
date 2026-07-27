@@ -302,6 +302,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     dateLabel.textContent = dStr + ' ' + weekdays[d.getDay()];
     renderTabs();
     renderList(0);
+    document.title = '小红故事|新闻 – ' + DISPLAY[0];
     loadingEl.classList.add('hide');
     setTimeout(function() { loadingEl.remove(); }, 500);
   }
@@ -331,6 +332,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     });
     // 滚动tab到可视区域
     if (tabs[idx]) tabs[idx].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    document.title = '小红故事|新闻 – ' + DISPLAY[idx];
     renderList(idx);
     newsList.scrollTop = 0;
   }
@@ -402,7 +404,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
           if (e.target.closest('.news-item-img')) return;
           this.classList.toggle('expanded');
           var t = this.querySelector('.news-item-title');
-          document.title = '小红故事|新闻 – ' + (t ? t.textContent : '');
+          document.title = '小红故事|新闻 – ' + (t ? t.textContent : '') + ' – ' + DISPLAY[currentColumn];
         });
       })(items_el[j]);
     }
@@ -594,6 +596,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     dataBase = 'news_CCTV/' + ds + '/';
     allData = {};
     currentColumn = 0;
+    document.title = '小红故事|新闻 – ' + DISPLAY[0];
     loaded = false;
     hideDateDropdown();
     // 更新日期栏
