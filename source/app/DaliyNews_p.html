@@ -9,7 +9,14 @@ layout: false
 <title>新闻</title>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;background:#000;color:#1a1a1a;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;background:#fafafa;color:#1a1a1a;-webkit-tap-highlight-color:transparent}
+
+/* 加载动画 */
+.loading-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:999;background:#fafafa;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
+.loading-overlay.hide{opacity:0;pointer-events:none}
+.spinner{width:40px;height:40px;border:3px solid #eee;border-top-color:#ff8c00;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{margin-top:16px;font-size:.9rem;color:#999}
 
 #app{position:relative;width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column}
 
@@ -45,13 +52,12 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* 日期下拉菜单 */
 .date-bar{cursor:pointer;position:relative}
-.date-dropdown{display:none;position:absolute;top:100%;left:0;right:0;z-index:50;background:#fff;border-radius:0 0 10px 10px;box-shadow:0 4px 12px rgba(0,0,0,.1);max-height:240px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.date-dropdown{display:none;position:absolute;top:100%;right:0;left:auto;z-index:50;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;max-height:240px;overflow-y:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
 .date-dropdown.show{display:block}
-.date-dropdown-item{padding:10px 16px;font-size:.8rem;color:#333;cursor:pointer;border-bottom:1px solid #f0f0f0;transition:background .15s}
+.date-dropdown-item{padding:10px 16px;font-size:.82rem;color:#333;cursor:pointer;transition:background .15s}
 .date-dropdown-item:active{background:#f5f5f5}
-.date-dropdown-item.active{color:#e94560;font-weight:500}
-.date-dropdown-item .check{float:right;color:#e94560;display:none}
-.date-dropdown-item.active .check{display:inline}
+.date-dropdown-item.active{color:#ff8c00;font-weight:500}
+.date-dropdown-item .check{float:right;color:#ff8c00;display:none;margin-left:12px}
 
 /* 空状态 / 加载失败 */
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:#bbb;font-size:.9rem;text-align:center;gap:8px}
@@ -114,9 +120,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .dn-float-menu a{color:#ddd}
   .dn-float-menu a:hover{background:#2a2a2a}
   .date-dropdown{background:#1e1e1e}
-  .date-dropdown-item{color:#ddd;border-color:#333}
+  .date-dropdown-item{color:#ddd}
   .date-dropdown-item:active{background:#2a2a2a}
-  .date-dropdown-item.active{color:#e94560}
+  .date-dropdown-item.active{color:#ff8c00}
 }
 [data-theme="dark"]{
   .column-tabs{background:#1a1a1a;border-color:#333}
@@ -138,9 +144,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .dn-float-menu a{color:#ddd}
   .dn-float-menu a:hover{background:#2a2a2a}
   .date-dropdown{background:#1e1e1e}
-  .date-dropdown-item{color:#ddd;border-color:#333}
+  .date-dropdown-item{color:#ddd}
   .date-dropdown-item:active{background:#2a2a2a}
-  .date-dropdown-item.active{color:#e94560}
+  .date-dropdown-item.active{color:#ff8c00}
 }
 </style>
 </head>
@@ -273,11 +279,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     loadingCount--;
     if (loadingCount > 0) return;
     loaded = true;
-    // 设置日期
-    var now = new Date();
-    var dStr = now.getFullYear() + '\u5E74' + (now.getMonth()+1) + '\u6708' + now.getDate() + '\u65E5';
+    // 设置日期（使用当前选中的日期）
+    var d = new Date(parseInt(currentDateStr.slice(0,4)), parseInt(currentDateStr.slice(4,6))-1, parseInt(currentDateStr.slice(6,8)));
+    var dStr = d.getFullYear() + '\u5E74' + (d.getMonth()+1) + '\u6708' + d.getDate() + '\u65E5';
     var weekdays = ['\u5468\u65E5','\u5468\u4E00','\u5468\u4E8C','\u5468\u4E09','\u5468\u56DB','\u5468\u4E94','\u5468\u516D'];
-    dateLabel.textContent = dStr + ' ' + weekdays[now.getDay()];
+    dateLabel.textContent = dStr + ' ' + weekdays[d.getDay()];
     renderTabs();
     renderList(0);
     loadingEl.classList.add('hide');
