@@ -6,7 +6,7 @@ layout: false
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>照见苏州 · 摄影专辑</title>
+<title>小红故事|照见苏州</title>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;background:#000;color:#1a1a1a;-webkit-tap-highlight-color:transparent}
@@ -405,6 +405,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     }
     loadNearbyImages();
     updateImageClick();
+    if (articles[currentIndex]) document.title = '小红故事|照见苏州 – ' + escapeHtml(articles[currentIndex].title || '无标题');
   }
 
   // 懒加载当前及相邻卡片图片
