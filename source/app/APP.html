@@ -127,6 +127,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 // 随机图片
 document.getElementById('bgImage').src = 'https://picsum.photos/1280/960?random=' + Date.now();
 
+// 点击背景图换一张
+document.getElementById('bgImage').addEventListener('click', function() {
+  this.src = 'https://picsum.photos/1280/960?random=' + Date.now();
+});
+
 // ===== 黄历 =====
 (function() {
   var now = new Date();
