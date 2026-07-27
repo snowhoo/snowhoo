@@ -52,10 +52,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .category-item .label{font-size:.75rem;color:#888;font-weight:400}
 .category-item.active .label{color:#333;font-weight:500}
 
-/* 诗词展示区 */
-.poem-area{text-align:center;padding:12px 20px 4px;color:#666;max-width:400px;width:100%}
-.poem-area .poem-line{font-size:.95rem;line-height:1.6;color:#333;font-weight:400;font-family:"KaiTi","STKaiti","楷体",serif}
-.poem-area .poem-source{font-size:.7rem;color:#999;margin-top:6px}
+/* 诗词展示区 - 圈字下方 */
+.poem-area{position:absolute;top:92px;left:16px;z-index:5;max-width:300px;text-align:left}
+.poem-area .poem-line{font-size:.88rem;line-height:1.5;color:#fff;font-weight:400;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.poem-area .poem-source{font-size:.65rem;color:rgba(255,255,255,.7);margin-top:4px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 </style>
 </head>
 <body>
@@ -66,6 +66,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   <div class="top-left-badges">
     <span class="badge" id="poetryBtn">诗</span>
     <span class="badge">今</span>
+  </div>
+  <div class="poem-area" id="poemArea" style="display:none">
+    <div class="poem-line" id="poemLine"></div>
+    <div class="poem-source" id="poemSource"></div>
   </div>
   <div class="top-right-logo"><img src="../images/logo.png" alt="logo"></div>
   <div class="welcome">
@@ -103,10 +107,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       <span class="circle" style="background:#ff8c00">新</span>
       <span class="label">新    闻</span>
     </button>
-  </div>
-  <div class="poem-area" id="poemArea" style="display:none">
-    <div class="poem-line" id="poemLine"></div>
-    <div class="poem-source" id="poemSource"></div>
   </div>
 </div>
 
