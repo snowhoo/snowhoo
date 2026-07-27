@@ -21,15 +21,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 /* ===== 底部面板 ===== */
 .bottom-panel{position:relative;height:25vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px;background:#fff;border-radius:20px 20px 0 0;margin-top:-20px;z-index:2}
 
-/* 分类菜单 */
-.category-list{display:flex;gap:10px;margin-bottom:16px;flex-wrap:nowrap}
-.category-item{padding:7px 18px;border-radius:20px;font-size:.82rem;color:#888;background:#f5f5f5;cursor:pointer;transition:all .25s;user-select:none;-webkit-user-select:none;white-space:nowrap;border:1px solid transparent}
-.category-item:active{transform:scale(.94)}
-.category-item.active{color:#fff;background:#e94560;border-color:#e94560;font-weight:500;box-shadow:0 2px 10px rgba(233,69,96,.25)}
-
-/* 进入按钮 */
-.enter-btn{width:100%;max-width:300px;padding:13px 0;border:none;border-radius:12px;font-size:.95rem;font-weight:500;color:#fff;cursor:pointer;transition:transform .2s,box-shadow .2s;background:#e94560;box-shadow:0 4px 16px rgba(233,69,96,.28);letter-spacing:1px}
-.enter-btn:active{transform:scale(.96)}
+/* 分类圆形按钮 */
+.category-list{display:flex;gap:20px;align-items:center;justify-content:center}
+.category-item{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0}
+.category-item:active{transform:scale(.88)}
+.category-item .circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:transform .25s,box-shadow .25s}
+.category-item.active .circle{transform:scale(1.1);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.category-item .label{font-size:.75rem;color:#888;font-weight:400}
+.category-item.active .label{color:#333;font-weight:500}
 </style>
 </head>
 <body>
@@ -45,33 +44,35 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 <div class="bottom-panel">
   <div class="category-list" id="categoryList">
-    <div class="category-item active" data-url="https://snowhoo.net/reader.html">小红故事</div>
-    <div class="category-item" data-url="https://snowhoo.net/js/sevencolor/1/yedu_p.html">夜读</div>
-    <div class="category-item" data-url="https://snowhoo.net/js/sevencolor/1/zjsz_p.html">照见苏州</div>
-    <div class="category-item" data-url="https://snowhoo.net/app/DaliyNews_p.html">新闻</div>
+    <button class="category-item active" data-url="https://snowhoo.net/reader.html">
+      <span class="circle" style="background:#e94560">小</span>
+      <span class="label">小红故事</span>
+    </button>
+    <button class="category-item" data-url="https://snowhoo.net/js/sevencolor/1/yedu_p.html">
+      <span class="circle" style="background:#764ba2">夜</span>
+      <span class="label">夜读</span>
+    </button>
+    <button class="category-item" data-url="https://snowhoo.net/js/sevencolor/1/zjsz_p.html">
+      <span class="circle" style="background:#3b82f6">照</span>
+      <span class="label">照见苏州</span>
+    </button>
+    <button class="category-item" data-url="https://snowhoo.net/app/DaliyNews_p.html">
+      <span class="circle" style="background:#ff8c00">新</span>
+      <span class="label">新闻</span>
+    </button>
   </div>
-  <button class="enter-btn" id="enterBtn">进 入</button>
 </div>
 
 <script>
 // 随机图片
 document.getElementById('bgImage').src = 'https://picsum.photos/1280/960?random=' + Date.now();
 
-// 分类选择
+// 分类点击直接跳转
 var items = document.querySelectorAll('.category-item');
-var activeUrl = items[0].dataset.url;
-
 items.forEach(function(el) {
   el.addEventListener('click', function() {
-    items.forEach(function(i) { i.classList.remove('active'); });
-    el.classList.add('active');
-    activeUrl = el.dataset.url;
+    window.location.href = el.dataset.url;
   });
-});
-
-// 进入按钮
-document.getElementById('enterBtn').addEventListener('click', function() {
-  if (activeUrl) window.location.href = activeUrl;
 });
 </script>
 </body>
