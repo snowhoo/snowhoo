@@ -6,7 +6,7 @@ layout: false
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>央视新闻</title>
+<title>新闻</title>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;background:#000;color:#1a1a1a;-webkit-tap-highlight-color:transparent}
@@ -63,9 +63,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* 浮窗菜单 */
 .dn-float-wrap{position:relative;display:flex;align-items:center}
-.dn-float-btn{width:32px;height:32px;border-radius:50%;background:#e94560;color:#fff;font-size:.65rem;font-weight:600;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2;transition:transform .2s,background .2s}
+.dn-float-btn{width:32px;height:32px;border-radius:50%;background:#ff8c00;color:#fff;font-size:.65rem;font-weight:600;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2;transition:transform .2s,background .2s}
 .dn-float-btn:active{transform:scale(.92)}
-.dn-float-btn:hover{background:#d63850}
+.dn-float-btn:hover{background:#e67e00}
 .dn-float-menu{position:absolute;bottom:40px;right:0;z-index:200;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;opacity:0;transform:translateY(8px) scale(.95);pointer-events:none;transition:opacity .2s ease,transform .2s ease;transform-origin:bottom right}
 .dn-float-menu.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
 .dn-float-menu a{display:flex;align-items:center;padding:10px 16px;color:#333;text-decoration:none;font-size:.82rem;font-weight:500;white-space:nowrap;transition:background .2s}
@@ -99,6 +99,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .dn-float-menu{background:#1e1e1e}
   .dn-float-menu a{color:#ddd}
   .dn-float-menu a:hover{background:#2a2a2a}
+  .date-dropdown{background:#1e1e1e}
+  .date-dropdown-item{color:#ddd;border-color:#333}
+  .date-dropdown-item:active{background:#2a2a2a}
+  .date-dropdown-item.active{color:#e94560}
 }
 [data-theme="dark"]{
   .column-tabs{background:#1a1a1a;border-color:#333}
@@ -119,6 +123,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .dn-float-menu{background:#1e1e1e}
   .dn-float-menu a{color:#ddd}
   .dn-float-menu a:hover{background:#2a2a2a}
+  .date-dropdown{background:#1e1e1e}
+  .date-dropdown-item{color:#ddd;border-color:#333}
+  .date-dropdown-item:active{background:#2a2a2a}
+  .date-dropdown-item.active{color:#e94560}
 }
 </style>
 </head>
@@ -126,7 +134,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 <div class="loading-overlay" id="loading">
   <div class="spinner"></div>
-  <div class="loading-text">正在加载央视新闻...</div>
+  <div class="loading-text">正在加载新闻...</div>
 </div>
 
 <div id="app">
@@ -135,15 +143,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     <span id="dateLabel"></span>
     <span class="count" id="countLabel"></span>
   </div>
+  <div class="date-dropdown" id="dateDropdown"></div>
   <div class="news-list" id="newsList"></div>
 </div>
 
 <div class="bottom-nav" id="bottomNav">
   <div style="display:flex;align-items:center;gap:20px">
     <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
-    <div class="page-nav-group">
-      <span class="page-nav-btn" id="scrollTopBtn">&#x2191;</span>
-    </div>
+    
   </div>
   <div class="dn-float-wrap">
     <button class="dn-float-btn" id="dnFloatBtn">新闻</button>
@@ -342,13 +349,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       });
     });
 
-    // 绑定点击事件
+    // 绑定点击事件 - 展开全文
     var items_el = newsList.querySelectorAll('.news-item');
     for (var j = 0; j < items_el.length; j++) {
       (function(el) {
-        el.addEventListener('click', function() {
-          var url = this.dataset.url;
-          if (url) window.open(url, '_blank');
+        el.addEventListener('click', function(e) {
+          // 点击图片区域不触发展开
+          if (e.target.closest('.news-item-img')) return;
+          this.classList.toggle('expanded');
         });
       })(items_el[j]);
     }
@@ -360,11 +368,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     div.textContent = str;
     return div.innerHTML;
   }
-
-  // ===== 回到顶部 =====
-  document.getElementById('scrollTopBtn').addEventListener('click', function() {
-    newsList.scrollTop = 0;
-  });
 
   // ===== 浮窗菜单 =====
   var dnFloatBtn = document.getElementById('dnFloatBtn');
@@ -385,7 +388,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     var col = COLUMNS[currentColumn];
     var items = allData[col] || [];
     if (!items.length) return;
-    var title = '央视新闻 - ' + col;
+    var title = '新闻 - ' + col;
     var firstItem = items[0];
     var summary = (firstItem.title || '') + ' ' + (firstItem.brief || '');
     summary = summary.substring(0, 120);
@@ -483,6 +486,117 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     setTimeout(function() { tip.style.opacity = '0'; setTimeout(function() { tip.remove(); }, 300); }, 2000);
   }
   document.getElementById('shareBtn').onclick = shareArticle;
+
+  // ===== 左右滑动切换分类 =====
+  var swipeStartX = 0, swipeStartY = 0;
+  newsList.addEventListener('touchstart', function(e) {
+    swipeStartX = e.changedTouches[0].screenX;
+    swipeStartY = e.changedTouches[0].screenY;
+  }, {passive: true});
+  newsList.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].screenX - swipeStartX;
+    var dy = e.changedTouches[0].screenY - swipeStartY;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0 && currentColumn < COLUMNS.length - 1) {
+        switchColumn(currentColumn + 1);
+      } else if (dx > 0 && currentColumn > 0) {
+        switchColumn(currentColumn - 1);
+      }
+    }
+  }, {passive: true});
+
+  // ===== 日期选择 =====
+  var dateDropdown = document.getElementById('dateDropdown');
+  var availableDates = [];
+  var currentDateStr = dateStr;
+
+  // 检测最近7天哪些日期有数据
+  function scanAvailableDates() {
+    var checks = [];
+    for (var i = 0; i < 7; i++) {
+      var d = new Date();
+      d.setDate(d.getDate() - i);
+      var ds = d.getFullYear() + padNum(d.getMonth()+1) + padNum(d.getDate());
+      (function(ds) {
+        checks.push(
+          fetch('news_CCTV/' + ds + '/_summary.json')
+            .then(function(r) { if (r.ok) availableDates.push(ds); })
+            .catch(function() {})
+        );
+      })(ds);
+    }
+    Promise.all(checks).then(function() {
+      // 确保当前日期在列表中，排序
+      if (availableDates.indexOf(currentDateStr) === -1) {
+        availableDates.unshift(currentDateStr);
+      }
+      availableDates.sort().reverse();
+    });
+  }
+
+  function renderDateDropdown() {
+    dateDropdown.innerHTML = '';
+    for (var i = 0; i < availableDates.length; i++) {
+      var ds = availableDates[i];
+      var d = new Date(parseInt(ds.slice(0,4)), parseInt(ds.slice(4,6))-1, parseInt(ds.slice(6,8)));
+      var label = d.getFullYear() + '\u5E74' + (d.getMonth()+1) + '\u6708' + d.getDate() + '\u65E5';
+      var weekdays = ['\u5468\u65E5','\u5468\u4E00','\u5468\u4E8C','\u5468\u4E09','\u5468\u56DB','\u5468\u4E94','\u5468\u516D'];
+      label += ' ' + weekdays[d.getDay()];
+      var item = document.createElement('div');
+      item.className = 'date-dropdown-item' + (ds === currentDateStr ? ' active' : '');
+      item.innerHTML = label + '<span class="check">&#x2713;</span>';
+      item.dataset.ds = ds;
+      item.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var ds = this.dataset.ds;
+        if (ds === currentDateStr) { hideDateDropdown(); return; }
+        switchDate(ds);
+      });
+      dateDropdown.appendChild(item);
+    }
+  }
+
+  function switchDate(ds) {
+    currentDateStr = ds;
+    dataBase = 'news_CCTV/' + ds + '/';
+    allData = {};
+    currentColumn = 0;
+    loaded = false;
+    hideDateDropdown();
+    // 更新日期栏
+    var d = new Date(parseInt(ds.slice(0,4)), parseInt(ds.slice(4,6))-1, parseInt(ds.slice(6,8)));
+    var dStr = d.getFullYear() + '\u5E74' + (d.getMonth()+1) + '\u6708' + d.getDate() + '\u65E5';
+    var weekdays = ['\u5468\u65E5','\u5468\u4E00','\u5468\u4E8C','\u5468\u4E09','\u5468\u56DB','\u5468\u4E94','\u5468\u516D'];
+    dateLabel.textContent = dStr + ' ' + weekdays[d.getDay()];
+    countLabel.textContent = '\u52A0\u8F7D\u4E2D...';
+    newsList.innerHTML = '<div class="empty-state"><div class="icon">&#x23F3;</div><div>\u52A0\u8F7D\u4E2D...</div></div>';
+    renderDateDropdown();
+    loadAll();
+  }
+
+  function showDateDropdown() {
+    renderDateDropdown();
+    dateDropdown.classList.add('show');
+  }
+
+  function hideDateDropdown() {
+    dateDropdown.classList.remove('show');
+  }
+
+  dateLabel.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (dateDropdown.classList.contains('show')) {
+      hideDateDropdown();
+    } else {
+      showDateDropdown();
+    }
+  });
+  document.addEventListener('click', function() {
+    hideDateDropdown();
+  });
+
+  // 扫描可用日期
+  scanAvailableDates();
 
   // ===== 启动 =====
   loadAll();
