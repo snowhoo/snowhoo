@@ -148,6 +148,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .date-dropdown-item:active{background:#2a2a2a}
   .date-dropdown-item.active{color:#ff8c00}
 }
+/* 图片查看器 */
+.img-viewer{display:none;position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:rgba(0,0,0,.85);cursor:pointer;align-items:center;justify-content:center}
+.img-viewer.show{display:flex}
+.img-viewer img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:4px}
+.img-viewer .close{position:fixed;top:16px;right:20px;color:#fff;font-size:1.5rem;cursor:pointer;z-index:1;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,0,0,.3)}
 </style>
 </head>
 <body>
@@ -198,7 +203,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   var dataBase = 'news_CCTV/' + dateStr + '/';
 
   // 栏目定义（按菜单栏顺序）
-  var COLUMNS = ['综合新闻','国内','国际','经济','社会','法治','文娱','科技','生活','军事'];
+  var COLUMNS = ['新闻','国内','国际','经济','社会','法治','文娱','科技','生活','军事'];
+  var DISPLAY = ['综合新闻','国内','国际','经济','社会','法治','文娱','科技','生活','军事'];
   var currentColumn = 0;
   var allData = {};       // columnName -> items[]
   var loaded = false;
@@ -296,7 +302,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     COLUMNS.forEach(function(col, idx) {
       var tab = document.createElement('span');
       tab.className = 'column-tab' + (idx === 0 ? ' active' : '');
-      tab.textContent = col;
+      tab.textContent = DISPLAY[idx];
       tab.dataset.idx = idx;
       tab.addEventListener('click', function() {
         switchColumn(parseInt(this.dataset.idx, 10));
@@ -342,7 +348,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       var safeLink = escapeHtml(link);
       var safeTitle = escapeHtml(title);
       var safeBrief = escapeHtml(brief);
-      var safeCol = escapeHtml(col);
+      var safeCol = escapeHtml(DISPLAY[colIdx]);
       var safeTime = escapeHtml(timeStr);
 
       html += '<div class="news-item" data-url="' + safeLink + '">';
@@ -361,11 +367,19 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     }
     newsList.innerHTML = html;
 
-    // 图片加载失败时显示占位
+    // 图片加载失败时显示占位，点击放大
     newsList.querySelectorAll('.news-item-img img').forEach(function(img) {
       img.addEventListener('error', function() {
         var p = this.parentElement;
         if (p) p.innerHTML = '<div class="no-img">&#x1F4F7;</div>';
+      });
+      img.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var src = this.src;
+        if (src) {
+          document.getElementById('imgViewerSrc').src = src;
+          document.getElementById('imgViewer').classList.add('show');
+        }
       });
     });
 
@@ -408,7 +422,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     var col = COLUMNS[currentColumn];
     var items = allData[col] || [];
     if (!items.length) return;
-    var title = '新闻 - ' + col;
+    var title = '新闻 - ' + DISPLAY[currentColumn];
     var firstItem = items[0];
     var summary = (firstItem.title || '') + ' ' + (firstItem.brief || '');
     summary = summary.substring(0, 120);
@@ -604,6 +618,18 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
   // 扫描可用日期
   scanAvailableDates();
+
+  // ===== 图片查看器 =====
+  var imgViewer = document.createElement('div');
+  imgViewer.className = 'img-viewer';
+  imgViewer.id = 'imgViewer';
+  imgViewer.innerHTML = '<span class="close" id="imgViewerClose">&times;</span><img id="imgViewerSrc" src="" alt="">';
+  document.body.appendChild(imgViewer);
+  imgViewer.onclick = function(e) {
+    if (e.target === imgViewer || e.target.id === 'imgViewerClose') {
+      this.classList.remove('show');
+    }
+  };
 
   // ===== 启动 =====
   loadAll();
