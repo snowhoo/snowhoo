@@ -18,7 +18,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .column-tabs::-webkit-scrollbar{display:none}
 .column-tab{flex-shrink:0;padding:10px 14px;font-size:.85rem;color:#666;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;user-select:none;-webkit-user-select:none}
 .column-tab:active{background:rgba(0,0,0,.04)}
-.column-tab.active{color:#e94560;border-bottom-color:#e94560;font-weight:500}
+.column-tab.active{color:#ff8c00;border-bottom-color:#ff8c00;font-weight:500}
 
 /* 日期栏 */
 .date-bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:6px 16px;background:#fafafa;font-size:.75rem;color:#999;border-bottom:1px solid #f0f0f0}
@@ -97,7 +97,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 @media(prefers-color-scheme:dark){
   .column-tabs{background:#1a1a1a;border-color:#333}
   .column-tab{color:#888}
-  .column-tab.active{color:#e94560}
+  .column-tab.active{color:#ff8c00}
   .date-bar{background:#181818;border-color:#333;color:#666}
   .news-list{background:#121212}
   .news-item{background:#1a1a1a}
@@ -121,7 +121,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 [data-theme="dark"]{
   .column-tabs{background:#1a1a1a;border-color:#333}
   .column-tab{color:#888}
-  .column-tab.active{color:#e94560}
+  .column-tab.active{color:#ff8c00}
   .date-bar{background:#181818;border-color:#333;color:#666}
   .news-list{background:#121212}
   .news-item{background:#1a1a1a}
@@ -524,28 +524,15 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   var availableDates = [];
   var currentDateStr = dateStr;
 
-  // 检测最近7天哪些日期有数据
+  // 生成最近7天日期列表（不依赖网络请求）
   function scanAvailableDates() {
-    var checks = [];
     for (var i = 0; i < 7; i++) {
       var d = new Date();
       d.setDate(d.getDate() - i);
       var ds = d.getFullYear() + padNum(d.getMonth()+1) + padNum(d.getDate());
-      (function(ds) {
-        checks.push(
-          fetch('news_CCTV/' + ds + '/_summary.json')
-            .then(function(r) { if (r.ok) availableDates.push(ds); })
-            .catch(function() {})
-        );
-      })(ds);
+      availableDates.push(ds);
     }
-    Promise.all(checks).then(function() {
-      // 确保当前日期在列表中，排序
-      if (availableDates.indexOf(currentDateStr) === -1) {
-        availableDates.unshift(currentDateStr);
-      }
-      availableDates.sort().reverse();
-    });
+    availableDates.sort().reverse();
   }
 
   function renderDateDropdown() {
