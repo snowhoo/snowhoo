@@ -20,7 +20,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* 左上角圈字 */
 .top-left-badges{position:absolute;top:46px;left:16px;z-index:5;display:flex;gap:10px}
-.top-left-badges .badge{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.85rem;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.5);background:rgba(0,0,0,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15)}
+.top-left-badges .badge{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.85rem;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.5);background:rgba(0,0,0,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15);cursor:pointer;transition:all .3s}
+.top-left-badges .badge.selected{background:rgba(233,69,96,.65);border-color:rgba(233,69,96,.8);transform:scale(1.08)}
 
 /* 右上角logo */
 .top-right-logo{position:absolute;top:46px;right:16px;z-index:5;width:90px}
@@ -52,10 +53,12 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .category-item .label{font-size:.75rem;color:#888;font-weight:400}
 .category-item.active .label{color:#333;font-weight:500}
 
-/* 诗词展示区 - 圈字下方 */
-.poem-area{position:absolute;top:92px;left:16px;z-index:5;max-width:300px;text-align:left}
-.poem-area .poem-line{font-size:.88rem;line-height:1.5;color:#fff;font-weight:400;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5)}
-.poem-area .poem-source{font-size:.65rem;color:rgba(255,255,255,.7);margin-top:4px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+/* 诗/今 内容展示区 - 圈字下方 */
+.content-area{position:absolute;top:102px;left:16px;z-index:5;max-width:320px;text-align:left}
+.content-area .content-line{font-size:.88rem;line-height:1.5;color:#fff;font-weight:400;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.content-area .content-source{font-size:.65rem;color:rgba(255,255,255,.7);margin-top:4px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.content-area .history-item{font-size:.78rem;line-height:1.6;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);font-family:"KaiTi","STKaiti","楷体",serif}
+.content-area .history-item .hyear{display:inline-block;min-width:3.2em;color:rgba(255,255,255,.6);font-size:.7rem;font-family:sans-serif}
 </style>
 </head>
 <body>
@@ -65,12 +68,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   <div class="gradient"></div>
   <div class="top-left-badges">
     <span class="badge" id="poetryBtn">诗</span>
-    <span class="badge">今</span>
+    <span class="badge" id="historyBtn">今</span>
   </div>
-  <div class="poem-area" id="poemArea" style="display:none">
-    <div class="poem-line" id="poemLine"></div>
-    <div class="poem-source" id="poemSource"></div>
-  </div>
+  <div class="content-area" id="contentArea" style="display:none"></div>
   <div class="top-right-logo"><img src="../images/logo.png" alt="logo"></div>
   <div class="welcome">
     探索
@@ -211,25 +211,43 @@ items.forEach(function(el) {
   });
 });
 
-// 点击"诗"展示每日诗词
-document.getElementById('poetryBtn').addEventListener('click', function() {
-  var area = document.getElementById('poemArea');
-  var line = document.getElementById('poemLine');
-  var source = document.getElementById('poemSource');
-  if (area.style.display !== 'none' && area._loaded) {
+// 点击"诗"展示每日诗词，"今"展示历史上的今天
+function toggleContent(btnId, url, renderFn) {
+  var btn = document.getElementById(btnId);
+  var area = document.getElementById('contentArea');
+  if (area._activeBtn === btnId && area.style.display !== 'none') {
     area.style.display = 'none';
+    btn.classList.remove('selected');
+    area._activeBtn = null;
     return;
   }
-  fetch('../js/DailyPoetry.json').then(function(r){return r.json()}).then(function(data){
-    line.textContent = data.line;
-    source.textContent = '—— ' + data.dynasty + ' · ' + data.author + '《' + data.title + '》';
+  document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
+  btn.classList.add('selected');
+  fetch(url).then(function(r){return r.json()}).then(function(data){
+    area.innerHTML = renderFn(data);
     area.style.display = 'block';
-    area._loaded = true;
+    area._activeBtn = btnId;
   }).catch(function(){
-    line.textContent = '暂无诗词';
-    source.textContent = '';
+    area.innerHTML = '<div class="content-line">暂无内容</div>';
     area.style.display = 'block';
-    area._loaded = true;
+    area._activeBtn = btnId;
+  });
+}
+
+document.getElementById('poetryBtn').addEventListener('click', function() {
+  toggleContent('poetryBtn', '../js/DailyPoetry.json', function(data) {
+    return '<div class="content-line">' + data.line + '</div>'
+         + '<div class="content-source">—— ' + data.dynasty + ' · ' + data.author + '《' + data.title + '》</div>';
+  });
+});
+
+document.getElementById('historyBtn').addEventListener('click', function() {
+  toggleContent('historyBtn', '../js/HistoryToday.json', function(data) {
+    var html = '';
+    data.events.forEach(function(e) {
+      html += '<div class="history-item"><span class="hyear">' + e.year + '年</span> ' + e.text + '</div>';
+    });
+    return html;
   });
 });
 </script>
