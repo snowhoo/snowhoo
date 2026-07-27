@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-DailyNews_CCTV.py — 央视新闻每日获取（增量模式）
+DailyNews_CCTV.py — 央视新闻每日获取（增量合并模式）
 
 功能:
   从央视新闻各栏目独立API获取当天新闻，按栏目分类保存为JSON。
+  每次运行从API拉取最新数据，与已有文件按 id 去重合并，
+  新数据覆盖旧数据，实现真正的每小时增量更新。
   栏目来源直接对应央视网菜单栏，而非关键词分类。
 
 栏目与API对照（从央视网菜单栏提取）:
@@ -19,9 +21,9 @@ DailyNews_CCTV.py — 央视新闻每日获取（增量模式）
   军事 → military.cctv.com/      → data/index.json
 
 运行:
-  python DailyNews_CCTV.py                      # 获取当天新闻
+  python DailyNews_CCTV.py                      # 增量合并获取当天新闻
   python DailyNews_CCTV.py --date=20260726       # 获取指定日期
-  python DailyNews_CCTV.py --force               # 强制重新获取（忽略增量）
+  python DailyNews_CCTV.py --force               # 忽略已有数据，重新全量获取
   python DailyNews_CCTV.py --detail              # 同时获取全文（较慢）
 
 输出:
@@ -197,21 +199,21 @@ def fetch_column(column_config, date_stamp, fetch_detail=False):
 
     r = safe_get(url)
     if not r:
-        print(f'  ✗ 请求失败: {url}')
+        print(f'  [失败] 请求失败: {url}')
         return []
 
     # 解析数据
     if column_config['type'] == 'jsonp':
         data = parse_jsonp(r.text)
         if not data:
-            print(f'  ✗ JSONP解析失败')
+            print(f'  [失败] JSONP解析失败')
             return []
         raw_items = data.get('data', {}).get('list', [])
     else:
         try:
             data = r.json()
         except json.JSONDecodeError:
-            print(f'  ✗ JSON解析失败')
+            print(f'  [失败] JSON解析失败')
             return []
         raw_items = data.get('rollData', [])
 
@@ -255,17 +257,26 @@ def save_column_json(column_name, items, date_stamp):
 
     return output_path
 
-def check_if_complete(date_stamp):
-    """检查当天数据是否已经完整获取（增量判断）"""
-    output_dir = os.path.join(OUTPUT_BASE, date_stamp)
-    if not os.path.isdir(output_dir):
-        return False
+def load_existing_items(column_name, date_stamp):
+    """读取已存在的栏目新闻数据，返回 items 列表"""
+    filepath = os.path.join(OUTPUT_BASE, date_stamp, f'{column_name}.json')
+    if not os.path.isfile(filepath):
+        return []
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return data.get('items', [])
+    except (json.JSONDecodeError, FileNotFoundError):
+        return []
 
-    for col in ALL_COLUMN_NAMES:
-        filepath = os.path.join(output_dir, f'{col}.json')
-        if not os.path.isfile(filepath) or os.path.getsize(filepath) < 50:
-            return False
-    return True
+def merge_items(existing, new_items):
+    """按 id 去重合并，新数据覆盖旧数据"""
+    seen = {}
+    for item in existing:
+        seen[item.get('id', '')] = item
+    for item in new_items:
+        seen[item.get('id', '')] = item  # 新数据覆盖旧数据
+    return list(seen.values())
 
 # ======================== 主流程 ========================
 
@@ -297,31 +308,36 @@ def main():
     print('=' * 50)
     print()
 
-    # ===== 增量检查 =====
-    if not force_refetch and check_if_complete(date_stamp):
-        print(f'✅ 当天数据已完整获取，跳过')
-        print(f'   目录: {output_dir}')
-        return
-
-    # ===== 获取各栏目 =====
-    print('【获取】从各栏目API获取当天新闻...')
+    # ===== 获取并合并各栏目 =====
+    print('【获取】从各栏目API获取当天新闻（增量合并模式）...')
     print()
 
     column_items = {}
-    total_items = 0
+    total_added = 0
 
     for col_config in COLUMNS:
         col_name = col_config['name']
         api_desc = col_config.get('api_name', col_config.get('domain', '?'))
         print(f'  [{col_name}] (/{api_desc}) ...', end=' ')
 
-        items = fetch_column(col_config, date_stamp, fetch_detail)
+        # 1. 读已有的
+        existing = [] if force_refetch else load_existing_items(col_name, date_stamp)
+        existing_count = len(existing)
+
+        # 2. 从API拉新的
+        new_items = fetch_column(col_config, date_stamp, fetch_detail)
+
+        # 3. 合并去重
+        items = merge_items(existing, new_items)
+
+        added = len(items) - existing_count
+        total_added += added
         column_items[col_name] = items
-        print(f'{len(items)} 条')
-        total_items += len(items)
+
+        print(f'API {len(new_items)} 条, 合并后 {len(items)} 条 (+{added})')
         time.sleep(0.3)
 
-    print(f'\n  共获取 {total_items} 条新闻\n')
+    print(f'\n  本次新增 {total_added} 条，累计 {sum(len(v) for v in column_items.values())} 条\n')
 
     # ===== 保存JSON =====
     print('【保存】写入JSON文件...')
@@ -330,9 +346,10 @@ def main():
         items = column_items.get(col_name, [])
         filepath = save_column_json(col_name, items, date_stamp)
         saved_files.append(filepath)
-        print(f'  ✅ {col_name}: {len(items)} 条 → {os.path.basename(filepath)}')
+        print(f'  [OK] {col_name}: {len(items)} 条 -> {os.path.basename(filepath)}')
 
     # 汇总
+    total_items = sum(len(v) for v in column_items.values())
     summary_path = os.path.join(output_dir, '_summary.json')
     summary = {
         'date': date_stamp,
@@ -347,9 +364,9 @@ def main():
     with open(summary_path, 'w', encoding='utf-8') as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
 
-    print(f'  ✅ 汇总: {os.path.basename(summary_path)}')
+    print(f'  [OK] 汇总: {os.path.basename(summary_path)}')
     print()
-    print(f'✅ 全部完成！共保存 {len(saved_files)} 个文件')
+    print(f'[OK] 全部完成！共保存 {len(saved_files)} 个文件')
     print(f'   目录: {output_dir}')
 
 if __name__ == '__main__':
@@ -359,7 +376,7 @@ if __name__ == '__main__':
         print('\n已取消')
         sys.exit(1)
     except Exception as e:
-        print(f'\n❌ 错误: {e}')
         import traceback
+        print(f'\n[错误] {e}')
         traceback.print_exc()
         sys.exit(1)
