@@ -52,7 +52,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* 日期下拉菜单 */
 .date-bar{cursor:pointer;position:relative}
-.date-dropdown{display:none;position:absolute;top:100%;right:0;left:auto;z-index:50;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;max-height:240px;overflow-y:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+.date-dropdown{display:none;position:absolute;top:100%;left:10px;right:auto;z-index:50;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;white-space:nowrap}
 .date-dropdown.show{display:block}
 .date-dropdown-item{padding:10px 16px;font-size:.82rem;color:#333;cursor:pointer;transition:background .15s}
 .date-dropdown-item:active{background:#f5f5f5}
@@ -198,7 +198,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   var dataBase = 'news_CCTV/' + dateStr + '/';
 
   // 栏目定义（按菜单栏顺序）
-  var COLUMNS = ['新闻','国内','国际','经济','社会','法治','文娱','科技','生活','军事'];
+  var COLUMNS = ['综合新闻','国内','国际','经济','社会','法治','文娱','科技','生活','军事'];
   var currentColumn = 0;
   var allData = {};       // columnName -> items[]
   var loaded = false;
