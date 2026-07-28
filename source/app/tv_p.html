@@ -192,10 +192,9 @@ layout: false
   <div style="display:flex;align-items:center;gap:12px">
     <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
     <div class="page-nav-group" id="pageNavGroup">
-      <span class="page-nav-btn" id="prevPageBtn">‹</span>
-      <span class="page-btn" id="pageBtn">1</span>
-      <span class="page-nav-btn" id="nextPageBtn">›</span>
-      <span class="page-text" id="pageInfo">/ 1</span>
+      <span class="page-nav-btn" id="firstBtn">‹‹</span>
+      <span class="page-btn" id="pageBtn">1 / 1</span>
+      <span class="page-nav-btn" id="lastBtn">››</span>
     </div>
   </div>
   <div class="float-wrap">
@@ -700,32 +699,45 @@ layout: false
     function updateBottomPagination() {
         let total = currentFiltered.length, pages = Math.ceil(total / PAGE_SIZE) || 1;
         if (currentPage > pages) currentPage = pages;
-        document.getElementById('pageBtn').textContent = currentPage;
-        document.getElementById('pageInfo').textContent = '/ ' + pages;
-        document.getElementById('prevPageBtn').style.color = currentPage <= 1 ? 'var(--text-muted)' : 'var(--text-secondary)';
-        document.getElementById('nextPageBtn').style.color = currentPage >= pages ? 'var(--text-muted)' : 'var(--text-secondary)';
+        document.getElementById('pageBtn').textContent = currentPage + ' / ' + pages;
     }
 
-    // 翻页：上一页
+    // 翻页：首页
+    function goFirstPage() {
+        let total = currentFiltered.length, pages = Math.ceil(total / PAGE_SIZE) || 1;
+        if (currentPage > 1) {
+            currentPage = 1;
+            renderHomeGrid();
+        }
+    }
+
+    // 翻页：尾页
+    function goLastPage() {
+        let total = currentFiltered.length, pages = Math.ceil(total / PAGE_SIZE) || 1;
+        if (currentPage < pages) {
+            currentPage = pages;
+            renderHomeGrid();
+        }
+    }
+
+    // 滑动翻页：上一页（含分类切换）
     function goPrevPage() {
         let total = currentFiltered.length, pages = Math.ceil(total / PAGE_SIZE) || 1;
         if (currentPage > 1) {
             currentPage--;
             renderHomeGrid();
         } else {
-            // 在第一页时向左滑动切换到上一分类
             goPrevCategory();
         }
     }
 
-    // 翻页：下一页
+    // 滑动翻页：下一页（含分类切换）
     function goNextPage() {
         let total = currentFiltered.length, pages = Math.ceil(total / PAGE_SIZE) || 1;
         if (currentPage < pages) {
             currentPage++;
             renderHomeGrid();
         } else {
-            // 在最后一页时向右滑动切换到下一分类
             goNextCategory();
         }
     }
@@ -783,8 +795,19 @@ layout: false
     }
 
     // 页面底部翻页按钮事件
-    document.getElementById('prevPageBtn').addEventListener('click', goPrevPage);
-    document.getElementById('nextPageBtn').addEventListener('click', goNextPage);
+    document.getElementById('firstBtn').addEventListener('click', goFirstPage);
+    document.getElementById('lastBtn').addEventListener('click', goLastPage);
+    document.getElementById('pageBtn').addEventListener('click', function() {
+        let total = currentFiltered.length, pages = Math.ceil(total / PAGE_SIZE) || 1;
+        var input = prompt('输入页码 (1 - ' + pages + ')', currentPage + '');
+        if (input !== null) {
+            var num = parseInt(input, 10);
+            if (num >= 1 && num <= pages) {
+                currentPage = num;
+                renderHomeGrid();
+            }
+        }
+    });
 
     // 滑动翻页
     (function() {
