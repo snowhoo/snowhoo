@@ -69,13 +69,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .content-area .history-item .hyear{display:inline-block;min-width:3.2em;color:rgba(255,255,255,.6);font-size:.7rem;font-family:sans-serif}
 
 /* 星座内容样式 */
-.constellation-item{font-size:.7rem;line-height:1.3;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);margin-bottom:5px;padding:5px 8px;background:rgba(255,255,255,.06);border-radius:6px;border:1px solid rgba(255,255,255,.06);transition:background .2s}
-.constellation-item .shead{display:flex;align-items:center;gap:5px;margin-bottom:3px}
-.constellation-item .semoji{font-size:.85rem;width:1.3em;text-align:center}
-.constellation-item .sname{font-weight:600;font-size:.78rem;letter-spacing:.5px}
-.constellation-item .slucky{font-size:.6rem;opacity:.65;margin-left:auto;white-space:nowrap}
-.constellation-item .scores{display:flex;gap:6px;flex-wrap:wrap}
-.constellation-item .score{display:inline-flex;align-items:center;gap:2px;font-size:.62rem;padding:1px 5px;border-radius:3px;background:rgba(255,255,255,.08)}
+.constellation-item{font-size:.68rem;line-height:1.5;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);margin-bottom:4px;padding:4px 8px;background:rgba(255,255,255,.05);border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.constellation-item .semoji{font-size:.78rem;margin-right:3px}
+.constellation-item .sname{font-weight:600;font-size:.72rem;margin-right:4px}
 </style>
 </head>
 <body>
@@ -303,7 +299,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       if (!s || !s.detail || !s.detail.today) return;
       var td = s.detail.today;
       var info = td.info || [];
-      var overall = '', love = '', wealth = '', work = '', lucky = '', color = '';
+      var overall = '', love = '', wealth = '', work = '', lucky = '', color = '', star = '', time = '';
       info.forEach(function(v){
         if (v.indexOf('综合运势') === 0) overall = v.replace('综合运势：','');
         if (v.indexOf('爱情运势') === 0) love = v.replace('爱情运势：','');
@@ -311,15 +307,10 @@ document.getElementById('constellationBtn').addEventListener('click', function()
         if (v.indexOf('工作运势') === 0) work = v.replace('工作运势：','');
         if (v.indexOf('幸运数字') === 0) lucky = v.replace('幸运数字：','');
         if (v.indexOf('幸运颜色') === 0) color = v.replace('幸运颜色：','');
+        if (v.indexOf('贵人星座') === 0) star = v.replace('贵人星座：','');
+        if (v.indexOf('幸运时间') === 0) time = v.replace('幸运时间：','');
       });
-      html += '<div class="constellation-item">'
-        + '<div class="shead"><span class="semoji">' + signs[key].emo + '</span><span class="sname">' + signs[key].cn + '</span><span class="slucky">🍀' + lucky + ' ' + color + '</span></div>'
-        + '<div class="scores">'
-        + '<span class="score">综合' + overall + '</span>'
-        + '<span class="score">爱情' + love + '</span>'
-        + '<span class="score">财富' + wealth + '</span>'
-        + '<span class="score">工作' + work + '</span>'
-        + '</div></div>';
+      html += '<div class="constellation-item"><span class="semoji">' + signs[key].emo + '</span><span class="sname">' + signs[key].cn + '</span> 综合' + overall + ' 爱情' + love + ' 财富' + wealth + ' 工作' + work + ' 幸运数' + lucky + ' ' + color + ' 贵人' + star + ' 时间' + time + '</div>';
     });
     area.innerHTML = html;
     area._activeBtn = 'constellationBtn';
