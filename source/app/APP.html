@@ -65,6 +65,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .content-area{position:absolute;top:50%;left:50%;z-index:5;width:310px;max-height:calc(70vh - 160px);overflow-y:auto;text-align:center;transform:translate(-50%,-50%)}
 .content-area::-webkit-scrollbar{width:0}
 .content-area .content-line{font-size:.88rem;line-height:1.5;color:#fff;font-weight:400;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.content-area .content-title{font-size:1.05rem;font-weight:700;color:#fff;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5);margin-bottom:2px}
+.content-area .content-author{font-size:.75rem;color:rgba(255,255,255,.7);margin-bottom:10px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .content-area .content-source{font-size:.65rem;color:rgba(255,255,255,.7);margin-top:4px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .content-area .history-item{font-size:.78rem;line-height:1.6;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);font-family:"KaiTi","STKaiti","楷体",serif;display:flex}
 .content-area .history-item .hyear{flex-shrink:0;width:4.8em;color:rgba(255,255,255,.6);font-size:.7rem;font-family:sans-serif}
@@ -272,12 +274,12 @@ function toggleContent(btnId, url, renderFn) {
 document.getElementById('poetryBtn').addEventListener('click', function() {
   toggleContent('poetryBtn', '../js/DailyPoetry.json', function(data) {
     var lines = data.detail && data.detail.content ? data.detail.content : [data.line];
-    var html = '';
+    var html = '<div class="content-title">' + data.title + '</div>'
+             + '<div class="content-author">' + data.dynasty + ' · ' + data.author + '</div>';
     lines.forEach(function(l) {
       html += '<div class="content-line">' + l + '</div>';
     });
-    return html
-         + '<div class="content-source">—— ' + data.dynasty + ' · ' + data.author + '《' + data.title + '》</div>';
+    return html;
   });
 });
 
