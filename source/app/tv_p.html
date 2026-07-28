@@ -204,7 +204,10 @@ layout: false
       <a href="https://snowhoo.net/app/yedu_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#764ba2">夜</span>夜读·每晚十点</a>
       <a href="https://snowhoo.net/app/zjsz_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#3b82f6">照</span>照见苏州·摄影专辑</a>
       <a href="https://snowhoo.net/app/DaliyNews_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#ff8c00">新</span>新闻·每日速览</a>
-      <a href="https://snowhoo.net/app/tv_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#22c55e">播</span>小红播霸·在线影视</a>
+      <span style="display:flex;align-items:center;padding:10px 16px;color:#22c55e;font-size:.82rem;font-weight:600;white-space:nowrap;cursor:default">
+        <span class="menu-indicator circulated" style="background:#22c55e">播</span>小红播霸·在线影视
+        <span style="margin-left:8px;color:#22c55e">&#x2713;</span>
+      </span>
     </div>
   </div>
 </div>
@@ -221,7 +224,7 @@ layout: false
     window.__SC_BASE_PATH = '/js/sevencolor/3/';
     // 存储与核心变量 ----------
     const STORAGE = { HISTORY:'tvbox_history', FAVORITES:'tvbox_favorites', SEARCH:'tvbox_search_results', THEME:'tvbox_theme' };
-    const PAGE_SIZE = 2, CONCURRENT = 10;
+    const PAGE_SIZE = 4, CONCURRENT = 10;
     let sourceIndex=[], loadedSources={}, sourceMeta={}, currentData=null, currentPrefix='', currentFilePage=1, currentPage=1, currentFiltered=[], currentCategory='';
     let currentSearchKeyword='', currentSearchResults=[], currentSearchCategory='', isSearching=false, searchVersion=0;
     let currentPlayingVideo=null, currentPlayingEpIndex=0, currentOpenVideo=null, currentEpNext=null, currentHls=null, playerInFloat=false;
