@@ -65,8 +65,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .content-area::-webkit-scrollbar{width:0}
 .content-area .content-line{font-size:.88rem;line-height:1.5;color:#fff;font-weight:400;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5)}
 .content-area .content-source{font-size:.65rem;color:rgba(255,255,255,.7);margin-top:4px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
-.content-area .history-item{font-size:.78rem;line-height:1.6;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);font-family:"KaiTi","STKaiti","楷体",serif}
-.content-area .history-item .hyear{display:inline-block;min-width:3.2em;color:rgba(255,255,255,.6);font-size:.7rem;font-family:sans-serif}
+.content-area .history-item{font-size:.78rem;line-height:1.6;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);font-family:"KaiTi","STKaiti","楷体",serif;display:flex}
+.content-area .history-item .hyear{flex-shrink:0;width:3.2em;color:rgba(255,255,255,.6);font-size:.7rem;font-family:sans-serif}
 
 /* 星座转盘样式 */
 .zodiac-wheel{position:relative;width:290px;height:290px;margin:8px auto 0;cursor:pointer;touch-action:none}
@@ -275,7 +275,7 @@ document.getElementById('historyBtn').addEventListener('click', function() {
   toggleContent('historyBtn', '../js/HistoryToday.json', function(data) {
     var html = '';
     data.events.forEach(function(e) {
-      html += '<div class="history-item"><span class="hyear">' + e.year + '年</span> ' + e.text + '</div>';
+      html += '<div class="history-item"><span class="hyear">' + e.year + '年</span><span class="htext"> ' + e.text + '</span></div>';
     });
     return html;
   });
