@@ -76,6 +76,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:140px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6}
 .zodiac-center .zc-name{font-size:.95rem;font-weight:700;display:block;margin-bottom:4px;color:#ff8c00;letter-spacing:1px}
 .zodiac-center .zc-line{font-size:.65rem;opacity:.85;display:block;white-space:nowrap}
+.zodiac-center .zc-sub{font-size:.58rem;opacity:.6;display:block;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -333,7 +334,10 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     // 中心信息面板
     html += '<div class="zodiac-center">'
           + '<span class="zc-name">' + items[0].cn + '</span>'
-          + '<span class="zc-line">综合' + items[0].overall + ' 爱情' + items[0].love + ' 财富' + items[0].wealth + ' 工作' + items[0].work + ' · 幸运数' + items[0].lucky + ' ' + items[0].color + ' · 贵人' + items[0].star + ' · ' + items[0].time + '</span>'
+          + '<span class="zc-line">综合' + items[0].overall + ' 爱情' + items[0].love + ' 财富' + items[0].wealth + ' 工作' + items[0].work + '</span>'
+          + '<span class="zc-line">幸运数' + items[0].lucky + ' ' + items[0].color + '</span>'
+          + '<span class="zc-sub">贵人星座 ' + items[0].star + '</span>'
+          + '<span class="zc-sub">幸运时间 ' + items[0].time + '</span>'
           + '</div>';
     for (var i = 0; i < items.length; i++) {
       var d = items[i];
@@ -355,6 +359,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     var zodiacItems = area.querySelectorAll('.zodiac-item');
     var centerName = area.querySelector('.zc-name');
     var centerLines = area.querySelectorAll('.zc-line');
+    var centerSubs = area.querySelectorAll('.zc-sub');
     var currentAngle = 0, startX, startY, startAngle = 0;
     var isDragging = false;
     // 默认选中第一个
@@ -362,7 +367,10 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     function updateCenter(idx) {
       var d = items[idx];
       centerName.textContent = d.cn;
-      centerLines[0].textContent = '综合' + d.overall + ' 爱情' + d.love + ' 财富' + d.wealth + ' 工作' + d.work + ' · 幸运数' + d.lucky + ' ' + d.color + ' · 贵人' + d.star + ' · ' + d.time;
+      centerLines[0].textContent = '综合' + d.overall + ' 爱情' + d.love + ' 财富' + d.wealth + ' 工作' + d.work;
+      centerLines[1].textContent = '幸运数' + d.lucky + ' ' + d.color;
+      centerSubs[0].textContent = '贵人星座 ' + d.star;
+      centerSubs[1].textContent = '幸运时间 ' + d.time;
     }
     function selectItem(idx) {
       zodiacItems.forEach(function(el){el.classList.remove('selected')});
