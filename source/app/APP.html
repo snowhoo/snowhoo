@@ -80,11 +80,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .content-area .history-item .hyear{flex-shrink:0;width:4.8em;color:rgba(255,255,255,.6);font-size:.7rem;font-family:sans-serif}
 
 /* 星座转盘样式 */
-.zodiac-wheel{position:relative;width:290px;height:290px;margin:8px auto 0;cursor:pointer;touch-action:none}
+.zodiac-wheel{position:relative;width:320px;height:320px;margin:8px auto 0;cursor:pointer;touch-action:none}
 .zodiac-item{position:absolute;text-align:center;color:rgba(255,255,255,.5);text-shadow:0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);width:72px;line-height:1.2;transition:all .35s;cursor:pointer;user-select:none;-webkit-user-select:none}
 .zodiac-item .zn{font-size:.6rem;font-weight:400;display:block;transition:all .35s;line-height:1.3}
 .zodiac-item.selected .zn{font-size:.95rem;font-weight:700;color:#ff8c00}
-.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:140px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6}
+.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:150px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6}
 .zodiac-center .zc-name{font-size:.95rem;font-weight:700;display:block;margin-bottom:4px;color:#ff8c00;letter-spacing:1px}
 .zodiac-center .zc-line{font-size:.65rem;opacity:.85;display:block;white-space:nowrap}
 .zodiac-center .zc-sub{font-size:.58rem;opacity:.6;display:block;white-space:nowrap}
@@ -335,7 +335,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
   // 居中显示
   area.style.left = '50%';
   area.style.transform = 'translate(-50%, -50%)';
-  area.style.width = '290px';
+  area.style.width = '320px';
   area.style.textAlign = 'center';
   fetch('https://www.52api.cn/api/constellation?key=G84cVgxx8BqrzOEPUZlpRSK41r').then(function(r){return r.json()}).then(function(data){
     if (data.code !== 200 || !data.data) {
@@ -365,7 +365,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       items.push(d);
     });
     // 构建转盘
-    var cx = 145, cy = 145, r = 110;
+    var cx = 160, cy = 160, r = 125;
     var html = '<div class="zodiac-wheel">';
     // 中心信息面板
     html += '<div class="zodiac-center">'
