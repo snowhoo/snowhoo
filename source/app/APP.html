@@ -39,6 +39,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 /* ===== 底部面板 ===== */
 .bottom-panel{position:relative;height:30vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px;background:#fff;z-index:2}
 
+/* 浮动奔跑图片 */
+.runner-float{position:absolute;top:60px;left:50%;transform:translateX(-50%);width:32px;height:auto;opacity:0.6;pointer-events:none;z-index:4;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+
 /* 年度进度条 */
 .year-bar{position:absolute;top:0;left:0;right:0;height:5px;background:#f0f0f0;overflow:hidden}
 .year-bar-fill{height:100%;background:linear-gradient(90deg,#e94560,#ff8c00);transition:width .6s ease;border-radius:0 2px 2px 0}
@@ -89,6 +93,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   </div>
 </div>
 
+<div class="runner-float"><img src="/source/images/run.png" alt="奔跑"></div>
 <div class="bottom-panel">
   <div class="year-bar"><div class="year-bar-fill" id="yearFill"></div></div>
   <div class="year-bar-text"><svg class="runner" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M8 21l3-6 3 3 4-8"/><path d="M14 10l3-3 3 2"/><path d="M5 18l3-6 3 3"/></svg><span id="yearText"></span></div>
