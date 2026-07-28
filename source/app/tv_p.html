@@ -136,7 +136,7 @@ layout: false
   <div class="loading-text">正在加载...</div>
 </div>
 
-<div id="app" data-theme="dark">
+<div id="app" data-theme="light">
     <!-- 首页视图 -->
     <div id="homeView" class="view">
         <div id="stickyHeader">
@@ -1266,6 +1266,11 @@ layout: false
     // 主题切换（与tv_p现有主题联动）
     var themeBtn = document.getElementById('themeBtn');
     var appWrap = document.getElementById('app');
+    // 主题初始化：从localStorage读取保存的主题
+    var savedTheme = localStorage.getItem('tvbox_theme');
+    if (savedTheme === 'dark' || savedTheme === 'light') {
+        appWrap.setAttribute('data-theme', savedTheme);
+    }
     if(themeBtn && appWrap){
         function syncThemeBtn(){
             var theme = appWrap.getAttribute('data-theme');
