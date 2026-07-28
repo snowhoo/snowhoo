@@ -355,6 +355,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     area._activeBtn = 'constellationBtn';
     // ===== 转盘交互 =====
     var wheel = area.querySelector('.zodiac-wheel');
+    var centerEl = area.querySelector('.zodiac-center');
     var zodiacItems = area.querySelectorAll('.zodiac-item');
     var centerName = area.querySelector('.zc-name');
     var centerLines = area.querySelectorAll('.zc-line');
@@ -382,6 +383,8 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       currentAngle = -Math.round(rawIdx) * 30;
       wheel.style.transition = 'transform .35s ease-out';
       wheel.style.transform = 'rotate(' + currentAngle + 'deg)';
+      centerEl.style.transition = 'transform .35s ease-out';
+      centerEl.style.transform = 'translate(-50%,-50%) rotate(' + (-currentAngle) + 'deg)';
       selectItem(nearest);
     }
     function getClientXY(e) {
@@ -397,6 +400,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       startY = c.y;
       startAngle = currentAngle;
       wheel.style.transition = 'none';
+      centerEl.style.transition = 'none';
     }
     function onMove(e) {
       if (!isDragging) return;
@@ -404,6 +408,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       var dx = c.x - startX;
       currentAngle = startAngle + dx * 0.5;
       wheel.style.transform = 'rotate(' + currentAngle + 'deg)';
+      centerEl.style.transform = 'translate(-50%,-50%) rotate(' + (-currentAngle) + 'deg)';
     }
     function onEnd() {
       if (!isDragging) return;
@@ -425,6 +430,8 @@ document.getElementById('constellationBtn').addEventListener('click', function()
         currentAngle = -idx * 30;
         wheel.style.transition = 'transform .35s ease-out';
         wheel.style.transform = 'rotate(' + currentAngle + 'deg)';
+        centerEl.style.transition = 'transform .35s ease-out';
+        centerEl.style.transform = 'translate(-50%,-50%) rotate(' + (-currentAngle) + 'deg)';
         selectItem(idx);
       });
     });
