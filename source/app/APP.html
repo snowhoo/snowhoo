@@ -83,6 +83,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .zodiac-wheel{position:relative;width:290px;height:290px;margin:8px auto 0;cursor:pointer;touch-action:none}
 .zodiac-item{position:absolute;text-align:center;color:rgba(255,255,255,.5);text-shadow:0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);width:72px;line-height:1.2;transition:all .35s;cursor:pointer;user-select:none;-webkit-user-select:none}
 .zodiac-item .zn{font-size:.6rem;font-weight:400;display:block;transition:all .35s}
+.zodiac-item .zd{font-size:.38rem;opacity:.5;display:block;margin-top:1px;white-space:nowrap;transition:all .35s}
 .zodiac-item.selected .zn{font-size:.95rem;font-weight:700;color:#ff8c00}
 .zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:140px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6}
 .zodiac-center .zc-name{font-size:.95rem;font-weight:700;display:block;margin-bottom:4px;color:#ff8c00;letter-spacing:1px}
@@ -342,7 +343,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       area.innerHTML = '<div class="content-line" style="font-size:.72rem;opacity:.6">星座数据加载失败</div>';
       return;
     }
-    var signs = {Aries:{cn:'白羊座',emoji:'♈'},Taurus:{cn:'金牛座',emoji:'♉'},Gemini:{cn:'双子座',emoji:'♊'},Cancer:{cn:'巨蟹座',emoji:'♋'},Leo:{cn:'狮子座',emoji:'♌'},Virgo:{cn:'处女座',emoji:'♍'},Libra:{cn:'天秤座',emoji:'♎'},Scorpio:{cn:'天蝎座',emoji:'♏'},Sagittarius:{cn:'射手座',emoji:'♐'},Capricorn:{cn:'摩羯座',emoji:'♑'},Aquarius:{cn:'水瓶座',emoji:'♒'},Pisces:{cn:'双鱼座',emoji:'♓'}};
+    var signs = {Aries:{cn:'白羊座',emoji:'♈',date:'3.21-4.19'},Taurus:{cn:'金牛座',emoji:'♉',date:'4.20-5.20'},Gemini:{cn:'双子座',emoji:'♊',date:'5.21-6.21'},Cancer:{cn:'巨蟹座',emoji:'♋',date:'6.22-7.22'},Leo:{cn:'狮子座',emoji:'♌',date:'7.23-8.22'},Virgo:{cn:'处女座',emoji:'♍',date:'8.23-9.22'},Libra:{cn:'天秤座',emoji:'♎',date:'9.23-10.23'},Scorpio:{cn:'天蝎座',emoji:'♏',date:'10.24-11.22'},Sagittarius:{cn:'射手座',emoji:'♐',date:'11.23-12.21'},Capricorn:{cn:'摩羯座',emoji:'♑',date:'12.22-1.19'},Aquarius:{cn:'水瓶座',emoji:'♒',date:'1.20-2.18'},Pisces:{cn:'双鱼座',emoji:'♓',date:'2.19-3.20'}};
     var order = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
     // 提取数据
     var items = [];
@@ -351,7 +352,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       if (!s || !s.detail || !s.detail.today) return;
       var td = s.detail.today;
       var info = td.info || [];
-      var d = {key:key, cn:signs[key].cn, emoji:signs[key].emoji, overall:'', love:'', wealth:'', work:'', lucky:'', color:'', star:'', time:''};
+      var d = {key:key, cn:signs[key].cn, emoji:signs[key].emoji, date:signs[key].date, overall:'', love:'', wealth:'', work:'', lucky:'', color:'', star:'', time:''};
       info.forEach(function(v){
         if (v.indexOf('综合运势') === 0) d.overall = v.replace('综合运势：','');
         if (v.indexOf('爱情运势') === 0) d.love = v.replace('爱情运势：','');
@@ -384,6 +385,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       var rot = i * 30;
       html += '<div class="zodiac-item" data-index="' + i + '" style="left:' + x.toFixed(0) + 'px;top:' + y.toFixed(0) + 'px">'
         + '<span class="zn" style="transform:rotate(' + rot + 'deg)">' + d.emoji + ' ' + d.cn + '</span>'
+        + '<span class="zd">' + d.date + '</span>'
         + '</div>';
     }
     html += '</div>';
