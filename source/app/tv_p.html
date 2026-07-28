@@ -238,7 +238,9 @@ layout: false
 
 <script>
 (function(){
-    // ---------- 存储与核心变量 ----------
+    // 设置数据文件基路径（指向 sevencolor/3 目录）
+    window.__SC_BASE_PATH = '/js/sevencolor/3/';
+    // 存储与核心变量 ----------
     const STORAGE = { HISTORY:'tvbox_history', FAVORITES:'tvbox_favorites', SEARCH:'tvbox_search_results', THEME:'tvbox_theme' };
     const PAGE_SIZE = 4, CONCURRENT = 10;
     let sourceIndex=[], loadedSources={}, sourceMeta={}, currentData=null, currentPrefix='', currentFilePage=1, currentPage=1, currentFiltered=[], currentCategory='';
@@ -1247,7 +1249,7 @@ layout: false
 </script>
 
 <!-- 缓存预热 iframe + 进度条 -->
-<iframe id="warmFrame" src="snowhoonetbbcache.html" style="display:none"></iframe>
+<iframe id="warmFrame" src="/js/sevencolor/3/snowhoonetbbcache.html" style="display:none"></iframe>
 <div id="warmBar" style="position:fixed;bottom:0;left:0;width:0%;height:1px;background:#666;z-index:9999;transition:width 0.3s"></div>
 <script>
 (function(){
