@@ -76,9 +76,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .constellation-item .slucky{font-size:.6rem;opacity:.65;margin-left:auto;white-space:nowrap}
 .constellation-item .scores{display:flex;gap:6px;flex-wrap:wrap}
 .constellation-item .score{display:inline-flex;align-items:center;gap:2px;font-size:.62rem;padding:1px 5px;border-radius:3px;background:rgba(255,255,255,.08)}
-.constellation-item .score .sdot{display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:1px}
-.constellation-item .score .sval{font-weight:500}
-.score-high{color:#4ade80}.score-mid{color:#fbbf24}.score-low{color:#f87171}
 </style>
 </head>
 <body>
@@ -301,20 +298,6 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     var signs = {Aries:{cn:'白羊座',emo:'♈'},Taurus:{cn:'金牛座',emo:'♉'},Gemini:{cn:'双子座',emo:'♊'},Cancer:{cn:'巨蟹座',emo:'♋'},Leo:{cn:'狮子座',emo:'♌'},Virgo:{cn:'处女座',emo:'♍'},Libra:{cn:'天秤座',emo:'♎'},Scorpio:{cn:'天蝎座',emo:'♏'},Sagittarius:{cn:'射手座',emo:'♐'},Capricorn:{cn:'摩羯座',emo:'♑'},Aquarius:{cn:'水瓶座',emo:'♒'},Pisces:{cn:'双鱼座',emo:'♓'}};
     var html = '';
     var order = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
-    function scoreClass(v){
-      var n = parseInt(v,10);
-      if (isNaN(n)) return '';
-      if (n >= 70) return 'score-high';
-      if (n >= 40) return 'score-mid';
-      return 'score-low';
-    }
-    function dotColor(v){
-      var n = parseInt(v,10);
-      if (isNaN(n)) return '#888';
-      if (n >= 70) return '#4ade80';
-      if (n >= 40) return '#fbbf24';
-      return '#f87171';
-    }
     order.forEach(function(key){
       var s = data.data[key];
       if (!s || !s.detail || !s.detail.today) return;
@@ -332,10 +315,10 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       html += '<div class="constellation-item">'
         + '<div class="shead"><span class="semoji">' + signs[key].emo + '</span><span class="sname">' + signs[key].cn + '</span><span class="slucky">🍀' + lucky + ' ' + color + '</span></div>'
         + '<div class="scores">'
-        + '<span class="score"><span class="sdot" style="background:' + dotColor(overall) + '"></span>综合<span class="sval ' + scoreClass(overall) + '">' + overall + '</span></span>'
-        + '<span class="score"><span class="sdot" style="background:' + dotColor(love) + '"></span>❤️<span class="sval ' + scoreClass(love) + '">' + love + '</span></span>'
-        + '<span class="score"><span class="sdot" style="background:' + dotColor(wealth) + '"></span>💰<span class="sval ' + scoreClass(wealth) + '">' + wealth + '</span></span>'
-        + '<span class="score"><span class="sdot" style="background:' + dotColor(work) + '"></span>💼<span class="sval ' + scoreClass(work) + '">' + work + '</span></span>'
+        + '<span class="score">综合' + overall + '</span>'
+        + '<span class="score">爱情' + love + '</span>'
+        + '<span class="score">财富' + wealth + '</span>'
+        + '<span class="score">工作' + work + '</span>'
         + '</div></div>';
     });
     area.innerHTML = html;
