@@ -71,7 +71,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 /* 星座转盘样式 */
 .zodiac-wheel{position:relative;width:290px;height:290px;margin:0 auto}
 .zodiac-item{position:absolute;text-align:center;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);width:80px;line-height:1.3}
-.zodiac-item .ze{font-size:.85rem;display:block}
 .zodiac-item .zn{font-size:.62rem;font-weight:600;display:block;letter-spacing:.5px}
 .zodiac-item .zs{font-size:.5rem;opacity:.8;display:block;white-space:nowrap}
 .zodiac-item .zl{font-size:.48rem;opacity:.55;display:block;white-space:nowrap}
@@ -326,7 +325,6 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       var x = cx + r * Math.cos(rad);
       var y = cy + r * Math.sin(rad);
       html += '<div class="zodiac-item" style="left:' + x.toFixed(0) + 'px;top:' + y.toFixed(0) + 'px">'
-        + '<span class="ze">' + d.emo + '</span>'
         + '<span class="zn">' + d.cn + '</span>'
         + '<span class="zs">综' + d.overall + ' 爱' + d.love + ' 财' + d.wealth + ' 工' + d.work + '</span>'
         + '<span class="zl">#' + d.lucky + ' ' + d.color + ' ' + d.star + '</span>'
