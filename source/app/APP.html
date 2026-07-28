@@ -22,8 +22,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 /* 左上角圈字 */
 .top-left-badges{position:absolute;top:46px;left:16px;z-index:5;display:flex;gap:14px}
 .top-left-badges .badge{color:rgba(255,255,255,.65);font-size:.82rem;font-weight:300;text-shadow:0 1px 4px rgba(0,0,0,.5);cursor:pointer;transition:all .3s;letter-spacing:1px;border:none;background:none;padding:0;line-height:1;display:flex;flex-direction:column;align-items:center;gap:2px}
-.top-left-badges .badge-icon{font-size:1rem;line-height:1}
+.top-left-badges .badge-icon{font-size:1rem;line-height:1;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:3px 5px;margin-bottom:1px}
 .top-left-badges .badge.selected{color:#ffd700;font-weight:400;text-shadow:0 0 10px rgba(255,215,0,.4)}
+.top-left-badges .badge.selected .badge-icon{border-color:rgba(255,215,0,.5)}
 
 /* 右上角logo */
 .top-right-logo{position:absolute;top:46px;right:16px;z-index:5;width:110px}
