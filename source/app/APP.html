@@ -53,9 +53,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 @keyframes run{0%{transform:translateY(0)}50%{transform:translateY(-2px)}100%{transform:translateY(0)}}
 
 /* 分类圆形按钮 */
-.category-list{display:flex;gap:0;align-items:center;margin-top:-10px;width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;justify-content:flex-start;padding:0 4px}
+.category-list{display:flex;gap:0;align-items:center;margin-top:6px;width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;justify-content:flex-start;padding:0 4px}
 .category-list::-webkit-scrollbar{display:none}
 .category-item{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;flex:0 0 25%;min-width:0}
+.category-item:first-child .circle{width:58px;height:58px;font-size:1.1rem}
 .category-item:active{transform:scale(.88)}
 .category-item .circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:transform .25s,box-shadow .25s}
 .category-item.active .circle{transform:scale(1.1);box-shadow:0 6px 20px rgba(0,0,0,.25)}
