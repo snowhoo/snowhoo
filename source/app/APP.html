@@ -266,7 +266,12 @@ function toggleContent(btnId, url, renderFn) {
 
 document.getElementById('poetryBtn').addEventListener('click', function() {
   toggleContent('poetryBtn', '../js/DailyPoetry.json', function(data) {
-    return '<div class="content-line">' + data.line + '</div>'
+    var lines = data.detail && data.detail.content ? data.detail.content : [data.line];
+    var html = '';
+    lines.forEach(function(l) {
+      html += '<div class="content-line">' + l + '</div>';
+    });
+    return html
          + '<div class="content-source">—— ' + data.dynasty + ' · ' + data.author + '《' + data.title + '》</div>';
   });
 });
