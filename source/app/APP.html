@@ -68,6 +68,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .content-area .content-title{font-size:1.05rem;font-weight:700;color:#fff;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5);margin-bottom:2px}
 .content-area .content-author{font-size:.75rem;color:rgba(255,255,255,.7);margin-bottom:10px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .content-area .content-source{font-size:.65rem;color:rgba(255,255,255,.7);margin-top:4px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.content-area .loading-spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;margin:0 auto 12px;animation:spin .8s linear infinite}
+.content-area .loading-hint{font-size:.82rem;color:#fff;font-weight:400;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+@keyframes spin{to{transform:rotate(360deg)}}
 .content-area .history-item{font-size:.78rem;line-height:1.6;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);font-family:"KaiTi","STKaiti","楷体",serif;display:flex}
 .content-area .history-item .hyear{flex-shrink:0;width:4.8em;color:rgba(255,255,255,.6);font-size:.7rem;font-family:sans-serif}
 
@@ -156,7 +159,22 @@ document.getElementById('bgImage').src = 'https://picsum.photos/1280/960?random=
 
 // 点击探索换图
 document.querySelector('.welcome').addEventListener('click', function() {
-  document.getElementById('bgImage').src = 'https://picsum.photos/1280/960?random=' + Date.now();
+  var area = document.getElementById('contentArea');
+  var img = document.getElementById('bgImage');
+  // 收起所有展开面板
+  area.style.display = 'block';
+  area.innerHTML = '<div class="loading-spinner"></div><div class="loading-hint">正在打开盲盒...</div>';
+  area.style.left = '50%';
+  area.style.transform = 'translate(-50%, -50%)';
+  area.style.width = 'auto';
+  area.style.textAlign = 'center';
+  area._activeBtn = null;
+  document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
+  // 加载新图片
+  img.src = 'https://picsum.photos/1280/960?random=' + Date.now();
+  img.onload = function() {
+    area.style.display = 'none';
+  };
 });
 
 // ===== 黄历 =====
