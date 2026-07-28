@@ -306,7 +306,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       area.innerHTML = '<div class="content-line" style="font-size:.72rem;opacity:.6">星座数据加载失败</div>';
       return;
     }
-    var signs = {Aries:{cn:'白羊座',emo:'♈'},Taurus:{cn:'金牛座',emo:'♉'},Gemini:{cn:'双子座',emo:'♊'},Cancer:{cn:'巨蟹座',emo:'♋'},Leo:{cn:'狮子座',emo:'♌'},Virgo:{cn:'处女座',emo:'♍'},Libra:{cn:'天秤座',emo:'♎'},Scorpio:{cn:'天蝎座',emo:'♏'},Sagittarius:{cn:'射手座',emo:'♐'},Capricorn:{cn:'摩羯座',emo:'♑'},Aquarius:{cn:'水瓶座',emo:'♒'},Pisces:{cn:'双鱼座',emo:'♓'}};
+    var signs = {Aries:{cn:'白羊座',emoji:'♈'},Taurus:{cn:'金牛座',emoji:'♉'},Gemini:{cn:'双子座',emoji:'♊'},Cancer:{cn:'巨蟹座',emoji:'♋'},Leo:{cn:'狮子座',emoji:'♌'},Virgo:{cn:'处女座',emoji:'♍'},Libra:{cn:'天秤座',emoji:'♎'},Scorpio:{cn:'天蝎座',emoji:'♏'},Sagittarius:{cn:'射手座',emoji:'♐'},Capricorn:{cn:'摩羯座',emoji:'♑'},Aquarius:{cn:'水瓶座',emoji:'♒'},Pisces:{cn:'双鱼座',emoji:'♓'}};
     var order = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
     // 提取数据
     var items = [];
@@ -315,7 +315,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       if (!s || !s.detail || !s.detail.today) return;
       var td = s.detail.today;
       var info = td.info || [];
-      var d = {key:key, cn:signs[key].cn, overall:'', love:'', wealth:'', work:'', lucky:'', color:'', star:'', time:''};
+      var d = {key:key, cn:signs[key].cn, emoji:signs[key].emoji, overall:'', love:'', wealth:'', work:'', lucky:'', color:'', star:'', time:''};
       info.forEach(function(v){
         if (v.indexOf('综合运势') === 0) d.overall = v.replace('综合运势：','');
         if (v.indexOf('爱情运势') === 0) d.love = v.replace('爱情运势：','');
@@ -345,8 +345,9 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       var rad = angle * Math.PI / 180;
       var x = cx + r * Math.cos(rad);
       var y = cy + r * Math.sin(rad);
+      var rot = i * 30;
       html += '<div class="zodiac-item" data-index="' + i + '" style="left:' + x.toFixed(0) + 'px;top:' + y.toFixed(0) + 'px">'
-        + '<span class="zn">' + d.cn + '</span>'
+        + '<span class="zn" style="transform:rotate(' + rot + 'deg)">' + d.emoji + ' ' + d.cn + '</span>'
         + '</div>';
     }
     html += '</div>';
