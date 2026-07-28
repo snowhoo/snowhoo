@@ -20,9 +20,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .image-area .welcome small{display:block;font-size:.75rem;font-weight:400;opacity:.7;margin-top:6px;letter-spacing:1px}
 
 /* 左上角圈字 */
-.top-left-badges{position:absolute;top:46px;left:16px;z-index:5;display:flex;gap:10px}
-.top-left-badges .badge{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.85rem;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.5);background:rgba(0,0,0,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15);cursor:pointer;transition:all .3s}
-.top-left-badges .badge.selected{background:rgba(233,69,96,.65);border-color:rgba(233,69,96,.8);transform:scale(1.08)}
+.top-left-badges{position:absolute;top:46px;left:16px;z-index:5;display:flex;gap:14px}
+.top-left-badges .badge{color:rgba(255,255,255,.65);font-size:.82rem;font-weight:300;text-shadow:0 1px 4px rgba(0,0,0,.5);cursor:pointer;transition:all .3s;letter-spacing:1px;border:none;background:none;padding:0;line-height:1}
+.top-left-badges .badge.selected{color:#ffd700;font-weight:400;text-shadow:0 0 10px rgba(255,215,0,.4)}
 
 /* 右上角logo */
 .top-right-logo{position:absolute;top:46px;right:16px;z-index:5;width:110px}
@@ -95,9 +95,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   <img id="bgImage" src="" alt="">
   <div class="gradient"></div>
   <div class="top-left-badges">
-    <span class="badge" id="poetryBtn">诗</span>
-    <span class="badge" id="historyBtn">今</span>
-    <span class="badge" id="constellationBtn">星</span>
+    <span class="badge" id="poetryBtn">诗词</span>
+    <span class="badge" id="historyBtn">今日</span>
+    <span class="badge" id="constellationBtn">星座</span>
   </div>
   <div class="content-area" id="contentArea" style="display:none"></div>
   <div class="top-right-logo"><img src="../images/logo.png" alt="logo"></div>
