@@ -385,7 +385,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       var rot = i * 30;
       html += '<div class="zodiac-item" data-index="' + i + '" style="left:' + x.toFixed(0) + 'px;top:' + y.toFixed(0) + 'px">'
         + '<span class="zn" style="transform:rotate(' + rot + 'deg)">' + d.emoji + ' ' + d.cn + '</span>'
-        + '<span class="zd">' + d.date + '</span>'
+        + '<span class="zd" style="transform:rotate(' + rot + 'deg)">' + d.date + '</span>'
         + '</div>';
     }
     html += '</div>';
