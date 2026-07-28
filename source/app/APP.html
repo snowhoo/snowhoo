@@ -69,11 +69,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .content-area .history-item .hyear{display:inline-block;min-width:3.2em;color:rgba(255,255,255,.6);font-size:.7rem;font-family:sans-serif}
 
 /* 星座转盘样式 */
-.zodiac-wheel{position:relative;width:290px;height:290px;margin:0 auto}
-.zodiac-item{position:absolute;text-align:center;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);width:80px;line-height:1.3}
-.zodiac-item .zn{font-size:.62rem;font-weight:600;display:block;letter-spacing:.5px}
-.zodiac-item .zs{font-size:.5rem;opacity:.8;display:block;white-space:nowrap}
-.zodiac-item .zl{font-size:.48rem;opacity:.55;display:block;white-space:nowrap}
+.zodiac-wheel{position:relative;width:290px;height:290px;margin:8px auto 0;cursor:pointer;touch-action:none}
+.zodiac-item{position:absolute;text-align:center;color:rgba(255,255,255,.5);text-shadow:0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);width:72px;line-height:1.2;transition:all .35s;cursor:pointer;user-select:none;-webkit-user-select:none}
+.zodiac-item .zn{font-size:.6rem;font-weight:400;display:block;transition:all .35s}
+.zodiac-item.selected .zn{font-size:.75rem;font-weight:700;color:#ff8c00}
+.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:140px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6}
+.zodiac-center .zc-name{font-size:.85rem;font-weight:700;display:block;margin-bottom:4px;color:#ff8c00;letter-spacing:1px}
+.zodiac-center .zc-line{font-size:.56rem;opacity:.85;display:block}
+.zodiac-center .zc-sub{font-size:.5rem;opacity:.6;display:block}
 </style>
 </head>
 <body>
@@ -245,6 +248,11 @@ function toggleContent(btnId, url, renderFn) {
   }
   document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
   btn.classList.add('selected');
+  // 恢复默认位置（诗/今内容左对齐）
+  area.style.left = '16px';
+  area.style.transform = 'none';
+  area.style.width = '310px';
+  area.style.textAlign = 'left';
   fetch(url).then(function(r){return r.json()}).then(function(data){
     area.innerHTML = renderFn(data);
     area.style.display = 'block';
@@ -288,6 +296,11 @@ document.getElementById('constellationBtn').addEventListener('click', function()
   area.innerHTML = '<div class="content-line" style="font-size:.72rem;opacity:.6">加载中...</div>';
   area.style.display = 'block';
   area._activeBtn = 'constellationBtn';
+  // 居中显示
+  area.style.left = '50%';
+  area.style.transform = 'translateX(-50%)';
+  area.style.width = '290px';
+  area.style.textAlign = 'center';
   fetch('https://www.52api.cn/api/constellation?key=G84cVgxx8BqrzOEPUZlpRSK41r').then(function(r){return r.json()}).then(function(data){
     if (data.code !== 200 || !data.data) {
       area.innerHTML = '<div class="content-line" style="font-size:.72rem;opacity:.6">星座数据加载失败</div>';
@@ -302,7 +315,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       if (!s || !s.detail || !s.detail.today) return;
       var td = s.detail.today;
       var info = td.info || [];
-      var d = {key:key, cn:signs[key].cn, emo:signs[key].emo, overall:'', love:'', wealth:'', work:'', lucky:'', color:'', star:'', time:''};
+      var d = {key:key, cn:signs[key].cn, overall:'', love:'', wealth:'', work:'', lucky:'', color:'', star:'', time:''};
       info.forEach(function(v){
         if (v.indexOf('综合运势') === 0) d.overall = v.replace('综合运势：','');
         if (v.indexOf('爱情运势') === 0) d.love = v.replace('爱情运势：','');
@@ -318,21 +331,102 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     // 构建转盘
     var cx = 145, cy = 145, r = 110;
     var html = '<div class="zodiac-wheel">';
+    // 中心信息面板
+    html += '<div class="zodiac-center">'
+          + '<span class="zc-name">' + items[0].cn + '</span>'
+          + '<span class="zc-line">综合' + items[0].overall + ' 爱情' + items[0].love + ' 财富' + items[0].wealth + ' 工作' + items[0].work + '</span>'
+          + '<span class="zc-line">幸运数' + items[0].lucky + ' ' + items[0].color + '</span>'
+          + '<span class="zc-sub">贵人星座 ' + items[0].star + '</span>'
+          + '<span class="zc-sub">幸运时间 ' + items[0].time + '</span>'
+          + '</div>';
     for (var i = 0; i < items.length; i++) {
       var d = items[i];
       var angle = i * 30 - 90;
       var rad = angle * Math.PI / 180;
       var x = cx + r * Math.cos(rad);
       var y = cy + r * Math.sin(rad);
-      html += '<div class="zodiac-item" style="left:' + x.toFixed(0) + 'px;top:' + y.toFixed(0) + 'px">'
+      html += '<div class="zodiac-item" data-index="' + i + '" style="left:' + x.toFixed(0) + 'px;top:' + y.toFixed(0) + 'px">'
         + '<span class="zn">' + d.cn + '</span>'
-        + '<span class="zs">综' + d.overall + ' 爱' + d.love + ' 财' + d.wealth + ' 工' + d.work + '</span>'
-        + '<span class="zl">#' + d.lucky + ' ' + d.color + ' ' + d.star + '</span>'
         + '</div>';
     }
     html += '</div>';
     area.innerHTML = html;
     area._activeBtn = 'constellationBtn';
+    // ===== 转盘交互 =====
+    var wheel = area.querySelector('.zodiac-wheel');
+    var zodiacItems = area.querySelectorAll('.zodiac-item');
+    var centerName = area.querySelector('.zc-name');
+    var centerLines = area.querySelectorAll('.zc-line');
+    var centerSubs = area.querySelectorAll('.zc-sub');
+    var currentAngle = 0, startX, startY, startAngle = 0;
+    var isDragging = false;
+    // 默认选中第一个
+    zodiacItems[0].classList.add('selected');
+    function updateCenter(idx) {
+      var d = items[idx];
+      centerName.textContent = d.cn;
+      centerLines[0].textContent = '综合' + d.overall + ' 爱情' + d.love + ' 财富' + d.wealth + ' 工作' + d.work;
+      centerLines[1].textContent = '幸运数' + d.lucky + ' ' + d.color;
+      centerSubs[0].textContent = '贵人星座 ' + d.star;
+      centerSubs[1].textContent = '幸运时间 ' + d.time;
+    }
+    function selectItem(idx) {
+      zodiacItems.forEach(function(el){el.classList.remove('selected')});
+      zodiacItems[idx].classList.add('selected');
+      updateCenter(idx);
+    }
+    function snapToNearest() {
+      var rawIdx = -currentAngle / 30;
+      var nearest = ((Math.round(rawIdx) % 12) + 12) % 12;
+      currentAngle = -Math.round(rawIdx) * 30;
+      wheel.style.transition = 'transform .35s ease-out';
+      wheel.style.transform = 'rotate(' + currentAngle + 'deg)';
+      selectItem(nearest);
+    }
+    function getClientXY(e) {
+      if (e.type.indexOf('touch') === 0) {
+        return {x: e.touches[0].clientX, y: e.touches[0].clientY};
+      }
+      return {x: e.clientX, y: e.clientY};
+    }
+    function onStart(e) {
+      isDragging = true;
+      var c = getClientXY(e);
+      startX = c.x;
+      startY = c.y;
+      startAngle = currentAngle;
+      wheel.style.transition = 'none';
+    }
+    function onMove(e) {
+      if (!isDragging) return;
+      var c = getClientXY(e);
+      var dx = c.x - startX;
+      currentAngle = startAngle + dx * 0.5;
+      wheel.style.transform = 'rotate(' + currentAngle + 'deg)';
+    }
+    function onEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+      snapToNearest();
+    }
+    // 鼠标事件
+    wheel.addEventListener('mousedown', onStart);
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onEnd);
+    // 触摸事件
+    wheel.addEventListener('touchstart', onStart, {passive: true});
+    document.addEventListener('touchmove', onMove, {passive: true});
+    document.addEventListener('touchend', onEnd);
+    // 点击选择
+    zodiacItems.forEach(function(el){
+      el.addEventListener('click', function(){
+        var idx = parseInt(el.dataset.index);
+        currentAngle = -idx * 30;
+        wheel.style.transition = 'transform .35s ease-out';
+        wheel.style.transform = 'rotate(' + currentAngle + 'deg)';
+        selectItem(idx);
+      });
+    });
   }).catch(function(){
     area.innerHTML = '<div class="content-line" style="font-size:.72rem;opacity:.6">网络请求失败，请稍后重试</div>';
     area._activeBtn = 'constellationBtn';
