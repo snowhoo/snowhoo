@@ -40,12 +40,13 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .bottom-panel{position:relative;height:30vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px;background:#fff;z-index:2}
 
 /* 浮动奔跑图片 */
-.runner-float{position:absolute;top:70vh;left:50%;transform:translateX(-50%);width:32px;height:auto;opacity:0.6;pointer-events:none;z-index:4;animation:float 3s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+.runner-float{position:absolute;top:-14px;left:0;z-index:5;pointer-events:none;animation:float 3s ease-in-out infinite}
+.runner-float img{height:32px;width:auto;display:block}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 
 /* 年度进度条 */
-.year-bar{position:absolute;top:0;left:0;right:0;height:5px;background:#f0f0f0;overflow:hidden}
-.year-bar-fill{height:100%;background:linear-gradient(90deg,#e94560,#ff8c00);transition:width .6s ease;border-radius:0 2px 2px 0}
+.year-bar{position:absolute;top:0;left:0;right:0;height:5px;background:#f0f0f0;overflow:visible}
+.year-bar-fill{height:100%;background:linear-gradient(90deg,#e94560,#ff8c00);transition:width .6s ease;border-radius:0 2px 2px 0;position:relative}
 .year-bar-text{position:absolute;top:10px;left:50%;transform:translateX(-50%);font-size:.65rem;color:#bbb;white-space:nowrap;letter-spacing:.5px;display:flex;align-items:center;gap:4px}
 .year-bar-text .runner{width:14px;height:14px;flex-shrink:0;animation:run .6s steps(2) infinite}
 @keyframes run{0%{transform:translateY(0)}50%{transform:translateY(-2px)}100%{transform:translateY(0)}}
@@ -93,9 +94,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   </div>
 </div>
 
-<div class="runner-float"><img src="../images/run.png" alt="奔跑"></div>
 <div class="bottom-panel">
-  <div class="year-bar"><div class="year-bar-fill" id="yearFill"></div></div>
+  <div class="year-bar"><div class="year-bar-fill" id="yearFill"></div><div class="runner-float" id="runnerFloat"><img src="../images/run.png" alt="奔跑"></div></div>
   <div class="year-bar-text"><svg class="runner" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M8 21l3-6 3 3 4-8"/><path d="M14 10l3-3 3 2"/><path d="M5 18l3-6 3 3"/></svg><span id="yearText"></span></div>
   <div class="category-list" id="categoryList">
     <button class="category-item active" data-url="https://snowhoo.net/app/reader.html">
@@ -129,6 +129,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   var pct = Math.min(day / total, 1);
   document.getElementById('yearFill').style.width = (pct * 100) + '%';
   document.getElementById('yearText').textContent = '把梦想写进日程 [ ' + yr + '已过' + Math.round(pct * 100) + '% ]';
+  document.getElementById('runnerFloat').style.left = (pct * 100) + '%';
 })();
 
 // 随机图片
