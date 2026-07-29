@@ -40,7 +40,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .almanac .al-zodiac{margin-top:4px;padding:2px 10px;border-radius:6px;font-size:.55rem;background:rgba(255,255,255,.12);letter-spacing:1px}
 
 /* ===== 底部面板 ===== */
-.bottom-panel{position:relative;height:30vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0px;background:#fff;z-index:2}
+.bottom-panel{position:relative;height:30vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0px;background:#fff url('xzbg.png') center/cover no-repeat;z-index:2}
 
 /* 浮动奔跑图片 */
 .runner-float{position:absolute;top:-16px;left:0;z-index:5;pointer-events:none;animation:float 3s ease-in-out infinite}
@@ -66,6 +66,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .category-item.active .label{color:#333;font-weight:400}
 .category-hint{text-align:center;margin-top:14px;font-size:.68rem;color:#bbb;letter-spacing:1px;line-height:1.5}
 .category-hint .hint-en{font-size:.55rem;color:#ccc;letter-spacing:2px;font-weight:300}
+.xz-man{position:absolute;bottom:10px;right:10px;height:50px;width:auto;pointer-events:none;z-index:3}
 
 /* 诗/今 内容展示区 - 圈字下方 */
 .content-area{position:absolute;top:50%;left:50%;z-index:5;width:310px;max-height:calc(70vh - 160px);overflow-y:auto;text-align:center;transform:translate(-50%,-50%)}
@@ -144,6 +145,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     </button>
   </div>
   <div class="category-hint">滑动&nbsp;·&nbsp;按下&nbsp;·&nbsp;进入<br><span class="hint-en">SWIPE · TAP · ENTER</span></div>
+  <img class="xz-man" src="xzman.png" alt="">
 </div>
 
 <script>
