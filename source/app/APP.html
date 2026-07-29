@@ -702,18 +702,20 @@ var GAME = {
     if (!user) { this.updateBadge(); this.updateTaskDots(); this.updateTaskMenu(); return; }
     var xhr = new XMLHttpRequest();
     xhr.open('GET','https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=200');
+    xhr.withCredentials = true;
     xhr.onload = function() {
       try {
         var data = JSON.parse(xhr.responseText);
         self.processRecords(data.data || [], user);
         // 服务器数据优先，覆盖本地
         self.saveLocal();
-      } catch(e) {}
+        console.log('[GAME] 从 Waline 加载经验值成功:', self.totalPoints);
+      } catch(e) { console.warn('[GAME] 解析 Waline 数据失败:', e); }
       self.updateBadge();
       self.updateTaskDots();
       self.updateTaskMenu();
     };
-    xhr.onerror = function() { self.updateBadge(); self.updateTaskDots(); self.updateTaskMenu(); };
+    xhr.onerror = function() { console.warn('[GAME] 加载 Waline 网络失败'); self.updateBadge(); self.updateTaskDots(); self.updateTaskMenu(); };
     xhr.send();
   },
 
@@ -847,13 +849,22 @@ var GAME = {
       var xhr = new XMLHttpRequest();
       xhr.open('POST','https://waline.snowhoo.net/api/comment');
       xhr.setRequestHeader('Content-Type','application/json');
+      xhr.withCredentials = true;
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          console.log('[GAME] 经验值已同步到 Waline:', key, '+'+points);
+        } else {
+          console.warn('[GAME] Waline 同步失败 状态码:', xhr.status, xhr.responseText);
+        }
+      };
+      xhr.onerror = function() { console.warn('[GAME] Waline 同步网络失败'); };
       xhr.send(JSON.stringify({
         comment: JSON.stringify({action:key,points:points,time:new Date().toISOString()}),
         url: '/app-game/actions',
         nick: user.display_name || '游客',
         mail: user.email || ''
       }));
-    } catch(e){}
+    } catch(e){ console.warn('[GAME] Waline 同步异常:', e); }
   }
 };
 GAME.init();
