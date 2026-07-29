@@ -87,7 +87,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .content-area.show{opacity:1;visibility:visible}
 .content-area::-webkit-scrollbar{width:0}
 .content-area .content-line{font-size:.88rem;line-height:1.5;color:#fff;font-weight:400;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5)}
-.content-area .content-title{font-size:1.05rem;font-weight:700;color:#fff;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5);margin-bottom:2px}
+.content-area .content-title{font-size:1.05rem;font-weight:400;color:#fff;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5);margin-bottom:2px}
 .content-area .content-author{font-size:.75rem;color:rgba(255,255,255,.7);margin-bottom:10px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .content-area .content-source{font-size:.65rem;color:rgba(255,255,255,.7);margin-top:4px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .content-area .loading-spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;margin:0 auto 12px;animation:spin .8s linear infinite}
@@ -136,13 +136,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .task-menu-btn.completed{color:#22c55e;border-color:rgba(34,197,94,.35)}
 .task-menu-dropdown{position:absolute;bottom:calc(100% + 6px);right:0;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:210px;padding:6px 0;display:none;z-index:10}
 .task-menu-dropdown.show{display:block}
-.task-item{display:flex;align-items:center;padding:7px 12px;font-size:.7rem;color:#333;line-height:1.4;gap:4px}
-.task-item .task-check{color:#22c55e;flex-shrink:0;width:14px;text-align:center;font-size:.65rem}
-.task-item .task-name{flex-shrink:0}
-.task-item .task-points{color:#ff8c00;flex-shrink:0;margin-left:2px}
+.task-item{display:flex;align-items:center;padding:7px 12px;font-size:.7rem;color:#333;line-height:1.4;gap:4px;white-space:nowrap}
+.task-item .task-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block}
+.task-item .task-check{color:#22c55e;flex-shrink:0;width:14px;text-align:center;font-size:.65rem;font-weight:700}
+.task-item .task-name{flex-shrink:0;margin-right:2px}
+.task-item .task-sub{font-size:.6rem;opacity:.55;flex-shrink:0}
 .task-item .task-count{margin-left:auto;color:#aaa;font-size:.62rem;flex-shrink:0}
 .task-item.completed{color:#22c55e}
-.task-item.completed .task-points{color:#22c55e}
+.task-item.completed .task-sub{color:#22c55e;opacity:.7}
 </style>
 </head>
 <body>
@@ -250,6 +251,7 @@ document.querySelector('.welcome').addEventListener('click', function() {
   // 收起所有展开面板（通过 class 控制）
   area.classList.remove('show');
   area.innerHTML = '<div class="loading-spinner"></div><div class="loading-hint">正在探索...</div>';
+  area.classList.add('show');
   area.style.left = '50%';
   area.style.transform = 'translate(-50%, -50%)';
   area.style.width = 'auto';
@@ -823,6 +825,7 @@ var GAME = {
     var allDone = true;
     var html = '';
     var order = ['poetry','history','constellation','explore'];
+    var dotColors = {poetry:'#f43f5e',history:'#8b5cf6',constellation:'#f59e0b',explore:'#06b6d4'};
     for (var i = 0; i < order.length; i++) {
       var key = order[i];
       var act = this.actions[key];
@@ -830,9 +833,10 @@ var GAME = {
       var done = count >= act.max;
       if (!done) allDone = false;
       html += '<div class="task-item' + (done ? ' completed' : '') + '">'
-        + '<span class="task-check">' + (done ? '✓' : '') + '</span>'
-        + '<span class="task-name">' + act.taskName + '（' + act.name + '）</span>'
-        + '<span class="task-points">+' + act.points + '经验值</span>'
+        + (done ? '<span class="task-check">✓</span>'
+                : '<span class="task-dot" style="background:'+dotColors[key]+'"></span>')
+        + '<span class="task-name">' + act.taskName + '</span>'
+        + '<span class="task-sub">' + act.name + ' +' + act.points + '经验</span>'
         + '<span class="task-count">' + count + '/' + act.max + '</span>'
         + '</div>';
     }
