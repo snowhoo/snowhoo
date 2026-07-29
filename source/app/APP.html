@@ -60,10 +60,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .category-item{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;flex:0 0 25%;min-width:0}
 .category-item:first-child .circle{width:64px;height:64px;font-size:1.1rem}
 .category-item:active{transform:scale(.88)}
-.category-item .circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:transform .25s,box-shadow .25s}
+.category-item .circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;font-weight:400;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:transform .25s,box-shadow .25s}
 .category-item.active .circle{transform:scale(1.0);box-shadow:0 6px 20px rgba(0,0,0,.25)}
 .category-item .label{font-size:.75rem;color:#888;font-weight:400}
-.category-item.active .label{color:#333;font-weight:500}
+.category-item.active .label{color:#333;font-weight:400}
 .category-hint{text-align:center;margin-top:14px;font-size:.68rem;color:#bbb;letter-spacing:1px;line-height:1.5}
 .category-hint .hint-en{font-size:.55rem;color:#ccc;letter-spacing:2px;font-weight:300}
 
@@ -123,7 +123,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   <div class="year-bar-text"><svg class="runner" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M8 21l3-6 3 3 4-8"/><path d="M14 10l3-3 3 2"/><path d="M5 18l3-6 3 3"/></svg><span id="yearText"></span></div>
   <div class="category-list" id="categoryList">
     <button class="category-item active" data-url="https://snowhoo.net/app/reader.html">
-      <span class="circle" style="background:#e94560">小红故事</span>
+      <span class="circle" style="background:#e94560">小红<br>故事</span>
       <span class="label">小红故事</span>
     </button>
     <button class="category-item" data-url="https://snowhoo.net/app/yedu_p.html">
