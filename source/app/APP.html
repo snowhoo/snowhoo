@@ -238,8 +238,8 @@ document.getElementById('bgImage').src = 'https://picsum.photos/1280/960?random=
 document.querySelector('.welcome').addEventListener('click', function() {
   var area = document.getElementById('contentArea');
   var img = document.getElementById('bgImage');
-  // 收起所有展开面板
-  area.style.display = 'block';
+  // 收起所有展开面板（通过 class 控制）
+  area.classList.remove('show');
   area.innerHTML = '<div class="loading-spinner"></div><div class="loading-hint">正在探索...</div>';
   area.style.left = '50%';
   area.style.transform = 'translate(-50%, -50%)';
@@ -250,7 +250,7 @@ document.querySelector('.welcome').addEventListener('click', function() {
   // 加载新图片
   img.src = 'https://picsum.photos/1280/960?random=' + Date.now();
   img.onload = function() {
-    area.style.display = 'none';
+    area.classList.remove('show');
   };
 });
 
@@ -416,7 +416,6 @@ document.getElementById('constellationBtn').addEventListener('click', function()
   // 第一步：显示"观星推演中..." + 开始加载星空背景
   area.innerHTML = '<div class="content-line" style="font-size:.78rem;opacity:.7">✦ 观星推演中 ✦</div>';
   area.classList.add('show');
-  area.style.opacity = '1';
   area._activeBtn = 'constellationBtn';
   // 居中显示
   area.style.left = '50%';
@@ -588,15 +587,15 @@ var GAME = {
     this.loadFromServer();
     document.getElementById('poetryBtn').addEventListener('pointerdown',function(){
       var a = document.getElementById('contentArea');
-      if (!(a._activeBtn === 'poetryBtn' && a.style.display !== 'none')) self.doAction('poetry');
+      if (!(a._activeBtn === 'poetryBtn' && a.classList.contains('show'))) self.doAction('poetry');
     });
     document.getElementById('historyBtn').addEventListener('pointerdown',function(){
       var a = document.getElementById('contentArea');
-      if (!(a._activeBtn === 'historyBtn' && a.style.display !== 'none')) self.doAction('history');
+      if (!(a._activeBtn === 'historyBtn' && a.classList.contains('show'))) self.doAction('history');
     });
     document.getElementById('constellationBtn').addEventListener('pointerdown',function(){
       var a = document.getElementById('contentArea');
-      if (!(a._activeBtn === 'constellationBtn' && a.style.display !== 'none')) self.doAction('constellation');
+      if (!(a._activeBtn === 'constellationBtn' && a.classList.contains('show'))) self.doAction('constellation');
     });
     document.querySelector('.welcome').addEventListener('click',function(){self.doAction('explore')});
     // 任务菜单点击切换
@@ -867,6 +866,9 @@ commentOverlay.addEventListener('click', function(e) {
     almanac.classList.remove('hidden');
   });
 })();
+
+// 载入页面默认显示诗词
+document.getElementById('poetryBtn').click();
 </script>
 </body>
 </html>
