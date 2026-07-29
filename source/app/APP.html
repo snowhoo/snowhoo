@@ -109,9 +109,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* 积分系统 */
 .points-badge{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:.6rem;color:rgba(255,255,255,.6);background:rgba(0,0,0,.25);padding:2px 12px;border-radius:10px;white-space:nowrap;letter-spacing:.5px;z-index:3;pointer-events:none;font-weight:300}
-.toast-float{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99999;font-size:1.6rem;font-weight:300;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.5);pointer-events:none;opacity:0;transition:opacity .4s,transform .4s;letter-spacing:1px;text-align:center;line-height:1.4}
-.toast-float.show{opacity:1;transform:translate(-50%,-60%)}
-.toast-float .toast-sub{font-size:.75rem;font-weight:400;opacity:.7;display:block;margin-top:4px}
+.xp-float{position:absolute;bottom:75px;left:20px;z-index:4;font-size:.7rem;color:rgba(255,255,255,.85);text-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap;opacity:0;transition:all .6s ease-out;line-height:1.4;font-weight:400}
+.xp-float.show{opacity:1;transform:translateY(-20px)}
+.xp-float .xp-sub{font-size:.6rem;opacity:.7;display:block;font-weight:300}
 </style>
 </head>
 <body>
@@ -168,6 +168,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   </div>
   <div class="category-hint">滑动&nbsp;·&nbsp;按下&nbsp;·&nbsp;进入<br><span class="hint-en">SWIPE · TAP · ENTER</span></div>
   <div class="points-badge" id="pointsBadge">✦ 0</div>
+  <div class="xp-float" id="xpFloat"></div>
   <img class="xz-man" src="xzman.png" alt="">
   <div class="comment-avatar" id="commentAvatar">
     <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -184,9 +185,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     <div class="comment-panel-body" id="walineContainer"></div>
   </div>
 </div>
-
-<!-- 积分浮现 -->
-<div class="toast-float" id="toastFloat"></div>
 
 <script>
 // 年度进度
@@ -532,39 +530,43 @@ var GAME = {
   },
   todayCounts: {},
   totalPoints: 0,
-  deviceId: '',
-  ready: false,
 
   init: function() {
     var self = this;
-    this.deviceId = localStorage.getItem('game_device') || '';
-    if (!this.deviceId) {
-      this.deviceId = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-      localStorage.setItem('game_device', this.deviceId);
-    }
-    this.loadFromServer(function(){self.ready=true});
+    this.loadFromServer();
     document.getElementById('poetryBtn').addEventListener('click',function(){self.doAction('poetry')});
     document.getElementById('historyBtn').addEventListener('click',function(){self.doAction('history')});
     document.getElementById('constellationBtn').addEventListener('click',function(){self.doAction('constellation')});
     document.querySelector('.welcome').addEventListener('click',function(){self.doAction('explore')});
   },
 
-  loadFromServer: function(cb) {
+  getWalineUser: function() {
+    try {
+      var val = localStorage.getItem('@waline/user') || localStorage.getItem('waline_user') || '';
+      if (!val) return null;
+      var user = JSON.parse(val);
+      return user && user.display_name ? user : null;
+    } catch(e) { return null; }
+  },
+
+  loadFromServer: function() {
     var self = this;
+    var user = this.getWalineUser();
+    if (!user) { this.updateBadge(); return; }
     var xhr = new XMLHttpRequest();
     xhr.open('GET','https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=200');
     xhr.onload = function() {
       try {
         var data = JSON.parse(xhr.responseText);
-        self.processRecords(data.data || []);
+        self.processRecords(data.data || [], user);
       } catch(e) {}
-      if (cb) cb();
+      self.updateBadge();
     };
-    xhr.onerror = function() { if (cb) cb(); };
+    xhr.onerror = function() { self.updateBadge(); };
     xhr.send();
   },
 
-  processRecords: function(records) {
+  processRecords: function(records, user) {
     var today = new Date().toDateString();
     this.todayCounts = {};
     this.totalPoints = 0;
@@ -572,7 +574,7 @@ var GAME = {
       try {
         var r = records[i];
         var action = JSON.parse(r.comment);
-        if (action.device !== this.deviceId) continue;
+        if (r.mail !== user.email) continue;
         this.totalPoints += action.points || 0;
         var d = new Date(r.insertedAt || r.createdAt || r.time).toDateString();
         if (d === today) {
@@ -580,46 +582,50 @@ var GAME = {
         }
       } catch(e) {}
     }
-    this.updateBadge();
   },
 
   doAction: function(key) {
     var act = this.actions[key];
     if (!act) return;
+    var user = this.getWalineUser();
+    if (!user) {
+      this.showXp('+0 经验','请登录赚取修炼经验');
+      return;
+    }
     var count = this.todayCounts[key] || 0;
     if (count >= act.max) {
-      this.showToast('今日已达上限\n明日再来吧');
+      this.showXp('+0 经验','今日此项修炼已毕');
       return;
     }
     this.todayCounts[key] = count + 1;
     this.totalPoints += act.points;
     this.updateBadge();
-    this.showToast('+'+act.points+' '+act.name);
-    this.syncToWaline(key,act.points);
+    this.showXp('+'+act.points+' 经验','');
+    this.syncToWaline(key,act.points,user);
   },
 
   updateBadge: function() { document.getElementById('pointsBadge').textContent = '✦ '+this.totalPoints; },
 
-  showToast: function(msg) {
-    var el = document.getElementById('toastFloat');
-    el.innerHTML = msg.replace(/\n/g,'<span class="toast-sub">')+'</span>';
+  showXp: function(main,sub) {
+    var el = document.getElementById('xpFloat');
+    el.innerHTML = main + (sub ? '<span class="xp-sub">'+sub+'</span>' : '');
     el.classList.remove('show');
     void el.offsetWidth;
     el.classList.add('show');
     clearTimeout(el._timer);
-    el._timer = setTimeout(function(){el.classList.remove('show')},1800);
+    el._timer = setTimeout(function(){el.classList.remove('show')},2200);
   },
 
-  syncToWaline: function(key,points) {
+  syncToWaline: function(key,points,user) {
     try {
       var xhr = new XMLHttpRequest();
       xhr.open('POST','https://waline.snowhoo.net/api/comment');
       xhr.setRequestHeader('Content-Type','application/json');
       xhr.send(JSON.stringify({
-        comment: JSON.stringify({action:key,points:points,device:this.deviceId,time:new Date().toISOString()}),
+        comment: JSON.stringify({action:key,points:points,time:new Date().toISOString()}),
         url: '/app-game/actions',
-        nick: '游客',
-        mail: ''
+        nick: user.display_name || '游客',
+        mail: user.email || ''
       }));
     } catch(e){}
   }
