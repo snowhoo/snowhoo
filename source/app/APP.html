@@ -365,11 +365,16 @@ function toggleContent(btnId, url, renderFn) {
   area.style.transform = 'translate(-50%, -50%)';
   area.style.width = '310px';
   area.style.textAlign = 'center';
+  // 生成唯一标记，防止异步回调覆盖
+  var _reqId = Date.now() + '_' + Math.random();
+  area._toggleReqId = _reqId;
   fetch(url).then(function(r){return r.json()}).then(function(data){
+    if (area._toggleReqId !== _reqId) return;
     area.innerHTML = renderFn(data);
     area.classList.add('show');
     area._activeBtn = btnId;
   }).catch(function(){
+    if (area._toggleReqId !== _reqId) return;
     area.innerHTML = '<div class="content-line">暂无内容</div>';
     area.classList.add('show');
     area._activeBtn = btnId;
@@ -416,6 +421,9 @@ document.getElementById('constellationBtn').addEventListener('click', function()
   area.innerHTML = '<div class="content-line" style="font-size:.78rem;opacity:.7">✦ 观星推演中 ✦</div>';
   area.classList.add('show');
   area._activeBtn = 'constellationBtn';
+  // 生成唯一标记，防止异步回调覆盖其他面板
+  var _reqId = Date.now() + '_' + Math.random();
+  area._constellationReqId = _reqId;
   // 居中显示
   area.style.left = '50%';
   area.style.transform = 'translate(-50%, -50%)';
@@ -425,7 +433,11 @@ document.getElementById('constellationBtn').addEventListener('click', function()
   document.getElementById('starsOverlay').classList.add('show');
   // 第二步：背景渐入后，再加载星座数据
   setTimeout(function(){
+    // 如果已切换到其他面板，放弃
+    if (area._constellationReqId !== _reqId) return;
       fetch('https://www.52api.cn/api/constellation?key=G84cVgxx8BqrzOEPUZlpRSK41r').then(function(r){return r.json()}).then(function(data){
+    // 如果已切换到其他面板，放弃
+    if (area._constellationReqId !== _reqId) return;
     if (data.code !== 200 || !data.data) {
       area.innerHTML = '<div class="content-line" style="font-size:.72rem;opacity:.6">星座数据加载失败</div>';
       return;
@@ -560,6 +572,8 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       });
     });
   }).catch(function(){
+    // 如果已切换到其他面板，放弃
+    if (area._constellationReqId !== _reqId) return;
     area.innerHTML = '<div class="content-line" style="font-size:.72rem;opacity:.6">网络请求失败，请稍后重试</div>';
     area._activeBtn = 'constellationBtn';
   });
