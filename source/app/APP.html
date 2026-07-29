@@ -598,7 +598,13 @@ var GAME = {
 
   init: function() {
     var self = this;
+    // 先从本地缓存恢复数据（即使没登录也能显示上次的）
+    this.loadLocal();
+    this.updateBadge();
+    this.updateTaskDots();
+    this.updateTaskMenu();
     this.updateAvatar();
+    // 再尝试从服务器同步（登录用户覆盖本地数据）
     this.loadFromServer();
     document.getElementById('poetryBtn').addEventListener('pointerdown',function(){
       var a = document.getElementById('contentArea');
@@ -650,8 +656,7 @@ var GAME = {
 
   getWalineUser: function() {
     try {
-      // Waline v3 使用 key 'WALINE_USER' (from @vueuse/core useStorage)
-      // Waline v2 可能使用 '@waline/user' 或 'waline_user'
+      // Waline v3 使用 key 'WALINE_USER'
       var keys = ['WALINE_USER','@waline/user','waline_user'];
       var val = '', user = null;
       for (var i = 0; i < keys.length; i++) {
@@ -663,7 +668,7 @@ var GAME = {
           }
         } catch(e) { user = null; }
       }
-      // 如果没找到，尝试遍历 localStorage 查找可能的 Waline 用户键
+      // 如果没找到，尝试遍历 localStorage
       if (!user) {
         for (var j = 0; j < localStorage.length; j++) {
           try {
@@ -682,7 +687,8 @@ var GAME = {
         }
       }
       if (!user) return null;
-      // 兼容不同字段名 (Waline v3 UserInfo: display_name, email, avatar, token, objectId, type, url)
+      // 必须有 token 才算真正登录，否则可能是旧缓存/匿名
+      if (!user.token) return null;
       user.display_name = user.display_name || user.nick || user.name || '';
       user.avatar = user.avatar || user.objectURL || user.avator || '';
       user.email = user.email || user.mail || '';
@@ -700,6 +706,8 @@ var GAME = {
       try {
         var data = JSON.parse(xhr.responseText);
         self.processRecords(data.data || [], user);
+        // 服务器数据优先，覆盖本地
+        self.saveLocal();
       } catch(e) {}
       self.updateBadge();
       self.updateTaskDots();
@@ -707,6 +715,34 @@ var GAME = {
     };
     xhr.onerror = function() { self.updateBadge(); self.updateTaskDots(); self.updateTaskMenu(); };
     xhr.send();
+  },
+
+  // 本地持久化：即使服务器同步失败也能保留经验值
+  saveLocal: function() {
+    try {
+      localStorage.setItem('GAME_totalPoints', String(this.totalPoints));
+      localStorage.setItem('GAME_todayCounts', JSON.stringify(this.todayCounts));
+      localStorage.setItem('GAME_saveDate', new Date().toDateString());
+    } catch(e) {}
+  },
+
+  loadLocal: function() {
+    try {
+      var savedDate = localStorage.getItem('GAME_saveDate');
+      var today = new Date().toDateString();
+      // 只加载当日的数据，跨天自动重置
+      if (savedDate === today) {
+        var pts = localStorage.getItem('GAME_totalPoints');
+        if (pts) this.totalPoints = parseInt(pts) || 0;
+        var counts = localStorage.getItem('GAME_todayCounts');
+        if (counts) this.todayCounts = JSON.parse(counts) || {};
+      } else {
+        // 新的一天，清空今日计数但保留 totalPoints (如果将来做长期累计)
+        this.todayCounts = {};
+      }
+    } catch(e) {
+      this.todayCounts = {};
+    }
   },
 
   processRecords: function(records, user) {
@@ -742,6 +778,7 @@ var GAME = {
     }
     this.todayCounts[key] = count + 1;
     this.totalPoints += act.points;
+    this.saveLocal(); // 每次操作后立即保存到本地
     this.updateBadge();
     this.updateTaskDots();
     this.updateTaskMenu();
@@ -805,6 +842,8 @@ var GAME = {
 
   syncToWaline: function(key,points,user) {
     try {
+      // 需要有效 token 才能提交到 Waline，否则直接放弃（本地已保存）
+      if (!user || !user.token) return;
       var xhr = new XMLHttpRequest();
       xhr.open('POST','https://waline.snowhoo.net/api/comment');
       xhr.setRequestHeader('Content-Type','application/json');
