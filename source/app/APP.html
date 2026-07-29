@@ -335,6 +335,7 @@ items.forEach(function(el) {
 function toggleContent(btnId, url, renderFn) {
   var btn = document.getElementById(btnId);
   var area = document.getElementById('contentArea');
+  var bg = document.getElementById('bgImage');
   if (area._activeBtn === btnId && area.style.display !== 'none') {
     area.style.display = 'none';
     btn.classList.remove('selected');
@@ -343,6 +344,10 @@ function toggleContent(btnId, url, renderFn) {
   }
   document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
   btn.classList.add('selected');
+  // 切到非星座面板：还原 picsum 背景
+  if (area._activeBtn === 'constellationBtn') {
+    bg.src = 'https://picsum.photos/1280/960?random=' + Date.now();
+  }
   // 恢复默认位置（诗/今内容居中）
   area.style.left = '50%';
   area.style.transform = 'translate(-50%, -50%)';
@@ -385,10 +390,13 @@ document.getElementById('historyBtn').addEventListener('click', function() {
 document.getElementById('constellationBtn').addEventListener('click', function() {
   var btn = document.getElementById('constellationBtn');
   var area = document.getElementById('contentArea');
+  var bg = document.getElementById('bgImage');
   if (area._activeBtn === 'constellationBtn' && area.style.display !== 'none') {
     area.style.display = 'none';
     btn.classList.remove('selected');
     area._activeBtn = null;
+    // 关闭星座：还原星空为随机原图
+    bg.src = 'https://picsum.photos/1280/960?random=' + Date.now();
     return;
   }
   document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
@@ -396,6 +404,8 @@ document.getElementById('constellationBtn').addEventListener('click', function()
   area.innerHTML = '<div class="content-line" style="font-size:.72rem;opacity:.6">加载中...</div>';
   area.style.display = 'block';
   area._activeBtn = 'constellationBtn';
+  // 载入星座：切换到星空背景
+  bg.src = 'bg-stars.jpg';
   // 居中显示
   area.style.left = '50%';
   area.style.transform = 'translate(-50%, -50%)';
