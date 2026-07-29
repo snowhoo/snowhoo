@@ -66,7 +66,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .category-item.active .label{color:#333;font-weight:400}
 .category-hint{text-align:center;margin-top:14px;font-size:.68rem;color:#bbb;letter-spacing:1px;line-height:1.5}
 .category-hint .hint-en{font-size:.55rem;color:#ccc;letter-spacing:2px;font-weight:300}
-.xz-man{position:absolute;bottom:10px;right:10px;height:50px;width:auto;pointer-events:none;z-index:3}
+.xz-man{position:absolute;bottom:20px;right:20px;height:50px;width:auto;pointer-events:none;z-index:3;animation:xzFloat 3s ease-in-out infinite}
+@keyframes xzFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 
 /* 诗/今 内容展示区 - 圈字下方 */
 .content-area{position:absolute;top:50%;left:50%;z-index:5;width:310px;max-height:calc(70vh - 160px);overflow-y:auto;text-align:center;transform:translate(-50%,-50%)}
