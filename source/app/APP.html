@@ -14,7 +14,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* ===== 图片区域 70vh ===== */
 .image-area{position:relative;height:70vh;overflow:hidden;background:#1a1a1a}
-.image-area img{width:100%;height:100%;object-fit:cover;display:block}
+.image-area img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .8s ease}
+.image-area img.fade-in{opacity:1}
 .image-area .gradient{position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(transparent,rgba(0,0,0,.45))}
 .image-area .welcome{position:absolute;bottom:24px;left:24px;color:#fff;font-size:1.6rem;font-weight:300;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,.3);cursor:pointer;animation:welcomePulse 2.5s ease-in-out infinite}
 @keyframes welcomePulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
@@ -76,7 +77,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .comment-avatar svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* 诗/今 内容展示区 - 圈字下方 */
-.content-area{position:absolute;top:50%;left:50%;z-index:5;width:310px;max-height:calc(70vh - 160px);overflow-y:auto;text-align:center;transform:translate(-50%,-50%)}
+.content-area{position:absolute;top:50%;left:50%;z-index:5;width:310px;max-height:calc(70vh - 160px);overflow-y:auto;text-align:center;transform:translate(-50%,-50%);transition:opacity .5s ease;opacity:0;visibility:hidden}
+.content-area.show{opacity:1;visibility:visible}
 .content-area::-webkit-scrollbar{width:0}
 .content-area .content-line{font-size:.88rem;line-height:1.5;color:#fff;font-weight:400;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5)}
 .content-area .content-title{font-size:1.05rem;font-weight:700;color:#fff;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5);margin-bottom:2px}
@@ -90,13 +92,13 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* 星座转盘样式 */
 .zodiac-wheel{position:relative;width:320px;height:320px;margin:8px auto 0;cursor:pointer;touch-action:none}
-.zodiac-item{position:absolute;text-align:center;color:rgba(255,255,255,.5);text-shadow:0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);width:72px;line-height:1.2;transition:all .35s;cursor:pointer;user-select:none;-webkit-user-select:none}
-.zodiac-item .zn{font-size:.6rem;font-weight:400;display:block;transition:all .35s;line-height:1.3}
+.zodiac-item{position:absolute;text-align:center;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);width:80px;line-height:1.3;transition:all .35s;cursor:pointer;user-select:none;-webkit-user-select:none}
+.zodiac-item .zn{font-size:.7rem;font-weight:500;display:block;transition:all .35s;line-height:1.4}
 .zodiac-item.selected .zn{color:#ff8c00}
-.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:150px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6}
-.zodiac-center .zc-name{font-size:.95rem;font-weight:700;display:block;margin-bottom:4px;color:#ff8c00;letter-spacing:1px}
-.zodiac-center .zc-line{font-size:.65rem;opacity:.85;display:block;white-space:nowrap}
-.zodiac-center .zc-sub{font-size:.58rem;opacity:.6;display:block;white-space:nowrap}
+.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:160px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.7}
+.zodiac-center .zc-name{font-size:1.05rem;font-weight:700;display:block;margin-bottom:6px;color:#ff8c00;letter-spacing:1px}
+.zodiac-center .zc-line{font-size:.72rem;opacity:1;display:block;white-space:nowrap;color:#fff}
+.zodiac-center .zc-sub{font-size:.65rem;opacity:1;display:block;white-space:nowrap;color:rgba(255,255,255,.9)}
 
 /* 评论弹窗 */
 .comment-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,.5);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;display:flex;align-items:flex-end}
@@ -336,17 +338,19 @@ function toggleContent(btnId, url, renderFn) {
   var btn = document.getElementById(btnId);
   var area = document.getElementById('contentArea');
   var bg = document.getElementById('bgImage');
-  if (area._activeBtn === btnId && area.style.display !== 'none') {
-    area.style.display = 'none';
+  if (area._activeBtn === btnId && area.classList.contains('show')) {
+    area.classList.remove('show');
     btn.classList.remove('selected');
     area._activeBtn = null;
     return;
   }
   document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
   btn.classList.add('selected');
-  // 切到非星座面板：还原 picsum 背景
+  // 切到非星座面板：还原原随机图
   if (area._activeBtn === 'constellationBtn') {
-    bg.src = 'https://picsum.photos/1280/960?random=' + Date.now();
+    if (window._prevBgSrc) bg.src = window._prevBgSrc;
+    else bg.src = 'https://picsum.photos/1280/960?random=' + Date.now();
+    bg.style.opacity = '1';
   }
   // 恢复默认位置（诗/今内容居中）
   area.style.left = '50%';
@@ -355,11 +359,11 @@ function toggleContent(btnId, url, renderFn) {
   area.style.textAlign = 'center';
   fetch(url).then(function(r){return r.json()}).then(function(data){
     area.innerHTML = renderFn(data);
-    area.style.display = 'block';
+    area.classList.add('show');
     area._activeBtn = btnId;
   }).catch(function(){
     area.innerHTML = '<div class="content-line">暂无内容</div>';
-    area.style.display = 'block';
+    area.classList.add('show');
     area._activeBtn = btnId;
   });
 }
@@ -391,27 +395,38 @@ document.getElementById('constellationBtn').addEventListener('click', function()
   var btn = document.getElementById('constellationBtn');
   var area = document.getElementById('contentArea');
   var bg = document.getElementById('bgImage');
-  if (area._activeBtn === 'constellationBtn' && area.style.display !== 'none') {
-    area.style.display = 'none';
+  if (area._activeBtn === 'constellationBtn' && area.classList.contains('show')) {
+    area.classList.remove('show');
     btn.classList.remove('selected');
     area._activeBtn = null;
-    // 关闭星座：还原星空为随机原图
-    bg.src = 'https://picsum.photos/1280/960?random=' + Date.now();
+    // 关闭星座：还原之前的随机图
+    if (window._prevBgSrc) {
+      bg.src = window._prevBgSrc;
+      bg.style.opacity = '1';
+    }
     return;
   }
   document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
   btn.classList.add('selected');
-  area.innerHTML = '<div class="content-line" style="font-size:.72rem;opacity:.6">加载中...</div>';
-  area.style.display = 'block';
+  // 第一步：显示"观星推演中..." + 开始加载星空背景
+  area.innerHTML = '<div class="content-line" style="font-size:.78rem;opacity:.7">✦ 观星推演中 ✦</div>';
+  area.classList.add('show');
+  area.style.opacity = '1';
   area._activeBtn = 'constellationBtn';
-  // 载入星座：切换到星空背景
-  bg.src = 'bg-stars.jpg';
   // 居中显示
   area.style.left = '50%';
   area.style.transform = 'translate(-50%, -50%)';
   area.style.width = '320px';
   area.style.textAlign = 'center';
-  fetch('https://www.52api.cn/api/constellation?key=G84cVgxx8BqrzOEPUZlpRSK41r').then(function(r){return r.json()}).then(function(data){
+  // 切换背景（保存原图，先虚化过渡）
+  window._prevBgSrc = bg.src;
+  bg.style.opacity = '0.3';
+  bg.src = 'bg-stars.jpg';
+  bg.onload = function() {
+    bg.style.opacity = '1';
+    // 第二步：背景加载完毕渐入后，再加载星座数据
+    setTimeout(function(){
+      fetch('https://www.52api.cn/api/constellation?key=G84cVgxx8BqrzOEPUZlpRSK41r').then(function(r){return r.json()}).then(function(data){
     if (data.code !== 200 || !data.data) {
       area.innerHTML = '<div class="content-line" style="font-size:.72rem;opacity:.6">星座数据加载失败</div>';
       return;
