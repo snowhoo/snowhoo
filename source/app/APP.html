@@ -524,47 +524,82 @@ document.getElementById('poetryBtn').click();
 
 // ===== 积分系统 =====
 var GAME = {
-  state: null,
   actions: {
-    poetry: {name:'诗词',points:50,max:2},
-    history: {name:'今日',points:30,max:2},
-    constellation: {name:'星座',points:40,max:1},
-    explore: {name:'探索',points:20,max:5}
+    poetry: {name:'诗词',points:20,max:2},
+    history: {name:'今日',points:20,max:2},
+    constellation: {name:'星座',points:20,max:2},
+    explore: {name:'探索',points:10,max:5}
   },
+  todayCounts: {},
+  totalPoints: 0,
+  deviceId: '',
+  ready: false,
+
   init: function() {
-    this.loadState();
-    this.updateBadge();
     var self = this;
+    this.deviceId = localStorage.getItem('game_device') || '';
+    if (!this.deviceId) {
+      this.deviceId = 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+      localStorage.setItem('game_device', this.deviceId);
+    }
+    this.loadFromServer(function(){self.ready=true});
     document.getElementById('poetryBtn').addEventListener('click',function(){self.doAction('poetry')});
     document.getElementById('historyBtn').addEventListener('click',function(){self.doAction('history')});
     document.getElementById('constellationBtn').addEventListener('click',function(){self.doAction('constellation')});
     document.querySelector('.welcome').addEventListener('click',function(){self.doAction('explore')});
   },
-  loadState: function() {
-    var saved = localStorage.getItem('app_game');
-    this.state = saved ? JSON.parse(saved) : {points:0,total:0,today:{}};
-    var today = new Date().toDateString();
-    if (!this.state.today) this.state.today = {};
-    if (this.state.today._date !== today) this.state.today = {_date:today};
+
+  loadFromServer: function(cb) {
+    var self = this;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET','https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=200');
+    xhr.onload = function() {
+      try {
+        var data = JSON.parse(xhr.responseText);
+        self.processRecords(data.data || []);
+      } catch(e) {}
+      if (cb) cb();
+    };
+    xhr.onerror = function() { if (cb) cb(); };
+    xhr.send();
   },
-  saveState: function() { localStorage.setItem('app_game',JSON.stringify(this.state)); },
+
+  processRecords: function(records) {
+    var today = new Date().toDateString();
+    this.todayCounts = {};
+    this.totalPoints = 0;
+    for (var i = 0; i < records.length; i++) {
+      try {
+        var r = records[i];
+        var action = JSON.parse(r.comment);
+        if (action.device !== this.deviceId) continue;
+        this.totalPoints += action.points || 0;
+        var d = new Date(r.insertedAt || r.createdAt || r.time).toDateString();
+        if (d === today) {
+          this.todayCounts[action.key] = (this.todayCounts[action.key] || 0) + 1;
+        }
+      } catch(e) {}
+    }
+    this.updateBadge();
+  },
+
   doAction: function(key) {
     var act = this.actions[key];
     if (!act) return;
-    var count = this.state.today[key] || 0;
+    var count = this.todayCounts[key] || 0;
     if (count >= act.max) {
       this.showToast('今日已达上限\n明日再来吧');
       return;
     }
-    this.state.points += act.points;
-    this.state.total++;
-    this.state.today[key] = count + 1;
-    this.saveState();
+    this.todayCounts[key] = count + 1;
+    this.totalPoints += act.points;
     this.updateBadge();
     this.showToast('+'+act.points+' '+act.name);
     this.syncToWaline(key,act.points);
   },
-  updateBadge: function() { document.getElementById('pointsBadge').textContent = '✦ '+this.state.points; },
+
+  updateBadge: function() { document.getElementById('pointsBadge').textContent = '✦ '+this.totalPoints; },
+
   showToast: function(msg) {
     var el = document.getElementById('toastFloat');
     el.innerHTML = msg.replace(/\n/g,'<span class="toast-sub">')+'</span>';
@@ -574,13 +609,14 @@ var GAME = {
     clearTimeout(el._timer);
     el._timer = setTimeout(function(){el.classList.remove('show')},1800);
   },
+
   syncToWaline: function(key,points) {
     try {
       var xhr = new XMLHttpRequest();
       xhr.open('POST','https://waline.snowhoo.net/api/comment');
       xhr.setRequestHeader('Content-Type','application/json');
       xhr.send(JSON.stringify({
-        comment: JSON.stringify({action:key,points:points,time:new Date().toISOString()}),
+        comment: JSON.stringify({action:key,points:points,device:this.deviceId,time:new Date().toISOString()}),
         url: '/app-game/actions',
         nick: '游客',
         mail: ''
