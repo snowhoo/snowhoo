@@ -22,7 +22,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* 左上角圈字 */
 .top-left-badges{position:absolute;top:46px;left:16px;z-index:5;display:flex;gap:14px}
-.top-left-badges .badge{color:rgba(255,255,255,.65);font-size:.68rem;font-weight:300;text-shadow:0 1px 4px rgba(0,0,0,.5);cursor:pointer;transition:all .3s;letter-spacing:1px;border:none;background:none;padding:0;line-height:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.top-left-badges .badge{color:rgba(255,255,255,.65);font-size:.68rem;font-weight:300;text-shadow:0 1px 4px rgba(0,0,0,.5);cursor:pointer;transition:all .3s;letter-spacing:1px;border:none;background:none;padding:0;line-height:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
 .top-left-badges .badge-icon{font-size:1rem;line-height:1;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:3px 5px;margin-bottom:1px}
 .top-left-badges .badge.selected{color:#ffd700;font-weight:400;text-shadow:0 0 10px rgba(255,215,0,.4)}
 .top-left-badges .badge.selected .badge-icon{border-color:rgba(255,215,0,.5)}
@@ -110,9 +110,25 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* 积分系统 */
 .points-badge{position:absolute;bottom:75px;left:20px;font-size:.6rem;color:#1a1a1a;white-space:nowrap;letter-spacing:.5px;z-index:3;pointer-events:none;font-weight:300}
-.xp-float{position:absolute;bottom:45px;left:80px;z-index:4;font-size:.7rem;color:#1a1a1a;pointer-events:none;white-space:nowrap;opacity:0;transition:all .6s ease-out;line-height:1.4;font-weight:400}
+.xp-float{position:absolute;bottom:0px;left:20px;z-index:4;font-size:.7rem;color:#1a1a1a;pointer-events:none;white-space:nowrap;opacity:0;transition:all .6s ease-out;line-height:1.4;font-weight:400}
 .xp-float.show{opacity:1;transform:translateY(-20px)}
 .xp-float .xp-sub{font-size:.6rem;opacity:.7;display:block;font-weight:300}
+
+/* 任务红点 */
+.task-dot{position:absolute;top:-8px;right:-8px;background:#e94560;color:#fff;font-size:.5rem;min-width:15px;height:15px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 3px;font-weight:700;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.3);z-index:2}
+
+/* 今日修炼任务菜单 */
+.task-menu{position:absolute;bottom:20px;right:64px;z-index:3}
+.task-menu-btn{font-size:.58rem;color:#ff8c00;cursor:pointer;padding:3px 8px;border:1px solid rgba(255,140,0,.3);border-radius:10px;background:rgba(255,255,255,.88);white-space:nowrap;transition:all .3s;font-weight:400;letter-spacing:.3px;line-height:1.4;user-select:none;-webkit-user-select:none}
+.task-menu-btn.completed{color:#22c55e;border-color:rgba(34,197,94,.35)}
+.task-menu-dropdown{position:absolute;bottom:calc(100% + 6px);right:0;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:210px;padding:6px 0;display:none;z-index:10}
+.task-menu-dropdown.show{display:block}
+.task-item{display:flex;align-items:center;padding:7px 12px;font-size:.7rem;color:#333;line-height:1.4;gap:4px}
+.task-item .task-check{color:#22c55e;flex-shrink:0;width:14px;text-align:center;font-size:.65rem}
+.task-item .task-name{flex-shrink:0}
+.task-item .task-points{color:#ff8c00;flex-shrink:0;margin-left:2px}
+.task-item .task-count{margin-left:auto;color:#aaa;font-size:.62rem;flex-shrink:0}
+.task-item.completed{opacity:.6}
 </style>
 </head>
 <body>
@@ -121,15 +137,16 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   <img id="bgImage" src="" alt="">
   <div class="gradient"></div>
   <div class="top-left-badges">
-    <span class="badge" id="poetryBtn"><span class="badge-icon">≡</span>诗词</span>
-    <span class="badge" id="historyBtn"><span class="badge-icon">◎</span>今日</span>
-    <span class="badge" id="constellationBtn"><span class="badge-icon">✦</span>星座</span>
+    <span class="badge" id="poetryBtn"><span class="badge-icon">≡</span>诗词<span class="task-dot" id="poetryDot"></span></span>
+    <span class="badge" id="historyBtn"><span class="badge-icon">◎</span>今日<span class="task-dot" id="historyDot"></span></span>
+    <span class="badge" id="constellationBtn"><span class="badge-icon">✦</span>星座<span class="task-dot" id="constellationDot"></span></span>
   </div>
   <div class="content-area" id="contentArea" style="display:none"></div>
   <div class="top-right-logo"><img src="../images/logo.png" alt="logo"></div>
   <div class="welcome">
     探索
     <small>choose your journey</small>
+    <span class="task-dot" id="exploreDot"></span>
   </div>
   <div class="almanac" id="almanac">
     <div class="al-day" id="alDay"></div>
@@ -148,7 +165,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   <div class="category-list" id="categoryList">
     <button class="category-item active" data-url="https://snowhoo.net/app/reader.html">
       <span class="circle" style="background:#e94560">小红<br>故事</span>
-      <span class="label">小红故事</span>
     </button>
     <button class="category-item" data-url="https://snowhoo.net/app/yedu_p.html">
       <span class="circle" style="background:#764ba2">夜</span>
@@ -173,6 +189,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   <img class="xz-man" src="xzman.png" alt="">
   <div class="comment-avatar" id="commentAvatar">
     <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  </div>
+  <div class="task-menu">
+    <div class="task-menu-btn" id="taskMenuBtn">今日修炼任务</div>
+    <div class="task-menu-dropdown" id="taskMenuDropdown"></div>
   </div>
 </div>
 
@@ -522,10 +542,10 @@ document.getElementById('constellationBtn').addEventListener('click', function()
 // ===== 积分系统 =====
 var GAME = {
   actions: {
-    poetry: {name:'诗词',points:20,max:2},
-    history: {name:'今日',points:20,max:2},
-    constellation: {name:'星座',points:20,max:2},
-    explore: {name:'探索',points:10,max:5}
+    poetry: {name:'诗词',taskName:'吟诗作对',points:20,max:2},
+    history: {name:'今日',taskName:'上古传承',points:20,max:2},
+    constellation: {name:'星座',taskName:'夜观星象',points:20,max:2},
+    explore: {name:'探索',taskName:'秘境探寻',points:10,max:5}
   },
   todayCounts: {},
   totalPoints: 0,
@@ -538,6 +558,15 @@ var GAME = {
     document.getElementById('historyBtn').addEventListener('click',function(){self.doAction('history')});
     document.getElementById('constellationBtn').addEventListener('click',function(){self.doAction('constellation')});
     document.querySelector('.welcome').addEventListener('click',function(){self.doAction('explore')});
+    // 任务菜单点击切换
+    document.getElementById('taskMenuBtn').addEventListener('click',function(e){
+      e.stopPropagation();
+      document.getElementById('taskMenuDropdown').classList.toggle('show');
+    });
+    // 点击其他地方关闭任务菜单
+    document.addEventListener('click',function(){
+      document.getElementById('taskMenuDropdown').classList.remove('show');
+    });
     // 定期检查登录状态变化（每3秒检测一次）
     setInterval(function(){self.checkLogin()},3000);
   },
@@ -566,9 +595,10 @@ var GAME = {
 
   getWalineUser: function() {
     try {
-      var keys = ['@waline/user','waline_user','@waline/user'];
+      // Waline v3 使用 key 'WALINE_USER' (from @vueuse/core useStorage)
+      // Waline v2 可能使用 '@waline/user' 或 'waline_user'
+      var keys = ['WALINE_USER','@waline/user','waline_user'];
       var val = '', user = null;
-      // 尝试直接读取已知的 Waline 用户信息键
       for (var i = 0; i < keys.length; i++) {
         try {
           val = localStorage.getItem(keys[i]);
@@ -597,7 +627,7 @@ var GAME = {
         }
       }
       if (!user) return null;
-      // 兼容不同字段名
+      // 兼容不同字段名 (Waline v3 UserInfo: display_name, email, avatar, token, objectId, type, url)
       user.display_name = user.display_name || user.nick || user.name || '';
       user.avatar = user.avatar || user.objectURL || user.avator || '';
       user.email = user.email || user.mail || '';
@@ -608,7 +638,7 @@ var GAME = {
   loadFromServer: function() {
     var self = this;
     var user = this.getWalineUser();
-    if (!user) { this.updateBadge(); return; }
+    if (!user) { this.updateBadge(); this.updateTaskDots(); this.updateTaskMenu(); return; }
     var xhr = new XMLHttpRequest();
     xhr.open('GET','https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=200');
     xhr.onload = function() {
@@ -617,8 +647,10 @@ var GAME = {
         self.processRecords(data.data || [], user);
       } catch(e) {}
       self.updateBadge();
+      self.updateTaskDots();
+      self.updateTaskMenu();
     };
-    xhr.onerror = function() { self.updateBadge(); };
+    xhr.onerror = function() { self.updateBadge(); self.updateTaskDots(); self.updateTaskMenu(); };
     xhr.send();
   },
 
@@ -656,11 +688,55 @@ var GAME = {
     this.todayCounts[key] = count + 1;
     this.totalPoints += act.points;
     this.updateBadge();
+    this.updateTaskDots();
+    this.updateTaskMenu();
     this.showXp('+'+act.points+' 经验','');
     this.syncToWaline(key,act.points,user);
   },
 
   updateBadge: function() { document.getElementById('pointsBadge').textContent = '✦ '+this.totalPoints; },
+
+  updateTaskDots: function() {
+    var dotIds = {poetry:'poetryDot',history:'historyDot',constellation:'constellationDot',explore:'exploreDot'};
+    for (var key in dotIds) {
+      var el = document.getElementById(dotIds[key]);
+      if (!el) continue;
+      var act = this.actions[key];
+      var count = this.todayCounts[key] || 0;
+      var remaining = act.max - count;
+      if (remaining > 0) {
+        el.textContent = remaining;
+        el.style.display = 'flex';
+      } else {
+        el.style.display = 'none';
+      }
+    }
+  },
+
+  updateTaskMenu: function() {
+    var btn = document.getElementById('taskMenuBtn');
+    var dropdown = document.getElementById('taskMenuDropdown');
+    if (!btn || !dropdown) return;
+    var allDone = true;
+    var html = '';
+    var order = ['poetry','history','constellation','explore'];
+    for (var i = 0; i < order.length; i++) {
+      var key = order[i];
+      var act = this.actions[key];
+      var count = this.todayCounts[key] || 0;
+      var done = count >= act.max;
+      if (!done) allDone = false;
+      html += '<div class="task-item' + (done ? ' completed' : '') + '">'
+        + '<span class="task-check">' + (done ? '✓' : '') + '</span>'
+        + '<span class="task-name">' + act.taskName + '（' + act.name + '）</span>'
+        + '<span class="task-points">+' + act.points + '经验值</span>'
+        + '<span class="task-count">' + count + '/' + act.max + '</span>'
+        + '</div>';
+    }
+    dropdown.innerHTML = html;
+    btn.textContent = allDone ? '今日修炼已毕' : '今日修炼任务';
+    btn.classList.toggle('completed', allDone);
+  },
 
   showXp: function(main,sub) {
     var el = document.getElementById('xpFloat');
