@@ -97,12 +97,16 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 /* 星座转盘样式 */
 .zodiac-wheel{position:relative;width:320px;height:320px;margin:8px auto 0;cursor:pointer;touch-action:none}
 .zodiac-item{position:absolute;text-align:center;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);width:80px;line-height:1.3;transition:all .35s;cursor:pointer;user-select:none;-webkit-user-select:none}
-.zodiac-item .zn{font-size:.7rem;font-weight:500;display:block;transition:all .35s;line-height:1.4}
+.zodiac-item .zn{font-size:.7rem;font-weight:300;display:block;transition:all .35s;line-height:1.4}
 .zodiac-item.selected .zn{color:#ff8c00}
 .zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:160px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.7}
 .zodiac-center .zc-name{font-size:1.05rem;font-weight:700;display:block;margin-bottom:6px;color:#ff8c00;letter-spacing:1px}
 .zodiac-center .zc-line{font-size:.72rem;opacity:1;display:block;white-space:nowrap;color:#fff}
 .zodiac-center .zc-sub{font-size:.65rem;opacity:1;display:block;white-space:nowrap;color:rgba(255,255,255,.9)}
+
+/* 星座星空背景覆盖层 */
+.stars-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:url('bg-stars.jpg') center/cover no-repeat;opacity:0;transition:opacity .6s ease;pointer-events:none;z-index:1}
+.stars-overlay.show{opacity:1}
 
 /* 评论弹窗 */
 .comment-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,.5);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;display:flex;align-items:flex-end}
@@ -142,6 +146,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 <div class="image-area">
   <img id="bgImage" src="" alt="">
+  <div class="stars-overlay" id="starsOverlay"></div>
   <div class="gradient"></div>
   <div class="top-left-badges">
     <span class="badge" id="poetryBtn"><span class="badge-icon">≡</span>诗词<span class="task-dot" id="poetryDot"></span></span>
@@ -353,9 +358,7 @@ function toggleContent(btnId, url, renderFn) {
   btn.classList.add('selected');
   // 切到非星座面板：还原原随机图
   if (area._activeBtn === 'constellationBtn') {
-    if (window._prevBgSrc) bg.src = window._prevBgSrc;
-    else bg.src = 'https://picsum.photos/1280/960?random=' + Date.now();
-    bg.style.opacity = '1';
+    document.getElementById('starsOverlay').classList.remove('show');
   }
   // 恢复默认位置（诗/今内容居中）
   area.style.left = '50%';
@@ -399,16 +402,12 @@ document.getElementById('historyBtn').addEventListener('click', function() {
 document.getElementById('constellationBtn').addEventListener('click', function() {
   var btn = document.getElementById('constellationBtn');
   var area = document.getElementById('contentArea');
-  var bg = document.getElementById('bgImage');
   if (area._activeBtn === 'constellationBtn' && area.classList.contains('show')) {
     area.classList.remove('show');
     btn.classList.remove('selected');
     area._activeBtn = null;
-    // 关闭星座：还原之前的随机图
-    if (window._prevBgSrc) {
-      bg.src = window._prevBgSrc;
-      bg.style.opacity = '1';
-    }
+    // 关闭星座：隐藏星空背景覆盖层
+    document.getElementById('starsOverlay').classList.remove('show');
     return;
   }
   document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
@@ -422,14 +421,10 @@ document.getElementById('constellationBtn').addEventListener('click', function()
   area.style.transform = 'translate(-50%, -50%)';
   area.style.width = '320px';
   area.style.textAlign = 'center';
-  // 切换背景（保存原图，先虚化过渡）
-  window._prevBgSrc = bg.src;
-  bg.style.opacity = '0.3';
-  bg.src = 'bg-stars.jpg';
-  bg.onload = function() {
-    bg.style.opacity = '1';
-    // 第二步：背景加载完毕渐入后，再加载星座数据
-    setTimeout(function(){
+  // 切换背景（使用星空覆盖层，不修改原始背景图）
+  document.getElementById('starsOverlay').classList.add('show');
+  // 第二步：背景渐入后，再加载星座数据
+  setTimeout(function(){
       fetch('https://www.52api.cn/api/constellation?key=G84cVgxx8BqrzOEPUZlpRSK41r').then(function(r){return r.json()}).then(function(data){
     if (data.code !== 200 || !data.data) {
       area.innerHTML = '<div class="content-line" style="font-size:.72rem;opacity:.6">星座数据加载失败</div>';
@@ -569,7 +564,6 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     area._activeBtn = 'constellationBtn';
   });
     });
-  };
 });
 
 // ===== 积分系统 =====
@@ -868,9 +862,6 @@ commentOverlay.addEventListener('click', function(e) {
     almanac.classList.remove('hidden');
   });
 })();
-
-// 载入页面默认显示诗词
-document.getElementById('poetryBtn').click();
 </script>
 </body>
 </html>
