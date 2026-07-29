@@ -128,7 +128,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .task-item .task-name{flex-shrink:0}
 .task-item .task-points{color:#ff8c00;flex-shrink:0;margin-left:2px}
 .task-item .task-count{margin-left:auto;color:#aaa;font-size:.62rem;flex-shrink:0}
-.task-item.completed{opacity:.6}
+.task-item.completed{color:#22c55e}
+.task-item.completed .task-points{color:#22c55e}
 </style>
 </head>
 <body>
@@ -555,15 +556,15 @@ var GAME = {
     var self = this;
     this.updateAvatar();
     this.loadFromServer();
-    document.getElementById('poetryBtn').addEventListener('click',function(){
+    document.getElementById('poetryBtn').addEventListener('pointerdown',function(){
       var a = document.getElementById('contentArea');
       if (!(a._activeBtn === 'poetryBtn' && a.style.display !== 'none')) self.doAction('poetry');
     });
-    document.getElementById('historyBtn').addEventListener('click',function(){
+    document.getElementById('historyBtn').addEventListener('pointerdown',function(){
       var a = document.getElementById('contentArea');
       if (!(a._activeBtn === 'historyBtn' && a.style.display !== 'none')) self.doAction('history');
     });
-    document.getElementById('constellationBtn').addEventListener('click',function(){
+    document.getElementById('constellationBtn').addEventListener('pointerdown',function(){
       var a = document.getElementById('contentArea');
       if (!(a._activeBtn === 'constellationBtn' && a.style.display !== 'none')) self.doAction('constellation');
     });
@@ -672,7 +673,7 @@ var GAME = {
       try {
         var r = records[i];
         var action = JSON.parse(r.comment);
-        if (r.mail !== user.email) continue;
+        if ((r.mail||'') !== (user.email||'')) continue;
         this.totalPoints += action.points || 0;
         var d = new Date(r.insertedAt || r.createdAt || r.time).toDateString();
         if (d === today) {
