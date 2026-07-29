@@ -7,7 +7,7 @@ layout: false
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>小红故事|一九七九年 春天</title>
-<link rel="stylesheet" href="https://unpkg.com/@waline/client@v3/dist/waline.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@waline/client@v3/dist/waline.css">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;background:#fff;color:#1a1a1a;-webkit-tap-highlight-color:transparent}
@@ -59,11 +59,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .category-list{display:flex;gap:0;align-items:center;margin-top:6px;width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;justify-content:flex-start;padding:0 4px}
 .category-list::-webkit-scrollbar{display:none}
 .category-item{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;flex:0 0 25%;min-width:0}
-.category-item:first-child .circle{width:64px;height:64px;font-size:1.1rem}
+.category-item:first-child .circle{width:64px;height:64px;font-size:1rem}
 .category-item:active{transform:scale(.88)}
 .category-item .circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;font-weight:400;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:transform .25s,box-shadow .25s}
 .category-item.active .circle{transform:scale(1.0);box-shadow:0 6px 20px rgba(0,0,0,.25)}
-.category-item .label{font-size:.75rem;color:#888;font-weight:400}
+.category-item .label{font-size:.75rem;color:#888;font-weight:300}
 .category-item.active .label{color:#333;font-weight:400}
 .category-hint{text-align:center;margin-top:14px;font-size:.68rem;color:#bbb;letter-spacing:1px;line-height:1.5}
 .category-hint .hint-en{font-size:.55rem;color:#ccc;letter-spacing:2px;font-weight:300}
@@ -71,8 +71,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 @keyframes xzFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 
 /* 评论登录头像 */
-.comment-avatar{position:absolute;bottom:20px;right:20px;width:32px;height:32px;border-radius:50%;z-index:3;cursor:pointer;border:1.5px solid rgba(255,255,255,.5);box-shadow:0 2px 8px rgba(0,0,0,.15);transition:border-color .3s;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.comment-avatar svg{width:18px;height:18px;fill:none;stroke:rgba(255,255,255,.7);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.comment-avatar{position:absolute;bottom:20px;right:20px;width:32px;height:32px;border-radius:50%;z-index:3;cursor:pointer;border:1.5px solid rgba(255,255,255,.6);box-shadow:0 2px 8px rgba(0,0,0,.2);transition:border-color .3s;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.comment-avatar svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* 诗/今 内容展示区 - 圈字下方 */
 .content-area{position:absolute;top:50%;left:50%;z-index:5;width:310px;max-height:calc(70vh - 160px);overflow-y:auto;text-align:center;transform:translate(-50%,-50%)}
@@ -145,7 +145,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     </button>
     <button class="category-item" data-url="https://snowhoo.net/app/yedu_p.html">
       <span class="circle" style="background:#764ba2">夜</span>
-      <span class="label">夜&nbsp;·&nbsp;&nbsp;·&nbsp;读</span>
+      <span class="label">夜&nbsp;&nbsp;&nbsp;&nbsp;读</span>
     </button>
     <button class="category-item" data-url="https://snowhoo.net/app/zjsz_p.html">
       <span class="circle" style="background:#3b82f6">照</span>
@@ -153,11 +153,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     </button>
     <button class="category-item" data-url="https://snowhoo.net/app/DaliyNews_p.html">
       <span class="circle" style="background:#ff8c00">新</span>
-      <span class="label">新&nbsp;·&nbsp;&nbsp;·&nbsp;闻</span>
+      <span class="label">新&nbsp;&nbsp;&nbsp;&nbsp;闻</span>
     </button>
     <button class="category-item" data-url="https://snowhoo.net/app/tv_p.html">
       <span class="circle" style="background:#22c55e">播</span>
-      <span class="label">播&nbsp;·&nbsp;&nbsp;·&nbsp;霸</span>
+      <span class="label">播&nbsp;&nbsp;&nbsp;&nbsp;霸</span>
     </button>
   </div>
   <div class="category-hint">滑动&nbsp;·&nbsp;按下&nbsp;·&nbsp;进入<br><span class="hint-en">SWIPE · TAP · ENTER</span></div>
@@ -520,20 +520,29 @@ var commentContainer = document.getElementById('walineContainer');
 document.getElementById('commentAvatar').addEventListener('click', function() {
   commentOverlay.classList.add('active');
   if (!walineInstance) {
+    commentContainer.innerHTML = '<div style="text-align:center;padding:40px 0;color:#999;font-size:.82rem">加载中...</div>';
     var script = document.createElement('script');
-    script.src = 'https://unpkg.com/@waline/client@v3/dist/waline.js';
+    script.src = 'https://cdn.jsdelivr.net/npm/@waline/client@3/dist/waline.js';
     script.onload = function() {
-      walineInstance = Waline.init({
-        el: '#walineContainer',
-        serverURL: 'https://waline.snowhoo.net',
-        lang: 'zh-CN',
-        avatar: 'mp',
-        pageview: false,
-        locale: {
-          placeholder: '说点什么吧...',
-          comment: '留言'
-        }
-      });
+      try {
+        walineInstance = Waline.init({
+          el: '#walineContainer',
+          serverURL: 'https://waline.snowhoo.net',
+          lang: 'zh-CN',
+          avatar: 'mp',
+          pageview: false,
+          locale: {
+            placeholder: '说点什么吧...',
+            comment: '留言'
+          }
+        });
+      } catch(e) {
+        commentContainer.innerHTML = '<div style="text-align:center;padding:40px 0;color:#999;font-size:.82rem">评论加载失败，请刷新重试</div>';
+        console.error('Waline init error:', e);
+      }
+    };
+    script.onerror = function() {
+      commentContainer.innerHTML = '<div style="text-align:center;padding:40px 0;color:#999;font-size:.82rem">评论组件加载失败，请检查网络后重试</div>';
     };
     document.body.appendChild(script);
   }
