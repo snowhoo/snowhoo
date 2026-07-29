@@ -77,10 +77,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* 评论登录头像 */
 /* 评论登录用户区域 */
-.comment-avatar{position:fixed;bottom:25px;right:16px;z-index:10;width:36px;height:36px;border-radius:50%;cursor:pointer;border:1.5px solid rgba(255,255,255,.6);box-shadow:0 2px 8px rgba(0,0,0,.2);transition:border-color .3s;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.comment-avatar img{width:100%;height:100%;object-fit:cover;display:block}
-.comment-avatar svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.comment-name{position:fixed;bottom:10px;right:16px;z-index:10;font-size:.58rem;color:rgba(255,255,255,.6);white-space:nowrap;max-width:72px;overflow:hidden;text-overflow:ellipsis;text-align:center;line-height:1}
+.comment-user{position:fixed;bottom:25px;right:16px;z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px}
+.comment-user .comment-avatar{width:36px;height:36px;border-radius:50%;cursor:pointer;border:1.5px solid rgba(255,255,255,.6);box-shadow:0 2px 8px rgba(0,0,0,.2);transition:border-color .3s;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.comment-user .comment-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.comment-user .comment-avatar svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.comment-user .comment-name{font-size:.58rem;color:rgba(255,255,255,.6);white-space:nowrap;max-width:72px;overflow:hidden;text-overflow:ellipsis;text-align:center;line-height:1}
  
  /* 诗/今 内容展示区 - 圈字下方 */
 .content-area{position:absolute;top:50%;left:50%;z-index:5;width:310px;max-height:calc(70vh - 160px);overflow-y:auto;text-align:center;transform:translate(-50%,-50%);transition:opacity .5s ease;opacity:0;visibility:hidden}
@@ -137,7 +138,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .task-menu-dropdown{position:absolute;bottom:calc(100% + 6px);right:0;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:210px;padding:6px 0;display:none;z-index:10}
 .task-menu-dropdown.show{display:block}
 .task-item{display:flex;align-items:center;padding:7px 12px;font-size:.7rem;color:#333;line-height:1.4;gap:4px;white-space:nowrap}
-.task-item .task-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;display:inline-block}
+.task-item .task-dot{font-size:.75rem;line-height:1;flex-shrink:0;width:14px;text-align:center}
 .task-item .task-check{color:#22c55e;flex-shrink:0;width:14px;text-align:center;font-size:.65rem;font-weight:700}
 .task-item .task-name{flex-shrink:0;margin-right:2px}
 .task-item .task-sub{font-size:.6rem;opacity:.55;flex-shrink:0}
@@ -205,10 +206,12 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   <div class="points-badge" id="pointsBadge">✦ 0</div>
   <div class="xp-float" id="xpFloat"></div>
   <img class="xz-man" src="xzman.png" alt="">
-  <div class="comment-avatar" id="commentAvatar">
+  <div class="comment-user" id="commentUser">
+    <div class="comment-avatar" id="commentAvatar">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     </div>
     <div class="comment-name" id="commentName">未登录</div>
+  </div>
   <div class="task-menu">
     <div class="task-menu-btn" id="taskMenuBtn">今日修炼任务</div>
     <div class="task-menu-dropdown" id="taskMenuDropdown"></div>
@@ -698,12 +701,14 @@ var GAME = {
         }
       }
       if (!user) return null;
-      // 真实登录用户一定有 objectId/id
-      if (!user.objectId && !user.id) return null;
-      user.display_name = user.display_name || user.nick || user.name || '';
-      user.avatar = user.avatar || user.objectURL || user.avator || '';
-      user.email = user.email || user.mail || '';
-      return user;
+      // 真实登录用户通常有 objectId/id，但有 token 也算
+      if (user.token || user.objectId || user.id) {
+        user.display_name = user.display_name || user.nick || user.name || '';
+        user.avatar = user.avatar || user.objectURL || user.avator || '';
+        user.email = user.email || user.mail || '';
+        return user;
+      }
+      return null;
     } catch(e) { return null; }
   },
 
@@ -825,6 +830,7 @@ var GAME = {
     var allDone = true;
     var html = '';
     var order = ['poetry','history','constellation','explore'];
+    var dotIcons = {poetry:'●',history:'●',constellation:'●',explore:'●'};
     var dotColors = {poetry:'#f43f5e',history:'#8b5cf6',constellation:'#f59e0b',explore:'#06b6d4'};
     for (var i = 0; i < order.length; i++) {
       var key = order[i];
@@ -834,7 +840,7 @@ var GAME = {
       if (!done) allDone = false;
       html += '<div class="task-item' + (done ? ' completed' : '') + '">'
         + (done ? '<span class="task-check">✓</span>'
-                : '<span class="task-dot" style="background:'+dotColors[key]+'"></span>')
+                : '<span class="task-dot" style="color:'+dotColors[key]+'">'+dotIcons[key]+'</span>')
         + '<span class="task-name">' + act.taskName + '</span>'
         + '<span class="task-sub">' + act.name + ' +' + act.points + '经验</span>'
         + '<span class="task-count">' + count + '/' + act.max + '</span>'
@@ -859,9 +865,15 @@ var GAME = {
     try {
       // 需要有效用户信息才能提交到 Waline
       if (!user || !user.display_name) return;
+      // 从 localStorage 获取 token（确保即使 user 对象不完整也能拿到）
+      var token = user.token;
+      if (!token) {
+        try { var stored = JSON.parse(localStorage.getItem('WALINE_USER') || '{}'); token = stored.token; } catch(e) {}
+      }
       var xhr = new XMLHttpRequest();
       xhr.open('POST','https://waline.snowhoo.net/api/comment');
       xhr.setRequestHeader('Content-Type','application/json');
+      if (token) xhr.setRequestHeader('Authorization','Bearer ' + token);
       xhr.withCredentials = true;
       xhr.onload = function() {
         if (xhr.status >= 200 && xhr.status < 300) {
