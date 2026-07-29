@@ -650,8 +650,8 @@ var GAME = {
     }
   },
 
-  updateAvatar: function() {
-    var user = this.getWalineUser();
+  updateAvatar: function(optUser) {
+    var user = optUser || this.getWalineUser();
     var el = document.getElementById('commentAvatar');
     var nameEl = document.getElementById('commentName');
     if (user && user.avatar) {
@@ -699,8 +699,8 @@ var GAME = {
         }
       }
       if (!user) return null;
-      // 必须有 token 才算真正登录，否则可能是旧缓存/匿名
-      if (!user.token) return null;
+      // 真实登录用户一定有 objectId/id
+      if (!user.objectId && !user.id) return null;
       user.display_name = user.display_name || user.nick || user.name || '';
       user.avatar = user.avatar || user.objectURL || user.avator || '';
       user.email = user.email || user.mail || '';
@@ -856,8 +856,8 @@ var GAME = {
 
   syncToWaline: function(key,points,user) {
     try {
-      // 需要有效 token 才能提交到 Waline，否则直接放弃（本地已保存）
-      if (!user || !user.token) return;
+      // 需要有效用户信息才能提交到 Waline
+      if (!user || !user.display_name) return;
       var xhr = new XMLHttpRequest();
       xhr.open('POST','https://waline.snowhoo.net/api/comment');
       xhr.setRequestHeader('Content-Type','application/json');
@@ -903,8 +903,8 @@ document.getElementById('commentAvatar').addEventListener('click', function() {
             comment: '留言'
           },
           onLogin: function(user) {
-            // 登录后立即更新头像和积分系统
-            GAME.updateAvatar();
+            // 登录后立即更新头像和积分系统（传入user避免localStorage延迟）
+            GAME.updateAvatar(user);
             GAME.loadFromServer();
           }
         });
@@ -922,11 +922,13 @@ document.getElementById('commentAvatar').addEventListener('click', function() {
 
 document.getElementById('commentClose').addEventListener('click', function() {
   commentOverlay.classList.remove('active');
+  GAME.updateAvatar(); // 关闭评论时同步登录状态
 });
 
 commentOverlay.addEventListener('click', function(e) {
   if (e.target === commentOverlay) {
     commentOverlay.classList.remove('active');
+    GAME.updateAvatar(); // 关闭评论时同步登录状态
   }
 });
 
