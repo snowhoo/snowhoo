@@ -77,11 +77,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* 评论登录头像 */
 /* 评论登录用户区域 */
-.comment-user{position:fixed;bottom:25px;right:16px;z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px}
-.comment-user .comment-avatar{width:36px;height:36px;border-radius:50%;cursor:pointer;border:1.5px solid rgba(255,255,255,.6);box-shadow:0 2px 8px rgba(0,0,0,.2);transition:border-color .3s;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.comment-user .comment-avatar img{width:100%;height:100%;object-fit:cover;display:block}
-.comment-user .comment-avatar svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.comment-user .comment-name{font-size:.58rem;color:rgba(255,255,255,.6);white-space:nowrap;max-width:72px;overflow:hidden;text-overflow:ellipsis;text-align:center;line-height:1}
+.comment-avatar{position:fixed;bottom:25px;right:16px;z-index:10;width:36px;height:36px;border-radius:50%;cursor:pointer;border:1.5px solid rgba(255,255,255,.6);box-shadow:0 2px 8px rgba(0,0,0,.2);transition:border-color .3s;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.comment-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.comment-avatar svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.comment-name{position:fixed;bottom:10px;right:16px;z-index:10;font-size:.58rem;color:rgba(255,255,255,.6);white-space:nowrap;max-width:72px;overflow:hidden;text-overflow:ellipsis;text-align:center;line-height:1}
  
  /* 诗/今 内容展示区 - 圈字下方 */
 .content-area{position:absolute;top:50%;left:50%;z-index:5;width:310px;max-height:calc(70vh - 160px);overflow-y:auto;text-align:center;transform:translate(-50%,-50%);transition:opacity .5s ease;opacity:0;visibility:hidden}
@@ -205,12 +204,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   <div class="points-badge" id="pointsBadge">✦ 0</div>
   <div class="xp-float" id="xpFloat"></div>
   <img class="xz-man" src="xzman.png" alt="">
-  <div class="comment-user" id="commentUser">
-    <div class="comment-avatar" id="commentAvatar">
+  <div class="comment-avatar" id="commentAvatar">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     </div>
     <div class="comment-name" id="commentName">未登录</div>
-  </div>
   <div class="task-menu">
     <div class="task-menu-btn" id="taskMenuBtn">今日修炼任务</div>
     <div class="task-menu-dropdown" id="taskMenuDropdown"></div>
