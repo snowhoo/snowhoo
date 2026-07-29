@@ -109,7 +109,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* 积分系统 */
 .points-badge{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:.6rem;color:rgba(255,255,255,.6);background:rgba(0,0,0,.25);padding:2px 12px;border-radius:10px;white-space:nowrap;letter-spacing:.5px;z-index:3;pointer-events:none;font-weight:300}
-.xp-float{position:absolute;bottom:75px;left:20px;z-index:4;font-size:.7rem;color:rgba(255,255,255,.85);text-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap;opacity:0;transition:all .6s ease-out;line-height:1.4;font-weight:400}
+.xp-float{position:absolute;bottom:75px;left:80px;z-index:4;font-size:.7rem;color:rgba(255,255,255,.85);text-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none;white-space:nowrap;opacity:0;transition:all .6s ease-out;line-height:1.4;font-weight:400}
 .xp-float.show{opacity:1;transform:translateY(-20px)}
 .xp-float .xp-sub{font-size:.6rem;opacity:.7;display:block;font-weight:300}
 </style>
@@ -517,8 +517,6 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     area._activeBtn = 'constellationBtn';
   });
 });
-// 默认加载诗
-document.getElementById('poetryBtn').click();
 
 // ===== 积分系统 =====
 var GAME = {
