@@ -98,6 +98,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .zodiac-wheel{position:relative;width:320px;height:320px;margin:8px auto 0;cursor:pointer;touch-action:none}
 .zodiac-item{position:absolute;text-align:center;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);width:80px;line-height:1.3;transition:all .35s;cursor:pointer;user-select:none;-webkit-user-select:none}
 .zodiac-item .zn{font-size:.7rem;font-weight:300;display:block;transition:all .35s;line-height:1.4}
+.zodiac-item .zn .zn-date{opacity:.55;font-size:.55rem}
 .zodiac-item.selected .zn{color:#ff8c00}
 .zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:160px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.7}
 .zodiac-center .zc-name{font-size:1.05rem;font-weight:700;display:block;margin-bottom:6px;color:#ff8c00;letter-spacing:1px}
@@ -483,7 +484,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       var y = cy + r * Math.sin(rad);
       var rot = i * 30;
       html += '<div class="zodiac-item" data-index="' + i + '" style="left:' + x.toFixed(0) + 'px;top:' + y.toFixed(0) + 'px">'
-        + '<span class="zn" style="transform:rotate(' + rot + 'deg)">' + d.emoji + ' ' + d.cn + '<br>' + d.date + '</span>'
+        + '<span class="zn" style="transform:rotate(' + rot + 'deg)">' + d.emoji + ' ' + d.cn + '<br><span class="zn-date">' + d.date + '</span></span>'
         + '</div>';
     }
     html += '</div>';
