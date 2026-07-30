@@ -211,7 +211,6 @@ body{display:flex;flex-direction:column}
   </div>
   <div class="category-hint">滑动&nbsp;·&nbsp;按下&nbsp;·&nbsp;进入<br><span class="hint-en">SWIPE · TAP · ENTER</span></div>
   <div class="points-badge" id="pointsBadge">✦ 0</div>
-  <span class="sync-indicator" id="syncIndicator"></span>
   <div class="xp-float" id="xpFloat"></div>
   <img class="xz-man" src="xzman.png" alt="">
   <div class="comment-user" id="commentUser">
@@ -617,23 +616,19 @@ var GAME = {
 
   setSyncState: function(state) {
     this.syncState = state;
-    var el = document.getElementById('syncIndicator');
-    if (!el) return;
-      if (state === 'loading') {
-      el.textContent = '⚡ 真气恢复中..';
-      el.style.display = 'inline';
-    } else if (state === 'saving') {
-      el.textContent = '⟳ 真气融合中..';
-      el.style.display = 'inline';
-    } else {
-      el.style.display = 'none';
-    }
-    // 同步更新任务菜单按钮文本反馈（错误状态不覆盖）
     var btn = document.getElementById('taskMenuBtn');
-    if (btn && !btn.classList.contains('error')) {
-      if (state !== 'idle' && !btn.classList.contains('completed')) {
-        btn.textContent = state === 'loading' ? '⚡ 真气恢复中...' : '⟳ 真气融合中...';
+    if (state === 'loading') {
+      if (btn && !btn.classList.contains('error')) {
+        btn.textContent = '⚡ 真气恢复中..';
+        btn.style.display = '';
       }
+    } else if (state === 'saving') {
+      if (btn && !btn.classList.contains('error')) {
+        btn.textContent = '⟳ 真气融合中..';
+        btn.style.display = '';
+      }
+    } else {
+      // idle：由 updateTaskMenuBtn 根据 loaded 状态控制显隐
     }
   },
 
@@ -674,12 +669,13 @@ var GAME = {
       if (!(a._activeBtn === 'constellationBtn' && a.classList.contains('show'))) self.doAction('constellation');
     });
     document.querySelector('.welcome').addEventListener('click',function(){self.doAction('explore')});
-    // 任务菜单点击切换（错误状态时点击刷新页面）
+    // 任务菜单点击切换（错误状态刷新，加载/保存中无操作）
     document.getElementById('taskMenuBtn').addEventListener('click',function(e){
       if (this.classList.contains('error')) {
         location.reload();
         return;
       }
+      if (GAME.syncState !== 'idle') return; // 加载/保存中不响应
       e.stopPropagation();
       document.getElementById('taskMenuDropdown').classList.toggle('show');
     });
@@ -887,15 +883,15 @@ var GAME = {
     var act = this.actions[key];
     if (!act) return;
     var user = this.getWalineUser();
-    // 数据未就绪（加载失败导致的心魔困扰）永久阻塞
+    // 数据未就绪（加载失败导致的心魔困扰）永久阻塞，按钮显示错误提示
     if (user && !this.loaded) {
       this.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
       return;
     }
-    // 加载中或保存中时阻塞修炼操作
+    // 加载中或保存中，浮动提示操作被阻塞
     if (this.syncState !== 'idle') {
       var msg = this.syncState === 'loading' ? '真气恢复中，无法修炼..' : '真气融合中，无法修炼..';
-      this.showTaskMenuError(msg);
+      this.showXp('', msg);
       return;
     }
     if (!user) {
