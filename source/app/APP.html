@@ -238,6 +238,7 @@ body{display:flex;flex-direction:column}
   </div>
 </div>
 
+<script src="game-config.js"></script>
 <script>
 // 年度进度
 (function() {
@@ -615,18 +616,21 @@ document.getElementById('constellationBtn').addEventListener('click', function()
 
 // ===== 积分系统 =====
 var GAME = {
-  actions: {
-    poetry: {name:'诗词',taskName:'吟诗作对',points:20,max:2},
-    history: {name:'今日',taskName:'上古传承',points:20,max:2},
-    constellation: {name:'星座',taskName:'夜观星象',points:20,max:2},
-    explore: {name:'探索',taskName:'秘境探寻',points:10,max:5}
+  actions: {},   // 由 init 从 GAME_CONFIG 构建
+
+  buildActions: function() {
+    this.actions = {};
+    if (!window.GAME_CONFIG) return;
+    for (var i = 0; i < GAME_CONFIG.length; i++) {
+      var item = GAME_CONFIG[i];
+      this.actions[item.key] = {name:item.name, taskName:item.taskName, points:item.points, max:item.max};
+    }
   },
   todayCounts: {},
   totalPoints: 0,
   syncState: 'idle',      // 'idle' | 'loading' | 'saving'
   syncError: false,
   loaded: false,
-  _pendingXp: null,       // 待显示的修炼经验（写→读成功后展示）           // 服务器数据是否已成功加载（未加载时红点显示"…"）
 
   setSyncState: function(state) {
     this.syncState = state;
@@ -639,6 +643,7 @@ var GAME = {
   },
 
   init: function() {
+    this.buildActions();
     var self = this;
     // 登录用户直接显示加载状态，不走本地缓存
     var user = this.getWalineUser();
@@ -931,11 +936,13 @@ var GAME = {
   },
 
   updateTaskDots: function() {
-    var dotIds = {poetry:'poetryDot',history:'historyDot',constellation:'constellationDot',explore:'exploreDot'};
-    for (var key in dotIds) {
-      var el = document.getElementById(dotIds[key]);
+    if (!window.GAME_CONFIG) return;
+    for (var i = 0; i < GAME_CONFIG.length; i++) {
+      var key = GAME_CONFIG[i].key;
+      var el = document.getElementById(key + 'Dot');
       if (!el) continue;
       var act = this.actions[key];
+      if (!act) continue;
       // 数据未就绪（加载中或读取失败）时显示".."
       if (!this.loaded) {
         el.textContent = '..';
@@ -957,19 +964,19 @@ var GAME = {
     var btn = document.getElementById('taskMenuBtn');
     var dropdown = document.getElementById('taskMenuDropdown');
     if (!btn || !dropdown) return;
+    if (!window.GAME_CONFIG) return;
     var allDone = true;
     var html = '';
-    var order = ['poetry','history','constellation','explore'];
-    var dotColors = {poetry:'#f43f5e',history:'#8b5cf6',constellation:'#f59e0b',explore:'#06b6d4'};
-    for (var i = 0; i < order.length; i++) {
-      var key = order[i];
+    for (var i = 0; i < GAME_CONFIG.length; i++) {
+      var key = GAME_CONFIG[i].key;
       var act = this.actions[key];
+      if (!act) continue;
       var count = this.todayCounts[key] || 0;
       var done = count >= act.max;
       if (!done) allDone = false;
       html += '<div class="task-item' + (done ? ' completed' : '') + '">'
         + (done ? '<span class="task-check">✓</span>'
-                : '<span class="task-dot" style="background:'+dotColors[key]+'"></span>')
+                : '<span class="task-dot" style="background:'+GAME_CONFIG[i].color+'"></span>')
         + '<span class="task-name">' + act.taskName + '</span>'
         + '<span class="task-sub">' + act.name + ' +' + act.points + '经验</span>'
         + '<span class="task-count">' + count + '/' + act.max + '</span>'
