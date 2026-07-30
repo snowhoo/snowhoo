@@ -825,7 +825,7 @@ var GAME = {
       var records = (data.data && data.data.data) || [];
       self.processRecords(records, user);
       self.saveLocal();
-      console.log('[GAME] 从 Waline 加载经验值成功:', self.totalPoints);
+      console.log('[GAME] 从 Waline 加载真气值成功:', self.totalPoints);
     })
     .catch(function(e) {
       console.warn('[GAME] 加载 Waline 失败:', e);
@@ -843,7 +843,7 @@ var GAME = {
     });
   },
 
-  // 本地持久化：即使服务器同步失败也能保留经验值
+  // 本地持久化：即使服务器同步失败也能保留真气值
   saveLocal: function() {
     try {
       localStorage.setItem('GAME_totalPoints', String(this.totalPoints));
@@ -914,7 +914,7 @@ var GAME = {
         // 当天 → 直接用剩余次数
         this.todayCounts = foundData.todayRemaining || {};
       } else {
-        // 跨天 → 重置剩余次数（保留经验值）
+        // 跨天 → 重置剩余次数（保留真气值）
         this.initTodayRemaining();
       }
     } else {
@@ -927,7 +927,7 @@ var GAME = {
     this.clearTaskMenuError();
     var gain = this._beforePoints !== undefined ? this.totalPoints - this._beforePoints : 0;
     if (gain > 0) {
-      this.showXp('+' + gain + ' 经验', '');
+      this.showXp('+' + gain + ' 真气', '');
     }
     this._beforePoints = undefined;
   },
@@ -950,12 +950,12 @@ var GAME = {
       return;
     }
     if (!user) {
-      this.showXp('+0 经验','请登录赚取修炼经验');
+      this.showXp('+0 真气','请登录赚取修炼真气');
       return;
     }
     var remaining = this.todayCounts[key] || 0;
     if (remaining <= 0) {
-      this.showXp('+0 经验','今日此项修炼已毕');
+      this.showXp('+0 真气','今日此项修炼已毕');
       return;
     }
     // 记录操作前快照，写→读成功后根据实际增益显示
@@ -1013,7 +1013,7 @@ var GAME = {
         + (done ? '<span class="task-check">✓</span>'
                 : '<span class="task-dot" style="background:'+GAME_CONFIG[i].color+'"></span>')
         + '<span class="task-name">' + act.taskName + '</span>'
-        + '<span class="task-sub">' + act.name + ' +' + act.points + '经验</span>'
+        + '<span class="task-sub">' + act.name + ' +' + act.points + '真气</span>'
         + '<span class="task-count">' + (act.max - remaining) + '/' + act.max + '</span>'
         + '</div>';
     }
@@ -1071,7 +1071,7 @@ var GAME = {
     try {
       if (!user || !user.display_name) return;
       var self = this;
-      // 总经验值 = 原值 + 新增
+      // 总真气值 = 原值 + 新增
       var newPoints = this.totalPoints + points;
       // 剩余次数 = 所有任务当前剩余，当前任务 -1
       var newRemaining = {};
@@ -1123,7 +1123,7 @@ var GAME = {
       }
       request.then(function(r){
         if (r.ok) {
-          console.log('[GAME] 经验值已同步到 Waline:', key, '+'+points);
+          console.log('[GAME] 真气值已同步到 Waline:', key, '+'+points);
           return self.loadFromServer(user);
         } else {
           self.syncError = true;
