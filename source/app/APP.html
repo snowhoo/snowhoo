@@ -646,9 +646,20 @@ var GAME = {
     var user = this.getWalineUser();
     var userStr = user ? user.email + user.display_name : '';
     if (userStr !== this.lastUser) {
+      var wasLoggedIn = this.lastUser !== '';
       this.lastUser = userStr;
       this.updateAvatar();
-      this.loadFromServer();
+      if (!user && wasLoggedIn) {
+        // 从登录状态退出→重置积分/任务数据
+        this.totalPoints = 0;
+        this.todayCounts = {};
+        this.clearLocal();
+        this.updateBadge();
+        this.updateTaskDots();
+        this.updateTaskMenu();
+      } else {
+        this.loadFromServer();
+      }
     }
   },
 
@@ -715,7 +726,16 @@ var GAME = {
   loadFromServer: function() {
     var self = this;
     var user = this.getWalineUser();
-    if (!user) { this.updateBadge(); this.updateTaskDots(); this.updateTaskMenu(); return; }
+    if (!user) {
+      // 无用户→退出登录或未登录，重置数据到初始状态
+      this.totalPoints = 0;
+      this.todayCounts = {};
+      this.clearLocal();
+      this.updateBadge();
+      this.updateTaskDots();
+      this.updateTaskMenu();
+      return;
+    }
     var xhr = new XMLHttpRequest();
     xhr.open('GET','https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=200');
     xhr.withCredentials = true;
@@ -741,6 +761,14 @@ var GAME = {
       localStorage.setItem('GAME_totalPoints', String(this.totalPoints));
       localStorage.setItem('GAME_todayCounts', JSON.stringify(this.todayCounts));
       localStorage.setItem('GAME_saveDate', new Date().toDateString());
+    } catch(e) {}
+  },
+
+  clearLocal: function() {
+    try {
+      localStorage.removeItem('GAME_totalPoints');
+      localStorage.removeItem('GAME_todayCounts');
+      localStorage.removeItem('GAME_saveDate');
     } catch(e) {}
   },
 
