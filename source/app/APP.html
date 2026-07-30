@@ -674,8 +674,12 @@ var GAME = {
       if (!(a._activeBtn === 'constellationBtn' && a.classList.contains('show'))) self.doAction('constellation');
     });
     document.querySelector('.welcome').addEventListener('click',function(){self.doAction('explore')});
-    // 任务菜单点击切换
+    // 任务菜单点击切换（错误状态时点击刷新页面）
     document.getElementById('taskMenuBtn').addEventListener('click',function(e){
+      if (this.classList.contains('error')) {
+        location.reload();
+        return;
+      }
       e.stopPropagation();
       document.getElementById('taskMenuDropdown').classList.toggle('show');
     });
@@ -809,7 +813,7 @@ var GAME = {
     })
     .catch(function(e) {
       console.warn('[GAME] 加载 Waline 失败:', e);
-      self.showTaskMenuError('遭受心魔困扰，请回复心神!');
+      self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
     })
     .then(function() {
       self.setSyncState('idle');
@@ -885,7 +889,7 @@ var GAME = {
     var user = this.getWalineUser();
     // 数据未就绪（加载失败导致的心魔困扰）永久阻塞
     if (user && !this.loaded) {
-      this.showTaskMenuError('遭受心魔困扰，请回复心神!');
+      this.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
       return;
     }
     // 加载中或保存中时阻塞修炼操作
@@ -1055,7 +1059,7 @@ var GAME = {
         console.warn('[GAME] Waline 同步网络失败:', e);
       }).then(function(){
         if (self.syncError) {
-          self.showTaskMenuError('遭受心魔困扰，请回复心神!');
+          self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
           self.syncError = false;
           self.setSyncState('idle');
           self.updateBadge();
