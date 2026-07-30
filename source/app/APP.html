@@ -691,6 +691,8 @@ var GAME = {
     });
     // 定期检查登录状态变化（每3秒检测一次）
     setInterval(function(){self.checkLogin()},3000);
+    // 等待 Waline 异步初始化完成后检测一次用户状态（加速登录状态刷新）
+    setTimeout(function(){self.checkLogin()},500);
     // 记录当前用户，避免 checkLogin 首次触发重复检测
     var u = this.getWalineUser();
     this.lastUser = u ? u.email + u.display_name : '';
@@ -754,7 +756,8 @@ var GAME = {
 
   getWalineUser: function() {
     try {
-      // === 先用 Waline 自身的 key（Waline 登出时会清掉）===
+      // 只信任 Waline 自身的 key（WALINE_USER / @waline/user / waline_user）
+      // 登出时 Waline 会清掉这些 key，GAME_USER 仅做辅助持久化，不作为用户检测依据
       var keys = ['WALINE_USER','@waline/user','waline_user'];
       var user = null;
       for (var i = 0; i < keys.length; i++) {
@@ -766,54 +769,17 @@ var GAME = {
           }
         } catch(e) { user = null; }
       }
-      // sessionStorage 也扫一下
       if (!user) {
         try {
           var sv = sessionStorage.getItem('WALINE_USER') || sessionStorage.getItem('@waline/user');
-          if (sv) { user = JSON.parse(sv); if (user && (user.display_name || user.nick || user.name)) {} else user = null; }
+          if (sv) { user = JSON.parse(sv); if (!user || !(user.display_name || user.nick || user.name)) user = null; }
         } catch(e) { user = null; }
       }
-      // 全 key 扫描
-      if (!user) {
-        for (var j = 0; j < localStorage.length; j++) {
-          try {
-            var k = localStorage.key(j);
-            if (k && k.toLowerCase().indexOf('waline') !== -1) {
-              var v = localStorage.getItem(k);
-              if (v) { var u = JSON.parse(v); if (u && (u.display_name || u.nick || u.name)) { user = u; break; } }
-            }
-          } catch(e) {}
-        }
-      }
-
-      // 如果 Waline 自身的 key 里有用户 —— 直接返回
-      if (user) {
-        user.display_name = user.display_name || user.nick || user.name || '';
-        user.avatar = user.avatar || user.objectURL || user.avator || '';
-        user.email = user.email || user.mail || '';
-        return user;
-      }
-
-      // === Waline 自身 key 里没用户了 ===
-      // 此时 GAME_USER 可能是登出后的残留，也可能是页面刚刷新生效的
-      var gameUser = null;
-      try { var gv = localStorage.getItem('GAME_USER'); if (gv) { gameUser = JSON.parse(gv); } } catch(e) {}
-
-      if (gameUser && gameUser.display_name) {
-        // 如果 Waline 已经初始化完了（walineInstance 不为 null）但 Waline 的 key 却没了
-        // → 说明用户已经登出了，GAME_USER 是残留 → 清理掉
-        if (window.walineInstance) {
-          try { localStorage.removeItem('GAME_USER'); } catch(e) {}
-          return null;
-        }
-        // Waline 还没初始化完（页面刚加载），GAME_USER 是登入状态的缓存 → 信任
-        gameUser.display_name = gameUser.display_name || '';
-        gameUser.avatar = gameUser.avatar || '';
-        gameUser.email = gameUser.email || '';
-        return gameUser;
-      }
-
-      return null;
+      if (!user) return null;
+      user.display_name = user.display_name || user.nick || user.name || '';
+      user.avatar = user.avatar || user.objectURL || user.avator || '';
+      user.email = user.email || user.mail || '';
+      return user;
     } catch(e) { return null; }
   },
 
