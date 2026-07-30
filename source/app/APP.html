@@ -751,6 +751,14 @@ var GAME = {
 
   getWalineUser: function() {
     try {
+      // 先检查我们自己的 GAME_USER 缓存（在 onLogin 中保存，格式稳定，不依赖 Waline 版本）
+      try {
+        var gameUser = localStorage.getItem('GAME_USER');
+        if (gameUser) {
+          var u = JSON.parse(gameUser);
+          if (u && u.display_name) return u;
+        }
+      } catch(e) {}
       // Waline v3 使用 key 'WALINE_USER'
       var keys = ['WALINE_USER','@waline/user','waline_user'];
       var val = '', user = null;
@@ -1172,13 +1180,18 @@ document.getElementById('commentAvatar').addEventListener('click', function() {
             comment: '留言'
           },
           onLogin: function(user) {
-            // 登录后保存用户信息到多处备用
+            // 登录后保存用户信息到独立缓存（不依赖 Waline 内部存储格式）
+            var gu = {
+              display_name: user.display_name || user.nick || user.name || '',
+              avatar: user.avatar || user.objectURL || user.avator || '',
+              email: user.email || user.mail || ''
+            };
+            try { localStorage.setItem('GAME_USER', JSON.stringify(gu)); } catch(e) {}
+            // 也存一份兼容 Waline 的 key
             try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e) {}
-            try { localStorage.setItem('@waline/user', JSON.stringify(user)); } catch(e) {}
-            // 关闭评论弹窗
+            // 关闭评论弹窗后刷新页面
             commentOverlay.classList.remove('active');
-            // 延迟一点刷新页面，确保所有缓存写入完成
-            setTimeout(function(){ window.location.href = window.location.href; }, 300);
+            setTimeout(function(){ location.reload(); }, 200);
           }
         });
       } catch(e) {
