@@ -49,6 +49,10 @@ body{display:flex;flex-direction:column}
 /* ===== 底部面板：固定高度 ===== */
 .bottom-panel{position:relative;height:220px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;background:#fff url('xzbg.png') center/cover no-repeat;z-index:2}
 
+/* 数据库同步状态指示器 */
+.sync-indicator{position:absolute;top:42px;left:50%;transform:translateX(-50%);font-size:.55rem;color:#ff8c00;font-weight:300;letter-spacing:.5px;display:none;white-space:nowrap;text-shadow:0 1px 2px rgba(255,255,255,.5);z-index:3;animation:syncPulse 1.2s ease-in-out infinite}
+@keyframes syncPulse{0%,100%{opacity:1}50%{opacity:.4}}
+
 /* 浮动奔跑图片 */
 .runner-float{position:absolute;top:-16px;left:0;z-index:5;pointer-events:none;animation:float 3s ease-in-out infinite}
 .runner-float img{height:40px;width:auto;display:block}
@@ -206,6 +210,7 @@ body{display:flex;flex-direction:column}
   </div>
   <div class="category-hint">滑动&nbsp;·&nbsp;按下&nbsp;·&nbsp;进入<br><span class="hint-en">SWIPE · TAP · ENTER</span></div>
   <div class="points-badge" id="pointsBadge">✦ 0</div>
+  <span class="sync-indicator" id="syncIndicator"></span>
   <div class="xp-float" id="xpFloat"></div>
   <img class="xz-man" src="xzman.png" alt="">
   <div class="comment-user" id="commentUser">
@@ -605,17 +610,51 @@ var GAME = {
   },
   todayCounts: {},
   totalPoints: 0,
+  syncState: 'idle',      // 'idle' | 'loading' | 'saving'
+
+  setSyncState: function(state) {
+    this.syncState = state;
+    var el = document.getElementById('syncIndicator');
+    if (!el) return;
+    if (state === 'loading') {
+      el.textContent = '⚡ 真气恢复中…';
+      el.style.display = 'inline';
+    } else if (state === 'saving') {
+      el.textContent = '⟳ 真气融合中…';
+      el.style.display = 'inline';
+    } else {
+      el.style.display = 'none';
+    }
+    // 同步更新任务菜单按钮文本反馈
+    var btn = document.getElementById('taskMenuBtn');
+    if (state !== 'idle' && btn && !btn.classList.contains('completed')) {
+      btn.textContent = state === 'loading' ? '⚡ 真气恢复中...' : '⟳ 真气融合中...';
+    } else if (state === 'idle' && btn) {
+      // 稍后 updateTaskMenu 会恢复正确文本
+    }
+  },
 
   init: function() {
     var self = this;
-    // 先从本地缓存恢复数据（即使没登录也能显示上次的）
-    this.loadLocal();
-    this.updateBadge();
-    this.updateTaskDots();
-    this.updateTaskMenu();
-    this.updateAvatar();
-    // 再尝试从服务器同步（登录用户覆盖本地数据）
-    this.loadFromServer();
+    // 登录用户直接显示加载状态，不走本地缓存
+    var user = this.getWalineUser();
+    if (user) {
+      this.setSyncState('loading');
+      this.totalPoints = 0;
+      this.todayCounts = {};
+      this.updateBadge();
+      this.updateTaskDots();
+      this.updateTaskMenu();
+      this.updateAvatar();
+      this.loadFromServer(user);
+    } else {
+      // 未登录时从本地缓存恢复数据
+      this.loadLocal();
+      this.updateBadge();
+      this.updateTaskDots();
+      this.updateTaskMenu();
+      this.updateAvatar();
+    }
     document.getElementById('poetryBtn').addEventListener('pointerdown',function(){
       var a = document.getElementById('contentArea');
       if (!(a._activeBtn === 'poetryBtn' && a.classList.contains('show'))) self.doAction('poetry');
@@ -653,12 +692,22 @@ var GAME = {
       this.updateAvatar();
       if (!user && wasLoggedIn) {
         // 从登录状态退出→重置积分/任务数据
+        this.setSyncState('idle');
         this.totalPoints = 0;
         this.todayCounts = {};
         this.clearLocal();
         this.updateBadge();
         this.updateTaskDots();
         this.updateTaskMenu();
+      } else if (user && !wasLoggedIn) {
+        // 从未登录→登录，显示加载状态并拉取数据
+        this.setSyncState('loading');
+        this.totalPoints = 0;
+        this.todayCounts = {};
+        this.updateBadge();
+        this.updateTaskDots();
+        this.updateTaskMenu();
+        this.loadFromServer(user);
       } else {
         this.loadFromServer();
       }
@@ -729,7 +778,7 @@ var GAME = {
     var self = this;
     var user = optUser || this.getWalineUser();
     if (!user) {
-      // 无用户→退出登录或未登录，重置数据到初始状态
+      this.setSyncState('idle');
       this.totalPoints = 0;
       this.todayCounts = {};
       this.clearLocal();
@@ -738,6 +787,7 @@ var GAME = {
       this.updateTaskMenu();
       return;
     }
+    this.setSyncState('loading');
     fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=200', { credentials: 'include' })
     .then(function(r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -745,13 +795,13 @@ var GAME = {
     })
     .then(function(data) {
       self.processRecords(data.data || [], user);
-      self.saveLocal();
       console.log('[GAME] 从 Waline 加载经验值成功:', self.totalPoints);
     })
     .catch(function(e) {
       console.warn('[GAME] 加载 Waline 失败:', e);
     })
     .then(function() {
+      self.setSyncState('idle');
       self.updateBadge();
       self.updateTaskDots();
       self.updateTaskMenu();
@@ -815,6 +865,15 @@ var GAME = {
   doAction: function(key) {
     var act = this.actions[key];
     if (!act) return;
+    // 同步状态检查：加载中或保存中时阻塞所有操作
+    if (this.syncState === 'loading') {
+      this.showXp('', '真气恢复中，无法修炼…');
+      return;
+    }
+    if (this.syncState === 'saving') {
+      this.showXp('', '真气融合中，无法修炼…');
+      return;
+    }
     var user = this.getWalineUser();
     if (!user) {
       this.showXp('+0 经验','请登录赚取修炼经验');
@@ -825,13 +884,14 @@ var GAME = {
       this.showXp('+0 经验','今日此项修炼已毕');
       return;
     }
+    // 先乐观更新 UI
     this.todayCounts[key] = count + 1;
     this.totalPoints += act.points;
-    this.saveLocal(); // 每次操作后立即保存到本地
     this.updateBadge();
     this.updateTaskDots();
     this.updateTaskMenu();
     this.showXp('+'+act.points+' 经验','');
+    // 再写数据库（写入期间阻塞新操作）
     this.syncToWaline(key,act.points,user);
   },
 
@@ -901,9 +961,11 @@ var GAME = {
       }
       if (!token) {
         console.warn('[GAME] Waline 同步跳过：无认证 token');
+        this.setSyncState('idle');
         return;
       }
-      // 使用 fetch（比 XHR 更可靠地处理跨域认证）
+      this.setSyncState('saving');
+      var self = this;
       fetch('https://waline.snowhoo.net/api/comment', {
         method: 'POST',
         headers: {
@@ -927,6 +989,11 @@ var GAME = {
         return r;
       }).catch(function(e){
         console.warn('[GAME] Waline 同步网络失败:', e);
+      }).then(function(){
+        self.setSyncState('idle');
+        self.updateBadge();
+        self.updateTaskDots();
+        self.updateTaskMenu();
       });
     } catch(e){ console.warn('[GAME] Waline 同步异常:', e); }
   }
@@ -955,10 +1022,11 @@ document.getElementById('commentAvatar').addEventListener('click', function() {
             comment: '留言'
           },
           onLogin: function(user) {
-            // 登录后，主动保存用户信息到 localStorage（兼容 Waline v3 不同存储机制）
+            // 登录后，主动保存用户信息到 localStorage
             try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e) {}
-            // 立即更新头像和积分（传入 user 避免 getWalineUser() 找不到）
+            // 立即更新头像，并设为加载状态拉取数据
             GAME.updateAvatar(user);
+            GAME.setSyncState('loading');
             GAME.loadFromServer(user);
           }
         });
