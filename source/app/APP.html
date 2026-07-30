@@ -122,6 +122,9 @@ body{display:flex;flex-direction:column}
 .poetry-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:url('poetry-bg.jpg') center/cover no-repeat;opacity:0;transition:opacity .8s ease;pointer-events:none;z-index:1}
 .poetry-overlay.show{opacity:1}
 .poetry-overlay::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(transparent 40%,rgba(0,0,0,.35))}
+.history-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:url('history-bg.jpg') center/cover no-repeat;opacity:0;transition:opacity .8s ease;pointer-events:none;z-index:1}
+.history-overlay.show{opacity:1}
+.history-overlay::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(transparent 40%,rgba(0,0,0,.35))}
 
 /* 评论弹窗 */
 .comment-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,.5);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;display:flex;align-items:flex-end}
@@ -167,6 +170,7 @@ body{display:flex;flex-direction:column}
   <img id="bgImage" src="" alt="">
   <div class="stars-overlay" id="starsOverlay"></div>
   <div class="poetry-overlay" id="poetryOverlay"></div>
+  <div class="history-overlay" id="historyOverlay"></div>
   <div class="gradient"></div>
   <div class="top-left-badges">
     <span class="badge" id="poetryBtn"><span class="badge-icon">≡</span>诗词<span class="task-dot" id="poetryDot"></span></span>
@@ -379,8 +383,10 @@ items.forEach(function(el) {
 function closeAllOverlays() {
   var so = document.getElementById('starsOverlay');
   var po = document.getElementById('poetryOverlay');
+  var ho = document.getElementById('historyOverlay');
   if (so) so.classList.remove('show');
   if (po) po.classList.remove('show');
+  if (ho) ho.classList.remove('show');
 }
 
 // 点击"诗"展示每日诗词，"今"展示历史上的今天
@@ -490,17 +496,65 @@ function togglePoetry() {
 
 document.getElementById('poetryBtn').addEventListener('click', togglePoetry);
 
-document.getElementById('historyBtn').addEventListener('click', function() {
-  var a = document.getElementById('contentArea');
-  var isNew = !(a._activeBtn === 'historyBtn' && a.classList.contains('show'));
-  toggleContent('historyBtn', '../js/HistoryToday.json', function(data) {
-    var html = '';
-    data.events.forEach(function(e) {
-      html += '<div class="history-item"><span class="hyear">' + e.year + '年</span><span class="htext"> ' + e.text + '</span></div>';
+// 今日按钮：和诗词同样的"先显示背景+加载提示，再异步加载内容"流程
+function toggleHistory() {
+  var btn = document.getElementById('historyBtn');
+  var area = document.getElementById('contentArea');
+  var overlay = document.getElementById('historyOverlay');
+
+  // 关闭面板
+  if (area._activeBtn === 'historyBtn' && area.classList.contains('show')) {
+    area.classList.remove('show');
+    btn.classList.remove('selected');
+    area._activeBtn = null;
+    closeAllOverlays();
+    return;
+  }
+
+  document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
+  btn.classList.add('selected');
+
+  // 关闭所有背景覆盖层，再显示今日背景
+  closeAllOverlays();
+
+  // 第一步：显示"今日推演中.." 提示文本 + 触发背景渐入
+  area.innerHTML = '<div class="content-line" style="font-size:.78rem;opacity:.7">今日推演中..</div>';
+  area.classList.add('show');
+  area._activeBtn = 'historyBtn';
+  area.style.left = '';
+  area.style.width = '';
+  area.style.transform = 'translateY(-50%)';
+  area.style.textAlign = 'center';
+
+  // 显示今日背景（淡入 0.8s 与 CSS transition 一致）
+  overlay.classList.add('show');
+
+  // 生成唯一标记，防止异步回调覆盖其他面板
+  var _reqId = Date.now() + '_' + Math.random();
+  area._toggleReqId = _reqId;
+
+  // 第二步：背景渐入后，加载今日内容
+  setTimeout(function() {
+    if (area._toggleReqId !== _reqId) return;  // 用户已切走
+    fetch('../js/HistoryToday.json').then(function(r){return r.json()}).then(function(data){
+      if (area._toggleReqId !== _reqId) return;
+      var html = '';
+      data.events.forEach(function(e) {
+        html += '<div class="history-item"><span class="hyear">' + e.year + '年</span><span class="htext"> ' + e.text + '</span></div>';
+      });
+      area.innerHTML = html;
+      area._activeBtn = 'historyBtn';
+      // 今日内容加载完成 → 记录修炼
+      GAME.doAction('history');
+    }).catch(function(){
+      if (area._toggleReqId !== _reqId) return;
+      area.innerHTML = '<div class="content-line">今日加载失败</div>';
+      area._activeBtn = 'historyBtn';
     });
-    return html;
-  }, isNew ? function(){ GAME.doAction('history'); } : null);
-});
+  }, 800);
+}
+
+document.getElementById('historyBtn').addEventListener('click', toggleHistory);
 
 // 星座按钮
 document.getElementById('constellationBtn').addEventListener('click', function() {
