@@ -612,6 +612,7 @@ var GAME = {
   totalPoints: 0,
   syncState: 'idle',      // 'idle' | 'loading' | 'saving'
   syncError: false,
+  loaded: false,           // 服务器数据是否已成功加载（未加载时红点显示"…"）
 
   setSyncState: function(state) {
     this.syncState = state;
@@ -640,6 +641,7 @@ var GAME = {
     // 登录用户直接显示加载状态，不走本地缓存
     var user = this.getWalineUser();
     if (user) {
+      this.loaded = false;
       this.setSyncState('loading');
       this.totalPoints = 0;
       this.todayCounts = {};
@@ -650,6 +652,7 @@ var GAME = {
       this.loadFromServer(user);
     } else {
       // 未登录时从本地缓存恢复数据
+      this.loaded = true;
       this.setSyncState('idle');
       this.loadLocal();
       this.updateBadge();
@@ -694,6 +697,7 @@ var GAME = {
       this.updateAvatar();
       if (!user && wasLoggedIn) {
         // 从登录状态退出→重置积分/任务数据
+        this.loaded = true;
         this.setSyncState('idle');
         this.totalPoints = 0;
         this.todayCounts = {};
@@ -703,6 +707,7 @@ var GAME = {
         this.updateTaskMenu();
       } else if (user && !wasLoggedIn) {
         // 从未登录→登录，显示加载状态并拉取数据
+        this.loaded = false;
         this.setSyncState('loading');
         this.totalPoints = 0;
         this.todayCounts = {};
@@ -780,6 +785,7 @@ var GAME = {
     var self = this;
     var user = optUser || this.getWalineUser();
     if (!user) {
+      this.loaded = true;
       this.setSyncState('idle');
       this.totalPoints = 0;
       this.todayCounts = {};
@@ -863,6 +869,7 @@ var GAME = {
         }
       } catch(e) {}
     }
+    this.loaded = true;
   },
 
   doAction: function(key) {
@@ -906,8 +913,8 @@ var GAME = {
       var el = document.getElementById(dotIds[key]);
       if (!el) continue;
       var act = this.actions[key];
-      // 加载中状态：显示"…"表示正在拉取数据
-      if (this.syncState === 'loading') {
+      // 数据未就绪（加载中或读取失败）时显示"…"
+      if (!this.loaded) {
         el.textContent = '…';
         el.style.display = 'flex';
         continue;
