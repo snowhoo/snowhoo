@@ -77,8 +77,9 @@ body{display:flex;flex-direction:column}
 .category-item.active .label{color:#333;font-weight:400}
 .category-hint{text-align:center;margin-top:4px;font-size:.68rem;color:#bbb;letter-spacing:1px;line-height:1.5}
 .category-hint .hint-en{font-size:.55rem;color:#ccc;letter-spacing:2px;font-weight:300}
-.xz-man{position:absolute;bottom:25px;left:25px;height:50px;width:auto;pointer-events:none;z-index:3;animation:xzFloat 3s ease-in-out infinite}
-.xz-level{position:absolute;bottom:78px;left:25px;z-index:3;color:#000;font-size:.62rem;font-weight:300;letter-spacing:1px;white-space:nowrap;pointer-events:none}
+.xz-group{position:absolute;bottom:18px;left:25px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none}
+.xz-man{height:50px;width:auto;animation:xzFloat 3s ease-in-out infinite}
+.xz-level{font-size:.62rem;color:#000;font-weight:300;letter-spacing:1px;white-space:nowrap}
 @keyframes xzFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 
 /* 评论登录头像 */
@@ -130,7 +131,7 @@ body{display:flex;flex-direction:column}
 .comment-panel-body{flex:1;overflow-y:auto;padding:8px 16px;min-height:200px;max-height:calc(85vh - 50px);-webkit-overflow-scrolling:touch}
 
 /* 积分系统 */
-.points-badge{position:absolute;bottom:10px;left:25px;font-size:.6rem;color:#1a1a1a;white-space:nowrap;letter-spacing:.5px;z-index:3;pointer-events:none;font-weight:300}
+.points-badge{font-size:.6rem;color:#1a1a1a;white-space:nowrap;letter-spacing:.5px;font-weight:300}
 .xp-float{position:absolute;bottom:5px;left:80px;z-index:4;font-size:.7rem;color:#1a1a1a;pointer-events:none;white-space:nowrap;opacity:0;transition:all .6s ease-out;line-height:1.4;font-weight:400}
 .xp-float.show{opacity:1;transform:translateY(-20px)}
 .xp-float .xp-sub{font-size:.6rem;opacity:.7;display:block;font-weight:300}
@@ -213,10 +214,12 @@ body{display:flex;flex-direction:column}
     </button>
   </div>
   <div class="category-hint">滑动&nbsp;·&nbsp;按下&nbsp;·&nbsp;进入<br><span class="hint-en">SWIPE · TAP · ENTER</span></div>
-  <div class="points-badge" id="pointsBadge">✦ 0</div>
+  <div class="xz-group">
+    <div class="xz-level" id="xzLevel"></div>
+    <img class="xz-man" src="xzman.png" alt="">
+    <div class="points-badge" id="pointsBadge">✦ 0</div>
+  </div>
   <div class="xp-float" id="xpFloat"></div>
-  <img class="xz-man" src="xzman.png" alt="">
-  <div class="xz-level" id="xzLevel"></div>
   <div class="comment-user" id="commentUser">
     <div class="comment-avatar" id="commentAvatar">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
