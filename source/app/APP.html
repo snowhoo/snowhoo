@@ -618,11 +618,11 @@ var GAME = {
     this.syncState = state;
     var el = document.getElementById('syncIndicator');
     if (!el) return;
-    if (state === 'loading') {
-      el.textContent = '⚡ 真气恢复中…';
+      if (state === 'loading') {
+      el.textContent = '⚡ 真气恢复中..';
       el.style.display = 'inline';
     } else if (state === 'saving') {
-      el.textContent = '⟳ 真气融合中…';
+      el.textContent = '⟳ 真气融合中..';
       el.style.display = 'inline';
     } else {
       el.style.display = 'none';
@@ -875,13 +875,9 @@ var GAME = {
   doAction: function(key) {
     var act = this.actions[key];
     if (!act) return;
-    // 同步状态检查：加载中或保存中时阻塞所有操作
-    if (this.syncState === 'loading') {
-      this.showXp('', '真气恢复中，无法修炼…');
-      return;
-    }
+    // 同步状态检查：保存中时阻塞新操作
     if (this.syncState === 'saving') {
-      this.showXp('', '真气融合中，无法修炼…');
+      this.showXp('', '真气融合中，无法修炼..');
       return;
     }
     var user = this.getWalineUser();
@@ -905,7 +901,9 @@ var GAME = {
     this.syncToWaline(key,act.points,user);
   },
 
-  updateBadge: function() { document.getElementById('pointsBadge').textContent = '✦ '+this.totalPoints; },
+  updateBadge: function() {
+    document.getElementById('pointsBadge').textContent = this.loaded ? '✦ '+this.totalPoints : '✦ ..';
+  },
 
   updateTaskDots: function() {
     var dotIds = {poetry:'poetryDot',history:'historyDot',constellation:'constellationDot',explore:'exploreDot'};
@@ -913,9 +911,9 @@ var GAME = {
       var el = document.getElementById(dotIds[key]);
       if (!el) continue;
       var act = this.actions[key];
-      // 数据未就绪（加载中或读取失败）时显示"…"
+      // 数据未就绪（加载中或读取失败）时显示".."
       if (!this.loaded) {
-        el.textContent = '…';
+        el.textContent = '..';
         el.style.display = 'flex';
         continue;
       }
