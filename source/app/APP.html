@@ -140,6 +140,8 @@ body{display:flex;flex-direction:column}
 /* 今日修炼任务菜单 */
 .task-menu{position:absolute;bottom:10px;z-index:3}
 .task-menu-btn{font-size:.58rem;color:#ff8c00;cursor:pointer;padding:3px 8px;border:1px solid rgba(255,140,0,.3);border-radius:10px;background:rgba(255,255,255,.88);white-space:nowrap;transition:all .3s;font-weight:400;letter-spacing:.3px;line-height:1.4;user-select:none;-webkit-user-select:none}
+/* 初始隐藏（!important 防止任何 JS/CSS 提前显示）*/
+.task-menu-btn.init-hidden{display:none!important}
 .task-menu-btn.error{color:#e94560;border-color:rgba(233,69,96,.35)}
 .task-menu-btn.completed{color:#22c55e;border-color:rgba(34,197,94,.35)}
 .task-menu-dropdown{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:170px;padding:6px 0;display:none;z-index:10}
@@ -220,7 +222,7 @@ body{display:flex;flex-direction:column}
     <div class="comment-name" id="commentName">未登录</div>
   </div>
   <div class="task-menu">
-    <div class="task-menu-btn" id="taskMenuBtn" style="display:none">今日修炼任务</div>
+    <div class="task-menu-btn init-hidden" id="taskMenuBtn">今日修炼任务</div>
     <div class="task-menu-dropdown" id="taskMenuDropdown"></div>
   </div>
 </div>
@@ -981,7 +983,7 @@ var GAME = {
     if (!btn) return;
     btn.textContent = msg;
     btn.classList.add('error');
-    btn.style.display = '';
+    btn.classList.remove('init-hidden');
   },
 
   clearTaskMenuError: function() {
@@ -997,10 +999,10 @@ var GAME = {
     if (!btn) return;
     var user = this.getWalineUser();
     if (this.loaded && user) {
-      btn.style.display = '';
+      btn.classList.remove('init-hidden');
       this.updateTaskMenu();
     } else {
-      btn.style.display = 'none';
+      btn.classList.add('init-hidden');
     }
   },
 
