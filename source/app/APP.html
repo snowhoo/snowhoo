@@ -78,6 +78,7 @@ body{display:flex;flex-direction:column}
 .category-hint{text-align:center;margin-top:4px;font-size:.68rem;color:#bbb;letter-spacing:1px;line-height:1.5}
 .category-hint .hint-en{font-size:.55rem;color:#ccc;letter-spacing:2px;font-weight:300}
 .xz-man{position:absolute;bottom:25px;left:25px;height:50px;width:auto;pointer-events:none;z-index:3;animation:xzFloat 3s ease-in-out infinite}
+.xz-level{position:absolute;bottom:78px;left:25px;z-index:3;color:#fff;font-size:.62rem;font-weight:300;text-shadow:0 1px 6px rgba(0,0,0,.5);letter-spacing:1px;background:rgba(0,0,0,.25);padding:2px 8px;border-radius:8px;white-space:nowrap;pointer-events:none;backdrop-filter:blur(2px)}
 @keyframes xzFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 
 /* 评论登录头像 */
@@ -215,6 +216,7 @@ body{display:flex;flex-direction:column}
   <div class="points-badge" id="pointsBadge">✦ 0</div>
   <div class="xp-float" id="xpFloat"></div>
   <img class="xz-man" src="xzman.png" alt="">
+  <div class="xz-level" id="xzLevel"></div>
   <div class="comment-user" id="commentUser">
     <div class="comment-avatar" id="commentAvatar">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -633,6 +635,7 @@ var GAME = {
   loaded: false,
   _gameObjectId: 0,       // 当前用户游戏记录在 Waline 中的 objectId，用于 PUT 更新
   _noDbData: false,       // 数据库中无该用户记录（新用户），红点应显示".."
+  level: 0,               // 境界等级（0=凡人）
 
   setSyncState: function(state) {
     this.syncState = state;
@@ -665,6 +668,7 @@ var GAME = {
       this.updateBadge();
       this.updateTaskDots();
       this.updateAvatar();
+      this.updateLevelDisplay();
       this.loadFromServer(user);
     } else {
       // 未登录不显示缓存数据，统一显示".."占位
@@ -673,6 +677,7 @@ var GAME = {
       this.updateBadge();
       this.updateTaskDots();
       this.updateAvatar();
+      this.updateLevelDisplay();
       this.updateTaskMenuBtn();
     }
     // 任务菜单点击切换（错误状态刷新，加载/保存中无操作）
@@ -723,6 +728,7 @@ var GAME = {
         this.clearLocal();
         this.updateBadge();
         this.updateTaskDots();
+        this.updateLevelDisplay();
         this.updateTaskMenu();
       } else if (user && !wasLoggedIn) {
         // 从未登录→登录，显示加载状态并拉取数据
@@ -916,6 +922,7 @@ var GAME = {
       this.totalPoints = foundData.points;
       this._gameObjectId = foundId;
       this._noDbData = false;
+      this.level = typeof foundData.level === 'number' ? foundData.level : 0;
       if (foundData.date === today) {
         // 当天 → 直接用剩余次数
         this.todayCounts = foundData.todayRemaining || {};
@@ -936,6 +943,7 @@ var GAME = {
       this.showXp('+' + gain + ' 真气', '');
     }
     this._beforePoints = undefined;
+    this.updateLevelDisplay();
   },
 
   doAction: function(key) {
@@ -1076,6 +1084,25 @@ var GAME = {
     }
   },
 
+  // 根据等级数值返回对应显示文字
+  getLevelName: function(lv) {
+    if (typeof LEVEL_TABLE !== 'undefined' && LEVEL_TABLE[lv]) return LEVEL_TABLE[lv];
+    return '凡人';
+  },
+
+  // 更新左下角境界显示（打坐人物上方）
+  updateLevelDisplay: function() {
+    var el = document.getElementById('xzLevel');
+    if (!el) return;
+    var user = this.getWalineUser();
+    if (user) {
+      el.textContent = this.getLevelName(this.level);
+      el.style.display = '';
+    } else {
+      el.style.display = 'none';
+    }
+  },
+
   syncToWaline: function(key,points,user) {
     try {
       if (!user || !user.display_name) return;
@@ -1093,7 +1120,7 @@ var GAME = {
           points: newPoints,
           todayRemaining: newRemaining,
           nick: user.display_name,
-          level: 0,
+          level: this.level,
           date: today
         }),
         url: '/app-game/actions',
