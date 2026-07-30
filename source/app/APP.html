@@ -801,7 +801,7 @@ var GAME = {
     this.setSyncState('loading');
     // 获取 token 用于调试/认证
     var token = user.token || '';
-    return fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions' + (token ? '&token='+encodeURIComponent(token) : ''))
+    return fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=50' + (token ? '&token='+encodeURIComponent(token) : ''))
     .then(function(r) {
       if (!r.ok) {
         // 读取响应体以便排查错误详情
@@ -871,12 +871,14 @@ var GAME = {
 
   processRecords: function(records, user) {
     var today = new Date().toDateString();
+    var userNick = user.display_name || '';
     this.todayCounts = {};
     this.totalPoints = 0;
     for (var i = 0; i < records.length; i++) {
       try {
         var r = records[i];
-        // Waline API 返回的原始内容在 orig 字段（comment 字段含 HTML 标签）
+        // 只统计当前登录用户的记录（用 nick 匹配，mail 字段可能不返回）
+        if ((r.nick || '') !== userNick) continue;
         var raw = r.orig || r.comment || '';
         var action = JSON.parse(raw);
         this.totalPoints += action.points || 0;
