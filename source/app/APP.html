@@ -882,13 +882,18 @@ var GAME = {
   doAction: function(key) {
     var act = this.actions[key];
     if (!act) return;
+    var user = this.getWalineUser();
+    // 数据未就绪（加载失败导致的心魔困扰）永久阻塞
+    if (user && !this.loaded) {
+      this.showTaskMenuError('遭受心魔困扰，请回复心神!');
+      return;
+    }
     // 加载中或保存中时阻塞修炼操作
     if (this.syncState !== 'idle') {
       var msg = this.syncState === 'loading' ? '真气恢复中，无法修炼..' : '真气融合中，无法修炼..';
       this.showTaskMenuError(msg);
       return;
     }
-    var user = this.getWalineUser();
     if (!user) {
       this.showXp('+0 经验','请登录赚取修炼经验');
       return;
