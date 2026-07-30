@@ -219,7 +219,7 @@ body{display:flex;flex-direction:column}
     <div class="comment-avatar" id="commentAvatar">
       <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     </div>
-    <div class="comment-name" id="commentName">未登录</div>
+    <div class="comment-name" id="commentName">隐匿者</div>
   </div>
   <div class="task-menu">
     <div class="task-menu-btn init-hidden" id="taskMenuBtn"></div>
@@ -744,7 +744,7 @@ var GAME = {
       nameEl.textContent = user.display_name || '';
     } else {
       el.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
-      nameEl.textContent = '未登录';
+      nameEl.textContent = '隐匿者';
     }
   },
 
