@@ -784,7 +784,7 @@ var GAME = {
     } catch(e) { return null; }
   },
 
-  loadFromServer: function(optUser) {
+  loadFromServer: function(optUser, silent) {
     var self = this;
     var user = optUser || this.getWalineUser();
     if (!user) {
@@ -818,7 +818,10 @@ var GAME = {
     })
     .catch(function(e) {
       console.warn('[GAME] 加载 Waline 失败:', e);
-      self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+      // silent=true 时不干扰已显示的 UI（写入成功后的静默校正）
+      if (!silent) {
+        self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+      }
     })
     .then(function() {
       self.setSyncState('idle');
@@ -870,36 +873,39 @@ var GAME = {
 
   processRecords: function(records, user) {
     var today = new Date().toDateString();
-    this.todayCounts = {};
-    this.totalPoints = 0;
+    // 保存当前乐观值，与服务器结果取大（防止服务器缓存延迟导致数据回退）
+    var optimisticTotal = this.totalPoints;
+    var optimisticCounts = {};
+    for (var k in this.todayCounts) optimisticCounts[k] = this.todayCounts[k];
+    // 用服务器数据重新计算
+    var serverTotal = 0;
+    var serverCounts = {};
     for (var i = 0; i < records.length; i++) {
       try {
         var r = records[i];
         var action = JSON.parse(r.comment);
         if ((r.mail||'') !== (user.email||'')) continue;
-        this.totalPoints += action.points || 0;
+        serverTotal += action.points || 0;
         var d = new Date(r.insertedAt || r.createdAt || r.time).toDateString();
         if (d === today) {
-          this.todayCounts[action.key] = (this.todayCounts[action.key] || 0) + 1;
+          serverCounts[action.key] = (serverCounts[action.key] || 0) + 1;
         }
       } catch(e) {}
     }
+    // 取服务器与乐观值中的较大者（服务器更准确，但乐观值防止回退）
+    this.totalPoints = Math.max(serverTotal, optimisticTotal);
+    this.todayCounts = {};
+    for (var key in this.actions) {
+      this.todayCounts[key] = Math.max(serverCounts[key] || 0, optimisticCounts[key] || 0);
+    }
     this.loaded = true;
     this.clearTaskMenuError();
-    // 用操作前快照与读回后的实际差值决定浮动提示（保证正确性）
-    var gain = this._beforePoints !== undefined ? this.totalPoints - this._beforePoints : 0;
-    if (gain > 0) {
-      this.showXp('+' + gain + ' 经验', '');
-    }
-    this._beforePoints = undefined;
   },
 
   doAction: function(key) {
     var act = this.actions[key];
     if (!act) return;
     var user = this.getWalineUser();
-    // 重置快照（避免上次失败的残留）
-    this._beforePoints = undefined;
     // 数据未就绪（加载失败导致的心魔困扰）永久阻塞，按钮显示错误提示
     if (user && !this.loaded) {
       this.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
@@ -920,9 +926,7 @@ var GAME = {
       this.showXp('+0 经验','今日此项修炼已毕');
       return;
     }
-    // 记录操作前快照，写→读成功后根据实际增益显示
-    this._beforePoints = this.totalPoints;
-    // 写数据库→读数据库→更新 UI
+    // 写数据库→成功时乐观更新→异步读校正
     this.syncToWaline(key,act.points,user);
   },
 
@@ -1059,8 +1063,17 @@ var GAME = {
       }).then(function(r){
         if (r.ok) {
           console.log('[GAME] 经验值已同步到 Waline:', key, '+'+points);
-          // 写入成功后重新从数据库加载，确保数据一致
-          return self.loadFromServer(user);
+          // 写入成功 → 乐观更新本地数据 + 显示经验（保证用户即时反馈）
+          self.todayCounts[key] = (self.todayCounts[key] || 0) + 1;
+          self.totalPoints += points;
+          self._beforePoints = undefined; // 已本地更新，不再需要增益计算
+          self.setSyncState('idle');
+          self.updateBadge();
+          self.updateTaskDots();
+          self.updateTaskMenu();
+          self.showXp('+' + points + ' 经验', '');
+          // 异步读数据库做校正（静默执行，失败不影响已更新的 UI）
+          self.loadFromServer(user, true);
         } else {
           self.syncError = true;
           return r.text().then(function(t){ console.warn('[GAME] Waline 同步失败', r.status, t); });
