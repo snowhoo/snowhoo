@@ -142,7 +142,7 @@ body{display:flex;flex-direction:column}
 .task-menu-btn{font-size:.58rem;color:#ff8c00;cursor:pointer;padding:3px 8px;border:1px solid rgba(255,140,0,.3);border-radius:10px;background:rgba(255,255,255,.88);white-space:nowrap;transition:all .3s;font-weight:400;letter-spacing:.3px;line-height:1.4;user-select:none;-webkit-user-select:none}
 /* 初始隐藏（!important 防止任何 JS/CSS 提前显示）*/
 .task-menu-btn.init-hidden{display:none!important}
-.task-menu-btn.error{color:#e94560!important;border-color:rgba(233,69,96,.35)}
+.task-menu-btn.error{color:#e94560!important;border-color:rgba(233,69,96,.35)!important}
 .task-menu-btn.completed{color:#22c55e;border-color:rgba(34,197,94,.35)}
 .task-menu-dropdown{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:170px;padding:6px 0;display:none;z-index:10}
 .task-menu-dropdown.show{display:block}
@@ -782,8 +782,8 @@ var GAME = {
         }
       }
       if (!user) return null;
-      // 真实登录用户通常有 objectId/id，但有 token 也算
-      if (user.token || user.objectId || user.id) {
+      // 有 display_name 就算有效用户（不依赖 token 字段，Waline v3 不同版本字段名不同）
+      if (user.display_name || user.nick || user.name) {
         user.display_name = user.display_name || user.nick || user.name || '';
         user.avatar = user.avatar || user.objectURL || user.avator || '';
         user.email = user.email || user.mail || '';
@@ -1172,9 +1172,13 @@ document.getElementById('commentAvatar').addEventListener('click', function() {
             comment: '留言'
           },
           onLogin: function(user) {
-            // 登录后保存用户信息，然后刷新页面确保所有状态完整更新
+            // 登录后保存用户信息到多处备用
             try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e) {}
-            location.reload();
+            try { localStorage.setItem('@waline/user', JSON.stringify(user)); } catch(e) {}
+            // 关闭评论弹窗
+            commentOverlay.classList.remove('active');
+            // 延迟一点刷新页面，确保所有缓存写入完成
+            setTimeout(function(){ window.location.href = window.location.href; }, 300);
           }
         });
       } catch(e) {
