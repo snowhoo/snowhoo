@@ -274,6 +274,8 @@ document.querySelector('.welcome').addEventListener('click', function() {
   img.src = 'https://picsum.photos/1280/960?random=' + Date.now();
   img.onload = function() {
     area.classList.remove('show');
+    // 内容加载完成→记录修炼
+    GAME.doAction('explore');
   };
 });
 
@@ -362,7 +364,7 @@ items.forEach(function(el) {
 });
 
 // 点击"诗"展示每日诗词，"今"展示历史上的今天
-function toggleContent(btnId, url, renderFn) {
+function toggleContent(btnId, url, renderFn, onLoaded) {
   var btn = document.getElementById(btnId);
   var area = document.getElementById('contentArea');
   var bg = document.getElementById('bgImage');
@@ -393,15 +395,20 @@ function toggleContent(btnId, url, renderFn) {
     area.innerHTML = renderFn(data);
     area.classList.add('show');
     area._activeBtn = btnId;
+    // 内容加载完成→记录修炼
+    if (onLoaded) onLoaded();
   }).catch(function(){
     if (area._toggleReqId !== _reqId) return;
     area.innerHTML = '<div class="content-line">暂无内容</div>';
     area.classList.add('show');
     area._activeBtn = btnId;
+    // 内容加载失败不记录修炼
   });
 }
 
 document.getElementById('poetryBtn').addEventListener('click', function() {
+  var a = document.getElementById('contentArea');
+  var isNew = !(a._activeBtn === 'poetryBtn' && a.classList.contains('show'));
   toggleContent('poetryBtn', '../js/DailyPoetry.json', function(data) {
     var lines = data.detail && data.detail.content ? data.detail.content : [data.line];
     var html = '<div class="content-title">' + data.title + '</div>'
@@ -410,17 +417,19 @@ document.getElementById('poetryBtn').addEventListener('click', function() {
       html += '<div class="content-line">' + l + '</div>';
     });
     return html;
-  });
+  }, isNew ? function(){ GAME.doAction('poetry'); } : null);
 });
 
 document.getElementById('historyBtn').addEventListener('click', function() {
+  var a = document.getElementById('contentArea');
+  var isNew = !(a._activeBtn === 'historyBtn' && a.classList.contains('show'));
   toggleContent('historyBtn', '../js/HistoryToday.json', function(data) {
     var html = '';
     data.events.forEach(function(e) {
       html += '<div class="history-item"><span class="hyear">' + e.year + '年</span><span class="htext"> ' + e.text + '</span></div>';
     });
     return html;
-  });
+  }, isNew ? function(){ GAME.doAction('history'); } : null);
 });
 
 // 星座按钮
@@ -511,6 +520,8 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     html += '</div>';
     area.innerHTML = html;
     area._activeBtn = 'constellationBtn';
+    // 星座内容加载完成→记录修炼
+    GAME.doAction('constellation');
     // ===== 转盘交互 =====
     var wheel = area.querySelector('.zodiac-wheel');
     var centerEl = area.querySelector('.zodiac-center');
@@ -614,7 +625,8 @@ var GAME = {
   totalPoints: 0,
   syncState: 'idle',      // 'idle' | 'loading' | 'saving'
   syncError: false,
-  loaded: false,           // 服务器数据是否已成功加载（未加载时红点显示"…"）
+  loaded: false,
+  _pendingXp: null,       // 待显示的修炼经验（写→读成功后展示）           // 服务器数据是否已成功加载（未加载时红点显示"…"）
 
   setSyncState: function(state) {
     this.syncState = state;
@@ -648,19 +660,6 @@ var GAME = {
       this.updateTaskDots();
       this.updateAvatar();
     }
-    document.getElementById('poetryBtn').addEventListener('pointerdown',function(){
-      var a = document.getElementById('contentArea');
-      if (!(a._activeBtn === 'poetryBtn' && a.classList.contains('show'))) self.doAction('poetry');
-    });
-    document.getElementById('historyBtn').addEventListener('pointerdown',function(){
-      var a = document.getElementById('contentArea');
-      if (!(a._activeBtn === 'historyBtn' && a.classList.contains('show'))) self.doAction('history');
-    });
-    document.getElementById('constellationBtn').addEventListener('pointerdown',function(){
-      var a = document.getElementById('contentArea');
-      if (!(a._activeBtn === 'constellationBtn' && a.classList.contains('show'))) self.doAction('constellation');
-    });
-    document.querySelector('.welcome').addEventListener('click',function(){self.doAction('explore')});
     // 任务菜单点击切换（错误状态刷新，加载/保存中无操作）
     document.getElementById('taskMenuBtn').addEventListener('click',function(e){
       if (this.classList.contains('error')) {
@@ -882,6 +881,11 @@ var GAME = {
     }
     this.loaded = true;
     this.clearTaskMenuError();
+    // 写→读成功后展示修炼经验
+    if (this._pendingXp) {
+      this.showXp(this._pendingXp.msg, '');
+      this._pendingXp = null;
+    }
   },
 
   doAction: function(key) {
@@ -908,14 +912,9 @@ var GAME = {
       this.showXp('+0 经验','今日此项修炼已毕');
       return;
     }
-    // 先乐观更新 UI
-    this.todayCounts[key] = count + 1;
-    this.totalPoints += act.points;
-    this.updateBadge();
-    this.updateTaskDots();
-    this.updateTaskMenu();
-    this.showXp('+'+act.points+' 经验','');
-    // 再写数据库（写入期间阻塞新操作）
+    // 不乐观更新 UI，记录待显示经验等待写→读成功后再展示
+    this._pendingXp = { msg: '+'+act.points+' 经验', key: key };
+    // 写数据库→读数据库→更新 UI
     this.syncToWaline(key,act.points,user);
   },
 
