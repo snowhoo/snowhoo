@@ -666,10 +666,9 @@ var GAME = {
       this.updateAvatar();
       this.loadFromServer(user);
     } else {
-      // 未登录时从本地缓存恢复数据
-      this.loaded = true;
+      // 未登录不显示缓存数据，统一显示".."占位
+      this.loaded = false;
       this.setSyncState('idle');
-      this.loadLocal();
       this.updateBadge();
       this.updateTaskDots();
       this.updateAvatar();
