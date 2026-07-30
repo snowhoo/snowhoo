@@ -881,6 +881,8 @@ var GAME = {
         if ((r.nick || '') !== userNick) continue;
         var raw = r.orig || r.comment || '';
         var action = JSON.parse(raw);
+        // 确保这是游戏经验记录（有 action 和 points 字段），过滤掉普通评论
+        if (!action || !action.key || typeof action.points !== 'number') continue;
         this.totalPoints += action.points || 0;
         var d = new Date(r.insertedAt || r.createdAt || r.time).toDateString();
         if (d === today) {
