@@ -257,9 +257,9 @@ document.querySelector('.welcome').addEventListener('click', function() {
   area.classList.remove('show');
   area.innerHTML = '<div class="loading-spinner"></div><div class="loading-hint">正在探索...</div>';
   area.classList.add('show');
-  area.style.left = '50%';
-  area.style.transform = 'translate(-50%, -50%)';
-  area.style.width = 'auto';
+  area.style.left = '';
+  area.style.width = '';
+  area.style.transform = 'translateY(-50%)';
   area.style.textAlign = 'center';
   area._activeBtn = null;
   document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
@@ -374,6 +374,8 @@ function toggleContent(btnId, url, renderFn) {
     area._constellationReqId = Date.now() + '_cancelled';
   }
   // 恢复默认位置（诗/今内容居中）
+  area.style.left = '';
+  area.style.width = '';
   area.style.transform = 'translateY(-50%)';
   area.style.textAlign = 'center';
   // 生成唯一标记，防止异步回调覆盖
