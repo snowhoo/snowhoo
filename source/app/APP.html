@@ -1031,33 +1031,17 @@ var GAME = {
   syncToWaline: function(key,points,user) {
     try {
       if (!user || !user.display_name) return;
-      // 获取认证 token
-      var token = user.token;
-      if (!token) {
-        try { var stored = JSON.parse(localStorage.getItem('WALINE_USER') || '{}'); token = stored.token; } catch(e) {}
-      }
-      if (!token) {
-        console.warn('[GAME] Waline 同步跳过：无认证 token');
-        this.setSyncState('idle');
-        return;
-      }
       this.setSyncState('saving');
       var self = this;
-      // POST 用 Authorization:Bearer + credentials:include 携带 cookie 双认证
-      var postUrl = 'https://waline.snowhoo.net/api/comment';
-      fetch(postUrl, {
+      // Waline /api/comment POST 无需认证（curl 已验证）
+      fetch('https://waline.snowhoo.net/api/comment', {
         method: 'POST',
-        headers: {
-          'Content-Type':'application/json',
-          'Authorization':'Bearer ' + token
-        },
-        credentials: 'include',
+        headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
           comment: JSON.stringify({action:key,points:points,time:new Date().toISOString()}),
           url: '/app-game/actions',
           nick: user.display_name || '游客',
-          mail: user.email || '',
-          token: token
+          mail: user.email || ''
         })
       }).then(function(r){
         if (r.ok) {
