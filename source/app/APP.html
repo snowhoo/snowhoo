@@ -1032,17 +1032,20 @@ var GAME = {
       }
       this.setSyncState('saving');
       var self = this;
-      fetch('https://waline.snowhoo.net/api/comment', {
+      // GET 已验证 ?token= 方式可行，POST 同样使用 query token
+      var postUrl = 'https://waline.snowhoo.net/api/comment?token=' + encodeURIComponent(token);
+      fetch(postUrl, {
         method: 'POST',
         headers: {
-          'Content-Type':'application/json'
+          'Content-Type':'application/json',
+          'Authorization':'Bearer ' + token
         },
         body: JSON.stringify({
           comment: JSON.stringify({action:key,points:points,time:new Date().toISOString()}),
           url: '/app-game/actions',
           nick: user.display_name || '游客',
           mail: user.email || '',
-          token: token   // Waline API 支持在请求体中传递 token
+          token: token
         })
       }).then(function(r){
         if (r.ok) {
