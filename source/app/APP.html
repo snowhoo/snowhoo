@@ -870,8 +870,17 @@ var GAME = {
     }
   },
 
+  // 从 config 初始化所有任务的剩余次数（跨天/首次使用）
+  initTodayRemaining: function() {
+    this.todayCounts = {};
+    if (!window.GAME_CONFIG) return;
+    for (var i = 0; i < GAME_CONFIG.length; i++) {
+      this.todayCounts[GAME_CONFIG[i].key] = GAME_CONFIG[i].max;
+    }
+  },
+
   processRecords: function(records, user) {
-    var today = new Date().toISOString().slice(0,10); // '2026-07-30'
+    var today = new Date().toISOString().slice(0,10);
     var userNick = user.display_name || '';
     var foundId = 0;
     var foundData = null;
@@ -881,7 +890,8 @@ var GAME = {
         if ((r.nick || '') !== userNick) continue;
         var raw = r.orig || r.comment || '';
         var data = JSON.parse(raw);
-        if (data && typeof data.points === 'number' && data.todayCounts) {
+        // 识别新格式：todayRemaining（剩余次数）
+        if (data && typeof data.points === 'number' && data.todayRemaining) {
           var id = parseInt(r.objectId, 10) || 0;
           if (id > foundId) { foundId = id; foundData = data; }
         }
@@ -890,16 +900,18 @@ var GAME = {
     if (foundData) {
       this.totalPoints = foundData.points;
       this._gameObjectId = foundId;
-      // 根据日期判断是否需要重置今日任务次数
       if (foundData.date === today) {
-        this.todayCounts = foundData.todayCounts || {};
+        // 当天 → 直接用剩余次数
+        this.todayCounts = foundData.todayRemaining || {};
       } else {
-        this.todayCounts = {}; // 跨天自动重置
+        // 跨天 → 重置剩余次数（保留经验值）
+        this.initTodayRemaining();
       }
     } else {
-      // 没找到记录 → 初始化为 0（但不重置 _gameObjectId，避免覆盖已有 ID）
+      // 首次使用，无记录
       this.totalPoints = 0;
-      this.todayCounts = {};
+      this._gameObjectId = 0;
+      this.initTodayRemaining();
     }
     this.loaded = true;
     this.clearTaskMenuError();
@@ -931,8 +943,8 @@ var GAME = {
       this.showXp('+0 经验','请登录赚取修炼经验');
       return;
     }
-    var count = this.todayCounts[key] || 0;
-    if (count >= act.max) {
+    var remaining = this.todayCounts[key] || 0;
+    if (remaining <= 0) {
       this.showXp('+0 经验','今日此项修炼已毕');
       return;
     }
@@ -957,16 +969,13 @@ var GAME = {
       var key = GAME_CONFIG[i].key;
       var el = document.getElementById(key + 'Dot');
       if (!el) continue;
-      var act = this.actions[key];
-      if (!act) continue;
-      // 数据未就绪（加载中或读取失败）时显示".."
+      // 数据未就绪显示".."
       if (!this.loaded) {
         el.textContent = '..';
         el.style.display = 'flex';
         continue;
       }
-      var count = this.todayCounts[key] || 0;
-      var remaining = act.max - count;
+      var remaining = this.todayCounts[key] || 0;
       if (remaining > 0) {
         el.textContent = remaining;
         el.style.display = 'flex';
@@ -987,15 +996,15 @@ var GAME = {
       var key = GAME_CONFIG[i].key;
       var act = this.actions[key];
       if (!act) continue;
-      var count = this.todayCounts[key] || 0;
-      var done = count >= act.max;
+      var remaining = this.todayCounts[key] || 0;
+      var done = remaining <= 0;
       if (!done) allDone = false;
       html += '<div class="task-item' + (done ? ' completed' : '') + '">'
         + (done ? '<span class="task-check">✓</span>'
                 : '<span class="task-dot" style="background:'+GAME_CONFIG[i].color+'"></span>')
         + '<span class="task-name">' + act.taskName + '</span>'
         + '<span class="task-sub">' + act.name + ' +' + act.points + '经验</span>'
-        + '<span class="task-count">' + count + '/' + act.max + '</span>'
+        + '<span class="task-count">' + (act.max - remaining) + '/' + act.max + '</span>'
         + '</div>';
     }
     dropdown.innerHTML = html;
@@ -1046,17 +1055,18 @@ var GAME = {
     try {
       if (!user || !user.display_name) return;
       var self = this;
-      // 计算新状态
+      // 总经验值 = 原值 + 新增
       var newPoints = this.totalPoints + points;
-      var newCounts = {};
-      for (var k in this.todayCounts) newCounts[k] = this.todayCounts[k];
-      newCounts[key] = (newCounts[key] || 0) + 1;
+      // 剩余次数 = 所有任务当前剩余，当前任务 -1
+      var newRemaining = {};
+      for (var k in this.todayCounts) newRemaining[k] = this.todayCounts[k];
+      if (typeof newRemaining[key] === 'number') newRemaining[key]--;
       var today = new Date().toISOString().slice(0,10);
       this.setSyncState('saving');
       var payload = JSON.stringify({
         comment: JSON.stringify({
           points: newPoints,
-          todayCounts: newCounts,
+          todayRemaining: newRemaining,
           nick: user.display_name,
           level: 0,
           date: today
