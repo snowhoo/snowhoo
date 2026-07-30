@@ -272,6 +272,7 @@ document.getElementById('bgImage').src = 'https://picsum.photos/1280/960?random=
 
 // 点击探索换图
 document.querySelector('.welcome').addEventListener('click', function() {
+  cancelAllRequests();
   var area = document.getElementById('contentArea');
   var img = document.getElementById('bgImage');
   // 关闭所有背景覆盖层（诗词/星座），确保探索图片不被遮挡
@@ -389,8 +390,18 @@ function closeAllOverlays() {
   if (ho) ho.classList.remove('show');
 }
 
+// 取消所有正在加载的请求，防止异步回调覆盖当前面板内容
+function cancelAllRequests() {
+  var area = document.getElementById('contentArea');
+  if (!area) return;
+  var now = Date.now() + '_cancelled';
+  area._toggleReqId = now;
+  area._constellationReqId = now;
+}
+
 // 点击"诗"展示每日诗词，"今"展示历史上的今天
 function toggleContent(btnId, url, renderFn, onLoaded) {
+  cancelAllRequests();
   var btn = document.getElementById(btnId);
   var area = document.getElementById('contentArea');
   var bg = document.getElementById('bgImage');
@@ -435,6 +446,7 @@ function toggleContent(btnId, url, renderFn, onLoaded) {
 
 // 诗词按钮：和星座同样的"先显示背景+加载提示，再异步加载内容"流程
 function togglePoetry() {
+  cancelAllRequests();
   var btn = document.getElementById('poetryBtn');
   var area = document.getElementById('contentArea');
   var overlay = document.getElementById('poetryOverlay');
@@ -498,6 +510,7 @@ document.getElementById('poetryBtn').addEventListener('click', togglePoetry);
 
 // 今日按钮：和诗词同样的"先显示背景+加载提示，再异步加载内容"流程
 function toggleHistory() {
+  cancelAllRequests();
   var btn = document.getElementById('historyBtn');
   var area = document.getElementById('contentArea');
   var overlay = document.getElementById('historyOverlay');
@@ -558,6 +571,7 @@ document.getElementById('historyBtn').addEventListener('click', toggleHistory);
 
 // 星座按钮
 document.getElementById('constellationBtn').addEventListener('click', function() {
+  cancelAllRequests();
   var btn = document.getElementById('constellationBtn');
   var area = document.getElementById('contentArea');
   if (area._activeBtn === 'constellationBtn' && area.classList.contains('show')) {
