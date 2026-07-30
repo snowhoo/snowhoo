@@ -681,6 +681,7 @@ var GAME = {
         return;
       }
       if (GAME.syncState !== 'idle') return; // 加载/保存中不响应
+      if (this.classList.contains('no-reload')) return; // 未登录状态不响应菜单
       e.stopPropagation();
       document.getElementById('taskMenuDropdown').classList.toggle('show');
     });
