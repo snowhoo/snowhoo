@@ -738,23 +738,24 @@ var GAME = {
       this.updateTaskMenu();
       return;
     }
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET','https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=200');
-    xhr.withCredentials = true;
-    xhr.onload = function() {
-      try {
-        var data = JSON.parse(xhr.responseText);
-        self.processRecords(data.data || [], user);
-        // 服务器数据优先，覆盖本地
-        self.saveLocal();
-        console.log('[GAME] 从 Waline 加载经验值成功:', self.totalPoints);
-      } catch(e) { console.warn('[GAME] 解析 Waline 数据失败:', e); }
+    fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=200', { credentials: 'include' })
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      self.processRecords(data.data || [], user);
+      self.saveLocal();
+      console.log('[GAME] 从 Waline 加载经验值成功:', self.totalPoints);
+    })
+    .catch(function(e) {
+      console.warn('[GAME] 加载 Waline 失败:', e);
+    })
+    .then(function() {
       self.updateBadge();
       self.updateTaskDots();
       self.updateTaskMenu();
-    };
-    xhr.onerror = function() { console.warn('[GAME] 加载 Waline 网络失败'); self.updateBadge(); self.updateTaskDots(); self.updateTaskMenu(); };
-    xhr.send();
+    });
   },
 
   // 本地持久化：即使服务器同步失败也能保留经验值
@@ -892,32 +893,41 @@ var GAME = {
 
   syncToWaline: function(key,points,user) {
     try {
-      // 需要有效用户信息才能提交到 Waline
       if (!user || !user.display_name) return;
-      // 从 localStorage 获取 token（确保即使 user 对象不完整也能拿到）
+      // 获取认证 token
       var token = user.token;
       if (!token) {
         try { var stored = JSON.parse(localStorage.getItem('WALINE_USER') || '{}'); token = stored.token; } catch(e) {}
       }
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST','https://waline.snowhoo.net/api/comment');
-      xhr.setRequestHeader('Content-Type','application/json');
-      if (token) xhr.setRequestHeader('X-LC-Session', token);
-      xhr.withCredentials = true;
-      xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 300) {
+      if (!token) {
+        console.warn('[GAME] Waline 同步跳过：无认证 token');
+        return;
+      }
+      // 使用 fetch（比 XHR 更可靠地处理跨域认证）
+      fetch('https://waline.snowhoo.net/api/comment', {
+        method: 'POST',
+        headers: {
+          'Content-Type':'application/json',
+          'Authorization':'Bearer ' + token,
+          'X-Waline-Session': token
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          comment: JSON.stringify({action:key,points:points,time:new Date().toISOString()}),
+          url: '/app-game/actions',
+          nick: user.display_name || '游客',
+          mail: user.email || ''
+        })
+      }).then(function(r){
+        if (r.ok) {
           console.log('[GAME] 经验值已同步到 Waline:', key, '+'+points);
         } else {
-          console.warn('[GAME] Waline 同步失败 状态码:', xhr.status, xhr.responseText);
+          r.text().then(function(t){ console.warn('[GAME] Waline 同步失败', r.status, t); });
         }
-      };
-      xhr.onerror = function() { console.warn('[GAME] Waline 同步网络失败'); };
-      xhr.send(JSON.stringify({
-        comment: JSON.stringify({action:key,points:points,time:new Date().toISOString()}),
-        url: '/app-game/actions',
-        nick: user.display_name || '游客',
-        mail: user.email || ''
-      }));
+        return r;
+      }).catch(function(e){
+        console.warn('[GAME] Waline 同步网络失败:', e);
+      });
     } catch(e){ console.warn('[GAME] Waline 同步异常:', e); }
   }
 };
