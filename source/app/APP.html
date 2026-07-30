@@ -1098,11 +1098,12 @@ var GAME = {
     var el = document.getElementById('xzLevel');
     if (!el) return;
     var user = this.getWalineUser();
-    if (user) {
+    // 数据未加载完成时不显示（同红点/真气值行为）
+    if (!this.loaded || !user) {
+      el.style.display = 'none';
+    } else {
       el.textContent = this.getLevelName(this.level);
       el.style.display = '';
-    } else {
-      el.style.display = 'none';
     }
   },
 
