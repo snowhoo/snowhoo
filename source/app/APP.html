@@ -617,19 +617,11 @@ var GAME = {
   setSyncState: function(state) {
     this.syncState = state;
     var btn = document.getElementById('taskMenuBtn');
-    if (state === 'loading') {
-      if (btn && !btn.classList.contains('error')) {
-        btn.textContent = '⚡ 真气恢复中..';
-        btn.style.display = '';
-      }
-    } else if (state === 'saving') {
-      if (btn && !btn.classList.contains('error')) {
-        btn.textContent = '⟳ 真气融合中..';
-        btn.style.display = '';
-      }
-    } else {
-      // idle：由 updateTaskMenuBtn 根据 loaded 状态控制显隐
+    if (state !== 'idle' && btn && !btn.classList.contains('error')) {
+      // 加载/保存中仅设文字，不修改 display（保持按钮隐藏直到 loaded=true）
+      btn.textContent = state === 'loading' ? '⚡ 真气恢复中..' : '⟳ 真气融合中..';
     }
+    // idle：由 updateTaskMenuBtn 根据 loaded && user 控制显隐
   },
 
   init: function() {
