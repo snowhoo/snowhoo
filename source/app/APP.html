@@ -801,7 +801,7 @@ var GAME = {
     this.setSyncState('loading');
     // 获取 token 用于调试/认证
     var token = user.token || '';
-    return fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=50' + (token ? '&token='+encodeURIComponent(token) : ''))
+    return fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions' + (token ? '&token='+encodeURIComponent(token) : ''))
     .then(function(r) {
       if (!r.ok) {
         // 读取响应体以便排查错误详情
@@ -870,29 +870,32 @@ var GAME = {
   },
 
   processRecords: function(records, user) {
-    var today = new Date().toDateString();
     var userNick = user.display_name || '';
-    this.todayCounts = {};
-    this.totalPoints = 0;
+    // 找当前用户最新的一条记录（objectId 最大）
+    var latestId = 0;
+    var latestData = null;
     for (var i = 0; i < records.length; i++) {
       try {
         var r = records[i];
-        // 只统计当前登录用户的记录（用 nick 匹配，mail 字段可能不返回）
         if ((r.nick || '') !== userNick) continue;
         var raw = r.orig || r.comment || '';
-        var action = JSON.parse(raw);
-        // 确保这是游戏经验记录（有 action 和 points 字段），过滤掉普通评论
-        if (!action || !action.key || typeof action.points !== 'number') continue;
-        this.totalPoints += action.points || 0;
-        var d = new Date(r.insertedAt || r.createdAt || r.time).toDateString();
-        if (d === today) {
-          this.todayCounts[action.key] = (this.todayCounts[action.key] || 0) + 1;
+        var data = JSON.parse(raw);
+        // 新版格式：totalPoints + todayCounts
+        if (data && typeof data.totalPoints === 'number' && data.todayCounts) {
+          var id = parseInt(r.objectId, 10) || 0;
+          if (id > latestId) { latestId = id; latestData = data; }
         }
       } catch(e) {}
     }
+    if (latestData) {
+      this.totalPoints = latestData.totalPoints;
+      this.todayCounts = latestData.todayCounts || {};
+    } else {
+      this.totalPoints = 0;
+      this.todayCounts = {};
+    }
     this.loaded = true;
     this.clearTaskMenuError();
-    // 用操作前快照与读回后的实际差值决定浮动提示（保证正确性）
     var gain = this._beforePoints !== undefined ? this.totalPoints - this._beforePoints : 0;
     if (gain > 0) {
       this.showXp('+' + gain + ' 经验', '');
@@ -1035,14 +1038,18 @@ var GAME = {
   syncToWaline: function(key,points,user) {
     try {
       if (!user || !user.display_name) return;
-      this.setSyncState('saving');
       var self = this;
-      // Waline /api/comment POST 无需认证（curl 已验证）
+      // 计算新状态（写入完整游戏数据，不依赖多条记录累加）
+      var newTotal = this.totalPoints + points;
+      var newCounts = {};
+      for (var k in this.todayCounts) newCounts[k] = this.todayCounts[k];
+      newCounts[key] = (newCounts[key] || 0) + 1;
+      this.setSyncState('saving');
       fetch('https://waline.snowhoo.net/api/comment', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
-          comment: JSON.stringify({action:key,points:points,time:new Date().toISOString()}),
+          comment: JSON.stringify({totalPoints:newTotal, todayCounts:newCounts}),
           url: '/app-game/actions',
           nick: user.display_name || '游客',
           mail: user.email || ''
@@ -1050,7 +1057,7 @@ var GAME = {
       }).then(function(r){
         if (r.ok) {
           console.log('[GAME] 经验值已同步到 Waline:', key, '+'+points);
-          // 写入成功后重新从数据库加载，确保数据一致
+          // 写入成功后重新从数据库加载，取最新记录确认
           return self.loadFromServer(user);
         } else {
           self.syncError = true;
@@ -1063,13 +1070,11 @@ var GAME = {
         if (self.syncError) {
           self.showTaskMenuError('真气融合失败，经验没有增加!');
           self.syncError = false;
-          self._beforePoints = undefined; // 失败时清空，不显示浮动经验
+          self._beforePoints = undefined;
           self.setSyncState('idle');
           self.updateBadge();
           self.updateTaskDots();
-          // 按钮已由 showTaskMenuError 设置，不覆盖
         }
-        // 写入成功时 loadFromServer 已经完成了状态切换和 UI 更新
       });
     } catch(e){ console.warn('[GAME] Waline 同步异常:', e); }
   }
