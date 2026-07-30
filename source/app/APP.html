@@ -802,7 +802,7 @@ var GAME = {
     this.setSyncState('loading');
     // 获取 token 用于调试/认证
     var token = user.token || '';
-    return fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions' + (token ? '&token='+encodeURIComponent(token) : ''))
+    return fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=50' + (token ? '&token='+encodeURIComponent(token) : ''))
     .then(function(r) {
       if (!r.ok) {
         // 读取响应体以便排查错误详情
@@ -871,6 +871,7 @@ var GAME = {
   },
 
   processRecords: function(records, user) {
+    var today = new Date().toISOString().slice(0,10); // '2026-07-30'
     var userNick = user.display_name || '';
     var foundId = 0;
     var foundData = null;
@@ -880,20 +881,25 @@ var GAME = {
         if ((r.nick || '') !== userNick) continue;
         var raw = r.orig || r.comment || '';
         var data = JSON.parse(raw);
-        if (data && typeof data.totalPoints === 'number' && data.todayCounts) {
+        if (data && typeof data.points === 'number' && data.todayCounts) {
           var id = parseInt(r.objectId, 10) || 0;
           if (id > foundId) { foundId = id; foundData = data; }
         }
       } catch(e) {}
     }
     if (foundData) {
-      this.totalPoints = foundData.totalPoints;
-      this.todayCounts = foundData.todayCounts || {};
-      this._gameObjectId = foundId; // 记住记录 ID，下次用 PUT 更新
+      this.totalPoints = foundData.points;
+      this._gameObjectId = foundId;
+      // 根据日期判断是否需要重置今日任务次数
+      if (foundData.date === today) {
+        this.todayCounts = foundData.todayCounts || {};
+      } else {
+        this.todayCounts = {}; // 跨天自动重置
+      }
     } else {
+      // 没找到记录 → 初始化为 0（但不重置 _gameObjectId，避免覆盖已有 ID）
       this.totalPoints = 0;
       this.todayCounts = {};
-      this._gameObjectId = 0; // 无记录，下次用 POST 创建
     }
     this.loaded = true;
     this.clearTaskMenuError();
@@ -1040,21 +1046,27 @@ var GAME = {
     try {
       if (!user || !user.display_name) return;
       var self = this;
-      // 计算新状态（写入完整游戏数据，一条记录包含全部）
-      var newTotal = this.totalPoints + points;
+      // 计算新状态
+      var newPoints = this.totalPoints + points;
       var newCounts = {};
       for (var k in this.todayCounts) newCounts[k] = this.todayCounts[k];
       newCounts[key] = (newCounts[key] || 0) + 1;
+      var today = new Date().toISOString().slice(0,10);
       this.setSyncState('saving');
       var payload = JSON.stringify({
-        comment: JSON.stringify({totalPoints:newTotal, todayCounts:newCounts}),
+        comment: JSON.stringify({
+          points: newPoints,
+          todayCounts: newCounts,
+          nick: user.display_name,
+          level: 0,
+          date: today
+        }),
         url: '/app-game/actions',
         nick: user.display_name || '游客',
         mail: user.email || ''
       });
       var token = user.token || '';
       if (!token) { try { var s = JSON.parse(localStorage.getItem('WALINE_USER')||'{}'); if(s.token) token=s.token; } catch(e){} }
-      // POST/PUT 都带 Authorization: Bearer（CORS 已验证通过），确保记录有所属用户
       var headers = {'Content-Type':'application/json'};
       if (token) headers['Authorization'] = 'Bearer ' + token;
       var request;
