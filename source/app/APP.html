@@ -804,6 +804,12 @@ var GAME = {
   loadFromServer: function(optUser) {
     var self = this;
     var user = optUser || this.getWalineUser();
+    // 标准化用户字段（无论从 optUser 还是 getWalineUser 来，确保 display_name 存在）
+    if (user) {
+      user.display_name = user.display_name || user.nick || user.name || '';
+      user.avatar = user.avatar || user.objectURL || user.avator || '';
+      user.email = user.email || user.mail || '';
+    }
     if (!user) {
       this.loaded = true;
       this.setSyncState('idle');
