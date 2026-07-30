@@ -814,6 +814,7 @@ var GAME = {
     })
     .then(function(data) {
       self.processRecords(data.data || [], user);
+      self.saveLocal();
       console.log('[GAME] 从 Waline 加载经验值成功:', self.totalPoints);
     })
     .catch(function(e) {
@@ -1041,14 +1042,15 @@ var GAME = {
       }
       this.setSyncState('saving');
       var self = this;
-      // GET 已验证 ?token= 方式可行，POST 同样使用 query token
-      var postUrl = 'https://waline.snowhoo.net/api/comment?token=' + encodeURIComponent(token);
+      // POST 用 Authorization:Bearer + credentials:include 携带 cookie 双认证
+      var postUrl = 'https://waline.snowhoo.net/api/comment';
       fetch(postUrl, {
         method: 'POST',
         headers: {
           'Content-Type':'application/json',
           'Authorization':'Bearer ' + token
         },
+        credentials: 'include',
         body: JSON.stringify({
           comment: JSON.stringify({action:key,points:points,time:new Date().toISOString()}),
           url: '/app-game/actions',
