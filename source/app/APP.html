@@ -611,6 +611,7 @@ var GAME = {
   todayCounts: {},
   totalPoints: 0,
   syncState: 'idle',      // 'idle' | 'loading' | 'saving'
+  syncError: false,
 
   setSyncState: function(state) {
     this.syncState = state;
@@ -799,6 +800,7 @@ var GAME = {
     })
     .catch(function(e) {
       console.warn('[GAME] 加载 Waline 失败:', e);
+      self.showXp('', '遭受心魔困扰，请回复心神!');
     })
     .then(function() {
       self.setSyncState('idle');
@@ -984,12 +986,18 @@ var GAME = {
         if (r.ok) {
           console.log('[GAME] 经验值已同步到 Waline:', key, '+'+points);
         } else {
+          self.syncError = true;
           r.text().then(function(t){ console.warn('[GAME] Waline 同步失败', r.status, t); });
         }
         return r;
       }).catch(function(e){
+        self.syncError = true;
         console.warn('[GAME] Waline 同步网络失败:', e);
       }).then(function(){
+        if (self.syncError) {
+          self.showXp('', '遭受心魔困扰，请回复心神!');
+          self.syncError = false;
+        }
         self.setSyncState('idle');
         self.updateBadge();
         self.updateTaskDots();
