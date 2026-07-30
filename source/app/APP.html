@@ -786,10 +786,10 @@ var GAME = {
       this.updateBadge();
       this.updateTaskDots();
       this.updateTaskMenu();
-      return;
+      return Promise.resolve();
     }
     this.setSyncState('loading');
-    fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=200', { credentials: 'include' })
+    return fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=200', { credentials: 'include' })
     .then(function(r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
@@ -905,6 +905,12 @@ var GAME = {
       var el = document.getElementById(dotIds[key]);
       if (!el) continue;
       var act = this.actions[key];
+      // 加载中状态：显示"…"表示正在拉取数据
+      if (this.syncState === 'loading') {
+        el.textContent = '…';
+        el.style.display = 'flex';
+        continue;
+      }
       var count = this.todayCounts[key] || 0;
       var remaining = act.max - count;
       if (remaining > 0) {
@@ -985,11 +991,12 @@ var GAME = {
       }).then(function(r){
         if (r.ok) {
           console.log('[GAME] 经验值已同步到 Waline:', key, '+'+points);
+          // 写入成功后重新从数据库加载，确保数据一致
+          return self.loadFromServer(user);
         } else {
           self.syncError = true;
-          r.text().then(function(t){ console.warn('[GAME] Waline 同步失败', r.status, t); });
+          return r.text().then(function(t){ console.warn('[GAME] Waline 同步失败', r.status, t); });
         }
-        return r;
       }).catch(function(e){
         self.syncError = true;
         console.warn('[GAME] Waline 同步网络失败:', e);
@@ -997,11 +1004,12 @@ var GAME = {
         if (self.syncError) {
           self.showXp('', '遭受心魔困扰，请回复心神!');
           self.syncError = false;
+          self.setSyncState('idle');
+          self.updateBadge();
+          self.updateTaskDots();
+          self.updateTaskMenu();
         }
-        self.setSyncState('idle');
-        self.updateBadge();
-        self.updateTaskDots();
-        self.updateTaskMenu();
+        // 写入成功时 loadFromServer 已经完成了状态切换和 UI 更新
       });
     } catch(e){ console.warn('[GAME] Waline 同步异常:', e); }
   }
