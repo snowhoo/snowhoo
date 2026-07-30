@@ -287,9 +287,13 @@ document.querySelector('.welcome').addEventListener('click', function() {
   area.style.textAlign = 'center';
   area._activeBtn = null;
   document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
+  // 生成唯一标记，防止异步回调覆盖其他面板
+  var _expReqId = Date.now() + '_' + Math.random();
+  area._exploreReqId = _expReqId;
   // 加载新图片
   img.src = 'https://picsum.photos/1280/960?random=' + Date.now();
   img.onload = function() {
+    if (area._exploreReqId !== _expReqId) return;
     area.classList.remove('show');
     // 内容加载完成→记录修炼
     GAME.doAction('explore');
@@ -395,8 +399,9 @@ function cancelAllRequests() {
   var area = document.getElementById('contentArea');
   if (!area) return;
   var now = Date.now() + '_cancelled';
-  area._toggleReqId = now;
-  area._constellationReqId = now;
+  area._toggleReqId = now;           // 取消诗词/今日
+  area._constellationReqId = now;    // 取消星座
+  area._exploreReqId = now;          // 取消探索
 }
 
 // 点击"诗"展示每日诗词，"今"展示历史上的今天
