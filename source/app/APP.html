@@ -725,9 +725,9 @@ var GAME = {
     } catch(e) { return null; }
   },
 
-  loadFromServer: function() {
+  loadFromServer: function(optUser) {
     var self = this;
-    var user = this.getWalineUser();
+    var user = optUser || this.getWalineUser();
     if (!user) {
       // 无用户→退出登录或未登录，重置数据到初始状态
       this.totalPoints = 0;
@@ -945,9 +945,11 @@ document.getElementById('commentAvatar').addEventListener('click', function() {
             comment: '留言'
           },
           onLogin: function(user) {
-            // 登录后立即更新头像和积分系统（传入user避免localStorage延迟）
+            // 登录后，主动保存用户信息到 localStorage（兼容 Waline v3 不同存储机制）
+            try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e) {}
+            // 立即更新头像和积分（传入 user 避免 getWalineUser() 找不到）
             GAME.updateAvatar(user);
-            GAME.loadFromServer();
+            GAME.loadFromServer(user);
           }
         });
         // Waline 初始化后重新检查用户信息，更新头像和积分
@@ -964,13 +966,15 @@ document.getElementById('commentAvatar').addEventListener('click', function() {
 
 document.getElementById('commentClose').addEventListener('click', function() {
   commentOverlay.classList.remove('active');
-  GAME.updateAvatar(); // 关闭评论时同步登录状态
+  GAME.updateAvatar();
+  GAME.loadFromServer(); // 关闭评论时同步登录状态和数据
 });
 
 commentOverlay.addEventListener('click', function(e) {
   if (e.target === commentOverlay) {
     commentOverlay.classList.remove('active');
-    GAME.updateAvatar(); // 关闭评论时同步登录状态
+    GAME.updateAvatar();
+    GAME.loadFromServer(); // 关闭评论时同步登录状态和数据
   }
 });
 
