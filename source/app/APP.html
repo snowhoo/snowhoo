@@ -876,8 +876,9 @@ var GAME = {
     for (var i = 0; i < records.length; i++) {
       try {
         var r = records[i];
-        var action = JSON.parse(r.comment);
-        if ((r.mail||'') !== (user.email||'')) continue;
+        // Waline API 返回的原始内容在 orig 字段（comment 字段含 HTML 标签）
+        var raw = r.orig || r.comment || '';
+        var action = JSON.parse(raw);
         this.totalPoints += action.points || 0;
         var d = new Date(r.insertedAt || r.createdAt || r.time).toDateString();
         if (d === today) {
