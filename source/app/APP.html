@@ -645,6 +645,8 @@ var GAME = {
 
   init: function() {
     this.buildActions();
+    // 恢复 _gameObjectId，避免页面刷新后异步加载未完成前首次操作又 POST 新记录
+    try { var oid = localStorage.getItem('GAME_objectId'); if (oid) this._gameObjectId = parseInt(oid,10) || 0; } catch(e){}
     var self = this;
     // 登录用户直接显示加载状态，不走本地缓存
     var user = this.getWalineUser();
@@ -842,6 +844,7 @@ var GAME = {
       localStorage.setItem('GAME_totalPoints', String(this.totalPoints));
       localStorage.setItem('GAME_todayCounts', JSON.stringify(this.todayCounts));
       localStorage.setItem('GAME_saveDate', new Date().toDateString());
+      localStorage.setItem('GAME_objectId', String(this._gameObjectId));
     } catch(e) {}
   },
 
@@ -850,6 +853,7 @@ var GAME = {
       localStorage.removeItem('GAME_totalPoints');
       localStorage.removeItem('GAME_todayCounts');
       localStorage.removeItem('GAME_saveDate');
+      localStorage.removeItem('GAME_objectId');
     } catch(e) {}
   },
 
@@ -857,6 +861,9 @@ var GAME = {
     try {
       var savedDate = localStorage.getItem('GAME_saveDate');
       var today = new Date().toDateString();
+      // 恢复 _gameObjectId（避免页面刷新后首次操作又 POST 新记录）
+      var oid = localStorage.getItem('GAME_objectId');
+      if (oid) this._gameObjectId = parseInt(oid, 10) || 0;
       // 只加载当日的数据，跨天自动重置
       if (savedDate === today) {
         var pts = localStorage.getItem('GAME_totalPoints');
@@ -1098,7 +1105,10 @@ var GAME = {
         }).then(function(r){
           if (r.ok) {
             return r.json().then(function(j){
-              if (j.data && j.data.objectId) self._gameObjectId = parseInt(j.data.objectId,10);
+              if (j.data && j.data.objectId) {
+                self._gameObjectId = parseInt(j.data.objectId,10);
+                self.saveLocal(); // 立即持久化，防刷新后丢失
+              }
               return r;
             });
           }
