@@ -801,7 +801,7 @@ var GAME = {
     this.setSyncState('loading');
     // 获取 token 用于调试/认证
     var token = user.token || '';
-    return fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=200' + (token ? '&token='+encodeURIComponent(token) : ''))
+    return fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions' + (token ? '&token='+encodeURIComponent(token) : ''))
     .then(function(r) {
       if (!r.ok) {
         // 读取响应体以便排查错误详情
