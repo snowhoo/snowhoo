@@ -1001,6 +1001,8 @@ var GAME = {
     var dropdown = document.getElementById('taskMenuDropdown');
     if (!btn || !dropdown) return;
     if (!window.GAME_CONFIG) return;
+    // 错误/未登录状态下不覆盖按钮文本（由 showTaskMenuError/updateTaskMenuBtn 控制）
+    if (btn.classList.contains('error')) return;
     var allDone = true;
     var html = '';
     for (var i = 0; i < GAME_CONFIG.length; i++) {
@@ -1172,16 +1174,16 @@ document.getElementById('commentAvatar').addEventListener('click', function() {
           onLogin: function(user) {
             // 登录后，主动保存用户信息到 localStorage
             try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e) {}
-            // 更新 lastUser 避免 checkLogin 重复检测
+            // 更新 lastUser，让 checkLogin 能正确检测登录状态变化
             GAME.lastUser = user.email + user.display_name;
-            // 立即更新头像，并设为加载状态拉取数据
+            // 立即更新头像
             GAME.updateAvatar(user);
-            GAME.setSyncState('loading');
-            GAME.loadFromServer(user);
+            // 设为加载状态拉取数据（checkLogin 会检测 user && !wasLoggedIn 走正确分支）
+            GAME.checkLogin();
           }
         });
-        // Waline 初始化后重新检查用户信息，更新头像和积分
-        setTimeout(function(){GAME.updateAvatar();GAME.loadFromServer();},500);
+        // Waline 初始化后重新检查用户信息
+        setTimeout(function(){GAME.checkLogin();},500);
       } catch(e) {
         commentContainer.innerHTML = '<div style="text-align:center;padding:40px 0;color:#999;font-size:.82rem">评论加载失败，请刷新重试</div>';
         console.error('Waline init error:', e);
@@ -1194,15 +1196,13 @@ document.getElementById('commentAvatar').addEventListener('click', function() {
 
 document.getElementById('commentClose').addEventListener('click', function() {
   commentOverlay.classList.remove('active');
-  GAME.updateAvatar();
-  GAME.loadFromServer(); // 关闭评论时同步登录状态和数据
+  GAME.checkLogin(); // 智能检测登录/登出状态变化，避免直接 loadFromServer 读到 Waline 缓存
 });
 
 commentOverlay.addEventListener('click', function(e) {
   if (e.target === commentOverlay) {
     commentOverlay.classList.remove('active');
-    GAME.updateAvatar();
-    GAME.loadFromServer(); // 关闭评论时同步登录状态和数据
+    GAME.checkLogin(); // 同上
   }
 });
 
