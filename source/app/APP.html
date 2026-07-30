@@ -708,9 +708,9 @@ var GAME = {
       var btn = document.getElementById('taskMenuBtn');
       if (btn && btn.classList.contains('error') && user) return;
       if (!user && wasLoggedIn) {
-        // 从登录状态退出→重置积分/任务数据
+        // 从登录状态退出→显示".."占位状态，等待重新登录
         this.clearTaskMenuError();
-        this.loaded = true;
+        this.loaded = false;
         this.setSyncState('idle');
         this.totalPoints = 0;
         this.todayCounts = {};
