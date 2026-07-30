@@ -751,7 +751,7 @@ var GAME = {
 
   getWalineUser: function() {
     try {
-      // 先检查我们自己的 GAME_USER 缓存（在 onLogin 中保存，格式稳定，不依赖 Waline 版本）
+      // 第一优先：检查我们自己的 GAME_USER 缓存（在 onLogin 中保存，格式稳定）
       try {
         var gameUser = localStorage.getItem('GAME_USER');
         if (gameUser) {
@@ -759,7 +759,7 @@ var GAME = {
           if (u && u.display_name) return u;
         }
       } catch(e) {}
-      // Waline v3 使用 key 'WALINE_USER'
+      // 第二优先：Waline v3 localStorage 存储
       var keys = ['WALINE_USER','@waline/user','waline_user'];
       var val = '', user = null;
       for (var i = 0; i < keys.length; i++) {
@@ -771,12 +771,25 @@ var GAME = {
           }
         } catch(e) { user = null; }
       }
-      // 如果没找到，尝试遍历 localStorage
+      // 第三优先：sessionStorage（Waline 某些版本/场景会存这里）
+      if (!user) {
+        try {
+          val = sessionStorage.getItem('WALINE_USER');
+          if (val) { user = JSON.parse(val); if (user && (user.display_name || user.nick || user.name)) {} else user = null; }
+        } catch(e) { user = null; }
+        if (!user) {
+          try {
+            val = sessionStorage.getItem('@waline/user');
+            if (val) { user = JSON.parse(val); if (user && (user.display_name || user.nick || user.name)) {} else user = null; }
+          } catch(e) { user = null; }
+        }
+      }
+      // 第四优先：遍历所有 localStorage key 找 waline 相关
       if (!user) {
         for (var j = 0; j < localStorage.length; j++) {
           try {
             var k = localStorage.key(j);
-            if (k && k.indexOf('waline') !== -1) {
+            if (k && k.toLowerCase().indexOf('waline') !== -1) {
               var v = localStorage.getItem(k);
               if (v) {
                 var u = JSON.parse(v);
@@ -790,7 +803,7 @@ var GAME = {
         }
       }
       if (!user) return null;
-      // 有 display_name 就算有效用户（不依赖 token 字段，Waline v3 不同版本字段名不同）
+      // 标准化字段
       if (user.display_name || user.nick || user.name) {
         user.display_name = user.display_name || user.nick || user.name || '';
         user.avatar = user.avatar || user.objectURL || user.avator || '';
@@ -1167,49 +1180,64 @@ GAME.init();
 // ===== Waline 评论 =====
 var walineInstance = null;
 var commentOverlay = document.getElementById('commentOverlay');
-var commentContainer = document.getElementById('walineContainer');
+
+// 初始化 Waline（页面加载时就初始化，非延迟加载）
+// 这样登录重定向回来时 Waline 能立刻检测到用户
+(function initWalineEarly() {
+  import('https://unpkg.com/@waline/client@v3/dist/waline.js').then(function(mod) {
+    try {
+      walineInstance = mod.init({
+        el: '#walineContainer',
+        serverURL: 'https://waline.snowhoo.net',
+        lang: 'zh-CN',
+        avatar: 'mp',
+        pageview: false,
+        locale: {
+          placeholder: '说点什么吧...',
+          comment: '留言'
+        },
+        onLogin: function(user) {
+          console.log('[GAME-DBG] onLogin fired, user:', user.display_name || user.nick || user.name);
+          // 保存用户信息用于跨页面持久化（多种格式）
+          var gu = {
+            display_name: user.display_name || user.nick || user.name || '',
+            avatar: user.avatar || user.objectURL || user.avator || '',
+            email: user.email || user.mail || ''
+          };
+          try { localStorage.setItem('GAME_USER', JSON.stringify(gu)); } catch(e) {}
+          try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e) {}
+          // 更新 GAME 内部状态
+          if (window.GAME) {
+            GAME.lastUser = gu.email + gu.display_name;
+            GAME.updateAvatar(user);
+            GAME.loaded = false;
+            GAME.setSyncState('loading');
+            GAME.loadFromServer(user);
+          }
+          // 如果评论弹窗开着，关闭它
+          commentOverlay.classList.remove('active');
+        },
+        onLogout: function() {
+          console.log('[GAME-DBG] onLogout fired');
+          try { localStorage.removeItem('GAME_USER'); } catch(e) {}
+          try { localStorage.removeItem('WALINE_USER'); } catch(e) {}
+          if (window.GAME) {
+            GAME.lastUser = '';
+            GAME.checkLogin();
+          }
+        }
+      });
+      console.log('[GAME-DBG] Waline early init OK');
+    } catch(e) {
+      console.error('[GAME-DBG] Waline early init error:', e);
+    }
+  }).catch(function(e) {
+    console.error('[GAME-DBG] Waline dynamic import failed:', e);
+  });
+})();
 
 document.getElementById('commentAvatar').addEventListener('click', function() {
   commentOverlay.classList.add('active');
-  if (!walineInstance) {
-    commentContainer.innerHTML = '<div style="text-align:center;padding:40px 0;color:#999;font-size:.82rem">加载中...</div>';
-    import('https://unpkg.com/@waline/client@v3/dist/waline.js').then(function(mod) {
-      try {
-        walineInstance = mod.init({
-          el: '#walineContainer',
-          serverURL: 'https://waline.snowhoo.net',
-          lang: 'zh-CN',
-          avatar: 'mp',
-          pageview: false,
-          locale: {
-            placeholder: '说点什么吧...',
-            comment: '留言'
-          },
-          onLogin: function(user) {
-            // 保存用户信息用于跨页面持久化
-            var gu = {
-              display_name: user.display_name || user.nick || user.name || '',
-              avatar: user.avatar || user.objectURL || user.avator || '',
-              email: user.email || user.mail || ''
-            };
-            try { localStorage.setItem('GAME_USER', JSON.stringify(gu)); } catch(e) {}
-            try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e) {}
-            // 直接更新头像和加载数据（传入 user 对象，不走 getWalineUser 判断）
-            GAME.updateAvatar(user);
-            GAME.setSyncState('loading');
-            GAME.loadFromServer(user);
-            // 关闭评论弹窗
-            commentOverlay.classList.remove('active');
-          }
-        });
-      } catch(e) {
-        commentContainer.innerHTML = '<div style="text-align:center;padding:40px 0;color:#999;font-size:.82rem">评论加载失败，请刷新重试</div>';
-        console.error('Waline init error:', e);
-      }
-    }).catch(function() {
-      commentContainer.innerHTML = '<div style="text-align:center;padding:40px 0;color:#999;font-size:.82rem">评论组件加载失败，请检查网络后重试</div>';
-    });
-  }
 });
 
 document.getElementById('commentClose').addEventListener('click', function() {
@@ -1237,6 +1265,75 @@ commentOverlay.addEventListener('click', function(e) {
     almanac.classList.remove('hidden');
   });
 })();
+
+/* ===== 调试面板（双击或长按左下角区域显示） ===== */
+var debugVisible = false;
+var debugPanel = document.createElement('div');
+debugPanel.id = 'debugPanel';
+debugPanel.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:rgba(0,0,0,.88);color:#0f0;font-size:11px;font-family:monospace;padding:8px;max-height:40vh;overflow:auto;display:none;white-space:pre-wrap;word-break:break-all';
+document.body.appendChild(debugPanel);
+
+function showDebug() {
+  var lines = [];
+  lines.push('=== localStorage keys ===');
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    var v = localStorage.getItem(k);
+    if (v && v.length > 100) v = v.slice(0,100) + '...';
+    lines.push('  ' + k + ' = ' + v);
+  }
+  lines.push('');
+  lines.push('=== sessionStorage keys ===');
+  for (var i = 0; i < sessionStorage.length; i++) {
+    var k = sessionStorage.key(i);
+    var v = sessionStorage.getItem(k);
+    if (v && v.length > 100) v = v.slice(0,100) + '...';
+    lines.push('  ' + k + ' = ' + v);
+  }
+  lines.push('');
+  try {
+    var u = GAME ? GAME.getWalineUser() : null;
+    lines.push('=== GAME.getWalineUser() ===');
+    lines.push(u ? JSON.stringify({display_name:u.display_name,avatar:u.avatar?.slice(0,30),email:u.email},null,2) : 'null');
+    lines.push('');
+    lines.push('=== GAME state ===');
+    if (GAME) {
+      lines.push('  loaded: ' + GAME.loaded);
+      lines.push('  syncState: ' + GAME.syncState);
+      lines.push('  totalPoints: ' + GAME.totalPoints);
+      lines.push('  todayCounts: ' + JSON.stringify(GAME.todayCounts));
+      lines.push('  lastUser: ' + GAME.lastUser);
+      lines.push('  _gameObjectId: ' + GAME._gameObjectId);
+    }
+  } catch(e) { lines.push('GAME not ready: ' + e.message); }
+  debugPanel.textContent = lines.join('\n');
+  debugPanel.style.display = debugVisible ? 'none' : 'block';
+  debugVisible = !debugVisible;
+}
+
+// 双击底部任务菜单区域触发调试面板
+document.addEventListener('dblclick', function(e) {
+  showDebug();
+});
+// 也支持在"探索"按钮上长按3秒触发（手机触摸）
+var _debugTouchTimer = null;
+document.querySelector('.welcome').addEventListener('touchstart', function() {
+  _debugTouchTimer = setTimeout(showDebug, 2000);
+});
+document.querySelector('.welcome').addEventListener('touchend', function() {
+  clearTimeout(_debugTouchTimer);
+});
+
+// 登录后状态监测辅助：每3秒记录一次用户检测状态
+setInterval(function() {
+  try {
+    if (GAME && GAME.getWalineUser) {
+      var u = GAME.getWalineUser();
+      if (u) console.log('[GAME-DBG] getWalineUser OK:', u.display_name, u.email);
+      else console.log('[GAME-DBG] getWalineUser = null');
+    }
+  } catch(e) {}
+}, 3000);
 </script>
 </body>
 </html>
