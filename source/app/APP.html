@@ -705,8 +705,10 @@ var GAME = {
       this.lastUser = userStr;
       this.updateAvatar();
       // 如果按钮处于错误状态且用户还在（非登出），跳过覆盖按钮文本
+      // 如果是心魔困扰状态（error 但无 no-reload），跳过覆盖按钮文本
+      // 未登录的"请勿隐匿身份"（error + no-reload）不拦截，允许登录流程通过
       var btn = document.getElementById('taskMenuBtn');
-      if (btn && btn.classList.contains('error') && user) return;
+      if (btn && btn.classList.contains('error') && !btn.classList.contains('no-reload') && user) return;
       if (!user && wasLoggedIn) {
         // 从登录状态退出→显示".."占位状态，等待重新登录
         this.clearTaskMenuError();
