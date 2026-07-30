@@ -140,6 +140,7 @@ body{display:flex;flex-direction:column}
 /* 今日修炼任务菜单 */
 .task-menu{position:absolute;bottom:10px;z-index:3}
 .task-menu-btn{font-size:.58rem;color:#ff8c00;cursor:pointer;padding:3px 8px;border:1px solid rgba(255,140,0,.3);border-radius:10px;background:rgba(255,255,255,.88);white-space:nowrap;transition:all .3s;font-weight:400;letter-spacing:.3px;line-height:1.4;user-select:none;-webkit-user-select:none}
+.task-menu-btn.error{color:#e94560;border-color:rgba(233,69,96,.35)}
 .task-menu-btn.completed{color:#22c55e;border-color:rgba(34,197,94,.35)}
 .task-menu-dropdown{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:170px;padding:6px 0;display:none;z-index:10}
 .task-menu-dropdown.show{display:block}
@@ -220,7 +221,7 @@ body{display:flex;flex-direction:column}
     <div class="comment-name" id="commentName">未登录</div>
   </div>
   <div class="task-menu">
-    <div class="task-menu-btn" id="taskMenuBtn">今日修炼任务</div>
+    <div class="task-menu-btn" id="taskMenuBtn" style="display:none">今日修炼任务</div>
     <div class="task-menu-dropdown" id="taskMenuDropdown"></div>
   </div>
 </div>
@@ -627,12 +628,12 @@ var GAME = {
     } else {
       el.style.display = 'none';
     }
-    // 同步更新任务菜单按钮文本反馈
+    // 同步更新任务菜单按钮文本反馈（错误状态不覆盖）
     var btn = document.getElementById('taskMenuBtn');
-    if (state !== 'idle' && btn && !btn.classList.contains('completed')) {
-      btn.textContent = state === 'loading' ? '⚡ 真气恢复中...' : '⟳ 真气融合中...';
-    } else if (state === 'idle' && btn) {
-      // 稍后 updateTaskMenu 会恢复正确文本
+    if (btn && !btn.classList.contains('error')) {
+      if (state !== 'idle' && !btn.classList.contains('completed')) {
+        btn.textContent = state === 'loading' ? '⚡ 真气恢复中...' : '⟳ 真气融合中...';
+      }
     }
   },
 
@@ -697,6 +698,7 @@ var GAME = {
       this.updateAvatar();
       if (!user && wasLoggedIn) {
         // 从登录状态退出→重置积分/任务数据
+        this.clearTaskMenuError();
         this.loaded = true;
         this.setSyncState('idle');
         this.totalPoints = 0;
@@ -807,13 +809,17 @@ var GAME = {
     })
     .catch(function(e) {
       console.warn('[GAME] 加载 Waline 失败:', e);
-      self.showXp('', '遭受心魔困扰，请回复心神!');
+      self.showTaskMenuError('遭受心魔困扰，请回复心神!');
     })
     .then(function() {
       self.setSyncState('idle');
       self.updateBadge();
       self.updateTaskDots();
-      self.updateTaskMenu();
+      // 错误状态不覆盖按钮文本（错误信息持久显示）
+      var btn = document.getElementById('taskMenuBtn');
+      if (!btn || !btn.classList.contains('error')) {
+        self.updateTaskMenu();
+      }
     });
   },
 
@@ -870,14 +876,16 @@ var GAME = {
       } catch(e) {}
     }
     this.loaded = true;
+    this.clearTaskMenuError();
   },
 
   doAction: function(key) {
     var act = this.actions[key];
     if (!act) return;
-    // 同步状态检查：保存中时阻塞新操作
-    if (this.syncState === 'saving') {
-      this.showXp('', '真气融合中，无法修炼..');
+    // 加载中或保存中时阻塞修炼操作
+    if (this.syncState !== 'idle') {
+      var msg = this.syncState === 'loading' ? '真气恢复中，无法修炼..' : '真气融合中，无法修炼..';
+      this.showTaskMenuError(msg);
       return;
     }
     var user = this.getWalineUser();
@@ -902,7 +910,12 @@ var GAME = {
   },
 
   updateBadge: function() {
-    document.getElementById('pointsBadge').textContent = this.loaded ? '✦ '+this.totalPoints : '✦ ..';
+    var user = this.getWalineUser();
+    if (this.loaded && user) {
+      document.getElementById('pointsBadge').textContent = '✦ '+this.totalPoints;
+    } else {
+      document.getElementById('pointsBadge').textContent = '✦ ..';
+    }
   },
 
   updateTaskDots: function() {
@@ -965,6 +978,35 @@ var GAME = {
     el._timer = setTimeout(function(){el.classList.remove('show')},2200);
   },
 
+  // 在修炼任务菜单按钮上显示错误（红色，样式与按钮一致）
+  showTaskMenuError: function(msg) {
+    var btn = document.getElementById('taskMenuBtn');
+    if (!btn) return;
+    btn.textContent = msg;
+    btn.classList.add('error');
+    btn.style.display = '';
+  },
+
+  clearTaskMenuError: function() {
+    var btn = document.getElementById('taskMenuBtn');
+    if (!btn) return;
+    btn.classList.remove('error');
+    this.updateTaskMenuBtn();
+  },
+
+  // 控制任务菜单按钮显隐：登录用户且数据就绪才显示
+  updateTaskMenuBtn: function() {
+    var btn = document.getElementById('taskMenuBtn');
+    if (!btn) return;
+    var user = this.getWalineUser();
+    if (this.loaded && user) {
+      btn.style.display = '';
+      this.updateTaskMenu();
+    } else {
+      btn.style.display = 'none';
+    }
+  },
+
   syncToWaline: function(key,points,user) {
     try {
       if (!user || !user.display_name) return;
@@ -1008,12 +1050,12 @@ var GAME = {
         console.warn('[GAME] Waline 同步网络失败:', e);
       }).then(function(){
         if (self.syncError) {
-          self.showXp('', '遭受心魔困扰，请回复心神!');
+          self.showTaskMenuError('遭受心魔困扰，请回复心神!');
           self.syncError = false;
           self.setSyncState('idle');
           self.updateBadge();
           self.updateTaskDots();
-          self.updateTaskMenu();
+          // 按钮已由 showTaskMenuError 设置，不覆盖
         }
         // 写入成功时 loadFromServer 已经完成了状态切换和 UI 更新
       });
