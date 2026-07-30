@@ -632,6 +632,7 @@ var GAME = {
   syncError: false,
   loaded: false,
   _gameObjectId: 0,       // 当前用户游戏记录在 Waline 中的 objectId，用于 PUT 更新
+  _noDbData: false,       // 数据库中无该用户记录（新用户），红点应显示".."
 
   setSyncState: function(state) {
     this.syncState = state;
@@ -914,6 +915,7 @@ var GAME = {
       if (this._loadTimeout) { clearTimeout(this._loadTimeout); this._loadTimeout = null; }
       this.totalPoints = foundData.points;
       this._gameObjectId = foundId;
+      this._noDbData = false;
       if (foundData.date === today) {
         // 当天 → 直接用剩余次数
         this.todayCounts = foundData.todayRemaining || {};
@@ -922,10 +924,10 @@ var GAME = {
         this.initTodayRemaining();
       }
     } else {
-      // 首次使用，无记录
+      // 首次使用，无记录 → 不初始化次数，等待首次修炼写入后再读回
       this.totalPoints = 0;
       this._gameObjectId = 0;
-      this.initTodayRemaining();
+      this._noDbData = true;  // 标记：数据库中无数据，红点应显示".."
     }
     this.loaded = true;
     this.clearTaskMenuError();
@@ -958,7 +960,8 @@ var GAME = {
       return;
     }
     var remaining = this.todayCounts[key] || 0;
-    if (remaining <= 0) {
+    // 数据库中有记录时才检查剩余次数；无记录（新用户）跳过此检查
+    if (!this._noDbData && remaining <= 0) {
       this.showXp('+0 真气','今日此项修炼已毕');
       return;
     }
@@ -970,7 +973,7 @@ var GAME = {
 
   updateBadge: function() {
     var user = this.getWalineUser();
-    if (this.loaded && user) {
+    if (this.loaded && user && !this._noDbData) {
       document.getElementById('pointsBadge').textContent = '✦ '+this.totalPoints;
     } else {
       document.getElementById('pointsBadge').textContent = '✦ ..';
@@ -983,8 +986,8 @@ var GAME = {
       var key = GAME_CONFIG[i].key;
       var el = document.getElementById(key + 'Dot');
       if (!el) continue;
-      // 数据未就绪显示".."
-      if (!this.loaded) {
+      // 数据未就绪 或 数据库无记录 → 显示".."
+      if (!this.loaded || this._noDbData) {
         el.textContent = '..';
         el.style.display = 'flex';
         continue;
@@ -1012,7 +1015,7 @@ var GAME = {
       var key = GAME_CONFIG[i].key;
       var act = this.actions[key];
       if (!act) continue;
-      var remaining = this.todayCounts[key] || 0;
+      var remaining = this._noDbData ? act.max : (this.todayCounts[key] || 0);
       var done = remaining <= 0;
       if (!done) allDone = false;
       html += '<div class="task-item' + (done ? ' completed' : '') + '">'
