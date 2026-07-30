@@ -756,16 +756,16 @@ var GAME = {
 
   getWalineUser: function() {
     try {
-      // 只信任 Waline 自身的 key（WALINE_USER / @waline/user / waline_user）
-      // 登出时 Waline 会清掉这些 key，GAME_USER 仅做辅助持久化，不作为用户检测依据
+      // 只信任 Waline 自身的 key，登出时 Waline 会清掉
       var keys = ['WALINE_USER','@waline/user','waline_user'];
       var user = null;
+      var foundKey = '';
       for (var i = 0; i < keys.length; i++) {
         try {
           var val = localStorage.getItem(keys[i]);
           if (val) {
             user = JSON.parse(val);
-            if (user && (user.display_name || user.nick || user.name)) break;
+            if (user && (user.display_name || user.nick || user.name)) { foundKey = keys[i]; break; }
           }
         } catch(e) { user = null; }
       }
@@ -776,7 +776,14 @@ var GAME = {
         } catch(e) { user = null; }
       }
       if (!user) return null;
+      // 标准化
       user.display_name = user.display_name || user.nick || user.name || '';
+      user.display_name = user.display_name.trim();
+      if (!user.display_name) {
+        // 空名称的残留数据 → 清理掉
+        if (foundKey) try { localStorage.removeItem(foundKey); } catch(e) {}
+        return null;
+      }
       user.avatar = user.avatar || user.objectURL || user.avator || '';
       user.email = user.email || user.mail || '';
       return user;
