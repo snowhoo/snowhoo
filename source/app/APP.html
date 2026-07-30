@@ -631,6 +631,7 @@ var GAME = {
   syncState: 'idle',      // 'idle' | 'loading' | 'saving'
   syncError: false,
   loaded: false,
+  _gameObjectId: 0,       // 当前用户游戏记录在 Waline 中的 objectId，用于 PUT 更新
 
   setSyncState: function(state) {
     this.syncState = state;
@@ -871,28 +872,28 @@ var GAME = {
 
   processRecords: function(records, user) {
     var userNick = user.display_name || '';
-    // 找当前用户最新的一条记录（objectId 最大）
-    var latestId = 0;
-    var latestData = null;
+    var foundId = 0;
+    var foundData = null;
     for (var i = 0; i < records.length; i++) {
       try {
         var r = records[i];
         if ((r.nick || '') !== userNick) continue;
         var raw = r.orig || r.comment || '';
         var data = JSON.parse(raw);
-        // 新版格式：totalPoints + todayCounts
         if (data && typeof data.totalPoints === 'number' && data.todayCounts) {
           var id = parseInt(r.objectId, 10) || 0;
-          if (id > latestId) { latestId = id; latestData = data; }
+          if (id > foundId) { foundId = id; foundData = data; }
         }
       } catch(e) {}
     }
-    if (latestData) {
-      this.totalPoints = latestData.totalPoints;
-      this.todayCounts = latestData.todayCounts || {};
+    if (foundData) {
+      this.totalPoints = foundData.totalPoints;
+      this.todayCounts = foundData.todayCounts || {};
+      this._gameObjectId = foundId; // 记住记录 ID，下次用 PUT 更新
     } else {
       this.totalPoints = 0;
       this.todayCounts = {};
+      this._gameObjectId = 0; // 无记录，下次用 POST 创建
     }
     this.loaded = true;
     this.clearTaskMenuError();
@@ -1039,25 +1040,49 @@ var GAME = {
     try {
       if (!user || !user.display_name) return;
       var self = this;
-      // 计算新状态（写入完整游戏数据，不依赖多条记录累加）
+      // 计算新状态（写入完整游戏数据，一条记录包含全部）
       var newTotal = this.totalPoints + points;
       var newCounts = {};
       for (var k in this.todayCounts) newCounts[k] = this.todayCounts[k];
       newCounts[key] = (newCounts[key] || 0) + 1;
       this.setSyncState('saving');
-      fetch('https://waline.snowhoo.net/api/comment', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          comment: JSON.stringify({totalPoints:newTotal, todayCounts:newCounts}),
-          url: '/app-game/actions',
-          nick: user.display_name || '游客',
-          mail: user.email || ''
-        })
-      }).then(function(r){
+      var payload = JSON.stringify({
+        comment: JSON.stringify({totalPoints:newTotal, todayCounts:newCounts}),
+        url: '/app-game/actions',
+        nick: user.display_name || '游客',
+        mail: user.email || ''
+      });
+      var token = user.token || '';
+      if (token) { try { var s = JSON.parse(localStorage.getItem('WALINE_USER')||'{}'); if(s.token) token=s.token; } catch(e){} }
+      var request;
+      if (this._gameObjectId) {
+        // 已有记录 → PUT 更新（只改 comment 字段）
+        var headers = {'Content-Type':'application/json'};
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        request = fetch('https://waline.snowhoo.net/api/comment/' + this._gameObjectId, {
+          method: 'PUT',
+          headers: headers,
+          body: payload
+        });
+      } else {
+        // 无记录 → POST 创建新记录
+        request = fetch('https://waline.snowhoo.net/api/comment', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: payload
+        }).then(function(r){
+          if (r.ok) {
+            return r.json().then(function(j){
+              if (j.data && j.data.objectId) self._gameObjectId = parseInt(j.data.objectId,10);
+              return r;
+            });
+          }
+          return r;
+        });
+      }
+      request.then(function(r){
         if (r.ok) {
           console.log('[GAME] 经验值已同步到 Waline:', key, '+'+points);
-          // 写入成功后重新从数据库加载，取最新记录确认
           return self.loadFromServer(user);
         } else {
           self.syncError = true;
