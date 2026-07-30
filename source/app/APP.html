@@ -1207,7 +1207,6 @@ var commentOverlay = document.getElementById('commentOverlay');
           comment: '留言'
         },
         onLogin: function(user) {
-          console.log('[GAME-DBG] onLogin fired, user:', user.display_name || user.nick || user.name);
           // 保存用户信息到 localStorage
           var gu = {
             display_name: user.display_name || user.nick || user.name || '',
@@ -1226,7 +1225,6 @@ var commentOverlay = document.getElementById('commentOverlay');
           }
         },
         onLogout: function() {
-          console.log('[GAME-DBG] onLogout fired');
           try { localStorage.removeItem('GAME_USER'); } catch(e) {}
           try { localStorage.removeItem('WALINE_USER'); } catch(e) {}
           if (window.GAME) {
@@ -1235,12 +1233,12 @@ var commentOverlay = document.getElementById('commentOverlay');
           }
         }
       });
-      console.log('[GAME-DBG] Waline early init OK');
+      console.log('[GAME] Waline init OK');
     } catch(e) {
-      console.error('[GAME-DBG] Waline early init error:', e);
+      console.error('[GAME] Waline init error:', e);
     }
   }).catch(function(e) {
-    console.error('[GAME-DBG] Waline dynamic import failed:', e);
+    console.error('[GAME] Waline import error:', e);
   });
 })();
 
@@ -1273,75 +1271,6 @@ commentOverlay.addEventListener('click', function(e) {
     almanac.classList.remove('hidden');
   });
 })();
-
-/* ===== 调试面板（双击或长按左下角区域显示） ===== */
-var debugVisible = false;
-var debugPanel = document.createElement('div');
-debugPanel.id = 'debugPanel';
-debugPanel.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:rgba(0,0,0,.88);color:#0f0;font-size:11px;font-family:monospace;padding:8px;max-height:40vh;overflow:auto;display:none;white-space:pre-wrap;word-break:break-all';
-document.body.appendChild(debugPanel);
-
-function showDebug() {
-  var lines = [];
-  lines.push('=== localStorage keys ===');
-  for (var i = 0; i < localStorage.length; i++) {
-    var k = localStorage.key(i);
-    var v = localStorage.getItem(k);
-    if (v && v.length > 100) v = v.slice(0,100) + '...';
-    lines.push('  ' + k + ' = ' + v);
-  }
-  lines.push('');
-  lines.push('=== sessionStorage keys ===');
-  for (var i = 0; i < sessionStorage.length; i++) {
-    var k = sessionStorage.key(i);
-    var v = sessionStorage.getItem(k);
-    if (v && v.length > 100) v = v.slice(0,100) + '...';
-    lines.push('  ' + k + ' = ' + v);
-  }
-  lines.push('');
-  try {
-    var u = GAME ? GAME.getWalineUser() : null;
-    lines.push('=== GAME.getWalineUser() ===');
-    lines.push(u ? JSON.stringify({display_name:u.display_name,avatar:u.avatar?.slice(0,30),email:u.email},null,2) : 'null');
-    lines.push('');
-    lines.push('=== GAME state ===');
-    if (GAME) {
-      lines.push('  loaded: ' + GAME.loaded);
-      lines.push('  syncState: ' + GAME.syncState);
-      lines.push('  totalPoints: ' + GAME.totalPoints);
-      lines.push('  todayCounts: ' + JSON.stringify(GAME.todayCounts));
-      lines.push('  lastUser: ' + GAME.lastUser);
-      lines.push('  _gameObjectId: ' + GAME._gameObjectId);
-    }
-  } catch(e) { lines.push('GAME not ready: ' + e.message); }
-  debugPanel.textContent = lines.join('\n');
-  debugPanel.style.display = debugVisible ? 'none' : 'block';
-  debugVisible = !debugVisible;
-}
-
-// 双击底部任务菜单区域触发调试面板
-document.addEventListener('dblclick', function(e) {
-  showDebug();
-});
-// 也支持在"探索"按钮上长按3秒触发（手机触摸）
-var _debugTouchTimer = null;
-document.querySelector('.welcome').addEventListener('touchstart', function() {
-  _debugTouchTimer = setTimeout(showDebug, 2000);
-});
-document.querySelector('.welcome').addEventListener('touchend', function() {
-  clearTimeout(_debugTouchTimer);
-});
-
-// 登录后状态监测辅助：每3秒记录一次用户检测状态
-setInterval(function() {
-  try {
-    if (GAME && GAME.getWalineUser) {
-      var u = GAME.getWalineUser();
-      if (u) console.log('[GAME-DBG] getWalineUser OK:', u.display_name, u.email);
-      else console.log('[GAME-DBG] getWalineUser = null');
-    }
-  } catch(e) {}
-}, 3000);
 </script>
 </body>
 </html>
