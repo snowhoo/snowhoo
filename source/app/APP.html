@@ -1180,18 +1180,20 @@ document.getElementById('commentAvatar').addEventListener('click', function() {
             comment: '留言'
           },
           onLogin: function(user) {
-            // 登录后保存用户信息到独立缓存（不依赖 Waline 内部存储格式）
+            // 保存用户信息用于跨页面持久化
             var gu = {
               display_name: user.display_name || user.nick || user.name || '',
               avatar: user.avatar || user.objectURL || user.avator || '',
               email: user.email || user.mail || ''
             };
             try { localStorage.setItem('GAME_USER', JSON.stringify(gu)); } catch(e) {}
-            // 也存一份兼容 Waline 的 key
             try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e) {}
-            // 关闭评论弹窗后刷新页面
+            // 直接更新头像和加载数据（传入 user 对象，不走 getWalineUser 判断）
+            GAME.updateAvatar(user);
+            GAME.setSyncState('loading');
+            GAME.loadFromServer(user);
+            // 关闭评论弹窗
             commentOverlay.classList.remove('active');
-            setTimeout(function(){ location.reload(); }, 200);
           }
         });
       } catch(e) {
