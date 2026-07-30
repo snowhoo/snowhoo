@@ -1053,22 +1053,23 @@ var GAME = {
         mail: user.email || ''
       });
       var token = user.token || '';
-      if (token) { try { var s = JSON.parse(localStorage.getItem('WALINE_USER')||'{}'); if(s.token) token=s.token; } catch(e){} }
+      if (!token) { try { var s = JSON.parse(localStorage.getItem('WALINE_USER')||'{}'); if(s.token) token=s.token; } catch(e){} }
+      // POST/PUT 都带 Authorization: Bearer（CORS 已验证通过），确保记录有所属用户
+      var headers = {'Content-Type':'application/json'};
+      if (token) headers['Authorization'] = 'Bearer ' + token;
       var request;
       if (this._gameObjectId) {
-        // 已有记录 → PUT 更新（只改 comment 字段）
-        var headers = {'Content-Type':'application/json'};
-        if (token) headers['Authorization'] = 'Bearer ' + token;
+        // 已有记录 → PUT 更新
         request = fetch('https://waline.snowhoo.net/api/comment/' + this._gameObjectId, {
           method: 'PUT',
           headers: headers,
           body: payload
         });
       } else {
-        // 无记录 → POST 创建新记录
+        // 无记录 → POST 创建新记录（带 auth，确保有所属用户）
         request = fetch('https://waline.snowhoo.net/api/comment', {
           method: 'POST',
-          headers: {'Content-Type':'application/json'},
+          headers: headers,
           body: payload
         }).then(function(r){
           if (r.ok) {
