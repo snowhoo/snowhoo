@@ -650,6 +650,7 @@ var GAME = {
       this.loadFromServer(user);
     } else {
       // 未登录时从本地缓存恢复数据
+      this.setSyncState('idle');
       this.loadLocal();
       this.updateBadge();
       this.updateTaskDots();
@@ -682,7 +683,7 @@ var GAME = {
     setInterval(function(){self.checkLogin()},3000);
   },
 
-  lastUser: null,
+  lastUser: '',
 
   checkLogin: function() {
     var user = this.getWalineUser();
