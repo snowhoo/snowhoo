@@ -675,7 +675,7 @@ var GAME = {
     }
     // 任务菜单点击切换（错误状态刷新，加载/保存中无操作）
     document.getElementById('taskMenuBtn').addEventListener('click',function(e){
-      if (this.classList.contains('error')) {
+      if (this.classList.contains('error') && !this.classList.contains('no-reload')) {
         location.reload();
         return;
       }
@@ -1048,15 +1048,21 @@ var GAME = {
     this.updateTaskMenuBtn();
   },
 
-  // 控制任务菜单按钮显隐：登录用户且数据就绪才显示
+  // 控制任务菜单按钮显隐/状态：登录用户且数据就绪显示正常菜单，未登录显示红色提示
   updateTaskMenuBtn: function() {
     var btn = document.getElementById('taskMenuBtn');
     if (!btn) return;
     var user = this.getWalineUser();
-    if (this.loaded && user) {
+    if (!user) {
+      // 未登录：显示红色提示
+      btn.textContent = '请勿隐匿身份，否则您无法修炼';
+      btn.classList.add('error', 'no-reload');
       btn.classList.remove('init-hidden');
+    } else if (this.loaded) {
+      btn.classList.remove('init-hidden', 'error', 'no-reload');
       this.updateTaskMenu();
     } else {
+      // 登录但数据未就绪：隐藏（loading 状态由 setSyncState 控制按钮文本）
       btn.classList.add('init-hidden');
     }
   },
