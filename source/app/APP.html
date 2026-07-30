@@ -1070,7 +1070,7 @@ var GAME = {
         console.warn('[GAME] Waline 同步网络失败:', e);
       }).then(function(){
         if (self.syncError) {
-          self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+          self.showTaskMenuError('真气融合失败，经验没有增加!');
           self.syncError = false;
           self._beforePoints = undefined; // 失败时清空，不显示浮动经验
           self.setSyncState('idle');
