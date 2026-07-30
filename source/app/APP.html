@@ -814,7 +814,9 @@ var GAME = {
       return r.json();
     })
     .then(function(data) {
-      self.processRecords(data.data || [], user);
+      // Waline API 返回 {data: {page, totalPages, count, data: [...]}}
+      var records = (data.data && data.data.data) || [];
+      self.processRecords(records, user);
       self.saveLocal();
       console.log('[GAME] 从 Waline 加载经验值成功:', self.totalPoints);
     })
