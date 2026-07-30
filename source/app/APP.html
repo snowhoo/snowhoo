@@ -119,6 +119,9 @@ body{display:flex;flex-direction:column}
 /* 星座星空背景覆盖层 */
 .stars-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:url('bg-stars.jpg') center/cover no-repeat;opacity:0;transition:opacity .6s ease;pointer-events:none;z-index:1}
 .stars-overlay.show{opacity:1}
+.poetry-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:url('poetry-bg.jpg') center/cover no-repeat;opacity:0;transition:opacity .8s ease;pointer-events:none;z-index:1}
+.poetry-overlay.show{opacity:1}
+.poetry-overlay::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(transparent 40%,rgba(0,0,0,.35))}
 
 /* 评论弹窗 */
 .comment-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,.5);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;display:flex;align-items:flex-end}
@@ -163,6 +166,7 @@ body{display:flex;flex-direction:column}
 <div class="image-area">
   <img id="bgImage" src="" alt="">
   <div class="stars-overlay" id="starsOverlay"></div>
+  <div class="poetry-overlay" id="poetryOverlay"></div>
   <div class="gradient"></div>
   <div class="top-left-badges">
     <span class="badge" id="poetryBtn"><span class="badge-icon">≡</span>诗词<span class="task-dot" id="poetryDot"></span></span>
@@ -388,6 +392,10 @@ function toggleContent(btnId, url, renderFn, onLoaded) {
     // 终止后台正在加载的星座请求
     area._constellationReqId = Date.now() + '_cancelled';
   }
+  // 切到非诗词面板：关闭诗词背景覆盖层
+  if (area._activeBtn === 'poetryBtn') {
+    document.getElementById('poetryOverlay').classList.remove('show');
+  }
   // 恢复默认位置（诗/今内容居中）
   area.style.left = '';
   area.style.width = '';
@@ -412,19 +420,64 @@ function toggleContent(btnId, url, renderFn, onLoaded) {
   });
 }
 
-document.getElementById('poetryBtn').addEventListener('click', function() {
-  var a = document.getElementById('contentArea');
-  var isNew = !(a._activeBtn === 'poetryBtn' && a.classList.contains('show'));
-  toggleContent('poetryBtn', '../js/DailyPoetry.json', function(data) {
-    var lines = data.detail && data.detail.content ? data.detail.content : [data.line];
-    var html = '<div class="content-title">' + data.title + '</div>'
-             + '<div class="content-author">' + data.dynasty + ' · ' + data.author + '</div>';
-    lines.forEach(function(l) {
-      html += '<div class="content-line">' + l + '</div>';
+// 诗词按钮：和星座同样的"先显示背景+加载提示，再异步加载内容"流程
+function togglePoetry() {
+  var btn = document.getElementById('poetryBtn');
+  var area = document.getElementById('contentArea');
+  var overlay = document.getElementById('poetryOverlay');
+
+  // 关闭面板
+  if (area._activeBtn === 'poetryBtn' && area.classList.contains('show')) {
+    area.classList.remove('show');
+    btn.classList.remove('selected');
+    area._activeBtn = null;
+    overlay.classList.remove('show');
+    return;
+  }
+
+  document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
+  btn.classList.add('selected');
+
+  // 第一步：显示"诗词酝酿中.." 提示文本 + 触发背景渐入
+  area.innerHTML = '<div class="content-line" style="font-size:.78rem;opacity:.7">诗词酝酿中..</div>';
+  area.classList.add('show');
+  area._activeBtn = 'poetryBtn';
+  area.style.left = '';
+  area.style.width = '';
+  area.style.transform = 'translateY(-50%)';
+  area.style.textAlign = 'center';
+
+  // 显示诗词背景（淡入 0.8s 与 CSS transition 一致）
+  overlay.classList.add('show');
+
+  // 生成唯一标记，防止异步回调覆盖其他面板
+  var _reqId = Date.now() + '_' + Math.random();
+  area._toggleReqId = _reqId;
+
+  // 第二步：背景渐入后，加载诗词内容
+  setTimeout(function() {
+    if (area._toggleReqId !== _reqId) return;  // 用户已切走
+    fetch('../js/DailyPoetry.json').then(function(r){return r.json()}).then(function(data){
+      if (area._toggleReqId !== _reqId) return;
+      var lines = data.detail && data.detail.content ? data.detail.content : [data.line];
+      var html = '<div class="content-title">' + data.title + '</div>'
+               + '<div class="content-author">' + data.dynasty + ' · ' + data.author + '</div>';
+      lines.forEach(function(l) {
+        html += '<div class="content-line">' + l + '</div>';
+      });
+      area.innerHTML = html;
+      area._activeBtn = 'poetryBtn';
+      // 诗词内容加载完成 → 记录修炼
+      GAME.doAction('poetry');
+    }).catch(function(){
+      if (area._toggleReqId !== _reqId) return;
+      area.innerHTML = '<div class="content-line">诗词加载失败</div>';
+      area._activeBtn = 'poetryBtn';
     });
-    return html;
-  }, isNew ? function(){ GAME.doAction('poetry'); } : null);
-});
+  }, 800);
+}
+
+document.getElementById('poetryBtn').addEventListener('click', togglePoetry);
 
 document.getElementById('historyBtn').addEventListener('click', function() {
   var a = document.getElementById('contentArea');
@@ -461,6 +514,10 @@ document.getElementById('constellationBtn').addEventListener('click', function()
   // 生成唯一标记，防止异步回调覆盖其他面板
   var _reqId = Date.now() + '_' + Math.random();
   area._constellationReqId = _reqId;
+  // 切到非诗词面板：关闭诗词背景覆盖层
+  if (area._activeBtn === 'poetryBtn') {
+    document.getElementById('poetryOverlay').classList.remove('show');
+  }
   // 居中显示
   area.style.left = '50%';
   area.style.transform = 'translate(-50%, -50%)';
