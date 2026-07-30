@@ -131,7 +131,7 @@ body{display:flex;flex-direction:column}
 .xp-float .xp-sub{font-size:.6rem;opacity:.7;display:block;font-weight:300}
 
 /* 任务红点 */
-.task-dot{position:absolute;top:-8px;right:-8px;background:#e94560;color:#fff;font-size:.5rem;min-width:15px;height:15px;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 3px;font-weight:700;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.3);z-index:2}
+.task-dot{position:absolute;top:-8px;right:-8px;background:#e94560;color:#fff;font-size:.42rem;min-width:13px;height:13px;border-radius:7px;display:none;align-items:center;justify-content:center;padding:0 3px;font-weight:300;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.3);z-index:2}
 
 /* 今日修炼任务菜单 */
 .task-menu{position:absolute;bottom:10px;z-index:3}
@@ -140,7 +140,7 @@ body{display:flex;flex-direction:column}
 .task-menu-dropdown{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:170px;padding:6px 0;display:none;z-index:10}
 .task-menu-dropdown.show{display:block}
 .task-item{display:flex;align-items:center;padding:7px 12px;font-size:.7rem;color:#333;line-height:1.4;gap:4px;white-space:nowrap}
-.task-item .task-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.task-item .task-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0;position:static}
 .task-item .task-check{color:#22c55e;flex-shrink:0;width:14px;text-align:center;font-size:.65rem;font-weight:700}
 .task-item .task-name{flex-shrink:0;margin-right:2px}
 .task-item .task-sub{font-size:.6rem;opacity:.55;flex-shrink:0}
@@ -902,7 +902,7 @@ var GAME = {
       var xhr = new XMLHttpRequest();
       xhr.open('POST','https://waline.snowhoo.net/api/comment');
       xhr.setRequestHeader('Content-Type','application/json');
-      if (token) xhr.setRequestHeader('Authorization','Bearer ' + token);
+      if (token) xhr.setRequestHeader('X-LC-Session', token);
       xhr.withCredentials = true;
       xhr.onload = function() {
         if (xhr.status >= 200 && xhr.status < 300) {
