@@ -1223,7 +1223,7 @@ var commentOverlay = document.getElementById('commentOverlay');
           try { localStorage.removeItem('GAME_USER'); } catch(e) {}
           try { localStorage.removeItem('WALINE_USER'); } catch(e) {}
           if (window.GAME) {
-            GAME.lastUser = '';
+            // 不设 lastUser，让 checkLogin 自然检测到 user→null 的变化进入登出分支
             GAME.checkLogin();
           }
         }
