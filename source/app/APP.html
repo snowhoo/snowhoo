@@ -795,9 +795,17 @@ var GAME = {
       return Promise.resolve();
     }
     this.setSyncState('loading');
-    return fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=200', { credentials: 'include' })
+    // 获取 token 用于调试/认证
+    var token = user.token || '';
+    return fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions&pageSize=200' + (token ? '&token='+encodeURIComponent(token) : ''))
     .then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
+      if (!r.ok) {
+        // 读取响应体以便排查错误详情
+        return r.text().then(function(body) {
+          console.warn('[GAME] 加载 Waline HTTP 异常:', r.status, body.slice(0,300));
+          throw new Error('HTTP ' + r.status);
+        });
+      }
       return r.json();
     })
     .then(function(data) {
@@ -1027,16 +1035,14 @@ var GAME = {
       fetch('https://waline.snowhoo.net/api/comment', {
         method: 'POST',
         headers: {
-          'Content-Type':'application/json',
-          'Authorization':'Bearer ' + token,
-          'X-Waline-Session': token
+          'Content-Type':'application/json'
         },
-        credentials: 'include',
         body: JSON.stringify({
           comment: JSON.stringify({action:key,points:points,time:new Date().toISOString()}),
           url: '/app-game/actions',
           nick: user.display_name || '游客',
-          mail: user.email || ''
+          mail: user.email || '',
+          token: token   // Waline API 支持在请求体中传递 token
         })
       }).then(function(r){
         if (r.ok) {
