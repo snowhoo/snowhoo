@@ -1198,7 +1198,7 @@ var commentOverlay = document.getElementById('commentOverlay');
         },
         onLogin: function(user) {
           console.log('[GAME-DBG] onLogin fired, user:', user.display_name || user.nick || user.name);
-          // 保存用户信息用于跨页面持久化（多种格式）
+          // 保存用户信息到 localStorage
           var gu = {
             display_name: user.display_name || user.nick || user.name || '',
             avatar: user.avatar || user.objectURL || user.avator || '',
@@ -1206,16 +1206,14 @@ var commentOverlay = document.getElementById('commentOverlay');
           };
           try { localStorage.setItem('GAME_USER', JSON.stringify(gu)); } catch(e) {}
           try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e) {}
-          // 更新 GAME 内部状态
+          // 更新头像，然后让 checkLogin 自动检测用户变化并加载数据
           if (window.GAME) {
-            GAME.lastUser = gu.email + gu.display_name;
             GAME.updateAvatar(user);
-            GAME.loaded = false;
-            GAME.setSyncState('loading');
-            GAME.loadFromServer(user);
+            commentOverlay.classList.remove('active');
+            // 不直接调 loadFromServer，走 checkLogin 统一路径
+            // 避免与 init/定时器 双重调用导致 race condition
+            GAME.checkLogin();
           }
-          // 如果评论弹窗开着，关闭它
-          commentOverlay.classList.remove('active');
         },
         onLogout: function() {
           console.log('[GAME-DBG] onLogout fired');
