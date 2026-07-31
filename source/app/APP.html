@@ -316,7 +316,7 @@ body{display:flex;flex-direction:column}
   </div>
 </div>
 
-<script src="game-config.js?v=20260731"></script>
+<script src="game-config.js?v=20260731b"></script>
 <script>
 // 年度进度
 (function() {
@@ -2347,21 +2347,31 @@ var GAME = {
     });
   },
 
-  // 双击背景图破除隐藏结界：扣 5-10 随机真气 → 成功后保存当前背景图到相册
+  // 双击背景图破除隐藏结界：扣随机真气 → 成功后保存当前背景图到相册
   // 流程与其它解锁完全一致：先弹询问窗 → 确认后窗口不关闭 → 读库校验（登录/真气不足）→ 扣真气写库 → 读回确认 → 保存图片
+  // 参数与文案由 game-config.js 的 BG_UNLOCK_CONFIG 配置（不记录解锁状态、不限次数）
   unlockBackground: function() {
     if (this._autoMode || this._oneKeyMode) return; // 自动/一键修炼中屏蔽
     if (this.syncState !== 'idle') {
       this.showXp('', this.syncState === 'loading' ? '真气恢复中，无法修炼..' : '真气融合中，无法修炼..');
       return;
     }
-    var cost = 5 + Math.floor(Math.random() * 6); // 5-10 随机
+    var cfg = (typeof BG_UNLOCK_CONFIG !== 'undefined') ? BG_UNLOCK_CONFIG : {};
+    var min = (typeof cfg.min === 'number') ? cfg.min : 5;
+    var max = (typeof cfg.max === 'number') ? cfg.max : 10;
+    if (max < min) max = min;
+    var cost = min + Math.floor(Math.random() * (max - min + 1)); // min~max 随机
+    var qTitle = cfg.title || '🗝 隐藏结界';
+    var qText = (cfg.text || '发现隐藏结界，注入 {cost} 真气破除结界？').replace('{cost}', cost);
+    var qOk = cfg.okText || '破除';
+    var doneTitle = cfg.doneTitle || '✓ 结界已破';
+    var doneText = (cfg.doneText || '结界破除！-{cost} 真气，图片已保存到相册').replace('{cost}', cost);
     var self = this;
     // 1. 立即弹询问窗口（自定义文案：隐藏结界），确认后窗口不关闭
     self._showUnlockFlow(cost, {
-      title: '🗝 隐藏结界',
-      text: '发现隐藏结界，注入 ' + cost + ' 真气破除结界？',
-      okText: '破除',
+      title: qTitle,
+      text: qText,
+      okText: qOk,
       onConfirm: function(setStatus) {
         // 确认后再校验登录状态（未登录 → 窗口提示，无法注入真气）
         var user = self.getWalineUser();
@@ -2372,7 +2382,7 @@ var GAME = {
           return;
         }
         // 2. 读数据库真实数据（真气值以数据库为准）
-        setStatus('🗝 隐藏结界', '正在恢复真气..');
+        setStatus(qTitle, '正在恢复真气..');
         self.setSyncState('loading');
         self._fetchCurrentRecord(user).then(function(res) {
           var basePoints = res.data ? res.data.points : 0;
@@ -2386,8 +2396,8 @@ var GAME = {
             setStatus('无法破除结界', '真气不足，破除结界需要 ' + cost + ' 真气！');
             return;
           }
-          // 3. 写库：扣随机真气，解锁状态字段保留数据库原值
-          setStatus('🗝 隐藏结界', '正在融合真气..');
+          // 3. 写库：扣随机真气，解锁状态字段保留数据库原值（结界不记录解锁状态、不限次数）
+          setStatus(qTitle, '正在融合真气..');
           var now = new Date();
           var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
           var newPoints = basePoints - cost;
@@ -2414,7 +2424,7 @@ var GAME = {
               return;
             }
             // 成功 → 窗口提示 + 保存图片到相册
-            setStatus('✓ 结界已破', '结界破除！-' + cost + ' 真气，图片已保存到相册');
+            setStatus(doneTitle, doneText);
             self.saveBgImage();
           });
         }).catch(function(e) {

@@ -81,3 +81,23 @@ var UNLOCK_CONFIG = {
   tv: 555,
   runner: 1000
 };
+
+/**
+ * 双击背景图破除隐藏结界配置
+ * 不记录解锁状态、不限次数——每次双击背景图都独立触发一次结界：
+ *   弹窗确认 → 读库校验 → 扣除真气 → 保存当前背景图到相册
+ *   min / max — 每次破除结界随机扣除真气下限/上限（含两端）
+ *   title     — 询问窗标题
+ *   text      — 询问窗正文（{cost} 会被替换为本次实际扣除的真气值）
+ *   okText    — 确认按钮文字
+ *   doneTitle / doneText — 破除成功后窗口显示文案（{cost} 同上）
+ */
+var BG_UNLOCK_CONFIG = {
+  min: 5,
+  max: 10,
+  title: '🗝 隐藏结界',
+  text: '发现隐藏结界，注入 {cost} 真气破除结界？',
+  okText: '破除',
+  doneTitle: '✓ 结界已破',
+  doneText: '结界破除！-{cost} 真气，图片已保存到相册'
+};
