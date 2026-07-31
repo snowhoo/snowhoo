@@ -155,6 +155,8 @@ body{display:flex;flex-direction:column}
 .task-quick-btn.auto{background:#22c55e;color:#fff;border:1px solid #fff}
 .task-quick-btn.onekey{background:#3b82f6;color:#fff;border:1px solid #fff}
 .task-quick-btn.upgrade{background:#22c55e;color:#fff;border:1px solid #fff;animation:xzUpgradeJump 1s ease-in-out infinite}
+/* 最高境界：金色静态，不再跳动 */
+.task-quick-btn.upgrade.max-level{background:#f59e0b;animation:none}
 /* 境界提升按钮跳动动画 */
 @keyframes xzUpgradeJump{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 /* 锁遮罩：未解锁时半透明灰白遮罩 + 锁图标，禁用点击 */
@@ -1401,12 +1403,21 @@ var GAME = {
       if (this.oneKeyUnlocked) onekeyBtn.classList.remove('locked');
       else onekeyBtn.classList.add('locked');
     }
-    // 升级按钮：达到下一境界所需真气才显示（未达到隐藏），最高境界不显示
+    // 升级按钮三态：
+    //   达到下一境界所需 → 绿色跳动"境界提升↑"
+    //   未达到 → 隐藏
+    //   已达最高境界 → 金色静态"已达最高境界"
     if (upgradeBtn) {
       var nextCost = (typeof LEVEL_CONFIG !== 'undefined' && LEVEL_CONFIG[this.level + 1])
         ? LEVEL_CONFIG[this.level + 1].cost : null;
       if (nextCost !== null && this.totalPoints >= nextCost) {
         upgradeBtn.style.display = 'inline-flex';
+        upgradeBtn.textContent = '境界提升↑';
+        upgradeBtn.classList.remove('max-level');
+      } else if (nextCost === null) {
+        upgradeBtn.style.display = 'inline-flex';
+        upgradeBtn.textContent = '已达最高境界';
+        upgradeBtn.classList.add('max-level');
       } else {
         upgradeBtn.style.display = 'none';
       }
