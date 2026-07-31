@@ -1073,6 +1073,30 @@ var GAME = {
     }
   },
 
+  // 健壮解析 Waline 记录内容：兼容纯 JSON / 被 markdown 渲染成 <p> 包裹 / 弯引号 / HTML 实体 等情况
+  // 手工在 Waline 管理后台编辑评论时，内容会被重新渲染为 <p>{“points”:...}</p>（直引号变弯引号），
+  // 直接 JSON.parse 会失败导致读不到数据，这里先清洗再解析。
+  parseGameRecord: function(raw) {
+    if (!raw) return null;
+    var s = String(raw);
+    // 1. 去掉 HTML 标签
+    s = s.replace(/<[^>]*>/g, '');
+    // 2. Unicode 弯引号 → 直引号
+    s = s.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+    // 3. HTML 实体解码
+    s = s.replace(/&quot;/g, '"').replace(/&#34;/g, '"')
+         .replace(/&amp;/g, '&').replace(/&#38;/g, '&')
+         .replace(/&lt;/g, '<').replace(/&#60;/g, '<')
+         .replace(/&gt;/g, '>').replace(/&#62;/g, '>');
+    // 4. 截取第一个 { 到最后一个 }（剔除渲染残留的前后缀）
+    var start = s.indexOf('{');
+    var end = s.lastIndexOf('}');
+    if (start >= 0 && end > start) s = s.slice(start, end + 1);
+    try {
+      return JSON.parse(s);
+    } catch(e) { return null; }
+  },
+
   processRecords: function(records, user) {
     var now = new Date();
     var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
@@ -1084,7 +1108,7 @@ var GAME = {
         var r = records[i];
         if ((r.nick || '') !== userNick) continue;
         var raw = r.orig || r.comment || '';
-        var data = JSON.parse(raw);
+        var data = this.parseGameRecord(raw);
         // 识别新格式：todayRemaining（剩余次数）
         if (data && typeof data.points === 'number' && data.todayRemaining) {
           var id = parseInt(r.objectId, 10) || 0;
@@ -1391,6 +1415,7 @@ var GAME = {
   // 从数据库读取当前用户的真实记录（只读，不更新 UI），返回 Promise<{foundId, data}>
   // 写入前必须先调此方法拿真实数据，再基于真实数据处理后写入，防止覆盖其他端的最新数据
   _fetchCurrentRecord: function(user) {
+    var self = this;
     var userNick = user.display_name || '';
     return fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions')
       .then(function(r) {
@@ -1405,7 +1430,7 @@ var GAME = {
             var r = records[i];
             if ((r.nick || '') !== userNick) continue;
             var raw = r.orig || r.comment || '';
-            var data = JSON.parse(raw);
+            var data = self.parseGameRecord(raw);
             if (data && typeof data.points === 'number' && data.todayRemaining) {
               var id = parseInt(r.objectId, 10) || 0;
               if (id > foundId) { foundId = id; foundData = data; }
