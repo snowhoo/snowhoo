@@ -1573,11 +1573,11 @@ var GAME = {
       if (basePoints < cost) {
         self.setSyncState('idle');
         self.updateTaskMenuBtn();
-        self.showXp('', '真气不足无法破除封印！');
+        self.showXp('', '真气不足，破除封印需要 ' + cost + ' 真气！');
         return;
       }
       // 二次确认，防止误触消耗真气
-      if (!window.confirm('破除封印会损耗' + cost + '真气，是否继续？')) {
+      if (!window.confirm('破除封印会损耗 ' + cost + ' 真气，继续？')) {
         self.setSyncState('idle');
         self.updateTaskMenuBtn();
         return;
