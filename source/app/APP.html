@@ -1638,6 +1638,25 @@ var GAME = {
     });
   },
 
+  // 显示单按钮提示弹层（解锁确认后读库校验失败等场景，提示信息直接在窗口内显示）
+  _showTip: function(title, text) {
+    var mask = document.getElementById('tipConfirm');
+    var t = document.getElementById('tipConfirmTitle');
+    var x = document.getElementById('tipConfirmText');
+    var ok = document.getElementById('tipConfirmOk');
+    if (!mask || !t || !x || !ok) {
+      // 弹层缺失时兜底提示
+      window.alert((title ? title + '：' : '') + text);
+      return;
+    }
+    t.textContent = title || '';
+    x.textContent = text || '';
+    mask.classList.add('show');
+    ok.onclick = function() {
+      mask.classList.remove('show');
+    };
+  },
+
   // 显示境界突破确认弹层（自定义暗绿色，兼容移动端禁 confirm 环境），返回 Promise<boolean>
   _showUpgradeConfirm: function(cost, nextName) {
     return new Promise(function(resolve) {
@@ -1971,98 +1990,102 @@ var GAME = {
       return;
     }
     var self = this;
-    // 读库阶段：用 loading（真气恢复中）而非 saving——此时还没到写库
-    this.setSyncState('loading');
-    // 1. 先读数据库真实数据（真气值/解锁状态以数据库为准，防止多端数据过期）
-    this._fetchCurrentRecord(user).then(function(res) {
-      var basePoints = res.data ? res.data.points : 0;
-      var baseAuto = res.data ? (res.data.autoUnlocked ? 1 : 0) : 0;
-      var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : 0;
-      var baseAlmanac = res.data ? (res.data.almanacUnlocked ? 1 : 0) : 0;
-      var baseLogo = res.data ? (res.data.logoUnlocked ? 1 : 0) : 0;
-      var baseRunner = res.data ? (res.data.runnerUnlocked ? 1 : 0) : 0;
-      var baseCats = {};
-      for (var ci = 0; ci < catKeys.length; ci++) {
-        baseCats[catKeys[ci]] = res.data ? (res.data[catKeys[ci] + 'Unlocked'] ? 1 : 0) : 0;
-      }
-      var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
-      if (res.foundId) self._gameObjectId = res.foundId;
-      // 以下所有"不能解锁"的场景：直接回 idle 并恢复按钮文本，不写库
-      // 已解锁（以数据库为准）→ 同步内存标记并提示
-      if (feature === 'auto' && baseAuto) {
-        self.autoUnlocked = 1;
-        self.setSyncState('idle');
-        self.updateTaskMenuBtn();
-        self.showXp('', '"自动" 已解锁');
-        self._updateQuickBtns(true);
-        return;
-      }
-      if (feature === 'oneKey' && baseOneKey) {
-        self.oneKeyUnlocked = 1;
-        self.setSyncState('idle');
-        self.updateTaskMenuBtn();
-        self.showXp('', '"一键" 已解锁');
-        self._updateQuickBtns(true);
-        return;
-      }
-      if (feature === 'almanac' && baseAlmanac) {
-        self.almanacUnlocked = 1;
-        self.setSyncState('idle');
-        self.updateTaskMenuBtn();
-        self.showXp('', '"日期卡片" 已解锁');
-        self._updateAlmanacLock();
-        return;
-      }
-      if (feature === 'logo' && baseLogo) {
-        self.logoUnlocked = 1;
-        self.setSyncState('idle');
-        self.updateTaskMenuBtn();
-        self.showXp('', '"LOGO" 已解锁');
-        self._updateLogoLock();
-        return;
-      }
-      if (feature === 'runner' && baseRunner) {
-        self.runnerUnlocked = 1;
-        self.setSyncState('idle');
-        self.updateTaskMenuBtn();
-        self.showXp('', '"奔跑" 已解锁');
-        self._updateRunnerLock();
-        return;
-      }
-      // 5 个栏目：已解锁（以数据库为准）→ 同步内存标记并提示
-      for (var ci2 = 0; ci2 < catKeys.length; ci2++) {
-        var ck = catKeys[ci2];
-        if (feature === ck && baseCats[ck]) {
-          self[ck + 'Unlocked'] = 1;
+    // 1. 立即弹询问窗口（不先读库），确认解锁后再读记录校验
+    self._showUnlockConfirm(cost).then(function(confirmed) {
+      if (!confirmed) return; // 取消：状态未变，直接返回
+      // 2. 确认后读数据库真实数据（真气值/解锁状态以数据库为准，防止多端数据过期）
+      self.setSyncState('loading');
+      self._fetchCurrentRecord(user).then(function(res) {
+        var basePoints = res.data ? res.data.points : 0;
+        var baseAuto = res.data ? (res.data.autoUnlocked ? 1 : 0) : 0;
+        var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : 0;
+        var baseAlmanac = res.data ? (res.data.almanacUnlocked ? 1 : 0) : 0;
+        var baseLogo = res.data ? (res.data.logoUnlocked ? 1 : 0) : 0;
+        var baseRunner = res.data ? (res.data.runnerUnlocked ? 1 : 0) : 0;
+        var baseCats = {};
+        for (var ci = 0; ci < catKeys.length; ci++) {
+          baseCats[catKeys[ci]] = res.data ? (res.data[catKeys[ci] + 'Unlocked'] ? 1 : 0) : 0;
+        }
+        var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
+        if (res.foundId) self._gameObjectId = res.foundId;
+        // 以下所有"不能解锁"的场景：直接回 idle 并恢复按钮文本，不写库
+        // 提示信息直接在窗口内显示（原页面提示保留照旧）
+        // 已解锁（以数据库为准）→ 同步内存标记并提示
+        if (feature === 'auto' && baseAuto) {
+          self.autoUnlocked = 1;
           self.setSyncState('idle');
           self.updateTaskMenuBtn();
-          self.showXp('', '"' + names[ck] + '" 已解锁');
-          self._updateCategoryLocks();
+          self.showXp('', '"自动" 已解锁');
+          self._updateQuickBtns(true);
+          self._showTip('无需破除封印', '"自动" 功能已解锁');
           return;
         }
-      }
-      // "一键"需先解锁"自动"
-      if (feature === 'oneKey' && !baseAuto) {
-        self.setSyncState('idle');
-        self.updateTaskMenuBtn();
-        self.showXp('', '需先解锁"自动"功能!');
-        return;
-      }
-      // 真气不足（以数据库真实值为准）→ 不允许解锁
-      if (basePoints < cost) {
-        self.setSyncState('idle');
-        self.updateTaskMenuBtn();
-        self.showXp('', '真气不足，破除封印需要 ' + cost + ' 真气！');
-        return;
-      }
-      // 二次确认（自定义弹层，防止误触消耗真气；兼容移动端禁 confirm 环境）
-      return self._showUnlockConfirm(cost).then(function(confirmed) {
-        if (!confirmed) {
+        if (feature === 'oneKey' && baseOneKey) {
+          self.oneKeyUnlocked = 1;
           self.setSyncState('idle');
           self.updateTaskMenuBtn();
+          self.showXp('', '"一键" 已解锁');
+          self._updateQuickBtns(true);
+          self._showTip('无需破除封印', '"一键" 功能已解锁');
           return;
         }
-        // 2. 写库（saving 由 _writeState 内部在写库动作执行时设置）
+        if (feature === 'almanac' && baseAlmanac) {
+          self.almanacUnlocked = 1;
+          self.setSyncState('idle');
+          self.updateTaskMenuBtn();
+          self.showXp('', '"日期卡片" 已解锁');
+          self._updateAlmanacLock();
+          self._showTip('无需破除封印', '"日期卡片" 功能已解锁');
+          return;
+        }
+        if (feature === 'logo' && baseLogo) {
+          self.logoUnlocked = 1;
+          self.setSyncState('idle');
+          self.updateTaskMenuBtn();
+          self.showXp('', '"LOGO" 已解锁');
+          self._updateLogoLock();
+          self._showTip('无需破除封印', '"LOGO" 功能已解锁');
+          return;
+        }
+        if (feature === 'runner' && baseRunner) {
+          self.runnerUnlocked = 1;
+          self.setSyncState('idle');
+          self.updateTaskMenuBtn();
+          self.showXp('', '"奔跑" 已解锁');
+          self._updateRunnerLock();
+          self._showTip('无需破除封印', '"奔跑" 功能已解锁');
+          return;
+        }
+        // 5 个栏目：已解锁（以数据库为准）→ 同步内存标记并提示
+        for (var ci2 = 0; ci2 < catKeys.length; ci2++) {
+          var ck = catKeys[ci2];
+          if (feature === ck && baseCats[ck]) {
+            self[ck + 'Unlocked'] = 1;
+            self.setSyncState('idle');
+            self.updateTaskMenuBtn();
+            self.showXp('', '"' + names[ck] + '" 已解锁');
+            self._updateCategoryLocks();
+            self._showTip('无需破除封印', '"' + names[ck] + '" 功能已解锁');
+            return;
+          }
+        }
+        // "一键"需先解锁"自动"
+        if (feature === 'oneKey' && !baseAuto) {
+          self.setSyncState('idle');
+          self.updateTaskMenuBtn();
+          self.showXp('', '需先解锁"自动"功能!');
+          self._showTip('无法破除封印', '需先解锁"自动"功能!');
+          return;
+        }
+        // 真气不足（以数据库真实值为准）→ 不允许解锁
+        if (basePoints < cost) {
+          self.setSyncState('idle');
+          self.updateTaskMenuBtn();
+          self.showXp('', '真气不足，破除封印需要 ' + cost + ' 真气！');
+          self._showTip('无法破除封印', '真气不足，破除封印需要 ' + cost + ' 真气！');
+          return;
+        }
+        // 3. 写库（saving 由 _writeState 内部在写库动作执行时设置）
         //    注意：不在此处修改 self.xxxUnlocked，也不立即解锁——
         //    解锁状态以写库成功后读库返回的数据为准（processRecords 从数据库读回并更新 UI）
         var newPoints = basePoints - cost;
@@ -2079,7 +2102,7 @@ var GAME = {
         self._pendingUnlockMsg = '-' + cost + ' 真气，封印已破！';
         var now = new Date();
         var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
-        // 3. 写入（成功后再回读确认，由 processRecords 根据数据库数据更新解锁状态）
+        // 4. 写入（成功后再回读确认，由 processRecords 根据数据库数据更新解锁状态）
         self._writeState(user, {
           points: newPoints,
           todayRemaining: self._normalizeRemaining(res.data ? res.data.todayRemaining : null),
@@ -2097,14 +2120,15 @@ var GAME = {
           newsUnlocked: newCats.news,
           tvUnlocked: newCats.tv
         }, '已解锁"' + name + '"功能');
+      }).catch(function(e) {
+        // 确认后读取真实数据失败/超时 → 无法保证解锁正确性，窗口提示并回 idle
+        console.warn('[GAME] 解锁前读取真实数据失败:', e);
+        self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+        self.setSyncState('idle');
+        self.updateBadge();
+        self.updateTaskDots();
+        self._showTip('心魔困扰', '正遭受心魔困扰，点击恢复心神!');
       });
-    }).catch(function(e) {
-      // 解锁前读取真实数据失败/超时 → 无法保证解锁正确性，显示心魔并回 idle
-      console.warn('[GAME] 解锁前读取真实数据失败:', e);
-      self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
-      self.setSyncState('idle');
-      self.updateBadge();
-      self.updateTaskDots();
     });
   },
 
@@ -2600,6 +2624,16 @@ commentOverlay.addEventListener('click', function(e) {
     <div class="confirm-btns">
       <button class="confirm-btn cancel" id="upgradeConfirmCancel">再想想</button>
       <button class="confirm-btn ok" id="upgradeConfirmOk">破境</button>
+    </div>
+  </div>
+</div>
+<!-- 单按钮提示弹层（解锁校验失败等提示，直接在窗口内显示） -->
+<div class="confirm-mask" id="tipConfirm">
+  <div class="confirm-box">
+    <div class="confirm-title" id="tipConfirmTitle"></div>
+    <div class="confirm-text" id="tipConfirmText"></div>
+    <div class="confirm-btns">
+      <button class="confirm-btn ok" id="tipConfirmOk">知道了</button>
     </div>
   </div>
 </div>
