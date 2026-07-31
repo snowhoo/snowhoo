@@ -237,7 +237,7 @@ body{display:flex;flex-direction:column}
     <span class="badge" id="constellationBtn"><span class="badge-icon">✦</span>星座<span class="task-dot" id="constellationDot"></span></span>
   </div>
   <div class="content-area" id="contentArea"></div>
-  <div class="top-right-logo locked" id="topRightLogo"><img src="../images/logo.png" alt="logo"><span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div>
+  <div class="top-right-logo locked" id="topRightLogo"><img src="logo.png" alt="logo"><span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div>
   <div class="logo-mini" id="logoMini"><svg viewBox="0 0 24 24"><path d="M15 4L7 12l8 8"/></svg></div>
   <div class="welcome">
     探索
@@ -2503,6 +2503,16 @@ var GAME = {
       setTimeout(function(){ URL.revokeObjectURL(url); }, 5000);
     }
     function shareOrDownload(blob, n) {
+      // App WebView：优先原生桥保存到系统相册（最可靠，替代长按/下载，不会退出 App）
+      if (inWebView && window.AndroidBridge && typeof window.AndroidBridge.save === 'function') {
+        var rd = new FileReader();
+        rd.onload = function() {
+          try { window.AndroidBridge.save(rd.result, n); }
+          catch (e) { self._showBgPreview(blob); }
+        };
+        rd.readAsDataURL(blob);
+        return;
+      }
       // 移动端优先系统分享（可存相册）
       if (navigator.canShare && navigator.share) {
         var file = new File([blob], n, { type: blob.type || 'image/jpeg' });
