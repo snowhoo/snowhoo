@@ -1559,23 +1559,23 @@ var GAME = {
         return;
       }
       // 2. 写库（saving 由 _writeState 内部在写库动作执行时设置）
+      //    注意：不在此处修改 self.autoUnlocked/oneKeyUnlocked，也不立即解锁按钮——
+      //    解锁状态以写库成功后读库返回的数据为准（processRecords 从数据库读回并更新按钮）
       var newPoints = basePoints - cost;
-      if (feature === 'auto') self.autoUnlocked = 1;
-      if (feature === 'oneKey') self.oneKeyUnlocked = 1;
+      var newAuto = (feature === 'auto') ? 1 : baseAuto;
+      var newOneKey = (feature === 'oneKey') ? 1 : baseOneKey;
       var now = new Date();
       var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
-      // 3. 写入（保留数据库真实剩余次数/解锁状态，成功后再回读确认）
+      // 3. 写入（成功后再回读确认，由 processRecords 根据数据库数据更新解锁状态）
       self._writeState(user, {
         points: newPoints,
         todayRemaining: self._normalizeRemaining(res.data ? res.data.todayRemaining : null),
         nick: user.display_name,
         level: baseLevel,
         date: today,
-        autoUnlocked: self.autoUnlocked,
-        oneKeyUnlocked: self.oneKeyUnlocked
+        autoUnlocked: newAuto,
+        oneKeyUnlocked: newOneKey
       }, '已解锁"' + name + '"功能');
-      // 本地立即更新按钮状态（回读成功后再由 processRecords 确认）
-      self._updateQuickBtns(true);
     }).catch(function(e) {
       // 解锁前读取真实数据失败/超时 → 无法保证解锁正确性，显示心魔并回 idle
       console.warn('[GAME] 解锁前读取真实数据失败:', e);
