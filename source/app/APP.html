@@ -84,8 +84,11 @@ body{display:flex;flex-direction:column}
 @keyframes syncPulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* 浮动奔跑图片 */
-.runner-float{position:absolute;top:-16px;left:0;z-index:5;pointer-events:none;animation:float 3s ease-in-out infinite}
-.runner-float img{height:40px;width:auto;display:block}
+.runner-float{position:absolute;top:-16px;left:0;z-index:5;cursor:pointer;animation:float 3s ease-in-out infinite}
+.runner-float img{height:40px;width:auto;display:block;pointer-events:none}
+.runner-float.locked{cursor:not-allowed;filter:saturate(.35) brightness(.85)}
+.runner-float .lock-icon{position:absolute;top:0;right:0;width:12px;height:12px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:none}
+.runner-float.locked .lock-icon{display:block}
 @keyframes float{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-4px)}}
 
 /* 年度进度条 */
@@ -246,7 +249,7 @@ body{display:flex;flex-direction:column}
 </div>
 
 <div class="bottom-panel">
-  <div class="year-bar"><div class="year-bar-fill" id="yearFill"></div><div class="runner-float" id="runnerFloat"><img src="../images/run.png" alt="奔跑"></div></div>
+  <div class="year-bar"><div class="year-bar-fill" id="yearFill"></div><div class="runner-float locked" id="runnerFloat"><img src="../images/run.png" alt="奔跑"><svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div></div>
   <div class="year-bar-text"><svg class="runner" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M8 21l3-6 3 3 4-8"/><path d="M14 10l3-3 3 2"/><path d="M5 18l3-6 3 3"/></svg><span id="yearText"></span></div>
   <div class="category-list" id="categoryList">
     <button class="category-item active locked" id="storyBtn" data-unlock="story" data-url="https://snowhoo.net/app/reader.html" title="小红故事（解锁需 111 真气）">
@@ -882,6 +885,7 @@ var GAME = {
   _autoPanelCb: null,     // 面板数据加载完成回调（autoCultivate 注入）
   almanacUnlocked: 0,     // 日期卡片（黄历）是否解锁（0锁止 1可用）
   logoUnlocked: 0,        // LOGO 是否解锁（0锁止 1可用）
+  runnerUnlocked: 0,      // 奔跑的人是否解锁（0锁止 1可用）
   storyUnlocked: 0,       // 栏目"小红故事"是否解锁（0锁止 1可用）
   yeduUnlocked: 0,        // 栏目"夜读"是否解锁（0锁止 1可用）
   zjszUnlocked: 0,        // 栏目"照见苏州"是否解锁（0锁止 1可用）
@@ -955,6 +959,7 @@ var GAME = {
       this._updateAlmanacLock();
       this._updateLogoLock();
       this._updateCategoryLocks();
+      this._updateRunnerLock();
       this.loadFromServer(user);
     } else {
       // 未登录不显示缓存数据，统一显示".."占位
@@ -968,6 +973,7 @@ var GAME = {
       this._updateAlmanacLock();
       this._updateLogoLock();
       this._updateCategoryLocks();
+      this._updateRunnerLock();
     }
     // 任务菜单点击切换（错误状态刷新，加载/保存中无操作）
     document.getElementById('taskMenuBtn').addEventListener('click',function(e){
@@ -1049,6 +1055,7 @@ var GAME = {
         this.oneKeyUnlocked = 0;
         this.almanacUnlocked = 0;
         this.logoUnlocked = 0;
+        this.runnerUnlocked = 0;
         this.storyUnlocked = 0;
         this.yeduUnlocked = 0;
         this.zjszUnlocked = 0;
@@ -1063,6 +1070,7 @@ var GAME = {
         this._updateAlmanacLock();
         this._updateLogoLock();
         this._updateCategoryLocks();
+        this._updateRunnerLock();
       } else if (user && !wasLoggedIn) {
         // 从未登录→登录，显示加载状态并拉取数据
         this.loaded = false;
@@ -1073,6 +1081,7 @@ var GAME = {
         this.oneKeyUnlocked = 0;
         this.almanacUnlocked = 0;
         this.logoUnlocked = 0;
+        this.runnerUnlocked = 0;
         this.storyUnlocked = 0;
         this.yeduUnlocked = 0;
         this.zjszUnlocked = 0;
@@ -1083,6 +1092,7 @@ var GAME = {
         this._updateAlmanacLock();
         this._updateLogoLock();
         this._updateCategoryLocks();
+        this._updateRunnerLock();
         this.loadFromServer(user);
       } else {
         this.loadFromServer();
@@ -1310,6 +1320,7 @@ var GAME = {
       this.oneKeyUnlocked = foundData.oneKeyUnlocked ? 1 : 0;
       this.almanacUnlocked = foundData.almanacUnlocked ? 1 : 0;
       this.logoUnlocked = foundData.logoUnlocked ? 1 : 0;
+      this.runnerUnlocked = foundData.runnerUnlocked ? 1 : 0;
       this.storyUnlocked = foundData.storyUnlocked ? 1 : 0;
       this.yeduUnlocked = foundData.yeduUnlocked ? 1 : 0;
       this.zjszUnlocked = foundData.zjszUnlocked ? 1 : 0;
@@ -1331,6 +1342,7 @@ var GAME = {
       this.oneKeyUnlocked = 0;
       this.almanacUnlocked = 0;
       this.logoUnlocked = 0;
+      this.runnerUnlocked = 0;
       this.storyUnlocked = 0;
       this.yeduUnlocked = 0;
       this.zjszUnlocked = 0;
@@ -1339,11 +1351,12 @@ var GAME = {
     }
     this.loaded = true;
     this.clearTaskMenuError();
-    // 数据读取成功后更新快捷按钮锁状态 + 日期卡片锁状态 + LOGO锁状态 + 栏目锁状态
+    // 数据读取成功后更新快捷按钮锁状态 + 日期卡片锁状态 + LOGO锁状态 + 栏目锁状态 + 奔跑者锁状态
     this._updateQuickBtns(true);
     this._updateAlmanacLock();
     this._updateLogoLock();
     this._updateCategoryLocks();
+    this._updateRunnerLock();
     var gain = this._beforePoints !== undefined ? this.totalPoints - this._beforePoints : 0;
     // 一键修炼期间不逐次显示 +真气（完成提示统一在 autoHint）；自动修炼与手动一致显示实际增益
     if (gain > 0 && !this._oneKeyMode) {
@@ -1699,6 +1712,16 @@ var GAME = {
     }
   },
 
+  // 更新奔跑的人锁状态：已登录+数据就绪+已解锁 → 可点击跳转；否则加锁
+  _updateRunnerLock: function() {
+    var rf = document.getElementById('runnerFloat');
+    if (!rf) return;
+    var user = this.getWalineUser();
+    var locked = !(this.loaded && user && this.runnerUnlocked);
+    if (this._noDbData) locked = true;
+    rf.classList.toggle('locked', locked);
+  },
+
   // 更新 5 个栏目按钮锁状态（story小红故事/yedu夜读/zjsz照见苏州/news新闻/tv播霸）
   _updateCategoryLocks: function() {
     var map = { story: 'storyBtn', yedu: 'yeduBtn', zjsz: 'zjszBtn', news: 'newsBtn', tv: 'tvBtn' };
@@ -1893,6 +1916,7 @@ var GAME = {
         oneKeyUnlocked: baseOneKey,
         almanacUnlocked: baseAlmanac,
         logoUnlocked: baseLogo,
+        runnerUnlocked: (res.data && res.data.runnerUnlocked) ? 1 : self.runnerUnlocked,
         storyUnlocked: (res.data && res.data.storyUnlocked) ? 1 : self.storyUnlocked,
         yeduUnlocked: (res.data && res.data.yeduUnlocked) ? 1 : self.yeduUnlocked,
         zjszUnlocked: (res.data && res.data.zjszUnlocked) ? 1 : self.zjszUnlocked,
@@ -1924,10 +1948,10 @@ var GAME = {
   // 解锁功能：消耗真气一次性解锁"自动"/"一键"/"日期卡片"
   unlockFeature: function(feature) {
     if (this._autoMode || this._oneKeyMode) return; // 自动/一键修炼中屏蔽
-    var cfg = (typeof UNLOCK_CONFIG !== 'undefined') ? UNLOCK_CONFIG : {auto:888, oneKey:999, almanac:666, logo:777, story:111, yedu:222, zjsz:333, news:444, tv:555};
+    var cfg = (typeof UNLOCK_CONFIG !== 'undefined') ? UNLOCK_CONFIG : {auto:888, oneKey:999, almanac:666, logo:777, story:111, yedu:222, zjsz:333, news:444, tv:555, runner:1000};
     var cost = cfg[feature];
     if (!cost) return;
-    var names = {auto:'自动', oneKey:'一键', almanac:'日期卡片', logo:'LOGO', story:'小红故事', yedu:'夜读', zjsz:'照见苏州', news:'新闻', tv:'播霸'};
+    var names = {auto:'自动', oneKey:'一键', almanac:'日期卡片', logo:'LOGO', story:'小红故事', yedu:'夜读', zjsz:'照见苏州', news:'新闻', tv:'播霸', runner:'奔跑'};
     var name = names[feature] || feature;
     // 5 个栏目（参照自动修炼锁定，解锁后正常跳转）
     var catKeys = ['story','yedu','zjsz','news','tv'];
@@ -1954,6 +1978,7 @@ var GAME = {
       var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : 0;
       var baseAlmanac = res.data ? (res.data.almanacUnlocked ? 1 : 0) : 0;
       var baseLogo = res.data ? (res.data.logoUnlocked ? 1 : 0) : 0;
+      var baseRunner = res.data ? (res.data.runnerUnlocked ? 1 : 0) : 0;
       var baseCats = {};
       for (var ci = 0; ci < catKeys.length; ci++) {
         baseCats[catKeys[ci]] = res.data ? (res.data[catKeys[ci] + 'Unlocked'] ? 1 : 0) : 0;
@@ -1992,6 +2017,14 @@ var GAME = {
         self.updateTaskMenuBtn();
         self.showXp('', '"LOGO" 已解锁');
         self._updateLogoLock();
+        return;
+      }
+      if (feature === 'runner' && baseRunner) {
+        self.runnerUnlocked = 1;
+        self.setSyncState('idle');
+        self.updateTaskMenuBtn();
+        self.showXp('', '"奔跑" 已解锁');
+        self._updateRunnerLock();
         return;
       }
       // 5 个栏目：已解锁（以数据库为准）→ 同步内存标记并提示
@@ -2035,6 +2068,7 @@ var GAME = {
         var newOneKey = (feature === 'oneKey') ? 1 : baseOneKey;
         var newAlmanac = (feature === 'almanac') ? 1 : baseAlmanac;
         var newLogo = (feature === 'logo') ? 1 : baseLogo;
+        var newRunner = (feature === 'runner') ? 1 : baseRunner;
         var newCats = {};
         for (var ci3 = 0; ci3 < catKeys.length; ci3++) {
           newCats[catKeys[ci3]] = (feature === catKeys[ci3]) ? 1 : baseCats[catKeys[ci3]];
@@ -2054,6 +2088,7 @@ var GAME = {
           oneKeyUnlocked: newOneKey,
           almanacUnlocked: newAlmanac,
           logoUnlocked: newLogo,
+          runnerUnlocked: newRunner,
           storyUnlocked: newCats.story,
           yeduUnlocked: newCats.yedu,
           zjszUnlocked: newCats.zjsz,
@@ -2142,6 +2177,7 @@ var GAME = {
           oneKeyUnlocked: self.oneKeyUnlocked,
           almanacUnlocked: self.almanacUnlocked,
           logoUnlocked: self.logoUnlocked,
+          runnerUnlocked: self.runnerUnlocked,
           storyUnlocked: self.storyUnlocked,
           yeduUnlocked: self.yeduUnlocked,
           zjszUnlocked: self.zjszUnlocked,
@@ -2341,6 +2377,7 @@ var GAME = {
         oneKeyUnlocked: baseOneKey,
         almanacUnlocked: baseAlmanac,
         logoUnlocked: baseLogo,
+        runnerUnlocked: (res.data && res.data.runnerUnlocked) ? 1 : self.runnerUnlocked,
         storyUnlocked: (res.data && res.data.storyUnlocked) ? 1 : self.storyUnlocked,
         yeduUnlocked: (res.data && res.data.yeduUnlocked) ? 1 : self.yeduUnlocked,
         zjszUnlocked: (res.data && res.data.zjszUnlocked) ? 1 : self.zjszUnlocked,
@@ -2515,6 +2552,31 @@ commentOverlay.addEventListener('click', function(e) {
       logo.classList.remove('hidden');
     });
   }
+})();
+
+// 奔跑的人点击：未解锁 → 走解锁流程（消耗 1000 真气破除封印）；已解锁 → 刷新本页（跳转页面待规划）
+(function(){
+  var runner = document.getElementById('runnerFloat');
+  if (!runner) return;
+  runner.addEventListener('click', function(){
+    if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
+    var user = GAME.getWalineUser();
+    if (!user) {
+      GAME.showXp('', '请勿隐匿身份，否则您无法修炼');
+      return;
+    }
+    if (!GAME.loaded) {
+      GAME.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+      return;
+    }
+    // 未解锁 → 走解锁流程（消耗 1000 真气破除封印）
+    if (!GAME.runnerUnlocked) {
+      GAME.unlockFeature('runner');
+      return;
+    }
+    // 已解锁 → 刷新本页（跳转页面规划好后改此处链接）
+    location.reload();
+  });
 })();
 </script>
 <!-- 破除封印确认弹层（自定义，兼容移动端禁 confirm 环境） -->

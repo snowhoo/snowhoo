@@ -78,5 +78,6 @@ var UNLOCK_CONFIG = {
   yedu: 222,
   zjsz: 333,
   news: 444,
-  tv: 555
+  tv: 555,
+  runner: 1000
 };
