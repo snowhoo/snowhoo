@@ -845,17 +845,10 @@ var GAME = {
     var btn = document.getElementById('taskMenuBtn');
     if (state !== 'idle' && btn && !btn.classList.contains('error')) {
       // 加载/保存中仅设文字，不修改 display（保持按钮隐藏直到 loaded=true）
-      // 自动/一键模式：按钮保持"今日修炼任务"，状态提示在按钮上方 autoHint
-      if (!this._autoMode && !this._oneKeyMode) {
+      // 自动修炼与手动修炼提示完全一致（真气恢复中/融合中）；
+      // 一键模式：按钮保持"今日修炼任务"，提示在按钮上方 autoHint
+      if (!this._oneKeyMode) {
         btn.textContent = state === 'loading' ? '⚡ 真气恢复中..' : '⟳ 真气融合中..';
-      }
-    }
-    // 自动修炼模式：同步更新 autoHint 显示当前任务读写进度（面板加载中由 autoCultivate 更新）
-    if (this._autoMode && state !== 'idle') {
-      var hint = document.getElementById('autoHint');
-      if (hint) {
-        var tn = this._autoTaskName || '修炼';
-        hint.textContent = (state === 'loading' ? '⚡ ' : '⟳ ') + tn + (state === 'loading' ? '（读取数据）..' : '（写入数据）..');
       }
     }
     // idle：由 updateTaskMenuBtn 根据 loaded && user 控制显隐
@@ -1890,17 +1883,15 @@ var GAME = {
     if (!this.autoUnlocked) { this.unlockFeature('auto'); return; }
     var self = this;
     this._autoMode = true;
-    this._autoTaskName = '';
     // 全屏透明遮罩：覆盖所有页面功能
     this.showModeMask();
-    // 提示显示在修炼按钮上方（autoHint），按钮保持"今日修炼任务"
+    // 上方提示（autoHint）始终显示"自动修炼中.."；其余提示与手动修炼完全一致（原位置原内容）
     var hint = document.getElementById('autoHint');
     if (hint) { hint.textContent = '⚡ 自动修炼中..'; hint.style.display = 'block'; }
     // 任务顺序（按配置）
     var keys = [];
-    var names = {};
     if (window.GAME_CONFIG) {
-      for (var i = 0; i < GAME_CONFIG.length; i++) { keys.push(GAME_CONFIG[i].key); names[GAME_CONFIG[i].key] = GAME_CONFIG[i].name; }
+      for (var i = 0; i < GAME_CONFIG.length; i++) keys.push(GAME_CONFIG[i].key);
     } else { keys = ['poetry','history','constellation','explore']; }
     function openPanel(key) {
       if (key === 'poetry') { togglePoetry(); }
@@ -1923,7 +1914,6 @@ var GAME = {
         self._autoMode = false;
         self._autoPanelCb = null;
         self._autoPanelKey = null;
-        self._autoTaskName = '';
         self.hideModeMask();
         self.setSyncState('idle');
         self.updateTaskMenuBtn();
@@ -1934,10 +1924,6 @@ var GAME = {
         }
         return;
       }
-      // 设置当前任务名，更新提示为"加载中"
-      self._autoTaskName = names[next] || '';
-      var hh = document.getElementById('autoHint');
-      if (hh) hh.textContent = '⚡ 自动修炼：' + (names[next] || '') + '加载中..';
       // 展开面板（真实加载数据），等待加载完成回调（带超时，失败/超时跳过该任务）
       self._autoPanelKey = next;
       var done = false;
@@ -1960,7 +1946,6 @@ var GAME = {
             self._autoMode = false;
             self._autoPanelCb = null;
             self._autoPanelKey = null;
-            self._autoTaskName = '';
             self.hideModeMask();
             self.setSyncState('idle');
             var h3 = document.getElementById('autoHint');
