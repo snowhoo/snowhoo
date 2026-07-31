@@ -142,6 +142,8 @@ body{display:flex;flex-direction:column}
 
 /* 今日修炼任务菜单 */
 .task-menu{position:absolute;bottom:15px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px}
+/* 自动修炼提示：显示在修炼按钮上方，单独元素不占用按钮 */
+.auto-hint{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);font-size:.58rem;color:#22c55e;background:#fff;border:1px solid rgba(34,197,94,.35);border-radius:10px;padding:3px 10px;white-space:nowrap;display:none;z-index:4;box-shadow:0 2px 8px rgba(0,0,0,.08);letter-spacing:.3px}
 .task-menu-btn{font-size:.58rem;color:#ff8c00;cursor:pointer;padding:3px 8px;border:1px solid rgba(255,140,0,.3);border-radius:10px;background:rgba(255,255,255,.88);white-space:nowrap;transition:all .3s;font-weight:400;letter-spacing:.3px;line-height:1.4;user-select:none;-webkit-user-select:none}
 /* 初始隐藏（!important 防止任何 JS/CSS 提前显示）*/
 .task-menu-btn.init-hidden{display:none!important}
@@ -242,6 +244,7 @@ body{display:flex;flex-direction:column}
     <div class="comment-name" id="commentName">隐匿者</div>
   </div>
   <div class="task-menu">
+    <div class="auto-hint" id="autoHint"></div>
     <div class="task-menu-btn init-hidden" id="taskMenuBtn"></div>
     <div class="task-quick-row">
       <span class="task-quick-btn auto locked" id="autoBtn" title="自动（解锁需 888 真气）">自动<svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
@@ -284,7 +287,7 @@ document.getElementById('bgImage').src = 'https://picsum.photos/1280/960?random=
 
 // 点击探索换图
 document.querySelector('.welcome').addEventListener('click', function() {
-  if (GAME._autoMode || GAME._oneKeyMode) return; // 自动/一键修炼中屏蔽
+  if ((GAME._autoMode || GAME._oneKeyMode) && !GAME._autoPanelOpen) return; // 修炼中屏蔽（自动模式主动打开除外）
   cancelAllRequests();
   var area = document.getElementById('contentArea');
   var img = document.getElementById('bgImage');
@@ -308,8 +311,13 @@ document.querySelector('.welcome').addEventListener('click', function() {
   img.onload = function() {
     if (area._exploreReqId !== _expReqId) return;
     area.classList.remove('show');
-    // 内容加载完成→记录修炼
-    GAME.doAction('explore');
+    // 内容加载完成→记录修炼（自动模式下通知自动流程，不直接修炼）
+    if (GAME._autoMode) { GAME._autoPanelLoaded('explore', true); }
+    else { GAME.doAction('explore'); }
+  };
+  img.onerror = function() {
+    if (area._exploreReqId !== _expReqId) return;
+    if (GAME._autoMode) GAME._autoPanelLoaded('explore', false);
   };
 });
 
@@ -464,14 +472,14 @@ function toggleContent(btnId, url, renderFn, onLoaded) {
 
 // 诗词按钮：和星座同样的"先显示背景+加载提示，再异步加载内容"流程
 function togglePoetry() {
-  if (GAME._autoMode || GAME._oneKeyMode) return; // 自动/一键修炼中屏蔽
+  if ((GAME._autoMode || GAME._oneKeyMode) && !GAME._autoPanelOpen) return; // 修炼中屏蔽（自动模式主动打开除外）
   cancelAllRequests();
   var btn = document.getElementById('poetryBtn');
   var area = document.getElementById('contentArea');
   var overlay = document.getElementById('poetryOverlay');
 
-  // 关闭面板
-  if (area._activeBtn === 'poetryBtn' && area.classList.contains('show')) {
+  // 关闭面板（自动修炼中不关闭，直接重新加载）
+  if (!GAME._autoMode && area._activeBtn === 'poetryBtn' && area.classList.contains('show')) {
     area.classList.remove('show');
     btn.classList.remove('selected');
     area._activeBtn = null;
@@ -515,12 +523,14 @@ function togglePoetry() {
       });
       area.innerHTML = html;
       area._activeBtn = 'poetryBtn';
-      // 诗词内容加载完成 → 记录修炼
-      GAME.doAction('poetry');
+      // 诗词内容加载完成 → 记录修炼（自动模式下通知自动流程，不直接修炼）
+      if (GAME._autoMode) { GAME._autoPanelLoaded('poetry', true); }
+      else { GAME.doAction('poetry'); }
     }).catch(function(){
       if (area._toggleReqId !== _reqId) return;
       area.innerHTML = '<div class="content-line">诗词加载失败</div>';
       area._activeBtn = 'poetryBtn';
+      if (GAME._autoMode) GAME._autoPanelLoaded('poetry', false);
     });
   }, 800);
 }
@@ -529,14 +539,14 @@ document.getElementById('poetryBtn').addEventListener('click', togglePoetry);
 
 // 今日按钮：和诗词同样的"先显示背景+加载提示，再异步加载内容"流程
 function toggleHistory() {
-  if (GAME._autoMode || GAME._oneKeyMode) return; // 自动/一键修炼中屏蔽
+  if ((GAME._autoMode || GAME._oneKeyMode) && !GAME._autoPanelOpen) return; // 修炼中屏蔽（自动模式主动打开除外）
   cancelAllRequests();
   var btn = document.getElementById('historyBtn');
   var area = document.getElementById('contentArea');
   var overlay = document.getElementById('historyOverlay');
 
-  // 关闭面板
-  if (area._activeBtn === 'historyBtn' && area.classList.contains('show')) {
+  // 关闭面板（自动修炼中不关闭，直接重新加载）
+  if (!GAME._autoMode && area._activeBtn === 'historyBtn' && area.classList.contains('show')) {
     area.classList.remove('show');
     btn.classList.remove('selected');
     area._activeBtn = null;
@@ -577,12 +587,14 @@ function toggleHistory() {
       });
       area.innerHTML = html;
       area._activeBtn = 'historyBtn';
-      // 今日内容加载完成 → 记录修炼
-      GAME.doAction('history');
+      // 今日内容加载完成 → 记录修炼（自动模式下通知自动流程，不直接修炼）
+      if (GAME._autoMode) { GAME._autoPanelLoaded('history', true); }
+      else { GAME.doAction('history'); }
     }).catch(function(){
       if (area._toggleReqId !== _reqId) return;
       area.innerHTML = '<div class="content-line">今日加载失败</div>';
       area._activeBtn = 'historyBtn';
+      if (GAME._autoMode) GAME._autoPanelLoaded('history', false);
     });
   }, 800);
 }
@@ -591,11 +603,12 @@ document.getElementById('historyBtn').addEventListener('click', toggleHistory);
 
 // 星座按钮
 document.getElementById('constellationBtn').addEventListener('click', function() {
-  if (GAME._autoMode || GAME._oneKeyMode) return; // 自动/一键修炼中屏蔽
+  if ((GAME._autoMode || GAME._oneKeyMode) && !GAME._autoPanelOpen) return; // 修炼中屏蔽（自动模式主动打开除外）
   cancelAllRequests();
   var btn = document.getElementById('constellationBtn');
   var area = document.getElementById('contentArea');
-  if (area._activeBtn === 'constellationBtn' && area.classList.contains('show')) {
+  // 关闭面板（自动修炼中不关闭，直接重新加载）
+  if (!GAME._autoMode && area._activeBtn === 'constellationBtn' && area.classList.contains('show')) {
     area.classList.remove('show');
     btn.classList.remove('selected');
     area._activeBtn = null;
@@ -631,6 +644,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     if (area._constellationReqId !== _reqId) return;
     if (data.code !== 200 || !data.data) {
       area.innerHTML = '<div class="content-line" style="font-size:.72rem;opacity:.6">星座数据加载失败</div>';
+      if (GAME._autoMode) GAME._autoPanelLoaded('constellation', false);
       return;
     }
     var signs = {Aries:{cn:'白羊座',emoji:'♈',date:'3.21-4.19'},Taurus:{cn:'金牛座',emoji:'♉',date:'4.20-5.20'},Gemini:{cn:'双子座',emoji:'♊',date:'5.21-6.21'},Cancer:{cn:'巨蟹座',emoji:'♋',date:'6.22-7.22'},Leo:{cn:'狮子座',emoji:'♌',date:'7.23-8.22'},Virgo:{cn:'处女座',emoji:'♍',date:'8.23-9.22'},Libra:{cn:'天秤座',emoji:'♎',date:'9.23-10.23'},Scorpio:{cn:'天蝎座',emoji:'♏',date:'10.24-11.22'},Sagittarius:{cn:'射手座',emoji:'♐',date:'11.23-12.21'},Capricorn:{cn:'摩羯座',emoji:'♑',date:'12.22-1.19'},Aquarius:{cn:'水瓶座',emoji:'♒',date:'1.20-2.18'},Pisces:{cn:'双鱼座',emoji:'♓',date:'2.19-3.20'}};
@@ -680,8 +694,9 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     html += '</div>';
     area.innerHTML = html;
     area._activeBtn = 'constellationBtn';
-    // 星座内容加载完成→记录修炼
-    GAME.doAction('constellation');
+    // 星座内容加载完成→记录修炼（自动模式下通知自动流程，不直接修炼）
+    if (GAME._autoMode) { GAME._autoPanelLoaded('constellation', true); }
+    else { GAME.doAction('constellation'); }
     // ===== 转盘交互 =====
     var wheel = area.querySelector('.zodiac-wheel');
     var centerEl = area.querySelector('.zodiac-center');
@@ -800,6 +815,8 @@ var GAME = {
   _pendingUpgradeMsg: null, // 升级成功读回后的提示（境界突破），由 processRecords 显示
   _autoMode: false,       // 自动修炼进行中（屏蔽其它点击）
   _oneKeyMode: false,     // 一键修炼进行中（屏蔽其它点击）
+  _autoPanelOpen: false,  // 自动修炼主动打开面板（放行面板函数入口拦截）
+  _autoPanelCb: null,     // 面板数据加载完成回调（autoCultivate 注入）
 
   // 当前 level 的境界配置（null fallback）
   getLevelCfg: function() {
@@ -824,11 +841,10 @@ var GAME = {
     var btn = document.getElementById('taskMenuBtn');
     if (state !== 'idle' && btn && !btn.classList.contains('error')) {
       // 加载/保存中仅设文字，不修改 display（保持按钮隐藏直到 loaded=true）
-      if (this._autoMode) {
-        btn.textContent = '⚡ 自动修炼中..';
-      } else if (this._oneKeyMode) {
+      if (this._oneKeyMode) {
         btn.textContent = '⚡ 一键修炼中..';
-      } else {
+      } else if (!this._autoMode) {
+        // 自动模式：按钮保持"今日修炼任务"，"自动修炼中"提示显示在按钮上方 autoHint
         btn.textContent = state === 'loading' ? '⚡ 真气恢复中..' : '⟳ 真气融合中..';
       }
     }
@@ -1643,6 +1659,17 @@ var GAME = {
     });
   },
 
+  // 面板数据加载完成通知（自动修炼模式下由面板函数调用，替代 doAction）
+  _autoPanelLoaded: function(key, ok) {
+    // key 匹配当前期望的任务才响应（避免上一步迟到的回调误触发下一步）
+    if (this._autoPanelCb && this._autoPanelKey === key) {
+      var cb = this._autoPanelCb;
+      this._autoPanelCb = null;
+      this._autoPanelKey = null;
+      cb(ok);
+    }
+  },
+
   // 解锁功能：消耗真气一次性解锁"自动"或"一键"
   unlockFeature: function(feature) {
     if (this._autoMode || this._oneKeyMode) return; // 自动/一键修炼中屏蔽
@@ -1823,39 +1850,8 @@ var GAME = {
     });
   },
 
-  // 自动修炼面板轻量展示：模拟手动点击展开对应面板（背景覆盖层 + 修炼提示文字）
-  autoShowPanel: function(key, done) {
-    var area = document.getElementById('contentArea');
-    if (!area) { if (done) done(); return; }
-    closeAllOverlays();
-    area.classList.remove('show');
-    document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
-    var btn = document.getElementById(key + 'Btn');
-    if (btn) btn.classList.add('selected');
-    var tips = {poetry:'⚡ 诗词修炼中..', history:'⚡ 今日修炼中..', constellation:'⚡ 星座修炼中..', explore:'⚡ 探索修炼中..'};
-    // 恢复默认位置
-    area.style.left = '';
-    area.style.width = '';
-    area.style.transform = 'translateY(-50%)';
-    area.style.textAlign = 'center';
-    // 对应背景覆盖层
-    if (key === 'poetry') {
-      var po = document.getElementById('poetryOverlay');
-      if (po) po.classList.add('show');
-    } else if (key === 'history') {
-      var ho = document.getElementById('historyOverlay');
-      if (ho) ho.classList.add('show');
-    } else if (key === 'constellation') {
-      var so = document.getElementById('starsOverlay');
-      if (so) so.classList.add('show');
-    }
-    area.innerHTML = '<div class="content-line" style="font-size:.78rem;opacity:.7">' + (tips[key] || '修炼中..') + '</div>';
-    area.classList.add('show');
-    area._activeBtn = key + 'Btn';
-    setTimeout(done, 500);
-  },
-
-  // 自动修炼：依次展开诗词/今日/星座/探索，有剩余次数则循环；每次写库完成后才进入下一动作
+  // 自动修炼：与手动修炼一致——展开面板（真实加载数据）→ 数据加载完成 → 读库→写库→读回确认
+  // 依次展开诗词/今日/星座/探索，有剩余次数则循环；每次写库完成后才进入下一动作
   autoCultivate: function() {
     var user = this.getWalineUser();
     if (!user) {
@@ -1874,13 +1870,19 @@ var GAME = {
     if (!this.autoUnlocked) { this.unlockFeature('auto'); return; }
     var self = this;
     this._autoMode = true;
-    // 初始提示：自动修炼中
-    var btn = document.getElementById('taskMenuBtn');
-    if (btn) { btn.textContent = '⚡ 自动修炼中..'; btn.classList.remove('init-hidden'); }
+    // 提示显示在修炼按钮上方（autoHint），按钮保持"今日修炼任务"
+    var hint = document.getElementById('autoHint');
+    if (hint) { hint.textContent = '⚡ 自动修炼中..'; hint.style.display = 'block'; }
     // 任务顺序（按配置）
     var keys = [];
     if (window.GAME_CONFIG) { for (var i = 0; i < GAME_CONFIG.length; i++) keys.push(GAME_CONFIG[i].key); }
     else keys = ['poetry','history','constellation','explore'];
+    function openPanel(key) {
+      if (key === 'poetry') { togglePoetry(); }
+      else if (key === 'history') { toggleHistory(); }
+      else if (key === 'constellation') { document.getElementById('constellationBtn').click(); }
+      else if (key === 'explore') { document.querySelector('.welcome').click(); }
+    }
     function step() {
       if (!self._autoMode) return;
       // 找下一个有剩余次数且经验>0 的任务
@@ -1894,26 +1896,53 @@ var GAME = {
       if (!next) {
         // 全部完成
         self._autoMode = false;
+        self._autoPanelCb = null;
+        self._autoPanelKey = null;
         self.setSyncState('idle');
         self.updateTaskMenuBtn();
-        self.showXp('', '自动修炼完成！');
+        var h2 = document.getElementById('autoHint');
+        if (h2) {
+          h2.textContent = '自动修炼完成！';
+          setTimeout(function(){ h2.style.display = 'none'; }, 2200);
+        }
         return;
       }
-      // 展开面板 → 修炼（写库完成后进入下一步）
-      self.autoShowPanel(next, function() {
-        if (!self._autoMode) return;
-        self.performCultivate(next, user, {}).then(function(ok) {
-          if (!ok) {
+      // 展开面板（真实加载数据），等待加载完成回调（带超时，失败/超时跳过该任务）
+      self._autoPanelKey = next;
+      var done = false;
+      var timer = setTimeout(function() {
+        if (done) return;
+        done = true;
+        self._autoPanelCb = null;
+        self._autoPanelKey = null;
+        setTimeout(step, 120); // 加载超时：跳过该任务继续
+      }, 15000);
+      self._autoPanelCb = function(ok) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        if (!ok) { setTimeout(step, 120); return; } // 面板加载失败：跳过
+        // 数据加载完成 → 修炼（读库→写库→读回确认），写库完成后进入下一动作
+        self.performCultivate(next, user, {}).then(function(ok2) {
+          if (!ok2) {
             // 写库失败：停止自动修炼（错误提示已由 _writeState 显示）
             self._autoMode = false;
+            self._autoPanelCb = null;
+            self._autoPanelKey = null;
             self.setSyncState('idle');
+            var h3 = document.getElementById('autoHint');
+            if (h3) h3.style.display = 'none';
             self.updateBadge();
             self.updateTaskDots();
             return;
           }
-          step();
+          setTimeout(step, 120);
         });
-      });
+      };
+      // 主动打开面板（放行入口拦截）
+      self._autoPanelOpen = true;
+      openPanel(next);
+      self._autoPanelOpen = false;
     }
     step();
   },
@@ -1989,7 +2018,7 @@ var GAME = {
         if (ok) {
           self.setSyncState('idle');
           self.updateTaskMenuBtn();
-          self.showXp('', '一键修炼完成！');
+          self.showXp('+' + totalGain + ' 真气', '一键修炼完成！');
         } else {
           // 写库失败：错误提示已由 _writeState 显示
           self.setSyncState('idle');
