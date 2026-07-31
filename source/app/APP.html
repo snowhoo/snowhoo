@@ -1373,15 +1373,25 @@ var GAME = {
     });
   },
 
+  // 归一化剩余次数：确保所有任务都有值（缺失时用配置的 max 补全），首次修炼/解锁时防止写入空对象
+  _normalizeRemaining: function() {
+    var out = {};
+    if (!window.GAME_CONFIG) return this.todayCounts || {};
+    for (var i = 0; i < GAME_CONFIG.length; i++) {
+      var ck = GAME_CONFIG[i].key;
+      out[ck] = (typeof this.todayCounts[ck] === 'number') ? this.todayCounts[ck] : GAME_CONFIG[i].max;
+    }
+    return out;
+  },
+
   syncToWaline: function(key,points,user) {
     try {
       if (!user || !user.display_name) return;
       var self = this;
       // 总真气值 = 原值 + 新增
       var newPoints = this.totalPoints + points;
-      // 剩余次数 = 所有任务当前剩余，当前任务 -1
-      var newRemaining = {};
-      for (var k in this.todayCounts) newRemaining[k] = this.todayCounts[k];
+      // 剩余次数 = 所有任务当前剩余（缺失任务用 max 补全），当前任务 -1
+      var newRemaining = this._normalizeRemaining();
       if (typeof newRemaining[key] === 'number') newRemaining[key]--;
       var now = new Date();
       var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
@@ -1445,7 +1455,7 @@ var GAME = {
     // 写入数据库（保存完整状态，含解锁标记），成功后回读确认
     this._writeState(user, {
       points: this.totalPoints,
-      todayRemaining: this.todayCounts,
+      todayRemaining: this._normalizeRemaining(),
       nick: user.display_name,
       level: this.level,
       date: today,
