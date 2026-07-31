@@ -1100,12 +1100,24 @@ var GAME = {
 
   // 从 LEVEL_CONFIG[level] 初始化所有任务的剩余次数（跨天/首次使用/升级后）
   initTodayRemaining: function() {
-    this.todayCounts = {};
-    if (!window.GAME_CONFIG) return;
+    this.todayCounts = this.buildRemainingForLevel(this.level);
+  },
+
+  // 按指定境界 level 生成全量剩余次数（不修改 this.todayCounts，供升级等场景使用）
+  buildRemainingForLevel: function(lv) {
+    var out = {};
+    if (!window.GAME_CONFIG) return out;
+    if (typeof LEVEL_CONFIG === 'undefined' || !LEVEL_CONFIG[lv] || !LEVEL_CONFIG[lv].times) {
+      // 配置缺失时按 0 兜底
+      for (var k = 0; k < GAME_CONFIG.length; k++) out[GAME_CONFIG[k].key] = 0;
+      return out;
+    }
     for (var i = 0; i < GAME_CONFIG.length; i++) {
       var key = GAME_CONFIG[i].key;
-      this.todayCounts[key] = this.getActionMax(key);
+      var t = LEVEL_CONFIG[lv].times[key];
+      out[key] = typeof t === 'number' ? t : 0;
     }
+    return out;
   },
 
   // 健壮解析 Waline 记录内容：兼容纯 JSON / 被 markdown 渲染成 <p> 包裹 / 弯引号 / HTML 实体 等情况
@@ -1190,7 +1202,7 @@ var GAME = {
     }
     // 升级成功读回确认后显示【境界突破】提示
     if (this._pendingUpgradeMsg) {
-      this.showXp('-' + this._pendingUpgradeMsg.cost + ' 真气', '【' + this._pendingUpgradeMsg.name + '】突破！');
+      this.showXp('-' + this._pendingUpgradeMsg.cost + ' 真气', '【' + this._pendingUpgradeMsg.name + '】突破！体力已恢复');
       this._pendingUpgradeMsg = undefined;
     }
     this.updateLevelDisplay();
@@ -1754,8 +1766,8 @@ var GAME = {
       var newLevel = nextLv;
       var now = new Date();
       var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
-      // 升级后剩余次数按新境界 times 重新初始化（升级带来的每日次数变化）
-      var newRemaining = self._normalizeRemaining(res.data ? res.data.todayRemaining : null);
+      // 升级后剩余次数按新境界 times 全量恢复（体力已恢复）
+      var newRemaining = self.buildRemainingForLevel(newLevel);
       // 3. 写库（saving 由 _writeState 内部在写库动作执行时设置）
       self._writeState(user, {
         points: newPoints,
