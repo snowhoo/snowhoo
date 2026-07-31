@@ -72,5 +72,6 @@ var LEVEL_CONFIG = [
 var UNLOCK_CONFIG = {
   auto: 888,
   oneKey: 999,
-  almanac: 666
+  almanac: 666,
+  logo: 666
 };

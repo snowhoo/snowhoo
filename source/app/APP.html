@@ -31,6 +31,10 @@ body{display:flex;flex-direction:column}
 /* 右上角logo */
 .top-right-logo{position:absolute;top:46px;right:16px;z-index:5;width:110px}
 .top-right-logo img{width:100%;height:auto;display:block;border-radius:8px}
+/* LOGO 锁定状态：不加背景/滤镜，仅右上角锁图标，未解锁时点击走解锁流程 */
+.top-right-logo.locked{cursor:not-allowed}
+.top-right-logo .lock-overlay{position:absolute;top:0;right:0;z-index:2;display:flex;align-items:center;justify-content:center;width:24px;height:24px;pointer-events:auto;background:transparent;border-radius:0;padding:0;margin:0}
+.top-right-logo .lock-overlay svg{width:14px;height:14px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* 黄历面板 - 竖版 */
 .almanac{position:absolute;bottom:16px;right:16px;z-index:5;display:flex;flex-direction:column;align-items:center;gap:10px;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;border:none;border-radius:16px;padding:0;color:#fff;min-width:90px;text-shadow:0 2px 8px rgba(0,0,0,.5);cursor:pointer;transition:all .35s ease}
@@ -196,7 +200,7 @@ body{display:flex;flex-direction:column}
     <span class="badge" id="constellationBtn"><span class="badge-icon">✦</span>星座<span class="task-dot" id="constellationDot"></span></span>
   </div>
   <div class="content-area" id="contentArea"></div>
-  <div class="top-right-logo"><img src="../images/logo.png" alt="logo"></div>
+  <div class="top-right-logo locked" id="topRightLogo"><img src="../images/logo.png" alt="logo"><span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div>
   <div class="welcome">
     探索
     <small>choose your journey</small>
@@ -828,6 +832,7 @@ var GAME = {
   _autoPanelOpen: false,  // 自动修炼主动打开面板（放行面板函数入口拦截）
   _autoPanelCb: null,     // 面板数据加载完成回调（autoCultivate 注入）
   almanacUnlocked: 0,     // 日期卡片（黄历）是否解锁（0锁止 1可用）
+  logoUnlocked: 0,        // LOGO 是否解锁（0锁止 1可用）
 
   // 当前 level 的境界配置（null fallback）
   getLevelCfg: function() {
@@ -894,6 +899,7 @@ var GAME = {
       this.updateAvatar();
       this.updateLevelDisplay();
       this._updateAlmanacLock();
+      this._updateLogoLock();
       this.loadFromServer(user);
     } else {
       // 未登录不显示缓存数据，统一显示".."占位
@@ -905,6 +911,7 @@ var GAME = {
       this.updateLevelDisplay();
       this.updateTaskMenuBtn();
       this._updateAlmanacLock();
+      this._updateLogoLock();
     }
     // 任务菜单点击切换（错误状态刷新，加载/保存中无操作）
     document.getElementById('taskMenuBtn').addEventListener('click',function(e){
@@ -985,6 +992,7 @@ var GAME = {
         this.autoUnlocked = 0;
         this.oneKeyUnlocked = 0;
         this.almanacUnlocked = 0;
+        this.logoUnlocked = 0;
         this.clearLocal();
         this.updateBadge();
         this.updateTaskDots();
@@ -992,6 +1000,7 @@ var GAME = {
         this.updateTaskMenu();
         this._updateQuickBtns(false);
         this._updateAlmanacLock();
+        this._updateLogoLock();
       } else if (user && !wasLoggedIn) {
         // 从未登录→登录，显示加载状态并拉取数据
         this.loaded = false;
@@ -1001,9 +1010,11 @@ var GAME = {
         this.autoUnlocked = 0;
         this.oneKeyUnlocked = 0;
         this.almanacUnlocked = 0;
+        this.logoUnlocked = 0;
         this.updateBadge();
         this.updateTaskDots();
         this._updateAlmanacLock();
+        this._updateLogoLock();
         this.loadFromServer(user);
       } else {
         this.loadFromServer();
@@ -1230,6 +1241,7 @@ var GAME = {
       this.autoUnlocked = foundData.autoUnlocked ? 1 : 0;
       this.oneKeyUnlocked = foundData.oneKeyUnlocked ? 1 : 0;
       this.almanacUnlocked = foundData.almanacUnlocked ? 1 : 0;
+      this.logoUnlocked = foundData.logoUnlocked ? 1 : 0;
       if (foundData.date === today) {
         // 当天 → 直接用剩余次数
         this.todayCounts = foundData.todayRemaining || {};
@@ -1245,12 +1257,14 @@ var GAME = {
       this.autoUnlocked = 0;
       this.oneKeyUnlocked = 0;
       this.almanacUnlocked = 0;
+      this.logoUnlocked = 0;
     }
     this.loaded = true;
     this.clearTaskMenuError();
-    // 数据读取成功后更新快捷按钮锁状态 + 日期卡片锁状态
+    // 数据读取成功后更新快捷按钮锁状态 + 日期卡片锁状态 + LOGO锁状态
     this._updateQuickBtns(true);
     this._updateAlmanacLock();
+    this._updateLogoLock();
     var gain = this._beforePoints !== undefined ? this.totalPoints - this._beforePoints : 0;
     // 一键修炼期间不逐次显示 +真气（完成提示统一在 autoHint）；自动修炼与手动一致显示实际增益
     if (gain > 0 && !this._oneKeyMode) {
@@ -1521,6 +1535,27 @@ var GAME = {
     }
   },
 
+  // 更新 LOGO 锁状态：已登录+数据就绪+已解锁 → 正常显示；否则右上角加锁
+  _updateLogoLock: function() {
+    var lg = document.getElementById('topRightLogo');
+    if (!lg) return;
+    var user = this.getWalineUser();
+    var locked = !(this.loaded && user && this.logoUnlocked);
+    if (this._noDbData) locked = true;
+    lg.classList.toggle('locked', locked);
+    var ov = lg.querySelector('.lock-overlay');
+    if (locked) {
+      if (!ov) {
+        ov = document.createElement('span');
+        ov.className = 'lock-overlay';
+        ov.innerHTML = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+        lg.appendChild(ov);
+      }
+    } else if (ov) {
+      ov.remove();
+    }
+  },
+
   // 根据等级数值返回对应显示文字
   getLevelName: function(lv) {
     if (typeof LEVEL_CONFIG !== 'undefined' && LEVEL_CONFIG[lv]) return LEVEL_CONFIG[lv].name;
@@ -1681,6 +1716,7 @@ var GAME = {
       var baseAuto = res.data ? (res.data.autoUnlocked ? 1 : 0) : self.autoUnlocked;
       var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : self.oneKeyUnlocked;
       var baseAlmanac = res.data ? (res.data.almanacUnlocked ? 1 : 0) : self.almanacUnlocked;
+      var baseLogo = res.data ? (res.data.logoUnlocked ? 1 : 0) : self.logoUnlocked;
       // 找到真实记录 → 用其 objectId，确保 PUT 更新同一条（不产生新记录）
       if (res.foundId) self._gameObjectId = res.foundId;
       // 单次经验值（可覆盖：一键批量用自身计算，正常修炼按境界查表）
@@ -1700,7 +1736,8 @@ var GAME = {
         date: today,
         autoUnlocked: baseAuto,
         oneKeyUnlocked: baseOneKey,
-        almanacUnlocked: baseAlmanac
+        almanacUnlocked: baseAlmanac,
+        logoUnlocked: baseLogo
       }, '真气值已同步到 Waline: ' + key + ' +' + points);
     }).catch(function(e) {
       // 写入前读取真实数据失败 → 无法保证写入正确性，阻止写入
@@ -1727,10 +1764,10 @@ var GAME = {
   // 解锁功能：消耗真气一次性解锁"自动"/"一键"/"日期卡片"
   unlockFeature: function(feature) {
     if (this._autoMode || this._oneKeyMode) return; // 自动/一键修炼中屏蔽
-    var cfg = (typeof UNLOCK_CONFIG !== 'undefined') ? UNLOCK_CONFIG : {auto:888, oneKey:999, almanac:666};
+    var cfg = (typeof UNLOCK_CONFIG !== 'undefined') ? UNLOCK_CONFIG : {auto:888, oneKey:999, almanac:666, logo:666};
     var cost = cfg[feature];
     if (!cost) return;
-    var names = {auto:'自动', oneKey:'一键', almanac:'日期卡片'};
+    var names = {auto:'自动', oneKey:'一键', almanac:'日期卡片', logo:'LOGO'};
     var name = names[feature] || feature;
     var user = this.getWalineUser();
     if (!user) {
@@ -1754,6 +1791,7 @@ var GAME = {
       var baseAuto = res.data ? (res.data.autoUnlocked ? 1 : 0) : 0;
       var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : 0;
       var baseAlmanac = res.data ? (res.data.almanacUnlocked ? 1 : 0) : 0;
+      var baseLogo = res.data ? (res.data.logoUnlocked ? 1 : 0) : 0;
       var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
       if (res.foundId) self._gameObjectId = res.foundId;
       // 以下所有"不能解锁"的场景：直接回 idle 并恢复按钮文本，不写库
@@ -1780,6 +1818,14 @@ var GAME = {
         self.updateTaskMenuBtn();
         self.showXp('', '"日期卡片" 已解锁');
         self._updateAlmanacLock();
+        return;
+      }
+      if (feature === 'logo' && baseLogo) {
+        self.logoUnlocked = 1;
+        self.setSyncState('idle');
+        self.updateTaskMenuBtn();
+        self.showXp('', '"LOGO" 已解锁');
+        self._updateLogoLock();
         return;
       }
       // "一键"需先解锁"自动"
@@ -1809,6 +1855,7 @@ var GAME = {
       var newAuto = (feature === 'auto') ? 1 : baseAuto;
       var newOneKey = (feature === 'oneKey') ? 1 : baseOneKey;
       var newAlmanac = (feature === 'almanac') ? 1 : baseAlmanac;
+      var newLogo = (feature === 'logo') ? 1 : baseLogo;
       // 记录解锁成功后的提示（由 processRecords 在写库读回确认后显示，与修炼 +真气 一致）
       self._pendingUnlockMsg = '-' + cost + ' 真气，封印已破！';
       var now = new Date();
@@ -1822,7 +1869,8 @@ var GAME = {
         date: today,
         autoUnlocked: newAuto,
         oneKeyUnlocked: newOneKey,
-        almanacUnlocked: newAlmanac
+        almanacUnlocked: newAlmanac,
+        logoUnlocked: newLogo
       }, '已解锁"' + name + '"功能');
     }).catch(function(e) {
       // 解锁前读取真实数据失败/超时 → 无法保证解锁正确性，显示心魔并回 idle
@@ -1902,7 +1950,8 @@ var GAME = {
         date: today,
         autoUnlocked: self.autoUnlocked,
         oneKeyUnlocked: self.oneKeyUnlocked,
-        almanacUnlocked: self.almanacUnlocked
+        almanacUnlocked: self.almanacUnlocked,
+        logoUnlocked: self.logoUnlocked
       }, '境界提升至【' + nextName + '】');
       // 不前置显示升级提示，由 processRecords 读回确认后展示（与修炼+真气同一时序）
       self._pendingUpgradeMsg = { name: nextName, cost: realCost };
@@ -2049,6 +2098,7 @@ var GAME = {
       var baseAuto = res.data ? (res.data.autoUnlocked ? 1 : 0) : self.autoUnlocked;
       var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : self.oneKeyUnlocked;
       var baseAlmanac = res.data ? (res.data.almanacUnlocked ? 1 : 0) : self.almanacUnlocked;
+      var baseLogo = res.data ? (res.data.logoUnlocked ? 1 : 0) : self.logoUnlocked;
       if (res.foundId) self._gameObjectId = res.foundId;
       // 基于数据库真实剩余次数汇总（缺失任务用当前境界 times 补全）
       var rem = self._normalizeRemaining(baseRemaining);
@@ -2093,7 +2143,8 @@ var GAME = {
         date: today,
         autoUnlocked: baseAuto,
         oneKeyUnlocked: baseOneKey,
-        almanacUnlocked: baseAlmanac
+        almanacUnlocked: baseAlmanac,
+        logoUnlocked: baseLogo
       }, '一键修炼完成 +' + totalGain + ' 真气').then(function(ok) {
         self._oneKeyMode = false;
         self.hideModeMask();
@@ -2227,6 +2278,30 @@ commentOverlay.addEventListener('click', function(e) {
   mini.addEventListener('click', function(){
     mini.classList.remove('show');
     almanac.classList.remove('hidden');
+  });
+})();
+
+// LOGO 点击：未解锁 → 走解锁流程（消耗 666 真气破除封印）；已解锁 → 正常
+(function(){
+  var logo = document.getElementById('topRightLogo');
+  if (!logo) return;
+  logo.addEventListener('click', function(){
+    if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
+    var user = GAME.getWalineUser();
+    if (!user) {
+      GAME.showXp('', '请勿隐匿身份，否则您无法修炼');
+      return;
+    }
+    if (!GAME.loaded) {
+      GAME.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+      return;
+    }
+    // 未解锁 → 走解锁流程（消耗 666 真气破除封印）
+    if (!GAME.logoUnlocked) {
+      GAME.unlockFeature('logo');
+      return;
+    }
+    // 已解锁 → 正常显示（无额外行为）
   });
 })();
 </script>
