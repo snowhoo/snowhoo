@@ -1019,9 +1019,9 @@ var GAME = {
       self.setSyncState('idle');
       self.updateBadge();
       self.updateTaskDots();
-      // 错误状态不覆盖按钮文本（错误信息持久显示）
+      // 错误状态不覆盖按钮文本；按钮正在显示临时提示（+真气）时不覆盖，等 showXp 计时器恢复
       var btn = document.getElementById('taskMenuBtn');
-      if (!btn || !btn.classList.contains('error')) {
+      if (btn && !btn.classList.contains('error') && !btn._msgTimer) {
         self.updateTaskMenu();
       }
     });
@@ -1263,11 +1263,12 @@ var GAME = {
           // 仍在加载/保存中 → 恢复状态文本（真气恢复中/真气融合中）
           btn.textContent = GAME.syncState === 'loading' ? '⚡ 真气恢复中..' : '⟳ 真气融合中..';
         } else {
-          // 正常状态按登录/加载状态恢复按钮文本
+          // 正常状态按登录/加载状态恢复按钮文本（今日修炼任务/今日修炼已毕）
           self.updateTaskMenuBtn();
         }
         btn._preMsg = undefined;
       }
+      btn._msgTimer = undefined;
     }, 2200);
   },
 
