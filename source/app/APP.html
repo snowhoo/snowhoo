@@ -2050,7 +2050,7 @@ var GAME = {
     self._showUnlockFlow(cost, {
       onConfirm: function(setStatus) {
         // 2. 确认后读数据库真实数据（真气值/解锁状态以数据库为准，防止多端数据过期）
-        setStatus('⚡ 破除封印', '正在读取记录..');
+        setStatus('⚡ 破除封印', '正在恢复真气..');
         self.setSyncState('loading');
         self._fetchCurrentRecord(user).then(function(res) {
           var basePoints = res.data ? res.data.points : 0;
@@ -2145,7 +2145,7 @@ var GAME = {
           // 3. 写库（saving 由 _writeState 内部在写库动作执行时设置）
           //    注意：不在此处修改 self.xxxUnlocked，也不立即解锁——
           //    解锁状态以写库成功后读库返回的数据为准（processRecords 从数据库读回并更新 UI）
-          setStatus('⚡ 破除封印', '正在写入记录..');
+          setStatus('⚡ 破除封印', '正在融合真气..');
           var newPoints = basePoints - cost;
           var newAuto = (feature === 'auto') ? 1 : baseAuto;
           var newOneKey = (feature === 'oneKey') ? 1 : baseOneKey;
@@ -2179,7 +2179,7 @@ var GAME = {
             tvUnlocked: newCats.tv
           }, '已解锁"' + name + '"功能').then(function(ok) {
             // 结果直接在窗口内显示（页面成功提示照旧由 processRecords 驱动）
-            setStatus(ok ? '✓ 封印已破' : '写入失败', ok ? ('解锁成功！-' + cost + ' 真气，封印已破！') : '写入记录失败，请重试..');
+            setStatus(ok ? '✓ 封印已破' : '融合失败', ok ? ('解锁成功！-' + cost + ' 真气，封印已破！') : '融合真气失败，请重试..');
           });
         }).catch(function(e) {
           // 确认后读取真实数据失败/超时 → 无法保证解锁正确性，窗口提示并回 idle
@@ -2284,7 +2284,7 @@ var GAME = {
     self._showUpgradeFlow(preCost, preName, {
       onConfirm: function(setStatus) {
         // 2. 确认后读数据库真实数据（真气/level 以数据库为准）
-        setStatus('⚡ 境界突破', '正在读取记录..');
+        setStatus('⚡ 境界突破', '正在恢复真气..');
         self.setSyncState('loading');
         self._fetchCurrentRecord(user).then(function(res) {
           var basePoints = res.data ? res.data.points : 0;
@@ -2310,7 +2310,7 @@ var GAME = {
             return;
           }
           // 3. 写库（saving 由 _writeState 内部在写库动作执行时设置）
-          setStatus('⚡ 境界突破', '正在写入记录..');
+          setStatus('⚡ 境界突破', '正在融合真气..');
           var newPoints = basePoints - realCost;
           var newLevel = nextLv;
           var now = new Date();
@@ -2337,7 +2337,7 @@ var GAME = {
             // 不前置显示升级提示，由 processRecords 读回确认后展示（与修炼+真气同一时序）
             self._pendingUpgradeMsg = { name: nextName, cost: realCost };
             // 结果直接在窗口内显示（暗绿色窗口）
-            setStatus(ok ? '✓ 突破成功' : '写入失败', ok ? ('境界提升至【' + nextName + '】！-' + realCost + ' 真气，体力恢复！') : '写入记录失败，请重试..');
+            setStatus(ok ? '✓ 突破成功' : '融合失败', ok ? ('境界提升至【' + nextName + '】！-' + realCost + ' 真气，体力恢复！') : '融合真气失败，请重试..');
           });
         }).catch(function(e) {
           // 确认后读取真实数据失败/超时 → 无法保证升级正确性，窗口提示并回 idle
