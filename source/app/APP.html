@@ -2179,7 +2179,7 @@ var GAME = {
             tvUnlocked: newCats.tv
           }, '已解锁"' + name + '"功能').then(function(ok) {
             // 结果直接在窗口内显示（页面成功提示照旧由 processRecords 驱动）
-            setStatus(ok ? '✓ 封印已破' : '融合失败', ok ? ('解锁成功！-' + cost + ' 真气，封印已破！') : '融合真气失败，请重试..');
+            setStatus(ok ? '✓ 封印已破' : '心魔困扰', ok ? ('解锁成功！-' + cost + ' 真气，封印已破！') : '正遭受心魔困扰，点击恢复心神!');
           });
         }).catch(function(e) {
           // 确认后读取真实数据失败/超时 → 无法保证解锁正确性，窗口提示并回 idle
@@ -2337,7 +2337,7 @@ var GAME = {
             // 不前置显示升级提示，由 processRecords 读回确认后展示（与修炼+真气同一时序）
             self._pendingUpgradeMsg = { name: nextName, cost: realCost };
             // 结果直接在窗口内显示（暗绿色窗口）
-            setStatus(ok ? '✓ 突破成功' : '融合失败', ok ? ('境界提升至【' + nextName + '】！-' + realCost + ' 真气，体力恢复！') : '融合真气失败，请重试..');
+            setStatus(ok ? '✓ 突破成功' : '心魔困扰', ok ? ('境界提升至【' + nextName + '】！-' + realCost + ' 真气，体力恢复！') : '正遭受心魔困扰，点击恢复心神!');
           });
         }).catch(function(e) {
           // 确认后读取真实数据失败/超时 → 无法保证升级正确性，窗口提示并回 idle
