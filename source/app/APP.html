@@ -141,9 +141,11 @@ body{display:flex;flex-direction:column}
 .task-dot{position:absolute;top:-8px;right:-8px;background:#e94560;color:#fff;font-size:.42rem;min-width:13px;height:13px;border-radius:7px;display:none;align-items:center;justify-content:center;padding:0 3px;font-weight:300;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.3);z-index:2}
 
 /* 今日修炼任务菜单 */
-.task-menu{position:absolute;bottom:15px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px}
-/* 自动修炼提示：显示在修炼按钮上方，单独元素不占用按钮 */
-.auto-hint{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);font-size:.58rem;color:#22c55e;background:#fff;border:1px solid rgba(34,197,94,.35);border-radius:10px;padding:3px 10px;white-space:nowrap;display:none;z-index:4;box-shadow:0 2px 8px rgba(0,0,0,.08);letter-spacing:.3px}
+.task-menu{position:absolute;bottom:15px;z-index:10001;display:flex;flex-direction:column;align-items:center;gap:4px}
+/* 自动修炼提示：显示在修炼按钮上方，单独元素不占用按钮（z-index 高于修炼遮罩） */
+.auto-hint{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);font-size:.58rem;color:#22c55e;background:#fff;border:1px solid rgba(34,197,94,.35);border-radius:10px;padding:3px 10px;white-space:nowrap;display:none;z-index:9997;box-shadow:0 2px 8px rgba(0,0,0,.08);letter-spacing:.3px}
+/* 修炼模式全屏透明遮罩：覆盖所有页面功能（含评论弹窗 9999），杜绝任何点击 */
+#modeMask{position:fixed;top:0;left:0;right:0;bottom:0;z-index:10000;display:none;background:transparent}
 .task-menu-btn{font-size:.58rem;color:#ff8c00;cursor:pointer;padding:3px 8px;border:1px solid rgba(255,140,0,.3);border-radius:10px;background:rgba(255,255,255,.88);white-space:nowrap;transition:all .3s;font-weight:400;letter-spacing:.3px;line-height:1.4;user-select:none;-webkit-user-select:none}
 /* 初始隐藏（!important 防止任何 JS/CSS 提前显示）*/
 .task-menu-btn.init-hidden{display:none!important}
@@ -254,6 +256,8 @@ body{display:flex;flex-direction:column}
     <div class="task-menu-dropdown" id="taskMenuDropdown"></div>
   </div>
 </div>
+<!-- 修炼模式全屏透明遮罩（自动/一键修炼期间显示，覆盖所有页面功能） -->
+<div id="modeMask"></div>
 
 <!-- 评论弹窗 -->
 <div class="comment-overlay" id="commentOverlay">
@@ -841,14 +845,30 @@ var GAME = {
     var btn = document.getElementById('taskMenuBtn');
     if (state !== 'idle' && btn && !btn.classList.contains('error')) {
       // 加载/保存中仅设文字，不修改 display（保持按钮隐藏直到 loaded=true）
-      if (this._oneKeyMode) {
-        btn.textContent = '⚡ 一键修炼中..';
-      } else if (!this._autoMode) {
-        // 自动模式：按钮保持"今日修炼任务"，"自动修炼中"提示显示在按钮上方 autoHint
+      // 自动/一键模式：按钮保持"今日修炼任务"，状态提示在按钮上方 autoHint
+      if (!this._autoMode && !this._oneKeyMode) {
         btn.textContent = state === 'loading' ? '⚡ 真气恢复中..' : '⟳ 真气融合中..';
       }
     }
+    // 自动修炼模式：同步更新 autoHint 显示当前任务读写进度（面板加载中由 autoCultivate 更新）
+    if (this._autoMode && state !== 'idle') {
+      var hint = document.getElementById('autoHint');
+      if (hint) {
+        var tn = this._autoTaskName || '修炼';
+        hint.textContent = (state === 'loading' ? '⚡ ' : '⟳ ') + tn + (state === 'loading' ? '（读取数据）..' : '（写入数据）..');
+      }
+    }
     // idle：由 updateTaskMenuBtn 根据 loaded && user 控制显隐
+  },
+
+  // 修炼模式全屏透明遮罩：覆盖所有页面功能，杜绝任何点击
+  showModeMask: function() {
+    var m = document.getElementById('modeMask');
+    if (m) m.style.display = 'block';
+  },
+  hideModeMask: function() {
+    var m = document.getElementById('modeMask');
+    if (m) m.style.display = 'none';
   },
 
   init: function() {
@@ -1870,13 +1890,18 @@ var GAME = {
     if (!this.autoUnlocked) { this.unlockFeature('auto'); return; }
     var self = this;
     this._autoMode = true;
+    this._autoTaskName = '';
+    // 全屏透明遮罩：覆盖所有页面功能
+    this.showModeMask();
     // 提示显示在修炼按钮上方（autoHint），按钮保持"今日修炼任务"
     var hint = document.getElementById('autoHint');
     if (hint) { hint.textContent = '⚡ 自动修炼中..'; hint.style.display = 'block'; }
     // 任务顺序（按配置）
     var keys = [];
-    if (window.GAME_CONFIG) { for (var i = 0; i < GAME_CONFIG.length; i++) keys.push(GAME_CONFIG[i].key); }
-    else keys = ['poetry','history','constellation','explore'];
+    var names = {};
+    if (window.GAME_CONFIG) {
+      for (var i = 0; i < GAME_CONFIG.length; i++) { keys.push(GAME_CONFIG[i].key); names[GAME_CONFIG[i].key] = GAME_CONFIG[i].name; }
+    } else { keys = ['poetry','history','constellation','explore']; }
     function openPanel(key) {
       if (key === 'poetry') { togglePoetry(); }
       else if (key === 'history') { toggleHistory(); }
@@ -1898,6 +1923,8 @@ var GAME = {
         self._autoMode = false;
         self._autoPanelCb = null;
         self._autoPanelKey = null;
+        self._autoTaskName = '';
+        self.hideModeMask();
         self.setSyncState('idle');
         self.updateTaskMenuBtn();
         var h2 = document.getElementById('autoHint');
@@ -1907,6 +1934,10 @@ var GAME = {
         }
         return;
       }
+      // 设置当前任务名，更新提示为"加载中"
+      self._autoTaskName = names[next] || '';
+      var hh = document.getElementById('autoHint');
+      if (hh) hh.textContent = '⚡ 自动修炼：' + (names[next] || '') + '加载中..';
       // 展开面板（真实加载数据），等待加载完成回调（带超时，失败/超时跳过该任务）
       self._autoPanelKey = next;
       var done = false;
@@ -1929,6 +1960,8 @@ var GAME = {
             self._autoMode = false;
             self._autoPanelCb = null;
             self._autoPanelKey = null;
+            self._autoTaskName = '';
+            self.hideModeMask();
             self.setSyncState('idle');
             var h3 = document.getElementById('autoHint');
             if (h3) h3.style.display = 'none';
@@ -1966,7 +1999,10 @@ var GAME = {
     if (!this.oneKeyUnlocked) { this.unlockFeature('oneKey'); return; }
     var self = this;
     this._oneKeyMode = true;
-    this.setSyncState('loading'); // 按钮显示"一键修炼中.."
+    // 全屏透明遮罩：覆盖所有页面功能；提示显示在按钮上方 autoHint
+    this.showModeMask();
+    var hint = document.getElementById('autoHint');
+    if (hint) { hint.textContent = '⚡ 一键修炼中..'; hint.style.display = 'block'; }
     // 读库真实数据 → 汇总次数与经验 → 一次写入
     this._fetchCurrentRecord(user).then(function(res) {
       var basePoints = res.data ? res.data.points : 0;
@@ -1997,9 +2033,14 @@ var GAME = {
       if (totalGain <= 0) {
         // 今日已无可修炼任务
         self._oneKeyMode = false;
+        self.hideModeMask();
         self.setSyncState('idle');
         self.updateTaskMenuBtn();
-        self.showXp('', '今日已无可修炼任务');
+        var h0 = document.getElementById('autoHint');
+        if (h0) {
+          h0.textContent = '今日已无可修炼任务';
+          setTimeout(function(){ h0.style.display = 'none'; }, 2200);
+        }
         return;
       }
       var now = new Date();
@@ -2015,12 +2056,19 @@ var GAME = {
         oneKeyUnlocked: baseOneKey
       }, '一键修炼完成 +' + totalGain + ' 真气').then(function(ok) {
         self._oneKeyMode = false;
+        self.hideModeMask();
         if (ok) {
           self.setSyncState('idle');
           self.updateTaskMenuBtn();
-          self.showXp('+' + totalGain + ' 真气', '一键修炼完成！');
+          var h1 = document.getElementById('autoHint');
+          if (h1) {
+            h1.textContent = '+' + totalGain + ' 真气，一键修炼完成！';
+            setTimeout(function(){ h1.style.display = 'none'; }, 2200);
+          }
         } else {
           // 写库失败：错误提示已由 _writeState 显示
+          var h1b = document.getElementById('autoHint');
+          if (h1b) h1b.style.display = 'none';
           self.setSyncState('idle');
           self.updateTaskMenuBtn();
         }
@@ -2028,6 +2076,9 @@ var GAME = {
     }).catch(function(e) {
       console.warn('[GAME] 一键修炼读取真实数据失败:', e);
       self._oneKeyMode = false;
+      self.hideModeMask();
+      var h1c = document.getElementById('autoHint');
+      if (h1c) h1c.style.display = 'none';
       self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
       self.setSyncState('idle');
       self.updateBadge();
