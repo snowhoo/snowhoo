@@ -93,8 +93,8 @@ var UNLOCK_CONFIG = {
  *   doneTitle / doneText — 破除成功后窗口显示文案（{cost} 同上）
  */
 var BG_UNLOCK_CONFIG = {
-  min: 5,
-  max: 10,
+  min: 1,
+  max: 5,
   title: '🗝 隐藏结界',
   text: '发现隐藏结界，注入 {cost} 真气破除结界？',
   okText: '破除',
