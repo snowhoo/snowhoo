@@ -153,9 +153,13 @@ body{display:flex;flex-direction:column}
 .task-menu-btn.error{color:#e94560!important;border-color:rgba(233,69,96,.35)!important}
 .task-menu-btn.completed{color:#22c55e;border-color:rgba(34,197,94,.35)}
 /* 快捷修炼按钮 */
-.task-quick-btn{display:none;height:22px;border-radius:11px;padding:0 7px;align-items:center;justify-content:center;font-size:.58rem;font-weight:400;cursor:pointer;transition:all .3s;vertical-align:middle;margin-left:5px;user-select:none;-webkit-user-select:none;line-height:1;flex-shrink:0;white-space:nowrap}
+.task-quick-btn{display:none;height:22px;border-radius:11px;padding:0 7px;align-items:center;justify-content:center;font-size:.58rem;font-weight:400;cursor:pointer;transition:all .3s;vertical-align:middle;margin-left:5px;user-select:none;-webkit-user-select:none;line-height:1;flex-shrink:0;white-space:nowrap;position:relative}
 .task-quick-btn.auto{background:#22c55e;color:#fff;border:1px solid #fff}
 .task-quick-btn.onekey{background:#3b82f6;color:#fff;border:1px solid #fff}
+/* 锁遮罩：未解锁时半透明灰白遮罩 + 锁图标，禁用点击 */
+.task-quick-btn .lock-icon{width:10px;height:10px;flex-shrink:0;margin-left:3px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:none}
+.task-quick-btn.locked{cursor:not-allowed;filter:saturate(.35) brightness(.85);pointer-events:auto}
+.task-quick-btn.locked .lock-icon{display:block}
 .task-menu-dropdown{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:170px;padding:6px 0;display:none;z-index:10}
 .task-menu-dropdown.show{display:block}
 .task-item{display:flex;align-items:center;padding:7px 12px;font-size:.7rem;color:#333;line-height:1.4;gap:4px;white-space:nowrap}
@@ -240,8 +244,8 @@ body{display:flex;flex-direction:column}
   </div>
   <div class="task-menu">
     <div class="task-menu-btn init-hidden" id="taskMenuBtn"></div>
-    <span class="task-quick-btn auto" id="autoBtn" title="自动">自动</span>
-    <span class="task-quick-btn onekey" id="oneKeyBtn" title="一键">一键</span>
+    <span class="task-quick-btn auto locked" id="autoBtn" title="自动（解锁需 888 真气）">自动<svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+    <span class="task-quick-btn onekey locked" id="oneKeyBtn" title="一键（解锁需 999 真气）">一键<svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
     <div class="task-menu-dropdown" id="taskMenuDropdown"></div>
   </div>
 </div>
@@ -783,6 +787,8 @@ var GAME = {
   _gameObjectId: 0,       // 当前用户游戏记录在 Waline 中的 objectId，用于 PUT 更新
   _noDbData: false,       // 数据库中无该用户记录（新用户），红点应显示".."
   level: 0,               // 境界等级（0=凡人）
+  autoUnlocked: 0,        // "自动"功能是否解锁（0锁止 1可用）
+  oneKeyUnlocked: 0,      // "一键"功能是否解锁（0锁止 1可用）
 
   setSyncState: function(state) {
     this.syncState = state;
@@ -842,6 +848,22 @@ var GAME = {
     document.addEventListener('click',function(){
       document.getElementById('taskMenuDropdown').classList.remove('show');
     });
+    // 快捷修炼按钮：未解锁 → 尝试解锁；已解锁 → 暂占位（功能后续开放）
+    var bindQuick = function(id, feature) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (GAME.syncState !== 'idle') return;
+        if (!GAME[feature === 'auto' ? 'autoUnlocked' : 'oneKeyUnlocked']) {
+          GAME.unlockFeature(feature);
+          return;
+        }
+        GAME.showXp('', '"' + (feature === 'auto' ? '自动' : '一键') + '"修炼功能即将开放');
+      });
+    };
+    bindQuick('autoBtn', 'auto');
+    bindQuick('oneKeyBtn', 'oneKey');
     // 定期检查登录状态变化（每3秒检测一次）
     setInterval(function(){self.checkLogin()},3000);
     // 等待 Waline 异步初始化完成后检测一次用户状态（加速登录状态刷新）
@@ -872,17 +894,22 @@ var GAME = {
         this.setSyncState('idle');
         this.totalPoints = 0;
         this.todayCounts = {};
+        this.autoUnlocked = 0;
+        this.oneKeyUnlocked = 0;
         this.clearLocal();
         this.updateBadge();
         this.updateTaskDots();
         this.updateLevelDisplay();
         this.updateTaskMenu();
+        this._updateQuickBtns(false);
       } else if (user && !wasLoggedIn) {
         // 从未登录→登录，显示加载状态并拉取数据
         this.loaded = false;
         this.setSyncState('loading');
         this.totalPoints = 0;
         this.todayCounts = {};
+        this.autoUnlocked = 0;
+        this.oneKeyUnlocked = 0;
         this.updateBadge();
         this.updateTaskDots();
         this.loadFromServer(user);
@@ -1071,6 +1098,8 @@ var GAME = {
       this._gameObjectId = foundId;
       this._noDbData = false;
       this.level = typeof foundData.level === 'number' ? foundData.level : 0;
+      this.autoUnlocked = foundData.autoUnlocked ? 1 : 0;
+      this.oneKeyUnlocked = foundData.oneKeyUnlocked ? 1 : 0;
       if (foundData.date === today) {
         // 当天 → 直接用剩余次数
         this.todayCounts = foundData.todayRemaining || {};
@@ -1083,9 +1112,13 @@ var GAME = {
       this.totalPoints = 0;
       this._gameObjectId = 0;
       this._noDbData = true;  // 标记：数据库中无数据，红点应显示".."
+      this.autoUnlocked = 0;
+      this.oneKeyUnlocked = 0;
     }
     this.loaded = true;
     this.clearTaskMenuError();
+    // 数据读取成功后更新快捷按钮锁状态
+    this._updateQuickBtns(true);
     var gain = this._beforePoints !== undefined ? this.totalPoints - this._beforePoints : 0;
     if (gain > 0) {
       this.showXp('+' + gain + ' 真气', '');
@@ -1237,12 +1270,25 @@ var GAME = {
     }
   },
 
-  // 控制快捷修炼按钮的显隐
+  // 控制快捷修炼按钮的显隐与锁状态
   _updateQuickBtns: function(show) {
     var autoBtn = document.getElementById('autoBtn');
     var onekeyBtn = document.getElementById('oneKeyBtn');
-    if (autoBtn) autoBtn.style.display = show ? 'inline-flex' : 'none';
-    if (onekeyBtn) onekeyBtn.style.display = show ? 'inline-flex' : 'none';
+    if (!show) {
+      if (autoBtn) autoBtn.style.display = 'none';
+      if (onekeyBtn) onekeyBtn.style.display = 'none';
+      return;
+    }
+    if (autoBtn) {
+      autoBtn.style.display = 'inline-flex';
+      if (this.autoUnlocked) autoBtn.classList.remove('locked');
+      else autoBtn.classList.add('locked');
+    }
+    if (onekeyBtn) {
+      onekeyBtn.style.display = 'inline-flex';
+      if (this.oneKeyUnlocked) onekeyBtn.classList.remove('locked');
+      else onekeyBtn.classList.add('locked');
+    }
   },
 
   // 根据等级数值返回对应显示文字
@@ -1265,6 +1311,68 @@ var GAME = {
     }
   },
 
+  // 通用写入：将完整游戏状态（含解锁标记）保存到 Waline（有记录 PUT 更新，无记录 POST 创建）
+  _writeState: function(user, commentObj, successMsg) {
+    var self = this;
+    var payload = JSON.stringify({
+      comment: JSON.stringify(commentObj),
+      url: '/app-game/actions',
+      nick: user.display_name || '游客',
+      mail: user.email || ''
+    });
+    var token = user.token || '';
+    if (!token) { try { var s = JSON.parse(localStorage.getItem('WALINE_USER')||'{}'); if(s.token) token=s.token; } catch(e){} }
+    var headers = {'Content-Type':'application/json'};
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    var request;
+    if (this._gameObjectId) {
+      // 已有记录 → PUT 更新
+      request = fetch('https://waline.snowhoo.net/api/comment/' + this._gameObjectId, {
+        method: 'PUT',
+        headers: headers,
+        body: payload
+      });
+    } else {
+      // 无记录 → POST 创建新记录（带 auth，确保有所属用户）
+      request = fetch('https://waline.snowhoo.net/api/comment', {
+        method: 'POST',
+        headers: headers,
+        body: payload
+      }).then(function(r){
+        if (r.ok) {
+          return r.json().then(function(j){
+            if (j.data && j.data.objectId) {
+              self._gameObjectId = parseInt(j.data.objectId,10);
+            }
+            return r;
+          });
+        }
+        return r;
+      });
+    }
+    request.then(function(r){
+      if (r.ok) {
+        console.log('[GAME]', successMsg);
+        return self.loadFromServer(user);
+      } else {
+        self.syncError = true;
+        return r.text().then(function(t){ console.warn('[GAME] Waline 同步失败', r.status, t); });
+      }
+    }).catch(function(e){
+      self.syncError = true;
+      console.warn('[GAME] Waline 同步网络失败:', e);
+    }).then(function(){
+      if (self.syncError) {
+        self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+        self.syncError = false;
+        self._beforePoints = undefined;
+        self.setSyncState('idle');
+        self.updateBadge();
+        self.updateTaskDots();
+      }
+    });
+  },
+
   syncToWaline: function(key,points,user) {
     try {
       if (!user || !user.display_name) return;
@@ -1278,70 +1386,74 @@ var GAME = {
       var now = new Date();
       var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
       this.setSyncState('saving');
-      var payload = JSON.stringify({
-        comment: JSON.stringify({
-          points: newPoints,
-          todayRemaining: newRemaining,
-          nick: user.display_name,
-          level: this.level,
-          date: today
-        }),
-        url: '/app-game/actions',
-        nick: user.display_name || '游客',
-        mail: user.email || ''
-      });
-      var token = user.token || '';
-      if (!token) { try { var s = JSON.parse(localStorage.getItem('WALINE_USER')||'{}'); if(s.token) token=s.token; } catch(e){} }
-      var headers = {'Content-Type':'application/json'};
-      if (token) headers['Authorization'] = 'Bearer ' + token;
-      var request;
-      if (this._gameObjectId) {
-        // 已有记录 → PUT 更新
-        request = fetch('https://waline.snowhoo.net/api/comment/' + this._gameObjectId, {
-          method: 'PUT',
-          headers: headers,
-          body: payload
-        });
-      } else {
-        // 无记录 → POST 创建新记录（带 auth，确保有所属用户）
-        request = fetch('https://waline.snowhoo.net/api/comment', {
-          method: 'POST',
-          headers: headers,
-          body: payload
-        }).then(function(r){
-          if (r.ok) {
-            return r.json().then(function(j){
-              if (j.data && j.data.objectId) {
-                self._gameObjectId = parseInt(j.data.objectId,10);
-              }
-              return r;
-            });
-          }
-          return r;
-        });
-      }
-      request.then(function(r){
-        if (r.ok) {
-          console.log('[GAME] 真气值已同步到 Waline:', key, '+'+points);
-          return self.loadFromServer(user);
-        } else {
-          self.syncError = true;
-          return r.text().then(function(t){ console.warn('[GAME] Waline 同步失败', r.status, t); });
-        }
-      }).catch(function(e){
-        self.syncError = true;
-        console.warn('[GAME] Waline 同步网络失败:', e);
-      }).then(function(){
-        if (self.syncError) {
-          self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
-          self.syncError = false;
-          self._beforePoints = undefined;
-          self.setSyncState('idle');
-          self.updateBadge();
-          self.updateTaskDots();
-        }
-      });
+      this._writeState(user, {
+        points: newPoints,
+        todayRemaining: newRemaining,
+        nick: user.display_name,
+        level: this.level,
+        date: today,
+        autoUnlocked: this.autoUnlocked,
+        oneKeyUnlocked: this.oneKeyUnlocked
+      }, '真气值已同步到 Waline: ' + key + ' +' + points);
     } catch(e){ console.warn('[GAME] Waline 同步异常:', e); }
+  },
+
+  // 解锁功能：消耗真气一次性解锁"自动"或"一键"
+  unlockFeature: function(feature) {
+    var cfg = (typeof UNLOCK_CONFIG !== 'undefined') ? UNLOCK_CONFIG : {auto:888, oneKey:999};
+    var cost = cfg[feature];
+    if (!cost) return;
+    var names = {auto:'自动', oneKey:'一键'};
+    var name = names[feature] || feature;
+    var user = this.getWalineUser();
+    if (!user) {
+      this.showXp('', '请勿隐匿身份，否则您无法修炼');
+      return;
+    }
+    if (!this.loaded) {
+      this.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+      return;
+    }
+    if (this.syncState !== 'idle') {
+      this.showXp('', this.syncState === 'loading' ? '真气恢复中，无法修炼..' : '真气融合中，无法修炼..');
+      return;
+    }
+    // 已解锁 → 无需重复解锁
+    if ((feature === 'auto' && this.autoUnlocked) || (feature === 'oneKey' && this.oneKeyUnlocked)) {
+      this.showXp('', '"' + name + '" 已解锁');
+      return;
+    }
+    // "一键"需先解锁"自动"
+    if (feature === 'oneKey' && !this.autoUnlocked) {
+      this.showXp('', '需先解锁"自动"功能!');
+      return;
+    }
+    // 真气不足 → 不允许解锁
+    if (this.totalPoints < cost) {
+      this.showXp('', '真气不足，解锁"' + name + '"需 ' + cost + ' 真气');
+      return;
+    }
+    // 二次确认，防止误触消耗真气
+    if (!window.confirm('消耗 ' + cost + ' 真气，解锁"' + name + '"功能？')) return;
+    // 扣减真气，标记解锁
+    this.totalPoints -= cost;
+    if (feature === 'auto') this.autoUnlocked = 1;
+    if (feature === 'oneKey') this.oneKeyUnlocked = 1;
+    var now = new Date();
+    var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+    this.setSyncState('saving');
+    // 写入数据库（保存完整状态，含解锁标记），成功后回读确认
+    this._writeState(user, {
+      points: this.totalPoints,
+      todayRemaining: this.todayCounts,
+      nick: user.display_name,
+      level: this.level,
+      date: today,
+      autoUnlocked: this.autoUnlocked,
+      oneKeyUnlocked: this.oneKeyUnlocked
+    }, '已解锁"' + name + '"功能');
+    // 本地立即更新按钮状态（回读成功后再由 processRecords 确认）
+    this._updateQuickBtns(true);
   }
 };
 GAME.init();
