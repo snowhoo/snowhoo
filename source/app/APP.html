@@ -454,16 +454,7 @@ items.forEach(function(el) {
     var key = el.dataset.unlock || '';
     if (key) {
       if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
-      var user = GAME.getWalineUser();
-      if (!user) {
-        GAME.showXp('', '请勿隐匿身份，否则您无法修炼');
-        return;
-      }
-      if (!GAME.loaded) {
-        GAME.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
-        return;
-      }
-      // 未解锁 → 走解锁流程
+      // 未解锁 → 走解锁流程（登录/加载校验在确认后统一处理，未登录也先弹确认再提示）
       if (!GAME[key + 'Unlocked']) {
         GAME.unlockFeature(key);
         return;
@@ -2032,15 +2023,6 @@ var GAME = {
     var name = names[feature] || feature;
     // 5 个栏目（参照自动修炼锁定，解锁后正常跳转）
     var catKeys = ['story','yedu','zjsz','news','tv'];
-    var user = this.getWalineUser();
-    if (!user) {
-      this.showXp('', '请勿隐匿身份，否则您无法修炼');
-      return;
-    }
-    if (!this.loaded) {
-      this.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
-      return;
-    }
     if (this.syncState !== 'idle') {
       this.showXp('', this.syncState === 'loading' ? '真气恢复中，无法修炼..' : '真气融合中，无法修炼..');
       return;
@@ -2049,6 +2031,14 @@ var GAME = {
     // 1. 立即弹询问窗口（不先读库），确认后窗口不关闭，读写信息直接在窗口内显示
     self._showUnlockFlow(cost, {
       onConfirm: function(setStatus) {
+        // 确认后再校验登录状态（未登录 → 窗口提示，无法注入真气破除封印）
+        var user = self.getWalineUser();
+        if (!user) {
+          self.setSyncState('idle');
+          self.updateTaskMenuBtn();
+          setStatus('隐匿身份', '隐匿身份，无法注入真气破除封印!');
+          return;
+        }
         // 2. 确认后读数据库真实数据（真气值/解锁状态以数据库为准，防止多端数据过期）
         setStatus('⚡ 破除封印', '正在恢复真气..');
         self.setSyncState('loading');
@@ -2356,6 +2346,13 @@ var GAME = {
   // 自动修炼：与手动修炼一致——展开面板（真实加载数据）→ 数据加载完成 → 读库→写库→读回确认
   // 依次展开诗词/今日/星座/探索，有剩余次数则循环；每次写库完成后才进入下一动作
   autoCultivate: function() {
+    if (this._autoMode || this._oneKeyMode) return;
+    if (this.syncState !== 'idle') {
+      this.showXp('', this.syncState === 'loading' ? '真气恢复中，无法修炼..' : '真气融合中，无法修炼..');
+      return;
+    }
+    // 未解锁 → 走解锁流程（登录/加载校验在确认后统一处理，未登录也先弹确认再提示）
+    if (!this.autoUnlocked) { this.unlockFeature('auto'); return; }
     var user = this.getWalineUser();
     if (!user) {
       this.showXp('', '请勿隐匿身份，否则您无法修炼');
@@ -2365,12 +2362,6 @@ var GAME = {
       this.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
       return;
     }
-    if (this._autoMode || this._oneKeyMode) return;
-    if (this.syncState !== 'idle') {
-      this.showXp('', this.syncState === 'loading' ? '真气恢复中，无法修炼..' : '真气融合中，无法修炼..');
-      return;
-    }
-    if (!this.autoUnlocked) { this.unlockFeature('auto'); return; }
     var self = this;
     this._autoMode = true;
     // 全屏透明遮罩：覆盖所有页面功能
@@ -2457,6 +2448,13 @@ var GAME = {
 
   // 一键修炼：计算所有可修炼任务的次数与经验，汇总后一次写入数据库
   oneKeyCultivate: function() {
+    if (this._autoMode || this._oneKeyMode) return;
+    if (this.syncState !== 'idle') {
+      this.showXp('', this.syncState === 'loading' ? '真气恢复中，无法修炼..' : '真气融合中，无法修炼..');
+      return;
+    }
+    // 未解锁 → 走解锁流程（登录/加载校验在确认后统一处理，未登录也先弹确认再提示）
+    if (!this.oneKeyUnlocked) { this.unlockFeature('oneKey'); return; }
     var user = this.getWalineUser();
     if (!user) {
       this.showXp('', '请勿隐匿身份，否则您无法修炼');
@@ -2466,12 +2464,6 @@ var GAME = {
       this.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
       return;
     }
-    if (this._autoMode || this._oneKeyMode) return;
-    if (this.syncState !== 'idle') {
-      this.showXp('', this.syncState === 'loading' ? '真气恢复中，无法修炼..' : '真气融合中，无法修炼..');
-      return;
-    }
-    if (!this.oneKeyUnlocked) { this.unlockFeature('oneKey'); return; }
     var self = this;
     this._oneKeyMode = true;
     // 全屏透明遮罩：覆盖所有页面功能；提示显示在按钮上方 autoHint
@@ -2650,16 +2642,7 @@ commentOverlay.addEventListener('click', function(e) {
   var mini = document.getElementById('almanacMini');
   almanac.addEventListener('click', function(){
     if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
-    var user = GAME.getWalineUser();
-    if (!user) {
-      GAME.showXp('', '请勿隐匿身份，否则您无法修炼');
-      return;
-    }
-    if (!GAME.loaded) {
-      GAME.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
-      return;
-    }
-    // 未解锁 → 走解锁流程（消耗 666 真气破除封印）
+    // 未解锁 → 走解锁流程（登录/加载校验在确认后统一处理，未登录也先弹确认再提示）
     if (!GAME.almanacUnlocked) {
       GAME.unlockFeature('almanac');
       return;
@@ -2682,16 +2665,7 @@ commentOverlay.addEventListener('click', function(e) {
   var logoMini = document.getElementById('logoMini');
   logo.addEventListener('click', function(){
     if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
-    var user = GAME.getWalineUser();
-    if (!user) {
-      GAME.showXp('', '请勿隐匿身份，否则您无法修炼');
-      return;
-    }
-    if (!GAME.loaded) {
-      GAME.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
-      return;
-    }
-    // 未解锁 → 走解锁流程（消耗 777 真气破除封印）
+    // 未解锁 → 走解锁流程（登录/加载校验在确认后统一处理，未登录也先弹确认再提示）
     if (!GAME.logoUnlocked) {
       GAME.unlockFeature('logo');
       return;
@@ -2716,16 +2690,7 @@ commentOverlay.addEventListener('click', function(e) {
   if (!runner) return;
   runner.addEventListener('click', function(){
     if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
-    var user = GAME.getWalineUser();
-    if (!user) {
-      GAME.showXp('', '请勿隐匿身份，否则您无法修炼');
-      return;
-    }
-    if (!GAME.loaded) {
-      GAME.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
-      return;
-    }
-    // 未解锁 → 走解锁流程（消耗 1000 真气破除封印）
+    // 未解锁 → 走解锁流程（登录/加载校验在确认后统一处理，未登录也先弹确认再提示）
     if (!GAME.runnerUnlocked) {
       GAME.unlockFeature('runner');
       return;
