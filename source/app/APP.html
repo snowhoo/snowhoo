@@ -2194,6 +2194,62 @@ var GAME = {
     });
   },
 
+  // 境界突破流程弹窗：询问 → 确认后窗口不关闭，读库/写库进度与结果直接在窗口内显示（暗绿色主题）
+  // opts.onConfirm(setStatus)：用户点"破境"后调用；setStatus(title, text) 更新窗口内容
+  _showUpgradeFlow: function(cost, nextName, opts) {
+    return new Promise(function(resolve) {
+      var mask = document.getElementById('upgradeConfirm');
+      var title = document.getElementById('upgradeConfirmTitle');
+      var text = document.getElementById('upgradeConfirmText');
+      var okBtn = document.getElementById('upgradeConfirmOk');
+      var cancelBtn = document.getElementById('upgradeConfirmCancel');
+      // 弹层元素缺失时兜底用原生 confirm
+      if (!mask || !title || !text || !okBtn || !cancelBtn) {
+        if (opts && opts.onConfirm) {
+          if (window.confirm('消耗 ' + cost + ' 真气，破境至【' + nextName + '】？')) opts.onConfirm(function(){});
+        }
+        resolve(true);
+        return;
+      }
+      // 询问态
+      title.textContent = '⚡ 境界突破';
+      text.textContent = '消耗 ' + cost + ' 真气，破境至【' + nextName + '】？';
+      okBtn.textContent = '破境';
+      cancelBtn.style.display = '';
+      mask.classList.add('show');
+      var settled = false;
+      function finish(v) {
+        if (settled) return;
+        settled = true;
+        mask.classList.remove('show');
+        cancelBtn.style.display = '';
+        okBtn.textContent = '破境';
+        okBtn.removeEventListener('click', onOk);
+        okBtn.removeEventListener('click', onClose);
+        cancelBtn.removeEventListener('click', onCancel);
+        resolve(v);
+      }
+      function onOk() {
+        // 确认 → 窗口不关闭，转为流程态：隐藏"再想想"，按钮变"知道了"
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.style.display = 'none';
+        okBtn.textContent = '知道了';
+        okBtn.addEventListener('click', onClose);
+        if (opts && opts.onConfirm) {
+          opts.onConfirm(function(t, x) {
+            if (settled) return;
+            if (t !== undefined) title.textContent = t;
+            if (x !== undefined) text.textContent = x;
+          });
+        }
+      }
+      function onClose() { finish(true); }
+      function onCancel() { finish(false); }
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+    });
+  },
+
   // 手动升级境界：扣真气 → level+1 → 写库 → 读回确认 → 显示【境界突破】
   upgradeLevel: function() {
     if (this._autoMode || this._oneKeyMode) return; // 自动/一键修炼中屏蔽
@@ -2216,72 +2272,84 @@ var GAME = {
       return;
     }
     var self = this;
-    // 读库阶段：loading（真气恢复中），此时未写库
-    this.setSyncState('loading');
-    // 1. 先读数据库真实数据（真气/level 以数据库为准）
-    this._fetchCurrentRecord(user).then(function(res) {
-      var basePoints = res.data ? res.data.points : 0;
-      var baseLevel = res.data && typeof res.data.level === 'number' ? res.data.level : self.level;
-      if (res.foundId) self._gameObjectId = res.foundId;
-      // 检查等级上限（已是最高境界）
-      var nextLv = baseLevel + 1;
-      if (!LEVEL_CONFIG[nextLv]) {
-        self.setSyncState('idle');
-        self.updateTaskMenuBtn();
-        self.showXp('', '已达最高境界【化神大圆满】');
-        return;
-      }
-      var realCost = LEVEL_CONFIG[nextLv].cost;
-      var nextName = LEVEL_CONFIG[nextLv].name;
-      // 真气不足 → 提示
-      if (basePoints < realCost) {
-        self.setSyncState('idle');
-        self.updateTaskMenuBtn();
-        self.showXp('', '真气不足，破境【' + nextName + '】需 ' + realCost + ' 真气');
-        return;
-      }
-      // 二次确认，防止误触消耗真气（自定义暗绿色弹层）
-      self._showUpgradeConfirm(realCost, nextName).then(function(ok) {
-        if (!ok) {
+    // 用内存境界推算下一档（本地配置用于询问文案；确认后读库再以数据库为准复核）
+    var nextLv0 = self.level + 1;
+    if (!LEVEL_CONFIG[nextLv0]) {
+      this.showXp('', '已达最高境界【化神大圆满】');
+      return;
+    }
+    var preCost = LEVEL_CONFIG[nextLv0].cost;
+    var preName = LEVEL_CONFIG[nextLv0].name;
+    // 1. 立即弹询问窗口（暗绿色，不先读库），确认后窗口不关闭，读写信息直接在窗口内显示
+    self._showUpgradeFlow(preCost, preName, {
+      onConfirm: function(setStatus) {
+        // 2. 确认后读数据库真实数据（真气/level 以数据库为准）
+        setStatus('⚡ 境界突破', '正在读取记录..');
+        self.setSyncState('loading');
+        self._fetchCurrentRecord(user).then(function(res) {
+          var basePoints = res.data ? res.data.points : 0;
+          var baseLevel = res.data && typeof res.data.level === 'number' ? res.data.level : self.level;
+          if (res.foundId) self._gameObjectId = res.foundId;
+          // 检查等级上限（以数据库为准，已是最高境界）
+          var nextLv = baseLevel + 1;
+          if (!LEVEL_CONFIG[nextLv]) {
+            self.setSyncState('idle');
+            self.updateTaskMenuBtn();
+            self.showXp('', '已达最高境界【化神大圆满】');
+            setStatus('已达最高境界', '已臻【化神大圆满】，无法继续突破');
+            return;
+          }
+          var realCost = LEVEL_CONFIG[nextLv].cost;
+          var nextName = LEVEL_CONFIG[nextLv].name;
+          // 真气不足 → 窗口提示（原页面提示保留照旧）
+          if (basePoints < realCost) {
+            self.setSyncState('idle');
+            self.updateTaskMenuBtn();
+            self.showXp('', '真气不足，破境【' + nextName + '】需 ' + realCost + ' 真气');
+            setStatus('无法突破', '真气不足，破境【' + nextName + '】需 ' + realCost + ' 真气');
+            return;
+          }
+          // 3. 写库（saving 由 _writeState 内部在写库动作执行时设置）
+          setStatus('⚡ 境界突破', '正在写入记录..');
+          var newPoints = basePoints - realCost;
+          var newLevel = nextLv;
+          var now = new Date();
+          var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+          // 升级后剩余次数按新境界 times 全量恢复（体力已恢复）
+          var newRemaining = self.buildRemainingForLevel(newLevel);
+          self._writeState(user, {
+            points: newPoints,
+            todayRemaining: newRemaining,
+            nick: user.display_name,
+            level: newLevel,
+            date: today,
+            autoUnlocked: self.autoUnlocked,
+            oneKeyUnlocked: self.oneKeyUnlocked,
+            almanacUnlocked: self.almanacUnlocked,
+            logoUnlocked: self.logoUnlocked,
+            runnerUnlocked: self.runnerUnlocked,
+            storyUnlocked: self.storyUnlocked,
+            yeduUnlocked: self.yeduUnlocked,
+            zjszUnlocked: self.zjszUnlocked,
+            newsUnlocked: self.newsUnlocked,
+            tvUnlocked: self.tvUnlocked
+          }, '境界提升至【' + nextName + '】').then(function(ok) {
+            // 不前置显示升级提示，由 processRecords 读回确认后展示（与修炼+真气同一时序）
+            self._pendingUpgradeMsg = { name: nextName, cost: realCost };
+            // 结果直接在窗口内显示（暗绿色窗口）
+            setStatus(ok ? '✓ 突破成功' : '写入失败', ok ? ('境界提升至【' + nextName + '】！-' + realCost + ' 真气，体力恢复！') : '写入记录失败，请重试..');
+          });
+        }).catch(function(e) {
+          // 确认后读取真实数据失败/超时 → 无法保证升级正确性，窗口提示并回 idle
+          console.warn('[GAME] 升级前读取真实数据失败:', e);
+          self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
           self.setSyncState('idle');
+          self.updateBadge();
+          self.updateTaskDots();
           self.updateTaskMenuBtn();
-          return;
-        }
-        // 2. 扣减真气 + 升级（只算待写入的值，不直接置 self.level，由 processRecords 读回后驱动）
-        var newPoints = basePoints - realCost;
-        var newLevel = nextLv;
-        var now = new Date();
-        var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
-        // 升级后剩余次数按新境界 times 全量恢复（体力已恢复）
-        var newRemaining = self.buildRemainingForLevel(newLevel);
-        // 3. 写库（saving 由 _writeState 内部在写库动作执行时设置）
-        self._writeState(user, {
-          points: newPoints,
-          todayRemaining: newRemaining,
-          nick: user.display_name,
-          level: newLevel,
-          date: today,
-          autoUnlocked: self.autoUnlocked,
-          oneKeyUnlocked: self.oneKeyUnlocked,
-          almanacUnlocked: self.almanacUnlocked,
-          logoUnlocked: self.logoUnlocked,
-          runnerUnlocked: self.runnerUnlocked,
-          storyUnlocked: self.storyUnlocked,
-          yeduUnlocked: self.yeduUnlocked,
-          zjszUnlocked: self.zjszUnlocked,
-          newsUnlocked: self.newsUnlocked,
-          tvUnlocked: self.tvUnlocked
-        }, '境界提升至【' + nextName + '】');
-        // 不前置显示升级提示，由 processRecords 读回确认后展示（与修炼+真气同一时序）
-        self._pendingUpgradeMsg = { name: nextName, cost: realCost };
-      });
-    }).catch(function(e) {
-      console.warn('[GAME] 升级前读取真实数据失败:', e);
-      self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
-      self.setSyncState('idle');
-      self.updateBadge();
-      self.updateTaskDots();
-      self.updateTaskMenuBtn();
+          setStatus('心魔困扰', '正遭受心魔困扰，点击恢复心神!');
+        });
+      }
     });
   },
 
@@ -2681,7 +2749,7 @@ commentOverlay.addEventListener('click', function(e) {
 <!-- 境界突破确认弹层（自定义暗绿色，兼容移动端禁 confirm 环境） -->
 <div class="confirm-mask green" id="upgradeConfirm">
   <div class="confirm-box">
-    <div class="confirm-title">⚡ 境界突破</div>
+    <div class="confirm-title" id="upgradeConfirmTitle">⚡ 境界突破</div>
     <div class="confirm-text" id="upgradeConfirmText"></div>
     <div class="confirm-btns">
       <button class="confirm-btn cancel" id="upgradeConfirmCancel">再想想</button>
