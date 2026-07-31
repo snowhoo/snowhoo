@@ -1338,6 +1338,8 @@ var GAME = {
   // 通用写入：将完整游戏状态（含解锁标记）保存到 Waline（有记录 PUT 更新，无记录 POST 创建）
   _writeState: function(user, commentObj, successMsg) {
     var self = this;
+    // 写库动作执行：此时才进入"真气融合中"，不再由调用方前置设置
+    this.setSyncState('saving');
     var payload = JSON.stringify({
       comment: JSON.stringify(commentObj),
       url: '/app-game/actions',
@@ -1450,7 +1452,8 @@ var GAME = {
     try {
       if (!user || !user.display_name) return;
       var self = this;
-      this.setSyncState('saving');
+      // 读库阶段：真气恢复中（saving 由 _writeState 在真正写库时设置）
+      this.setSyncState('loading');
       // 1. 先读数据库真实数据，再基于真实数据处理后写入
       this._fetchCurrentRecord(user).then(function(res) {
         var basePoints = res.data ? res.data.points : 0;
@@ -1550,8 +1553,7 @@ var GAME = {
         self.setSyncState('idle');
         return;
       }
-      // 2. 到这里才真正进入写库阶段（真气融合中）
-      self.setSyncState('saving');
+      // 2. 写库（saving 由 _writeState 内部在写库动作执行时设置）
       var newPoints = basePoints - cost;
       if (feature === 'auto') self.autoUnlocked = 1;
       if (feature === 'oneKey') self.oneKeyUnlocked = 1;
