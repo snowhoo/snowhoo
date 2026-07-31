@@ -101,3 +101,14 @@ var BG_UNLOCK_CONFIG = {
   doneTitle: '✓ 结界已破',
   doneText: '结界破除！-{cost} 真气，图片已保存到相册'
 };
+
+/**
+ * WebView 环境识别关键字（App 封装 UA 中自定义的标识）
+ * 命中任一关键字（不区分大小写）即判定为 App 内嵌 WebView：
+ *   - 保存图片时不使用 a[download] 下载（WebView 无下载处理器，点击会导致 App 退出/无反应），
+ *     改为「全屏预览 + 长按图片保存到相册」（iOS/Android WebView 均支持长按存图，不依赖下载机制）。
+ * 默认自动识别通用 WebView 标识（wv / webview / wkwebview 等），无需配置；
+ * 若你的 App 壳在 UA 里加了自定义标识（如 "MyApp/1.0"），把关键字填进数组即可精确识别。
+ * 浏览器（含手机浏览器）不受影响，仍走 Web Share / 直接下载。
+ */
+var WEBVIEW_UA_KEYWORDS = [];
