@@ -1520,11 +1520,12 @@ var GAME = {
       var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : 0;
       var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
       if (res.foundId) self._gameObjectId = res.foundId;
-      // 以下所有"不能解锁"的场景：直接回 idle，不写库
+      // 以下所有"不能解锁"的场景：直接回 idle 并恢复按钮文本，不写库
       // 已解锁（以数据库为准）→ 同步内存标记并提示
       if (feature === 'auto' && baseAuto) {
         self.autoUnlocked = 1;
         self.setSyncState('idle');
+        self.updateTaskMenuBtn();
         self.showXp('', '"自动" 已解锁');
         self._updateQuickBtns(true);
         return;
@@ -1532,6 +1533,7 @@ var GAME = {
       if (feature === 'oneKey' && baseOneKey) {
         self.oneKeyUnlocked = 1;
         self.setSyncState('idle');
+        self.updateTaskMenuBtn();
         self.showXp('', '"一键" 已解锁');
         self._updateQuickBtns(true);
         return;
@@ -1539,18 +1541,21 @@ var GAME = {
       // "一键"需先解锁"自动"
       if (feature === 'oneKey' && !baseAuto) {
         self.setSyncState('idle');
+        self.updateTaskMenuBtn();
         self.showXp('', '需先解锁"自动"功能!');
         return;
       }
       // 真气不足（以数据库真实值为准）→ 不允许解锁
       if (basePoints < cost) {
         self.setSyncState('idle');
+        self.updateTaskMenuBtn();
         self.showXp('', '真气不足，解锁"' + name + '"需 ' + cost + ' 真气');
         return;
       }
       // 二次确认，防止误触消耗真气
       if (!window.confirm('消耗 ' + cost + ' 真气，解锁"' + name + '"功能？')) {
         self.setSyncState('idle');
+        self.updateTaskMenuBtn();
         return;
       }
       // 2. 写库（saving 由 _writeState 内部在写库动作执行时设置）
