@@ -73,5 +73,5 @@ var UNLOCK_CONFIG = {
   auto: 888,
   oneKey: 999,
   almanac: 666,
-  logo: 666
+  logo: 777
 };
