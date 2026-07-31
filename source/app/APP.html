@@ -284,6 +284,7 @@ document.getElementById('bgImage').src = 'https://picsum.photos/1280/960?random=
 
 // 点击探索换图
 document.querySelector('.welcome').addEventListener('click', function() {
+  if (GAME._autoMode || GAME._oneKeyMode) return; // 自动/一键修炼中屏蔽
   cancelAllRequests();
   var area = document.getElementById('contentArea');
   var img = document.getElementById('bgImage');
@@ -463,6 +464,7 @@ function toggleContent(btnId, url, renderFn, onLoaded) {
 
 // 诗词按钮：和星座同样的"先显示背景+加载提示，再异步加载内容"流程
 function togglePoetry() {
+  if (GAME._autoMode || GAME._oneKeyMode) return; // 自动/一键修炼中屏蔽
   cancelAllRequests();
   var btn = document.getElementById('poetryBtn');
   var area = document.getElementById('contentArea');
@@ -527,6 +529,7 @@ document.getElementById('poetryBtn').addEventListener('click', togglePoetry);
 
 // 今日按钮：和诗词同样的"先显示背景+加载提示，再异步加载内容"流程
 function toggleHistory() {
+  if (GAME._autoMode || GAME._oneKeyMode) return; // 自动/一键修炼中屏蔽
   cancelAllRequests();
   var btn = document.getElementById('historyBtn');
   var area = document.getElementById('contentArea');
@@ -588,6 +591,7 @@ document.getElementById('historyBtn').addEventListener('click', toggleHistory);
 
 // 星座按钮
 document.getElementById('constellationBtn').addEventListener('click', function() {
+  if (GAME._autoMode || GAME._oneKeyMode) return; // 自动/一键修炼中屏蔽
   cancelAllRequests();
   var btn = document.getElementById('constellationBtn');
   var area = document.getElementById('contentArea');
@@ -794,6 +798,8 @@ var GAME = {
   oneKeyUnlocked: 0,      // "一键"功能是否解锁（0锁止 1可用）
   _pendingUnlockMsg: null, // 解锁成功读回后的提示（"封印已破"），由 processRecords 显示
   _pendingUpgradeMsg: null, // 升级成功读回后的提示（境界突破），由 processRecords 显示
+  _autoMode: false,       // 自动修炼进行中（屏蔽其它点击）
+  _oneKeyMode: false,     // 一键修炼进行中（屏蔽其它点击）
 
   // 当前 level 的境界配置（null fallback）
   getLevelCfg: function() {
@@ -818,7 +824,13 @@ var GAME = {
     var btn = document.getElementById('taskMenuBtn');
     if (state !== 'idle' && btn && !btn.classList.contains('error')) {
       // 加载/保存中仅设文字，不修改 display（保持按钮隐藏直到 loaded=true）
-      btn.textContent = state === 'loading' ? '⚡ 真气恢复中..' : '⟳ 真气融合中..';
+      if (this._autoMode) {
+        btn.textContent = '⚡ 自动修炼中..';
+      } else if (this._oneKeyMode) {
+        btn.textContent = '⚡ 一键修炼中..';
+      } else {
+        btn.textContent = state === 'loading' ? '⚡ 真气恢复中..' : '⟳ 真气融合中..';
+      }
     }
     // idle：由 updateTaskMenuBtn 根据 loaded && user 控制显隐
   },
@@ -858,6 +870,7 @@ var GAME = {
     }
     // 任务菜单点击切换（错误状态刷新，加载/保存中无操作）
     document.getElementById('taskMenuBtn').addEventListener('click',function(e){
+      if (GAME._autoMode || GAME._oneKeyMode) return; // 自动/一键修炼中屏蔽
       if (this.classList.contains('error') && !this.classList.contains('no-reload')) {
         location.reload();
         return;
@@ -871,18 +884,23 @@ var GAME = {
     document.addEventListener('click',function(){
       document.getElementById('taskMenuDropdown').classList.remove('show');
     });
-    // 快捷修炼按钮：未解锁 → 尝试解锁；已解锁 → 暂占位（功能后续开放）
+    // 快捷修炼按钮：未解锁 → 尝试解锁；已解锁 → 自动/一键修炼
     var bindQuick = function(id, feature) {
       var el = document.getElementById(id);
       if (!el) return;
       el.addEventListener('click', function(e) {
         e.stopPropagation();
+        if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
         if (GAME.syncState !== 'idle') return;
         if (!GAME[feature === 'auto' ? 'autoUnlocked' : 'oneKeyUnlocked']) {
           GAME.unlockFeature(feature);
           return;
         }
-        GAME.showXp('', '"' + (feature === 'auto' ? '自动' : '一键') + '"修炼功能即将开放');
+        if (feature === 'auto') {
+          GAME.autoCultivate();
+        } else {
+          GAME.oneKeyCultivate();
+        }
       });
     };
     bindQuick('autoBtn', 'auto');
@@ -892,6 +910,7 @@ var GAME = {
     if (upgradeBtn) {
       upgradeBtn.addEventListener('click', function(e) {
         e.stopPropagation();
+        if (GAME._autoMode || GAME._oneKeyMode) return; // 自动/一键修炼中屏蔽
         GAME.upgradeLevel();
       });
     }
@@ -1188,7 +1207,8 @@ var GAME = {
     // 数据读取成功后更新快捷按钮锁状态
     this._updateQuickBtns(true);
     var gain = this._beforePoints !== undefined ? this.totalPoints - this._beforePoints : 0;
-    if (gain > 0) {
+    // 自动/一键修炼期间不逐次显示 +真气（按钮持续显示"自动/一键修炼中"）
+    if (gain > 0 && !this._autoMode && !this._oneKeyMode) {
       this.showXp('+' + gain + ' 真气', '');
     }
     this._beforePoints = undefined;
@@ -1207,41 +1227,43 @@ var GAME = {
 
   doAction: function(key) {
     var act = this.actions[key];
-    if (!act) return;
+    if (!act) return Promise.resolve(false);
+    // 自动/一键修炼期间屏蔽手动修炼
+    if (this._autoMode || this._oneKeyMode) return Promise.resolve(false);
     var user = this.getWalineUser();
     // 重置快照（避免上次失败的残留）
     this._beforePoints = undefined;
     // 数据未就绪（加载失败导致的心魔困扰）永久阻塞，按钮显示错误提示
     if (user && !this.loaded) {
       this.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
-      return;
+      return Promise.resolve(false);
     }
     // 加载中或保存中，浮动提示操作被阻塞
     if (this.syncState !== 'idle') {
       var msg = this.syncState === 'loading' ? '真气恢复中，无法修炼..' : '真气融合中，无法修炼..';
       this.showXp('', msg);
-      return;
+      return Promise.resolve(false);
     }
     if (!user) {
       this.showXp('+0 真气','请登录赚取修炼真气');
-      return;
+      return Promise.resolve(false);
     }
     var remaining = this.todayCounts[key] || 0;
     // 数据库中有记录时才检查剩余次数；无记录（新用户）跳过此检查
     if (!this._noDbData && remaining <= 0) {
       this.showXp('+0 真气','今日此项修炼已毕');
-      return;
+      return Promise.resolve(false);
     }
     // 单次经验值由 LEVEL_CONFIG[level] 决定（旧 GAME_CONFIG.points 已废弃）
     var points = this.getActionPoints(key);
     if (points <= 0) {
       this.showXp('+0 真气','当前境界此项无经验奖励');
-      return;
+      return Promise.resolve(false);
     }
     // 记录操作前快照，写→读成功后根据实际增益显示
     this._beforePoints = this.totalPoints;
-    // 写数据库→读数据库→更新 UI
-    this.syncToWaline(key, points, user);
+    // 写数据库→读数据库→更新 UI（返回 Promise 供链式调用）
+    return this.syncToWaline(key, points, user);
   },
 
   updateBadge: function() {
@@ -1495,19 +1517,20 @@ var GAME = {
         return r;
       });
     }
-    request.then(function(r){
+    return request.then(function(r){
       if (r.ok) {
         console.log('[GAME]', successMsg);
-        return self.loadFromServer(user);
+        return self.loadFromServer(user).then(function(){ return true; });
       } else {
         self.syncError = true;
-        return r.text().then(function(t){ console.warn('[GAME] Waline 同步失败', r.status, t); });
+        return r.text().then(function(t){ console.warn('[GAME] Waline 同步失败', r.status, t); return false; });
       }
     }).catch(function(e){
       self.syncError = true;
       console.warn('[GAME] Waline 同步网络失败:', e);
-    }).then(function(){
-      if (self.syncError) {
+      return false;
+    }).then(function(ok){
+      if (!ok) {
         self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
         self.syncError = false;
         self._beforePoints = undefined;
@@ -1515,6 +1538,7 @@ var GAME = {
         self.updateBadge();
         self.updateTaskDots();
       }
+      return !!ok;
     });
   },
 
@@ -1569,48 +1593,59 @@ var GAME = {
 
   syncToWaline: function(key,points,user) {
     try {
-      if (!user || !user.display_name) return;
+      if (!user || !user.display_name) return Promise.resolve(false);
       var self = this;
-      // 读库阶段：真气恢复中（saving 由 _writeState 在真正写库时设置）
-      this.setSyncState('loading');
-      // 1. 先读数据库真实数据，再基于真实数据处理后写入
-      this._fetchCurrentRecord(user).then(function(res) {
-        var basePoints = res.data ? res.data.points : 0;
-        var baseRemaining = (res.data && res.data.todayRemaining) ? res.data.todayRemaining : {};
-        var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
-        var baseAuto = res.data ? (res.data.autoUnlocked ? 1 : 0) : self.autoUnlocked;
-        var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : self.oneKeyUnlocked;
-        // 找到真实记录 → 用其 objectId，确保 PUT 更新同一条（不产生新记录）
-        if (res.foundId) self._gameObjectId = res.foundId;
-        // 2. 基于真实数据计算
-        var newPoints = basePoints + points;
-        var newRemaining = self._normalizeRemaining(baseRemaining);
-        if (typeof newRemaining[key] === 'number') newRemaining[key]--;
-        var now = new Date();
-        var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
-        // 3. 写入（成功后再回读确认，更新 UI）
-        self._writeState(user, {
-          points: newPoints,
-          todayRemaining: newRemaining,
-          nick: user.display_name,
-          level: baseLevel,
-          date: today,
-          autoUnlocked: baseAuto,
-          oneKeyUnlocked: baseOneKey
-        }, '真气值已同步到 Waline: ' + key + ' +' + points);
-      }).catch(function(e) {
-        // 写入前读取真实数据失败 → 无法保证写入正确性，阻止写入
-        console.warn('[GAME] 写入前读取真实数据失败:', e);
-        self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
-        self.setSyncState('idle');
-        self.updateBadge();
-        self.updateTaskDots();
-      });
-    } catch(e){ console.warn('[GAME] Waline 同步异常:', e); }
+      return this.performCultivate(key, user, {points: points});
+    } catch(e){ console.warn('[GAME] Waline 同步异常:', e); return Promise.resolve(false); }
+  },
+
+  // 核心修炼：读库真实数据 → 基于真实值计算 → 写库（PUT/POST）→ 读回确认
+  // 返回 Promise<boolean>：写库成功 true，失败 false（失败时已显示心魔困扰）
+  performCultivate: function(key, user, opts) {
+    var self = this;
+    opts = opts || {};
+    // 读库阶段：真气恢复中（saving 由 _writeState 在真正写库时设置）
+    this.setSyncState('loading');
+    return this._fetchCurrentRecord(user).then(function(res) {
+      var basePoints = res.data ? res.data.points : 0;
+      var baseRemaining = (res.data && res.data.todayRemaining) ? res.data.todayRemaining : {};
+      var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
+      var baseAuto = res.data ? (res.data.autoUnlocked ? 1 : 0) : self.autoUnlocked;
+      var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : self.oneKeyUnlocked;
+      // 找到真实记录 → 用其 objectId，确保 PUT 更新同一条（不产生新记录）
+      if (res.foundId) self._gameObjectId = res.foundId;
+      // 单次经验值（可覆盖：一键批量用自身计算，正常修炼按境界查表）
+      var points = (opts.points !== undefined) ? opts.points : self.getActionPoints(key);
+      // 基于真实数据计算
+      var newPoints = basePoints + points;
+      var newRemaining = self._normalizeRemaining(baseRemaining);
+      if (typeof newRemaining[key] === 'number') newRemaining[key]--;
+      var now = new Date();
+      var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+      // 写入（成功后再回读确认，更新 UI）
+      return self._writeState(user, {
+        points: newPoints,
+        todayRemaining: newRemaining,
+        nick: user.display_name,
+        level: baseLevel,
+        date: today,
+        autoUnlocked: baseAuto,
+        oneKeyUnlocked: baseOneKey
+      }, '真气值已同步到 Waline: ' + key + ' +' + points);
+    }).catch(function(e) {
+      // 写入前读取真实数据失败 → 无法保证写入正确性，阻止写入
+      console.warn('[GAME] 写入前读取真实数据失败:', e);
+      self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+      self.setSyncState('idle');
+      self.updateBadge();
+      self.updateTaskDots();
+      return false;
+    });
   },
 
   // 解锁功能：消耗真气一次性解锁"自动"或"一键"
   unlockFeature: function(feature) {
+    if (this._autoMode || this._oneKeyMode) return; // 自动/一键修炼中屏蔽
     var cfg = (typeof UNLOCK_CONFIG !== 'undefined') ? UNLOCK_CONFIG : {auto:888, oneKey:999};
     var cost = cfg[feature];
     if (!cost) return;
@@ -1709,6 +1744,7 @@ var GAME = {
 
   // 手动升级境界：扣真气 → level+1 → 写库 → 读回确认 → 显示【境界突破】
   upgradeLevel: function() {
+    if (this._autoMode || this._oneKeyMode) return; // 自动/一键修炼中屏蔽
     var user = this.getWalineUser();
     if (!user) {
       this.showXp('', '请勿隐匿身份，否则您无法修炼');
@@ -1784,6 +1820,189 @@ var GAME = {
       self.updateBadge();
       self.updateTaskDots();
       self.updateTaskMenuBtn();
+    });
+  },
+
+  // 自动修炼面板轻量展示：模拟手动点击展开对应面板（背景覆盖层 + 修炼提示文字）
+  autoShowPanel: function(key, done) {
+    var area = document.getElementById('contentArea');
+    if (!area) { if (done) done(); return; }
+    closeAllOverlays();
+    area.classList.remove('show');
+    document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
+    var btn = document.getElementById(key + 'Btn');
+    if (btn) btn.classList.add('selected');
+    var tips = {poetry:'⚡ 诗词修炼中..', history:'⚡ 今日修炼中..', constellation:'⚡ 星座修炼中..', explore:'⚡ 探索修炼中..'};
+    // 恢复默认位置
+    area.style.left = '';
+    area.style.width = '';
+    area.style.transform = 'translateY(-50%)';
+    area.style.textAlign = 'center';
+    // 对应背景覆盖层
+    if (key === 'poetry') {
+      var po = document.getElementById('poetryOverlay');
+      if (po) po.classList.add('show');
+    } else if (key === 'history') {
+      var ho = document.getElementById('historyOverlay');
+      if (ho) ho.classList.add('show');
+    } else if (key === 'constellation') {
+      var so = document.getElementById('starsOverlay');
+      if (so) so.classList.add('show');
+    }
+    area.innerHTML = '<div class="content-line" style="font-size:.78rem;opacity:.7">' + (tips[key] || '修炼中..') + '</div>';
+    area.classList.add('show');
+    area._activeBtn = key + 'Btn';
+    setTimeout(done, 500);
+  },
+
+  // 自动修炼：依次展开诗词/今日/星座/探索，有剩余次数则循环；每次写库完成后才进入下一动作
+  autoCultivate: function() {
+    var user = this.getWalineUser();
+    if (!user) {
+      this.showXp('', '请勿隐匿身份，否则您无法修炼');
+      return;
+    }
+    if (!this.loaded) {
+      this.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+      return;
+    }
+    if (this._autoMode || this._oneKeyMode) return;
+    if (this.syncState !== 'idle') {
+      this.showXp('', this.syncState === 'loading' ? '真气恢复中，无法修炼..' : '真气融合中，无法修炼..');
+      return;
+    }
+    if (!this.autoUnlocked) { this.unlockFeature('auto'); return; }
+    var self = this;
+    this._autoMode = true;
+    // 初始提示：自动修炼中
+    var btn = document.getElementById('taskMenuBtn');
+    if (btn) { btn.textContent = '⚡ 自动修炼中..'; btn.classList.remove('init-hidden'); }
+    // 任务顺序（按配置）
+    var keys = [];
+    if (window.GAME_CONFIG) { for (var i = 0; i < GAME_CONFIG.length; i++) keys.push(GAME_CONFIG[i].key); }
+    else keys = ['poetry','history','constellation','explore'];
+    function step() {
+      if (!self._autoMode) return;
+      // 找下一个有剩余次数且经验>0 的任务
+      var next = null;
+      for (var j = 0; j < keys.length; j++) {
+        var k = keys[j];
+        var rem = self.todayCounts[k] || 0;
+        var pts = self.getActionPoints(k);
+        if (rem > 0 && pts > 0) { next = k; break; }
+      }
+      if (!next) {
+        // 全部完成
+        self._autoMode = false;
+        self.setSyncState('idle');
+        self.updateTaskMenuBtn();
+        self.showXp('', '自动修炼完成！');
+        return;
+      }
+      // 展开面板 → 修炼（写库完成后进入下一步）
+      self.autoShowPanel(next, function() {
+        if (!self._autoMode) return;
+        self.performCultivate(next, user, {}).then(function(ok) {
+          if (!ok) {
+            // 写库失败：停止自动修炼（错误提示已由 _writeState 显示）
+            self._autoMode = false;
+            self.setSyncState('idle');
+            self.updateBadge();
+            self.updateTaskDots();
+            return;
+          }
+          step();
+        });
+      });
+    }
+    step();
+  },
+
+  // 一键修炼：计算所有可修炼任务的次数与经验，汇总后一次写入数据库
+  oneKeyCultivate: function() {
+    var user = this.getWalineUser();
+    if (!user) {
+      this.showXp('', '请勿隐匿身份，否则您无法修炼');
+      return;
+    }
+    if (!this.loaded) {
+      this.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+      return;
+    }
+    if (this._autoMode || this._oneKeyMode) return;
+    if (this.syncState !== 'idle') {
+      this.showXp('', this.syncState === 'loading' ? '真气恢复中，无法修炼..' : '真气融合中，无法修炼..');
+      return;
+    }
+    if (!this.oneKeyUnlocked) { this.unlockFeature('oneKey'); return; }
+    var self = this;
+    this._oneKeyMode = true;
+    this.setSyncState('loading'); // 按钮显示"一键修炼中.."
+    // 读库真实数据 → 汇总次数与经验 → 一次写入
+    this._fetchCurrentRecord(user).then(function(res) {
+      var basePoints = res.data ? res.data.points : 0;
+      var baseRemaining = (res.data && res.data.todayRemaining) ? res.data.todayRemaining : null;
+      var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
+      var baseAuto = res.data ? (res.data.autoUnlocked ? 1 : 0) : self.autoUnlocked;
+      var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : self.oneKeyUnlocked;
+      if (res.foundId) self._gameObjectId = res.foundId;
+      // 基于数据库真实剩余次数汇总（缺失任务用当前境界 times 补全）
+      var rem = self._normalizeRemaining(baseRemaining);
+      var lvCfg = (typeof LEVEL_CONFIG !== 'undefined' && LEVEL_CONFIG[baseLevel]) ? LEVEL_CONFIG[baseLevel] : null;
+      var totalGain = 0;
+      var newRemaining = {};
+      var keys = [];
+      if (window.GAME_CONFIG) { for (var i = 0; i < GAME_CONFIG.length; i++) keys.push(GAME_CONFIG[i].key); }
+      else keys = ['poetry','history','constellation','explore'];
+      for (var j = 0; j < keys.length; j++) {
+        var k = keys[j];
+        var r = rem[k] || 0;
+        var pts = (lvCfg && lvCfg.points && typeof lvCfg.points[k] === 'number') ? lvCfg.points[k] : 0;
+        if (pts > 0 && r > 0) {
+          totalGain += r * pts;
+          newRemaining[k] = 0; // 一键修炼：清空该任务今日剩余
+        } else {
+          newRemaining[k] = r;
+        }
+      }
+      if (totalGain <= 0) {
+        // 今日已无可修炼任务
+        self._oneKeyMode = false;
+        self.setSyncState('idle');
+        self.updateTaskMenuBtn();
+        self.showXp('', '今日已无可修炼任务');
+        return;
+      }
+      var now = new Date();
+      var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+      // 一次写入（成功读回确认后 processRecords 更新 UI）
+      self._writeState(user, {
+        points: basePoints + totalGain,
+        todayRemaining: newRemaining,
+        nick: user.display_name,
+        level: baseLevel,
+        date: today,
+        autoUnlocked: baseAuto,
+        oneKeyUnlocked: baseOneKey
+      }, '一键修炼完成 +' + totalGain + ' 真气').then(function(ok) {
+        self._oneKeyMode = false;
+        if (ok) {
+          self.setSyncState('idle');
+          self.updateTaskMenuBtn();
+          self.showXp('', '一键修炼完成！');
+        } else {
+          // 写库失败：错误提示已由 _writeState 显示
+          self.setSyncState('idle');
+          self.updateTaskMenuBtn();
+        }
+      });
+    }).catch(function(e) {
+      console.warn('[GAME] 一键修炼读取真实数据失败:', e);
+      self._oneKeyMode = false;
+      self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+      self.setSyncState('idle');
+      self.updateBadge();
+      self.updateTaskDots();
     });
   }
 };
