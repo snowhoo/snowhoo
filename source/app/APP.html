@@ -16,7 +16,7 @@ body{display:flex;flex-direction:column}
 /* ===== 图片区域：自适应填充剩余空间 ===== */
 .image-area{position:relative;flex:1;min-height:0;overflow:hidden;background:#1a1a1a}
 .image-area img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .6s ease}
-.image-area .gradient{position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(transparent,rgba(0,0,0,.45))}
+.image-area .gradient{position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(transparent,rgba(0,0,0,.45));pointer-events:none}
 .image-area .welcome{position:absolute;bottom:16px;left:15px;color:#fff;font-size:1.6rem;font-weight:300;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,.3);cursor:pointer;animation:welcomePulse 2.5s ease-in-out infinite;z-index:2}
 @keyframes welcomePulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 .image-area .welcome small{display:block;font-size:.75rem;font-weight:400;opacity:.7;margin-top:6px;letter-spacing:1px}
@@ -1631,6 +1631,7 @@ var GAME = {
 
   // 解锁流程弹窗：询问 → 确认后窗口不关闭，读库/写库进度与结果直接在窗口内显示
   // opts.onConfirm(setStatus)：用户点"破除"后调用；setStatus(title, text) 更新窗口内容
+  // opts.title / opts.text / opts.okText：自定义询问态文案（默认"⚡ 破除封印 / 破除封印会损耗 X 真气，继续？ / 破除"）
   _showUnlockFlow: function(cost, opts) {
     return new Promise(function(resolve) {
       var mask = document.getElementById('unlockConfirm');
@@ -1638,18 +1639,21 @@ var GAME = {
       var text = document.getElementById('unlockConfirmText');
       var okBtn = document.getElementById('unlockConfirmOk');
       var cancelBtn = document.getElementById('unlockConfirmCancel');
+      var qTitle = (opts && opts.title) || '⚡ 破除封印';
+      var qText = (opts && opts.text) || ('破除封印会损耗 ' + cost + ' 真气，继续？');
+      var qOk = (opts && opts.okText) || '破除';
       // 弹层元素缺失时兜底用原生 confirm
       if (!mask || !title || !text || !okBtn || !cancelBtn) {
         if (opts && opts.onConfirm) {
-          if (window.confirm('破除封印会损耗 ' + cost + ' 真气，继续？')) opts.onConfirm(function(){});
+          if (window.confirm(qText)) opts.onConfirm(function(){});
         }
         resolve(true);
         return;
       }
       // 询问态
-      title.textContent = '⚡ 破除封印';
-      text.textContent = '破除封印会损耗 ' + cost + ' 真气，继续？';
-      okBtn.textContent = '破除';
+      title.textContent = qTitle;
+      text.textContent = qText;
+      okBtn.textContent = qOk;
       cancelBtn.style.display = '';
       mask.classList.add('show');
       var settled = false;
@@ -2343,6 +2347,127 @@ var GAME = {
     });
   },
 
+  // 双击背景图破除隐藏结界：扣 5-10 随机真气 → 成功后保存当前背景图到相册
+  // 流程与其它解锁完全一致：先弹询问窗 → 确认后窗口不关闭 → 读库校验（登录/真气不足）→ 扣真气写库 → 读回确认 → 保存图片
+  unlockBackground: function() {
+    if (this._autoMode || this._oneKeyMode) return; // 自动/一键修炼中屏蔽
+    if (this.syncState !== 'idle') {
+      this.showXp('', this.syncState === 'loading' ? '真气恢复中，无法修炼..' : '真气融合中，无法修炼..');
+      return;
+    }
+    var cost = 5 + Math.floor(Math.random() * 6); // 5-10 随机
+    var self = this;
+    // 1. 立即弹询问窗口（自定义文案：隐藏结界），确认后窗口不关闭
+    self._showUnlockFlow(cost, {
+      title: '🗝 隐藏结界',
+      text: '发现隐藏结界，注入 ' + cost + ' 真气破除结界？',
+      okText: '破除',
+      onConfirm: function(setStatus) {
+        // 确认后再校验登录状态（未登录 → 窗口提示，无法注入真气）
+        var user = self.getWalineUser();
+        if (!user) {
+          self.setSyncState('idle');
+          self.updateTaskMenuBtn();
+          setStatus('隐匿身份', '隐匿身份，无法注入真气破除结界!');
+          return;
+        }
+        // 2. 读数据库真实数据（真气值以数据库为准）
+        setStatus('🗝 隐藏结界', '正在恢复真气..');
+        self.setSyncState('loading');
+        self._fetchCurrentRecord(user).then(function(res) {
+          var basePoints = res.data ? res.data.points : 0;
+          var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
+          if (res.foundId) self._gameObjectId = res.foundId;
+          // 真气不足（以数据库真实值为准）→ 窗口提示，不写库
+          if (basePoints < cost) {
+            self.setSyncState('idle');
+            self.updateTaskMenuBtn();
+            self.showXp('', '真气不足，破除结界需要 ' + cost + ' 真气！');
+            setStatus('无法破除结界', '真气不足，破除结界需要 ' + cost + ' 真气！');
+            return;
+          }
+          // 3. 写库：扣随机真气，解锁状态字段保留数据库原值
+          setStatus('🗝 隐藏结界', '正在融合真气..');
+          var now = new Date();
+          var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+          var newPoints = basePoints - cost;
+          var newRemaining = self._normalizeRemaining(res.data ? res.data.todayRemaining : null);
+          self._writeState(user, {
+            points: newPoints,
+            todayRemaining: newRemaining,
+            nick: user.display_name,
+            level: baseLevel,
+            date: today,
+            autoUnlocked: (res.data && res.data.autoUnlocked) ? 1 : self.autoUnlocked,
+            oneKeyUnlocked: (res.data && res.data.oneKeyUnlocked) ? 1 : self.oneKeyUnlocked,
+            almanacUnlocked: (res.data && res.data.almanacUnlocked) ? 1 : self.almanacUnlocked,
+            logoUnlocked: (res.data && res.data.logoUnlocked) ? 1 : self.logoUnlocked,
+            runnerUnlocked: (res.data && res.data.runnerUnlocked) ? 1 : self.runnerUnlocked,
+            storyUnlocked: (res.data && res.data.storyUnlocked) ? 1 : self.storyUnlocked,
+            yeduUnlocked: (res.data && res.data.yeduUnlocked) ? 1 : self.yeduUnlocked,
+            zjszUnlocked: (res.data && res.data.zjszUnlocked) ? 1 : self.zjszUnlocked,
+            newsUnlocked: (res.data && res.data.newsUnlocked) ? 1 : self.newsUnlocked,
+            tvUnlocked: (res.data && res.data.tvUnlocked) ? 1 : self.tvUnlocked
+          }, '破除结界 -' + cost + ' 真气').then(function(ok) {
+            if (!ok) {
+              setStatus('心魔困扰', '正遭受心魔困扰，点击恢复心神!');
+              return;
+            }
+            // 成功 → 窗口提示 + 保存图片到相册
+            setStatus('✓ 结界已破', '结界破除！-' + cost + ' 真气，图片已保存到相册');
+            self.saveBgImage();
+          });
+        }).catch(function(e) {
+          console.warn('[GAME] 破除结界读取真实数据失败:', e);
+          self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+          self.setSyncState('idle');
+          self.updateBadge();
+          self.updateTaskDots();
+          setStatus('心魔困扰', '正遭受心魔困扰，点击恢复心神!');
+        });
+      }
+    });
+  },
+
+  // 保存当前背景图到相册：优先 Web Share API（移动端可直接存相册），失败则回退 a[download] 下载
+  saveBgImage: function() {
+    var img = document.getElementById('bgImage');
+    if (!img || !img.src) return;
+    var src = img.src;
+    function downloadSrc(u) {
+      var a = document.createElement('a');
+      a.href = u;
+      a.download = 'bg-' + Date.now() + '.jpg';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+    function downloadBlob(blob, name) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+    }
+    // 移动端优先 Web Share API（可保存到相册）
+    if (navigator.canShare && navigator.share) {
+      fetch(src).then(function(r) { return r.blob(); }).then(function(blob) {
+        var file = new File([blob], 'bg-' + Date.now() + '.jpg', { type: blob.type || 'image/jpeg' });
+        if (navigator.canShare({ files: [file] })) {
+          return navigator.share({ files: [file], title: '背景图' }).catch(function(){});
+        }
+        downloadBlob(blob, 'bg-' + Date.now() + '.jpg');
+      }).catch(function() {
+        downloadSrc(src);
+      });
+    } else {
+      downloadSrc(src);
+    }
+  },
+
   // 自动修炼：与手动修炼一致——展开面板（真实加载数据）→ 数据加载完成 → 读库→写库→读回确认
   // 依次展开诗词/今日/星座/探索，有剩余次数则循环；每次写库完成后才进入下一动作
   autoCultivate: function() {
@@ -2697,6 +2822,23 @@ commentOverlay.addEventListener('click', function(e) {
     }
     // 已解锁 → 刷新本页（跳转页面规划好后改此处链接）
     location.reload();
+  });
+})();
+
+// 双击背景图：发现隐藏结界 → 破除结界（扣 5-10 随机真气）→ 保存图片到相册
+(function(){
+  var bg = document.getElementById('bgImage');
+  if (!bg) return;
+  var lastClick = 0;
+  bg.addEventListener('click', function(){
+    if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
+    var now = Date.now();
+    if (lastClick && now - lastClick < 400) {
+      lastClick = 0; // 双击 → 破除结界
+      GAME.unlockBackground();
+    } else {
+      lastClick = now;
+    }
   });
 })();
 </script>
