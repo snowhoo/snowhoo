@@ -68,6 +68,12 @@ body{display:flex;flex-direction:column}
 .confirm-btn{padding:9px 24px;border-radius:8px;font-size:.78rem;border:none;cursor:pointer;letter-spacing:1px}
 .confirm-btn.cancel{background:rgba(255,255,255,.12);color:#e8d9b8}
 .confirm-btn.ok{background:linear-gradient(135deg,#e94560,#c72846);color:#fff;font-weight:600;box-shadow:0 3px 10px rgba(233,69,96,.35)}
+/* 境界突破确认弹层（暗绿色主题变体） */
+.confirm-mask.green .confirm-box{background:linear-gradient(160deg,#0e2a1b,#0a1a10);border:1px solid rgba(74,222,128,.4)}
+.confirm-mask.green .confirm-title{color:#4ade80}
+.confirm-mask.green .confirm-text{color:#cfe8d6}
+.confirm-mask.green .confirm-btn.cancel{background:rgba(255,255,255,.1);color:#cfe8d6}
+.confirm-mask.green .confirm-btn.ok{background:linear-gradient(135deg,#16a34a,#0f7a35);color:#fff;font-weight:600;box-shadow:0 3px 10px rgba(22,163,74,.35)}
 .almanac .lock-overlay svg{width:14px;height:14px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* ===== 底部面板：固定高度 ===== */
@@ -1617,6 +1623,36 @@ var GAME = {
     });
   },
 
+  // 显示境界突破确认弹层（自定义暗绿色，兼容移动端禁 confirm 环境），返回 Promise<boolean>
+  _showUpgradeConfirm: function(cost, nextName) {
+    return new Promise(function(resolve) {
+      var mask = document.getElementById('upgradeConfirm');
+      var text = document.getElementById('upgradeConfirmText');
+      var okBtn = document.getElementById('upgradeConfirmOk');
+      var cancelBtn = document.getElementById('upgradeConfirmCancel');
+      // 弹层元素缺失时兜底用原生 confirm
+      if (!mask || !text || !okBtn || !cancelBtn) {
+        resolve(window.confirm('消耗 ' + cost + ' 真气，破境至【' + nextName + '】？'));
+        return;
+      }
+      text.textContent = '消耗 ' + cost + ' 真气，破境至【' + nextName + '】？';
+      mask.classList.add('show');
+      var done = false;
+      function finish(ok) {
+        if (done) return;
+        done = true;
+        mask.classList.remove('show');
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        resolve(ok);
+      }
+      function onOk() { finish(true); }
+      function onCancel() { finish(false); }
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+    });
+  },
+
   // 更新日期卡片（黄历）锁状态：已登录+数据就绪+已解锁 → 可缩小/展开；否则加锁遮罩
   _updateAlmanacLock: function() {
     var al = document.getElementById('almanac');
@@ -2081,38 +2117,40 @@ var GAME = {
         self.showXp('', '真气不足，破境【' + nextName + '】需 ' + realCost + ' 真气');
         return;
       }
-      // 二次确认，防止误触消耗真气
-      if (!window.confirm('消耗 ' + realCost + ' 真气，破境至【' + nextName + '】？')) {
-        self.setSyncState('idle');
-        self.updateTaskMenuBtn();
-        return;
-      }
-      // 2. 扣减真气 + 升级（只算待写入的值，不直接置 self.level，由 processRecords 读回后驱动）
-      var newPoints = basePoints - realCost;
-      var newLevel = nextLv;
-      var now = new Date();
-      var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
-      // 升级后剩余次数按新境界 times 全量恢复（体力已恢复）
-      var newRemaining = self.buildRemainingForLevel(newLevel);
-      // 3. 写库（saving 由 _writeState 内部在写库动作执行时设置）
-      self._writeState(user, {
-        points: newPoints,
-        todayRemaining: newRemaining,
-        nick: user.display_name,
-        level: newLevel,
-        date: today,
-        autoUnlocked: self.autoUnlocked,
-        oneKeyUnlocked: self.oneKeyUnlocked,
-        almanacUnlocked: self.almanacUnlocked,
-        logoUnlocked: self.logoUnlocked,
-        storyUnlocked: self.storyUnlocked,
-        yeduUnlocked: self.yeduUnlocked,
-        zjszUnlocked: self.zjszUnlocked,
-        newsUnlocked: self.newsUnlocked,
-        tvUnlocked: self.tvUnlocked
-      }, '境界提升至【' + nextName + '】');
-      // 不前置显示升级提示，由 processRecords 读回确认后展示（与修炼+真气同一时序）
-      self._pendingUpgradeMsg = { name: nextName, cost: realCost };
+      // 二次确认，防止误触消耗真气（自定义暗绿色弹层）
+      self._showUpgradeConfirm(realCost, nextName).then(function(ok) {
+        if (!ok) {
+          self.setSyncState('idle');
+          self.updateTaskMenuBtn();
+          return;
+        }
+        // 2. 扣减真气 + 升级（只算待写入的值，不直接置 self.level，由 processRecords 读回后驱动）
+        var newPoints = basePoints - realCost;
+        var newLevel = nextLv;
+        var now = new Date();
+        var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+        // 升级后剩余次数按新境界 times 全量恢复（体力已恢复）
+        var newRemaining = self.buildRemainingForLevel(newLevel);
+        // 3. 写库（saving 由 _writeState 内部在写库动作执行时设置）
+        self._writeState(user, {
+          points: newPoints,
+          todayRemaining: newRemaining,
+          nick: user.display_name,
+          level: newLevel,
+          date: today,
+          autoUnlocked: self.autoUnlocked,
+          oneKeyUnlocked: self.oneKeyUnlocked,
+          almanacUnlocked: self.almanacUnlocked,
+          logoUnlocked: self.logoUnlocked,
+          storyUnlocked: self.storyUnlocked,
+          yeduUnlocked: self.yeduUnlocked,
+          zjszUnlocked: self.zjszUnlocked,
+          newsUnlocked: self.newsUnlocked,
+          tvUnlocked: self.tvUnlocked
+        }, '境界提升至【' + nextName + '】');
+        // 不前置显示升级提示，由 processRecords 读回确认后展示（与修炼+真气同一时序）
+        self._pendingUpgradeMsg = { name: nextName, cost: realCost };
+      });
     }).catch(function(e) {
       console.warn('[GAME] 升级前读取真实数据失败:', e);
       self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
@@ -2487,6 +2525,17 @@ commentOverlay.addEventListener('click', function(e) {
     <div class="confirm-btns">
       <button class="confirm-btn cancel" id="unlockConfirmCancel">再想想</button>
       <button class="confirm-btn ok" id="unlockConfirmOk">破除</button>
+    </div>
+  </div>
+</div>
+<!-- 境界突破确认弹层（自定义暗绿色，兼容移动端禁 confirm 环境） -->
+<div class="confirm-mask green" id="upgradeConfirm">
+  <div class="confirm-box">
+    <div class="confirm-title">⚡ 境界突破</div>
+    <div class="confirm-text" id="upgradeConfirmText"></div>
+    <div class="confirm-btns">
+      <button class="confirm-btn cancel" id="upgradeConfirmCancel">再想想</button>
+      <button class="confirm-btn ok" id="upgradeConfirmOk">破境</button>
     </div>
   </div>
 </div>
