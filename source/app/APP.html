@@ -1236,8 +1236,8 @@ var GAME = {
     // 数据读取成功后更新快捷按钮锁状态
     this._updateQuickBtns(true);
     var gain = this._beforePoints !== undefined ? this.totalPoints - this._beforePoints : 0;
-    // 自动/一键修炼期间不逐次显示 +真气（按钮持续显示"自动/一键修炼中"）
-    if (gain > 0 && !this._autoMode && !this._oneKeyMode) {
+    // 一键修炼期间不逐次显示 +真气（完成提示统一在 autoHint）；自动修炼与手动一致显示实际增益
+    if (gain > 0 && !this._oneKeyMode) {
       this.showXp('+' + gain + ' 真气', '');
     }
     this._beforePoints = undefined;
@@ -1633,6 +1633,8 @@ var GAME = {
   performCultivate: function(key, user, opts) {
     var self = this;
     opts = opts || {};
+    // 记录操作前真气快照（与手动修炼 doAction 一致），读回后按实际增益显示 +真气
+    this._beforePoints = this.totalPoints;
     // 读库阶段：真气恢复中（saving 由 _writeState 在真正写库时设置）
     this.setSyncState('loading');
     return this._fetchCurrentRecord(user).then(function(res) {
