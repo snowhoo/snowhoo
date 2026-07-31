@@ -154,6 +154,7 @@ body{display:flex;flex-direction:column}
 .task-quick-btn{display:none;height:22px;border-radius:11px;padding:0 7px;align-items:center;justify-content:center;font-size:.58rem;font-weight:400;cursor:pointer;transition:all .3s;vertical-align:middle;user-select:none;-webkit-user-select:none;line-height:1;flex-shrink:0;white-space:nowrap;position:relative}
 .task-quick-btn.auto{background:#22c55e;color:#fff;border:1px solid #fff}
 .task-quick-btn.onekey{background:#3b82f6;color:#fff;border:1px solid #fff}
+.task-quick-btn.upgrade{background:#f59e0b;color:#fff;border:1px solid #fff}
 /* 锁遮罩：未解锁时半透明灰白遮罩 + 锁图标，禁用点击 */
 .task-quick-btn .lock-icon{width:10px;height:10px;flex-shrink:0;margin-left:3px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:none}
 .task-quick-btn.locked{cursor:not-allowed;filter:saturate(.35) brightness(.85);pointer-events:auto}
@@ -244,6 +245,7 @@ body{display:flex;flex-direction:column}
     <div class="task-quick-row">
       <span class="task-quick-btn auto locked" id="autoBtn" title="自动（解锁需 888 真气）">自动<svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
       <span class="task-quick-btn onekey locked" id="oneKeyBtn" title="一键（解锁需 999 真气）">一键<svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+      <span class="task-quick-btn upgrade" id="upgradeBtn" title="境界提升（消耗真气破境）">升级</span>
     </div>
     <div class="task-menu-dropdown" id="taskMenuDropdown"></div>
   </div>
@@ -775,7 +777,8 @@ var GAME = {
     if (!window.GAME_CONFIG) return;
     for (var i = 0; i < GAME_CONFIG.length; i++) {
       var item = GAME_CONFIG[i];
-      this.actions[item.key] = {name:item.name, taskName:item.taskName, points:item.points, max:item.max};
+      // points/max 已废弃，单次经验和每日次数由 LEVEL_CONFIG[level] 决定
+      this.actions[item.key] = {name:item.name, taskName:item.taskName, color:item.color, points:0, max:0};
     }
   },
   todayCounts: {},
@@ -785,10 +788,29 @@ var GAME = {
   loaded: false,
   _gameObjectId: 0,       // 当前用户游戏记录在 Waline 中的 objectId，用于 PUT 更新
   _noDbData: false,       // 数据库中无该用户记录（新用户），红点应显示".."
-  level: 0,               // 境界等级（0=凡人）
+  level: 0,               // 境界等级（0=凡人, 29=化神大圆满）
   autoUnlocked: 0,        // "自动"功能是否解锁（0锁止 1可用）
   oneKeyUnlocked: 0,      // "一键"功能是否解锁（0锁止 1可用）
   _pendingUnlockMsg: null, // 解锁成功读回后的提示（"封印已破"），由 processRecords 显示
+  _pendingUpgradeMsg: null, // 升级成功读回后的提示（境界突破），由 processRecords 显示
+
+  // 当前 level 的境界配置（null fallback）
+  getLevelCfg: function() {
+    if (typeof LEVEL_CONFIG !== 'undefined' && LEVEL_CONFIG[this.level]) return LEVEL_CONFIG[this.level];
+    return null;
+  },
+
+  // 当前 level 下某任务每次完成获得的经验值（来自 LEVEL_CONFIG）
+  getActionPoints: function(key) {
+    var cfg = this.getLevelCfg();
+    return cfg && cfg.points && typeof cfg.points[key] === 'number' ? cfg.points[key] : 0;
+  },
+
+  // 当前 level 下某任务每日最大次数（来自 LEVEL_CONFIG）
+  getActionMax: function(key) {
+    var cfg = this.getLevelCfg();
+    return cfg && cfg.times && typeof cfg.times[key] === 'number' ? cfg.times[key] : 0;
+  },
 
   setSyncState: function(state) {
     this.syncState = state;
@@ -864,6 +886,14 @@ var GAME = {
     };
     bindQuick('autoBtn', 'auto');
     bindQuick('oneKeyBtn', 'oneKey');
+    // 升级按钮：无锁遮罩，点击直接调用 upgradeLevel（内部判断真气是否足够）
+    var upgradeBtn = document.getElementById('upgradeBtn');
+    if (upgradeBtn) {
+      upgradeBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        GAME.upgradeLevel();
+      });
+    }
     // 定期检查登录状态变化（每3秒检测一次）
     setInterval(function(){self.checkLogin()},3000);
     // 等待 Waline 异步初始化完成后检测一次用户状态（加速登录状态刷新）
@@ -1064,12 +1094,13 @@ var GAME = {
     }
   },
 
-  // 从 config 初始化所有任务的剩余次数（跨天/首次使用）
+  // 从 LEVEL_CONFIG[level] 初始化所有任务的剩余次数（跨天/首次使用/升级后）
   initTodayRemaining: function() {
     this.todayCounts = {};
     if (!window.GAME_CONFIG) return;
     for (var i = 0; i < GAME_CONFIG.length; i++) {
-      this.todayCounts[GAME_CONFIG[i].key] = GAME_CONFIG[i].max;
+      var key = GAME_CONFIG[i].key;
+      this.todayCounts[key] = this.getActionMax(key);
     }
   },
 
@@ -1153,6 +1184,11 @@ var GAME = {
       this.showXp(this._pendingUnlockMsg, '');
       this._pendingUnlockMsg = undefined;
     }
+    // 升级成功读回确认后显示【境界突破】提示
+    if (this._pendingUpgradeMsg) {
+      this.showXp('-' + this._pendingUpgradeMsg.cost + ' 真气', '【' + this._pendingUpgradeMsg.name + '】突破！');
+      this._pendingUpgradeMsg = undefined;
+    }
     this.updateLevelDisplay();
   },
 
@@ -1183,10 +1219,16 @@ var GAME = {
       this.showXp('+0 真气','今日此项修炼已毕');
       return;
     }
+    // 单次经验值由 LEVEL_CONFIG[level] 决定（旧 GAME_CONFIG.points 已废弃）
+    var points = this.getActionPoints(key);
+    if (points <= 0) {
+      this.showXp('+0 真气','当前境界此项无经验奖励');
+      return;
+    }
     // 记录操作前快照，写→读成功后根据实际增益显示
     this._beforePoints = this.totalPoints;
     // 写数据库→读数据库→更新 UI
-    this.syncToWaline(key,act.points,user);
+    this.syncToWaline(key, points, user);
   },
 
   updateBadge: function() {
@@ -1233,15 +1275,18 @@ var GAME = {
       var key = GAME_CONFIG[i].key;
       var act = this.actions[key];
       if (!act) continue;
-      var remaining = this._noDbData ? act.max : (this.todayCounts[key] || 0);
+      // max 由 LEVEL_CONFIG[level] 决定
+      var max = this.getActionMax(key);
+      var remaining = this._noDbData ? max : (this.todayCounts[key] || 0);
       var done = remaining <= 0;
       if (!done) allDone = false;
+      var pts = this.getActionPoints(key);
       html += '<div class="task-item' + (done ? ' completed' : '') + '">'
         + (done ? '<span class="task-check">✓</span>'
                 : '<span class="task-dot" style="background:'+GAME_CONFIG[i].color+'"></span>')
         + '<span class="task-name">' + act.taskName + '</span>'
-        + '<span class="task-sub">' + act.name + ' +' + act.points + '真气</span>'
-        + '<span class="task-count">' + (act.max - remaining) + '/' + act.max + '</span>'
+        + '<span class="task-sub">' + act.name + ' +' + pts + '真气</span>'
+        + '<span class="task-count">' + (max - remaining) + '/' + max + '</span>'
         + '</div>';
     }
     dropdown.innerHTML = html;
@@ -1322,9 +1367,11 @@ var GAME = {
   _updateQuickBtns: function(show) {
     var autoBtn = document.getElementById('autoBtn');
     var onekeyBtn = document.getElementById('oneKeyBtn');
+    var upgradeBtn = document.getElementById('upgradeBtn');
     if (!show) {
       if (autoBtn) autoBtn.style.display = 'none';
       if (onekeyBtn) onekeyBtn.style.display = 'none';
+      if (upgradeBtn) upgradeBtn.style.display = 'none';
       return;
     }
     if (autoBtn) {
@@ -1337,10 +1384,13 @@ var GAME = {
       if (this.oneKeyUnlocked) onekeyBtn.classList.remove('locked');
       else onekeyBtn.classList.add('locked');
     }
+    // 升级按钮：无锁状态（无前置解锁条件），仅跟登录+数据就绪显隐
+    if (upgradeBtn) upgradeBtn.style.display = 'inline-flex';
   },
 
   // 根据等级数值返回对应显示文字
   getLevelName: function(lv) {
+    if (typeof LEVEL_CONFIG !== 'undefined' && LEVEL_CONFIG[lv]) return LEVEL_CONFIG[lv].name;
     if (typeof LEVEL_TABLE !== 'undefined' && LEVEL_TABLE[lv]) return LEVEL_TABLE[lv];
     return '凡人';
   },
@@ -1609,6 +1659,86 @@ var GAME = {
       self.setSyncState('idle');
       self.updateBadge();
       self.updateTaskDots();
+    });
+  },
+
+  // 手动升级境界：扣真气 → level+1 → 写库 → 读回确认 → 显示【境界突破】
+  upgradeLevel: function() {
+    var user = this.getWalineUser();
+    if (!user) {
+      this.showXp('', '请勿隐匿身份，否则您无法修炼');
+      return;
+    }
+    if (!this.loaded) {
+      this.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+      return;
+    }
+    if (this.syncState !== 'idle') {
+      this.showXp('', this.syncState === 'loading' ? '真气恢复中，无法升级..' : '真气融合中，无法升级..');
+      return;
+    }
+    // 检查 LEVEL_CONFIG 是否存在
+    if (typeof LEVEL_CONFIG === 'undefined') {
+      this.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+      return;
+    }
+    var self = this;
+    // 读库阶段：loading（真气恢复中），此时未写库
+    this.setSyncState('loading');
+    // 1. 先读数据库真实数据（真气/level 以数据库为准）
+    this._fetchCurrentRecord(user).then(function(res) {
+      var basePoints = res.data ? res.data.points : 0;
+      var baseLevel = res.data && typeof res.data.level === 'number' ? res.data.level : self.level;
+      if (res.foundId) self._gameObjectId = res.foundId;
+      // 检查等级上限（已是最高境界）
+      var nextLv = baseLevel + 1;
+      if (!LEVEL_CONFIG[nextLv]) {
+        self.setSyncState('idle');
+        self.updateTaskMenuBtn();
+        self.showXp('', '已达最高境界【化神大圆满】');
+        return;
+      }
+      var realCost = LEVEL_CONFIG[nextLv].cost;
+      var nextName = LEVEL_CONFIG[nextLv].name;
+      // 真气不足 → 提示
+      if (basePoints < realCost) {
+        self.setSyncState('idle');
+        self.updateTaskMenuBtn();
+        self.showXp('', '真气不足，破境【' + nextName + '】需 ' + realCost + ' 真气');
+        return;
+      }
+      // 二次确认，防止误触消耗真气
+      if (!window.confirm('消耗 ' + realCost + ' 真气，破境至【' + nextName + '】？')) {
+        self.setSyncState('idle');
+        self.updateTaskMenuBtn();
+        return;
+      }
+      // 2. 扣减真气 + 升级（只算待写入的值，不直接置 self.level，由 processRecords 读回后驱动）
+      var newPoints = basePoints - realCost;
+      var newLevel = nextLv;
+      var now = new Date();
+      var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+      // 升级后剩余次数按新境界 times 重新初始化（升级带来的每日次数变化）
+      var newRemaining = self._normalizeRemaining(res.data ? res.data.todayRemaining : null);
+      // 3. 写库（saving 由 _writeState 内部在写库动作执行时设置）
+      self._writeState(user, {
+        points: newPoints,
+        todayRemaining: newRemaining,
+        nick: user.display_name,
+        level: newLevel,
+        date: today,
+        autoUnlocked: self.autoUnlocked,
+        oneKeyUnlocked: self.oneKeyUnlocked
+      }, '境界提升至【' + nextName + '】');
+      // 不前置显示升级提示，由 processRecords 读回确认后展示（与修炼+真气同一时序）
+      self._pendingUpgradeMsg = { name: nextName, cost: realCost };
+    }).catch(function(e) {
+      console.warn('[GAME] 升级前读取真实数据失败:', e);
+      self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
+      self.setSyncState('idle');
+      self.updateBadge();
+      self.updateTaskDots();
+      self.updateTaskMenuBtn();
     });
   }
 };
