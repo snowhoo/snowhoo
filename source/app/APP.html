@@ -1202,7 +1202,7 @@ var GAME = {
     }
     // 升级成功读回确认后显示【境界突破】提示
     if (this._pendingUpgradeMsg) {
-      this.showXp('-' + this._pendingUpgradeMsg.cost + ' 真气', '【' + this._pendingUpgradeMsg.name + '】突破！体力已恢复');
+      this.showXp('-' + this._pendingUpgradeMsg.cost + ' 真气', '【' + this._pendingUpgradeMsg.name + '】突破，体力恢复！');
       this._pendingUpgradeMsg = undefined;
     }
     this.updateLevelDisplay();
