@@ -788,6 +788,7 @@ var GAME = {
   level: 0,               // 境界等级（0=凡人）
   autoUnlocked: 0,        // "自动"功能是否解锁（0锁止 1可用）
   oneKeyUnlocked: 0,      // "一键"功能是否解锁（0锁止 1可用）
+  _pendingUnlockMsg: null, // 解锁成功读回后的提示（"封印已破"），由 processRecords 显示
 
   setSyncState: function(state) {
     this.syncState = state;
@@ -1147,6 +1148,11 @@ var GAME = {
       this.showXp('+' + gain + ' 真气', '');
     }
     this._beforePoints = undefined;
+    // 解锁成功读回确认后显示"封印已破"提示（与修炼 +真气 同一展示位）
+    if (this._pendingUnlockMsg) {
+      this.showXp(this._pendingUnlockMsg, '');
+      this._pendingUnlockMsg = undefined;
+    }
     this.updateLevelDisplay();
   },
 
@@ -1567,11 +1573,11 @@ var GAME = {
       if (basePoints < cost) {
         self.setSyncState('idle');
         self.updateTaskMenuBtn();
-        self.showXp('', '真气不足，解锁"' + name + '"需 ' + cost + ' 真气');
+        self.showXp('', '真气不足无法破除封印！');
         return;
       }
       // 二次确认，防止误触消耗真气
-      if (!window.confirm('消耗 ' + cost + ' 真气，解锁"' + name + '"功能？')) {
+      if (!window.confirm('破除封印会损耗' + cost + '真气，是否继续？')) {
         self.setSyncState('idle');
         self.updateTaskMenuBtn();
         return;
@@ -1582,6 +1588,8 @@ var GAME = {
       var newPoints = basePoints - cost;
       var newAuto = (feature === 'auto') ? 1 : baseAuto;
       var newOneKey = (feature === 'oneKey') ? 1 : baseOneKey;
+      // 记录解锁成功后的提示（由 processRecords 在写库读回确认后显示，与修炼 +真气 一致）
+      self._pendingUnlockMsg = '-' + cost + ' 真气，封印已破！';
       var now = new Date();
       var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
       // 3. 写入（成功后再回读确认，由 processRecords 根据数据库数据更新解锁状态）
