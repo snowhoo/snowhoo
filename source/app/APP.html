@@ -1417,7 +1417,7 @@ var GAME = {
   _fetchCurrentRecord: function(user) {
     var self = this;
     var userNick = user.display_name || '';
-    return fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions')
+    var p = fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions')
       .then(function(r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
@@ -1439,6 +1439,11 @@ var GAME = {
         }
         return { foundId: foundId, data: foundData };
       });
+    // 8 秒超时兜底：防止网络挂起导致状态机永久卡在 loading/saving
+    var timer = new Promise(function(resolve, reject) {
+      setTimeout(function(){ reject(new Error('读取超时')); }, 8000);
+    });
+    return Promise.race([p, timer]);
   },
 
   syncToWaline: function(key,points,user) {
@@ -1503,7 +1508,8 @@ var GAME = {
       return;
     }
     var self = this;
-    this.setSyncState('saving');
+    // 读库阶段：用 loading（真气恢复中）而非 saving——此时还没到写库
+    this.setSyncState('loading');
     // 1. 先读数据库真实数据（真气值/解锁状态以数据库为准，防止多端数据过期）
     this._fetchCurrentRecord(user).then(function(res) {
       var basePoints = res.data ? res.data.points : 0;
@@ -1511,6 +1517,7 @@ var GAME = {
       var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : 0;
       var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
       if (res.foundId) self._gameObjectId = res.foundId;
+      // 以下所有"不能解锁"的场景：直接回 idle，不写库
       // 已解锁（以数据库为准）→ 同步内存标记并提示
       if (feature === 'auto' && baseAuto) {
         self.autoUnlocked = 1;
@@ -1543,7 +1550,8 @@ var GAME = {
         self.setSyncState('idle');
         return;
       }
-      // 2. 基于真实数据扣减真气 + 标记解锁
+      // 2. 到这里才真正进入写库阶段（真气融合中）
+      self.setSyncState('saving');
       var newPoints = basePoints - cost;
       if (feature === 'auto') self.autoUnlocked = 1;
       if (feature === 'oneKey') self.oneKeyUnlocked = 1;
@@ -1562,7 +1570,7 @@ var GAME = {
       // 本地立即更新按钮状态（回读成功后再由 processRecords 确认）
       self._updateQuickBtns(true);
     }).catch(function(e) {
-      // 解锁前读取真实数据失败 → 无法保证解锁正确性
+      // 解锁前读取真实数据失败/超时 → 无法保证解锁正确性，显示心魔并回 idle
       console.warn('[GAME] 解锁前读取真实数据失败:', e);
       self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
       self.setSyncState('idle');
