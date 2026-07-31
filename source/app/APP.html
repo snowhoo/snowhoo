@@ -30,7 +30,12 @@ body{display:flex;flex-direction:column}
 
 /* 右上角logo */
 .top-right-logo{position:absolute;top:46px;right:16px;z-index:5;width:110px}
+.top-right-logo.hidden{opacity:0;pointer-events:none;transform:scale(.8)}
 .top-right-logo img{width:100%;height:auto;display:block;border-radius:8px}
+/* LOGO 收起边条：与日期卡片一致（同高、宽5、透明度50、内含<），贴右边缘 */
+.logo-mini{position:absolute;right:0;top:46px;z-index:5;display:none;align-items:center;justify-content:center;width:5px;background:#fff;opacity:.5;border-radius:6px 0 0 6px;cursor:pointer;transition:all .35s ease;box-shadow:-2px 0 8px rgba(0,0,0,.15)}
+.logo-mini.show{display:flex}
+.logo-mini svg{width:8px;height:auto;stroke:#333;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
 /* LOGO 锁定状态：不加背景/滤镜，仅右上角锁图标，未解锁时点击走解锁流程 */
 .top-right-logo.locked{cursor:not-allowed}
 .top-right-logo .lock-overlay{position:absolute;top:-10px;right:-10px;z-index:2;display:flex;align-items:center;justify-content:center;width:24px;height:24px;pointer-events:auto;background:transparent;border-radius:0;padding:0;margin:0;opacity:.5}
@@ -211,6 +216,7 @@ body{display:flex;flex-direction:column}
   </div>
   <div class="content-area" id="contentArea"></div>
   <div class="top-right-logo locked" id="topRightLogo"><img src="../images/logo.png" alt="logo"><span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div>
+  <div class="logo-mini" id="logoMini"><svg viewBox="0 0 24 24"><path d="M15 4L7 12l8 8"/></svg></div>
   <div class="welcome">
     探索
     <small>choose your journey</small>
@@ -1575,7 +1581,7 @@ var GAME = {
     }
   },
 
-  // 更新 LOGO 锁状态：已登录+数据就绪+已解锁 → 正常显示；否则右上角加锁
+  // 更新 LOGO 锁状态：已登录+数据就绪+已解锁 → 正常显示（可自由收起/展开）；否则加锁
   _updateLogoLock: function() {
     var lg = document.getElementById('topRightLogo');
     if (!lg) return;
@@ -1585,6 +1591,10 @@ var GAME = {
     lg.classList.toggle('locked', locked);
     var ov = lg.querySelector('.lock-overlay');
     if (locked) {
+      // 锁定状态下强制完整显示 LOGO（带锁），不处于收起边条态
+      var lm = document.getElementById('logoMini');
+      if (lm) lm.classList.remove('show');
+      lg.classList.remove('hidden');
       if (!ov) {
         ov = document.createElement('span');
         ov.className = 'lock-overlay';
@@ -2323,10 +2333,11 @@ commentOverlay.addEventListener('click', function(e) {
   });
 })();
 
-// LOGO 点击：未解锁 → 走解锁流程（消耗 666 真气破除封印）；已解锁 → 正常
+// LOGO 点击：未解锁 → 走解锁流程（消耗 777 真气破除封印）；已解锁 → 向右侧收起为同高边条（与日期卡片一致）
 (function(){
   var logo = document.getElementById('topRightLogo');
   if (!logo) return;
+  var logoMini = document.getElementById('logoMini');
   logo.addEventListener('click', function(){
     if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
     var user = GAME.getWalineUser();
@@ -2338,13 +2349,23 @@ commentOverlay.addEventListener('click', function(e) {
       GAME.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
       return;
     }
-    // 未解锁 → 走解锁流程（消耗 666 真气破除封印）
+    // 未解锁 → 走解锁流程（消耗 777 真气破除封印）
     if (!GAME.logoUnlocked) {
       GAME.unlockFeature('logo');
       return;
     }
-    // 已解锁 → 正常显示（无额外行为）
+    // 已解锁 → 向右侧收起为同高边条（宽5、透明度50、内含 <）
+    if (logoMini) logoMini.style.height = logo.offsetHeight + 'px';
+    logo.classList.add('hidden');
+    if (logoMini) logoMini.classList.add('show');
   });
+  // 点击边条 → 展开 LOGO
+  if (logoMini) {
+    logoMini.addEventListener('click', function(){
+      logoMini.classList.remove('show');
+      logo.classList.remove('hidden');
+    });
+  }
 })();
 </script>
 <!-- 破除封印确认弹层（自定义，兼容移动端禁 confirm 环境） -->
