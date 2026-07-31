@@ -154,7 +154,9 @@ body{display:flex;flex-direction:column}
 .task-quick-btn{display:none;height:22px;border-radius:11px;padding:0 7px;align-items:center;justify-content:center;font-size:.58rem;font-weight:400;cursor:pointer;transition:all .3s;vertical-align:middle;user-select:none;-webkit-user-select:none;line-height:1;flex-shrink:0;white-space:nowrap;position:relative}
 .task-quick-btn.auto{background:#22c55e;color:#fff;border:1px solid #fff}
 .task-quick-btn.onekey{background:#3b82f6;color:#fff;border:1px solid #fff}
-.task-quick-btn.upgrade{background:#f59e0b;color:#fff;border:1px solid #fff}
+.task-quick-btn.upgrade{background:#22c55e;color:#fff;border:1px solid #fff;animation:xzUpgradeJump 1s ease-in-out infinite}
+/* 境界提升按钮跳动动画 */
+@keyframes xzUpgradeJump{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 /* 锁遮罩：未解锁时半透明灰白遮罩 + 锁图标，禁用点击 */
 .task-quick-btn .lock-icon{width:10px;height:10px;flex-shrink:0;margin-left:3px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:none}
 .task-quick-btn.locked{cursor:not-allowed;filter:saturate(.35) brightness(.85);pointer-events:auto}
@@ -245,7 +247,7 @@ body{display:flex;flex-direction:column}
     <div class="task-quick-row">
       <span class="task-quick-btn auto locked" id="autoBtn" title="自动（解锁需 888 真气）">自动<svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
       <span class="task-quick-btn onekey locked" id="oneKeyBtn" title="一键（解锁需 999 真气）">一键<svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
-      <span class="task-quick-btn upgrade" id="upgradeBtn" title="境界提升（消耗真气破境）">升级</span>
+      <span class="task-quick-btn upgrade" id="upgradeBtn" title="境界提升（消耗真气破境）">境界提升↑</span>
     </div>
     <div class="task-menu-dropdown" id="taskMenuDropdown"></div>
   </div>
@@ -1233,10 +1235,25 @@ var GAME = {
 
   updateBadge: function() {
     var user = this.getWalineUser();
+    var el = document.getElementById('pointsBadge');
+    if (!el) return;
     if (this.loaded && user && !this._noDbData) {
-      document.getElementById('pointsBadge').textContent = '✦ '+this.totalPoints;
+      // 下一境界所需真气（LEVEL_CONFIG 越界 = 已达最高境界）
+      var nextCost = (typeof LEVEL_CONFIG !== 'undefined' && LEVEL_CONFIG[this.level + 1])
+        ? LEVEL_CONFIG[this.level + 1].cost : null;
+      if (nextCost !== null) {
+        // 显示：总真气/下一境界所需
+        el.textContent = '✦ ' + this.totalPoints + '/' + nextCost;
+        // 达到或超过 → 绿色；未达到 → 红色
+        el.style.color = this.totalPoints >= nextCost ? '#22c55e' : '#e94560';
+      } else {
+        // 已达最高境界：只显示总真气
+        el.textContent = '✦ ' + this.totalPoints;
+        el.style.color = '#22c55e';
+      }
     } else {
-      document.getElementById('pointsBadge').textContent = '✦ ..';
+      el.textContent = '✦ ..';
+      el.style.color = '';
     }
   },
 
@@ -1384,8 +1401,16 @@ var GAME = {
       if (this.oneKeyUnlocked) onekeyBtn.classList.remove('locked');
       else onekeyBtn.classList.add('locked');
     }
-    // 升级按钮：无锁状态（无前置解锁条件），仅跟登录+数据就绪显隐
-    if (upgradeBtn) upgradeBtn.style.display = 'inline-flex';
+    // 升级按钮：达到下一境界所需真气才显示（未达到隐藏），最高境界不显示
+    if (upgradeBtn) {
+      var nextCost = (typeof LEVEL_CONFIG !== 'undefined' && LEVEL_CONFIG[this.level + 1])
+        ? LEVEL_CONFIG[this.level + 1].cost : null;
+      if (nextCost !== null && this.totalPoints >= nextCost) {
+        upgradeBtn.style.display = 'inline-flex';
+      } else {
+        upgradeBtn.style.display = 'none';
+      }
+    }
   },
 
   // 根据等级数值返回对应显示文字
