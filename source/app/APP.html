@@ -226,23 +226,28 @@ body{display:flex;flex-direction:column}
 /* ===== 日程计划：与诗词/今日/星座同位置（中央内容区），互斥切换 ===== */
 .plan-panel{position:absolute;top:calc(50% + 10px);left:15px;right:15px;z-index:5;max-width:620px;margin:0 auto;transform:translateY(-50%);max-height:calc(100% - 180px);background:rgba(255,255,255,.8);border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .4s ease,visibility .4s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .plan-panel.show{opacity:1;visibility:visible}
-.plan-panel-body{flex:1;min-height:0;overflow-y:auto;padding:10px;-webkit-overflow-scrolling:touch}
-.plan-date-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0px;border-radius:8px;}
+.plan-panel-body{flex:1;min-height:0;overflow:hidden;padding:10px;display:flex;flex-direction:column}
+.plan-date-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0px;border-radius:8px;flex-shrink:0}
 .plan-date-arrow{width:34px;height:34px;border:none;border-radius:50%;background:#f6f4ee;color:#8a7a5f;font-size:1.2rem;cursor:pointer;flex-shrink:0;line-height:1}
 .plan-date-arrow:active{background:#e9e2d3}
 .plan-date-center{flex:1;text-align:center;cursor:pointer;padding:1px 0}
 .plan-date-main{font-size:.8rem;font-weight:400;color:#3a2f22;font-variant-numeric:tabular-nums}
 .plan-today-btn{flex-shrink:0;border:none;border-radius:8px;padding:6px 12px;font-size:.72rem;color:#fff;background:#e8793a;cursor:pointer;letter-spacing:1px}
 .plan-today-btn:active{opacity:.85}
-.plan-sync-tip{text-align:center;font-size:.62rem;color:#b0a48c;margin:6px 0 8px;min-height:12px}
-.plan-add-card{display:flex;align-items:center;gap:8px;padding:0px;background:rgba(255,255,255,.75);border-radius:8px;box-shadow:0 1px 6px rgba(60,50,30,.06)}
+.plan-sync-tip{text-align:center;font-size:.62rem;color:#b0a48c;margin:6px 0 8px;min-height:12px;flex-shrink:0}
+.plan-add-card{display:flex;align-items:center;gap:8px;padding:0px;background:rgba(255,255,255,.75);border-radius:8px;box-shadow:0 1px 6px rgba(60,50,30,.06);flex-shrink:0}
 .plan-add-card input[type=time]{border:0px solid #e8e0cf;border-radius:8px;padding:5px 5px;font-size:.8rem;color:#3a2f22;background:#faf8f2;flex-shrink:0;outline:none;width:74px}
 .plan-add-card input[type=text]{flex:1;min-width:0;border:none;outline:none;font-size:.8rem;color:#3a2f22;background:transparent;padding:6px 2px}
 .plan-add-card input[type=text]::placeholder{color:#c2b8a2}
 .plan-add-btn{flex-shrink:0;border:none;border-radius:8px;padding:5px 10px;font-size:.8rem;color:#fff;background:#e8793a;cursor:pointer;letter-spacing:1px}
 .plan-add-btn:active{opacity:.85}
-.plan-list-wrap{margin-top:10px}
-.plan-list-card{background:rgba(255,255,255,.75);border-radius:8px;box-shadow:0 1px 6px rgba(60,50,30,.06);overflow:hidden}
+.plan-list-wrap{flex:1;min-height:0;display:flex;flex-direction:column;position:relative;margin-top:10px}
+.plan-list-card{flex:1;min-height:0;background:rgba(255,255,255,.75);border-radius:8px;box-shadow:0 1px 6px rgba(60,50,30,.06);overflow-y:auto;-webkit-overflow-scrolling:touch}
+/* 列表滚动方向提示箭头：上箭头=上方有未显示，下箭头=下方有未显示（纯提示，不拦截滚动手势） */
+.plan-arrow{position:absolute;left:50%;transform:translateX(-50%);z-index:3;pointer-events:none;font-size:.55rem;line-height:1;color:#8a7c63;background:rgba(255,255,255,.92);border-radius:8px;padding:3px 9px;box-shadow:0 1px 5px rgba(60,50,30,.15);opacity:0;transition:opacity .25s}
+.plan-arrow.show{opacity:1}
+.plan-arrow-up{top:-7px}
+.plan-arrow-down{bottom:-7px}
 .plan-item{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #f3efe4}
 .plan-item:last-child{border-bottom:none}
 .plan-item:active{background:#faf8f2}
@@ -257,7 +262,7 @@ body{display:flex;flex-direction:column}
 .plan-del-btn:active{color:#e94560;background:#fdf1f1}
 .plan-empty{padding:10px 0;text-align:center;color:#c2b8a2;font-size:.8rem;line-height:1.8}
 .plan-empty span{font-size:1.5rem;display:block;margin-bottom:8px}
-.plan-stat-bar{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 0 4px;font-size:.62rem;color:#a3957d}
+.plan-stat-bar{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 0 4px;font-size:.62rem;color:#a3957d;flex-shrink:0}
 .plan-stat-bar .bar{width:86px;height:5px;border-radius:3px;background:#e8e0cf;overflow:hidden}
 .plan-stat-bar .bar i{display:block;height:100%;width:0;background:#e8793a;border-radius:3px;transition:width .3s}
 .plan-stat-done{color:#e8793a;font-weight:600}
@@ -300,10 +305,12 @@ body{display:flex;flex-direction:column}
         <button class="plan-add-btn" id="planAddBtn">添加</button>
       </div>
       <div class="plan-list-wrap">
-        <div class="plan-list-card">
+        <div class="plan-arrow plan-arrow-up" id="planArrowUp">▲</div>
+        <div class="plan-list-card" id="planListCard">
           <div class="plan-empty" id="planEmptyTip"><span>📝</span>今天还没有计划，添加一条吧</div>
           <div id="planList"></div>
         </div>
+        <div class="plan-arrow plan-arrow-down" id="planArrowDown">▼</div>
       </div>
       <div class="plan-stat-bar" id="planStatBar"></div>
     </div>
@@ -3093,6 +3100,19 @@ var PlanSvc = (function(){
     // 日期栏：单行 "2026年8月1日 周六"
     var d = parseDate(curDate);
     $('planDateMain').textContent = d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 周' + weekCN(d);
+    // 渲染后刷新滚动方向提示箭头（等布局完成）
+    requestAnimationFrame(updateArrows);
+  }
+
+  // 列表滚动方向提示：上箭头=顶部被滚出（可往上），下箭头=底部还有未显示（可往下）
+  function updateArrows(){
+    var card = document.getElementById('planListCard');
+    if (!card) return;
+    var up = document.getElementById('planArrowUp');
+    var down = document.getElementById('planArrowDown');
+    if (!up || !down) return;
+    up.classList.toggle('show', card.scrollTop > 2);
+    down.classList.toggle('show', card.scrollTop + card.clientHeight < card.scrollHeight - 2);
   }
 
   // ---------- 交互 ----------
@@ -3173,6 +3193,9 @@ var PlanSvc = (function(){
     $('planText').addEventListener('keydown', function(e){
       if (e.key === 'Enter') addItem();
     });
+    var listCard = document.getElementById('planListCard');
+    if (listCard) listCard.addEventListener('scroll', updateArrows);
+    window.addEventListener('resize', updateArrows);
     $('planList').addEventListener('click', function(e){
       var btn = e.target.closest('[data-act]');
       if (!btn) return;
