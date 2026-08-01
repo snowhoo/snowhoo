@@ -234,7 +234,7 @@ body{display:flex;flex-direction:column}
 .plan-date-main{font-size:.8rem;font-weight:400;color:#3a2f22;font-variant-numeric:tabular-nums}
 .plan-today-btn{flex-shrink:0;border:none;border-radius:8px;padding:6px 12px;font-size:.72rem;color:#fff;background:#e8793a;cursor:pointer;letter-spacing:1px}
 .plan-today-btn:active{opacity:.85}
-.plan-sync-tip{text-align:center;font-size:.62rem;color:#b0a48c;margin:6px 0 8px;min-height:12px;flex-shrink:0}
+.plan-sync-tip{font-size:.62rem;color:#b0a48c;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52%}
 .plan-add-card{display:flex;align-items:center;gap:8px;padding:0px;background:rgba(255,255,255,.75);border-radius:8px;box-shadow:0 1px 6px rgba(60,50,30,.06);flex-shrink:0}
 .plan-add-card input[type=time]{border:0px solid #e8e0cf;border-radius:8px;padding:5px 5px;font-size:.8rem;color:#3a2f22;background:#faf8f2;flex-shrink:0;outline:none;width:74px}
 .plan-add-card input[type=text]{flex:1;min-width:0;border:none;outline:none;font-size:.8rem;color:#3a2f22;background:transparent;padding:6px 2px}
@@ -242,7 +242,7 @@ body{display:flex;flex-direction:column}
 .plan-add-btn{flex-shrink:0;border:none;border-radius:8px;padding:5px 10px;font-size:.8rem;color:#fff;background:#e8793a;cursor:pointer;letter-spacing:1px}
 .plan-add-btn:active{opacity:.85}
 .plan-list-wrap{flex:1;min-height:0;display:flex;flex-direction:column;position:relative;margin-top:10px}
-.plan-list-card{flex:1;min-height:0;background:rgba(255,255,255,.75);border-radius:8px;box-shadow:0 1px 6px rgba(60,50,30,.06);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.plan-list-card{flex:1;min-height:0;background:rgba(255,255,255,.5);border-radius:8px;box-shadow:0 1px 6px rgba(60,50,30,.06);overflow-y:auto;-webkit-overflow-scrolling:touch}
 /* 列表滚动方向提示箭头：上箭头=上方有未显示，下箭头=下方有未显示（纯提示，不拦截滚动手势） */
 .plan-arrow{position:absolute;left:50%;transform:translateX(-50%);z-index:3;pointer-events:none;font-size:.55rem;line-height:1;color:#8a7c63;background:rgba(255,255,255,.92);border-radius:8px;padding:3px 9px;box-shadow:0 1px 5px rgba(60,50,30,.15);opacity:0;transition:opacity .25s}
 .plan-arrow.show{opacity:1}
@@ -262,10 +262,10 @@ body{display:flex;flex-direction:column}
 .plan-del-btn:active{color:#e94560;background:#fdf1f1}
 .plan-empty{padding:10px 0;text-align:center;color:#c2b8a2;font-size:.8rem;line-height:1.8}
 .plan-empty span{font-size:1.5rem;display:block;margin-bottom:8px}
-.plan-stat-bar{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 0 4px;font-size:.62rem;color:#a3957d;flex-shrink:0}
-.plan-stat-bar .bar{width:86px;height:5px;border-radius:3px;background:#e8e0cf;overflow:hidden}
+.plan-stat-bar{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 0 2px;font-size:.62rem;color:#a3957d;flex-shrink:0;min-height:0}
+.plan-stat-bar .bar{width:56px;height:5px;border-radius:3px;background:#e8e0cf;overflow:hidden;flex-shrink:0}
 .plan-stat-bar .bar i{display:block;height:100%;width:0;background:#e8793a;border-radius:3px;transition:width .3s}
-.plan-stat-done{color:#e8793a;font-weight:600}
+.plan-stat-sep{color:#d3c9b4;flex-shrink:0}
 .plan-toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:12000;background:rgba(40,32,20,.88);color:#fff;font-size:.72rem;padding:7px 16px;border-radius:16px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
 .plan-toast.show{opacity:1}
 </style>
@@ -298,7 +298,6 @@ body{display:flex;flex-direction:column}
         <button class="plan-date-arrow" id="planNextDay">›</button>
       </div>
       <input type="date" id="planDatePicker" style="display:none">
-      <div class="plan-sync-tip" id="planSyncTip"></div>
       <div class="plan-add-card">
         <input type="time" id="planTime" value="09:00">
         <input type="text" id="planText" placeholder="添加一项计划…" maxlength="60">
@@ -3094,9 +3093,12 @@ var PlanSvc = (function(){
     empty.style.display = items.length ? 'none' : 'block';
     var stat = $('planStatBar');
     var pct = items.length ? Math.round(done / items.length * 100) : 0;
-    stat.innerHTML = '今日 ' + items.length + ' 项' +
+    stat.innerHTML =
+      '<span class="plan-stat-text">今日 ' + items.length + ' 项，完成 ' + done + ' 项</span>' +
       '<span class="bar"><i style="width:' + pct + '%"></i></span>' +
-      '<span class="plan-stat-done">已完成 ' + done + ' 项</span>';
+      '<span class="plan-stat-sep">|</span>' +
+      '<span class="plan-sync-tip" id="planSyncTip"></span>';
+    updateSyncTip(); // 登录信息与完成项同行（元素随 innerHTML 重建，需重新填充）
     // 日期栏：单行 "2026年8月1日 周六"
     var d = parseDate(curDate);
     $('planDateMain').textContent = d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 周' + weekCN(d);
