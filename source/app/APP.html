@@ -226,19 +226,12 @@ body{display:flex;flex-direction:column}
 /* ===== 日程计划：与诗词/今日/星座同位置（中央内容区），互斥切换 ===== */
 .plan-panel{position:absolute;top:calc(50% + 20px);left:15px;right:15px;z-index:5;max-width:600px;margin:0 auto;transform:translateY(-50%);max-height:calc(100% - 180px);background:rgba(255,255,255,.8);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .4s ease,visibility .4s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .plan-panel.show{opacity:1;visibility:visible}
-.plan-panel-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px 10px;border-bottom:1px solid rgba(239,233,220,.8);background:rgba(255,255,255,.8);border-radius:16px 16px 0 0;flex-shrink:0}
-.plan-panel-title{font-size:.98rem;font-weight:700;letter-spacing:1px;color:#3a2f22}
-.plan-panel-title em{font-style:normal;color:#e8793a}
-.plan-panel-close{font-size:1.3rem;color:#999;cursor:pointer;padding:4px 8px;line-height:1;border:none;background:none}
-.plan-panel-close:active{color:#e8793a}
 .plan-panel-body{flex:1;min-height:0;overflow-y:auto;padding:10px 14px 16px;-webkit-overflow-scrolling:touch}
 .plan-date-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:10px 12px;background:rgba(255,255,255,.75);border-radius:14px;box-shadow:0 1px 6px rgba(60,50,30,.06)}
 .plan-date-arrow{width:34px;height:34px;border:none;border-radius:50%;background:#f6f4ee;color:#8a7a5f;font-size:1.2rem;cursor:pointer;flex-shrink:0;line-height:1}
 .plan-date-arrow:active{background:#e9e2d3}
-.plan-date-center{flex:1;text-align:center;cursor:pointer;padding:2px 0}
-.plan-date-main{font-size:1rem;font-weight:700;color:#3a2f22}
-.plan-date-main.today{color:#e8793a}
-.plan-date-sub{font-size:.66rem;color:#a3957d;margin-top:3px}
+.plan-date-center{flex:1;text-align:center;cursor:pointer;padding:1px 0}
+.plan-date-main{font-size:.9rem;font-weight:600;color:#3a2f22;font-variant-numeric:tabular-nums}
 .plan-today-btn{flex-shrink:0;border:none;border-radius:14px;padding:6px 12px;font-size:.72rem;color:#fff;background:#e8793a;cursor:pointer;letter-spacing:1px}
 .plan-today-btn:active{opacity:.85}
 .plan-sync-tip{text-align:center;font-size:.62rem;color:#b0a48c;margin:6px 0 8px;min-height:12px}
@@ -290,16 +283,11 @@ body{display:flex;flex-direction:column}
   <div class="content-area" id="contentArea"></div>
   <!-- 日程计划：与诗词/今日/星座同位置（中央内容区）互斥切换 -->
   <div class="plan-panel" id="planPanel">
-    <div class="plan-panel-header">
-      <span class="plan-panel-title">📅 日程<em>计划</em></span>
-      <button class="plan-panel-close" id="planClose">&times;</button>
-    </div>
     <div class="plan-panel-body">
       <div class="plan-date-bar">
         <button class="plan-date-arrow" id="planPrevDay">‹</button>
         <div class="plan-date-center" id="planDateCenter">
           <div class="plan-date-main" id="planDateMain"></div>
-          <div class="plan-date-sub" id="planDateSub"></div>
         </div>
         <button class="plan-today-btn" id="planTodayBtn">今天</button>
         <button class="plan-date-arrow" id="planNextDay">›</button>
@@ -3102,12 +3090,9 @@ var PlanSvc = (function(){
     stat.innerHTML = '今日 ' + items.length + ' 项' +
       '<span class="bar"><i style="width:' + pct + '%"></i></span>' +
       '<span class="plan-stat-done">已完成 ' + done + ' 项</span>';
-    // 日期栏
+    // 日期栏：单行 "2026年8月1日 周六"
     var d = parseDate(curDate);
-    var isToday = curDate === todayStr();
-    $('planDateMain').textContent = (d.getMonth()+1) + '月' + d.getDate() + '日 周' + weekCN(d) + (isToday ? '（今天）' : '');
-    $('planDateMain').className = 'plan-date-main' + (isToday ? ' today' : '');
-    $('planDateSub').textContent = curDate.replace(/-/g, '年').replace(/-/, '月') + '日';
+    $('planDateMain').textContent = d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 周' + weekCN(d);
   }
 
   // ---------- 交互 ----------
@@ -3227,12 +3212,6 @@ function togglePlan() {
   PlanSvc.render();
   if (PlanSvc.getWalineUser()) PlanSvc.syncNow();
 }
-document.getElementById('planClose').addEventListener('click', function() {
-  var panel = document.getElementById('planPanel');
-  var btn = document.getElementById('planBtn');
-  if (panel) panel.classList.remove('show');
-  if (btn) btn.classList.remove('selected');
-});
 document.getElementById('planBtn').addEventListener('click', togglePlan);
 
 // ===== Waline 评论 =====
