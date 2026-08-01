@@ -221,11 +221,9 @@ body{display:flex;flex-direction:column}
 .bg-save-img{max-width:94%;max-height:78vh;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);-webkit-user-select:none;user-select:none;-webkit-touch-callout:default}
 .bg-save-close{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.4);color:#fff;font-size:.8rem;cursor:pointer;z-index:1}
 
-/* ===== 日程计划面板（奔跑小人已解锁点击打开，中央卡片，位置同诗词内容区，参照诗词面板互斥/屏蔽逻辑） ===== */
-.plan-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;display:flex;align-items:center;justify-content:center}
-.plan-overlay.show{opacity:1;visibility:visible}
-.plan-panel{background:#f6f4ee;width:92%;max-width:420px;max-height:84vh;border-radius:16px;display:flex;flex-direction:column;transform:scale(.94);opacity:0;transition:transform .25s ease,opacity .25s ease;box-shadow:0 10px 40px rgba(0,0,0,.35)}
-.plan-overlay.show .plan-panel{transform:scale(1);opacity:1}
+/* ===== 日程计划：与诗词/今日/星座同位置（中央内容区），互斥切换 ===== */
+.plan-panel{position:absolute;top:50%;left:15px;right:15px;z-index:5;max-width:600px;margin:0 auto;transform:translateY(-50%);max-height:calc(100% - 160px);background:#fff;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .4s ease,visibility .4s}
+.plan-panel.show{opacity:1;visibility:visible}
 .plan-panel-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px 10px;border-bottom:1px solid #efe9dc;background:#fff;border-radius:16px 16px 0 0;flex-shrink:0}
 .plan-panel-title{font-size:.98rem;font-weight:700;letter-spacing:1px;color:#3a2f22}
 .plan-panel-title em{font-style:normal;color:#e8793a}
@@ -285,8 +283,41 @@ body{display:flex;flex-direction:column}
     <span class="badge" id="poetryBtn"><span class="badge-icon">≡</span>诗词<span class="task-dot" id="poetryDot"></span></span>
     <span class="badge" id="historyBtn"><span class="badge-icon">◎</span>今日<span class="task-dot" id="historyDot"></span></span>
     <span class="badge" id="constellationBtn"><span class="badge-icon">✦</span>星座<span class="task-dot" id="constellationDot"></span></span>
+    <span class="badge" id="planBtn"><span class="badge-icon">📅</span>日程</span>
   </div>
   <div class="content-area" id="contentArea"></div>
+  <!-- 日程计划：与诗词/今日/星座同位置（中央内容区）互斥切换 -->
+  <div class="plan-panel" id="planPanel">
+    <div class="plan-panel-header">
+      <span class="plan-panel-title">📅 日程<em>计划</em></span>
+      <button class="plan-panel-close" id="planClose">&times;</button>
+    </div>
+    <div class="plan-panel-body">
+      <div class="plan-date-bar">
+        <button class="plan-date-arrow" id="planPrevDay">‹</button>
+        <div class="plan-date-center" id="planDateCenter">
+          <div class="plan-date-main" id="planDateMain"></div>
+          <div class="plan-date-sub" id="planDateSub"></div>
+        </div>
+        <button class="plan-today-btn" id="planTodayBtn">今天</button>
+        <button class="plan-date-arrow" id="planNextDay">›</button>
+      </div>
+      <input type="date" id="planDatePicker" style="display:none">
+      <div class="plan-sync-tip" id="planSyncTip"></div>
+      <div class="plan-add-card">
+        <input type="time" id="planTime" value="09:00">
+        <input type="text" id="planText" placeholder="添加一项计划…" maxlength="60">
+        <button class="plan-add-btn" id="planAddBtn">添加</button>
+      </div>
+      <div class="plan-list-wrap">
+        <div class="plan-list-card">
+          <div class="plan-empty" id="planEmptyTip"><span>📝</span>今天还没有计划，添加一条吧</div>
+          <div id="planList"></div>
+        </div>
+      </div>
+      <div class="plan-stat-bar" id="planStatBar"></div>
+    </div>
+  </div>
   <div class="top-right-logo locked" id="topRightLogo"><img src="logo.png" alt="logo"><span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div>
   <div class="logo-mini" id="logoMini"><svg viewBox="0 0 24 24"><path d="M15 4L7 12l8 8"/></svg></div>
   <div class="welcome">
@@ -370,41 +401,6 @@ body{display:flex;flex-direction:column}
       <button class="cp-close" id="commentClose">&times;</button>
     </div>
     <div class="comment-panel-body" id="walineContainer"></div>
-  </div>
-</div>
-
-<!-- 日程计划面板（奔跑小人已解锁点击打开，底部滑出） -->
-<div class="plan-overlay" id="planOverlay">
-  <div class="plan-panel">
-    <div class="plan-panel-header">
-      <span class="plan-panel-title">📅 日程<em>计划</em></span>
-      <button class="plan-panel-close" id="planClose">&times;</button>
-    </div>
-    <div class="plan-panel-body">
-      <div class="plan-date-bar">
-        <button class="plan-date-arrow" id="planPrevDay">‹</button>
-        <div class="plan-date-center" id="planDateCenter">
-          <div class="plan-date-main" id="planDateMain"></div>
-          <div class="plan-date-sub" id="planDateSub"></div>
-        </div>
-        <button class="plan-today-btn" id="planTodayBtn">今天</button>
-        <button class="plan-date-arrow" id="planNextDay">›</button>
-      </div>
-      <input type="date" id="planDatePicker" style="display:none">
-      <div class="plan-sync-tip" id="planSyncTip"></div>
-      <div class="plan-add-card">
-        <input type="time" id="planTime" value="09:00">
-        <input type="text" id="planText" placeholder="添加一项计划…" maxlength="60">
-        <button class="plan-add-btn" id="planAddBtn">添加</button>
-      </div>
-      <div class="plan-list-wrap">
-        <div class="plan-list-card">
-          <div class="plan-empty" id="planEmptyTip"><span>📝</span>今天还没有计划，添加一条吧</div>
-          <div id="planList"></div>
-        </div>
-      </div>
-      <div class="plan-stat-bar" id="planStatBar"></div>
-    </div>
   </div>
 </div>
 
@@ -566,11 +562,13 @@ function closeAllOverlays() {
   var so = document.getElementById('starsOverlay');
   var po = document.getElementById('poetryOverlay');
   var ho = document.getElementById('historyOverlay');
-  var pv = document.getElementById('planOverlay');
+  var pv = document.getElementById('planPanel');
+  var pb = document.getElementById('planBtn');
   if (so) so.classList.remove('show');
   if (po) po.classList.remove('show');
   if (ho) ho.classList.remove('show');
   if (pv) pv.classList.remove('show');
+  if (pb) pb.classList.remove('selected');
 }
 
 // 取消所有正在加载的请求，防止异步回调覆盖当前面板内容
@@ -3193,13 +3191,16 @@ var PlanSvc = (function(){
 })();
 PlanSvc.init();
 
-// 打开/关闭日程面板（参照诗词面板：互斥关闭其它层 + 修炼中屏蔽）
+// 打开/关闭日程面板（与诗词/今日/星座同一区域互斥切换，参照诗词面板：互斥关闭其它层 + 修炼中屏蔽）
 function togglePlan() {
   if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
-  var overlay = document.getElementById('planOverlay');
-  if (!overlay) return;
-  if (overlay.classList.contains('show')) {
-    overlay.classList.remove('show');
+  var panel = document.getElementById('planPanel');
+  var btn = document.getElementById('planBtn');
+  if (!panel || !btn) return;
+  // 关闭面板（与诗词一致：再点徽章/奔跑小人/右上角 × 关闭）
+  if (panel.classList.contains('show')) {
+    panel.classList.remove('show');
+    btn.classList.remove('selected');
     return;
   }
   cancelAllRequests();
@@ -3208,18 +3209,19 @@ function togglePlan() {
   var area = document.getElementById('contentArea');
   if (area) { area.classList.remove('show'); area._activeBtn = null; }
   document.querySelectorAll('.badge').forEach(function(b){ b.classList.remove('selected'); });
-  overlay.classList.add('show');
+  btn.classList.add('selected');
+  panel.classList.add('show');
   PlanSvc.updateSyncTip();
   PlanSvc.render();
   if (PlanSvc.getWalineUser()) PlanSvc.syncNow();
 }
-// 遮罩点击关闭（内容实时写本地，无丢失风险）
-document.getElementById('planOverlay').addEventListener('click', function(e) {
-  if (e.target === this) this.classList.remove('show');
-});
 document.getElementById('planClose').addEventListener('click', function() {
-  document.getElementById('planOverlay').classList.remove('show');
+  var panel = document.getElementById('planPanel');
+  var btn = document.getElementById('planBtn');
+  if (panel) panel.classList.remove('show');
+  if (btn) btn.classList.remove('selected');
 });
+document.getElementById('planBtn').addEventListener('click', togglePlan);
 
 // ===== Waline 评论 =====
 var walineInstance = null;
