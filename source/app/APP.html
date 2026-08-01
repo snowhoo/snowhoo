@@ -28,6 +28,8 @@ body{display:flex;flex-direction:column}
 .top-left-badges .badge-icon{font-size:1rem;line-height:1;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:3px 5px;margin-bottom:1px}
 .top-left-badges .badge.selected{color:#ffd700;font-weight:400;text-shadow:0 0 10px rgba(255,215,0,.4)}
 .top-left-badges .badge.selected .badge-icon{border-color:rgba(255,215,0,.5)}
+/* 日程徽章：默认隐藏，奔跑人解锁后才显示（唯一入口） */
+#planBtn{display:none}
 
 /* 右上角logo */
 .top-right-logo{position:absolute;top:46px;right:16px;z-index:5;width:110px}
@@ -1881,7 +1883,7 @@ var GAME = {
     }
   },
 
-  // 更新奔跑的人锁状态：已登录+数据就绪+已解锁 → 可点击跳转；否则加锁
+  // 更新奔跑的人锁状态：已登录+数据就绪+已解锁 → 解锁（此时显示日程徽章入口）；否则加锁
   _updateRunnerLock: function() {
     var rf = document.getElementById('runnerFloat');
     if (!rf) return;
@@ -1889,6 +1891,16 @@ var GAME = {
     var locked = !(this.loaded && user && this.runnerUnlocked);
     if (this._noDbData) locked = true;
     rf.classList.toggle('locked', locked);
+    // 日程徽章：奔跑人解锁才显示（唯一入口），锁定/登出时隐藏并收起日程面板
+    var pb = document.getElementById('planBtn');
+    if (pb) {
+      pb.style.display = locked ? 'none' : 'flex';
+      if (locked) {
+        pb.classList.remove('selected');
+        var pp = document.getElementById('planPanel');
+        if (pp) pp.classList.remove('show');
+      }
+    }
   },
 
   // 更新 5 个栏目按钮锁状态（story小红故事/yedu夜读/zjsz照见苏州/news新闻/tv播霸）
@@ -3342,19 +3354,16 @@ commentOverlay.addEventListener('click', function(e) {
   }
 })();
 
-// 奔跑的人点击：未解锁 → 走解锁流程（消耗 1000 真气破除封印）；已解锁 → 打开日程计划面板
+// 奔跑的人：未解锁 → 走解锁流程（消耗 1000 真气破除封印）；已解锁 → 无入口作用（日程入口为解锁后显示的「日程」徽章）
 (function(){
   var runner = document.getElementById('runnerFloat');
   if (!runner) return;
   runner.addEventListener('click', function(){
     if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
-    // 未解锁 → 走解锁流程（登录/加载校验在确认后统一处理，未登录也先弹确认再提示）
     if (!GAME.runnerUnlocked) {
       GAME.unlockFeature('runner');
-      return;
     }
-    // 已解锁 → 打开日程计划面板（参照诗词等面板：互斥关闭其它层 + 修炼中屏蔽）
-    togglePlan();
+    // 已解锁：奔跑人不作入口，日程面板仅通过「日程」徽章打开
   });
 })();
 
