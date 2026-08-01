@@ -228,6 +228,7 @@ body{display:flex;flex-direction:column}
 .plan-panel.show{opacity:1;visibility:visible}
 .plan-panel-body{flex:1;min-height:0;overflow:hidden;padding:10px;display:flex;flex-direction:column}
 .plan-topbar{display:flex;align-items:center;gap:6px;padding:0px;flex-shrink:0}
+.plan-cal-icon{flex-shrink:0;font-size:.8rem;line-height:1;color:#e8793a}
 .plan-date-center{position:relative;flex:1;text-align:center;cursor:pointer;padding:0 2px;min-width:0;overflow:hidden}
 .plan-date-main{font-size:.62rem;font-weight:400;color:#3a2f22;font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
 /* 透明日期选择器覆盖日期区：点击日期直接弹原生日期选择器 */
@@ -269,8 +270,7 @@ body{display:flex;flex-direction:column}
 .plan-stat-bar .bar{width:120px;height:5px;border-radius:3px;background:#e8e0cf;overflow:hidden;flex-shrink:0}
 .plan-stat-bar .bar i{display:block;height:100%;width:0;background:#e8793a;border-radius:3px;transition:width .3s}
 .plan-stat-sep{color:#d3c9b4;flex-shrink:0}
-/* 底部"全部日程"开关 */
-.plan-all-toggle{display:flex;align-items:center;justify-content:center;gap:8px;padding:2px 0 0;font-size:.68rem;color:#8a7a5f;flex-shrink:0;user-select:none}
+/* 首行"全部日程"开关（滑块，title 提示含义） */
 .plan-switch{position:relative;display:inline-block;width:34px;height:18px;flex-shrink:0;cursor:pointer}
 .plan-switch input{position:absolute;opacity:0;width:0;height:0}
 .plan-switch .slider{position:absolute;inset:0;background:#d8cfba;border-radius:9px;transition:background .2s;pointer-events:none}
@@ -302,6 +302,7 @@ body{display:flex;flex-direction:column}
   <div class="plan-panel" id="planPanel">
     <div class="plan-panel-body">
       <div class="plan-topbar">
+        <span class="plan-cal-icon" title="日程">📅</span>
         <div class="plan-date-center" id="planDateCenter">
           <div class="plan-date-main" id="planDateMain"></div>
           <input type="date" id="planDatePicker" class="plan-date-picker" title="选择日期">
@@ -309,6 +310,9 @@ body{display:flex;flex-direction:column}
         <input type="time" id="planTime" value="09:00" class="plan-add-time">
         <input type="text" id="planText" placeholder="添加一项计划…" maxlength="60" class="plan-add-text">
         <button class="plan-add-btn" id="planAddBtn">+</button>
+        <label class="plan-switch" id="planAllSwitchBar" title="全部日程">
+          <input type="checkbox" id="planAllSwitch" checked><span class="slider"></span>
+        </label>
       </div>
       <div class="plan-list-wrap">
         <div class="plan-arrow plan-arrow-up" id="planArrowUp">▲</div>
@@ -319,10 +323,6 @@ body{display:flex;flex-direction:column}
         <div class="plan-arrow plan-arrow-down" id="planArrowDown">▼</div>
       </div>
       <div class="plan-stat-bar" id="planStatBar"></div>
-      <div class="plan-all-toggle" id="planAllToggleBar">
-        <span>全部日程</span>
-        <label class="plan-switch"><input type="checkbox" id="planAllSwitch" checked><span class="slider"></span></label>
-      </div>
     </div>
   </div>
   <div class="top-right-logo locked" id="topRightLogo"><img src="logo.png" alt="logo"><span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div>
@@ -3137,9 +3137,9 @@ var PlanSvc = (function(){
       '</span>' +
       '<span class="bar"><i style="width:' + pct + '%"></i></span>';
     updateSyncTip(); // 登录信息与完成项同行（元素随 innerHTML 重建，需重新填充）
-    // 日期栏：全部模式显示"全部日程"，单日模式显示 "2026-8-1 周六"
+    // 日期栏：始终显示当前日期 "2026-8-1 周六"（全部/单日模式都显示，切日期不迷失）
     var d = parseDate(curDate);
-    $('planDateMain').textContent = allMode ? '全部日程' : d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate() + ' 周' + weekCN(d);
+    $('planDateMain').textContent = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate() + ' 周' + weekCN(d);
     // 渲染后刷新滚动方向提示箭头（等布局完成）
     requestAnimationFrame(updateArrows);
   }
