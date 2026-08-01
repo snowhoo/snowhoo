@@ -1376,8 +1376,18 @@ layout: false
 // 边缘手势锁：排除左右边缘系统返回手势（防横滑翻页误触退出），离开页面恢复
 (function(){
   function lockEdge(lock){ try{ if(window.AppBridge && window.AppBridge.setEdgeLock) window.AppBridge.setEdgeLock(lock ? '1' : '0'); }catch(e){} }
+  var bridged = !!(window.AppBridge && window.AppBridge.setEdgeLock);
   lockEdge(true);
   window.addEventListener('pagehide', function(){ lockEdge(false); });
+  // 诊断标识：原生边缘锁桥生效时短暂显示（旧App/普通浏览器无桥则不显示）
+  if (bridged) {
+    var b = document.createElement('div');
+    b.textContent = '🔒 边缘锁已启用';
+    b.style.cssText = 'position:fixed;right:8px;bottom:70px;z-index:99999;background:rgba(34,197,94,.92);color:#fff;font-size:11px;padding:4px 10px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none;opacity:0;transition:opacity .5s';
+    document.body.appendChild(b);
+    setTimeout(function(){ b.style.opacity = '1'; }, 300);
+    setTimeout(function(){ b.style.opacity = '0'; setTimeout(function(){ b.remove(); }, 600); }, 2500);
+  }
 })();
 </script>
 </body>
