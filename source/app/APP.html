@@ -228,14 +228,14 @@ body{display:flex;flex-direction:column}
 .plan-panel.show{opacity:1;visibility:visible}
 .plan-panel-body{flex:1;min-height:0;overflow:hidden;padding:10px;display:flex;flex-direction:column}
 .plan-topbar{display:flex;align-items:center;gap:6px;padding:0px;flex-shrink:0}
-.plan-date-arrow{width:28px;height:28px;border:none;border-radius:50%;background:#f6f4ee;color:#8a7a5f;font-size:1.05rem;cursor:pointer;flex-shrink:0;line-height:1}
+.plan-date-arrow{height:28px;border:none;background:#ffffff00;color:#8a7a5f;font-size:1.05rem;cursor:pointer;flex-shrink:0;line-height:1}
 .plan-date-arrow:active{background:#e9e2d3}
 .plan-date-center{flex:1;text-align:center;cursor:pointer;padding:0 2px;min-width:0}
-.plan-date-main{font-size:.72rem;font-weight:500;color:#3a2f22;font-variant-numeric:tabular-nums;white-space:nowrap}
+.plan-date-main{font-size:.62rem;font-weight:400;color:#3a2f22;font-variant-numeric:tabular-nums;white-space:nowrap}
 .plan-today-btn{flex-shrink:0;border:none;border-radius:50%;width:26px;height:26px;padding:0;font-size:.66rem;color:#fff;background:#e8793a;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
 .plan-today-btn:active{opacity:.85}
 .plan-sync-tip{font-size:.62rem;color:#b0a48c;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52%}
-.plan-add-time{border:none;border-radius:8px;padding:4px 4px;font-size:.8rem;color:#3a2f22;background:#faf8f2;flex-shrink:0;outline:none;width:64px}
+.plan-add-time{border:none;border-radius:8px;padding:0px;font-size:.62rem;color:#3a2f22;background:#ffffff00;flex-shrink:0;outline:none;width:54px}
 .plan-add-text{flex:1;min-width:0;border:none;outline:none;font-size:.8rem;color:#3a2f22;background:transparent;padding:6px 2px}
 .plan-add-text::placeholder{color:#c2b8a2}
 .plan-add-btn{flex-shrink:0;border:none;border-radius:8px;padding:5px 9px;font-size:.78rem;color:#fff;background:#e8793a;cursor:pointer;letter-spacing:1px}
@@ -298,7 +298,7 @@ body{display:flex;flex-direction:column}
         <button class="plan-date-arrow" id="planNextDay">›</button>
         <input type="time" id="planTime" value="09:00" class="plan-add-time">
         <input type="text" id="planText" placeholder="添加一项计划…" maxlength="60" class="plan-add-text">
-        <button class="plan-add-btn" id="planAddBtn">添加</button>
+        <button class="plan-add-btn" id="planAddBtn">+</button>
       </div>
       <input type="date" id="planDatePicker" style="display:none">
       <div class="plan-list-wrap">
