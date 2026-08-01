@@ -2926,8 +2926,8 @@ commentOverlay.addEventListener('click', function(e) {
       GAME.unlockFeature('runner');
       return;
     }
-    // 已解锁 → 刷新本页（跳转页面规划好后改此处链接）
-    location.reload();
+    // 已解锁 → 打开日程计划页（replace 不留 WebView 历史）
+    window.location.replace('https://snowhoo.net/app/schedule.html');
   });
 })();
 
