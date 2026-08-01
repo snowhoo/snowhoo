@@ -227,19 +227,18 @@ body{display:flex;flex-direction:column}
 .plan-panel{position:absolute;top:calc(50% + 10px);left:15px;right:15px;z-index:5;max-width:620px;margin:0 auto;transform:translateY(-50%);max-height:calc(100% - 180px);background:rgba(255,255,255,.8);border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .4s ease,visibility .4s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .plan-panel.show{opacity:1;visibility:visible}
 .plan-panel-body{flex:1;min-height:0;overflow:hidden;padding:10px;display:flex;flex-direction:column}
-.plan-date-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0px;border-radius:8px;flex-shrink:0}
-.plan-date-arrow{width:34px;height:34px;border:none;border-radius:50%;background:#f6f4ee;color:#8a7a5f;font-size:1.2rem;cursor:pointer;flex-shrink:0;line-height:1}
+.plan-topbar{display:flex;align-items:center;gap:6px;padding:0px;flex-shrink:0}
+.plan-date-arrow{width:28px;height:28px;border:none;border-radius:50%;background:#f6f4ee;color:#8a7a5f;font-size:1.05rem;cursor:pointer;flex-shrink:0;line-height:1}
 .plan-date-arrow:active{background:#e9e2d3}
-.plan-date-center{flex:1;text-align:center;cursor:pointer;padding:1px 0}
-.plan-date-main{font-size:.8rem;font-weight:400;color:#3a2f22;font-variant-numeric:tabular-nums}
-.plan-today-btn{flex-shrink:0;border:none;border-radius:8px;padding:6px 12px;font-size:.72rem;color:#fff;background:#e8793a;cursor:pointer;letter-spacing:1px}
+.plan-date-center{flex:1;text-align:center;cursor:pointer;padding:0 2px;min-width:0}
+.plan-date-main{font-size:.72rem;font-weight:500;color:#3a2f22;font-variant-numeric:tabular-nums;white-space:nowrap}
+.plan-today-btn{flex-shrink:0;border:none;border-radius:50%;width:26px;height:26px;padding:0;font-size:.66rem;color:#fff;background:#e8793a;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
 .plan-today-btn:active{opacity:.85}
 .plan-sync-tip{font-size:.62rem;color:#b0a48c;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52%}
-.plan-add-card{display:flex;align-items:center;gap:8px;padding:0px;background:rgba(255,255,255,.75);border-radius:8px;box-shadow:0 1px 6px rgba(60,50,30,.06);flex-shrink:0}
-.plan-add-card input[type=time]{border:0px solid #e8e0cf;border-radius:8px;padding:5px 5px;font-size:.8rem;color:#3a2f22;background:#faf8f2;flex-shrink:0;outline:none;width:74px}
-.plan-add-card input[type=text]{flex:1;min-width:0;border:none;outline:none;font-size:.8rem;color:#3a2f22;background:transparent;padding:6px 2px}
-.plan-add-card input[type=text]::placeholder{color:#c2b8a2}
-.plan-add-btn{flex-shrink:0;border:none;border-radius:8px;padding:5px 10px;font-size:.8rem;color:#fff;background:#e8793a;cursor:pointer;letter-spacing:1px}
+.plan-add-time{border:none;border-radius:8px;padding:4px 4px;font-size:.8rem;color:#3a2f22;background:#faf8f2;flex-shrink:0;outline:none;width:64px}
+.plan-add-text{flex:1;min-width:0;border:none;outline:none;font-size:.8rem;color:#3a2f22;background:transparent;padding:6px 2px}
+.plan-add-text::placeholder{color:#c2b8a2}
+.plan-add-btn{flex-shrink:0;border:none;border-radius:8px;padding:5px 9px;font-size:.78rem;color:#fff;background:#e8793a;cursor:pointer;letter-spacing:1px}
 .plan-add-btn:active{opacity:.85}
 .plan-list-wrap{flex:1;min-height:0;display:flex;flex-direction:column;position:relative;margin-top:10px}
 .plan-list-card{flex:1;min-height:0;background:rgba(255,255,255,.5);border-radius:8px;box-shadow:0 1px 6px rgba(60,50,30,.06);overflow-y:auto;-webkit-overflow-scrolling:touch}
@@ -248,7 +247,7 @@ body{display:flex;flex-direction:column}
 .plan-arrow.show{opacity:1}
 .plan-arrow-up{top:-7px}
 .plan-arrow-down{bottom:-7px}
-.plan-item{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid #f3efe4}
+.plan-item{display:flex;align-items:center;gap:10px;padding:6px 10px;border-bottom:1px solid #f3efe4}
 .plan-item:last-child{border-bottom:none}
 .plan-item:active{background:#faf8f2}
 .plan-done-btn{width:22px;height:22px;border-radius:50%;border:2px solid #d8cfba;background:#fff;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;padding:0}
@@ -262,8 +261,9 @@ body{display:flex;flex-direction:column}
 .plan-del-btn:active{color:#e94560;background:#fdf1f1}
 .plan-empty{padding:10px 0;text-align:center;color:#c2b8a2;font-size:.8rem;line-height:1.8}
 .plan-empty span{font-size:1.5rem;display:block;margin-bottom:8px}
-.plan-stat-bar{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 0 2px;font-size:.62rem;color:#a3957d;flex-shrink:0;min-height:0}
-.plan-stat-bar .bar{width:56px;height:5px;border-radius:3px;background:#e8e0cf;overflow:hidden;flex-shrink:0}
+.plan-stat-bar{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 0 2px;font-size:.62rem;color:#a3957d;flex-shrink:0;min-height:0}
+.plan-stat-line{display:flex;align-items:center;justify-content:center;gap:6px;max-width:100%}
+.plan-stat-bar .bar{width:120px;height:5px;border-radius:3px;background:#e8e0cf;overflow:hidden;flex-shrink:0}
 .plan-stat-bar .bar i{display:block;height:100%;width:0;background:#e8793a;border-radius:3px;transition:width .3s}
 .plan-stat-sep{color:#d3c9b4;flex-shrink:0}
 .plan-toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:12000;background:rgba(40,32,20,.88);color:#fff;font-size:.72rem;padding:7px 16px;border-radius:16px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
@@ -289,20 +289,18 @@ body{display:flex;flex-direction:column}
   <!-- 日程计划：与诗词/今日/星座同位置（中央内容区）互斥切换 -->
   <div class="plan-panel" id="planPanel">
     <div class="plan-panel-body">
-      <div class="plan-date-bar">
+      <div class="plan-topbar">
         <button class="plan-date-arrow" id="planPrevDay">‹</button>
         <div class="plan-date-center" id="planDateCenter">
           <div class="plan-date-main" id="planDateMain"></div>
         </div>
-        <button class="plan-today-btn" id="planTodayBtn">今天</button>
+        <button class="plan-today-btn" id="planTodayBtn">今</button>
         <button class="plan-date-arrow" id="planNextDay">›</button>
-      </div>
-      <input type="date" id="planDatePicker" style="display:none">
-      <div class="plan-add-card">
-        <input type="time" id="planTime" value="09:00">
-        <input type="text" id="planText" placeholder="添加一项计划…" maxlength="60">
+        <input type="time" id="planTime" value="09:00" class="plan-add-time">
+        <input type="text" id="planText" placeholder="添加一项计划…" maxlength="60" class="plan-add-text">
         <button class="plan-add-btn" id="planAddBtn">添加</button>
       </div>
+      <input type="date" id="planDatePicker" style="display:none">
       <div class="plan-list-wrap">
         <div class="plan-arrow plan-arrow-up" id="planArrowUp">▲</div>
         <div class="plan-list-card" id="planListCard">
@@ -3094,14 +3092,16 @@ var PlanSvc = (function(){
     var stat = $('planStatBar');
     var pct = items.length ? Math.round(done / items.length * 100) : 0;
     stat.innerHTML =
-      '<span class="plan-stat-text">今日 ' + items.length + ' 项，完成 ' + done + ' 项</span>' +
-      '<span class="bar"><i style="width:' + pct + '%"></i></span>' +
-      '<span class="plan-stat-sep">|</span>' +
-      '<span class="plan-sync-tip" id="planSyncTip"></span>';
+      '<span class="plan-stat-line">' +
+        '<span class="plan-stat-text">今日 ' + items.length + ' 项，完成 ' + done + ' 项</span>' +
+        '<span class="plan-stat-sep">|</span>' +
+        '<span class="plan-sync-tip" id="planSyncTip"></span>' +
+      '</span>' +
+      '<span class="bar"><i style="width:' + pct + '%"></i></span>';
     updateSyncTip(); // 登录信息与完成项同行（元素随 innerHTML 重建，需重新填充）
-    // 日期栏：单行 "2026年8月1日 周六"
+    // 日期栏：单行 "2026-8-1 周六"
     var d = parseDate(curDate);
-    $('planDateMain').textContent = d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 周' + weekCN(d);
+    $('planDateMain').textContent = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate() + ' 周' + weekCN(d);
     // 渲染后刷新滚动方向提示箭头（等布局完成）
     requestAnimationFrame(updateArrows);
   }
