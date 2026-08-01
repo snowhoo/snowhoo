@@ -34,7 +34,7 @@ body{display:flex;flex-direction:column}
 /* 右上角logo */
 .top-right-logo{position:absolute;top:46px;right:16px;z-index:5;width:110px}
 .top-right-logo.hidden{opacity:0;pointer-events:none;transform:scale(.8)}
-.top-right-logo img{width:100%;height:auto;display:block;border-radius:8px}
+.top-right-logo img{width:100%;height:auto;display:block;border-radius:8px;opacity:.8}
 /* LOGO 收起边条：与日期卡片一致（同高、宽5、透明度50、内含<），贴右边缘 */
 .logo-mini{position:absolute;right:0;top:46px;z-index:5;display:none;align-items:center;justify-content:center;width:5px;background:#fff;opacity:.5;border-radius:6px 0 0 6px;cursor:pointer;transition:all .35s ease;box-shadow:-2px 0 8px rgba(0,0,0,.15)}
 .logo-mini.show{display:flex}
@@ -285,7 +285,7 @@ body{display:flex;flex-direction:column}
     <span class="badge" id="poetryBtn"><span class="badge-icon">≡</span>诗词<span class="task-dot" id="poetryDot"></span></span>
     <span class="badge" id="historyBtn"><span class="badge-icon">◎</span>今日<span class="task-dot" id="historyDot"></span></span>
     <span class="badge" id="constellationBtn"><span class="badge-icon">✦</span>星座<span class="task-dot" id="constellationDot"></span></span>
-    <span class="badge" id="planBtn"><span class="badge-icon">☐</span>日程</span>
+    <span class="badge" id="planBtn"><span class="badge-icon">▤</span>日程</span>
   </div>
   <div class="content-area" id="contentArea"></div>
   <!-- 日程计划：与诗词/今日/星座同位置（中央内容区）互斥切换 -->
