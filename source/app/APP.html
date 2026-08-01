@@ -470,7 +470,9 @@ items.forEach(function(el) {
         return;
       }
     }
-    window.location.href = el.dataset.url;
+    // 用 replace 跳转：不在 WebView 历史栈留下本页，
+    // 栏目页内系统返回手势误触时不会 goBack 跳回首页（配合原生返回守护）
+    window.location.replace(el.dataset.url);
   });
 });
 
