@@ -23,9 +23,9 @@ body{display:flex;flex-direction:column}
 .image-area .welcome small{display:block;font-size:.75rem;font-weight:400;opacity:.7;margin-top:6px;letter-spacing:1px}
 
 /* 左上角圈字 */
-.top-left-badges{position:absolute;top:46px;left:16px;z-index:5;display:flex;gap:14px}
-.top-left-badges .badge{color:#fff;font-size:.68rem;font-weight:400;text-shadow:0 1px 4px rgba(0,0,0,.5);cursor:pointer;transition:all .3s;letter-spacing:1px;border:none;background:none;padding:0;line-height:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
-.top-left-badges .badge-icon{font-size:1rem;line-height:1;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:3px 5px;margin-bottom:1px}
+.top-left-badges{position:absolute;top:66px;left:16px;z-index:5;display:flex;gap:14px}
+.top-left-badges .badge{color:#fff;font-size:.68rem;font-weight:400;text-shadow:0 1px 4px rgba(0,0,0,.5);cursor:pointer;transition:all .3s;letter-spacing:1px;border:none;background:none;padding:0;line-height:1;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
+.top-left-badges .badge-icon{font-size:.82rem;line-height:1;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:2px 5px;margin-bottom:0}
 .top-left-badges .badge.selected{color:#ffd700;font-weight:400;text-shadow:0 0 10px rgba(255,215,0,.4)}
 .top-left-badges .badge.selected .badge-icon{border-color:rgba(255,215,0,.5)}
 /* 日程徽章：默认隐藏，奔跑人解锁后才显示（唯一入口） */
@@ -34,7 +34,7 @@ body{display:flex;flex-direction:column}
 /* 右上角logo */
 .top-right-logo{position:absolute;top:46px;right:16px;z-index:5;width:110px}
 .top-right-logo.hidden{opacity:0;pointer-events:none;transform:scale(.8)}
-.top-right-logo img{width:100%;height:auto;display:block;border-radius:8px;opacity:.8}
+.top-right-logo img{width:100%;height:auto;display:block;border-radius:8px;opacity:.7}
 /* LOGO 收起边条：与日期卡片一致（同高、宽5、透明度50、内含<），贴右边缘 */
 .logo-mini{position:absolute;right:0;top:46px;z-index:5;display:none;align-items:center;justify-content:center;width:5px;background:#fff;opacity:.5;border-radius:6px 0 0 6px;cursor:pointer;transition:all .35s ease;box-shadow:-2px 0 8px rgba(0,0,0,.15)}
 .logo-mini.show{display:flex}
@@ -224,15 +224,15 @@ body{display:flex;flex-direction:column}
 .bg-save-close{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.4);color:#fff;font-size:.8rem;cursor:pointer;z-index:1}
 
 /* ===== 日程计划：与诗词/今日/星座同位置（中央内容区），互斥切换 ===== */
-.plan-panel{position:absolute;top:50%;left:15px;right:15px;z-index:5;max-width:600px;margin:0 auto;transform:translateY(-50%);max-height:calc(100% - 160px);background:#fff;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .4s ease,visibility .4s}
+.plan-panel{position:absolute;top:50%;left:15px;right:15px;z-index:5;max-width:600px;margin:0 auto;transform:translateY(-50%);max-height:calc(100% - 160px);background:rgba(255,255,255,.8);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .4s ease,visibility .4s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .plan-panel.show{opacity:1;visibility:visible}
-.plan-panel-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px 10px;border-bottom:1px solid #efe9dc;background:#fff;border-radius:16px 16px 0 0;flex-shrink:0}
+.plan-panel-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px 10px;border-bottom:1px solid rgba(239,233,220,.8);background:rgba(255,255,255,.8);border-radius:16px 16px 0 0;flex-shrink:0}
 .plan-panel-title{font-size:.98rem;font-weight:700;letter-spacing:1px;color:#3a2f22}
 .plan-panel-title em{font-style:normal;color:#e8793a}
 .plan-panel-close{font-size:1.3rem;color:#999;cursor:pointer;padding:4px 8px;line-height:1;border:none;background:none}
 .plan-panel-close:active{color:#e8793a}
 .plan-panel-body{flex:1;min-height:0;overflow-y:auto;padding:10px 14px 16px;-webkit-overflow-scrolling:touch}
-.plan-date-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:10px 12px;background:#fff;border-radius:14px;box-shadow:0 1px 6px rgba(60,50,30,.06)}
+.plan-date-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:10px 12px;background:rgba(255,255,255,.75);border-radius:14px;box-shadow:0 1px 6px rgba(60,50,30,.06)}
 .plan-date-arrow{width:34px;height:34px;border:none;border-radius:50%;background:#f6f4ee;color:#8a7a5f;font-size:1.2rem;cursor:pointer;flex-shrink:0;line-height:1}
 .plan-date-arrow:active{background:#e9e2d3}
 .plan-date-center{flex:1;text-align:center;cursor:pointer;padding:2px 0}
@@ -242,14 +242,14 @@ body{display:flex;flex-direction:column}
 .plan-today-btn{flex-shrink:0;border:none;border-radius:14px;padding:6px 12px;font-size:.72rem;color:#fff;background:#e8793a;cursor:pointer;letter-spacing:1px}
 .plan-today-btn:active{opacity:.85}
 .plan-sync-tip{text-align:center;font-size:.62rem;color:#b0a48c;margin:6px 0 8px;min-height:12px}
-.plan-add-card{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fff;border-radius:14px;box-shadow:0 1px 6px rgba(60,50,30,.06)}
+.plan-add-card{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,.75);border-radius:14px;box-shadow:0 1px 6px rgba(60,50,30,.06)}
 .plan-add-card input[type=time]{border:1px solid #e8e0cf;border-radius:8px;padding:7px 6px;font-size:.8rem;color:#3a2f22;background:#faf8f2;flex-shrink:0;outline:none;width:74px}
 .plan-add-card input[type=text]{flex:1;min-width:0;border:none;outline:none;font-size:.88rem;color:#3a2f22;background:transparent;padding:6px 2px}
 .plan-add-card input[type=text]::placeholder{color:#c2b8a2}
 .plan-add-btn{flex-shrink:0;border:none;border-radius:8px;padding:9px 16px;font-size:.8rem;color:#fff;background:#e8793a;cursor:pointer;letter-spacing:1px}
 .plan-add-btn:active{opacity:.85}
 .plan-list-wrap{margin-top:10px}
-.plan-list-card{background:#fff;border-radius:14px;box-shadow:0 1px 6px rgba(60,50,30,.06);overflow:hidden}
+.plan-list-card{background:rgba(255,255,255,.75);border-radius:14px;box-shadow:0 1px 6px rgba(60,50,30,.06);overflow:hidden}
 .plan-item{display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid #f3efe4}
 .plan-item:last-child{border-bottom:none}
 .plan-item:active{background:#faf8f2}
