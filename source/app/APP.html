@@ -3499,7 +3499,9 @@ commentOverlay.addEventListener('click', function(e) {
 })();
 </script>
 <script>
-// 启动进度：等待背景图 + 数据加载完整后进度条走满并淡出（6s 兜底防卡屏）
+// 启动进度：等待背景图 + 数据加载完整后进度条走满并淡出
+// 触发条件：GAME.loaded=true（成功）或 曾进入 loading 后回 idle（加载失败），且背景图已加载完
+// 不再监听 window.load（load 只代表资源就绪，早于 checkLogin/waline 数据加载完成）
 (function(){
   var sp = document.getElementById('bootSplash');
   if (!sp) return;
@@ -3516,17 +3518,30 @@ commentOverlay.addEventListener('click', function(e) {
       setTimeout(function(){ if (sp.parentNode) sp.parentNode.removeChild(sp); }, 500);
     }, 260);
   }
+  var sawLoading = false; // 是否曾进入数据加载中（区分"未开始"与"已失败"）
+  // 包装 setSyncState 精确捕获 loading 状态（轮询 150ms 采样可能错过瞬时 loading）
+  try {
+    if (typeof GAME !== 'undefined' && GAME && typeof GAME.setSyncState === 'function') {
+      var _origSS = GAME.setSyncState;
+      GAME.setSyncState = function(s){ if (s === 'loading') sawLoading = true; return _origSS.apply(this, arguments); };
+    }
+  } catch(e){}
+  var bootT = Date.now(); // 页面加载起始
   function ready(){
-    // 背景图（设置了 src）加载完成
+    // 背景图（设置了 src）加载完成（成功或失败都算）
     var bg = document.getElementById('bgImage');
     if (bg && bg.getAttribute('src') && !bg.complete) return false;
-    // GAME 数据加载完成（已登录时等待云端数据读回）
-    if (typeof GAME === 'undefined' || !GAME || !GAME.loaded) return false;
-    return true;
+    // GAME 数据：加载成功 → 完成；正在加载 → 继续等
+    if (typeof GAME === 'undefined' || !GAME) return false;
+    if (GAME.loaded) return true;
+    if (GAME.syncState === 'loading') return false;
+    // idle 且未加载：曾进入 loading（加载已失败）或页面已过 2s（checkLogin 500ms 已跑完）→ 放行
+    if (sawLoading || Date.now() - bootT > 2000) return true;
+    return false;
   }
   var t = setInterval(function(){ if (ready()) { clearInterval(t); finish(); } }, 150);
-  window.addEventListener('load', function(){ clearInterval(t); finish(); });
-  setTimeout(function(){ clearInterval(t); finish(); }, 6000); // 兜底：网络差也最多等 6s
+  // 兜底：GAME 脚本异常等极端情况最多等 10s（长于 waline 8s 超时，正常路径不会被兜底抢先）
+  setTimeout(function(){ clearInterval(t); finish(); }, 10000);
 })();
 </script>
 </body>

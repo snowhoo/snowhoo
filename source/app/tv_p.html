@@ -80,11 +80,6 @@ layout: false
         @media (orientation: landscape) { #app { padding: 0 10px 10px; } }
         @media (orientation: portrait) { #app { padding: 0 10px 10px; padding-bottom:64px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0px 6px 0; gap: 6px; overflow-x: hidden; flex-wrap: nowrap; background-image: none;} .toolbar select, .toolbar input, .toolbar button { padding: 6px 6px; font-size: 12px; flex-shrink: 1; min-width: 0; } .toolbar select { min-width: 80px; background-position: right 6px center; padding-right: 22px; } .toolbar input { max-width: 80px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .toolbar .btn-text { display: none; } }
 
-        /* ===== 通用布局：首页按钮 ===== */
-        .home-btn{position:fixed;top:52px;right:12px;z-index:999;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,transform .2s;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
-        .home-btn:active{transform:scale(.88)}
-        .home-btn svg{width:18px;height:18px;fill:#fff;opacity:.8}
-
         /* ===== 通用布局：底部导航 ===== */
         .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:var(--bg-surface,#fff);border-top:1px solid var(--border,#eee);display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:.8rem;user-select:none;-webkit-user-select:none}
         .bottom-nav .page-btn{display:flex;align-items:center;gap:4px;padding:4px 16px;border-radius:4px;cursor:pointer;color:var(--text-secondary,#666)}
@@ -120,6 +115,13 @@ layout: false
         @keyframes spin{to{transform:rotate(360deg)}}
         .loading-text{margin-top:16px;font-size:.9rem;color:#999}
 
+        /* 菜单锁定 + 传送回修真小世界（统一类名，跨页同名无冲突） */
+        .menu-item.locked{opacity:.5;filter:grayscale(1)}
+        .menu-lock-icon{margin-left:8px;font-size:.72rem}
+        .menu-home{border-top:1px solid rgba(128,128,128,.35)}
+        .menu-lock-tip{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:99999;background:rgba(40,32,20,.9);color:#fff;font-size:.75rem;padding:8px 16px;border-radius:16px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+        .menu-lock-tip.show{opacity:1}
+
         /* ===== 暗色模式适配 ===== */
         @media(prefers-color-scheme:dark){
             .float-menu{background:#1e1e1e}
@@ -129,7 +131,6 @@ layout: false
     </style>
 </head>
 <body>
-<button class="home-btn" onclick="window.location.href='https://snowhoo.net/app/APP.html'" title="首页"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></button>
 
 <div class="loading-overlay" id="loading">
   <div class="spinner"></div>
@@ -200,14 +201,15 @@ layout: false
   <div class="float-wrap">
     <button class="float-btn" id="floatBtn">播</button>
     <div class="float-menu" id="floatMenu">
-      <a href="https://snowhoo.net/app/reader.html" target="_blank"><span class="menu-indicator circulated" style="background:#e94560">小</span>小红故事·Blog</a>
-      <a href="https://snowhoo.net/app/yedu_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#764ba2">夜</span>夜读·每晚十点</a>
-      <a href="https://snowhoo.net/app/zjsz_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#3b82f6">照</span>照见苏州·摄影专辑</a>
-      <a href="https://snowhoo.net/app/DaliyNews_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#ff8c00">新</span>新闻·每日速览</a>
+      <a class="menu-item" href="https://snowhoo.net/app/reader.html" target="_blank"><span class="menu-indicator circulated" style="background:#e94560">小</span>小红故事·Blog</a>
+      <a class="menu-item" href="https://snowhoo.net/app/yedu_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#764ba2">夜</span>夜读·每晚十点</a>
+      <a class="menu-item" href="https://snowhoo.net/app/zjsz_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#3b82f6">照</span>照见苏州·摄影专辑</a>
+      <a class="menu-item" href="https://snowhoo.net/app/DaliyNews_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#ff8c00">新</span>新闻·每日速览</a>
       <span style="display:flex;align-items:center;padding:10px 16px;color:#22c55e;font-size:.82rem;font-weight:600;white-space:nowrap;cursor:default">
         <span class="menu-indicator circulated" style="background:#22c55e">播</span>播霸·在线影视
         <span style="margin-left:8px;color:#22c55e">&#x2713;</span>
       </span>
+      <a class="menu-item menu-home" href="https://snowhoo.net/app/APP.html" onclick="event.preventDefault();window.location.replace('https://snowhoo.net/app/APP.html')"><span class="menu-indicator circulated" style="background:#e8793a">界</span>传送回修真小世界</a>
     </div>
   </div>
 </div>
@@ -1380,6 +1382,43 @@ layout: false
   lockEdge(true);
   guardBack(true);
   window.addEventListener('pagehide', function(){ lockEdge(false); guardBack(false); });
+})();
+</script>
+<script>
+// 菜单解锁：栏目传送项按登录信息解锁（未登录置灰+提示），传送回修真小世界不锁定
+(function(){
+  function getWalineUser(){
+    try{
+      var keys = ['WALINE_USER','@waline/user','waline_user'];
+      for (var i = 0; i < keys.length; i++) {
+        try{ var v = localStorage.getItem(keys[i]); if (v) { var u = JSON.parse(v); if (u && (u.display_name || u.nick || u.name)) return u; } }catch(e){}
+      }
+      try{ var sv = sessionStorage.getItem('WALINE_USER') || sessionStorage.getItem('@waline/user');
+        if (sv) { var u2 = JSON.parse(sv); if (u2 && (u2.display_name || u2.nick || u2.name)) return u2; } }catch(e){}
+    }catch(e){}
+    return null;
+  }
+  function tip(msg){
+    var t = document.getElementById('menuLockTip');
+    if (!t) { t = document.createElement('div'); t.id = 'menuLockTip'; t.className = 'menu-lock-tip'; document.body.appendChild(t); }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._tm);
+    t._tm = setTimeout(function(){ t.classList.remove('show'); }, 1800);
+  }
+  var menu = document.getElementById('floatMenu');
+  if (menu) {
+    var logged = !!getWalineUser();
+    var links = menu.querySelectorAll('a');
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      if (a.classList.contains('menu-home')) continue; // 传送回主页不锁定
+      if (logged) continue;                            // 已登录全部解锁
+      a.classList.add('locked');
+      a.insertAdjacentHTML('beforeend', '<span class="menu-lock-icon">🔒</span>');
+      a.addEventListener('click', function(e){ e.preventDefault(); tip('请先在修真小世界登录，解锁全部传送'); });
+    }
+  }
 })();
 </script>
 </body>
