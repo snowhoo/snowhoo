@@ -224,7 +224,7 @@ body{display:flex;flex-direction:column}
 .bg-save-close{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.4);color:#fff;font-size:.8rem;cursor:pointer;z-index:1}
 
 /* ===== 日程计划：与诗词/今日/星座同位置（中央内容区），互斥切换 ===== */
-.plan-panel{position:absolute;top:calc(50% + 20px);left:15px;right:15px;z-index:5;max-width:600px;margin:0 auto;transform:translateY(-50%);max-height:calc(100% - 180px);background:rgba(255,255,255,.8);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .4s ease,visibility .4s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.plan-panel{position:absolute;top:calc(50% + 10px);left:15px;right:15px;z-index:5;max-width:610px;margin:0 auto;transform:translateY(-50%);max-height:calc(100% - 180px);background:rgba(255,255,255,.8);border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .4s ease,visibility .4s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .plan-panel.show{opacity:1;visibility:visible}
 .plan-panel-body{flex:1;min-height:0;overflow-y:auto;padding:10px 14px 16px;-webkit-overflow-scrolling:touch}
 .plan-date-bar{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:10px 12px;background:rgba(255,255,255,.75);border-radius:14px;box-shadow:0 1px 6px rgba(60,50,30,.06)}
