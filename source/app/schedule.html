@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>日程计划</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;background:#f6f4ee;color:#1a1a1a;-webkit-tap-highlight-color:transparent}
+body{display:flex;flex-direction:column}
+
+/* 顶部栏 */
+.header{flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:16px 60px 10px;position:relative}
+.header .page-title{font-size:1.05rem;font-weight:700;letter-spacing:1px;color:#3a2f22}
+.header .page-title em{font-style:normal;color:#e8793a}
+.home-btn{position:fixed;top:52px;right:12px;z-index:999;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,transform .2s;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.home-btn:active{transform:scale(.88)}
+.home-btn svg{width:18px;height:18px;fill:#fff;opacity:.8}
+
+/* 日期栏 */
+.date-bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:6px;margin:4px 14px 10px;padding:10px 12px;background:#fff;border-radius:14px;box-shadow:0 1px 6px rgba(60,50,30,.06)}
+.date-arrow{width:34px;height:34px;border:none;border-radius:50%;background:#f6f4ee;color:#8a7a5f;font-size:1.2rem;cursor:pointer;flex-shrink:0;line-height:1}
+.date-arrow:active{background:#e9e2d3}
+.date-center{flex:1;text-align:center;cursor:pointer;padding:2px 0}
+.date-center .date-main{font-size:1rem;font-weight:700;color:#3a2f22}
+.date-center .date-main.today{color:#e8793a}
+.date-center .date-sub{font-size:.66rem;color:#a3957d;margin-top:3px}
+.today-btn{flex-shrink:0;border:none;border-radius:14px;padding:6px 12px;font-size:.72rem;color:#fff;background:#e8793a;cursor:pointer;letter-spacing:1px}
+.today-btn:active{opacity:.85}
+
+/* 同步状态小字 */
+.sync-tip{flex-shrink:0;text-align:center;font-size:.62rem;color:#b0a48c;margin:-4px 0 8px;min-height:12px}
+
+/* 添加卡片 */
+.add-card{flex-shrink:0;display:flex;align-items:center;gap:8px;margin:0 14px 10px;padding:10px 12px;background:#fff;border-radius:14px;box-shadow:0 1px 6px rgba(60,50,30,.06)}
+.add-card input[type=time]{border:1px solid #e8e0cf;border-radius:8px;padding:7px 6px;font-size:.8rem;color:#3a2f22;background:#faf8f2;flex-shrink:0;outline:none;width:74px}
+.add-card input[type=text]{flex:1;min-width:0;border:none;outline:none;font-size:.88rem;color:#3a2f22;background:transparent;padding:6px 2px}
+.add-card input[type=text]::placeholder{color:#c2b8a2}
+.add-card .add-btn{flex-shrink:0;border:none;border-radius:8px;padding:9px 16px;font-size:.8rem;color:#fff;background:#e8793a;cursor:pointer;letter-spacing:1px}
+.add-card .add-btn:active{opacity:.85}
+
+/* 列表 */
+.list-wrap{flex:1;min-height:0;overflow-y:auto;padding:0 14px 8px;-webkit-overflow-scrolling:touch}
+.list-card{background:#fff;border-radius:14px;box-shadow:0 1px 6px rgba(60,50,30,.06);overflow:hidden}
+.plan-item{display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid #f3efe4}
+.plan-item:last-child{border-bottom:none}
+.plan-item:active{background:#faf8f2}
+.done-btn{width:22px;height:22px;border-radius:50%;border:2px solid #d8cfba;background:#fff;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;padding:0}
+.plan-item.done .done-btn{background:#e8793a;border-color:#e8793a}
+.done-btn svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .15s}
+.plan-item.done .done-btn svg{opacity:1}
+.plan-time{flex-shrink:0;font-size:.7rem;color:#a3957d;background:#f6f4ee;border-radius:6px;padding:3px 8px;font-variant-numeric:tabular-nums}
+.plan-text{flex:1;min-width:0;font-size:.88rem;color:#3a2f22;word-break:break-all;line-height:1.45}
+.plan-item.done .plan-text{color:#c0b6a0;text-decoration:line-through}
+.del-btn{flex-shrink:0;width:26px;height:26px;border:none;background:none;color:#d3c9b4;font-size:1.05rem;cursor:pointer;line-height:1;border-radius:50%}
+.del-btn:active{color:#e94560;background:#fdf1f1}
+.empty{padding:56px 0;text-align:center;color:#c2b8a2;font-size:.8rem;line-height:1.8}
+.empty .empty-ico{font-size:1.6rem;display:block;margin-bottom:8px}
+
+/* 底部统计 */
+.stat-bar{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px 14px;font-size:.72rem;color:#a3957d}
+.stat-bar .bar{width:86px;height:5px;border-radius:3px;background:#e8e0cf;overflow:hidden}
+.stat-bar .bar i{display:block;height:100%;width:0;background:#e8793a;border-radius:3px;transition:width .3s}
+.stat-bar .stat-done{color:#e8793a;font-weight:600}
+
+/* 轻提示 */
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(40,32,20,.88);color:#fff;font-size:.72rem;padding:7px 16px;border-radius:16px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="page-title">📅 日程<em>计划</em></div>
+</div>
+<button class="home-btn" onclick="window.location.href='https://snowhoo.net/app/APP.html'" title="首页"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></button>
+
+<div class="date-bar">
+  <button class="date-arrow" id="prevDay" title="前一天">‹</button>
+  <div class="date-center" id="dateCenter" title="点击选择日期">
+    <div class="date-main" id="dateMain"></div>
+    <div class="date-sub" id="dateSub"></div>
+  </div>
+  <button class="today-btn" id="todayBtn">今天</button>
+  <button class="date-arrow" id="nextDay" title="后一天">›</button>
+</div>
+<input type="date" id="datePicker" style="display:none">
+
+<div class="sync-tip" id="syncTip"></div>
+
+<div class="add-card">
+  <input type="time" id="planTime" value="09:00">
+  <input type="text" id="planText" placeholder="添加一项计划…" maxlength="60">
+  <button class="add-btn" id="addBtn">添加</button>
+</div>
+
+<div class="list-wrap">
+  <div class="list-card" id="listCard">
+    <div class="empty" id="emptyTip"><span class="empty-ico">📝</span>今天还没有计划，添加一条吧</div>
+    <div id="planList"></div>
+  </div>
+</div>
+
+<div class="stat-bar" id="statBar"></div>
+
+<script>
+(function(){
+  var LS_KEY = 'snowhoo_plan_data';      // 本地全部日程 { 'YYYY-MM-DD': [ {id,time,text,done} ] }
+  var LS_SAVED = 'snowhoo_plan_savedAt'; // 本地最后保存时间戳
+  var LS_OID = 'snowhoo_plan_oid';       // 云端评论 objectId（可重新获取）
+  var CLOUD_BASE = 'https://waline.snowhoo.net';
+  var CLOUD_PATH_BASE = '/app-plan/';
+
+  var data = {};
+  var curDate = '';
+  var syncTimer = null;
+
+  // ---------- 工具 ----------
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function todayStr(d){ d = d || new Date(); return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
+  function weekCN(d){ return '日一二三四五六'[d.getDay()]; }
+  function parseDate(s){
+    var p = String(s).split('-');
+    return new Date(+p[0], (+p[1])-1, +p[2]);
+  }
+  function $id(id){ return document.getElementById(id); }
+
+  // ---------- 本地存储 ----------
+  function loadLocal(){
+    try{
+      var raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        var obj = JSON.parse(raw);
+        if (obj && typeof obj === 'object' && !Array.isArray(obj)) data = obj;
+      }
+    }catch(e){ data = {}; }
+  }
+  function saveLocal(){
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(data)); }catch(e){}
+  }
+  function savedAt(){
+    try{ return parseInt(localStorage.getItem(LS_SAVED) || '0', 10) || 0; }catch(e){ return 0; }
+  }
+  function setSavedAt(ts){
+    try{ localStorage.setItem(LS_SAVED, String(ts)); }catch(e){}
+  }
+  function cloudOid(){
+    try{ return parseInt(localStorage.getItem(LS_OID) || '0', 10) || 0; }catch(e){ return 0; }
+  }
+  function setCloudOid(id){
+    try{ localStorage.setItem(LS_OID, id ? String(id) : ''); }catch(e){}
+  }
+
+  // ---------- Waline 用户（与 APP.html 同套逻辑）----------
+  function getWalineUser(){
+    try{
+      var keys = ['WALINE_USER','@waline/user','waline_user'];
+      var user = null;
+      for (var i = 0; i < keys.length; i++) {
+        try{
+          var val = localStorage.getItem(keys[i]);
+          if (val) {
+            user = JSON.parse(val);
+            if (user && (user.display_name || user.nick || user.name)) break;
+          }
+        }catch(e){ user = null; }
+      }
+      if (!user) {
+        try{
+          var sv = sessionStorage.getItem('WALINE_USER') || sessionStorage.getItem('@waline/user');
+          if (sv) { user = JSON.parse(sv); if (!user || !(user.display_name || user.nick || user.name)) user = null; }
+        }catch(e){ user = null; }
+      }
+      if (!user) return null;
+      user.display_name = user.display_name || user.nick || user.name || '';
+      user.display_name = user.display_name.trim();
+      if (!user.display_name) return null;
+      user.email = user.email || user.mail || '';
+      return user;
+    }catch(e){ return null; }
+  }
+  // 云端按用户区分 path（email 优先，保证唯一）
+  function cloudPath(u){
+    var key = (u.email || u.display_name || 'guest').trim();
+    return CLOUD_PATH_BASE + encodeURIComponent(key);
+  }
+  // 健壮解析（兼容 Waline 管理后台 markdown 渲染污染，同 APP.html parseGameRecord）
+  function parsePlan(raw){
+    if (!raw) return null;
+    var s = String(raw).replace(/<[^>]*>/g, '')
+      .replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'")
+      .replace(/&quot;/g, '"').replace(/&#34;/g, '"')
+      .replace(/&amp;/g, '&').replace(/&#38;/g, '&')
+      .replace(/&lt;/g, '<').replace(/&#60;/g, '<')
+      .replace(/&gt;/g, '>').replace(/&#62;/g, '>');
+    var start = s.indexOf('{');
+    var end = s.lastIndexOf('}');
+    if (start >= 0 && end > start) s = s.slice(start, end + 1);
+    try { return JSON.parse(s); } catch(e){ return null; }
+  }
+
+  // ---------- 云端同步 ----------
+  function setTip(txt){
+    var el = $id('syncTip');
+    if (el) el.textContent = txt || '';
+  }
+  function updateSyncTip(){
+    var u = getWalineUser();
+    if (u) setTip('已登录：' + u.display_name + ' · 计划自动同步云端');
+    else setTip('未登录 · 计划仅保存在本机');
+  }
+  // 拉取云端最新记录（含 objectId），失败返回 null
+  function fetchCloud(u){
+    var p = fetch(CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(cloudPath(u)))
+      .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function(resp){
+        var records = (resp.data && resp.data.data) || [];
+        var found = null;
+        for (var i = 0; i < records.length; i++) {
+          try{
+            var rec = records[i];
+            var obj = parsePlan(rec.orig || rec.comment || '');
+            if (obj && obj.v === 1 && obj.data && typeof obj.data === 'object') {
+              var oid = parseInt(rec.objectId, 10) || 0;
+              if (!found || oid > found.oid) found = { oid: oid, updatedAt: +obj.updatedAt || 0, data: obj.data };
+            }
+          }catch(e){}
+        }
+        return found;
+      });
+    var timer = new Promise(function(resolve, reject){ setTimeout(function(){ reject(new Error('超时')); }, 8000); });
+    return Promise.race([p, timer]).catch(function(e){ console.warn('[计划] 拉取云端失败:', e); return null; });
+  }
+  // 同步：云端更新则采用；否则把本地推到云端
+  function syncNow(){
+    var u = getWalineUser();
+    if (!u) { setCloudOid(0); return; }
+    var token = u.token || '';
+    if (!token) { try{ var s = JSON.parse(localStorage.getItem('WALINE_USER')||'{}'); if (s.token) token = s.token; }catch(e){} }
+    fetchCloud(u).then(function(res){
+      var cloud = (res && res.data) ? res : null;
+      if (cloud && cloud.updatedAt > savedAt()) {
+        // 云端更新 → 采用云端
+        data = cloud.data;
+        saveLocal();
+        setSavedAt(cloud.updatedAt);
+        setCloudOid(cloud.oid);
+        setTip('已采用云端最新计划');
+        render();
+        setTimeout(function(){ updateSyncTip(); }, 2000);
+        return;
+      }
+      // 本地更新 → 推云端
+      setTip('正在同步…');
+      var payload = JSON.stringify({
+        comment: JSON.stringify({ v: 1, updatedAt: Date.now(), data: data }),
+        url: cloudPath(u),
+        nick: u.display_name || '游客',
+        mail: u.email || ''
+      });
+      var headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      var oid = cloud ? cloud.oid : cloudOid();
+      var req;
+      if (oid) {
+        req = fetch(CLOUD_BASE + '/api/comment/' + oid, { method: 'PUT', headers: headers, body: payload });
+      } else {
+        req = fetch(CLOUD_BASE + '/api/comment', { method: 'POST', headers: headers, body: payload })
+          .then(function(r){
+            return r.json().then(function(j){
+              if (r.ok && j.data && j.data.objectId) setCloudOid(parseInt(j.data.objectId, 10));
+              return r;
+            });
+          });
+      }
+      return req.then(function(r){
+        if (r.ok) {
+          setSavedAt(Date.now());
+          setTip('已同步到云端');
+        } else {
+          setTip('云端同步失败 · 计划已保存在本机');
+        }
+        setTimeout(function(){ updateSyncTip(); }, 2000);
+      }).catch(function(e){
+        console.warn('[计划] 云端同步网络失败:', e);
+        setTip('云端同步失败 · 计划已保存在本机');
+        setTimeout(function(){ updateSyncTip(); }, 2000);
+      });
+    });
+  }
+  function syncSoon(){
+    if (!getWalineUser()) return;
+    if (syncTimer) clearTimeout(syncTimer);
+    syncTimer = setTimeout(syncNow, 800);
+  }
+
+  // ---------- 渲染 ----------
+  function listFor(date){ return data[date] || (data[date] = []); }
+  function render(){
+    var items = listFor(curDate).slice().sort(function(a, b){
+      var ta = a.time || '99:99', tb = b.time || '99:99';
+      if (ta === tb) return (a.id||0) - (b.id||0);
+      return ta < tb ? -1 : 1;
+    });
+    var list = $id('planList');
+    var empty = $id('emptyTip');
+    list.innerHTML = '';
+    var done = 0;
+    items.forEach(function(it){
+      if (it.done) done++;
+      var li = document.createElement('div');
+      li.className = 'plan-item' + (it.done ? ' done' : '');
+      li.dataset.id = it.id;
+      li.innerHTML =
+        '<button class="done-btn" data-act="toggle"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></button>' +
+        '<span class="plan-time">' + (it.time ? escapeHtml(it.time) : '全天') + '</span>' +
+        '<span class="plan-text">' + escapeHtml(it.text) + '</span>' +
+        '<button class="del-btn" data-act="del">×</button>';
+      list.appendChild(li);
+    });
+    empty.style.display = items.length ? 'none' : 'block';
+    var stat = $id('statBar');
+    var pct = items.length ? Math.round(done / items.length * 100) : 0;
+    stat.innerHTML = '今日 ' + items.length + ' 项' +
+      '<span class="bar"><i style="width:' + pct + '%"></i></span>' +
+      '<span class="stat-done">已完成 ' + done + ' 项</span>';
+    // 日期栏
+    var d = parseDate(curDate);
+    var isToday = curDate === todayStr();
+    $id('dateMain').textContent = (d.getMonth()+1) + '月' + d.getDate() + '日 周' + weekCN(d) + (isToday ? '（今天）' : '');
+    $id('dateMain').className = 'date-main' + (isToday ? ' today' : '');
+    $id('dateSub').textContent = curDate.replace(/-/g, '年').replace(/-/, '月') + '日';
+  }
+  function escapeHtml(s){
+    return String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // ---------- 交互 ----------
+  function addItem(){
+    var textEl = $id('planText');
+    var timeEl = $id('planTime');
+    var text = (textEl.value || '').trim();
+    if (!text) { toast('请输入计划内容'); textEl.focus(); return; }
+    listFor(curDate).push({
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      time: timeEl.value || '',
+      text: text.slice(0, 60),
+      done: false
+    });
+    textEl.value = '';
+    saveLocal(); setSavedAt(Date.now());
+    render();
+    syncSoon();
+  }
+  function toggleDone(id){
+    var items = listFor(curDate);
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].id == id) { items[i].done = !items[i].done; break; }
+    }
+    saveLocal(); setSavedAt(Date.now());
+    render();
+    syncSoon();
+  }
+  function delItem(id){
+    var items = listFor(curDate);
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].id == id) { items.splice(i, 1); break; }
+    }
+    saveLocal(); setSavedAt(Date.now());
+    render();
+    syncSoon();
+    toast('已删除');
+  }
+  function shiftDate(delta){
+    var d = parseDate(curDate);
+    d.setDate(d.getDate() + delta);
+    curDate = todayStr(d);
+    render();
+  }
+  var toastTimer = null;
+  function toast(msg){
+    var t = document.querySelector('.toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.className = 'toast';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 1600);
+  }
+
+  // ---------- 初始化 ----------
+  function init(){
+    loadLocal();
+    curDate = todayStr();
+    updateSyncTip();
+    render();
+
+    $id('prevDay').addEventListener('click', function(){ shiftDate(-1); });
+    $id('nextDay').addEventListener('click', function(){ shiftDate(1); });
+    $id('todayBtn').addEventListener('click', function(){ curDate = todayStr(); render(); });
+    var picker = $id('datePicker');
+    $id('dateCenter').addEventListener('click', function(){
+      picker.value = curDate;
+      try { picker.showPicker && picker.showPicker(); } catch(e){}
+      picker.click();
+    });
+    picker.addEventListener('change', function(){
+      if (picker.value) { curDate = picker.value; render(); }
+    });
+    $id('addBtn').addEventListener('click', addItem);
+    $id('planText').addEventListener('keydown', function(e){
+      if (e.key === 'Enter') addItem();
+    });
+    $id('planList').addEventListener('click', function(e){
+      var btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      var li = btn.closest('.plan-item');
+      var id = li ? li.dataset.id : null;
+      if (id == null) return;
+      if (btn.dataset.act === 'toggle') toggleDone(id);
+      else if (btn.dataset.act === 'del') delItem(id);
+    });
+
+    // 已登录 → 拉取/同步云端
+    if (getWalineUser()) syncNow();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+<script>
+// 翻页保护：排除左右边缘系统返回手势（防横滑切页/退出），离开页面恢复
+(function(){
+  function lockEdge(lock){ try{ if(window.AppBridge && window.AppBridge.setEdgeLock) window.AppBridge.setEdgeLock(lock ? '1' : '0'); }catch(e){} }
+  function guardBack(g){ try{ if(window.AppBridge && window.AppBridge.setBackGuard) window.AppBridge.setBackGuard(g ? '1' : '0'); }catch(e){} }
+  lockEdge(true);
+  guardBack(true);
+  window.addEventListener('pagehide', function(){ lockEdge(false); guardBack(false); });
+})();
+</script>
+</body>
+</html>
