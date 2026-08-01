@@ -477,6 +477,32 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     else if (e.key === 'ArrowLeft' && currentIndex > 0) { currentIndex--; updateCards(); }
   }
 
+  // 通知封装 App 原生：音频播放状态（配合前台媒体服务实现后台/锁屏播放；App 未注入桥时自动忽略）
+  function notifyNative(playing) {
+    try {
+      if (window.AudioBridge && typeof window.AudioBridge.setPlaying === 'function') {
+        window.AudioBridge.setPlaying(playing ? '1' : '0');
+      }
+    } catch (e) {}
+  }
+  // 同步系统媒体会话（锁屏/通知栏显示标题与播放状态）
+  function setMediaSession(playing, title) {
+    try {
+      if (navigator.mediaSession && typeof MediaMetadata !== 'undefined') {
+        if (playing) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: title || '夜读',
+            artist: '小红故事·夜读',
+            album: '夜读'
+          });
+          navigator.mediaSession.playbackState = 'playing';
+        } else {
+          navigator.mediaSession.playbackState = title ? 'paused' : 'none';
+        }
+      }
+    } catch (e) {}
+  }
+
   function toggleAudio(index, btn) {
     var src = btn.dataset.src;
     var progressBar = document.getElementById('yedu-progress-' + index);
@@ -488,10 +514,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         _scAudio.play();
         btn.classList.add('playing');
         pathEl.setAttribute('d', pausePath);
+        notifyNative(true);
+        setMediaSession(true, (articles[index] || {}).title);
       } else {
         _scAudio.pause();
         btn.classList.remove('playing');
         pathEl.setAttribute('d', playPath);
+        notifyNative(false);
+        setMediaSession(false, (articles[index] || {}).title);
       }
       return;
     }
@@ -519,18 +549,33 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       btn.classList.remove('playing');
       pathEl.setAttribute('d', playPath);
       if (progressBar) progressBar.style.width = '0%';
+      notifyNative(false);
+      setMediaSession(false);
     });
     audio.addEventListener('error', function() {
       btn.classList.remove('playing');
       pathEl.setAttribute('d', playPath);
       if (progressBar) progressBar.style.width = '0%';
+      notifyNative(false);
+      setMediaSession(false);
     });
 
     btn.classList.add('playing');
     pathEl.setAttribute('d', pausePath);
+    notifyNative(true);
+    setMediaSession(true, (articles[index] || {}).title);
+    // 系统媒体通知的控制按钮（播放/暂停）→ 控制页面音频
+    try {
+      if (navigator.mediaSession && typeof navigator.mediaSession.setActionHandler === 'function') {
+        navigator.mediaSession.setActionHandler('play', function() { audio.play(); });
+        navigator.mediaSession.setActionHandler('pause', function() { audio.pause(); });
+      }
+    } catch (e) {}
     audio.play().catch(function() {
       btn.classList.remove('playing');
       pathEl.setAttribute('d', playPath);
+      notifyNative(false);
+      setMediaSession(false);
     });
   }
 
