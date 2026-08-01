@@ -228,12 +228,13 @@ body{display:flex;flex-direction:column}
 .plan-panel.show{opacity:1;visibility:visible}
 .plan-panel-body{flex:1;min-height:0;overflow:hidden;padding:10px;display:flex;flex-direction:column}
 .plan-topbar{display:flex;align-items:center;gap:6px;padding:0px;flex-shrink:0}
-.plan-date-arrow{height:28px;border:none;background:#ffffff00;color:#8a7a5f;font-size:1.05rem;cursor:pointer;flex-shrink:0;line-height:1}
-.plan-date-arrow:active{background:#e9e2d3}
-.plan-date-center{flex:1;text-align:center;cursor:pointer;padding:0 2px;min-width:0}
-.plan-date-main{font-size:.62rem;font-weight:400;color:#3a2f22;font-variant-numeric:tabular-nums;white-space:nowrap}
-.plan-today-btn{flex-shrink:0;border:none;border-radius:50%;width:20px;height:20px;padding:0;font-size:.62rem;color:#fff;background:#e8793a;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center}
-.plan-today-btn:active{opacity:.85}
+.plan-date-center{position:relative;flex:1;text-align:center;cursor:pointer;padding:0 2px;min-width:0;overflow:hidden}
+.plan-date-main{font-size:.62rem;font-weight:400;color:#3a2f22;font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
+/* 透明日期选择器覆盖日期区：点击日期直接弹原生日期选择器 */
+.plan-date-picker{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;border:none;background:transparent;cursor:pointer;z-index:2;color:#3a2f22}
+/* 隐藏 time 输入框右侧原生下箭头（点击输入框直接弹时间选择器） */
+.plan-add-time::-webkit-calendar-picker-indicator{display:none;-webkit-appearance:none;opacity:0}
+.plan-add-time::-webkit-inner-spin-button{display:none;-webkit-appearance:none}
 .plan-sync-tip{font-size:.62rem;color:#b0a48c;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52%}
 .plan-add-time{border:none;border-radius:8px;padding:0px;font-size:.62rem;color:#3a2f22;background:#ffffff00;flex-shrink:0;outline:none;width:54px}
 .plan-add-text{flex:1;min-width:0;border:none;outline:none;font-size:.8rem;color:#3a2f22;background:transparent;padding:6px 2px}
@@ -255,6 +256,8 @@ body{display:flex;flex-direction:column}
 .plan-done-btn svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .15s}
 .plan-item.done .plan-done-btn svg{opacity:1}
 .plan-time{flex-shrink:0;font-size:.62rem;color:#a3957d;background:#f6f4ee;border-radius:6px;padding:3px 8px;font-variant-numeric:tabular-nums}
+/* 全部日程视图：条目日期徽章（如 2026-8-1） */
+.plan-item-date{flex-shrink:0;font-size:.58rem;color:#8a7a5f;background:#efe9dc;border-radius:6px;padding:2px 6px;font-variant-numeric:tabular-nums}
 .plan-text{flex:1;min-width:0;font-size:.88rem;color:#3a2f22;word-break:break-all;line-height:1.45}
 .plan-item.done .plan-text{color:#c0b6a0;text-decoration:line-through}
 .plan-del-btn{flex-shrink:0;width:26px;height:26px;border:none;background:none;color:#d3c9b4;font-size:1.05rem;cursor:pointer;line-height:1;border-radius:50%}
@@ -266,6 +269,15 @@ body{display:flex;flex-direction:column}
 .plan-stat-bar .bar{width:120px;height:5px;border-radius:3px;background:#e8e0cf;overflow:hidden;flex-shrink:0}
 .plan-stat-bar .bar i{display:block;height:100%;width:0;background:#e8793a;border-radius:3px;transition:width .3s}
 .plan-stat-sep{color:#d3c9b4;flex-shrink:0}
+/* 底部"全部日程"开关 */
+.plan-all-toggle{display:flex;align-items:center;justify-content:center;gap:8px;padding:2px 0 0;font-size:.68rem;color:#8a7a5f;flex-shrink:0;user-select:none}
+.plan-switch{position:relative;display:inline-block;width:34px;height:18px;flex-shrink:0;cursor:pointer}
+.plan-switch input{position:absolute;opacity:0;width:0;height:0}
+.plan-switch .slider{position:absolute;inset:0;background:#d8cfba;border-radius:9px;transition:background .2s;pointer-events:none}
+.plan-switch .slider::before{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+.plan-switch input:checked + .slider{background:#e8793a}
+.plan-switch input:checked + .slider::before{transform:translateX(16px)}
+.plan-switch:active .slider{opacity:.85}
 .plan-toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:12000;background:rgba(40,32,20,.88);color:#fff;font-size:.72rem;padding:7px 16px;border-radius:16px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
 .plan-toast.show{opacity:1}
 </style>
@@ -290,17 +302,14 @@ body{display:flex;flex-direction:column}
   <div class="plan-panel" id="planPanel">
     <div class="plan-panel-body">
       <div class="plan-topbar">
-        <button class="plan-date-arrow" id="planPrevDay">‹</button>
         <div class="plan-date-center" id="planDateCenter">
           <div class="plan-date-main" id="planDateMain"></div>
+          <input type="date" id="planDatePicker" class="plan-date-picker" title="选择日期">
         </div>
-        <button class="plan-today-btn" id="planTodayBtn">今</button>
-        <button class="plan-date-arrow" id="planNextDay">›</button>
         <input type="time" id="planTime" value="09:00" class="plan-add-time">
         <input type="text" id="planText" placeholder="添加一项计划…" maxlength="60" class="plan-add-text">
         <button class="plan-add-btn" id="planAddBtn">+</button>
       </div>
-      <input type="date" id="planDatePicker" style="display:none">
       <div class="plan-list-wrap">
         <div class="plan-arrow plan-arrow-up" id="planArrowUp">▲</div>
         <div class="plan-list-card" id="planListCard">
@@ -310,6 +319,10 @@ body{display:flex;flex-direction:column}
         <div class="plan-arrow plan-arrow-down" id="planArrowDown">▼</div>
       </div>
       <div class="plan-stat-bar" id="planStatBar"></div>
+      <div class="plan-all-toggle" id="planAllToggleBar">
+        <span>全部日程</span>
+        <label class="plan-switch"><input type="checkbox" id="planAllSwitch" checked><span class="slider"></span></label>
+      </div>
     </div>
   </div>
   <div class="top-right-logo locked" id="topRightLogo"><img src="logo.png" alt="logo"><span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div>
@@ -2890,6 +2903,7 @@ var PlanSvc = (function(){
   var LS_KEY = 'snowhoo_plan_data';      // 本地全部日程 { 'YYYY-MM-DD': [ {id,time,text,done} ] }
   var LS_SAVED = 'snowhoo_plan_savedAt'; // 本地最后保存时间戳
   var LS_OID = 'snowhoo_plan_oid';       // 云端评论 objectId（可重新获取）
+  var LS_ALLMODE = 'snowhoo_plan_allMode'; // 全部日程开关（默认开）
   var CLOUD_BASE = 'https://waline.snowhoo.net';
   var CLOUD_PATH_BASE = '/app-plan/';
 
@@ -2901,6 +2915,12 @@ var PlanSvc = (function(){
   function todayStr(d){ d = d || new Date(); return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
   function weekCN(d){ return '日一二三四五六'[d.getDay()]; }
   function parseDate(s){ var p = String(s).split('-'); return new Date(+p[0], (+p[1])-1, +p[2]); }
+  // 展示用去前导零：2026-08-01 → 2026-8-1
+  function fmtDate(s){ var p = String(s).split('-'); return (+p[0]) + '-' + (+p[1]) + '-' + (+p[2]); }
+  // 展示用去前导零：09:00 → 9:00
+  function fmtTime(t){ return String(t || '').replace(/^0(\d):/, '$1:'); }
+  function isAllMode(){ try{ var v = localStorage.getItem(LS_ALLMODE); if (v == null) return true; return v === '1'; }catch(e){ return true; } }
+  function setAllMode(on){ try{ localStorage.setItem(LS_ALLMODE, on ? '1' : '0'); }catch(e){} }
   function $(id){ return document.getElementById(id); }
 
   // ---------- 本地存储 ----------
@@ -3066,42 +3086,60 @@ var PlanSvc = (function(){
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
+  function byTime(a, b){
+    var ta = a.time || '99:99', tb = b.time || '99:99';
+    if (ta === tb) return (a.id||0) - (b.id||0);
+    return ta < tb ? -1 : 1;
+  }
   function render(){
-    var items = listFor(curDate).slice().sort(function(a, b){
-      var ta = a.time || '99:99', tb = b.time || '99:99';
-      if (ta === tb) return (a.id||0) - (b.id||0);
-      return ta < tb ? -1 : 1;
-    });
+    var allMode = isAllMode();
+    var items = [], total = 0, done = 0;
+    if (allMode) {
+      // 全部日程：所有日期按日期+时间升序，条目带日期
+      Object.keys(data).filter(function(k){ return Array.isArray(data[k]) && data[k].length; }).sort().forEach(function(k){
+        data[k].slice().sort(byTime).forEach(function(it){ items.push({ date: k, it: it }); });
+      });
+      total = items.length;
+      items.forEach(function(r){ if (r.it.done) done++; });
+    } else {
+      // 单日：只显示日期框所选日期的日程（保持原样）
+      items = listFor(curDate).slice().sort(byTime).map(function(it){ return { date: curDate, it: it }; });
+      total = items.length;
+      items.forEach(function(r){ if (r.it.done) done++; });
+    }
     var list = $('planList');
     var empty = $('planEmptyTip');
     list.innerHTML = '';
-    var done = 0;
-    items.forEach(function(it){
-      if (it.done) done++;
+    items.forEach(function(rec){
+      var it = rec.it;
       var li = document.createElement('div');
       li.className = 'plan-item' + (it.done ? ' done' : '');
       li.dataset.id = it.id;
-      li.innerHTML =
-        '<button class="plan-done-btn" data-act="toggle"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></button>' +
-        '<span class="plan-time">' + (it.time ? escapeHtml(it.time) : '全天') + '</span>' +
+      var html =
+        '<button class="plan-done-btn" data-act="toggle"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></button>';
+      if (allMode) html += '<span class="plan-item-date">' + fmtDate(rec.date) + '</span>';
+      html +=
+        '<span class="plan-time">' + (it.time ? fmtTime(it.time) : '全天') + '</span>' +
         '<span class="plan-text">' + escapeHtml(it.text) + '</span>' +
         '<button class="plan-del-btn" data-act="del">×</button>';
+      li.innerHTML = html;
       list.appendChild(li);
     });
     empty.style.display = items.length ? 'none' : 'block';
+    empty.innerHTML = '<span>📝</span>' + (allMode ? '还没有任何计划，添加一条吧' : '今天还没有计划，添加一条吧');
     var stat = $('planStatBar');
-    var pct = items.length ? Math.round(done / items.length * 100) : 0;
+    var pct = total ? Math.round(done / total * 100) : 0;
     stat.innerHTML =
       '<span class="plan-stat-line">' +
-        '<span class="plan-stat-text">今日 ' + items.length + ' 项，完成 ' + done + ' 项</span>' +
+        '<span class="plan-stat-text">' + (allMode ? '全部 ' : '今日 ') + total + ' 项，完成 ' + done + ' 项</span>' +
         '<span class="plan-stat-sep">|</span>' +
         '<span class="plan-sync-tip" id="planSyncTip"></span>' +
       '</span>' +
       '<span class="bar"><i style="width:' + pct + '%"></i></span>';
     updateSyncTip(); // 登录信息与完成项同行（元素随 innerHTML 重建，需重新填充）
-    // 日期栏：单行 "2026-8-1 周六"
+    // 日期栏：全部模式显示"全部日程"，单日模式显示 "2026-8-1 周六"
     var d = parseDate(curDate);
-    $('planDateMain').textContent = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate() + ' 周' + weekCN(d);
+    $('planDateMain').textContent = allMode ? '全部日程' : d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate() + ' 周' + weekCN(d);
     // 渲染后刷新滚动方向提示箭头（等布局完成）
     requestAnimationFrame(updateArrows);
   }
@@ -3118,6 +3156,18 @@ var PlanSvc = (function(){
   }
 
   // ---------- 交互 ----------
+  // 按 id 在全部日期中查找条目（全部日程模式下跨日期勾选/删除）
+  function findItemById(id){
+    for (var d in data) {
+      var arr = data[d];
+      if (Array.isArray(arr)) {
+        for (var i = 0; i < arr.length; i++) {
+          if (arr[i].id == id) return { arr: arr, i: i };
+        }
+      }
+    }
+    return null;
+  }
   function addItem(){
     var textEl = $('planText');
     var timeEl = $('planTime');
@@ -3133,31 +3183,24 @@ var PlanSvc = (function(){
     saveLocal(); setSavedAt(Date.now());
     render();
     syncSoon();
+    if (isAllMode()) toast('已添加到 ' + fmtDate(curDate));
   }
   function toggleDone(id){
-    var items = listFor(curDate);
-    for (var i = 0; i < items.length; i++) {
-      if (items[i].id == id) { items[i].done = !items[i].done; break; }
-    }
+    var f = findItemById(id);
+    if (!f) return;
+    f.arr[f.i].done = !f.arr[f.i].done;
     saveLocal(); setSavedAt(Date.now());
     render();
     syncSoon();
   }
   function delItem(id){
-    var items = listFor(curDate);
-    for (var i = 0; i < items.length; i++) {
-      if (items[i].id == id) { items.splice(i, 1); break; }
-    }
+    var f = findItemById(id);
+    if (!f) return;
+    f.arr.splice(f.i, 1);
     saveLocal(); setSavedAt(Date.now());
     render();
     syncSoon();
     toast('已删除');
-  }
-  function shiftDate(delta){
-    var d = parseDate(curDate);
-    d.setDate(d.getDate() + delta);
-    curDate = todayStr(d);
-    render();
   }
   function toast(msg){
     var t = document.querySelector('.plan-toast');
@@ -3176,20 +3219,26 @@ var PlanSvc = (function(){
   function init(){
     loadLocal();
     curDate = todayStr();
+    $('planAllSwitch').checked = isAllMode();
     updateSyncTip();
     render();
 
-    $('planPrevDay').addEventListener('click', function(){ shiftDate(-1); });
-    $('planNextDay').addEventListener('click', function(){ shiftDate(1); });
-    $('planTodayBtn').addEventListener('click', function(){ curDate = todayStr(); render(); });
     var picker = $('planDatePicker');
-    $('planDateCenter').addEventListener('click', function(){
-      picker.value = curDate;
-      try { picker.showPicker && picker.showPicker(); } catch(e){}
-      picker.click();
-    });
+    // 点击日期直接选日期：picker 透明覆盖在日期文字上，原生弹出；全部模式下选日期自动切到单日
     picker.addEventListener('change', function(){
-      if (picker.value) { curDate = picker.value; render(); }
+      if (!picker.value) return;
+      if (isAllMode()) { setAllMode(false); $('planAllSwitch').checked = false; }
+      curDate = picker.value;
+      render();
+    });
+    // 点击时间直接选时间（PC 端无原生指示器时兜底弹出；移动端点击输入框自动弹出）
+    $('planTime').addEventListener('click', function(){
+      try { if (this.showPicker) this.showPicker(); } catch(e){}
+    });
+    // 底部开关：开=全部日程，关=仅显示日期框所选日期
+    $('planAllSwitch').addEventListener('change', function(){
+      setAllMode(this.checked);
+      render();
     });
     $('planAddBtn').addEventListener('click', addItem);
     $('planText').addEventListener('keydown', function(e){
