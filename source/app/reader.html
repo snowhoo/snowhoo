@@ -601,7 +601,7 @@ function createCards() {
         });
         galleryDiv.appendChild(dots);
         
-        let imgIndex = 0, imgStartX = 0, imgPageWidth = 0, imgStartX2 = 0;
+        let imgIndex = 0, imgStartX = 0, imgStartY = 0, imgPageWidth = 0, imgStartX2 = 0;
         // 缓存图片实际渲染宽度
         function getImgWidth() {
           const first = track.firstElementChild;
@@ -610,14 +610,18 @@ function createCards() {
         galleryDiv.addEventListener('touchstart', e => {
           e.stopPropagation();
           imgStartX = e.touches[0].clientX;
+          imgStartY = e.touches[0].clientY;
           imgPageWidth = getImgWidth();
           track.style.transition = 'none';
         }, { passive: true });
         galleryDiv.addEventListener('touchmove', e => {
           e.stopPropagation();
           const dx = e.touches[0].clientX - imgStartX;
+          const dy = e.touches[0].clientY - imgStartY;
+          // 横向滑动时阻止浏览器默认（避免与系统边缘返回手势抢手指），纵向滚动不受影响
+          if (Math.abs(dx) > Math.abs(dy)) e.preventDefault();
           track.style.transform = 'translateX(' + (-imgIndex * imgPageWidth + dx) + 'px)';
-        }, { passive: true });
+        }, { passive: false });
         galleryDiv.addEventListener('touchend', e => {
           e.stopPropagation();
           const diff = e.changedTouches[0].clientX - imgStartX;
@@ -1021,6 +1025,15 @@ function showTip(msg) {
 document.getElementById('shareBtn').onclick = shareArticle;
 
 main();
+</script>
+
+<script>
+// 边缘手势锁：排除左右边缘系统返回手势（防横滑翻页误触退出），离开页面恢复
+(function(){
+  function lockEdge(lock){ try{ if(window.AppBridge && window.AppBridge.setEdgeLock) window.AppBridge.setEdgeLock(lock ? '1' : '0'); }catch(e){} }
+  lockEdge(true);
+  window.addEventListener('pagehide', function(){ lockEdge(false); });
+})();
 </script>
 </body>
 </html>
