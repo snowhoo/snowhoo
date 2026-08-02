@@ -87,7 +87,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .dn-float-btn{width:32px;height:32px;border-radius:50%;background:#ff8c00;color:#fff;font-size:.65rem;font-weight:600;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2;transition:transform .2s,background .2s}
 .dn-float-btn:active{transform:scale(.92)}
 .dn-float-btn:hover{background:#e67e00}
-.dn-float-menu{position:absolute;bottom:40px;right:0;z-index:200;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;opacity:0;transform:translateY(8px) scale(.95);pointer-events:none;transition:opacity .2s ease,transform .2s ease;transform-origin:bottom right}
+.dn-float-menu{position:absolute;bottom:40px;left:0;z-index:200;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;opacity:0;transform:translateY(8px) scale(.95);pointer-events:none;transition:opacity .2s ease,transform .2s ease;transform-origin:bottom left}
 .dn-float-menu.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
 .dn-float-menu a{display:flex;align-items:center;padding:10px 16px;color:#333;text-decoration:none;font-size:.82rem;font-weight:500;white-space:nowrap;transition:background .2s}
 .dn-float-menu a:hover{background:#f5f5f5}
@@ -160,6 +160,12 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .img-viewer.show{display:flex}
 .img-viewer img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:4px}
 .img-viewer .close{position:fixed;top:16px;right:20px;color:#fff;font-size:1.5rem;cursor:pointer;z-index:1;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,0,0,.3)}
+
+/* 登录区（底部右侧头像+用户名，点击回修真小世界） */
+.user-area{display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;padding:2px 0;-webkit-tap-highlight-color:transparent}
+.user-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;background:rgba(128,128,128,.2);border:1px solid rgba(128,128,128,.3);flex-shrink:0}
+.user-name{font-size:.72rem;color:#666;max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(prefers-color-scheme:dark){.user-name{color:#bbb}}
 </style>
 </head>
 <body>
@@ -179,11 +185,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   <div class="news-list" id="newsList"></div>
 </div>
 
-<div class="bottom-nav" id="bottomNav">
-  <div style="display:flex;align-items:center;gap:20px">
-    <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
-    
-  </div>
+<div class="bottom-nav">
   <div class="dn-float-wrap">
     <button class="dn-float-btn" id="dnFloatBtn">新闻</button>
     <div class="dn-float-menu" id="dnFloatMenu">
@@ -197,6 +199,15 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       <a class="menu-item" href="https://snowhoo.net/app/tv_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#22c55e">播</span>播霸·在线影视</a>
       <a class="menu-item menu-home" href="https://snowhoo.net/app/APP.html" onclick="event.preventDefault();window.location.replace('https://snowhoo.net/app/APP.html')"><span class="menu-indicator circulated" style="background:#e8793a">界</span>传送回修真小世界</a>
     </div>
+  </div> id="bottomNav">
+  <div style="display:flex;align-items:center;gap:20px">
+    <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
+    
+  </div>
+  
+  <div class="user-area" id="userArea" onclick="window.location.replace('https://snowhoo.net/app/APP.html')">
+    <img class="user-avatar" id="userAvatar" alt="">
+    <span class="user-name" id="userName">登录</span>
   </div>
 </div>
 <div class="function-icons">
@@ -729,6 +740,13 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     }
   }
   var user = getWalineUser();
+  // 登录区：头像 + 用户名（未登录显示"登录"）
+  var ua = document.getElementById('userAvatar');
+  var un = document.getElementById('userName');
+  if (ua && un && user) {
+    un.textContent = user.display_name || user.nick || user.name || '用户';
+    if (user.avatar) ua.src = user.avatar;
+  }
   if (!user) { lockAll(); return; } // 未登录：全部锁定
   // 已登录：保守先全锁，再按云端解锁状态刷新（fetch 失败保持锁定，宁锁勿放）
   lockAll();
