@@ -585,7 +585,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         progressBar.style.width = (audio.currentTime / audio.duration * 100) + '%';
       }
       var now = Date.now();
-      if (now - lastPosSync > 1000) {
+      if (now - lastPosSync > 1000 && !audio.paused) { // 仅播放中同步（防停止/暂停后残留 timeupdate 把服务拉回）
         lastPosSync = now;
         var p = articles[index] || {};
         notifyNative(true, p.title, '小红故事·夜读', p.coverSrc, audio.duration, audio.currentTime);
