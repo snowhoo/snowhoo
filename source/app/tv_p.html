@@ -65,8 +65,11 @@ layout: false
         /* 播放器固定：吸顶常驻，列表从下方滚动 */
         #playerView { margin-bottom: 10px; }
         .player-container { background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9; box-shadow: var(--shadow-md); border: 1px solid var(--border); position: sticky; top: 0; z-index: 40; }
-        /* 未播放时的占位提示（播放器常驻显示） */
-        .player-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; color: #8a8a8a; font-size: 14px; letter-spacing: 1px; z-index: 2; pointer-events: none; }
+        /* 未播放时的占位（播放器常驻显示）：中间 ▶️ 按钮，先选集再点击播放 */
+        .player-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: #000; color: #8a8a8a; font-size: 14px; letter-spacing: 1px; z-index: 2; }
+        .big-play-btn { pointer-events: auto; width: 76px; height: 76px; border-radius: 50%; background: rgba(255,255,255,.14); border: 2px solid rgba(255,255,255,.55); color: #fff; font-size: 30px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0 0 0 6px; transition: all .15s; }
+        .big-play-btn:active { transform: scale(.92); }
+        .player-placeholder-tip { font-size: 12px; letter-spacing: 1px; opacity: .85; }
         .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 12px 14px; border: 1px solid var(--border); }
         .episodes-header { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
         .current-ep-title { font-size: 14px; font-weight: 600; color: var(--text-primary); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -75,8 +78,6 @@ layout: false
         .ep-title-row .current-ep-title { flex: 1; min-width: 0; }
         #exitPlayerBtn { flex-shrink: 0; }
         .ep-menu-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
-        /* 左段（新->旧 + 选择集数）右段（切换数据源）：两段对齐 */
-        .ep-menu-left { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; min-width: 0; }
         .ep-order-toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text-secondary); cursor: pointer; user-select: none; -webkit-user-select: none; }
         .ep-order-toggle input { width: 15px; height: 15px; margin: 0; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
         .ep-order-toggle.disabled { opacity: .45; cursor: not-allowed; }
@@ -101,6 +102,11 @@ layout: false
         #epMenu .menu-option { flex: 1 0 auto; padding: 2px 2px; text-align: center; border-radius: 6px; border: 1px solid var(--border); white-space: nowrap; overflow: visible; text-overflow: clip; }
         #epMenu .menu-option.active { border-color: var(--accent); }
         #epMenu .menu-option.menu-pad { visibility: hidden; border-color: transparent; pointer-events: none; }
+        /* 数据源菜单：与选集菜单同款（flex 弹性换行格子） */
+        #sourceMenu { min-width: 260px; max-height: 60vh; }
+        #sourceMenu.open { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; padding: 8px; }
+        #sourceMenu .menu-option { flex: 1 0 auto; padding: 2px 2px; text-align: center; border-radius: 6px; border: 1px solid var(--border); white-space: nowrap; overflow: visible; text-overflow: clip; }
+        #sourceMenu .menu-option.active { border-color: var(--accent); }
         .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
         .video-grid .empty-state { flex: 1 0 100%; width: 100%; }
         .page-text{font-size:.72rem;color:var(--text-muted);white-space:nowrap;margin:0 4px}
@@ -212,7 +218,10 @@ layout: false
             <div class="player-layout">
                 <div class="player-container">
                     <video id="detailPlayer" style="width:100%;height:100%;display:block" controls playsinline></video>
-                    <div class="player-placeholder" id="playerPlaceholder">🎬 点击影片卡片开始播放</div>
+                    <div class="player-placeholder" id="playerPlaceholder">
+                        <button type="button" class="big-play-btn" id="bigPlayBtn" aria-label="播放当前选集">▶</button>
+                        <div class="player-placeholder-tip">先选集，再点击播放</div>
+                    </div>
                 </div>
                 <div class="video-detail">
                     <div class="episodes-header">
@@ -221,12 +230,10 @@ layout: false
                             <button type="button" id="exitPlayerBtn" class="menu-btn" disabled>退出播放</button>
                         </div>
                         <div class="ep-menu-row">
-                            <div class="ep-menu-left">
-                                <label class="ep-order-toggle disabled" for="epOrderToggle" title="勾选后剧集菜单按新到旧排列"><input type="checkbox" id="epOrderToggle" checked disabled>新-&gt;旧</label>
-                                <div class="menu-btn-wrap" id="epMenuWrap">
-                                    <button type="button" id="epMenuBtn" class="menu-btn" disabled>选择集数 ▾</button>
-                                    <div id="epMenu" class="custom-menu"></div>
-                                </div>
+                            <label class="ep-order-toggle disabled" for="epOrderToggle" title="勾选后剧集菜单按新到旧排列"><input type="checkbox" id="epOrderToggle" checked disabled>新-&gt;旧</label>
+                            <div class="menu-btn-wrap" id="epMenuWrap">
+                                <button type="button" id="epMenuBtn" class="menu-btn" disabled>选择集数 ▾</button>
+                                <div id="epMenu" class="custom-menu"></div>
                             </div>
                             <div class="menu-btn-wrap" id="sourceMenuWrap">
                                 <button type="button" id="sourceMenuBtn" class="menu-btn" disabled>切换数据源 ▾</button>
@@ -1174,6 +1181,22 @@ layout: false
         if(!wasOpen) padEpMenuRow();
     });
     sourceMenuBtn.addEventListener('click',(e)=>{ e.stopPropagation(); toggleMenu('sourceMenu','sourceMenuBtn'); });
+    // 播放器中间 ▶️：播放当前选中集（先选集，再点击播放）
+    var bigPlayBtn = document.getElementById('bigPlayBtn');
+    if(bigPlayBtn){
+        bigPlayBtn.addEventListener('click', function(){
+            if(!currentPlayerEpisodes.length || currentPlayerEpisodes[currentPlayingEpIndex] === undefined){
+                setStatus('请先选择剧集'); return;
+            }
+            let ep = currentPlayerEpisodes[currentPlayingEpIndex];
+            if(ep.playable === false){
+                let fi = currentPlayerEpisodes.findIndex(e=>e.playable !== false);
+                if(fi >= 0){ ep = currentPlayerEpisodes[fi]; currentPlayingEpIndex = fi; }
+                else { setStatus('该片没有可播放的剧集'); return; }
+            }
+            playEpInPlayer(ep.url, ep.title, currentPlayingEpIndex, 0);
+        });
+    }
     epOrderToggle.addEventListener('change',()=>{
         renderEpisodesList();
         if(epMenu.classList.contains('open')) padEpMenuRow();
