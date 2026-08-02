@@ -502,11 +502,13 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
   // 通知封装 App 原生：音频播放状态 + 元数据（配合前台媒体服务实现后台/锁屏播放；
   // App 未注入桥时自动忽略）。setMeta 更新 MediaSession（锁屏媒体卡片标题/封面/进度）
-  function notifyNative(playing, title, artist, artwork, duration, position) {
+  function notifyNative(playing, title, artist, artwork, duration, position, keepAlive) {
     try {
       if (window.AudioBridge) {
         if (typeof window.AudioBridge.setPlaying === 'function') {
-          window.AudioBridge.setPlaying(playing ? '1' : '0');
+          // 播放→启动前台服务；暂停(keepAlive=true)→保留服务可恢复；停止/结束→退出服务
+          if (playing) window.AudioBridge.setPlaying('1');
+          else if (!keepAlive) window.AudioBridge.setPlaying('0');
         }
         if (typeof window.AudioBridge.setMeta === 'function') {
           window.AudioBridge.setMeta(
@@ -559,7 +561,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         _scAudio.pause();
         btn.classList.remove('playing');
         pathEl.setAttribute('d', playPath);
-        notifyNative(false, (articles[index] || {}).title, '小红故事·夜读', (articles[index] || {}).coverSrc, _scAudio.duration, _scAudio.currentTime);
+        notifyNative(false, (articles[index] || {}).title, '小红故事·夜读', (articles[index] || {}).coverSrc, _scAudio.duration, _scAudio.currentTime, true);
         setMediaSession(false, (articles[index] || {}).title, (articles[index] || {}).coverSrc);
       }
       return;
@@ -651,7 +653,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       } else if (cmd === 'pause') {
         if (_scAudio && !_scAudio.paused) {
           _scAudio.pause();
-          notifyNative(false, p.title, '小红故事·夜读', p.coverSrc, _scAudio.duration, _scAudio.currentTime);
+          notifyNative(false, p.title, '小红故事·夜读', p.coverSrc, _scAudio.duration, _scAudio.currentTime, true);
           setMediaSession(false, p.title, p.coverSrc);
         }
       } else if (cmd === 'stop') {
