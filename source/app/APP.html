@@ -259,8 +259,10 @@ body{display:flex;flex-direction:column}
 .plan-done-btn svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .15s}
 .plan-item.done .plan-done-btn svg{opacity:1}
 .plan-time{flex-shrink:0;font-size:.62rem;color:#a3957d;background:#f6f4ee;border-radius:6px;padding:3px 8px;font-variant-numeric:tabular-nums}
-/* 全部日程视图：条目日期徽章（如 2026-8-1） */
-.plan-item-date{flex-shrink:0;font-size:.58rem;color:#8a7a5f;background:#efe9dc;border-radius:6px;padding:2px 6px;font-variant-numeric:tabular-nums}
+/* 全部日程视图：日期+时间竖排双行容器（节省水平空间） */
+.plan-datetime{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;background:#efe9dc;border-radius:8px;padding:3px 7px;min-width:46px}
+.plan-dt-date{font-size:.58rem;color:#8a7a5f;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap}
+.plan-dt-time{font-size:.64rem;color:#a3957d;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap}
 .plan-text{flex:1;min-width:0;font-size:.88rem;color:#3a2f22;word-break:break-all;line-height:1.45}
 .plan-item.done .plan-text{color:#c0b6a0;text-decoration:line-through}
 .plan-del-btn{flex-shrink:0;width:26px;height:26px;border:none;background:none;color:#d3c9b4;font-size:1.05rem;cursor:pointer;line-height:1;border-radius:50%}
@@ -282,6 +284,9 @@ body{display:flex;flex-direction:column}
 .plan-switch:active .slider{opacity:.85}
 .plan-toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:12000;background:rgba(40,32,20,.88);color:#fff;font-size:.72rem;padding:7px 16px;border-radius:16px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
 .plan-toast.show{opacity:1}
+/* ===== 计划行内编辑（双击条目区域激活） ===== */
+.plan-edit-inline{font:inherit;color:#3a2f22;background:#fff;border:1px solid #e8793a;border-radius:6px;padding:1px 5px;min-width:24px;max-width:100%;outline:none;box-sizing:border-box;flex-shrink:0}
+.plan-edit-inline::placeholder{color:#c0b6a0}
 /* ===== 启动进度遮罩（打开/刷新时显示，待加载完整淡出） ===== */
 .boot-splash{position:fixed;inset:0;z-index:30000;background:radial-gradient(circle at 50% 40%,rgba(60,45,25,.96),rgba(20,15,8,.98));display:flex;align-items:center;justify-content:center;transition:opacity .45s ease;opacity:1}
 .boot-splash.hide{opacity:0;pointer-events:none}
@@ -3136,11 +3141,20 @@ var PlanSvc = (function(){
       var li = document.createElement('div');
       li.className = 'plan-item' + (it.done ? ' done' : '');
       li.dataset.id = it.id;
+      li.dataset.date = rec.date;
+      li.dataset.time = it.time || '';
       var html =
         '<button class="plan-done-btn" data-act="toggle"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></button>';
-      if (allMode) html += '<span class="plan-item-date">' + fmtDate(rec.date) + '</span>';
+      if (allMode) {
+        // 全部日程：日期+时间竖排双行容器，节省水平空间
+        html += '<span class="plan-datetime">' +
+          '<span class="plan-dt-date">' + fmtDate(rec.date) + '</span>' +
+          '<span class="plan-dt-time">' + (it.time ? fmtTime(it.time) : '全天') + '</span>' +
+        '</span>';
+      } else {
+        html += '<span class="plan-time">' + (it.time ? fmtTime(it.time) : '全天') + '</span>';
+      }
       html +=
-        '<span class="plan-time">' + (it.time ? fmtTime(it.time) : '全天') + '</span>' +
         '<span class="plan-text">' + escapeHtml(it.text) + '</span>' +
         '<button class="plan-del-btn" data-act="del">×</button>';
       li.innerHTML = html;
@@ -3236,6 +3250,64 @@ var PlanSvc = (function(){
     toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 1600);
   }
 
+  // ---------- 计划行内编辑（双击激活，原地改） ----------
+  var editingEl = null;      // 当前编辑中的 input
+  var planClickTimer = null; // 单击延迟（区分单击/双击）
+  function commitPlanEdit(input){
+    if (input._done) return;
+    input._done = true;
+    if (input._cancelled) { editingEl = null; render(); return; }
+    editingEl = null;
+    var li = input.closest('.plan-item');
+    var id = li ? li.dataset.id : null;
+    var kind = input.dataset.kind; // text | date | time
+    var f = id == null ? null : findItemById(id);
+    var changed = false;
+    if (f) {
+      if (kind === 'text') {
+        var t = (input.value || '').trim();
+        if (t) { f.arr[f.i].text = t.slice(0, 60); changed = true; }
+        else { toast('计划内容不能为空'); }
+      } else if (kind === 'time') {
+        if ((input.value || '') !== (f.arr[f.i].time || '')) { f.arr[f.i].time = input.value || ''; changed = true; }
+      } else if (kind === 'date') {
+        var nd = input.value;
+        var oldKey = null;
+        for (var k in data) if (data[k] === f.arr) { oldKey = k; break; }
+        if (nd && nd !== oldKey) {
+          var item = f.arr[f.i];
+          f.arr.splice(f.i, 1);
+          if (!Array.isArray(data[nd])) data[nd] = [];
+          data[nd].push(item);
+          if (oldKey && (!data[oldKey] || !data[oldKey].length)) delete data[oldKey];
+          changed = true;
+          toast('已移至 ' + fmtDate(nd));
+        }
+      }
+    }
+    if (changed) { saveLocal(); setSavedAt(Date.now()); syncSoon(); if (kind !== 'date') toast('已修改'); }
+    render();
+  }
+  function startPlanEdit(el, kind, curVal){
+    if (editingEl) commitPlanEdit(editingEl); // 先提交上一个未完成的编辑
+    var input = document.createElement('input');
+    input.type = kind === 'date' ? 'date' : kind === 'time' ? 'time' : 'text';
+    if (kind === 'text') input.maxLength = 60;
+    input.value = curVal || '';
+    input.className = 'plan-edit-inline';
+    input.dataset.kind = kind;
+    input.style.fontSize = kind === 'date' || kind === 'time' ? '.62rem' : '';
+    el.replaceWith(input);
+    editingEl = input;
+    input.focus();
+    if (kind === 'text') { try { input.setSelectionRange(input.value.length, input.value.length); } catch(e){} }
+    input.addEventListener('blur', function(){ if (!input._done) commitPlanEdit(input); });
+    input.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') { e.preventDefault(); if (!input._done) commitPlanEdit(input); }
+      else if (e.key === 'Escape') { input._cancelled = true; if (!input._done) commitPlanEdit(input); }
+    });
+  }
+
   // ---------- 初始化 ----------
   function init(){
     loadLocal();
@@ -3276,6 +3348,27 @@ var PlanSvc = (function(){
       if (id == null) return;
       if (btn.dataset.act === 'toggle') toggleDone(id);
       else if (btn.dataset.act === 'del') delItem(id);
+    });
+    // 单击条目 → 提示"双击可进行修改"；双击 → 行内编辑（勾选/删除按钮区、编辑中的 input 不触发）
+    $('planList').addEventListener('click', function(e){
+      if (e.target.closest('[data-act]') || e.target.tagName === 'INPUT') return;
+      var li = e.target.closest('.plan-item');
+      if (!li) return;
+      if (planClickTimer) { clearTimeout(planClickTimer); planClickTimer = null; return; } // 双击的第二次点击，交给 dblclick
+      planClickTimer = setTimeout(function(){ planClickTimer = null; toast('双击可进行修改'); }, 280);
+    });
+    $('planList').addEventListener('dblclick', function(e){
+      if (e.target.closest('[data-act]') || e.target.tagName === 'INPUT') return;
+      var li = e.target.closest('.plan-item');
+      if (!li) return;
+      if (planClickTimer) { clearTimeout(planClickTimer); planClickTimer = null; }
+      var id = li.dataset.id;
+      var dd = e.target.closest('.plan-dt-date');
+      if (dd) { startPlanEdit(dd, 'date', li.dataset.date || ''); return; }
+      var tt = e.target.closest('.plan-dt-time') || e.target.closest('.plan-time');
+      if (tt) { startPlanEdit(tt, 'time', li.dataset.time || ''); return; }
+      var txt = e.target.closest('.plan-text');
+      if (txt) { startPlanEdit(txt, 'text', txt.textContent); }
     });
   }
 
