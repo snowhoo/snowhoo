@@ -3347,6 +3347,11 @@ var commentOverlay = document.getElementById('commentOverlay');
         onLogout: function() {
           try { localStorage.removeItem('GAME_USER'); } catch(e) {}
           try { localStorage.removeItem('WALINE_USER'); } catch(e) {}
+          // 彻底清理 Waline 组件残留（否则栏目页菜单会误判已登录解锁）
+          try { localStorage.removeItem('@waline/user'); } catch(e) {}
+          try { localStorage.removeItem('waline_user'); } catch(e) {}
+          try { sessionStorage.removeItem('WALINE_USER'); } catch(e) {}
+          try { sessionStorage.removeItem('@waline/user'); } catch(e) {}
           if (window.GAME) {
             // 不设 lastUser，让 checkLogin 自然检测到 user→null 的变化进入登出分支
             GAME.checkLogin();

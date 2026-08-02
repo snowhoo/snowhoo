@@ -757,14 +757,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 <script>
 // 菜单解锁：栏目传送项按登录信息解锁（未登录置灰+提示），传送回修真小世界不锁定
 (function(){
+  // 仅以 APP 主登录 key WALINE_USER 判定（'@waline/user' 是 Waline 评论组件写入，登出残留会导致误判已登录）
   function getWalineUser(){
     try{
-      var keys = ['WALINE_USER','@waline/user','waline_user'];
-      for (var i = 0; i < keys.length; i++) {
-        try{ var v = localStorage.getItem(keys[i]); if (v) { var u = JSON.parse(v); if (u && (u.display_name || u.nick || u.name)) return u; } }catch(e){}
-      }
-      try{ var sv = sessionStorage.getItem('WALINE_USER') || sessionStorage.getItem('@waline/user');
-        if (sv) { var u2 = JSON.parse(sv); if (u2 && (u2.display_name || u2.nick || u2.name)) return u2; } }catch(e){}
+      var v = localStorage.getItem('WALINE_USER') || sessionStorage.getItem('WALINE_USER');
+      if (v) { var u = JSON.parse(v); if (u && (u.display_name || u.nick || u.name)) return u; }
     }catch(e){}
     return null;
   }
