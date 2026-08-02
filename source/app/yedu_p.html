@@ -45,12 +45,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .page-nav-btn{padding:4px 6px;cursor:pointer;color:#999;font-size:.72rem;user-select:none}
 .page-nav-btn:active{background:rgba(0,0,0,.05)}
 
-/* 功能图标 - 浮动在导航栏上方 */
-.function-icons{position:fixed;bottom:48px;left:12px;z-index:99;display:flex;align-items:center;gap:16px;padding:6px 0;background:rgba(0,0,0,0);pointer-events:auto}
-.func-btn{width:24px;height:24px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
-.func-btn:active{transform:scale(.92)}
-.func-btn svg{width:18px;height:18px;fill:#999}
-
 /* 底部导航右侧浮窗 */
 .yedu-float-wrap{position:relative;display:flex;align-items:center;gap:20px}
 .yedu-float-btn{width:36px;height:36px;border-radius:50%;background:#764ba2;color:#fff;font-size:.65rem;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s,background .2s}
@@ -189,12 +183,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   <div class="user-area" id="userArea">
     <img class="user-avatar" id="userAvatar" alt="">
   </div>
-</div>
-<div class="function-icons">
-  <button class="func-btn" title="收藏"><svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg></button>
-  <button class="func-btn" title="评论"><svg viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/></svg></button>
-  <button class="func-btn" title="点赞"><svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-1.91l-.01-.01L23 10z"/></svg></button>
-  <button class="func-btn" id="shareBtn" title="转发"><svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg></button>
 </div>
 
 <script>
@@ -750,106 +738,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     return div.innerHTML;
   }
 
-  // 分享功能
-  function shareArticle() {
-    var post = articles[currentIndex];
-    if (!post) return;
-    var title = post.title || '夜读';
-    var summary = post.paragraphs && post.paragraphs.length ? post.paragraphs[0].replace(/<[^>]+>/g, '').substring(0, 120) : '';
-    var imgUrl = post.coverSrc || '';
-    var pageUrl = window.location.href;
-    var shareData = { title: title, text: title + (summary ? '\n' + summary : ''), url: pageUrl };
-    if (typeof navigator.share === 'function') {
-      navigator.share(shareData).catch(function() {});
-      return;
-    }
-    showSharePanel(title, summary, imgUrl, pageUrl);
-  }
-  function showSharePanel(t, s, img, url) {
-    var overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:0;z-index:9998;background:rgba(0,0,0,.4);opacity:0;transition:opacity .2s;display:flex;align-items:flex-end;justify-content:center';
-    var panel = document.createElement('div');
-    panel.style.cssText = 'background:#fff;border-radius:14px 14px 0 0;width:100%;max-width:480px;padding:16px 20px 28px;transform:translateY(100%);transition:transform .25s ease';
-    var h = document.createElement('div');
-    h.style.cssText = 'text-align:center;font-size:.85rem;color:#666;padding-bottom:14px;border-bottom:1px solid #eee;margin-bottom:14px';
-    h.textContent = '\u5206\u4EAB\u5230';
-    panel.appendChild(h);
-    var platforms = [
-      { label: '\u5FAE\u4FE1', color: '#07c160', icon: '\u4FE1', action: 'wechat' },
-      { label: '\u670B\u53CB\u5708', color: '#07c160', icon: '\u5708', action: 'moments' },
-      { label: '\u5FAE\u535A', color: '#e6162d', icon: '\u5FAE', url: 'https://service.weibo.com/share/share.php?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(t + (s ? ' - ' + s : '')) + '&pic=' + encodeURIComponent(img) },
-      { label: 'QQ', color: '#12b7f5', icon: 'Q', url: 'https://connect.qq.com/widget/shareqq/index.html?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(t) + '&desc=' + encodeURIComponent(s || t) },
-      { label: 'QQ\u7A7A\u95F4', color: '#fec944', icon: '\u7A7A', url: 'https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(t) + '&pics=' + encodeURIComponent(img) + '&desc=' + encodeURIComponent(s || '') },
-      { label: '\u590D\u5236\u94FE\u63A5', color: '#666', icon: '\u590D', action: 'copy' }
-    ];
-    var grid = document.createElement('div');
-    grid.style.cssText = 'display:flex;justify-content:space-around;padding:6px 0';
-    platforms.forEach(function(p) {
-      var item = document.createElement('div');
-      item.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;padding:4px 8px';
-      var circle = document.createElement('div');
-      circle.style.cssText = 'width:44px;height:44px;border-radius:50%;background:' + p.color + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:600';
-      circle.textContent = p.icon;
-      var label = document.createElement('span');
-      label.style.cssText = 'font-size:.7rem;color:#666';
-      label.textContent = p.label;
-      item.appendChild(circle);
-      item.appendChild(label);
-      item.onclick = function() {
-        closePanel();
-        var ct = t + '\n' + (s || '') + '\n' + url;
-        if (p.action === 'wechat') {
-          copyText(ct, '\u94FE\u63A5\u5DF2\u590D\u5236\uFF0C\u6253\u5F00\u5FAE\u4FE1\u7C98\u8D34\u5206\u4EAB\u7ED9\u597D\u53CB');
-        } else if (p.action === 'moments') {
-          copyText(ct, '\u94FE\u63A5\u5DF2\u590D\u5236\uFF0C\u6253\u5F00\u5FAE\u4FE1\u7C98\u8D34\u5206\u4EAB\u5230\u670B\u53CB\u5708');
-        } else if (p.action === 'copy') {
-          copyText(ct, '\u5DF2\u590D\u5236\u94FE\u63A5\uFF0C\u53EF\u7C98\u8D34\u5206\u4EAB\u7ED9\u597D\u53CB');
-        } else {
-          window.open(p.url, '_blank');
-        }
-      };
-      grid.appendChild(item);
-    });
-    panel.appendChild(grid);
-    var cancel = document.createElement('div');
-    cancel.style.cssText = 'text-align:center;padding-top:12px;margin-top:12px;border-top:1px solid #eee;color:#999;font-size:.8rem;cursor:pointer';
-    cancel.textContent = '\u53D6\u6D88';
-    cancel.onclick = closePanel;
-    panel.appendChild(cancel);
-    overlay.appendChild(panel);
-    document.body.appendChild(overlay);
-    requestAnimationFrame(function() { overlay.style.opacity = '1'; panel.style.transform = 'translateY(0)'; });
-    function closePanel() {
-      overlay.style.opacity = '0'; panel.style.transform = 'translateY(100%)';
-      setTimeout(function() { overlay.remove(); }, 250);
-    }
-    overlay.onclick = function(e) { if (e.target === overlay) closePanel(); };
-  }
-  function copyText(text, msg) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function() { showTip(msg); }).catch(function() { copyFallback(text, msg); });
-    } else {
-      copyFallback(text, msg);
-    }
-  }
-  function copyFallback(text, msg) {
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); showTip(msg); } catch(e) {}
-    document.body.removeChild(ta);
-  }
-  function showTip(msg) {
-    msg = msg || '\u5DF2\u590D\u5236\u94FE\u63A5\uFF0C\u53EF\u7C98\u8D34\u5206\u4EAB\u7ED9\u597D\u53CB';
-    var tip = document.createElement('div');
-    tip.textContent = msg;
-    tip.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(0,0,0,.7);color:#fff;padding:6px 16px;border-radius:20px;font-size:.78rem;opacity:1;transition:opacity .3s;white-space:nowrap';
-    document.body.appendChild(tip);
-    setTimeout(function() { tip.style.opacity = '0'; setTimeout(function() { tip.remove(); }, 300); }, 2000);
-  }
-  document.getElementById('shareBtn').onclick = shareArticle;
+  // 分享功能（已移除）
 
   loadData();
 })();

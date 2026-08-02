@@ -56,7 +56,9 @@ layout: false
             align-items: center;
             gap: 6px;
         }
-        .delete-item-btn { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: none; border-radius: 30px; width: 28px; height: 28px; font-size: 16px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; transition: 0.1s; }
+        .delete-item-btn { position: absolute; top: 34px; left: 8px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: none; border-radius: 30px; width: 28px; height: 28px; font-size: 16px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; transition: 0.1s; }
+        /* 封面左上角序号角标（第几部） */
+        .ep-index { position: absolute; top: 6px; left: 6px; z-index: 2; background: rgba(0,0,0,0.55); backdrop-filter: blur(2px); color: #fff; font-size: 11px; font-weight: 600; line-height: 1.4; padding: 2px 7px; border-radius: 20px; pointer-events: none; white-space: nowrap; }
         
         .source-label { position: absolute; top: 6px; right: 6px; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-size: 10px; background: transparent; border: none; z-index: 2; max-width: calc(100% - 30px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
         .player-layout { display: flex; flex-direction: column; gap: 12px; }
@@ -68,10 +70,11 @@ layout: false
         .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 12px 14px; border: 1px solid var(--border); }
         .episodes-header { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
         .current-ep-title { font-size: 14px; font-weight: 600; color: var(--text-primary); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* 片名行：标题左对齐可截断，退出播放按钮右对齐 */
+        .ep-title-row { display: flex; align-items: center; gap: 10px; width: 100%; }
+        .ep-title-row .current-ep-title { flex: 1; min-width: 0; }
+        #exitPlayerBtn { flex-shrink: 0; }
         .ep-menu-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-start; }
-        /* 退出播放按钮：右对齐，其余按钮左对齐 */
-        #exitPlayerBtn { margin-left: auto; }
-        #exitPlayerBtn:disabled { opacity: 0.4; cursor: not-allowed; }
         .ep-order-toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text-secondary); cursor: pointer; user-select: none; -webkit-user-select: none; }
         .ep-order-toggle input { width: 15px; height: 15px; margin: 0; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
         .menu-btn-wrap { position: relative; }
@@ -99,7 +102,7 @@ layout: false
         .page-text{font-size:.72rem;color:var(--text-muted);white-space:nowrap;margin:0 4px}
         
         @media (orientation: landscape) { #app { padding: 0 10px 10px; } }
-        @media (orientation: portrait) { #app { padding: 0 10px 10px; padding-bottom:64px; } .toolbar { padding: 6px 0px 6px 0; gap: 6px; overflow-x: hidden; flex-wrap: nowrap; background-image: none;} .toolbar select, .toolbar input, .toolbar button { padding: 6px 6px; font-size: 12px; flex-shrink: 1; min-width: 0; } .toolbar select { min-width: 80px; background-position: right 6px center; padding-right: 22px; } .toolbar input { max-width: 80px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .toolbar .btn-text { display: none; } }
+        @media (orientation: portrait) { #app { padding: 0 10px 10px; padding-bottom:64px; } .toolbar { padding: 6px 0px 6px 0; gap: 6px; overflow-x: hidden; flex-wrap: nowrap; background-image: none;} .toolbar select, .toolbar input, .toolbar button { padding: 6px 6px; font-size: 12px; flex-shrink: 1; min-width: 0; } .toolbar select { min-width: 80px; background-position: right 6px center; padding-right: 22px; } .toolbar input { max-width: 80px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 32px; left: 6px; } .ep-index { top: 4px; left: 4px; font-size: 10px; padding: 1px 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .toolbar .btn-text { display: none; } }
 
         /* ===== 通用布局：底部导航 ===== */
         .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:var(--bg-surface,#fff);border-top:1px solid var(--border,#eee);display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:.8rem;user-select:none;-webkit-user-select:none}
@@ -114,11 +117,7 @@ layout: false
         .theme-btn:active{transform:scale(.92)}
         .theme-btn svg{width:16px;height:16px}
 
-        /* ===== 通用布局：功能图标 ===== */
-        .function-icons{position:fixed;bottom:48px;left:12px;z-index:99;display:flex;align-items:center;gap:16px;padding:6px 0;background:rgba(0,0,0,0);pointer-events:auto}
-        .func-btn{width:24px;height:24px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
-        .func-btn:active{transform:scale(.92)}
-        .func-btn svg{width:18px;height:18px;fill:#999}
+        /* ===== 通用布局：功能图标（已移除） ===== */
 
         /* ===== 通用布局：浮窗菜单 ===== */
         .float-wrap{position:relative;display:flex;align-items:center;gap:20px}
@@ -198,7 +197,10 @@ layout: false
                 </div>
                 <div class="video-detail">
                     <div class="episodes-header">
-                        <div id="currentEpTitle" class="current-ep-title">▶ 未开始播放</div>
+                        <div class="ep-title-row">
+                            <div id="currentEpTitle" class="current-ep-title">▶ 未开始播放</div>
+                            <button type="button" id="exitPlayerBtn" class="menu-btn" disabled>退出播放</button>
+                        </div>
                         <div class="ep-menu-row">
                             <label class="ep-order-toggle" for="epOrderToggle" title="勾选后剧集菜单按新到旧排列"><input type="checkbox" id="epOrderToggle" checked>新-&gt;旧</label>
                             <div class="menu-btn-wrap" id="epMenuWrap">
@@ -209,7 +211,6 @@ layout: false
                                 <button type="button" id="sourceMenuBtn" class="menu-btn" disabled>切换数据源 ▾</button>
                                 <div id="sourceMenu" class="custom-menu"></div>
                             </div>
-                            <button type="button" id="exitPlayerBtn" class="menu-btn" disabled>退出播放</button>
                         </div>
                     </div>
                 </div>
@@ -240,7 +241,7 @@ layout: false
     <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
     <div class="page-nav-group" id="pageNavGroup">
       <span class="page-nav-btn" id="firstBtn">‹‹</span>
-      <span class="page-btn" id="pageBtn">0 部</span>
+      <span class="page-btn" id="pageBtn">0 / 0</span>
       <span class="page-nav-btn" id="lastBtn">››</span>
     </div>
   </div>
@@ -248,12 +249,6 @@ layout: false
   <div class="user-area" id="userArea">
     <img class="user-avatar" id="userAvatar" alt="">
   </div>
-</div>
-
-<div class="function-icons">
-  <button class="func-btn" title="收藏"><svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg></button>
-  <button class="func-btn" title="点赞"><svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-1.91l-.01-.01L23 10z"/></svg></button>
-  <button class="func-btn" id="shareBtn" title="转发"><svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg></button>
 </div>
 
 <script>
@@ -620,7 +615,7 @@ layout: false
         let items=currentFiltered;
         let html='';
         const isSpecial = (currentPrefix === '__history__' || currentPrefix === '__bookmarks__' || currentPrefix === '__search_result__' || currentPrefix === '__favorites__');
-        items.forEach(v=>{
+        items.forEach((v,i)=>{
             let onlinePic = v.vod_pic || '';
             let placeholderSrc = `https://picsum.photos/seed/${encodeURIComponent(v.vod_name)}/300/400`;
             let isFav=isFavorited(v.sourceKey, v.vod_name);
@@ -650,9 +645,10 @@ layout: false
             }
             // ======================================
             
-            html+=`<div class="video-card" data-name="${escAttr(v.vod_name)}" data-sourcekey="${escAttr(v.sourceKey)}" data-sourcename="${escAttr(v.sourceName||'')}" data-pic="${escAttr(onlinePic || placeholderSrc)}" data-epcount="${v.ep_count||0}" data-playable="${v.playable_count||0}" data-episodes='${escAttr(JSON.stringify(v.episodes||[]))}' data-class="${escAttr(v.vod_class||'')}"${restoreData}>
+            html+=`<div class="video-card" data-index="${i}" data-name="${escAttr(v.vod_name)}" data-sourcekey="${escAttr(v.sourceKey)}" data-sourcename="${escAttr(v.sourceName||'')}" data-pic="${escAttr(onlinePic || placeholderSrc)}" data-epcount="${v.ep_count||0}" data-playable="${v.playable_count||0}" data-episodes='${escAttr(JSON.stringify(v.episodes||[]))}' data-class="${escAttr(v.vod_class||'')}"${restoreData}>
                 ${deleteBtn}
                 <div class="pw-poster-wrap">
+                    <span class="ep-index">${i+1}</span>
                     ${isLive(v) 
                         ? `<div class="video-poster-text" data-poster="${escAttr(v.vod_name)}" data-src="${escAttr(onlinePic)}">${escHtml(v.vod_name)}</div>` 
                         : `<img class="video-poster" src="${placeholderSrc}"${onlinePic ? ` data-src="${escAttr(onlinePic)}"` : ''} loading="lazy">`}
@@ -730,11 +726,42 @@ layout: false
         renderSpecialView('__search_result__');
     }
 
-    // 底部影片数更新（原翻页栏位置，风格不变，显示影片总数）
+    // 底部位置更新：显示“当前第几部 / 总影片数”（当前 = 首个完整显示的封面）
+    function getCurrentIndex() {
+        let el = homeContent;
+        if (!el || !el.children.length) return 0;
+        let sl = el.scrollLeft, sr = sl + el.clientWidth;
+        let er = el.getBoundingClientRect();
+        let best = 0;
+        for (let i = 0; i < el.children.length; i++) {
+            let c = el.children[i];
+            if (!c.classList || !c.classList.contains('video-card')) continue;
+            let cl = c.getBoundingClientRect().left - er.left + sl;
+            let cr = cl + c.offsetWidth;
+            // 首个完全进入视口的卡片即当前影片
+            if (cl >= sl - 2 && cr <= sr + 2) return parseInt(c.dataset.index || i, 10);
+            // 兜底：首个右边缘超出视口左边界的卡片（滚动中间态，部分可见）
+            if (cr > sl) { best = parseInt(c.dataset.index || i, 10); break; }
+        }
+        return best;
+    }
     function updateBottomPagination() {
         let total = currentFiltered.length;
-        document.getElementById('pageBtn').textContent = total + ' 部';
+        let btn = document.getElementById('pageBtn');
+        if (!btn) return;
+        if (!total) { btn.textContent = '0 / 0'; return; }
+        let idx = getCurrentIndex();
+        btn.textContent = (idx + 1) + ' / ' + total;
     }
+    // 横向滚动时实时刷新当前影片位置
+    let posRaf = null;
+    homeContent.addEventListener('scroll', function(){
+        if (posRaf) return;
+        posRaf = requestAnimationFrame(function(){
+            posRaf = null;
+            updateBottomPagination();
+        });
+    }, {passive: true});
 
     // 首页：横向滚动到最左
     function goFirstPage() {
@@ -1352,43 +1379,6 @@ layout: false
         }, 10000);
     }
 
-    // 分享功能
-    function copyText(text, msg) {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(function(){ showTip(msg); }).catch(function(){ copyFallback(text, msg); });
-        } else {
-            copyFallback(text, msg);
-        }
-    }
-    function copyFallback(text, msg) {
-        var ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
-        document.body.appendChild(ta);
-        ta.select();
-        try { document.execCommand('copy'); showTip(msg); } catch(e) {}
-        document.body.removeChild(ta);
-    }
-    function showTip(msg) {
-        msg = msg || '已复制链接，可粘贴分享给好友';
-        var tip = document.createElement('div');
-        tip.textContent = msg;
-        tip.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(0,0,0,.7);color:#fff;padding:6px 16px;border-radius:20px;font-size:.78rem;opacity:1;transition:opacity .3s;white-space:nowrap';
-        document.body.appendChild(tip);
-        setTimeout(function(){ tip.style.opacity = '0'; setTimeout(function(){ tip.remove(); }, 300); }, 2000);
-    }
-    var shareBtn = document.getElementById('shareBtn');
-    if(shareBtn){
-        shareBtn.addEventListener('click', function(){
-            var url = window.location.href;
-            var title = document.title || '播霸|在线影视';
-            if (typeof navigator.share === 'function') {
-                navigator.share({ title: title, url: url }).catch(function(){});
-                return;
-            }
-            copyText(url, '链接已复制，可粘贴分享给好友');
-        });
-    }
 })();
 </script>
 
