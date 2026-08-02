@@ -61,9 +61,10 @@ layout: false
         /* 播放器固定：吸顶常驻，列表从下方滚动 */
         #playerView { margin-bottom: 10px; }
         .player-container { background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9; box-shadow: var(--shadow-md); border: 1px solid var(--border); position: sticky; top: 0; z-index: 40; }
+        /* 未播放时的占位提示（播放器常驻显示） */
+        .player-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; color: #8a8a8a; font-size: 14px; letter-spacing: 1px; z-index: 2; pointer-events: none; }
         .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 12px 14px; border: 1px solid var(--border); }
-        .episodes-section { margin-top: 0; }
-        .episodes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+        .episodes-header { display: flex; justify-content: flex-start; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
         .source-switch { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 6px 16px; font-size: 13px; cursor: pointer; color: var(--text-primary); }
         .episodes-grid { display: flex; flex-wrap: wrap; gap: 10px; max-height: 340px; overflow-y: auto; padding: 4px 0; }
         .episode-item { background: var(--bg-elevated); border-radius: 40px; padding: 6px 10px; font-size: 13px; cursor: pointer; transition: all 0.1s; border: 1px solid var(--border); color: var(--text-secondary); }
@@ -161,19 +162,18 @@ layout: false
             </div>
 			<div id="catBar" class="cat-filters"></div>
         </div>
-        <div id="playerView" class="view" style="display:none">
+        <div id="playerView" class="view">
             <div class="player-layout">
                 <div class="player-container">
                     <video id="detailPlayer" style="width:100%;height:100%;display:block" controls playsinline></video>
+                    <div class="player-placeholder" id="playerPlaceholder">🎬 点击影片卡片开始播放</div>
                 </div>
                 <div class="video-detail">
-                    <div class="episodes-section">
-                        <div class="episodes-header">
-                            <span style="font-weight:600;">📺 剧集列表</span>
-                            <select id="sourceSwitchSelect" class="source-switch"></select>
-                        </div>
-                        <div id="episodesList" class="episodes-grid"></div>
+                    <div class="episodes-header">
+                        <select id="epSelect" class="source-switch"><option value="">选择集数</option></select>
+                        <select id="sourceSwitchSelect" class="source-switch"></select>
                     </div>
+                    <div id="episodesList" class="episodes-grid"></div>
                 </div>
             </div>
         </div>
@@ -256,6 +256,7 @@ layout: false
     const detailPlayer = document.getElementById('detailPlayer');
     const episodesList = document.getElementById('episodesList');
     const sourceSwitchSelect = document.getElementById('sourceSwitchSelect');
+    const epSelect = document.getElementById('epSelect');
     
     const escHtml = s => String(s).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
     const escAttr = s => String(s).replace(/[&"']/g, m => ({'&':'&amp;','"':'&quot;',"'":'&#39;'}[m]));
@@ -1043,8 +1044,7 @@ layout: false
             if(items[restoreEp]) items[restoreEp].classList.add('current-ep');
         }, 50);
         buildSourceSwitchOptions();
-        // 播放器内嵌页面上方：显示播放区并滚动到顶部（不再切换视图/弹出）
-        playerView.style.display = 'block';
+        // 播放器常驻：滚动到顶部让用户看到已就绪的播放器
         try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0, 0); }
         document.title = '播霸|在线影视' + (video.vod_class ? '-' + video.vod_class : '') + '-' + video.vod_name;
         if(currentHls) currentHls.destroy();
@@ -1074,6 +1074,12 @@ layout: false
             html+=`<div class="episode-item ${isCurr?'current-ep':''}" data-url="${escAttr(ep.url)}" data-title="${escAttr(ep.title)}" data-idx="${idx}" data-playable="${ep.playable!==false}">${escHtml(ep.title)} ${!ep.playable?'🚫':''}</div>`;
         });
         episodesList.innerHTML=html;
+        // 同步填充集数下拉框（与剧集列表同源）
+        let optHtml='<option value="">选择集数</option>';
+        currentPlayerEpisodes.forEach((ep,idx)=>{
+            optHtml+=`<option value="${idx}" ${idx===currentPlayingEpIndex?'selected':''} ${ep.playable===false?'disabled':''}>${escHtml(ep.title)}${ep.playable===false?' 🚫':''}</option>`;
+        });
+        epSelect.innerHTML=optHtml;
         document.querySelectorAll('.episode-item').forEach(el=>{
             el.addEventListener('click',()=>{
                 let url=el.dataset.url, title=el.dataset.title, idx=parseInt(el.dataset.idx);
@@ -1086,6 +1092,9 @@ layout: false
     function playEpInPlayer(url, title, idx, seekTo = 0){
         if(currentHls) currentHls.destroy();
         detailPlayer.pause(); detailPlayer.removeAttribute('src');
+        // 隐藏播放器占位（开始播放）
+        var ph = document.getElementById('playerPlaceholder');
+        if(ph) ph.style.display = 'none';
         if(url.includes('.m3u8') && window.Hls?.isSupported()){
             let hls=new Hls();
             hls.loadSource(url);
@@ -1110,6 +1119,7 @@ layout: false
         currentPlayingEpIndex=idx;
         document.querySelectorAll('.episode-item').forEach(el=>el.classList.remove('current-ep'));
         if(episodesList.children[idx]) episodesList.children[idx].classList.add('current-ep');
+        if(epSelect) epSelect.value = String(idx); // 集数下拉同步
         let nextIdx=idx+1;
         while(nextIdx<currentPlayerEpisodes.length && currentPlayerEpisodes[nextIdx].playable===false) nextIdx++;
         currentEpNext = (nextIdx<currentPlayerEpisodes.length) ? {url:currentPlayerEpisodes[nextIdx].url, title:currentPlayerEpisodes[nextIdx].title, idx:nextIdx} : null;
@@ -1161,6 +1171,14 @@ layout: false
     });
     detailPlayer.addEventListener('pause',()=>{
         if(currentPlayingVideo && detailPlayer.currentTime>5) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
+    });
+    // 集数下拉框：选中即播放该集（与剧集列表一致）
+    epSelect.addEventListener('change',()=>{
+        let idx = parseInt(epSelect.value);
+        if(isNaN(idx) || !currentPlayerEpisodes[idx]) return;
+        let ep = currentPlayerEpisodes[idx];
+        if(ep.playable === false){ setStatus('⚠️ 该集无法播放'); epSelect.value = String(currentPlayingEpIndex); return; }
+        playEpInPlayer(ep.url, ep.title, idx, 0);
     });
     
     function loadIndexData(){
