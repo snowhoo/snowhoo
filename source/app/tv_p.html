@@ -16,7 +16,6 @@ layout: false
         #app[data-theme="dark"] { --bg-body: #000000; --bg-surface: #0a0a0f; --bg-card: #111115; --bg-card-hover: #1a1a20; --bg-elevated: #15151c; --border: #2a2a33; --text-primary: #ffffff; --text-secondary: #c0c0cf; --text-muted: #8a8a99; --accent: #f97316; --accent-hover: #fd7e2e; --shadow-sm: 0 4px 12px rgba(0,0,0,0.5); --shadow-md: 0 8px 24px rgba(0,0,0,0.6); }
         #app[data-theme="light"] { --bg-body: #f8fafc; --bg-surface: #ffffff; --bg-card: #f0f2f5; --bg-card-hover: #e8eaed; --bg-elevated: #f1f5f9; --border: #e2e8f0; --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #64748b; --accent: #f97316; --accent-hover: #ea580c; --shadow-sm: 0 2px 6px rgba(0,0,0,0.05); --shadow-md: 0 8px 20px rgba(0,0,0,0.08); }
         #app[data-theme="light"] .pw-poster-wrap { background: linear-gradient(to bottom, #ffffff 0%, #9e9ea6 50%, #ffffff 100%); }
-        #app[data-theme="light"] .detail-poster { background: linear-gradient(to bottom, #ffffff 0%, #9e9ea6 50%, #ffffff 100%); }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: var(--border); border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
@@ -58,29 +57,22 @@ layout: false
         .delete-item-btn { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border: none; border-radius: 30px; width: 28px; height: 28px; font-size: 16px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 2; transition: 0.1s; }
         
         .source-label { position: absolute; top: 6px; right: 6px; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-size: 10px; background: transparent; border: none; z-index: 2; max-width: calc(100% - 30px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
-        .player-layout { display: flex; flex-direction: column; gap: 28px; }
-        /* 播放器内嵌页面上方：与下方列表分隔 */
-        #playerView { margin-bottom: 14px; padding: 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); }
-        .player-container { background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
-        .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 24px; border: 1px solid var(--border); }
-        .detail-header { display: flex; gap: 24px; flex-wrap: wrap; }
-        .detail-poster { width: 140px; border-radius: var(--radius-sm); aspect-ratio: 2/3; object-fit: cover; box-shadow: var(--shadow-sm); }
-        .detail-info { flex: 1; }
-        .detail-title { font-size: 26px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
-        .detail-meta { display: flex; gap: 20px; flex-wrap: wrap; margin: 12px 0; color: var(--text-secondary); font-size: 14px; }
-        .detail-desc { margin-top: 16px; line-height: 1.5; color: var(--text-secondary); font-size: 14px; }
-        .episodes-section { margin-top: 28px; }
+        .player-layout { display: flex; flex-direction: column; gap: 12px; }
+        /* 播放器固定：吸顶常驻，列表从下方滚动 */
+        #playerView { margin-bottom: 10px; }
+        .player-container { background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9; box-shadow: var(--shadow-md); border: 1px solid var(--border); position: sticky; top: 0; z-index: 40; }
+        .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 12px 14px; border: 1px solid var(--border); }
+        .episodes-section { margin-top: 0; }
         .episodes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
         .source-switch { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 6px 16px; font-size: 13px; cursor: pointer; color: var(--text-primary); }
         .episodes-grid { display: flex; flex-wrap: wrap; gap: 10px; max-height: 340px; overflow-y: auto; padding: 4px 0; }
         .episode-item { background: var(--bg-elevated); border-radius: 40px; padding: 6px 10px; font-size: 13px; cursor: pointer; transition: all 0.1s; border: 1px solid var(--border); color: var(--text-secondary); }
         .episode-item.current-ep { background: var(--accent); color: white; border-color: var(--accent); }
-        .back-home { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 20px; background: var(--bg-card); padding: 8px 20px; border-radius: 40px; cursor: pointer; width: fit-content; border: 1px solid var(--border); font-weight: 500; transition: 0.1s; color: var(--text-primary); }
         .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
         .page-text{font-size:.72rem;color:var(--text-muted);white-space:nowrap;margin:0 4px}
         
         @media (orientation: landscape) { #app { padding: 0 10px 10px; } }
-        @media (orientation: portrait) { #app { padding: 0 10px 10px; padding-bottom:64px; } .detail-header { flex-direction: column; align-items: center; text-align: center; } .toolbar { padding: 6px 0px 6px 0; gap: 6px; overflow-x: hidden; flex-wrap: nowrap; background-image: none;} .toolbar select, .toolbar input, .toolbar button { padding: 6px 6px; font-size: 12px; flex-shrink: 1; min-width: 0; } .toolbar select { min-width: 80px; background-position: right 6px center; padding-right: 22px; } .toolbar input { max-width: 80px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .toolbar .btn-text { display: none; } }
+        @media (orientation: portrait) { #app { padding: 0 10px 10px; padding-bottom:64px; } .toolbar { padding: 6px 0px 6px 0; gap: 6px; overflow-x: hidden; flex-wrap: nowrap; background-image: none;} .toolbar select, .toolbar input, .toolbar button { padding: 6px 6px; font-size: 12px; flex-shrink: 1; min-width: 0; } .toolbar select { min-width: 80px; background-position: right 6px center; padding-right: 22px; } .toolbar input { max-width: 80px; } .delete-item-btn { width: 24px; height: 24px; font-size: 14px; top: 6px; left: 6px; } .source-label { font-size: 9px; top: 4px; right: 4px; } .toolbar .btn-text { display: none; } }
 
         /* ===== 通用布局：底部导航 ===== */
         .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:var(--bg-surface,#fff);border-top:1px solid var(--border,#eee);display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:.8rem;user-select:none;-webkit-user-select:none}
@@ -170,27 +162,11 @@ layout: false
 			<div id="catBar" class="cat-filters"></div>
         </div>
         <div id="playerView" class="view" style="display:none">
-            <div class="back-home" id="backHomeBtn">⤒ 收起播放器</div>
             <div class="player-layout">
                 <div class="player-container">
                     <video id="detailPlayer" style="width:100%;height:100%;display:block" controls playsinline></video>
                 </div>
                 <div class="video-detail">
-                    <div class="detail-header">
-                        <img id="detailPoster" class="detail-poster" alt="海报">
-                        <div class="detail-info">
-                            <div class="detail-title" id="detailTitle"></div>
-                            <div class="detail-meta">
-                                <span id="detailEpCount"></span>
-                                <span id="detailPlayable"></span>
-                                <span id="detailSource"></span>
-                            </div>
-                            <div class="detail-desc" id="detailDesc"></div>
-                            <div style="margin-top: 20px; gap: 12px;">
-                                <button id="detailNextEpBtn" style="background:var(--bg-elevated); border:1px solid var(--border); padding:8px 18px; border-radius:40px; cursor:pointer; color:var(--text-primary);">⏩ 下集</button>
-                            </div>
-                        </div>
-                    </div>
                     <div class="episodes-section">
                         <div class="episodes-header">
                             <span style="font-weight:600;">📺 剧集列表</span>
@@ -274,18 +250,10 @@ layout: false
     const stopSearchBtn = document.getElementById('stopSearchBtn');
     const historyBtn = document.getElementById('historyBtn');
     const favoritesBtn = document.getElementById('favoritesBtn');
-    const backHomeBtn = document.getElementById('backHomeBtn');
     const catBar = document.getElementById('catBar');
     const homeContent = document.getElementById('homeContent');
     const homePagination = document.getElementById('homePagination');
     const detailPlayer = document.getElementById('detailPlayer');
-    const detailPoster = document.getElementById('detailPoster');
-    const detailTitle = document.getElementById('detailTitle');
-    const detailEpCount = document.getElementById('detailEpCount');
-    const detailPlayable = document.getElementById('detailPlayable');
-    const detailSource = document.getElementById('detailSource');
-    const detailDesc = document.getElementById('detailDesc');
-    const detailNextEpBtn = document.getElementById('detailNextEpBtn');
     const episodesList = document.getElementById('episodesList');
     const sourceSwitchSelect = document.getElementById('sourceSwitchSelect');
     
@@ -1068,18 +1036,6 @@ layout: false
         let savedProgress = (pendingRestoreProgress !== null && pendingRestoreProgress > 0) ? pendingRestoreProgress : 0;
         currentPlayingEpIndex = restoreEp;
         
-        detailPoster.src = `https://picsum.photos/seed/${encodeURIComponent(video.vod_name)}/280/420`;
-        if (video.vod_pic) {
-            var temp = new Image();
-            temp.onload = function() { detailPoster.src = video.vod_pic; temp = null; };
-            temp.onerror = function() { temp = null; };
-            temp.src = video.vod_pic;
-        }
-        detailTitle.textContent = video.vod_name;
-        detailEpCount.textContent = `共${video.ep_count || 0}集`;
-        detailPlayable.textContent = `${video.playable_count || 0}集可播放`;
-        detailSource.textContent = `来源：${video.sourceName || '未知'}`;
-        detailDesc.textContent = video.vod_class ? `分类：${video.vod_class}` : '暂无简介';
         renderEpisodesList();
         // 高亮当前剧集
         setTimeout(() => {
@@ -1157,7 +1113,6 @@ layout: false
         let nextIdx=idx+1;
         while(nextIdx<currentPlayerEpisodes.length && currentPlayerEpisodes[nextIdx].playable===false) nextIdx++;
         currentEpNext = (nextIdx<currentPlayerEpisodes.length) ? {url:currentPlayerEpisodes[nextIdx].url, title:currentPlayerEpisodes[nextIdx].title, idx:nextIdx} : null;
-        detailNextEpBtn.style.display = currentEpNext?'inline-block':'none';
         if(currentPlayingVideo) updateHistory(currentPlayingVideo, idx, 0);
     }
     
@@ -1191,9 +1146,6 @@ layout: false
                 currentPlayerVideo.sourceName = selected.sourceName;
                 currentPlayerVideo.ep_count = selected.ep_count;
                 currentPlayerVideo.playable_count = selected.playable_count;
-                detailSource.textContent = `来源：${selected.sourceName}`;
-                detailEpCount.textContent = `共${selected.ep_count||0}集`;
-                detailPlayable.textContent = `${selected.playable_count||0}集可播放`;
                 renderEpisodesList();
                 // 重置剧集索引
                 currentPlayingEpIndex = 0;
@@ -1203,25 +1155,12 @@ layout: false
             }
         };
     }
-    detailNextEpBtn.addEventListener('click',()=>{
-        if(currentEpNext){
-            playEpInPlayer(currentEpNext.url, currentEpNext.title, currentEpNext.idx, 0);
-        }
-    });
     detailPlayer.addEventListener('ended',()=>{
         if(currentPlayingVideo) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
-        if(currentEpNext) detailNextEpBtn.click();
+        if(currentEpNext) playEpInPlayer(currentEpNext.url, currentEpNext.title, currentEpNext.idx, 0); // 自动播放下集
     });
     detailPlayer.addEventListener('pause',()=>{
         if(currentPlayingVideo && detailPlayer.currentTime>5) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
-    });
-    
-    backHomeBtn.addEventListener('click',()=>{
-        // 收起内嵌播放器（回到列表浏览），不切换视图
-        playerView.style.display = 'none';
-        document.title = '播霸|在线影视';
-        if(currentHls) currentHls.destroy();
-        detailPlayer.pause();
     });
     
     function loadIndexData(){
