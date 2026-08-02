@@ -552,11 +552,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
     if (_scAudio && _scAudio._scSrc === src) {
       if (_scAudio.paused) {
-        _scAudio.play();
-        btn.classList.add('playing');
-        pathEl.setAttribute('d', pausePath);
-        notifyNative(true, (articles[index] || {}).title, '小红故事·夜读', (articles[index] || {}).coverSrc, _scAudio.duration, _scAudio.currentTime);
-        setMediaSession(true, (articles[index] || {}).title, (articles[index] || {}).coverSrc);
+        playCurrentAudio();
       } else {
         _scAudio.pause();
         btn.classList.remove('playing');
@@ -639,6 +635,24 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     if (pb) pb.style.width = (_scAudio && _scAudio.duration ? (_scAudio.currentTime / _scAudio.duration * 100) : 0) + '%';
   }
 
+  // 播放当前 _scAudio：play() 结果确认后再同步 UI 与原生（防"显示播放但无声"的假播放；
+  // play() 被拒时回滚按钮 + 通知原生停止）
+  function playCurrentAudio() {
+    if (!_scAudio) return;
+    var p = _scAudioBtn ? (articles[_scAudioBtn.dataset.index] || {}) : {};
+    var pp = _scAudio.play();
+    if (pp && typeof pp.catch === 'function') {
+      pp.catch(function() {
+        refreshAudioUI(); // 播放失败：按真实 paused 状态回滚按钮
+        notifyNative(false, p.title, '小红故事·夜读', p.coverSrc, _scAudio.duration, _scAudio.currentTime);
+        setMediaSession(false, p.title, p.coverSrc);
+      });
+    }
+    refreshAudioUI();
+    notifyNative(true, p.title, '小红故事·夜读', p.coverSrc, _scAudio.duration, _scAudio.currentTime);
+    setMediaSession(true, p.title, p.coverSrc);
+  }
+
   // 原生媒体卡片（MediaSessionCompat/MediaStyle 通知/耳机线控）→ 控制页面音频
   // cmd: play | pause | stop | seek:<positionMs>；页面状态变化后同步原生
   window.__yeduControl = function(cmd) {
@@ -646,9 +660,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       var p = _scAudioBtn ? (articles[_scAudioBtn.dataset.index] || {}) : {};
       if (cmd === 'play') {
         if (_scAudio && _scAudio.paused) {
-          _scAudio.play();
-          notifyNative(true, p.title, '小红故事·夜读', p.coverSrc, _scAudio.duration, _scAudio.currentTime);
-          setMediaSession(true, p.title, p.coverSrc);
+          playCurrentAudio();
         }
       } else if (cmd === 'pause') {
         if (_scAudio && !_scAudio.paused) {
