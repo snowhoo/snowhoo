@@ -78,7 +78,12 @@ layout: false
         .custom-menu .menu-option.active { background: var(--accent); color: #fff; }
         .custom-menu .menu-option.disabled { opacity: 0.4; cursor: not-allowed; }
         .custom-menu .menu-option.disabled:hover { background: transparent; }
-        .custom-menu .menu-option + .menu-option { border-top: 1px solid var(--border); }
+        #sourceMenu .menu-option + .menu-option { border-top: 1px solid var(--border); }
+        /* 剧集菜单：每行三集（三列网格） */
+        #epMenu { min-width: 240px; max-width: 340px; }
+        #epMenu.open { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px; }
+        #epMenu .menu-option { padding: 8px 4px; text-align: center; border-radius: 6px; border: 1px solid var(--border); }
+        #epMenu .menu-option.active { border-color: var(--accent); }
         .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
         .page-text{font-size:.72rem;color:var(--text-muted);white-space:nowrap;margin:0 4px}
         
@@ -1086,8 +1091,9 @@ layout: false
         epMenuBtn.textContent = (ep && ep.title ? ep.title : '选择集数') + ' ▾';
     }
     function updateCurrentEpTitle(){
-        let ep = currentPlayerEpisodes[currentPlayingEpIndex];
-        currentEpTitle.textContent = '▶ ' + (ep && ep.title ? ep.title : '未开始播放');
+        // 上方显示剧名（影片名称），非当前集数
+        let name = currentPlayerVideo ? (currentPlayerVideo.vod_name || '') : '';
+        currentEpTitle.textContent = '▶ ' + (name || '未开始播放');
     }
     // 自定义菜单交互
     function closeAllMenus(){
