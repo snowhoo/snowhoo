@@ -624,7 +624,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 })();
 </script>
 <script>
-// 菜单解锁：栏目传送项按登录信息解锁（未登录置灰+提示），传送回修真小世界不锁定
+// 菜单解锁：按「登录 + 该栏目已真气解锁」判断（读云端 waline 游戏记录），未解锁置灰+提示；传送回修真小世界不锁定
 (function(){
   // 仅以 APP 主登录 key WALINE_USER 判定（'@waline/user' 是 Waline 评论组件写入，登出残留会导致误判已登录）
   function getWalineUser(){
@@ -633,6 +633,21 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       if (v) { var u = JSON.parse(v); if (u && (u.display_name || u.nick || u.name)) return u; }
     }catch(e){}
     return null;
+  }
+  // 栏目文件 → 解锁标记 key（与 APP.html 游戏记录字段一致）
+  var KEY_BY_FILE = { 'reader.html':'story', 'yedu_p.html':'yedu', 'zjsz_p.html':'zjsz', 'DaliyNews_p.html':'news', 'tv_p.html':'tv' };
+  // 健壮解析（兼容 Waline markdown 渲染污染，同 APP.html parseGameRecord）
+  function parseGameRecord(raw){
+    if (!raw) return null;
+    var s = String(raw).replace(/<[^>]*>/g, '')
+      .replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+      .replace(/&quot;/g, '"').replace(/&#34;/g, '"')
+      .replace(/&amp;/g, '&').replace(/&#38;/g, '&')
+      .replace(/&lt;/g, '<').replace(/&#60;/g, '<')
+      .replace(/&gt;/g, '>').replace(/&#62;/g, '>');
+    var st = s.indexOf('{'); var en = s.lastIndexOf('}');
+    if (st >= 0 && en > st) s = s.slice(st, en + 1);
+    try { return JSON.parse(s); } catch(e){ return null; }
   }
   function tip(msg){
     var t = document.getElementById('menuLockTip');
@@ -643,18 +658,59 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     t._tm = setTimeout(function(){ t.classList.remove('show'); }, 1800);
   }
   var menu = document.getElementById('zjszFloatMenu');
-  if (menu) {
-    var logged = !!getWalineUser();
-    var links = menu.querySelectorAll('a');
+  if (!menu) return;
+  var links = Array.prototype.slice.call(menu.querySelectorAll('a.menu-item:not(.menu-home)'));
+  function lockItem(a){
+    if (a.classList.contains('locked')) return;
+    a.classList.add('locked');
+    a.insertAdjacentHTML('beforeend', '<span class="menu-lock-icon">🔒</span>');
+    a.addEventListener('click', function(e){ e.preventDefault(); tip('该栏目尚未解锁，请先在修真小世界修炼解锁'); });
+  }
+  function unlockItem(a){
+    a.classList.remove('locked');
+    var ic = a.querySelector('.menu-lock-icon');
+    if (ic) ic.remove();
+  }
+  function fileOf(href){ try { var p = String(href).split('/'); return p[p.length - 1]; } catch(e){ return ''; } }
+  function lockAll(){ for (var i = 0; i < links.length; i++) lockItem(links[i]); }
+  function applyUnlocks(ul){
     for (var i = 0; i < links.length; i++) {
       var a = links[i];
-      if (a.classList.contains('menu-home')) continue; // 传送回主页不锁定
-      if (logged) continue;                            // 已登录全部解锁
-      a.classList.add('locked');
-      a.insertAdjacentHTML('beforeend', '<span class="menu-lock-icon">🔒</span>');
-      a.addEventListener('click', function(e){ e.preventDefault(); tip('请先在修真小世界登录，解锁全部传送'); });
+      var key = KEY_BY_FILE[fileOf(a.getAttribute('href') || '')];
+      if (key && ul && ul[key]) unlockItem(a);
     }
   }
+  var user = getWalineUser();
+  if (!user) { lockAll(); return; } // 未登录：全部锁定
+  // 已登录：保守先全锁，再按云端解锁状态刷新（fetch 失败保持锁定，宁锁勿放）
+  lockAll();
+  var token = user.token || '';
+  var url = 'https://waline.snowhoo.net/api/comment?path=/app-game/actions' + (token ? '&token=' + encodeURIComponent(token) : '');
+  fetch(url)
+    .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(resp){
+      var records = (resp.data && resp.data.data) || [];
+      var found = null, foundOid = 0;
+      for (var i = 0; i < records.length; i++) {
+        try {
+          var rec = records[i];
+          if ((rec.nick || '') !== user.display_name) continue;
+          var obj = parseGameRecord(rec.orig || rec.comment || '');
+          var oid = parseInt(rec.objectId, 10) || 0;
+          if (obj && typeof obj.points === 'number' && oid > foundOid) { found = obj; foundOid = oid; }
+        } catch(e){}
+      }
+      if (!found) return null;
+      return {
+        story: found.storyUnlocked ? 1 : 0,
+        yedu: found.yeduUnlocked ? 1 : 0,
+        zjsz: found.zjszUnlocked ? 1 : 0,
+        news: found.newsUnlocked ? 1 : 0,
+        tv: found.tvUnlocked ? 1 : 0
+      };
+    })
+    .then(function(ul){ if (ul) applyUnlocks(ul); })
+    .catch(function(e){ console.warn('[菜单解锁] 拉取解锁状态失败，保持锁定:', e); });
 })();
 </script>
 </body>
