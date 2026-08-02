@@ -291,8 +291,7 @@ body{display:flex;flex-direction:column}
 .boot-splash{position:fixed;inset:0;z-index:30000;background:radial-gradient(circle at 50% 40%,rgba(60,45,25,.96),rgba(20,15,8,.98));display:flex;align-items:center;justify-content:center;transition:opacity .45s ease;opacity:1}
 .boot-splash.hide{opacity:0;pointer-events:none}
 .boot-inner{width:170px;text-align:center}
-.boot-logo{font-size:1.05rem;font-weight:600;letter-spacing:4px;color:#f2e9d8;margin-bottom:18px;text-shadow:0 2px 8px rgba(0,0,0,.4)}
-.boot-logo small{display:block;font-size:.55rem;font-weight:400;letter-spacing:2px;color:rgba(242,233,216,.45);margin-top:6px}
+.boot-logo{display:block;width:120px;height:120px;object-fit:cover;border-radius:14px;margin:0 auto 18px;box-shadow:0 6px 24px rgba(0,0,0,.45)}
 .boot-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden;position:relative}
 .boot-bar i{display:block;position:absolute;top:0;left:0;height:100%;border-radius:2px;background:#e8793a;width:30%;animation:bootSlide 1.1s ease-in-out infinite}
 @keyframes bootSlide{0%{left:-30%}55%{left:100%}100%{left:100%}}
@@ -304,7 +303,7 @@ body{display:flex;flex-direction:column}
 <!-- 启动进度遮罩：打开/刷新时显示，待背景图与数据加载完整后淡出 -->
 <div class="boot-splash" id="bootSplash">
   <div class="boot-inner">
-    <div class="boot-logo">小红故事<small>choose your journey</small></div>
+    <img class="boot-logo" src="logo.png" alt="小红故事">
     <div class="boot-bar"><i></i></div>
     <div class="boot-text">加载中…</div>
   </div>
