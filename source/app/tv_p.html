@@ -98,8 +98,8 @@ layout: false
         .custom-menu .menu-option.disabled { opacity: 0.4; cursor: not-allowed; }
         .custom-menu .menu-option.disabled:hover { background: transparent; }
         #sourceMenu .menu-option + .menu-option { border-top: 1px solid var(--border); }
-        /* 剧集菜单：宽度与播放器同宽（JS 按播放器 rect 定位），flex 弹性换行，文字不截断，末行空容器补齐 */
-        #epMenu { position: fixed; max-height: 60vh; }
+        /* 剧集菜单：宽度与播放器同宽（JS 按播放器 rect 定位），flex 弹性换行，高度限 240px，文字不截断，末行空容器补齐 */
+        #epMenu { position: fixed; max-height: 240px; }
         #epMenu.open { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; padding: 8px; }
         #epMenu .menu-option { flex: 1 0 auto; padding: 2px 2px; text-align: center; border-radius: 6px; border: 1px solid var(--border); white-space: nowrap; overflow: visible; text-overflow: clip; }
         #epMenu .menu-option.active { border-color: var(--accent); }
