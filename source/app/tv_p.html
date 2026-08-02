@@ -59,6 +59,8 @@ layout: false
         
         .source-label { position: absolute; top: 6px; right: 6px; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.8); font-size: 10px; background: transparent; border: none; z-index: 2; max-width: calc(100% - 30px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
         .player-layout { display: flex; flex-direction: column; gap: 28px; }
+        /* 播放器内嵌页面上方：与下方列表分隔 */
+        #playerView { margin-bottom: 14px; padding: 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); }
         .player-container { background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9; box-shadow: var(--shadow-md); border: 1px solid var(--border); }
         .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 24px; border: 1px solid var(--border); }
         .detail-header { display: flex; gap: 24px; flex-wrap: wrap; }
@@ -167,41 +169,41 @@ layout: false
             </div>
 			<div id="catBar" class="cat-filters"></div>
         </div>
-        <div id="homeContent" class="video-grid"></div>
-        <div id="homePagination" class="pagination" style="display:none"></div>
-        <div id="footer" style="text-align:center; margin-top:20px; font-size:12px; color:var(--text-muted);"></div>
-    </div>
-    <div id="playerView" class="view hidden">
-        <div class="back-home" id="backHomeBtn">← 返回</div>
-        <div class="player-layout">
-            <div class="player-container">
-                <video id="detailPlayer" style="width:100%;height:100%;display:block" controls playsinline></video>
-            </div>
-            <div class="video-detail">
-                <div class="detail-header">
-                    <img id="detailPoster" class="detail-poster" alt="海报">
-                    <div class="detail-info">
-                        <div class="detail-title" id="detailTitle"></div>
-                        <div class="detail-meta">
-                            <span id="detailEpCount"></span>
-                            <span id="detailPlayable"></span>
-                            <span id="detailSource"></span>
-                        </div>
-                        <div class="detail-desc" id="detailDesc"></div>
-                        <div style="margin-top: 20px; gap: 12px;">
-                            <button id="detailNextEpBtn" style="background:var(--bg-elevated); border:1px solid var(--border); padding:8px 18px; border-radius:40px; cursor:pointer; color:var(--text-primary);">⏩ 下集</button>
-                        </div>
-                    </div>
+        <div id="playerView" class="view" style="display:none">
+            <div class="back-home" id="backHomeBtn">⤒ 收起播放器</div>
+            <div class="player-layout">
+                <div class="player-container">
+                    <video id="detailPlayer" style="width:100%;height:100%;display:block" controls playsinline></video>
                 </div>
-                <div class="episodes-section">
-                    <div class="episodes-header">
-                        <span style="font-weight:600;">📺 剧集列表</span>
-                        <select id="sourceSwitchSelect" class="source-switch"></select>
+                <div class="video-detail">
+                    <div class="detail-header">
+                        <img id="detailPoster" class="detail-poster" alt="海报">
+                        <div class="detail-info">
+                            <div class="detail-title" id="detailTitle"></div>
+                            <div class="detail-meta">
+                                <span id="detailEpCount"></span>
+                                <span id="detailPlayable"></span>
+                                <span id="detailSource"></span>
+                            </div>
+                            <div class="detail-desc" id="detailDesc"></div>
+                            <div style="margin-top: 20px; gap: 12px;">
+                                <button id="detailNextEpBtn" style="background:var(--bg-elevated); border:1px solid var(--border); padding:8px 18px; border-radius:40px; cursor:pointer; color:var(--text-primary);">⏩ 下集</button>
+                            </div>
+                        </div>
                     </div>
-                    <div id="episodesList" class="episodes-grid"></div>
+                    <div class="episodes-section">
+                        <div class="episodes-header">
+                            <span style="font-weight:600;">📺 剧集列表</span>
+                            <select id="sourceSwitchSelect" class="source-switch"></select>
+                        </div>
+                        <div id="episodesList" class="episodes-grid"></div>
+                    </div>
                 </div>
             </div>
         </div>
+        <div id="homeContent" class="video-grid"></div>
+        <div id="homePagination" class="pagination" style="display:none"></div>
+        <div id="footer" style="text-align:center; margin-top:20px; font-size:12px; color:var(--text-muted);"></div>
     </div>
 
 <!-- 底部导航栏 -->
@@ -246,7 +248,7 @@ layout: false
     window.__SC_BASE_PATH = '/js/sevencolor/3/';
     // 存储与核心变量 ----------
     const STORAGE = { HISTORY:'tvbox_history', FAVORITES:'tvbox_favorites', SEARCH:'tvbox_search_results', THEME:'tvbox_theme' };
-    const PAGE_SIZE = 4, CONCURRENT = 10;
+    const PAGE_SIZE = 2, CONCURRENT = 10;
     let sourceIndex=[], loadedSources={}, sourceMeta={}, currentData=null, currentPrefix='', currentFilePage=1, currentPage=1, currentFiltered=[], currentCategory='';
     let currentSearchKeyword='', currentSearchResults=[], currentSearchCategory='', isSearching=false, searchVersion=0;
     let currentPlayingVideo=null, currentPlayingEpIndex=0, currentOpenVideo=null, currentEpNext=null, currentHls=null, playerInFloat=false;
@@ -255,7 +257,6 @@ layout: false
     let currentSpecialType = null;
     let currentSpecialFullData = [];
     let currentSpecialCategory = '';
-    let currentView = 'home';
     let currentPlayerVideo = null;
     let currentPlayerEpisodes = [];
     let currentPlayerSourceKey = '';
@@ -266,7 +267,6 @@ layout: false
     let pendingRestoreProgress = null;
 
     // DOM 元素
-    const homeView = document.getElementById('homeView');
     const playerView = document.getElementById('playerView');
     const sourceSelect = document.getElementById('sourceSelect');
     const searchInput = document.getElementById('searchInput');
@@ -1087,9 +1087,9 @@ layout: false
             if(items[restoreEp]) items[restoreEp].classList.add('current-ep');
         }, 50);
         buildSourceSwitchOptions();
-        homeView.classList.add('hidden');
-        playerView.classList.remove('hidden');
-        currentView = 'player';
+        // 播放器内嵌页面上方：显示播放区并滚动到顶部（不再切换视图/弹出）
+        playerView.style.display = 'block';
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0, 0); }
         document.title = '播霸|在线影视' + (video.vod_class ? '-' + video.vod_class : '') + '-' + video.vod_name;
         if(currentHls) currentHls.destroy();
         detailPlayer.pause(); detailPlayer.removeAttribute('src');
@@ -1217,9 +1217,8 @@ layout: false
     });
     
     backHomeBtn.addEventListener('click',()=>{
-        homeView.classList.remove('hidden');
-        playerView.classList.add('hidden');
-        currentView = 'home';
+        // 收起内嵌播放器（回到列表浏览），不切换视图
+        playerView.style.display = 'none';
         document.title = '播霸|在线影视';
         if(currentHls) currentHls.destroy();
         detailPlayer.pause();
