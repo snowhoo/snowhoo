@@ -69,6 +69,8 @@ layout: false
         .player-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: #000; color: #8a8a8a; font-size: 14px; letter-spacing: 1px; z-index: 2; }
         .big-play-btn { pointer-events: auto; width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.14); border: 2px solid rgba(255,255,255,.55); color: #fff; font-size: 20px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0 0 0 4px; transition: all .15s; }
         .big-play-btn:active { transform: scale(.92); }
+        .big-play-btn:disabled { opacity: .35; cursor: not-allowed; }
+        .big-play-btn:disabled:active { transform: none; }
         .player-placeholder-tip { font-size: 12px; letter-spacing: 1px; opacity: .85; }
         .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 12px 14px; border: 1px solid var(--border); }
         .episodes-header { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
@@ -83,7 +85,7 @@ layout: false
         .ep-order-toggle.disabled { opacity: .45; cursor: not-allowed; }
         .ep-order-toggle.disabled input { cursor: not-allowed; }
         .menu-btn-wrap { position: relative; }
-        .menu-btn { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 6px 16px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-primary); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: all 0.1s; }
+        .menu-btn { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 0 16px; height: 34px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-primary); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: all 0.1s; }
         .menu-btn:hover { border-color: var(--accent); }
         .menu-btn.active { border-color: var(--accent); }
         .menu-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -102,8 +104,8 @@ layout: false
         #epMenu .menu-option { flex: 1 0 auto; padding: 2px 2px; text-align: center; border-radius: 6px; border: 1px solid var(--border); white-space: nowrap; overflow: visible; text-overflow: clip; }
         #epMenu .menu-option.active { border-color: var(--accent); }
         #epMenu .menu-option.menu-pad { visibility: hidden; border-color: transparent; pointer-events: none; }
-        /* 数据源菜单：与选集菜单同款（flex 弹性换行格子），宽度自适应内容 */
-        #sourceMenu { max-height: 60vh; }
+        /* 数据源菜单：与选集菜单同款（flex 弹性换行格子），宽度自适应内容，右边缘与按钮右对齐 */
+        #sourceMenu { max-height: 60vh; right: 0; left: auto; }
         #sourceMenu.open { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; padding: 8px; }
         #sourceMenu .menu-option { flex: 1 0 auto; padding: 2px 2px; text-align: center; border-radius: 6px; border: 1px solid var(--border); white-space: nowrap; overflow: visible; text-overflow: clip; }
         #sourceMenu .menu-option.active { border-color: var(--accent); }
@@ -219,7 +221,7 @@ layout: false
                 <div class="player-container">
                     <video id="detailPlayer" style="width:100%;height:100%;display:block" controls playsinline></video>
                     <div class="player-placeholder" id="playerPlaceholder">
-                        <button type="button" class="big-play-btn" id="bigPlayBtn" aria-label="播放当前选集">▶</button>
+                        <button type="button" class="big-play-btn" id="bigPlayBtn" aria-label="播放当前选集" disabled>▶</button>
                         <div class="player-placeholder-tip">先选集，再点击播放</div>
                     </div>
                 </div>
@@ -1057,6 +1059,7 @@ layout: false
         pendingRestoreProgress = null;
         updateExitBtnState();
         updateEpOrderState();
+        updatePlayBtnState();
     }
 
     // 退出播放：还原到非播放状态
@@ -1097,6 +1100,8 @@ layout: false
         updateExitBtnState();
         // 新->旧 复选框回到禁用态
         updateEpOrderState();
+        // ▶️ 播放按钮回到禁用态
+        updatePlayBtnState();
         // 回到顶部看列表
         try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0, 0); }
     }
@@ -1111,6 +1116,11 @@ layout: false
         epOrderToggle.disabled = !on;
         let lb = epOrderToggle.closest('.ep-order-toggle');
         if(lb) lb.classList.toggle('disabled', !on);
+    }
+    // ▶️ 播放按钮状态：仅打开影片视图时可用
+    function updatePlayBtnState(){
+        if(!bigPlayBtn) return;
+        bigPlayBtn.disabled = !(currentPlayerVideo || currentPlayingVideo);
     }
     exitPlayerBtn.addEventListener('click', exitPlayer);
     
