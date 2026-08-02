@@ -64,11 +64,21 @@ layout: false
         /* 未播放时的占位提示（播放器常驻显示） */
         .player-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #000; color: #8a8a8a; font-size: 14px; letter-spacing: 1px; z-index: 2; pointer-events: none; }
         .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 12px 14px; border: 1px solid var(--border); }
-        .episodes-header { display: flex; justify-content: flex-start; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
-        .source-switch { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 6px 16px; font-size: 13px; cursor: pointer; color: var(--text-primary); }
-        .episodes-grid { display: flex; flex-wrap: wrap; gap: 10px; max-height: 340px; overflow-y: auto; padding: 4px 0; }
-        .episode-item { background: var(--bg-elevated); border-radius: 40px; padding: 6px 10px; font-size: 13px; cursor: pointer; transition: all 0.1s; border: 1px solid var(--border); color: var(--text-secondary); }
-        .episode-item.current-ep { background: var(--accent); color: white; border-color: var(--accent); }
+        .episodes-header { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 14px; gap: 8px; }
+        .current-ep-title { font-size: 14px; font-weight: 600; color: var(--text-primary); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ep-menu-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .menu-btn-wrap { position: relative; }
+        .menu-btn { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 6px 16px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-primary); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: all 0.1s; }
+        .menu-btn:hover { border-color: var(--accent); }
+        .menu-btn.active { border-color: var(--accent); }
+        .custom-menu { position: absolute; top: calc(100% + 6px); left: 0; min-width: 170px; max-width: 280px; max-height: 320px; overflow-y: auto; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-md); z-index: 300; display: none; }
+        .custom-menu.open { display: block; }
+        .custom-menu .menu-option { padding: 9px 14px; font-size: 13px; cursor: pointer; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .custom-menu .menu-option:hover { background: var(--bg-card-hover); }
+        .custom-menu .menu-option.active { background: var(--accent); color: #fff; }
+        .custom-menu .menu-option.disabled { opacity: 0.4; cursor: not-allowed; }
+        .custom-menu .menu-option.disabled:hover { background: transparent; }
+        .custom-menu .menu-option + .menu-option { border-top: 1px solid var(--border); }
         .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
         .page-text{font-size:.72rem;color:var(--text-muted);white-space:nowrap;margin:0 4px}
         
@@ -170,10 +180,18 @@ layout: false
                 </div>
                 <div class="video-detail">
                     <div class="episodes-header">
-                        <select id="epSelect" class="source-switch"><option value="">选择集数</option></select>
-                        <select id="sourceSwitchSelect" class="source-switch"></select>
+                        <div id="currentEpTitle" class="current-ep-title">▶ 未开始播放</div>
+                        <div class="ep-menu-row">
+                            <div class="menu-btn-wrap" id="epMenuWrap">
+                                <button type="button" id="epMenuBtn" class="menu-btn">选择集数 ▾</button>
+                                <div id="epMenu" class="custom-menu"></div>
+                            </div>
+                            <div class="menu-btn-wrap" id="sourceMenuWrap">
+                                <button type="button" id="sourceMenuBtn" class="menu-btn">切换数据源 ▾</button>
+                                <div id="sourceMenu" class="custom-menu"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="episodesList" class="episodes-grid"></div>
                 </div>
             </div>
         </div>
@@ -254,9 +272,11 @@ layout: false
     const homeContent = document.getElementById('homeContent');
     const homePagination = document.getElementById('homePagination');
     const detailPlayer = document.getElementById('detailPlayer');
-    const episodesList = document.getElementById('episodesList');
-    const sourceSwitchSelect = document.getElementById('sourceSwitchSelect');
-    const epSelect = document.getElementById('epSelect');
+    const currentEpTitle = document.getElementById('currentEpTitle');
+    const epMenuBtn = document.getElementById('epMenuBtn');
+    const epMenu = document.getElementById('epMenu');
+    const sourceMenuBtn = document.getElementById('sourceMenuBtn');
+    const sourceMenu = document.getElementById('sourceMenu');
     
     const escHtml = s => String(s).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
     const escAttr = s => String(s).replace(/[&"']/g, m => ({'&':'&amp;','"':'&quot;',"'":'&#39;'}[m]));
@@ -1038,11 +1058,6 @@ layout: false
         currentPlayingEpIndex = restoreEp;
         
         renderEpisodesList();
-        // 高亮当前剧集
-        setTimeout(() => {
-            let items = document.querySelectorAll('#episodesList .episode-item');
-            if(items[restoreEp]) items[restoreEp].classList.add('current-ep');
-        }, 50);
         buildSourceSwitchOptions();
         // 播放器常驻：滚动到顶部让用户看到已就绪的播放器
         try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0, 0); }
@@ -1066,25 +1081,47 @@ layout: false
         pendingRestoreProgress = null;
     }
     
+    function updateEpMenuBtnText(){
+        let ep = currentPlayerEpisodes[currentPlayingEpIndex];
+        epMenuBtn.textContent = (ep && ep.title ? ep.title : '选择集数') + ' ▾';
+    }
+    function updateCurrentEpTitle(){
+        let ep = currentPlayerEpisodes[currentPlayingEpIndex];
+        currentEpTitle.textContent = '▶ ' + (ep && ep.title ? ep.title : '未开始播放');
+    }
+    // 自定义菜单交互
+    function closeAllMenus(){
+        document.querySelectorAll('.custom-menu').forEach(m=>m.classList.remove('open'));
+        document.querySelectorAll('.menu-btn').forEach(b=>b.classList.remove('active'));
+    }
+    function toggleMenu(menuId, btnId){
+        let menu = document.getElementById(menuId), btn = document.getElementById(btnId);
+        if(!menu) return;
+        let isOpen = menu.classList.contains('open');
+        closeAllMenus();
+        if(!isOpen){ menu.classList.add('open'); btn.classList.add('active'); }
+    }
+    document.addEventListener('click',(e)=>{
+        if(!e.target.closest('.menu-btn-wrap')) closeAllMenus();
+    });
+    epMenuBtn.addEventListener('click',(e)=>{ e.stopPropagation(); toggleMenu('epMenu','epMenuBtn'); });
+    sourceMenuBtn.addEventListener('click',(e)=>{ e.stopPropagation(); toggleMenu('sourceMenu','sourceMenuBtn'); });
+    
     function renderEpisodesList(){
-        if(!currentPlayerEpisodes.length){ episodesList.innerHTML='<div class="empty-state" style="padding:20px;">暂无剧集信息</div>'; return; }
+        if(!currentPlayerEpisodes.length){ epMenu.innerHTML='<div class="menu-option disabled">暂无剧集信息</div>'; updateEpMenuBtnText(); updateCurrentEpTitle(); return; }
         let html='';
         currentPlayerEpisodes.forEach((ep,idx)=>{
             let isCurr = (idx === currentPlayingEpIndex);
-            html+=`<div class="episode-item ${isCurr?'current-ep':''}" data-url="${escAttr(ep.url)}" data-title="${escAttr(ep.title)}" data-idx="${idx}" data-playable="${ep.playable!==false}">${escHtml(ep.title)} ${!ep.playable?'🚫':''}</div>`;
+            html+=`<div class="menu-option ${isCurr?'active':''} ${ep.playable===false?'disabled':''}" data-url="${escAttr(ep.url)}" data-title="${escAttr(ep.title)}" data-idx="${idx}" data-playable="${ep.playable!==false}">${escHtml(ep.title)}${ep.playable===false?' 🚫':''}</div>`;
         });
-        episodesList.innerHTML=html;
-        // 同步填充集数下拉框（与剧集列表同源）
-        let optHtml='<option value="">选择集数</option>';
-        currentPlayerEpisodes.forEach((ep,idx)=>{
-            optHtml+=`<option value="${idx}" ${idx===currentPlayingEpIndex?'selected':''} ${ep.playable===false?'disabled':''}>${escHtml(ep.title)}${ep.playable===false?' 🚫':''}</option>`;
-        });
-        epSelect.innerHTML=optHtml;
-        document.querySelectorAll('.episode-item').forEach(el=>{
+        epMenu.innerHTML=html;
+        updateEpMenuBtnText();
+        updateCurrentEpTitle();
+        epMenu.querySelectorAll('.menu-option').forEach(el=>{
             el.addEventListener('click',()=>{
-                let url=el.dataset.url, title=el.dataset.title, idx=parseInt(el.dataset.idx);
                 if(el.dataset.playable==='false'){ setStatus('⚠️ 该集无法播放'); return; }
-                playEpInPlayer(url, title, idx, 0);
+                closeAllMenus();
+                playEpInPlayer(el.dataset.url, el.dataset.title, parseInt(el.dataset.idx), 0);
             });
         });
     }
@@ -1117,9 +1154,11 @@ layout: false
         detailPlayer.play().catch(e=>setStatus('播放失败，请检查链接'));
         setStatus(`▶ ${title}`);
         currentPlayingEpIndex=idx;
-        document.querySelectorAll('.episode-item').forEach(el=>el.classList.remove('current-ep'));
-        if(episodesList.children[idx]) episodesList.children[idx].classList.add('current-ep');
-        if(epSelect) epSelect.value = String(idx); // 集数下拉同步
+        // 同步集数菜单高亮 + 按钮文字 + 当前剧集名称
+        epMenu.querySelectorAll('.menu-option').forEach(el=>el.classList.remove('active'));
+        if(epMenu.children[idx]) epMenu.children[idx].classList.add('active');
+        updateEpMenuBtnText();
+        updateCurrentEpTitle();
         let nextIdx=idx+1;
         while(nextIdx<currentPlayerEpisodes.length && currentPlayerEpisodes[nextIdx].playable===false) nextIdx++;
         currentEpNext = (nextIdx<currentPlayerEpisodes.length) ? {url:currentPlayerEpisodes[nextIdx].url, title:currentPlayerEpisodes[nextIdx].title, idx:nextIdx} : null;
@@ -1138,16 +1177,22 @@ layout: false
                 }
             }
         }
-        let html='<option value="">切换数据源</option>';
+        sourceMenu.innerHTML='';
+        if(!sameNameVideos.length){ sourceMenuBtn.style.display='none'; return; }
+        sourceMenuBtn.style.display='';
+        let html='';
         sameNameVideos.forEach((item,idx)=>{
-            html+=`<option value="${idx}" ${item.sourceKey===currentPlayerSourceKey?'selected':''}>${item.sourceName} (${item.ep_count||0}集)</option>`;
+            let isCurr = (item.sourceKey===currentPlayerSourceKey);
+            html+=`<div class="menu-option ${isCurr?'active':''}" data-idx="${idx}">${escHtml(item.sourceName)} (${item.ep_count||0}集)</div>`;
         });
-        sourceSwitchSelect.innerHTML=html;
-        sourceSwitchSelect.onchange=(e)=>{
-            let idx=e.target.value;
-            if(idx==='') return;
-            let selected = sameNameVideos[parseInt(idx)];
-            if(selected){
+        sourceMenu.innerHTML=html;
+        sourceMenuBtn.textContent = (currentPlayerSourceName || '切换数据源') + ' ▾';
+        sourceMenu.querySelectorAll('.menu-option').forEach(el=>{
+            el.addEventListener('click',()=>{
+                let idx=parseInt(el.dataset.idx);
+                let selected = sameNameVideos[idx];
+                if(!selected) return;
+                closeAllMenus();
                 currentPlayerSourceKey = selected.sourceKey;
                 currentPlayerSourceName = selected.sourceName;
                 currentPlayerEpisodes = selected.episodes || [];
@@ -1156,14 +1201,15 @@ layout: false
                 currentPlayerVideo.sourceName = selected.sourceName;
                 currentPlayerVideo.ep_count = selected.ep_count;
                 currentPlayerVideo.playable_count = selected.playable_count;
+                sourceMenuBtn.textContent = (selected.sourceName || '切换数据源') + ' ▾';
                 renderEpisodesList();
                 // 重置剧集索引
                 currentPlayingEpIndex = 0;
                 if(currentPlayerEpisodes.length && currentPlayerEpisodes[0]){
                     playEpInPlayer(currentPlayerEpisodes[0].url, currentPlayerEpisodes[0].title, 0, 0);
                 }
-            }
-        };
+            });
+        });
     }
     detailPlayer.addEventListener('ended',()=>{
         if(currentPlayingVideo) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
@@ -1171,14 +1217,6 @@ layout: false
     });
     detailPlayer.addEventListener('pause',()=>{
         if(currentPlayingVideo && detailPlayer.currentTime>5) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
-    });
-    // 集数下拉框：选中即播放该集（与剧集列表一致）
-    epSelect.addEventListener('change',()=>{
-        let idx = parseInt(epSelect.value);
-        if(isNaN(idx) || !currentPlayerEpisodes[idx]) return;
-        let ep = currentPlayerEpisodes[idx];
-        if(ep.playable === false){ setStatus('⚠️ 该集无法播放'); epSelect.value = String(currentPlayingEpIndex); return; }
-        playEpInPlayer(ep.url, ep.title, idx, 0);
     });
     
     function loadIndexData(){
