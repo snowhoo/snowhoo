@@ -817,7 +817,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     if (a.classList.contains('locked')) return;
     a.classList.add('locked');
     a.insertAdjacentHTML('beforeend', '<span class="menu-lock-icon">🔒</span>');
-    a.addEventListener('click', function(e){ if (!a.classList.contains('locked')) return; e.preventDefault(); tip('该栏目尚未解锁，请先在修真小世界修炼解锁'); }); // unlockItem 后已解锁，不拦截跳转
+    a.addEventListener('click', function(e){ if (!a.classList.contains('locked')) return; e.preventDefault(); tip('封印未破!请往修真小世界破除。'); }); // unlockItem 后已解锁，不拦截跳转
   }
   function unlockItem(a){
     a.classList.remove('locked');
