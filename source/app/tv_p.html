@@ -74,9 +74,13 @@ layout: false
         .ep-title-row { display: flex; align-items: center; gap: 10px; width: 100%; }
         .ep-title-row .current-ep-title { flex: 1; min-width: 0; }
         #exitPlayerBtn { flex-shrink: 0; }
-        .ep-menu-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-start; }
+        .ep-menu-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+        /* 左段（新->旧 + 选择集数）右段（切换数据源）：两段对齐 */
+        .ep-menu-left { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; min-width: 0; }
         .ep-order-toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text-secondary); cursor: pointer; user-select: none; -webkit-user-select: none; }
         .ep-order-toggle input { width: 15px; height: 15px; margin: 0; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
+        .ep-order-toggle.disabled { opacity: .45; cursor: not-allowed; }
+        .ep-order-toggle.disabled input { cursor: not-allowed; }
         .menu-btn-wrap { position: relative; }
         .menu-btn { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 6px 16px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-primary); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: all 0.1s; }
         .menu-btn:hover { border-color: var(--accent); }
@@ -217,10 +221,12 @@ layout: false
                             <button type="button" id="exitPlayerBtn" class="menu-btn" disabled>退出播放</button>
                         </div>
                         <div class="ep-menu-row">
-                            <label class="ep-order-toggle" for="epOrderToggle" title="勾选后剧集菜单按新到旧排列"><input type="checkbox" id="epOrderToggle" checked>新-&gt;旧</label>
-                            <div class="menu-btn-wrap" id="epMenuWrap">
-                                <button type="button" id="epMenuBtn" class="menu-btn" disabled>选择集数 ▾</button>
-                                <div id="epMenu" class="custom-menu"></div>
+                            <div class="ep-menu-left">
+                                <label class="ep-order-toggle disabled" for="epOrderToggle" title="勾选后剧集菜单按新到旧排列"><input type="checkbox" id="epOrderToggle" checked disabled>新-&gt;旧</label>
+                                <div class="menu-btn-wrap" id="epMenuWrap">
+                                    <button type="button" id="epMenuBtn" class="menu-btn" disabled>选择集数 ▾</button>
+                                    <div id="epMenu" class="custom-menu"></div>
+                                </div>
                             </div>
                             <div class="menu-btn-wrap" id="sourceMenuWrap">
                                 <button type="button" id="sourceMenuBtn" class="menu-btn" disabled>切换数据源 ▾</button>
@@ -1013,34 +1019,37 @@ layout: false
         currentPlayerEpisodes = video.episodes || [];
         currentPlayingVideo = video;
         
-        // 确定要播放的剧集索引和进度
-        let restoreEp = (pendingRestoreEpIndex !== null && pendingRestoreEpIndex < currentPlayerEpisodes.length) ? pendingRestoreEpIndex : 0;
-        let savedProgress = (pendingRestoreProgress !== null && pendingRestoreProgress > 0) ? pendingRestoreProgress : 0;
+        // 确定默认选中的剧集索引（仅加载信息，不自动播放）
+        let restoreEp = 0;
+        if (pendingRestoreEpIndex !== null && pendingRestoreEpIndex < currentPlayerEpisodes.length) {
+            restoreEp = pendingRestoreEpIndex;               // 续播优先
+        } else if (epOrderToggle && epOrderToggle.checked) {
+            restoreEp = currentPlayerEpisodes.length - 1;    // 新->旧：默认最新一集
+        }
+        if (currentPlayerEpisodes[restoreEp] && currentPlayerEpisodes[restoreEp].playable === false) {
+            let idx = currentPlayerEpisodes.findIndex(e=>e.playable !== false);
+            if (idx >= 0) restoreEp = idx;                   // 默认集不可播时回退到首个可播集
+        }
         currentPlayingEpIndex = restoreEp;
         
         renderEpisodesList();
         buildSourceSwitchOptions();
+        // 停止旧播放，等待用户点击选集后才播放
+        if(currentHls) currentHls.destroy();
+        currentHls = null;
+        detailPlayer.pause();
+        detailPlayer.removeAttribute('src');
+        detailPlayer.load();
+        var ph = document.getElementById('playerPlaceholder');
+        if(ph) ph.style.display = 'flex';
         // 播放器常驻：滚动到顶部让用户看到已就绪的播放器
         try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0, 0); }
         document.title = '播霸|在线影视' + (video.vod_class ? '-' + video.vod_class : '') + '-' + video.vod_name;
-        if(currentHls) currentHls.destroy();
-        detailPlayer.pause(); detailPlayer.removeAttribute('src');
-        if(currentPlayerEpisodes.length && currentPlayerEpisodes[restoreEp]){
-            let ep = currentPlayerEpisodes[restoreEp];
-            if(ep.playable !== false){
-                playEpInPlayer(ep.url, ep.title, restoreEp, savedProgress);
-            } else {
-                let firstPlayable = currentPlayerEpisodes.find(e=>e.playable!==false) || currentPlayerEpisodes[0];
-                if(firstPlayable) playEpInPlayer(firstPlayable.url, firstPlayable.title, currentPlayerEpisodes.indexOf(firstPlayable), 0);
-            }
-        } else if(currentPlayerEpisodes.length){
-            let firstPlayable = currentPlayerEpisodes.find(e=>e.playable!==false) || currentPlayerEpisodes[0];
-            if(firstPlayable) playEpInPlayer(firstPlayable.url, firstPlayable.title, 0, 0);
-        }
         // 清除续播标记，避免下次误用
         pendingRestoreEpIndex = null;
         pendingRestoreProgress = null;
         updateExitBtnState();
+        updateEpOrderState();
     }
 
     // 退出播放：还原到非播放状态
@@ -1079,12 +1088,22 @@ layout: false
         document.title = '播霸|在线影视';
         // 退出按钮回到禁用态
         updateExitBtnState();
+        // 新->旧 复选框回到禁用态
+        updateEpOrderState();
         // 回到顶部看列表
         try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0, 0); }
     }
     // 退出播放按钮状态：仅播放/打开影片视图时可用
     function updateExitBtnState(){
         if(exitPlayerBtn) exitPlayerBtn.disabled = !(currentPlayerVideo || currentPlayingVideo);
+    }
+    // 新->旧 复选框状态：仅打开影片视图时可用
+    function updateEpOrderState(){
+        if(!epOrderToggle) return;
+        let on = !!(currentPlayerVideo || currentPlayingVideo);
+        epOrderToggle.disabled = !on;
+        let lb = epOrderToggle.closest('.ep-order-toggle');
+        if(lb) lb.classList.toggle('disabled', !on);
     }
     exitPlayerBtn.addEventListener('click', exitPlayer);
     
@@ -1266,12 +1285,26 @@ layout: false
                 currentPlayerVideo.ep_count = selected.ep_count;
                 currentPlayerVideo.playable_count = selected.playable_count;
                 sourceMenuBtn.textContent = (selected.sourceName || '切换数据源') + ' ▾';
-                renderEpisodesList();
-                // 重置剧集索引
-                currentPlayingEpIndex = 0;
-                if(currentPlayerEpisodes.length && currentPlayerEpisodes[0]){
-                    playEpInPlayer(currentPlayerEpisodes[0].url, currentPlayerEpisodes[0].title, 0, 0);
+                // 重置默认选中索引（新->旧时最新一集），仅加载信息不自动播放
+                let defIdx = 0;
+                if(epOrderToggle && epOrderToggle.checked) defIdx = currentPlayerEpisodes.length - 1;
+                if(defIdx < 0) defIdx = 0;
+                if(currentPlayerEpisodes[defIdx] && currentPlayerEpisodes[defIdx].playable === false){
+                    let fi = currentPlayerEpisodes.findIndex(e=>e.playable !== false);
+                    if(fi >= 0) defIdx = fi;
                 }
+                currentPlayingEpIndex = defIdx;
+                renderEpisodesList();
+                // 停止旧播放，等待用户点击选集
+                if(currentHls) currentHls.destroy();
+                currentHls = null;
+                detailPlayer.pause();
+                detailPlayer.removeAttribute('src');
+                detailPlayer.load();
+                var ph = document.getElementById('playerPlaceholder');
+                if(ph) ph.style.display = 'flex';
+                updateExitBtnState();
+                updateEpOrderState();
             });
         });
     }
