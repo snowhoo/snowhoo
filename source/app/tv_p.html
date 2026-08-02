@@ -66,11 +66,13 @@ layout: false
         .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 12px 14px; border: 1px solid var(--border); }
         .episodes-header { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 14px; gap: 8px; }
         .current-ep-title { font-size: 14px; font-weight: 600; color: var(--text-primary); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .ep-menu-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .ep-menu-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
         .menu-btn-wrap { position: relative; }
         .menu-btn { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 6px 16px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-primary); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: all 0.1s; }
         .menu-btn:hover { border-color: var(--accent); }
         .menu-btn.active { border-color: var(--accent); }
+        .menu-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .menu-btn:disabled:hover { border-color: var(--border); }
         .custom-menu { position: absolute; top: calc(100% + 6px); left: 0; min-width: 170px; max-width: 280px; max-height: 320px; overflow-y: auto; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-md); z-index: 300; display: none; }
         .custom-menu.open { display: block; }
         .custom-menu .menu-option { padding: 9px 14px; font-size: 13px; cursor: pointer; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -79,11 +81,12 @@ layout: false
         .custom-menu .menu-option.disabled { opacity: 0.4; cursor: not-allowed; }
         .custom-menu .menu-option.disabled:hover { background: transparent; }
         #sourceMenu .menu-option + .menu-option { border-top: 1px solid var(--border); }
-        /* 剧集菜单：铺满整屏宽（无左右边界），flex 弹性换行，文字不截断 */
-        #epMenu { position: fixed; left: 0; right: 0; width: 100%; min-width: 0; max-width: none; max-height: 60vh; }
+        /* 剧集菜单：宽度与播放器同宽（JS 按播放器 rect 定位），flex 弹性换行，文字不截断，末行空容器补齐 */
+        #epMenu { position: fixed; max-height: 60vh; }
         #epMenu.open { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; padding: 8px; }
         #epMenu .menu-option { flex: 1 0 auto; min-width: 52px; padding: 8px 10px; text-align: center; border-radius: 6px; border: 1px solid var(--border); white-space: nowrap; overflow: visible; text-overflow: clip; }
         #epMenu .menu-option.active { border-color: var(--accent); }
+        #epMenu .menu-option.menu-pad { visibility: hidden; border-color: transparent; pointer-events: none; }
         .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
         .page-text{font-size:.72rem;color:var(--text-muted);white-space:nowrap;margin:0 4px}
         
@@ -188,11 +191,11 @@ layout: false
                         <div id="currentEpTitle" class="current-ep-title">▶ 未开始播放</div>
                         <div class="ep-menu-row">
                             <div class="menu-btn-wrap" id="epMenuWrap">
-                                <button type="button" id="epMenuBtn" class="menu-btn">选择集数 ▾</button>
+                                <button type="button" id="epMenuBtn" class="menu-btn" disabled>选择集数 ▾</button>
                                 <div id="epMenu" class="custom-menu"></div>
                             </div>
                             <div class="menu-btn-wrap" id="sourceMenuWrap">
-                                <button type="button" id="sourceMenuBtn" class="menu-btn">切换数据源 ▾</button>
+                                <button type="button" id="sourceMenuBtn" class="menu-btn" disabled>切换数据源 ▾</button>
                                 <div id="sourceMenu" class="custom-menu"></div>
                             </div>
                         </div>
@@ -1091,9 +1094,37 @@ layout: false
         epMenuBtn.textContent = (ep && ep.title ? ep.title : '选择集数') + ' ▾';
     }
     function updateCurrentEpTitle(){
-        // 上方显示剧名（影片名称），非当前集数
+        // 显示剧名 + 当前集数/总集数（如：▶ 剧名 1 / 100）
         let name = currentPlayerVideo ? (currentPlayerVideo.vod_name || '') : '';
-        currentEpTitle.textContent = '▶ ' + (name || '未开始播放');
+        let total = currentPlayerEpisodes.length;
+        let cur = (currentPlayingEpIndex >= 0 && currentPlayingEpIndex < total) ? (currentPlayingEpIndex + 1) : 0;
+        let suffix = (name && total) ? ` ${cur} / ${total}` : '';
+        currentEpTitle.textContent = '▶ ' + name + suffix;
+    }
+    // 剧集菜单：末行不足时用空容器补齐，保持每项同宽
+    function padEpMenuRow(){
+        epMenu.querySelectorAll('.menu-pad').forEach(p=>p.remove());
+        let items = Array.from(epMenu.querySelectorAll('.menu-option')).filter(el=>!el.classList.contains('menu-pad'));
+        if(items.length < 2) return;
+        let firstTop = items[0].offsetTop;
+        let perRow = 0;
+        for(let i=0;i<items.length;i++){
+            if(items[i].offsetTop === firstTop) perRow++;
+            else break;
+        }
+        if(perRow <= 0) return;
+        let lastTop = items[items.length-1].offsetTop;
+        let lastRowCount = 0;
+        for(let i=items.length-1;i>=0;i--){
+            if(items[i].offsetTop === lastTop) lastRowCount++;
+            else break;
+        }
+        let missing = perRow - lastRowCount;
+        for(let i=0;i<missing;i++){
+            let pad = document.createElement('div');
+            pad.className = 'menu-option menu-pad';
+            epMenu.appendChild(pad);
+        }
     }
     // 自定义菜单交互
     function closeAllMenus(){
@@ -1112,15 +1143,27 @@ layout: false
     });
     epMenuBtn.addEventListener('click',(e)=>{
         e.stopPropagation();
-        // fixed 定位：菜单铺满屏宽，top 定位到按钮下方
-        let r = epMenuBtn.getBoundingClientRect();
-        epMenu.style.top = (r.bottom + 6) + 'px';
+        if(epMenuBtn.disabled) return;
+        // 菜单与播放器同宽：按播放器 rect 定位
+        let btnRect = epMenuBtn.getBoundingClientRect();
+        let pc = document.querySelector('.player-container');
+        let pr = pc ? pc.getBoundingClientRect() : btnRect;
+        epMenu.style.top = (btnRect.bottom + 6) + 'px';
+        epMenu.style.left = pr.left + 'px';
+        epMenu.style.width = pr.width + 'px';
+        let wasOpen = epMenu.classList.contains('open');
         toggleMenu('epMenu','epMenuBtn');
+        if(!wasOpen) padEpMenuRow();
     });
     sourceMenuBtn.addEventListener('click',(e)=>{ e.stopPropagation(); toggleMenu('sourceMenu','sourceMenuBtn'); });
     
     function renderEpisodesList(){
-        if(!currentPlayerEpisodes.length){ epMenu.innerHTML='<div class="menu-option disabled">暂无剧集信息</div>'; updateEpMenuBtnText(); updateCurrentEpTitle(); return; }
+        if(!currentPlayerEpisodes.length){
+            epMenu.innerHTML='<div class="menu-option disabled">暂无剧集信息</div>';
+            epMenuBtn.disabled = true;
+            updateEpMenuBtnText(); updateCurrentEpTitle(); return;
+        }
+        epMenuBtn.disabled = false;
         let html='';
         currentPlayerEpisodes.forEach((ep,idx)=>{
             let isCurr = (idx === currentPlayingEpIndex);
@@ -1190,8 +1233,9 @@ layout: false
             }
         }
         sourceMenu.innerHTML='';
-        if(!sameNameVideos.length){ sourceMenuBtn.style.display='none'; return; }
+        if(!sameNameVideos.length){ sourceMenuBtn.style.display='none'; sourceMenuBtn.disabled = true; return; }
         sourceMenuBtn.style.display='';
+        sourceMenuBtn.disabled = false;
         let html='';
         sameNameVideos.forEach((item,idx)=>{
             let isCurr = (item.sourceKey===currentPlayerSourceKey);
