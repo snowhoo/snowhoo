@@ -79,10 +79,10 @@ layout: false
         .custom-menu .menu-option.disabled { opacity: 0.4; cursor: not-allowed; }
         .custom-menu .menu-option.disabled:hover { background: transparent; }
         #sourceMenu .menu-option + .menu-option { border-top: 1px solid var(--border); }
-        /* 剧集菜单：每行三集（三列网格） */
-        #epMenu { min-width: 240px; max-width: 340px; }
-        #epMenu.open { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px; }
-        #epMenu .menu-option { padding: 8px 4px; text-align: center; border-radius: 6px; border: 1px solid var(--border); }
+        /* 剧集菜单：铺满整屏宽（无左右边界），flex 弹性换行，文字不截断 */
+        #epMenu { position: fixed; left: 0; right: 0; width: 100%; min-width: 0; max-width: none; max-height: 60vh; }
+        #epMenu.open { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; padding: 8px; }
+        #epMenu .menu-option { flex: 1 0 auto; min-width: 52px; padding: 8px 10px; text-align: center; border-radius: 6px; border: 1px solid var(--border); white-space: nowrap; overflow: visible; text-overflow: clip; }
         #epMenu .menu-option.active { border-color: var(--accent); }
         .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
         .page-text{font-size:.72rem;color:var(--text-muted);white-space:nowrap;margin:0 4px}
@@ -1110,7 +1110,13 @@ layout: false
     document.addEventListener('click',(e)=>{
         if(!e.target.closest('.menu-btn-wrap')) closeAllMenus();
     });
-    epMenuBtn.addEventListener('click',(e)=>{ e.stopPropagation(); toggleMenu('epMenu','epMenuBtn'); });
+    epMenuBtn.addEventListener('click',(e)=>{
+        e.stopPropagation();
+        // fixed 定位：菜单铺满屏宽，top 定位到按钮下方
+        let r = epMenuBtn.getBoundingClientRect();
+        epMenu.style.top = (r.bottom + 6) + 'px';
+        toggleMenu('epMenu','epMenuBtn');
+    });
     sourceMenuBtn.addEventListener('click',(e)=>{ e.stopPropagation(); toggleMenu('sourceMenu','sourceMenuBtn'); });
     
     function renderEpisodesList(){
