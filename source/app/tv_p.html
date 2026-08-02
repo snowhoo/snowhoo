@@ -34,10 +34,12 @@ layout: false
         .cat-filters::-webkit-scrollbar { display: none; }
         .cat-badge { background: var(--bg-elevated); padding: 3px 6px; border-radius: 40px; font-size: 13px; cursor: pointer; border: 1px solid var(--border); transition: all 0.1s; white-space: nowrap; flex-shrink: 0; color: var(--text-primary); }
         .cat-badge.active { background: var(--accent); color: white; border-color: var(--accent); }
-        .video-grid { display: grid; gap: 10px; margin-top: 8px; }
-        @media (orientation: portrait) { .video-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; } }
-        @media (orientation: landscape) { .video-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; } }
-        .video-card { background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; cursor: pointer; transition: all 0.25s ease; border: 1px solid var(--border); box-shadow: var(--shadow-sm); position: relative; }
+        /* 左右滑自然流动模式：横向滚动流，不分页，全部影片一次渲染，左右滑动选取 */
+        .video-grid { display: flex; flex-flow: row nowrap; gap: 10px; margin-top: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; padding-bottom: 6px; scrollbar-width: none; }
+        .video-grid::-webkit-scrollbar { display: none; }
+        @media (orientation: portrait) { .video-grid { gap: 6px; } .video-card { width: 40vw; } }
+        @media (orientation: landscape) { .video-grid { gap: 10px; } .video-card { width: 23vw; } }
+        .video-card { background: var(--bg-card); border-radius: var(--radius-card); overflow: hidden; cursor: pointer; transition: all 0.25s ease; border: 1px solid var(--border); box-shadow: var(--shadow-sm); position: relative; flex: 0 0 auto; scroll-snap-align: start; }
         
         .video-poster { aspect-ratio: 2/3; width: 100%; object-fit: cover; display: block; }
         .video-poster-text { aspect-ratio: 2/3; width: 100%; display: flex; align-items: center; justify-content: center; padding: 10px; font-size: 14px; font-weight: 600; color: var(--text-muted); text-align: center; word-break: break-all; box-sizing: border-box; }
@@ -66,7 +68,12 @@ layout: false
         .video-detail { background: var(--bg-surface); border-radius: var(--radius-md); padding: 12px 14px; border: 1px solid var(--border); }
         .episodes-header { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
         .current-ep-title { font-size: 14px; font-weight: 600; color: var(--text-primary); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .ep-menu-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+        .ep-menu-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-start; }
+        /* 退出播放按钮：右对齐，其余按钮左对齐 */
+        #exitPlayerBtn { margin-left: auto; }
+        #exitPlayerBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .ep-order-toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text-secondary); cursor: pointer; user-select: none; -webkit-user-select: none; }
+        .ep-order-toggle input { width: 15px; height: 15px; margin: 0; cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
         .menu-btn-wrap { position: relative; }
         .menu-btn { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 40px; padding: 6px 16px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-primary); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: all 0.1s; }
         .menu-btn:hover { border-color: var(--accent); }
@@ -88,6 +95,7 @@ layout: false
         #epMenu .menu-option.active { border-color: var(--accent); }
         #epMenu .menu-option.menu-pad { visibility: hidden; border-color: transparent; pointer-events: none; }
         .empty-state { text-align: center; padding: 80px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: var(--radius-md); }
+        .video-grid .empty-state { flex: 1 0 100%; width: 100%; }
         .page-text{font-size:.72rem;color:var(--text-muted);white-space:nowrap;margin:0 4px}
         
         @media (orientation: landscape) { #app { padding: 0 10px 10px; } }
@@ -100,6 +108,8 @@ layout: false
         .page-nav-group{display:flex;align-items:center;gap:2px}
         .page-nav-btn{padding:4px 6px;cursor:pointer;color:var(--text-muted,#999);font-size:.72rem;user-select:none}
         .page-nav-btn:active{background:rgba(0,0,0,.05)}
+        /* 不分页模式：隐藏首/尾页跳转按钮，仅保留影片数显示 */
+        #firstBtn, #lastBtn { display: none; }
         .theme-btn{width:32px;height:32px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
         .theme-btn:active{transform:scale(.92)}
         .theme-btn svg{width:16px;height:16px}
@@ -190,6 +200,7 @@ layout: false
                     <div class="episodes-header">
                         <div id="currentEpTitle" class="current-ep-title">▶ 未开始播放</div>
                         <div class="ep-menu-row">
+                            <label class="ep-order-toggle" for="epOrderToggle" title="勾选后剧集菜单按新到旧排列"><input type="checkbox" id="epOrderToggle" checked>新-&gt;旧</label>
                             <div class="menu-btn-wrap" id="epMenuWrap">
                                 <button type="button" id="epMenuBtn" class="menu-btn" disabled>选择集数 ▾</button>
                                 <div id="epMenu" class="custom-menu"></div>
@@ -198,6 +209,7 @@ layout: false
                                 <button type="button" id="sourceMenuBtn" class="menu-btn" disabled>切换数据源 ▾</button>
                                 <div id="sourceMenu" class="custom-menu"></div>
                             </div>
+                            <button type="button" id="exitPlayerBtn" class="menu-btn" disabled>退出播放</button>
                         </div>
                     </div>
                 </div>
@@ -228,7 +240,7 @@ layout: false
     <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
     <div class="page-nav-group" id="pageNavGroup">
       <span class="page-nav-btn" id="firstBtn">‹‹</span>
-      <span class="page-btn" id="pageBtn">1 / 1</span>
+      <span class="page-btn" id="pageBtn">0 部</span>
       <span class="page-nav-btn" id="lastBtn">››</span>
     </div>
   </div>
@@ -250,7 +262,7 @@ layout: false
     window.__SC_BASE_PATH = '/js/sevencolor/3/';
     // 存储与核心变量 ----------
     const STORAGE = { HISTORY:'tvbox_history', FAVORITES:'tvbox_favorites', SEARCH:'tvbox_search_results', THEME:'tvbox_theme' };
-    const PAGE_SIZE = 2, CONCURRENT = 10;
+    const CONCURRENT = 10;
     let sourceIndex=[], loadedSources={}, sourceMeta={}, currentData=null, currentPrefix='', currentFilePage=1, currentPage=1, currentFiltered=[], currentCategory='';
     let currentSearchKeyword='', currentSearchResults=[], currentSearchCategory='', isSearching=false, searchVersion=0;
     let currentPlayingVideo=null, currentPlayingEpIndex=0, currentOpenVideo=null, currentEpNext=null, currentHls=null, playerInFloat=false;
@@ -283,8 +295,10 @@ layout: false
     const currentEpTitle = document.getElementById('currentEpTitle');
     const epMenuBtn = document.getElementById('epMenuBtn');
     const epMenu = document.getElementById('epMenu');
+    const epOrderToggle = document.getElementById('epOrderToggle');
     const sourceMenuBtn = document.getElementById('sourceMenuBtn');
     const sourceMenu = document.getElementById('sourceMenu');
+    const exitPlayerBtn = document.getElementById('exitPlayerBtn');
     
     const escHtml = s => String(s).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
     const escAttr = s => String(s).replace(/[&"']/g, m => ({'&':'&amp;','"':'&quot;',"'":'&#39;'}[m]));
@@ -602,9 +616,8 @@ layout: false
     }
 
     function renderHomeGrid(){
-        let total=currentFiltered.length, pages=Math.ceil(total/PAGE_SIZE)||1;
-        if(currentPage>pages) currentPage=pages;
-        let start=(currentPage-1)*PAGE_SIZE, items=currentFiltered.slice(start,start+PAGE_SIZE);
+        // 不分页：全部影片一次渲染进横向滑动流
+        let items=currentFiltered;
         let html='';
         const isSpecial = (currentPrefix === '__history__' || currentPrefix === '__bookmarks__' || currentPrefix === '__search_result__' || currentPrefix === '__favorites__');
         items.forEach(v=>{
@@ -717,51 +730,34 @@ layout: false
         renderSpecialView('__search_result__');
     }
 
-    // 底部翻页更新
+    // 底部影片数更新（原翻页栏位置，风格不变，显示影片总数）
     function updateBottomPagination() {
-        let total = currentFiltered.length, pages = Math.ceil(total / PAGE_SIZE) || 1;
-        if (currentPage > pages) currentPage = pages;
-        document.getElementById('pageBtn').textContent = currentPage + ' / ' + pages;
+        let total = currentFiltered.length;
+        document.getElementById('pageBtn').textContent = total + ' 部';
     }
 
-    // 翻页：首页
+    // 首页：横向滚动到最左
     function goFirstPage() {
-        let total = currentFiltered.length, pages = Math.ceil(total / PAGE_SIZE) || 1;
-        if (currentPage > 1) {
-            currentPage = 1;
-            renderHomeGrid();
-        }
+        let el = document.getElementById('homeContent');
+        if (el && el.scrollWidth > el.clientWidth) el.scrollTo({ left: 0, behavior: 'smooth' });
     }
 
-    // 翻页：尾页
+    // 尾页：横向滚动到最右
     function goLastPage() {
-        let total = currentFiltered.length, pages = Math.ceil(total / PAGE_SIZE) || 1;
-        if (currentPage < pages) {
-            currentPage = pages;
-            renderHomeGrid();
-        }
+        let el = document.getElementById('homeContent');
+        if (el && el.scrollWidth > el.clientWidth) el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' });
     }
 
-    // 滑动翻页：上一页（含分类切换）
+    // 滑动：上一屏（按约一屏宽度左移）
     function goPrevPage() {
-        let total = currentFiltered.length, pages = Math.ceil(total / PAGE_SIZE) || 1;
-        if (currentPage > 1) {
-            currentPage--;
-            renderHomeGrid();
-        } else {
-            goPrevCategory();
-        }
+        let el = document.getElementById('homeContent');
+        if (el) el.scrollTo({ left: Math.max(0, el.scrollLeft - el.clientWidth * 0.8), behavior: 'smooth' });
     }
 
-    // 滑动翻页：下一页（含分类切换）
+    // 滑动：下一屏（按约一屏宽度右移）
     function goNextPage() {
-        let total = currentFiltered.length, pages = Math.ceil(total / PAGE_SIZE) || 1;
-        if (currentPage < pages) {
-            currentPage++;
-            renderHomeGrid();
-        } else {
-            goNextCategory();
-        }
+        let el = document.getElementById('homeContent');
+        if (el) el.scrollTo({ left: el.scrollLeft + el.clientWidth * 0.8, behavior: 'smooth' });
     }
 
     // 获取当前分类列表
@@ -773,98 +769,13 @@ layout: false
         return cats;
     }
 
-    // 切换到下一分类
-    function goNextCategory() {
-        let cats = getCategoryList();
-        if (cats.length === 0) return;
-        let idx = cats.indexOf(currentCategory);
-        if (idx < 0 || idx >= cats.length - 1) {
-            // 已到最后一个分类，循环到第一个
-            idx = 0;
-        } else {
-            idx++;
-        }
-        let nextCat = cats[idx];
-        // 触发分类点击
-        let badges = document.querySelectorAll('#catBar .cat-badge');
-        for (let i = 0; i < badges.length; i++) {
-            if ((badges[i].dataset.cat || '') === nextCat) {
-                badges[i].click();
-                break;
-            }
-        }
-    }
-
-    // 切换到上一分类
-    function goPrevCategory() {
-        let cats = getCategoryList();
-        if (cats.length === 0) return;
-        let idx = cats.indexOf(currentCategory);
-        if (idx <= 0) {
-            // 已到第一个分类，循环到最后一个
-            idx = cats.length - 1;
-        } else {
-            idx--;
-        }
-        let prevCat = cats[idx];
-        let badges = document.querySelectorAll('#catBar .cat-badge');
-        for (let i = 0; i < badges.length; i++) {
-            if ((badges[i].dataset.cat || '') === prevCat) {
-                badges[i].click();
-                break;
-            }
-        }
-    }
-
-    // 页面底部翻页按钮事件
+    // 底部影片数按钮：点击平滑滚回最左（原为输入页码，不分页后改为滚动定位）
     document.getElementById('firstBtn').addEventListener('click', goFirstPage);
     document.getElementById('lastBtn').addEventListener('click', goLastPage);
-    document.getElementById('pageBtn').addEventListener('click', function() {
-        let total = currentFiltered.length, pages = Math.ceil(total / PAGE_SIZE) || 1;
-        var input = prompt('输入页码 (1 - ' + pages + ')', currentPage + '');
-        if (input !== null) {
-            var num = parseInt(input, 10);
-            if (num >= 1 && num <= pages) {
-                currentPage = num;
-                renderHomeGrid();
-            }
-        }
-    });
+    document.getElementById('pageBtn').addEventListener('click', goFirstPage);
 
-    // 滑动翻页
-    (function() {
-        var touchStartX = 0, touchStartY = 0, touching = false;
-        var mainContent = document.getElementById('homeContent');
-        if (mainContent) {
-            mainContent.addEventListener('touchstart', function(e) {
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
-                touching = true;
-            }, {passive: true});
-            mainContent.addEventListener('touchmove', function(e) {
-                if (!touching) return;
-                var dx = e.touches[0].clientX - touchStartX;
-                var dy = e.touches[0].clientY - touchStartY;
-                // 横向滑动时阻止浏览器默认（避免与系统边缘返回手势抢手指），纵向滚动不受影响
-                if (Math.abs(dx) > Math.abs(dy)) e.preventDefault();
-                // 仅当水平滑动距离大于垂直距离且超过阈值时触发翻页
-                if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
-                    touching = false;
-                    if (dx > 0) {
-                        // 右滑：上一页
-                        goPrevPage();
-                    } else {
-                        // 左滑：下一页
-                        goNextPage();
-                    }
-                }
-            }, {passive: false});
-            mainContent.addEventListener('touchend', function() {
-                touching = false;
-            }, {passive: true});
-        }
-    })();
-    
+    // 横向滑动：由 #homeContent 原生 overflow-x 滚动接管（左右滑自然流动），无需手动翻页
+
     // 全量分类统计
     function ensureFullCategoryStats(prefix, callback) {
         if (fullVideosCache[prefix] && fullVideosCache[prefix].ready) {
@@ -1087,7 +998,53 @@ layout: false
         // 清除续播标记，避免下次误用
         pendingRestoreEpIndex = null;
         pendingRestoreProgress = null;
+        updateExitBtnState();
     }
+
+    // 退出播放：还原到非播放状态
+    function exitPlayer(){
+        closeAllMenus();
+        // 先保存当前观看进度（先清空 currentPlayingVideo，避免后续 pause 事件重复保存）
+        let prog = Math.floor(detailPlayer.currentTime || 0);
+        let v = currentPlayingVideo;
+        if(v) updateHistory(v, currentPlayingEpIndex, prog);
+        currentPlayingVideo = null;
+        // 停止播放并显示占位
+        if(currentHls) currentHls.destroy();
+        currentHls = null;
+        detailPlayer.pause();
+        detailPlayer.removeAttribute('src');
+        detailPlayer.load();
+        var ph = document.getElementById('playerPlaceholder');
+        if(ph) ph.style.display = 'flex';
+        // 重置播放状态
+        currentPlayerVideo = null;
+        currentPlayerEpisodes = [];
+        currentEpNext = null;
+        currentPlayerSourceKey = '';
+        currentPlayerSourceName = '';
+        currentPlayingEpIndex = 0;
+        pendingRestoreEpIndex = null;
+        pendingRestoreProgress = null;
+        // 重置剧集/数据源菜单与标题
+        epMenu.innerHTML='';
+        epMenuBtn.disabled = true;
+        epMenuBtn.textContent = '选择集数 ▾';
+        sourceMenu.innerHTML='';
+        sourceMenuBtn.disabled = true;
+        sourceMenuBtn.textContent = '切换数据源 ▾';
+        currentEpTitle.textContent = '▶ 未开始播放';
+        document.title = '播霸|在线影视';
+        // 退出按钮回到禁用态
+        updateExitBtnState();
+        // 回到顶部看列表
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0, 0); }
+    }
+    // 退出播放按钮状态：仅播放/打开影片视图时可用
+    function updateExitBtnState(){
+        if(exitPlayerBtn) exitPlayerBtn.disabled = !(currentPlayerVideo || currentPlayingVideo);
+    }
+    exitPlayerBtn.addEventListener('click', exitPlayer);
     
     function updateEpMenuBtnText(){
         let ep = currentPlayerEpisodes[currentPlayingEpIndex];
@@ -1156,6 +1113,10 @@ layout: false
         if(!wasOpen) padEpMenuRow();
     });
     sourceMenuBtn.addEventListener('click',(e)=>{ e.stopPropagation(); toggleMenu('sourceMenu','sourceMenuBtn'); });
+    epOrderToggle.addEventListener('change',()=>{
+        renderEpisodesList();
+        if(epMenu.classList.contains('open')) padEpMenuRow();
+    });
     
     function renderEpisodesList(){
         if(!currentPlayerEpisodes.length){
@@ -1165,7 +1126,11 @@ layout: false
         }
         epMenuBtn.disabled = false;
         let html='';
-        currentPlayerEpisodes.forEach((ep,idx)=>{
+        // 按“新->旧”勾选状态决定渲染顺序；data-idx 始终保存原始索引，保证播放/高亮正确
+        let orderIndices = currentPlayerEpisodes.map((_,idx)=>idx);
+        if(epOrderToggle && epOrderToggle.checked) orderIndices.reverse();
+        orderIndices.forEach((idx)=>{
+            let ep = currentPlayerEpisodes[idx];
             let isCurr = (idx === currentPlayingEpIndex);
             html+=`<div class="menu-option ${isCurr?'active':''} ${ep.playable===false?'disabled':''}" data-url="${escAttr(ep.url)}" data-title="${escAttr(ep.title)}" data-idx="${idx}" data-playable="${ep.playable!==false}">${escHtml(ep.title)}${ep.playable===false?' 🚫':''}</div>`;
         });
@@ -1211,7 +1176,8 @@ layout: false
         currentPlayingEpIndex=idx;
         // 同步集数菜单高亮 + 按钮文字 + 当前剧集名称
         epMenu.querySelectorAll('.menu-option').forEach(el=>el.classList.remove('active'));
-        if(epMenu.children[idx]) epMenu.children[idx].classList.add('active');
+        let curEl = epMenu.querySelector(`.menu-option[data-idx="${idx}"]`);
+        if(curEl) curEl.classList.add('active');
         updateEpMenuBtnText();
         updateCurrentEpTitle();
         let nextIdx=idx+1;
