@@ -596,6 +596,16 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       notifyNative(false, '', '', '', 0, 0);
       setMediaSession(false);
     });
+    // 外部暂停（Chrome 因音频焦点被抢/来电/系统策略自动暂停等）→ 同步 UI 与原生
+    // （keepAlive 保留服务可恢复；非当前音频的 pause 忽略，避免切歌竞态）
+    audio.addEventListener('pause', function() {
+      if (!_scAudio || audio._scSrc !== _scAudio._scSrc) return; // 已切歌/旧 audio，忽略
+      btn.classList.remove('playing');
+      pathEl.setAttribute('d', playPath);
+      notifyNative(false, (articles[index] || {}).title, '小红故事·夜读',
+        (articles[index] || {}).coverSrc, audio.duration, audio.currentTime, true);
+      setMediaSession(false, (articles[index] || {}).title, (articles[index] || {}).coverSrc);
+    });
     audio.addEventListener('error', function() {
       btn.classList.remove('playing');
       pathEl.setAttribute('d', playPath);
