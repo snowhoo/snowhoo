@@ -508,15 +508,18 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       }
     } catch (e) {}
   }
-  // 同步系统媒体会话（锁屏/通知栏显示标题与播放状态）
-  function setMediaSession(playing, title) {
+  // 同步系统媒体会话（锁屏/通知栏媒体卡片显示标题、封面与播放状态）
+  // artwork 始终显式设置：文章有封面用封面，无封面用站点 logo——避免系统 fallback
+  // 到 App 启动图标（launcher icon 更新/缓存问题会导致媒体卡片显示老图标）
+  function setMediaSession(playing, title, cover) {
     try {
       if (navigator.mediaSession && typeof MediaMetadata !== 'undefined') {
         if (playing) {
           navigator.mediaSession.metadata = new MediaMetadata({
             title: title || '夜读',
             artist: '小红故事·夜读',
-            album: '夜读'
+            album: '夜读',
+            artwork: [{ src: cover || './logo.png', sizes: '512x512' }]
           });
           navigator.mediaSession.playbackState = 'playing';
         } else {
@@ -538,13 +541,13 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         btn.classList.add('playing');
         pathEl.setAttribute('d', pausePath);
         notifyNative(true);
-        setMediaSession(true, (articles[index] || {}).title);
+        setMediaSession(true, (articles[index] || {}).title, (articles[index] || {}).coverSrc);
       } else {
         _scAudio.pause();
         btn.classList.remove('playing');
         pathEl.setAttribute('d', playPath);
         notifyNative(false);
-        setMediaSession(false, (articles[index] || {}).title);
+        setMediaSession(false, (articles[index] || {}).title, (articles[index] || {}).coverSrc);
       }
       return;
     }
@@ -586,7 +589,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     btn.classList.add('playing');
     pathEl.setAttribute('d', pausePath);
     notifyNative(true);
-    setMediaSession(true, (articles[index] || {}).title);
+    setMediaSession(true, (articles[index] || {}).title, (articles[index] || {}).coverSrc);
     // 系统媒体通知的控制按钮（播放/暂停）→ 控制页面音频
     try {
       if (navigator.mediaSession && typeof navigator.mediaSession.setActionHandler === 'function') {
