@@ -62,46 +62,45 @@ var LEVEL_CONFIG = [
 ];
 
 /**
- * 功能解锁配置
- * 消耗真气值一次性解锁对应功能：
- *   auto    — "自动"修炼功能解锁所需真气（必须先解锁此项，才能解锁"一键"）
- *   oneKey  — "一键"修炼功能解锁所需真气（需先解锁"自动"）
- *   almanac — 右上角日期卡片（黄历）解锁所需真气，解锁后方可缩小/展开
- * 真气不足时不允许解锁。
- */
-var UNLOCK_CONFIG = {
-  auto: 888,
-  oneKey: 999,
-  almanac: 666,
-  logo: 777,
-  story: 111,
-  yedu: 222,
-  zjsz: 333,
-  news: 444,
-  tv: 555,
-  runner: 1000
-};
-
-/**
- * 发现列表（打坐人形入口）配置
- *   groups — 发现列表分组展示：
+ * 功能解锁与发现列表合并配置（原 UNLOCK_CONFIG + DISCOVER_CONFIG）
+ * 全部解锁项共用一个 key（英文键），解锁成本、回收比例、发现列表分组统一在此配置：
+ *   unlockCost — 解锁成本表（key → 消耗真气；auto/oneKey/almanac/logo/story/yedu/zjsz/news/tv/runner）
+ *   relockRate — 回收返还比例（0.8 = 返还解锁成本的 80%）
+ *   discover   — 发现列表（打坐人形入口）分组：
  *     cat   — 分类名（术法 / 小世界 / 心法）
  *     items — 各秘藏项：
- *       key       — 解锁字段对应键（auto/oneKey/almanac/logo/奔跑/story/yedu/zjsz/news/tv）
+ *       key       — 与 unlockCost 同名的 key（固魂大法 = runner，即"奔跑的人"）
  *       name      — 秘藏显示名（已解锁显示名称，未解锁显示？？）
  *       unlockMsg — 解锁成功提示文案
- *       relockMsg — 回收 80% 真气重新上锁时的操作名
- *   解锁成本统一由 UNLOCK_CONFIG 决定（同名 key）
+ *       relockMsg — 回收真气重新上锁时的操作名
  *
- * 注意：固魂大法（key: 奔跑）即"奔跑的人"——奔跑的人是其解锁窗口（解锁奔跑的人 = 发现固魂大法），
+ * 注意：固魂大法（key: runner）即"奔跑的人"——奔跑的人是其解锁窗口（解锁奔跑的人 = 发现固魂大法），
  *   解锁状态以 runnerUnlocked 为准（无独立锁，成本走 runner: 1000）。
  */
-var DISCOVER_CONFIG = {
-  groups: [
+var FEATURE_CONFIG = {
+  // 解锁成本：消耗真气值一次性解锁对应功能
+  //   auto    — "自动"修炼功能（必须先解锁此项，才能解锁"一键"）
+  //   oneKey  — "一键"修炼功能（需先解锁"自动"）
+  //   almanac — 右上角日期卡片（黄历），解锁后方可缩小/展开
+  // 真气不足时不允许解锁。
+  unlockCost: {
+    auto: 888,
+    oneKey: 999,
+    almanac: 666,
+    logo: 777,
+    story: 111,
+    yedu: 222,
+    zjsz: 333,
+    news: 444,
+    tv: 555,
+    runner: 1000
+  },
+  relockRate: 0.8,  // 回收返还比例：已解锁秘藏回收时返还解锁成本的比例
+  discover: [
     { cat: '术法', items: [
       { key:'logo', name:'隐灵术', unlockMsg:'破除封印！获得【隐灵术】', relockMsg:'收灵破法重修' },
       { key:'almanac', name:'轮回术', unlockMsg:'破除封印！获得【轮回术】', relockMsg:'收灵破法重修' },
-      { key:'奔跑', name:'固魂大法', unlockMsg:'破除封印！获得【固魂大法】', relockMsg:'收灵破法重修' }
+      { key:'runner', name:'固魂大法', unlockMsg:'破除封印！获得【固魂大法】', relockMsg:'收灵破法重修' }
     ]},
     { cat: '小世界', items: [
       { key:'story', name:'小红故事', unlockMsg:'破除迷雾结界！发现【红光秘境】', relockMsg:'撤回结界入口破锁真气' },

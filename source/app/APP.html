@@ -2255,11 +2255,9 @@ var GAME = {
   // 解锁功能：消耗真气一次性解锁"自动"/"一键"/"日期卡片"
   unlockFeature: function(feature) {
     if (this._autoMode || this._oneKeyMode) return; // 自动/一键修炼中屏蔽
-    // 名称/解锁文案先按配置原始 key 查（奔跑→固魂大法）
+    // 名称/解锁文案按配置原始 key 查（key 与 FEATURE_CONFIG.unlockCost 完全一致，无映射）
     var dItem = this._findDiscoverItem(feature);
-    // 固魂大法（配置 key: 奔跑）与"奔跑的人"同源：统一走 runner 解锁流程（成本/状态/徽章均以 runner 为准）
-    if (feature === '奔跑') feature = 'runner';
-    var cfg = (typeof UNLOCK_CONFIG !== 'undefined' && UNLOCK_CONFIG) ? UNLOCK_CONFIG : {}; // 成本一律读配置文件，不硬编码
+    var cfg = (typeof FEATURE_CONFIG !== 'undefined' && FEATURE_CONFIG && FEATURE_CONFIG.unlockCost) ? FEATURE_CONFIG.unlockCost : {}; // 成本一律读配置文件，不硬编码
     var cost = cfg[feature];
     if (!cost) return;
     var name = (dItem && dItem.name) ? dItem.name : feature;
@@ -2427,12 +2425,19 @@ var GAME = {
     });
   },
 
-  // 从配置文件（game-config.js 的 DISCOVER_CONFIG）读取发现列表分组；未定义时返回空
+  // 从配置文件（game-config.js 的 FEATURE_CONFIG.discover）读取发现列表分组；未定义时返回空
   _discoverGroups: function() {
-    var cfg = (typeof DISCOVER_CONFIG !== 'undefined' && DISCOVER_CONFIG && DISCOVER_CONFIG.groups) ? DISCOVER_CONFIG.groups : [];
+    var cfg = (typeof FEATURE_CONFIG !== 'undefined' && FEATURE_CONFIG && FEATURE_CONFIG.discover) ? FEATURE_CONFIG.discover : [];
     return cfg;
   },
-  // 按 key 在发现配置（groups + extra）中查找秘藏项
+  // 回收返还比例（FEATURE_CONFIG.relockRate），配置缺失时默认 0.8（80%）
+  _relockRate: function() {
+    if (typeof FEATURE_CONFIG !== 'undefined' && FEATURE_CONFIG && typeof FEATURE_CONFIG.relockRate === 'number') {
+      return FEATURE_CONFIG.relockRate;
+    }
+    return 0.8;
+  },
+  // 按 key 在发现配置（FEATURE_CONFIG.discover）中查找秘藏项（key 与 unlockCost 一致，无额外映射）
   _findDiscoverItem: function(key) {
     var groups = this._discoverGroups();
     for (var i = 0; i < groups.length; i++) {
@@ -2441,18 +2446,12 @@ var GAME = {
         if (items[j].key === key) return items[j];
       }
     }
-    if (typeof DISCOVER_CONFIG !== 'undefined' && DISCOVER_CONFIG && DISCOVER_CONFIG.extra && DISCOVER_CONFIG.extra[key]) {
-      return DISCOVER_CONFIG.extra[key];
-    }
     return null;
   },
 
-  // 该秘藏是否已解锁
-  // 固魂大法（plan）与"奔跑的人"（runner）同源：奔跑的人是日程计划/固魂大法的解锁窗口，
-  // 故固魂大法的解锁状态以 runnerUnlocked 为准
+  // 该秘藏是否已解锁（key 与 FEATURE_CONFIG.unlockCost 完全一致）
   _isUnlocked: function(key) {
-    // 固魂大法（配置 key: 奔跑）与"奔跑的人"同源：状态以 runnerUnlocked 为准
-    var map = { auto:'autoUnlocked', oneKey:'oneKeyUnlocked', almanac:'almanacUnlocked', logo:'logoUnlocked', '奔跑':'runnerUnlocked', runner:'runnerUnlocked', story:'storyUnlocked', yedu:'yeduUnlocked', zjsz:'zjszUnlocked', news:'newsUnlocked', tv:'tvUnlocked' };
+    var map = { auto:'autoUnlocked', oneKey:'oneKeyUnlocked', almanac:'almanacUnlocked', logo:'logoUnlocked', runner:'runnerUnlocked', story:'storyUnlocked', yedu:'yeduUnlocked', zjsz:'zjszUnlocked', news:'newsUnlocked', tv:'tvUnlocked' };
     return !!this[map[key]];
   },
 
@@ -2462,6 +2461,8 @@ var GAME = {
     if (!mask) return;
     var body = document.getElementById('discoverBody');
     var groups = this._discoverGroups();
+    var rate = this._relockRate();
+    var rateTxt = Math.round(rate * 100) + '%';
     var html = '';
     groups.forEach(function(g){
       html += '<div class="discover-cat">' + g.cat + '</div>';
@@ -2469,12 +2470,14 @@ var GAME = {
         var un = GAME._isUnlocked(it.key);
         html += '<div class="discover-item' + (un ? ' unlocked' : '') + '" data-key="' + it.key + '">'
           + (un ? '<span class="disc-name">' + it.name + '</span>' : '<span class="disc-name locked">？？</span>')
-          + (un ? '<span class="disc-act">回收 80%</span>' : '<span class="disc-act">未发现</span>')
+          + (un ? '<span class="disc-act">回收 ' + rateTxt + '</span>' : '<span class="disc-act">未发现</span>')
           + '</div>';
       });
     });
     if (!html) html = '<div class="discover-cat">暂未配置发现秘藏</div>';
     body.innerHTML = html;
+    var foot = document.getElementById('discoverFoot');
+    if (foot) foot.textContent = '已解锁秘藏点击可回收 ' + rateTxt + ' 真气重新上锁；未解锁秘藏点击可破除封印解锁';
     body.querySelectorAll('.discover-item').forEach(function(el){
       el.addEventListener('click', function(){
         var key = el.dataset.key;
@@ -2491,13 +2494,11 @@ var GAME = {
     document.body.style.overflow = '';
   },
 
-  // 回收 80% 真气，使已解锁秘藏重新上锁
+  // 回收真气（返还比例见 FEATURE_CONFIG.relockRate），使已解锁秘藏重新上锁
   relockFeature: function(feature) {
-    // 名称/回收操作名先按配置原始 key 查（奔跑→固魂大法）
+    // 名称/回收操作名按配置原始 key 查（key 与 unlockCost 一致，无映射）
     var dItem = this._findDiscoverItem(feature);
-    // 固魂大法（配置 key: 奔跑）与"奔跑的人"同源：回收其一即回收奔跑的人（成本/状态以 runner 为准）
-    if (feature === '奔跑') feature = 'runner';
-    var cfg = (typeof UNLOCK_CONFIG !== 'undefined' && UNLOCK_CONFIG) ? UNLOCK_CONFIG : {}; // 成本一律读配置文件，不硬编码
+    var cfg = (typeof FEATURE_CONFIG !== 'undefined' && FEATURE_CONFIG && FEATURE_CONFIG.unlockCost) ? FEATURE_CONFIG.unlockCost : {}; // 成本一律读配置文件，不硬编码
     var cost = cfg[feature];
     if (!cost) return;
     if (this.syncState !== 'idle') {
@@ -2506,7 +2507,7 @@ var GAME = {
     }
     var name = (dItem && dItem.name) ? dItem.name : feature;
     var relockMsg = (dItem && dItem.relockMsg) ? dItem.relockMsg : '收回真气重修';
-    var refund = Math.floor(cost * 0.8);
+    var refund = Math.floor(cost * this._relockRate());
     var self = this;
     var user = this.getWalineUser();
     if (!user) { this.showXp('', '隐匿身份，无法操作'); return; }
@@ -3704,7 +3705,7 @@ commentOverlay.addEventListener('click', function(e) {
   });
 })();
 
-// LOGO 点击：未解锁 → 走解锁流程（消耗真气破除封印，成本见 UNLOCK_CONFIG）；已解锁 → 向右侧收起为同高边条（与日期卡片一致）
+// LOGO 点击：未解锁 → 走解锁流程（消耗真气破除封印，成本见 FEATURE_CONFIG.unlockCost）；已解锁 → 向右侧收起为同高边条（与日期卡片一致）
 (function(){
   var logo = document.getElementById('topRightLogo');
   if (!logo) return;
@@ -3730,9 +3731,9 @@ commentOverlay.addEventListener('click', function(e) {
   }
 })();
 
-// 解锁按钮 title 成本动态化：成本一律读 UNLOCK_CONFIG（game-config.js），不在 HTML 硬编码
+// 解锁按钮 title 成本动态化：成本一律读 FEATURE_CONFIG.unlockCost（game-config.js），不在 HTML 硬编码
 (function(){
-  var cfg = (typeof UNLOCK_CONFIG !== 'undefined' && UNLOCK_CONFIG) ? UNLOCK_CONFIG : {};
+  var cfg = (typeof FEATURE_CONFIG !== 'undefined' && FEATURE_CONFIG && FEATURE_CONFIG.unlockCost) ? FEATURE_CONFIG.unlockCost : {};
   function applyTitles(){
     document.querySelectorAll('[data-unlock]').forEach(function(el){
       var cost = cfg[el.dataset.unlock];
@@ -3769,7 +3770,7 @@ commentOverlay.addEventListener('click', function(e) {
   });
 })();
 
-// 奔跑的人：未解锁 → 走解锁流程（消耗真气破除封印，成本见 UNLOCK_CONFIG）；已解锁 → 无入口作用（日程入口为解锁后显示的「日程」徽章）
+// 奔跑的人：未解锁 → 走解锁流程（消耗真气破除封印，成本见 FEATURE_CONFIG.unlockCost）；已解锁 → 无入口作用（日程入口为解锁后显示的「日程」徽章）
 (function(){
   var runner = document.getElementById('runnerFloat');
   if (!runner) return;
@@ -3807,7 +3808,7 @@ commentOverlay.addEventListener('click', function(e) {
       <button class="discover-close" id="discoverClose">✕</button>
     </div>
     <div class="discover-body" id="discoverBody"></div>
-    <div class="discover-foot">已解锁秘藏点击可回收 80% 真气重新上锁；未解锁秘藏点击可破除封印解锁</div>
+    <div class="discover-foot" id="discoverFoot"></div>
   </div>
 </div>
 <!-- 破除封印确认弹层（自定义，兼容移动端禁 confirm 环境） -->
