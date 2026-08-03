@@ -29,7 +29,7 @@ var GAME_CONFIG = [
  * 注意：points / cost 已按原始表格 ×10（用户确认表中数值漏乘 10）
  */
 var LEVEL_CONFIG = [
-  { name:'凡人',         times:{poetry:1, history:1, constellation:1, explore:0}, points:{poetry:100, history:0,   constellation:30,  explore:0 },  cost:0    },
+  { name:'凡人',         times:{poetry:1, history:1, constellation:1, explore:0}, points:{poetry:100, history:50,   constellation:30,  explore:0 },  cost:0    },
   { name:'练气一层',     times:{poetry:1, history:1, constellation:1, explore:0}, points:{poetry:100, history:50,  constellation:30,  explore:10 }, cost:180  },
   { name:'练气二层',     times:{poetry:1, history:1, constellation:1, explore:0}, points:{poetry:110, history:50,  constellation:30,  explore:10 }, cost:190  },
   { name:'练气三层',     times:{poetry:1, history:1, constellation:1, explore:0}, points:{poetry:120, history:50,  constellation:30,  explore:10 }, cost:200  },
