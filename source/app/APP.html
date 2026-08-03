@@ -84,21 +84,21 @@ body{display:flex;flex-direction:column}
 /* ===== 发现列表弹层（点击打坐人形打开） ===== */
 .discover-mask{position:fixed;top:0;left:0;right:0;bottom:0;z-index:20010;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .discover-mask.show{display:flex}
-.discover-box{background:linear-gradient(160deg,#231a2e,#14101c);border:1px solid rgba(139,92,246,.4);border-radius:16px;width:min(92vw,360px);max-height:78vh;display:flex;flex-direction:column;color:#e9e2f5;box-shadow:0 10px 40px rgba(0,0,0,.6);overflow:hidden}
-.discover-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid rgba(139,92,246,.2);flex-shrink:0}
-.discover-title{font-size:.92rem;font-weight:600;letter-spacing:2px;color:#c4b5fd}
-.discover-close{background:none;border:none;color:#8b7fae;font-size:1.15rem;cursor:pointer;padding:2px 6px;line-height:1}
+.discover-box{background:linear-gradient(160deg,#2c2340,#1a1526);border:1px solid rgba(139,92,246,.5);border-radius:16px;width:min(92vw,360px);max-height:78vh;display:flex;flex-direction:column;color:#f6f2ff;box-shadow:0 10px 40px rgba(0,0,0,.6);overflow:hidden}
+.discover-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid rgba(139,92,246,.3);flex-shrink:0}
+.discover-title{font-size:.92rem;font-weight:600;letter-spacing:2px;color:#ddd2ff}
+.discover-close{background:none;border:none;color:#b9aee0;font-size:1.15rem;cursor:pointer;padding:2px 6px;line-height:1}
 .discover-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 16px 16px}
-.discover-cat{font-size:.72rem;color:#a78bfa;letter-spacing:3px;margin:12px 0 8px;font-weight:600;display:flex;align-items:center;gap:8px}
-.discover-cat::before,.discover-cat::after{content:'';flex:1;height:1px;background:rgba(139,92,246,.25)}
-.discover-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);margin-bottom:8px;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.03)}
+.discover-cat{font-size:.72rem;color:#c9b8ff;letter-spacing:3px;margin:12px 0 8px;font-weight:600;display:flex;align-items:center;gap:8px}
+.discover-cat::before,.discover-cat::after{content:'';flex:1;height:1px;background:rgba(139,92,246,.3)}
+.discover-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);margin-bottom:8px;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.05)}
 .discover-item:active{transform:scale(.98)}
-.discover-item .disc-name{font-size:.85rem;color:#e9e2f5;font-weight:500}
-.discover-item .disc-name.locked{color:#6b6480;letter-spacing:3px}
-.discover-item .disc-act{font-size:.68rem;color:#8b7fae;white-space:nowrap}
-.discover-item.unlocked{border-color:rgba(52,211,153,.35)}
-.discover-item.unlocked .disc-act{color:#34d399}
-.discover-foot{padding:10px 16px 14px;border-top:1px solid rgba(139,92,246,.2);font-size:.62rem;color:#6b6480;text-align:center;line-height:1.6;flex-shrink:0}
+.discover-item .disc-name{font-size:.85rem;color:#ffffff;font-weight:500}
+.discover-item .disc-name.locked{color:#a49cc4;letter-spacing:3px}
+.discover-item .disc-act{font-size:.68rem;color:#b9aee0;white-space:nowrap}
+.discover-item.unlocked{border-color:rgba(52,211,153,.45)}
+.discover-item.unlocked .disc-act{color:#4ade80}
+.discover-foot{padding:10px 16px 14px;border-top:1px solid rgba(139,92,246,.3);font-size:.62rem;color:#a49cc4;text-align:center;line-height:1.6;flex-shrink:0}
 .xz-man{cursor:pointer;pointer-events:auto}
 
 /* ===== 底部面板：固定高度 ===== */
@@ -2356,19 +2356,19 @@ var GAME = {
   // 发现列表数据：术法类 / 小世界类 / 心法类（key 对应解锁字段）
   // relockMsg — 回收 80% 真气重新上锁时的操作名
   DISCOVER_GROUPS: [
-    { cat: '术法类', items: [
+    { cat: '术法', items: [
       { key:'logo', name:'隐灵术', relockMsg:'收灵破法重修' },
       { key:'almanac', name:'轮回术', relockMsg:'收灵破法重修' },
       { key:'plan', name:'固魂术', relockMsg:'收灵破法重修' }
     ]},
-    { cat: '小世界类', items: [
+    { cat: '小世界', items: [
       { key:'story', name:'小红故事', relockMsg:'撤回结界入口破锁之真气' },
       { key:'yedu', name:'夜读', relockMsg:'撤回结界入口破锁之真气' },
       { key:'zjsz', name:'照见苏州', relockMsg:'撤回结界入口破锁之真气' },
       { key:'news', name:'新闻', relockMsg:'撤回结界入口破锁之真气' },
       { key:'tv', name:'播霸', relockMsg:'撤回结界入口破锁之真气' }
     ]},
-    { cat: '心法类', items: [
+    { cat: '心法', items: [
       { key:'auto', name:'吐气纳灵心法', relockMsg:'聚灵归海' },
       { key:'oneKey', name:'引灵入体心法', relockMsg:'聚灵归海' }
     ]}
@@ -3687,18 +3687,20 @@ commentOverlay.addEventListener('click', function(e) {
 })();
 
 // 打坐人形：点击打开发现列表（已解锁显示名称可回收重锁，未解锁显示？？可破除封印）
+// 关闭用 document 事件委托（弹层 HTML 位于本脚本之后，直接绑定会取到 null）
 (function(){
   var man = document.querySelector('.xz-man');
-  var close = document.getElementById('discoverClose');
-  var mask = document.getElementById('discoverMask');
   if (man) {
     man.addEventListener('click', function(){
       if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
       GAME.openDiscover();
     });
   }
-  if (close) close.addEventListener('click', function(){ GAME.closeDiscover(); });
-  if (mask) mask.addEventListener('click', function(e){ if (e.target === mask) GAME.closeDiscover(); });
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    if (t && t.id === 'discoverClose') { GAME.closeDiscover(); return; }
+    if (t && t.classList && t.classList.contains('discover-mask')) { GAME.closeDiscover(); return; }
+  });
 })();
 
 // 奔跑的人：未解锁 → 走解锁流程（消耗 1000 真气破除封印）；已解锁 → 无入口作用（日程入口为解锁后显示的「日程」徽章）
