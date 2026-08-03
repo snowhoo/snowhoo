@@ -1183,7 +1183,6 @@ var GAME = {
         this.zjszUnlocked = 0;
         this.newsUnlocked = 0;
         this.tvUnlocked = 0;
-        this.clearLocal();
         this.updateBadge();
         this.updateTaskDots();
         this.updateLevelDisplay();
@@ -1288,7 +1287,6 @@ var GAME = {
       this.setSyncState('idle');
       this.totalPoints = 0;
       this.todayCounts = {};
-      this.clearLocal();
       this.updateBadge();
       this.updateTaskDots();
       this.updateTaskMenu();
@@ -1312,7 +1310,6 @@ var GAME = {
       // Waline API 返回 {data: {page, totalPages, count, data: [...]}}
       var records = (data.data && data.data.data) || [];
       self.processRecords(records, user);
-      self.saveLocal();
       console.log('[GAME] 从 Waline 加载真气值成功:', self.totalPoints);
     })
     .catch(function(e) {
@@ -1329,42 +1326,6 @@ var GAME = {
         self.updateTaskMenu();
       }
     });
-  },
-
-  // 本地持久化：即使服务器同步失败也能保留真气值
-  saveLocal: function() {
-    try {
-      localStorage.setItem('GAME_totalPoints', String(this.totalPoints));
-      localStorage.setItem('GAME_todayCounts', JSON.stringify(this.todayCounts));
-      localStorage.setItem('GAME_saveDate', new Date().toDateString());
-    } catch(e) {}
-  },
-
-  clearLocal: function() {
-    try {
-      localStorage.removeItem('GAME_totalPoints');
-      localStorage.removeItem('GAME_todayCounts');
-      localStorage.removeItem('GAME_saveDate');
-    } catch(e) {}
-  },
-
-  loadLocal: function() {
-    try {
-      var savedDate = localStorage.getItem('GAME_saveDate');
-      var today = new Date().toDateString();
-      // 只加载当日的数据，跨天自动重置
-      if (savedDate === today) {
-        var pts = localStorage.getItem('GAME_totalPoints');
-        if (pts) this.totalPoints = parseInt(pts) || 0;
-        var counts = localStorage.getItem('GAME_todayCounts');
-        if (counts) this.todayCounts = JSON.parse(counts) || {};
-      } else {
-        // 新的一天，清空今日计数但保留 totalPoints (如果将来做长期累计)
-        this.todayCounts = {};
-      }
-    } catch(e) {
-      this.todayCounts = {};
-    }
   },
 
   // 从 LEVEL_CONFIG[level] 初始化所有任务的剩余次数（跨天/首次使用/升级后）
@@ -1456,10 +1417,14 @@ var GAME = {
         this.initTodayRemaining();
       }
     } else {
-      // 首次使用，无记录 → 不初始化次数，等待首次修炼写入后再读回
+      // 数据库中无该用户记录：新用户或老用户后台数据被删除（用户已登录）
+      // 直接初始化一份全新数据：真气 0 + 按当前境界(0)赋予今日修炼次数，
+      // 红点正常显示剩余次数（不显示".."），首次修炼时 POST 写入数据库完成重建
       this.totalPoints = 0;
       this._gameObjectId = 0;
-      this._noDbData = true;  // 标记：数据库中无数据，红点应显示".."
+      this.level = 0;              // 从头开始：境界重置为凡人
+      this._noDbData = false;      // 已有初始数据，不再视为"无数据"
+      this.initTodayRemaining();   // 按等级 0 赋予今日修炼次数
       this.autoUnlocked = 0;
       this.oneKeyUnlocked = 0;
       this.almanacUnlocked = 0;
@@ -1565,12 +1530,13 @@ var GAME = {
 
   updateTaskDots: function() {
     if (!window.GAME_CONFIG) return;
+    var user = this.getWalineUser();
     for (var i = 0; i < GAME_CONFIG.length; i++) {
       var key = GAME_CONFIG[i].key;
       var el = document.getElementById(key + 'Dot');
       if (!el) continue;
-      // 数据未就绪 或 数据库无记录 → 显示".."
-      if (!this.loaded || this._noDbData) {
+      // 仅未登录（或数据尚未加载完成）→ 显示".."；已登录 → 显示剩余次数
+      if (!user || !this.loaded) {
         el.textContent = '..';
         el.style.display = 'flex';
         continue;
@@ -2072,6 +2038,10 @@ var GAME = {
             }
           } catch(e) {}
         }
+        // 云端无该用户记录（新用户，或老用户后台数据被删除）→ 重置 objectId，
+        // 后续写库走 POST 创建新记录，实现自动重建（否则会 PUT 到已删除的记录而 404）
+        if (foundId) self._gameObjectId = foundId;
+        else self._gameObjectId = 0;
         return { foundId: foundId, data: foundData };
       });
     // 8 秒超时兜底：防止网络挂起导致状态机永久卡在 loading/saving
@@ -3070,7 +3040,10 @@ var PlanSvc = (function(){
       });
       var headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = 'Bearer ' + token;
-      var oid = cloud ? cloud.oid : cloudOid();
+      // 云端无记录（新用户或老用户数据被删除）→ 一律 POST 重建，不能用本地缓存的旧 objectId
+      // （旧 oid 对应已被删除的评论，PUT 会 404 导致永远无法重建）
+      var oid = cloud ? cloud.oid : 0;
+      if (!cloud) setCloudOid(0);
       var req;
       if (oid) {
         req = fetch(CLOUD_BASE + '/api/comment/' + oid, { method: 'PUT', headers: headers, body: payload });
