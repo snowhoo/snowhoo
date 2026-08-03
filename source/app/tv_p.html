@@ -1343,10 +1343,26 @@ layout: false
     }
     detailPlayer.addEventListener('ended',()=>{
         if(currentPlayingVideo) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
+        // 页面在后台时禁止自动连播（避免后台持续拉流消耗流量）
+        if(document.hidden) return;
         if(currentEpNext) playEpInPlayer(currentEpNext.url, currentEpNext.title, currentEpNext.idx, 0); // 自动播放下集
     });
     detailPlayer.addEventListener('pause',()=>{
         if(currentPlayingVideo && detailPlayer.currentTime>5) updateHistory(currentPlayingVideo, currentPlayingEpIndex, Math.floor(detailPlayer.currentTime));
+    });
+    // 切后台自动暂停：停止 HLS 拉流 + 暂停视频，避免后台持续消耗流量；回前台不自动恢复播放（用户手动点播放）
+    document.addEventListener('visibilitychange', function(){
+        if(document.hidden){
+            if(currentHls && typeof currentHls.stopLoad === 'function') currentHls.stopLoad();
+            detailPlayer.pause();
+        } else {
+            if(currentHls && typeof currentHls.startLoad === 'function') currentHls.startLoad();
+        }
+    });
+    // 页面隐藏/卸载时同样暂停（兼容部分 WebView 不触发 visibilitychange 的场景）
+    window.addEventListener('pagehide', function(){
+        if(currentHls && typeof currentHls.stopLoad === 'function') currentHls.stopLoad();
+        detailPlayer.pause();
     });
     
     function loadIndexData(){

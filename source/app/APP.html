@@ -1318,7 +1318,7 @@ var GAME = {
     this.setSyncState('loading');
     // 获取 token 用于调试/认证
     var token = user.token || '';
-    return fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions' + (token ? '&token='+encodeURIComponent(token) : ''))
+    var p = fetch('https://waline.snowhoo.net/api/comment?path=/app-game/actions' + (token ? '&token='+encodeURIComponent(token) : ''))
     .then(function(r) {
       if (!r.ok) {
         // 读取响应体以便排查错误详情
@@ -1345,7 +1345,12 @@ var GAME = {
         return self._writeDailyReset(user);
       }
       console.log('[GAME] 从 Waline 加载真气值成功:', self.totalPoints);
-    })
+    });
+    // 12 秒超时兜底：防止 Waline 响应慢/挂起导致 syncState 永久卡在 loading
+    var timer = new Promise(function(resolve, reject) {
+      setTimeout(function(){ reject(new Error('读取超时')); }, 12000);
+    });
+    return Promise.race([p, timer])
     .catch(function(e) {
       console.warn('[GAME] 加载 Waline 失败:', e);
       self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
@@ -2105,7 +2110,12 @@ var GAME = {
         return r;
       });
     }
-    return request.then(function(r){
+    // 15 秒超时兜底：Waline 写库响应慢/挂起时不再无限等待（否则 syncState 永久卡 saving）
+    var timer = new Promise(function(resolve, reject) {
+      setTimeout(function(){ reject(new Error('写库超时')); }, 15000);
+    });
+    return Promise.race([request, timer])
+    .then(function(r){
       if (r.ok) {
         console.log('[GAME]', successMsg);
         return self.loadFromServer(user).then(function(){ return true; });
@@ -2119,6 +2129,7 @@ var GAME = {
       return false;
     }).then(function(ok){
       if (!ok) {
+        // 统一显示"心魔困扰"（含 IPQPS 频率限制场景，便于统一识别定位）
         self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
         self.syncError = false;
         self._beforePoints = undefined;
