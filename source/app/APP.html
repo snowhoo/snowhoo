@@ -2255,9 +2255,9 @@ var GAME = {
   // 解锁功能：消耗真气一次性解锁"自动"/"一键"/"日期卡片"
   unlockFeature: function(feature) {
     if (this._autoMode || this._oneKeyMode) return; // 自动/一键修炼中屏蔽
-    // 名称/解锁文案先按配置原始 key 查（奔跑→固魂术）
+    // 名称/解锁文案先按配置原始 key 查（奔跑→固魂大法）
     var dItem = this._findDiscoverItem(feature);
-    // 固魂术（配置 key: 奔跑）与"奔跑的人"同源：统一走 runner 解锁流程（成本/状态/徽章均以 runner 为准）
+    // 固魂大法（配置 key: 奔跑）与"奔跑的人"同源：统一走 runner 解锁流程（成本/状态/徽章均以 runner 为准）
     if (feature === '奔跑') feature = 'runner';
     var cfg = (typeof UNLOCK_CONFIG !== 'undefined' && UNLOCK_CONFIG) ? UNLOCK_CONFIG : {}; // 成本一律读配置文件，不硬编码
     var cost = cfg[feature];
@@ -2448,10 +2448,10 @@ var GAME = {
   },
 
   // 该秘藏是否已解锁
-  // 固魂术（plan）与"奔跑的人"（runner）同源：奔跑的人是日程计划/固魂术的解锁窗口，
-  // 故固魂术的解锁状态以 runnerUnlocked 为准
+  // 固魂大法（plan）与"奔跑的人"（runner）同源：奔跑的人是日程计划/固魂大法的解锁窗口，
+  // 故固魂大法的解锁状态以 runnerUnlocked 为准
   _isUnlocked: function(key) {
-    // 固魂术（配置 key: 奔跑）与"奔跑的人"同源：状态以 runnerUnlocked 为准
+    // 固魂大法（配置 key: 奔跑）与"奔跑的人"同源：状态以 runnerUnlocked 为准
     var map = { auto:'autoUnlocked', oneKey:'oneKeyUnlocked', almanac:'almanacUnlocked', logo:'logoUnlocked', '奔跑':'runnerUnlocked', runner:'runnerUnlocked', story:'storyUnlocked', yedu:'yeduUnlocked', zjsz:'zjszUnlocked', news:'newsUnlocked', tv:'tvUnlocked' };
     return !!this[map[key]];
   },
@@ -2493,9 +2493,9 @@ var GAME = {
 
   // 回收 80% 真气，使已解锁秘藏重新上锁
   relockFeature: function(feature) {
-    // 名称/回收操作名先按配置原始 key 查（奔跑→固魂术）
+    // 名称/回收操作名先按配置原始 key 查（奔跑→固魂大法）
     var dItem = this._findDiscoverItem(feature);
-    // 固魂术（配置 key: 奔跑）与"奔跑的人"同源：回收其一即回收奔跑的人（成本/状态以 runner 为准）
+    // 固魂大法（配置 key: 奔跑）与"奔跑的人"同源：回收其一即回收奔跑的人（成本/状态以 runner 为准）
     if (feature === '奔跑') feature = 'runner';
     var cfg = (typeof UNLOCK_CONFIG !== 'undefined' && UNLOCK_CONFIG) ? UNLOCK_CONFIG : {}; // 成本一律读配置文件，不硬编码
     var cost = cfg[feature];
@@ -2531,7 +2531,7 @@ var GAME = {
           oneKeyUnlocked: (feature === 'oneKey') ? 0 : lv('oneKey'),
           almanacUnlocked: (feature === 'almanac') ? 0 : lv('almanac'),
           logoUnlocked: (feature === 'logo') ? 0 : lv('logo'),
-          runnerUnlocked: (feature === 'runner') ? 0 : lv('runner'), // 回收固魂术即回收奔跑的人
+          runnerUnlocked: (feature === 'runner') ? 0 : lv('runner'), // 回收固魂大法即回收奔跑的人
           storyUnlocked: (feature === 'story') ? 0 : lv('story'),
           yeduUnlocked: (feature === 'yedu') ? 0 : lv('yedu'),
           zjszUnlocked: (feature === 'zjsz') ? 0 : lv('zjsz'),
