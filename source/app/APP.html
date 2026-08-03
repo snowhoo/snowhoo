@@ -1400,11 +1400,12 @@ var GAME = {
     var now = new Date();
     var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
     return self._fetchCurrentRecord(user).then(function(res) {
-      var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
+      var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : 0;
       var remaining = self.buildRemainingForLevel(baseLevel);
-      function lv(k){ return (res.data && res.data[k + 'Unlocked']) ? 1 : self[k + 'Unlocked']; }
+      // 真气/解锁状态一律以数据库当前记录为准（无记录按 0），绝不读内存
+      function lv(k){ return (res.data && res.data[k + 'Unlocked']) ? 1 : 0; }
       return self._writeState(user, {
-        points: res.data ? res.data.points : self.totalPoints,
+        points: res.data ? res.data.points : 0,
         todayRemaining: remaining,
         nick: user.display_name,
         level: baseLevel,
@@ -2204,11 +2205,12 @@ var GAME = {
     return this._fetchCurrentRecord(user).then(function(res) {
       var basePoints = res.data ? res.data.points : 0;
       var baseRemaining = (res.data && res.data.todayRemaining) ? res.data.todayRemaining : {};
-      var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
-      var baseAuto = res.data ? (res.data.autoUnlocked ? 1 : 0) : self.autoUnlocked;
-      var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : self.oneKeyUnlocked;
-      var baseAlmanac = res.data ? (res.data.almanacUnlocked ? 1 : 0) : self.almanacUnlocked;
-      var baseLogo = res.data ? (res.data.logoUnlocked ? 1 : 0) : self.logoUnlocked;
+      var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : 0;
+      // 解锁状态一律以数据库为准（无记录按 0），绝不读内存
+      var baseAuto = res.data ? (res.data.autoUnlocked ? 1 : 0) : 0;
+      var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : 0;
+      var baseAlmanac = res.data ? (res.data.almanacUnlocked ? 1 : 0) : 0;
+      var baseLogo = res.data ? (res.data.logoUnlocked ? 1 : 0) : 0;
       // 找到真实记录 → 用其 objectId，确保 PUT 更新同一条（不产生新记录）
       if (res.foundId) self._gameObjectId = res.foundId;
       // 单次经验值（可覆盖：一键批量用自身计算，正常修炼按境界查表）
@@ -2219,7 +2221,8 @@ var GAME = {
       if (typeof newRemaining[key] === 'number') newRemaining[key]--;
       var now = new Date();
       var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
-      // 写入（成功后再回读确认，更新 UI）
+      // 写入（成功后再回读确认，更新 UI）；解锁状态以数据库为准
+      function lvC(k){ return (res.data && res.data[k + 'Unlocked']) ? 1 : 0; }
       return self._writeState(user, {
         points: newPoints,
         todayRemaining: newRemaining,
@@ -2230,12 +2233,12 @@ var GAME = {
         oneKeyUnlocked: baseOneKey,
         almanacUnlocked: baseAlmanac,
         logoUnlocked: baseLogo,
-        runnerUnlocked: (res.data && res.data.runnerUnlocked) ? 1 : self.runnerUnlocked,
-        storyUnlocked: (res.data && res.data.storyUnlocked) ? 1 : self.storyUnlocked,
-        yeduUnlocked: (res.data && res.data.yeduUnlocked) ? 1 : self.yeduUnlocked,
-        zjszUnlocked: (res.data && res.data.zjszUnlocked) ? 1 : self.zjszUnlocked,
-        newsUnlocked: (res.data && res.data.newsUnlocked) ? 1 : self.newsUnlocked,
-        tvUnlocked: (res.data && res.data.tvUnlocked) ? 1 : self.tvUnlocked
+        runnerUnlocked: lvC('runner'),
+        storyUnlocked: lvC('story'),
+        yeduUnlocked: lvC('yedu'),
+        zjszUnlocked: lvC('zjsz'),
+        newsUnlocked: lvC('news'),
+        tvUnlocked: lvC('tv')
       }, '真气值已同步到 Waline: ' + key + ' +' + points);
     }).catch(function(e) {
       // 写入前读取真实数据失败 → 无法保证写入正确性，阻止写入
@@ -2278,8 +2281,7 @@ var GAME = {
     var self = this;
     // 1. 立即弹询问窗口（不先读库），确认后窗口不关闭，读写信息直接在窗口内显示
     self._showUnlockFlow(cost, {
-      onConfirm: function(setStatus) {
-        // 确认后再校验登录状态（未登录 → 窗口提示，无法注入真气破除封印）
+      onConfirm: function(setStatus) {        // 确认后再校验登录状态（未登录 → 窗口提示，无法注入真气破除封印）
         var user = self.getWalineUser();
         if (!user) {
           self.setSyncState('idle');
@@ -2301,7 +2303,7 @@ var GAME = {
           for (var ci = 0; ci < catKeys.length; ci++) {
             baseCats[catKeys[ci]] = res.data ? (res.data[catKeys[ci] + 'Unlocked'] ? 1 : 0) : 0;
           }
-          var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
+          var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : 0;
           if (res.foundId) self._gameObjectId = res.foundId;
           // 以下所有"不能解锁"的场景：直接回 idle 并恢复按钮文本，不写库
           // 结果直接在窗口内显示（原页面提示保留照旧）
@@ -2418,6 +2420,7 @@ var GAME = {
           }, '已解锁"' + name + '"功能').then(function(ok) {
             // 结果直接在窗口内显示（页面成功提示照旧由 processRecords 驱动）
             setStatus(ok ? '✓ 封印已破' : '心魔困扰', ok ? ('解锁成功！-' + cost + ' 真气，封印已破！') : '正遭受心魔困扰，点击恢复心神!');
+            // 注意：发现窗口的刷新放在 _showUnlockFlow 关闭后统一执行（见下方 .then）
           });
         }).catch(function(e) {
           // 确认后读取真实数据失败/超时 → 无法保证解锁正确性，窗口提示并回 idle
@@ -2429,6 +2432,9 @@ var GAME = {
           setStatus('心魔困扰', '正遭受心魔困扰，点击恢复心神!');
         });
       }
+    }).then(function(){
+      // 窗口已关闭（用户点"知道了"）→ 用已回读的数据库值刷新发现窗口
+      self.refreshDiscover();
     });
   },
 
@@ -2469,11 +2475,10 @@ var GAME = {
     return !!this[map[key]];
   },
 
-  // 打开发现列表（打坐人形入口）
-  openDiscover: function() {
-    var mask = document.getElementById('discoverMask');
-    if (!mask) return;
+  // 渲染发现列表内容（不改变窗口开关状态；供打开与刷新共用）
+  renderDiscover: function() {
     var body = document.getElementById('discoverBody');
+    if (!body) return;
     var groups = this._discoverGroups();
     var rate = this._relockRate();
     var rateTxt = this._relockRateText();
@@ -2499,9 +2504,23 @@ var GAME = {
         else GAME.unlockFeature(key);
       });
     });
+  },
+
+  // 打开发现列表（打坐人形入口）
+  openDiscover: function() {
+    var mask = document.getElementById('discoverMask');
+    if (!mask) return;
+    this.renderDiscover();
     mask.classList.add('show');
     document.body.style.overflow = 'hidden';
   },
+
+  // 刷新发现列表：若窗口当前已打开，仅重绘内容（不关闭窗口）
+  refreshDiscover: function() {
+    var mask = document.getElementById('discoverMask');
+    if (mask && mask.classList.contains('show')) this.renderDiscover();
+  },
+
   closeDiscover: function() {
     var mask = document.getElementById('discoverMask');
     if (mask) mask.classList.remove('show');
@@ -2509,6 +2528,7 @@ var GAME = {
   },
 
   // 回收真气（返还比例见 FEATURE_CONFIG.relockRate），使已解锁秘藏重新上锁
+  // 流程与解锁一致：询问 → 确认后窗口不关闭，读库/写库/回读进度直接在窗口内显示，成功后才关窗
   relockFeature: function(feature) {
     // 名称/回收操作名按配置原始 key 查（key 与 unlockCost 一致，无映射）
     var dItem = this._findDiscoverItem(feature);
@@ -2526,54 +2546,63 @@ var GAME = {
     var self = this;
     var user = this.getWalineUser();
     if (!user) { this.showXp('', '隐匿身份，无法操作'); return; }
-    // 回撤破印确认（与原"破除封印"确认框共用弹层，但使用回撤文案与标题）
-    this._showUnlockConfirm(cost, {
+    // 流程弹窗：确认后窗口不关闭，进度/结果直接显示在窗口内
+    self._showUnlockFlow(cost, {
       title: '🔓 回撤破印',
       text: '回撤破印，可得原破印真气' + rateTxt + '（+' + refund + ' 真气），【' + name + '】将重新上锁，继续？',
-      okText: '回撤破印'
-    }).then(function(ok){
-      if (!ok) return;
-      self.setSyncState('loading');
-      self._fetchCurrentRecord(user).then(function(res){
-        var basePoints = res.data ? res.data.points : self.totalPoints;
-        var todayRemaining = res.data ? res.data.todayRemaining : self.todayCounts;
-        var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
-        var newPoints = basePoints + refund;
-        var now = new Date();
-        var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
-        function lv(k){ return (res.data && res.data[k + 'Unlocked']) ? 1 : self[k + 'Unlocked']; }
-        var state = {
-          points: newPoints,
-          todayRemaining: self._normalizeRemaining(todayRemaining),
-          nick: user.display_name,
-          level: baseLevel,
-          date: today,
-          autoUnlocked: (feature === 'auto') ? 0 : lv('auto'),
-          oneKeyUnlocked: (feature === 'oneKey') ? 0 : lv('oneKey'),
-          almanacUnlocked: (feature === 'almanac') ? 0 : lv('almanac'),
-          logoUnlocked: (feature === 'logo') ? 0 : lv('logo'),
-          runnerUnlocked: (feature === 'runner') ? 0 : lv('runner'), // 回收固魂大法即回收奔跑的人
-          storyUnlocked: (feature === 'story') ? 0 : lv('story'),
-          yeduUnlocked: (feature === 'yedu') ? 0 : lv('yedu'),
-          zjszUnlocked: (feature === 'zjsz') ? 0 : lv('zjsz'),
-          newsUnlocked: (feature === 'news') ? 0 : lv('news'),
-          tvUnlocked: (feature === 'tv') ? 0 : lv('tv')
-        };
-        self._pendingRelockMsg = '【' + name + '】重新上锁 · ' + relockMsg + ' · +' + refund + ' 真气';
-        self._writeState(user, state, '已回收重修: ' + feature).then(function(ok){
-          if (!ok) self._pendingRelockMsg = undefined;
+      okText: '回撤破印',
+      onConfirm: function(setStatus) {
+        // 1. 读库阶段（真气恢复中）
+        setStatus('🔓 回撤破印', '正在恢复真气..');
+        self.setSyncState('loading');
+        self._fetchCurrentRecord(user).then(function(res){
+          var basePoints = res.data ? res.data.points : 0;
+          var todayRemaining = res.data ? res.data.todayRemaining : {};
+          var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : 0;
+          var newPoints = basePoints + refund;
+          var now = new Date();
+          var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+          // 解锁状态一律以数据库当前记录为准（无记录按 0），绝不读内存
+          function lv(k){ return (res.data && res.data[k + 'Unlocked']) ? 1 : 0; }
+          var state = {
+            points: newPoints,
+            todayRemaining: self._normalizeRemaining(todayRemaining),
+            nick: user.display_name,
+            level: baseLevel,
+            date: today,
+            autoUnlocked: (feature === 'auto') ? 0 : lv('auto'),
+            oneKeyUnlocked: (feature === 'oneKey') ? 0 : lv('oneKey'),
+            almanacUnlocked: (feature === 'almanac') ? 0 : lv('almanac'),
+            logoUnlocked: (feature === 'logo') ? 0 : lv('logo'),
+            runnerUnlocked: (feature === 'runner') ? 0 : lv('runner'), // 回收固魂大法即回收奔跑的人
+            storyUnlocked: (feature === 'story') ? 0 : lv('story'),
+            yeduUnlocked: (feature === 'yedu') ? 0 : lv('yedu'),
+            zjszUnlocked: (feature === 'zjsz') ? 0 : lv('zjsz'),
+            newsUnlocked: (feature === 'news') ? 0 : lv('news'),
+            tvUnlocked: (feature === 'tv') ? 0 : lv('tv')
+          };
+          // 2. 写库阶段（真气融合中）；_writeState 内部成功后自动回读数据库
+          setStatus('🔓 回撤破印', '正在融合真气..');
+          self._pendingRelockMsg = '【' + name + '】重新上锁 · ' + relockMsg + ' · +' + refund + ' 真气';
+          self._writeState(user, state, '已回收重修: ' + feature).then(function(ok){
+            if (!ok) {
+              self._pendingRelockMsg = undefined;
+              setStatus('心魔困扰', '正遭受心魔困扰，点击恢复心神!');
+              return;
+            }
+            // 3. 写库成功且已回读数据库 → 窗口显示完成，等待用户点"知道了"关窗
+            setStatus('✓ 回撤完成', '【' + name + '】重新上锁 · ' + relockMsg + ' · +' + refund + ' 真气');
+          });
+        }).catch(function(e) {
+          console.warn('[GAME] 回收重修读取失败:', e);
+          self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
           self.setSyncState('idle');
-          // 刷新发现列表显示
-          if (document.getElementById('discoverMask') && document.getElementById('discoverMask').classList.contains('show')) {
-            GAME.closeDiscover();
-            GAME.openDiscover();
-          }
+          setStatus('心魔困扰', '正遭受心魔困扰，点击恢复心神!');
         });
-      }).catch(function(e) {
-        console.warn('[GAME] 回收重修读取失败:', e);
-        self.showTaskMenuError('正遭受心魔困扰，点击恢复心神!');
-        self.setSyncState('idle');
-      });
+      }
+    }).then(function(){
+      // 窗口已关闭（用户点"知道了"）→ 用已回读的数据库值刷新发现窗口
+      self.refreshDiscover();
     });
   },
 
@@ -2671,7 +2700,7 @@ var GAME = {
         self.setSyncState('loading');
         self._fetchCurrentRecord(user).then(function(res) {
           var basePoints = res.data ? res.data.points : 0;
-          var baseLevel = res.data && typeof res.data.level === 'number' ? res.data.level : self.level;
+          var baseLevel = res.data && typeof res.data.level === 'number' ? res.data.level : 0;
           if (res.foundId) self._gameObjectId = res.foundId;
           // 检查等级上限（以数据库为准，已是最高境界）
           var nextLv = baseLevel + 1;
@@ -2700,22 +2729,24 @@ var GAME = {
           var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
           // 升级后剩余次数按新境界 times 全量恢复（体力已恢复）
           var newRemaining = self.buildRemainingForLevel(newLevel);
+          // 解锁状态一律以数据库当前记录为准（res.data），无记录时按 0 处理，绝不读内存
+          function lvU(k){ return (res.data && res.data[k + 'Unlocked']) ? 1 : 0; }
           self._writeState(user, {
             points: newPoints,
             todayRemaining: newRemaining,
             nick: user.display_name,
             level: newLevel,
             date: today,
-            autoUnlocked: self.autoUnlocked,
-            oneKeyUnlocked: self.oneKeyUnlocked,
-            almanacUnlocked: self.almanacUnlocked,
-            logoUnlocked: self.logoUnlocked,
-            runnerUnlocked: self.runnerUnlocked,
-            storyUnlocked: self.storyUnlocked,
-            yeduUnlocked: self.yeduUnlocked,
-            zjszUnlocked: self.zjszUnlocked,
-            newsUnlocked: self.newsUnlocked,
-            tvUnlocked: self.tvUnlocked
+            autoUnlocked: lvU('auto'),
+            oneKeyUnlocked: lvU('oneKey'),
+            almanacUnlocked: lvU('almanac'),
+            logoUnlocked: lvU('logo'),
+            runnerUnlocked: lvU('runner'),
+            storyUnlocked: lvU('story'),
+            yeduUnlocked: lvU('yedu'),
+            zjszUnlocked: lvU('zjsz'),
+            newsUnlocked: lvU('news'),
+            tvUnlocked: lvU('tv')
           }, '境界提升至【' + nextName + '】').then(function(ok) {
             // 不前置显示升级提示，由 processRecords 读回确认后展示（与修炼+真气同一时序）
             self._pendingUpgradeMsg = { name: nextName, cost: realCost };
@@ -2775,7 +2806,7 @@ var GAME = {
         self.setSyncState('loading');
         self._fetchCurrentRecord(user).then(function(res) {
           var basePoints = res.data ? res.data.points : 0;
-          var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
+          var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : 0;
           if (res.foundId) self._gameObjectId = res.foundId;
           // 真气不足（以数据库真实值为准）→ 窗口提示，不写库
           if (basePoints < cost) {
@@ -2791,22 +2822,24 @@ var GAME = {
           var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
           var newPoints = basePoints - cost;
           var newRemaining = self._normalizeRemaining(res.data ? res.data.todayRemaining : null);
+          // 解锁状态一律以数据库当前记录为准（无记录按 0），绝不读内存
+          function lvB(k){ return (res.data && res.data[k + 'Unlocked']) ? 1 : 0; }
           self._writeState(user, {
             points: newPoints,
             todayRemaining: newRemaining,
             nick: user.display_name,
             level: baseLevel,
             date: today,
-            autoUnlocked: (res.data && res.data.autoUnlocked) ? 1 : self.autoUnlocked,
-            oneKeyUnlocked: (res.data && res.data.oneKeyUnlocked) ? 1 : self.oneKeyUnlocked,
-            almanacUnlocked: (res.data && res.data.almanacUnlocked) ? 1 : self.almanacUnlocked,
-            logoUnlocked: (res.data && res.data.logoUnlocked) ? 1 : self.logoUnlocked,
-            runnerUnlocked: (res.data && res.data.runnerUnlocked) ? 1 : self.runnerUnlocked,
-            storyUnlocked: (res.data && res.data.storyUnlocked) ? 1 : self.storyUnlocked,
-            yeduUnlocked: (res.data && res.data.yeduUnlocked) ? 1 : self.yeduUnlocked,
-            zjszUnlocked: (res.data && res.data.zjszUnlocked) ? 1 : self.zjszUnlocked,
-            newsUnlocked: (res.data && res.data.newsUnlocked) ? 1 : self.newsUnlocked,
-            tvUnlocked: (res.data && res.data.tvUnlocked) ? 1 : self.tvUnlocked
+            autoUnlocked: lvB('auto'),
+            oneKeyUnlocked: lvB('oneKey'),
+            almanacUnlocked: lvB('almanac'),
+            logoUnlocked: lvB('logo'),
+            runnerUnlocked: lvB('runner'),
+            storyUnlocked: lvB('story'),
+            yeduUnlocked: lvB('yedu'),
+            zjszUnlocked: lvB('zjsz'),
+            newsUnlocked: lvB('news'),
+            tvUnlocked: lvB('tv')
           }, '破除结界 -' + cost + ' 真气').then(function(ok) {
             if (!ok) {
               setStatus('心魔困扰', '正遭受心魔困扰，点击恢复心神!');
@@ -3082,11 +3115,12 @@ var GAME = {
     this._fetchCurrentRecord(user).then(function(res) {
       var basePoints = res.data ? res.data.points : 0;
       var baseRemaining = (res.data && res.data.todayRemaining) ? res.data.todayRemaining : null;
-      var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
-      var baseAuto = res.data ? (res.data.autoUnlocked ? 1 : 0) : self.autoUnlocked;
-      var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : self.oneKeyUnlocked;
-      var baseAlmanac = res.data ? (res.data.almanacUnlocked ? 1 : 0) : self.almanacUnlocked;
-      var baseLogo = res.data ? (res.data.logoUnlocked ? 1 : 0) : self.logoUnlocked;
+      var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : 0;
+      // 解锁状态一律以数据库为准（无记录按 0），绝不读内存
+      var baseAuto = res.data ? (res.data.autoUnlocked ? 1 : 0) : 0;
+      var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : 0;
+      var baseAlmanac = res.data ? (res.data.almanacUnlocked ? 1 : 0) : 0;
+      var baseLogo = res.data ? (res.data.logoUnlocked ? 1 : 0) : 0;
       if (res.foundId) self._gameObjectId = res.foundId;
       // 基于数据库真实剩余次数汇总（缺失任务用当前境界 times 补全）
       var rem = self._normalizeRemaining(baseRemaining);
@@ -3122,7 +3156,8 @@ var GAME = {
       }
       var now = new Date();
       var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
-      // 一次写入（成功读回确认后 processRecords 更新 UI）
+      // 一次写入（成功读回确认后 processRecords 更新 UI）；解锁状态以数据库为准
+      function lvK(k){ return (res.data && res.data[k + 'Unlocked']) ? 1 : 0; }
       self._writeState(user, {
         points: basePoints + totalGain,
         todayRemaining: newRemaining,
@@ -3133,12 +3168,12 @@ var GAME = {
         oneKeyUnlocked: baseOneKey,
         almanacUnlocked: baseAlmanac,
         logoUnlocked: baseLogo,
-        runnerUnlocked: (res.data && res.data.runnerUnlocked) ? 1 : self.runnerUnlocked,
-        storyUnlocked: (res.data && res.data.storyUnlocked) ? 1 : self.storyUnlocked,
-        yeduUnlocked: (res.data && res.data.yeduUnlocked) ? 1 : self.yeduUnlocked,
-        zjszUnlocked: (res.data && res.data.zjszUnlocked) ? 1 : self.zjszUnlocked,
-        newsUnlocked: (res.data && res.data.newsUnlocked) ? 1 : self.newsUnlocked,
-        tvUnlocked: (res.data && res.data.tvUnlocked) ? 1 : self.tvUnlocked
+        runnerUnlocked: lvK('runner'),
+        storyUnlocked: lvK('story'),
+        yeduUnlocked: lvK('yedu'),
+        zjszUnlocked: lvK('zjsz'),
+        newsUnlocked: lvK('news'),
+        tvUnlocked: lvK('tv')
       }, '一键修炼完成 +' + totalGain + ' 真气').then(function(ok) {
         self._oneKeyMode = false;
         self.hideModeMask();
