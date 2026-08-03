@@ -74,6 +74,7 @@ var UNLOCK_CONFIG = {
   oneKey: 999,
   almanac: 666,
   logo: 777,
+  plan: 888,
   story: 111,
   yedu: 222,
   zjsz: 333,
