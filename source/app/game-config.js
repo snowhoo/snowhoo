@@ -96,6 +96,7 @@ var FEATURE_CONFIG = {
     runner: 1000
   },
   relockRate: 0.8,  // 回收返还比例：已解锁秘藏回收时返还解锁成本的比例
+  relockRateText: '八成',  // 回收返还比例的文字表述（前端显示用，如"八成"）
   discover: [
     { cat: '术法', items: [
       { key:'logo', name:'隐灵术', unlockMsg:'破除封印！获得【隐灵术】', relockMsg:'收灵破法重修' },
@@ -103,11 +104,11 @@ var FEATURE_CONFIG = {
       { key:'runner', name:'固魂大法', unlockMsg:'破除封印！获得【固魂大法】', relockMsg:'收灵破法重修' }
     ]},
     { cat: '小世界', items: [
-      { key:'story', name:'小红故事', unlockMsg:'破除迷雾结界！发现【红光秘境】', relockMsg:'撤回结界入口破锁真气' },
-      { key:'yedu', name:'夜读', unlockMsg:'破除迷雾结界！发现【心灵秘境】', relockMsg:'撤回结界入口破锁真气' },
-      { key:'zjsz', name:'照见苏州', unlockMsg:'破除迷雾结界！发现【视界秘境】', relockMsg:'撤回结界入口破锁真气' },
-      { key:'news', name:'新闻', unlockMsg:'破除迷雾结界！发现【正能光量小世界】', relockMsg:'撤回结界入口破锁真气' },
-      { key:'tv', name:'播霸', unlockMsg:'破除迷雾结界！发现【光怪陆离小世界】', relockMsg:'撤回结界入口破锁真气' }
+      { key:'story', name:'小红故事', unlockMsg:'破除迷雾结界！发现【红光秘境】', relockMsg:'回撤结界破锁真气' },
+      { key:'yedu', name:'夜读', unlockMsg:'破除迷雾结界！发现【心灵秘境】', relockMsg:'回撤结界破锁真气' },
+      { key:'zjsz', name:'照见苏州', unlockMsg:'破除迷雾结界！发现【视界秘境】', relockMsg:'回撤结界破锁真气' },
+      { key:'news', name:'新闻', unlockMsg:'破除迷雾结界！发现【正能光量小世界】', relockMsg:'回撤结界破锁真气' },
+      { key:'tv', name:'播霸', unlockMsg:'破除迷雾结界！发现【光怪陆离小世界】', relockMsg:'回撤结界破锁真气' }
     ]},
     { cat: '心法', items: [
       { key:'auto', name:'吐气纳灵心法', unlockMsg:'破除禁锢！习得【吐气纳灵心法】', relockMsg:'聚灵归海' },

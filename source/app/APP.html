@@ -64,7 +64,7 @@ body{display:flex;flex-direction:column}
 .almanac.locked{cursor:not-allowed}
 .almanac .lock-overlay{position:absolute;top:-10px;right:-10px;z-index:2;display:flex;align-items:center;justify-content:center;width:24px;height:24px;pointer-events:auto;background:transparent;border-radius:0;padding:0;margin:0}
 /* 破除封印确认弹层（自定义 confirm，兼容移动端） */
-.confirm-mask{position:fixed;top:0;left:0;right:0;bottom:0;z-index:20000;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.confirm-mask{position:fixed;top:0;left:0;right:0;bottom:0;z-index:20020;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
 .confirm-mask.show{display:flex}
 .confirm-box{background:linear-gradient(160deg,#2b1e13,#1a120c);border:1px solid rgba(233,69,96,.35);border-radius:14px;padding:22px 26px;text-align:center;max-width:290px;color:#f5e9d0;box-shadow:0 8px 32px rgba(0,0,0,.55)}
 .confirm-title{font-size:.95rem;letter-spacing:2px;color:#e94560;margin-bottom:10px;font-weight:600}
@@ -1811,19 +1811,26 @@ var GAME = {
     }
   },
 
-  // 显示破除封印确认弹层（自定义，兼容移动端禁 confirm 环境），返回 Promise<boolean>
-  _showUnlockConfirm: function(cost) {
+  // 显示确认弹层（自定义，兼容移动端禁 confirm 环境），返回 Promise<boolean>
+  // opts.title / opts.text / opts.okText：自定义文案（默认"⚡ 破除封印 / 破除封印会损耗 X 真气，继续？ / 破除"）
+  _showUnlockConfirm: function(cost, opts) {
     return new Promise(function(resolve) {
       var mask = document.getElementById('unlockConfirm');
-      var text = document.getElementById('unlockConfirmText');
+      var titleEl = document.getElementById('unlockConfirmTitle');
+      var textEl = document.getElementById('unlockConfirmText');
       var okBtn = document.getElementById('unlockConfirmOk');
       var cancelBtn = document.getElementById('unlockConfirmCancel');
+      var qTitle = (opts && opts.title) || '⚡ 破除封印';
+      var qText = (opts && opts.text) || ('破除封印会损耗 ' + cost + ' 真气，继续？');
+      var qOk = (opts && opts.okText) || '破除';
       // 弹层元素缺失时兜底用原生 confirm
-      if (!mask || !text || !okBtn || !cancelBtn) {
-        resolve(window.confirm('破除封印会损耗 ' + cost + ' 真气，继续？'));
+      if (!mask || !textEl || !okBtn || !cancelBtn) {
+        resolve(window.confirm(qText));
         return;
       }
-      text.textContent = '破除封印会损耗 ' + cost + ' 真气，继续？';
+      if (titleEl) titleEl.textContent = qTitle;
+      textEl.textContent = qText;
+      okBtn.textContent = qOk;
       mask.classList.add('show');
       var done = false;
       function finish(ok) {
@@ -2437,6 +2444,13 @@ var GAME = {
     }
     return 0.8;
   },
+  // 回收返还比例的文字表述（FEATURE_CONFIG.relockRateText，如"八成"），缺失时回退百分比
+  _relockRateText: function() {
+    if (typeof FEATURE_CONFIG !== 'undefined' && FEATURE_CONFIG && FEATURE_CONFIG.relockRateText) {
+      return FEATURE_CONFIG.relockRateText;
+    }
+    return Math.round(this._relockRate() * 100) + '%';
+  },
   // 按 key 在发现配置（FEATURE_CONFIG.discover）中查找秘藏项（key 与 unlockCost 一致，无额外映射）
   _findDiscoverItem: function(key) {
     var groups = this._discoverGroups();
@@ -2462,7 +2476,7 @@ var GAME = {
     var body = document.getElementById('discoverBody');
     var groups = this._discoverGroups();
     var rate = this._relockRate();
-    var rateTxt = Math.round(rate * 100) + '%';
+    var rateTxt = this._relockRateText();
     var html = '';
     groups.forEach(function(g){
       html += '<div class="discover-cat">' + g.cat + '</div>';
@@ -2470,14 +2484,14 @@ var GAME = {
         var un = GAME._isUnlocked(it.key);
         html += '<div class="discover-item' + (un ? ' unlocked' : '') + '" data-key="' + it.key + '">'
           + (un ? '<span class="disc-name">' + it.name + '</span>' : '<span class="disc-name locked">？？</span>')
-          + (un ? '<span class="disc-act">回收 ' + rateTxt + '</span>' : '<span class="disc-act">未发现</span>')
+          + (un ? '<span class="disc-act">回撤破印 · ' + rateTxt + '</span>' : '<span class="disc-act">未发现</span>')
           + '</div>';
       });
     });
     if (!html) html = '<div class="discover-cat">暂未配置发现秘藏</div>';
     body.innerHTML = html;
     var foot = document.getElementById('discoverFoot');
-    if (foot) foot.textContent = '已解锁秘藏点击可回收 ' + rateTxt + ' 真气重新上锁；未解锁秘藏点击可破除封印解锁';
+    if (foot) foot.textContent = '已解锁秘藏点击可回撤破印，可得原破印真气' + rateTxt + '；未解锁秘藏点击可破除封印解锁';
     body.querySelectorAll('.discover-item').forEach(function(el){
       el.addEventListener('click', function(){
         var key = el.dataset.key;
@@ -2508,10 +2522,16 @@ var GAME = {
     var name = (dItem && dItem.name) ? dItem.name : feature;
     var relockMsg = (dItem && dItem.relockMsg) ? dItem.relockMsg : '收回真气重修';
     var refund = Math.floor(cost * this._relockRate());
+    var rateTxt = this._relockRateText();
     var self = this;
     var user = this.getWalineUser();
     if (!user) { this.showXp('', '隐匿身份，无法操作'); return; }
-    this._showUnlockConfirm(cost).then(function(ok){
+    // 回撤破印确认（与原"破除封印"确认框共用弹层，但使用回撤文案与标题）
+    this._showUnlockConfirm(cost, {
+      title: '🔓 回撤破印',
+      text: '回撤破印，可得原破印真气' + rateTxt + '（+' + refund + ' 真气），【' + name + '】将重新上锁，继续？',
+      okText: '回撤破印'
+    }).then(function(ok){
       if (!ok) return;
       self.setSyncState('loading');
       self._fetchCurrentRecord(user).then(function(res){
