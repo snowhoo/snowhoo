@@ -1333,6 +1333,17 @@ var GAME = {
       // Waline API 返回 {data: {page, totalPages, count, data: [...]}}
       var records = (data.data && data.data.data) || [];
       self.processRecords(records, user);
+      // 数据库中无记录 → 重建初始记录（真气0 + 按等级0次数），写库成功后再回读，
+      // 红点等数据全部以数据库为准
+      if (self._pendingInitRecord) {
+        self._pendingInitRecord = false;
+        return self._writeInitRecord(user);
+      }
+      // 跨天 → 将新一天的次数写入数据库后再回读（数据以数据库为准）
+      if (self._pendingDailyReset) {
+        self._pendingDailyReset = false;
+        return self._writeDailyReset(user);
+      }
       console.log('[GAME] 从 Waline 加载真气值成功:', self.totalPoints);
     })
     .catch(function(e) {
@@ -1348,6 +1359,84 @@ var GAME = {
       if (btn && !btn.classList.contains('error') && !btn._msgTimer) {
         self.updateTaskMenu();
       }
+    });
+  },
+
+  // 数据库中无记录时重建初始记录：真气 0 + 按等级 0 赋予今日次数 + 全部未解锁
+  // 写库成功后 _writeState 内部会 loadFromServer 回读，红点/真气等自动更新为数据库数据
+  _writeInitRecord: function(user) {
+    var self = this;
+    var now = new Date();
+    var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+    var remaining = self.buildRemainingForLevel(0);
+    return self._writeState(user, {
+      points: 0,
+      todayRemaining: remaining,
+      nick: user.display_name,
+      level: 0,
+      date: today,
+      autoUnlocked: 0,
+      oneKeyUnlocked: 0,
+      almanacUnlocked: 0,
+      logoUnlocked: 0,
+      planUnlocked: 0,
+      runnerUnlocked: 0,
+      storyUnlocked: 0,
+      yeduUnlocked: 0,
+      zjszUnlocked: 0,
+      newsUnlocked: 0,
+      tvUnlocked: 0
+    }, '已初始化修炼记录').then(function(ok) {
+      if (!ok) {
+        // 重建失败（网络等）→ 保持空状态，不伪造次数
+        self.setSyncState('idle');
+        self.updateBadge();
+        self.updateTaskDots();
+      }
+      return ok;
+    });
+  },
+
+  // 跨天重置今日次数：基于数据库当前记录，仅更新 date + todayRemaining（按当前境界满次数），
+  // 真气/境界/解锁状态保留数据库原值；写库成功后 _writeState 内部回读，任务列表/红点以数据库为准
+  _writeDailyReset: function(user) {
+    var self = this;
+    var now = new Date();
+    var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+    return self._fetchCurrentRecord(user).then(function(res) {
+      var baseLevel = (res.data && typeof res.data.level === 'number') ? res.data.level : self.level;
+      var remaining = self.buildRemainingForLevel(baseLevel);
+      function lv(k){ return (res.data && res.data[k + 'Unlocked']) ? 1 : self[k + 'Unlocked']; }
+      return self._writeState(user, {
+        points: res.data ? res.data.points : self.totalPoints,
+        todayRemaining: remaining,
+        nick: user.display_name,
+        level: baseLevel,
+        date: today,
+        autoUnlocked: lv('auto'),
+        oneKeyUnlocked: lv('oneKey'),
+        almanacUnlocked: lv('almanac'),
+        logoUnlocked: lv('logo'),
+        planUnlocked: lv('plan'),
+        runnerUnlocked: lv('runner'),
+        storyUnlocked: lv('story'),
+        yeduUnlocked: lv('yedu'),
+        zjszUnlocked: lv('zjsz'),
+        newsUnlocked: lv('news'),
+        tvUnlocked: lv('tv')
+      }, '今日修炼次数已刷新').then(function(ok) {
+        if (!ok) {
+          self.setSyncState('idle');
+          self.updateBadge();
+          self.updateTaskDots();
+          self.updateTaskMenu();
+        }
+        return ok;
+      });
+    }).catch(function(e) {
+      console.warn('[GAME] 跨天重置写库失败:', e);
+      self.setSyncState('idle');
+      return false;
     });
   },
 
@@ -1434,21 +1523,25 @@ var GAME = {
       this.tvUnlocked = foundData.tvUnlocked ? 1 : 0;
       this.planUnlocked = foundData.planUnlocked ? 1 : 0;
       if (foundData.date === today) {
-        // 当天 → 直接用剩余次数
+        // 当天 → 直接用数据库里的剩余次数
         this.todayCounts = foundData.todayRemaining || {};
+        this._pendingDailyReset = false;
       } else {
-        // 跨天 → 重置剩余次数（保留真气值）
+        // 跨天 → 按当前境界重置今日次数，并标记写库（数据以数据库为准，写库回读后显示）
         this.initTodayRemaining();
+        this._pendingDailyReset = true;
       }
     } else {
       // 数据库中无该用户记录：新用户或老用户后台数据被删除（用户已登录）
-      // 直接初始化一份全新数据：真气 0 + 按当前境界(0)赋予今日修炼次数，
-      // 红点正常显示剩余次数（不显示".."），首次修炼时 POST 写入数据库完成重建
+      // 不在此处生成内存假次数——红点等所有数据必须以数据库为准。
+      // 置 _pendingInitRecord 标记，由 loadFromServer 触发"重建初始记录"（写库 → 回读），
+      // 红点显示从数据库读回的初始次数。
       this.totalPoints = 0;
       this._gameObjectId = 0;
       this.level = 0;              // 从头开始：境界重置为凡人
       this._noDbData = false;      // 已有初始数据，不再视为"无数据"
-      this.initTodayRemaining();   // 按等级 0 赋予今日修炼次数
+      this.todayCounts = {};       // 等重建记录写库回读后再填充（来自数据库）
+      this._pendingInitRecord = true;
       this.autoUnlocked = 0;
       this.oneKeyUnlocked = 0;
       this.almanacUnlocked = 0;
@@ -1594,9 +1687,10 @@ var GAME = {
       var key = GAME_CONFIG[i].key;
       var act = this.actions[key];
       if (!act) continue;
-      // max 由 LEVEL_CONFIG[level] 决定
+      // max 由 LEVEL_CONFIG[level] 决定（level 来自数据库）
       var max = this.getActionMax(key);
-      var remaining = this._noDbData ? max : (this.todayCounts[key] || 0);
+      // 剩余次数直接读数据库（todayCounts 仅由 processRecords 从数据库解析）
+      var remaining = this.todayCounts[key] || 0;
       var done = remaining <= 0;
       if (!done) allDone = false;
       var pts = this.getActionPoints(key);
@@ -2028,7 +2122,8 @@ var GAME = {
     });
   },
 
-  // 归一化剩余次数：确保所有任务都有值（缺失时用配置的 max 补全），首次修炼/解锁时防止写入空对象
+  // 归一化剩余次数：确保所有任务都有值（缺失时用当前境界 LEVEL_CONFIG[level].times 补全，
+  // GAME_CONFIG.max 已废弃），首次修炼/解锁时防止写入空对象
   _normalizeRemaining: function(base) {
     var src = base || this.todayCounts || {};
     var out = {};
@@ -2036,9 +2131,17 @@ var GAME = {
       for (var k in src) out[k] = src[k];
       return out;
     }
+    var cfg = this.getLevelCfg();
+    var times = (cfg && cfg.times) ? cfg.times : {};
     for (var i = 0; i < GAME_CONFIG.length; i++) {
       var ck = GAME_CONFIG[i].key;
-      out[ck] = (typeof src[ck] === 'number') ? src[ck] : GAME_CONFIG[i].max;
+      if (typeof src[ck] === 'number') {
+        out[ck] = src[ck];
+      } else if (typeof times[ck] === 'number') {
+        out[ck] = times[ck];
+      } else {
+        out[ck] = 0;
+      }
     }
     return out;
   },
@@ -3081,16 +3184,14 @@ var GAME = {
 };
 GAME.init();
 
-// ===== 日程计划面板（PlanSvc：本地存储为主 + 已登录 Waline 自动同步） =====
+// ===== 日程计划面板（PlanSvc：严格云端优先，数据全部以 Waline 数据库为准） =====
 var PlanSvc = (function(){
-  var LS_KEY = 'snowhoo_plan_data';      // 本地全部日程 { 'YYYY-MM-DD': [ {id,time,text,done} ] }
-  var LS_SAVED = 'snowhoo_plan_savedAt'; // 本地最后保存时间戳
-  var LS_OID = 'snowhoo_plan_oid';       // 云端评论 objectId（可重新获取）
-  var LS_ALLMODE = 'snowhoo_plan_allMode'; // 全部日程开关（默认开）
+  var LS_ALLMODE = 'snowhoo_plan_allMode'; // 全部日程开关（默认开，UI 偏好，非计划数据）
   var CLOUD_BASE = 'https://waline.snowhoo.net';
   var CLOUD_PATH_BASE = '/app-plan/';
 
   var data = {};
+  var oid = 0;              // 云端记录 objectId（从云端拉取获得，仅运行时引用，不落本地）
   var curDate = '';
   var syncTimer = null, toastTimer = null;
 
@@ -3105,22 +3206,6 @@ var PlanSvc = (function(){
   function isAllMode(){ try{ var v = localStorage.getItem(LS_ALLMODE); if (v == null) return true; return v === '1'; }catch(e){ return true; } }
   function setAllMode(on){ try{ localStorage.setItem(LS_ALLMODE, on ? '1' : '0'); }catch(e){} }
   function $(id){ return document.getElementById(id); }
-
-  // ---------- 本地存储 ----------
-  function loadLocal(){
-    try{
-      var raw = localStorage.getItem(LS_KEY);
-      if (raw) {
-        var obj = JSON.parse(raw);
-        if (obj && typeof obj === 'object' && !Array.isArray(obj)) data = obj;
-      }
-    }catch(e){ data = {}; }
-  }
-  function saveLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(data)); }catch(e){} }
-  function savedAt(){ try{ return parseInt(localStorage.getItem(LS_SAVED) || '0', 10) || 0; }catch(e){ return 0; } }
-  function setSavedAt(ts){ try{ localStorage.setItem(LS_SAVED, String(ts)); }catch(e){} }
-  function cloudOid(){ try{ return parseInt(localStorage.getItem(LS_OID) || '0', 10) || 0; }catch(e){ return 0; } }
-  function setCloudOid(id){ try{ localStorage.setItem(LS_OID, id ? String(id) : ''); }catch(e){} }
 
   // ---------- Waline 用户（与 GAME.getWalineUser 同套逻辑） ----------
   function getWalineUser(){
@@ -3170,12 +3255,12 @@ var PlanSvc = (function(){
     try { return JSON.parse(s); } catch(e){ return null; }
   }
 
-  // ---------- 云端同步 ----------
+  // ---------- 云端同步（严格云端优先：数据只从云端读、只写云端） ----------
   function setTip(txt){ var el = $('planSyncTip'); if (el) el.textContent = txt || ''; }
   function updateSyncTip(){
     var u = getWalineUser();
     if (u) setTip('已登录：' + u.display_name + ' · 计划自动同步云端');
-    else setTip('未登录 · 计划仅保存在本机');
+    else setTip('未登录 · 计划无法同步云端');
   }
   // 拉取云端最新记录（含 objectId），失败返回 null
   function fetchCloud(u){
@@ -3189,8 +3274,8 @@ var PlanSvc = (function(){
             var rec = records[i];
             var obj = parsePlan(rec.orig || rec.comment || '');
             if (obj && obj.v === 1 && obj.data && typeof obj.data === 'object') {
-              var oid = parseInt(rec.objectId, 10) || 0;
-              if (!found || oid > found.oid) found = { oid: oid, updatedAt: +obj.updatedAt || 0, data: obj.data };
+              var recOid = parseInt(rec.objectId, 10) || 0;
+              if (!found || recOid > found.oid) found = { oid: recOid, updatedAt: +obj.updatedAt || 0, data: obj.data };
             }
           }catch(e){}
         }
@@ -3199,70 +3284,62 @@ var PlanSvc = (function(){
     var timer = new Promise(function(resolve, reject){ setTimeout(function(){ reject(new Error('超时')); }, 8000); });
     return Promise.race([p, timer]).catch(function(e){ console.warn('[计划] 拉取云端失败:', e); return null; });
   }
-  // 同步：云端更新则采用；否则把本地推到云端
+  // 从云端加载（进入页面/登录/打开面板时调用）：云端有记录则以云端为准
   function syncNow(){
     var u = getWalineUser();
-    if (!u) { setCloudOid(0); return; }
-    var token = u.token || '';
-    if (!token) { try{ var s = JSON.parse(localStorage.getItem('WALINE_USER')||'{}'); if (s.token) token = s.token; }catch(e){} }
+    if (!u) { oid = 0; setTip('未登录 · 计划无法同步云端'); return; }
     fetchCloud(u).then(function(res){
-      var cloud = (res && res.data) ? res : null;
-      if (cloud && cloud.updatedAt > savedAt()) {
-        // 云端更新 → 采用云端
-        data = cloud.data;
-        saveLocal();
-        setSavedAt(cloud.updatedAt);
-        setCloudOid(cloud.oid);
-        setTip('已采用云端最新计划');
+      if (res && res.data) {
+        data = res.data;
+        oid = res.oid;
         render();
-        setTimeout(function(){ updateSyncTip(); }, 2000);
-        return;
-      }
-      // 本地更新 → 推云端
-      setTip('正在同步…');
-      var payload = JSON.stringify({
-        comment: JSON.stringify({ v: 1, updatedAt: Date.now(), data: data }),
-        url: cloudPath(u),
-        nick: u.display_name || '游客',
-        mail: u.email || ''
-      });
-      var headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = 'Bearer ' + token;
-      // 云端无记录（新用户或老用户数据被删除）→ 一律 POST 重建，不能用本地缓存的旧 objectId
-      // （旧 oid 对应已被删除的评论，PUT 会 404 导致永远无法重建）
-      var oid = cloud ? cloud.oid : 0;
-      if (!cloud) setCloudOid(0);
-      var req;
-      if (oid) {
-        req = fetch(CLOUD_BASE + '/api/comment/' + oid, { method: 'PUT', headers: headers, body: payload });
+        setTip('已加载云端计划');
       } else {
-        req = fetch(CLOUD_BASE + '/api/comment', { method: 'POST', headers: headers, body: payload })
-          .then(function(r){
-            return r.json().then(function(j){
-              if (r.ok && j.data && j.data.objectId) setCloudOid(parseInt(j.data.objectId, 10));
-              return r;
-            });
-          });
+        oid = 0; // 云端无记录（新用户或数据被删）→ 下次修改走 POST 重建
       }
-      return req.then(function(r){
-        if (r.ok) {
-          setSavedAt(Date.now());
-          setTip('已同步到云端');
-        } else {
-          setTip('云端同步失败 · 计划已保存在本机');
-        }
-        setTimeout(function(){ updateSyncTip(); }, 2000);
-      }).catch(function(e){
-        console.warn('[计划] 云端同步网络失败:', e);
-        setTip('云端同步失败 · 计划已保存在本机');
-        setTimeout(function(){ updateSyncTip(); }, 2000);
-      });
+      setTimeout(function(){ updateSyncTip(); }, 2000);
     });
   }
-  function syncSoon(){
-    if (!getWalineUser()) return;
+  // 把当前 data 推送到云端（修改后立即调用）：有 oid PUT 更新，无 oid POST 创建
+  function pushCloud(){
+    var u = getWalineUser();
+    if (!u) { setTip('未登录 · 修改无法同步云端'); setTimeout(function(){ updateSyncTip(); }, 2000); return; }
+    var token = u.token || '';
+    if (!token) { try{ var s = JSON.parse(localStorage.getItem('WALINE_USER')||'{}'); if (s.token) token = s.token; }catch(e){} }
+    setTip('正在同步…');
+    var payload = JSON.stringify({
+      comment: JSON.stringify({ v: 1, updatedAt: Date.now(), data: data }),
+      url: cloudPath(u),
+      nick: u.display_name || '游客',
+      mail: u.email || ''
+    });
+    var headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    var req;
+    if (oid) {
+      req = fetch(CLOUD_BASE + '/api/comment/' + oid, { method: 'PUT', headers: headers, body: payload });
+    } else {
+      req = fetch(CLOUD_BASE + '/api/comment', { method: 'POST', headers: headers, body: payload })
+        .then(function(r){
+          return r.json().then(function(j){
+            if (r.ok && j.data && j.data.objectId) oid = parseInt(j.data.objectId, 10);
+            return r;
+          });
+        });
+    }
+    return req.then(function(r){
+      if (r.ok) setTip('已同步到云端');
+      else setTip('云端同步失败');
+      setTimeout(function(){ updateSyncTip(); }, 2000);
+    }).catch(function(e){
+      console.warn('[计划] 云端同步网络失败:', e);
+      setTip('云端同步失败');
+      setTimeout(function(){ updateSyncTip(); }, 2000);
+    });
+  }
+  function pushCloudSoon(){
     if (syncTimer) clearTimeout(syncTimer);
-    syncTimer = setTimeout(syncNow, 800);
+    syncTimer = setTimeout(pushCloud, 800);
   }
 
   // ---------- 渲染 ----------
@@ -3375,26 +3452,23 @@ var PlanSvc = (function(){
       done: false
     });
     textEl.value = '';
-    saveLocal(); setSavedAt(Date.now());
     render();
-    syncSoon();
+    pushCloudSoon();   // 修改后立即推送云端
     if (isAllMode()) toast('已添加到 ' + fmtDate(curDate));
   }
   function toggleDone(id){
     var f = findItemById(id);
     if (!f) return;
     f.arr[f.i].done = !f.arr[f.i].done;
-    saveLocal(); setSavedAt(Date.now());
     render();
-    syncSoon();
+    pushCloudSoon();
   }
   function delItem(id){
     var f = findItemById(id);
     if (!f) return;
     f.arr.splice(f.i, 1);
-    saveLocal(); setSavedAt(Date.now());
     render();
-    syncSoon();
+    pushCloudSoon();
     toast('已删除');
   }
   function toast(msg){
@@ -3445,7 +3519,7 @@ var PlanSvc = (function(){
         }
       }
     }
-    if (changed) { saveLocal(); setSavedAt(Date.now()); syncSoon(); if (kind !== 'date') toast('已修改'); }
+    if (changed) { pushCloudSoon(); if (kind !== 'date') toast('已修改'); }
     render();
   }
   function startPlanEdit(el, kind, curVal){
@@ -3470,7 +3544,14 @@ var PlanSvc = (function(){
 
   // ---------- 初始化 ----------
   function init(){
-    loadLocal();
+    // 严格云端优先：清理旧版本遗留的本地计划缓存，数据只从云端读取
+    try {
+      localStorage.removeItem('snowhoo_plan_data');
+      localStorage.removeItem('snowhoo_plan_savedAt');
+      localStorage.removeItem('snowhoo_plan_oid');
+    } catch(e){}
+    data = {};
+    oid = 0;
     curDate = todayStr();
     $('planAllSwitch').checked = isAllMode();
     updateSyncTip();
@@ -3530,6 +3611,8 @@ var PlanSvc = (function(){
       var txt = e.target.closest('.plan-text');
       if (txt) { startPlanEdit(txt, 'text', txt.textContent); }
     });
+    // 已登录 → 从云端拉取计划（数据以云端数据库为准）
+    if (getWalineUser()) syncNow();
   }
 
   return { init: init, render: render, updateSyncTip: updateSyncTip, syncNow: syncNow, getWalineUser: getWalineUser };
@@ -3582,13 +3665,7 @@ var commentOverlay = document.getElementById('commentOverlay');
           comment: '留言'
         },
         onLogin: function(user) {
-          // 保存用户信息到 localStorage
-          var gu = {
-            display_name: user.display_name || user.nick || user.name || '',
-            avatar: user.avatar || user.objectURL || user.avator || '',
-            email: user.email || user.mail || ''
-          };
-          try { localStorage.setItem('GAME_USER', JSON.stringify(gu)); } catch(e) {}
+          // 登录态由 Waline 自身管理；游戏数据一律不落本地存储（数据全部以数据库为准）
           try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e) {}
           // 更新头像，然后让 checkLogin 自动检测用户变化并加载数据
           if (window.GAME) {
@@ -3600,7 +3677,6 @@ var commentOverlay = document.getElementById('commentOverlay');
           }
         },
         onLogout: function() {
-          try { localStorage.removeItem('GAME_USER'); } catch(e) {}
           try { localStorage.removeItem('WALINE_USER'); } catch(e) {}
           // 彻底清理 Waline 组件残留（否则栏目页菜单会误判已登录解锁）
           try { localStorage.removeItem('@waline/user'); } catch(e) {}
