@@ -67,22 +67,27 @@ var LEVEL_CONFIG = [
  *   unlockCost — 解锁成本表（key → 消耗真气；auto/oneKey/almanac/logo/story/yedu/zjsz/news/tv/runner）
  *   relockRate — 回收返还比例（0.8 = 返还解锁成本的 80%）
  *   discover   — 发现列表（打坐人形入口）分组：
- *     cat   — 分类名（术法 / 小世界 / 心法）
+ *     cat   — 分类名（术法 / 小世界 / 心法 / 法器）
  *     items — 各秘藏项：
- *       key       — 与 unlockCost 同名的 key（固魂大法 = runner，即"奔跑的人"）
- *       name      — 秘藏显示名（已解锁显示名称，未解锁显示？？）
- *       unlockMsg — 解锁成功提示文案
- *       relockMsg — 回收真气重新上锁时的操作名
+ *       key        — 与 unlockCost 同名的 key（固魂大法 = runner，即"奔跑的人"）
+ *       name       — 秘藏显示名（已解锁显示名称，未解锁显示？？）
+ *       unlockMsg  — 解锁成功提示文案
+ *       relockMsg  — 回收真气重新上锁时的操作名
+ *       lockedTip  — 未解锁时点击"？？"弹出的提示（说明如何发现/获得）
+ *       unlockedTip— 已解锁时点击名称弹出的提示（说明该秘藏）
+ *       noRelock   — true 表示不可回收（如法器"乾坤镜"），不显示回撤破印
  *
  * 注意：固魂大法（key: runner）即"奔跑的人"——奔跑的人是其解锁窗口（解锁奔跑的人 = 发现固魂大法），
  *   解锁状态以 runnerUnlocked 为准（无独立锁，成本走 runner: 1000）。
+ * 法器"乾坤镜"（key: background）：首次双击背景图成功下载图片后自动解锁（backgroundUnlocked），
+ *   不可通过真气破除封印解锁、不可回收（noRelock）。
  */
 var FEATURE_CONFIG = {
   // 解锁成本：消耗真气值一次性解锁对应功能
   //   auto    — "自动"修炼功能（必须先解锁此项，才能解锁"一键"）
   //   oneKey  — "一键"修炼功能（需先解锁"自动"）
   //   almanac — 右上角日期卡片（黄历），解锁后方可缩小/展开
-  // 真气不足时不允许解锁。
+  // 真气不足时不允许解锁。background（乾坤镜）不在成本表：行为解锁，不可破印/回收。
   unlockCost: {
     auto: 888,
     oneKey: 999,
@@ -99,20 +104,45 @@ var FEATURE_CONFIG = {
   relockRateText: '八成',  // 回收返还比例的文字表述（前端显示用，如"八成"）
   discover: [
     { cat: '术法', items: [
-      { key:'logo', name:'隐灵术', unlockMsg:'破除封印！获得【隐灵术】', relockMsg:'收灵破法重修' },
-      { key:'almanac', name:'轮回术', unlockMsg:'破除封印！获得【轮回术】', relockMsg:'收灵破法重修' },
-      { key:'runner', name:'固魂大法', unlockMsg:'破除封印！获得【固魂大法】', relockMsg:'收灵破法重修' }
+      { key:'logo', name:'隐灵术', unlockMsg:'破除封印！获得【隐灵术】', relockMsg:'收灵破法重修',
+        lockedTip:'隐灵术藏于LOGO之中，点击页首 LOGO 破除封印即可获得。',
+        unlockedTip:'隐灵术·可隐于无形，融于万物。点击 LOGO 可收起/展开。' },
+      { key:'almanac', name:'轮回术', unlockMsg:'破除封印！获得【轮回术】', relockMsg:'收灵破法重修',
+        lockedTip:'轮回术寄于黄历之上，点击右上角日期卡片破除封印即可获得。',
+        unlockedTip:'轮回术·观天象而知轮回。点击日期卡片可缩小/展开。' },
+      { key:'runner', name:'固魂大法', unlockMsg:'破除封印！获得【固魂大法】', relockMsg:'收灵破法重修',
+        lockedTip:'固魂大法藏于奔跑之人身后，点击奔跑的小人破除封印即可获得。',
+        unlockedTip:'固魂大法·稳固神魂，日程计划之门。解锁后即可使用日程计划。' }
     ]},
     { cat: '小世界', items: [
-      { key:'story', name:'小红故事', unlockMsg:'破除迷雾结界！发现【红光秘境】', relockMsg:'回撤结界破锁真气' },
-      { key:'yedu', name:'夜读', unlockMsg:'破除迷雾结界！发现【心灵秘境】', relockMsg:'回撤结界破锁真气' },
-      { key:'zjsz', name:'照见苏州', unlockMsg:'破除迷雾结界！发现【视界秘境】', relockMsg:'回撤结界破锁真气' },
-      { key:'news', name:'新闻', unlockMsg:'破除迷雾结界！发现【正能光量小世界】', relockMsg:'回撤结界破锁真气' },
-      { key:'tv', name:'播霸', unlockMsg:'破除迷雾结界！发现【光怪陆离小世界】', relockMsg:'回撤结界破锁真气' }
+      { key:'story', name:'小红故事', unlockMsg:'破除迷雾结界！发现【红光秘境】', relockMsg:'回撤结界破锁真气',
+        lockedTip:'小红故事秘境藏于迷雾之中，点击首页对应入口破除迷雾结界即可发现。',
+        unlockedTip:'红光秘境·万千故事汇聚的小世界，点击首页入口即可进入。' },
+      { key:'yedu', name:'夜读', unlockMsg:'破除迷雾结界！发现【心灵秘境】', relockMsg:'回撤结界破锁真气',
+        lockedTip:'心灵秘境藏于迷雾之中，点击首页对应入口破除迷雾结界即可发现。',
+        unlockedTip:'心灵秘境·每晚十点的静心小世界，点击首页入口即可进入。' },
+      { key:'zjsz', name:'照见苏州', unlockMsg:'破除迷雾结界！发现【视界秘境】', relockMsg:'回撤结界破锁真气',
+        lockedTip:'视界秘境藏于迷雾之中，点击首页对应入口破除迷雾结界即可发现。',
+        unlockedTip:'视界秘境·光影中的苏州小世界，点击首页入口即可进入。' },
+      { key:'news', name:'新闻', unlockMsg:'破除迷雾结界！发现【正能光量小世界】', relockMsg:'回撤结界破锁真气',
+        lockedTip:'正能光量小世界藏于迷雾之中，点击首页对应入口破除迷雾结界即可发现。',
+        unlockedTip:'正能光量小世界·每日正能量的新闻天地，点击首页入口即可进入。' },
+      { key:'tv', name:'播霸', unlockMsg:'破除迷雾结界！发现【光怪陆离小世界】', relockMsg:'回撤结界破锁真气',
+        lockedTip:'光怪陆离小世界藏于迷雾之中，点击首页对应入口破除迷雾结界即可发现。',
+        unlockedTip:'光怪陆离小世界·光影斑驳的影视天地，点击首页入口即可进入。' }
     ]},
     { cat: '心法', items: [
-      { key:'auto', name:'吐气纳灵心法', unlockMsg:'破除禁锢！习得【吐气纳灵心法】', relockMsg:'聚灵归海' },
-      { key:'oneKey', name:'引灵入体心法', unlockMsg:'破除禁锢！习得【引灵入体心法】', relockMsg:'聚灵归海' }
+      { key:'auto', name:'吐气纳灵心法', unlockMsg:'破除禁锢！习得【吐气纳灵心法】', relockMsg:'聚灵归海',
+        lockedTip:'吐气纳灵心法被禁锢于修炼栏中，点击"自动"按钮破除禁锢即可习得。',
+        unlockedTip:'吐气纳灵心法·吐纳之间灵气自聚，开启"自动"修炼。' },
+      { key:'oneKey', name:'引灵入体心法', unlockMsg:'破除禁锢！习得【引灵入体心法】', relockMsg:'聚灵归海',
+        lockedTip:'引灵入体心法被禁锢于修炼栏中，点击"一键"按钮破除禁锢即可习得。',
+        unlockedTip:'引灵入体心法·一气引灵入体，开启"一键"修炼。' }
+    ]},
+    { cat: '法器', items: [
+      { key:'background', name:'乾坤镜', noRelock:true,
+        lockedTip:'乾坤镜沉于隐藏结界之中，首次双击背景图破除结界并成功保存图片，即可得见此镜。',
+        unlockedTip:'乾坤镜·照见天地万物之镜。首次破除背景结界并保存图片后所得，不可回收。' }
     ]}
   ]
 };

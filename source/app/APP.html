@@ -1033,6 +1033,7 @@ var GAME = {
   zjszUnlocked: 0,        // 栏目"照见苏州"是否解锁（0锁止 1可用）
   newsUnlocked: 0,        // 栏目"新闻"是否解锁（0锁止 1可用）
   tvUnlocked: 0,          // 栏目"播霸"是否解锁（0锁止 1可用）
+  backgroundUnlocked: 0,  // 法器"乾坤镜"是否已获得（首次双击背景图破除结界并保存图片后=1；不可回收）
 
   // 当前 level 的境界配置（null fallback）
   getLevelCfg: function() {
@@ -1203,6 +1204,7 @@ var GAME = {
         this.zjszUnlocked = 0;
         this.newsUnlocked = 0;
         this.tvUnlocked = 0;
+        this.backgroundUnlocked = 0;
         this.updateBadge();
         this.updateTaskDots();
         this.updateLevelDisplay();
@@ -1228,6 +1230,7 @@ var GAME = {
         this.zjszUnlocked = 0;
         this.newsUnlocked = 0;
         this.tvUnlocked = 0;
+        this.backgroundUnlocked = 0;
         this.updateBadge();
         this.updateTaskDots();
         this._updateAlmanacLock();
@@ -1381,7 +1384,8 @@ var GAME = {
       yeduUnlocked: 0,
       zjszUnlocked: 0,
       newsUnlocked: 0,
-      tvUnlocked: 0
+      tvUnlocked: 0,
+      backgroundUnlocked: 0
     }, '已初始化修炼记录').then(function(ok) {
       if (!ok) {
         // 重建失败（网络等）→ 保持空状态，不伪造次数
@@ -1419,7 +1423,8 @@ var GAME = {
         yeduUnlocked: lv('yedu'),
         zjszUnlocked: lv('zjsz'),
         newsUnlocked: lv('news'),
-        tvUnlocked: lv('tv')
+        tvUnlocked: lv('tv'),
+        backgroundUnlocked: lv('background')
       }, '今日修炼次数已刷新').then(function(ok) {
         if (!ok) {
           self.setSyncState('idle');
@@ -1517,6 +1522,7 @@ var GAME = {
       this.zjszUnlocked = foundData.zjszUnlocked ? 1 : 0;
       this.newsUnlocked = foundData.newsUnlocked ? 1 : 0;
       this.tvUnlocked = foundData.tvUnlocked ? 1 : 0;
+      this.backgroundUnlocked = foundData.backgroundUnlocked ? 1 : 0;
       if (foundData.date === today) {
         // 当天 → 直接用数据库里的剩余次数
         this.todayCounts = foundData.todayRemaining || {};
@@ -1547,6 +1553,7 @@ var GAME = {
       this.zjszUnlocked = 0;
       this.newsUnlocked = 0;
       this.tvUnlocked = 0;
+      this.backgroundUnlocked = 0;
     }
     this.loaded = true;
     this.clearTaskMenuError();
@@ -2238,7 +2245,8 @@ var GAME = {
         yeduUnlocked: lvC('yedu'),
         zjszUnlocked: lvC('zjsz'),
         newsUnlocked: lvC('news'),
-        tvUnlocked: lvC('tv')
+        tvUnlocked: lvC('tv'),
+        backgroundUnlocked: lvC('background')
       }, '真气值已同步到 Waline: ' + key + ' +' + points);
     }).catch(function(e) {
       // 写入前读取真实数据失败 → 无法保证写入正确性，阻止写入
@@ -2416,7 +2424,8 @@ var GAME = {
             yeduUnlocked: newCats.yedu,
             zjszUnlocked: newCats.zjsz,
             newsUnlocked: newCats.news,
-            tvUnlocked: newCats.tv
+            tvUnlocked: newCats.tv,
+            backgroundUnlocked: (res.data && res.data.backgroundUnlocked) ? 1 : 0
           }, '已解锁"' + name + '"功能').then(function(ok) {
             // 结果直接在窗口内显示（页面成功提示照旧由 processRecords 驱动）
             setStatus(ok ? '✓ 封印已破' : '心魔困扰', ok ? ('解锁成功！-' + cost + ' 真气，封印已破！') : '正遭受心魔困扰，点击恢复心神!');
@@ -2471,7 +2480,7 @@ var GAME = {
 
   // 该秘藏是否已解锁（key 与 FEATURE_CONFIG.unlockCost 完全一致）
   _isUnlocked: function(key) {
-    var map = { auto:'autoUnlocked', oneKey:'oneKeyUnlocked', almanac:'almanacUnlocked', logo:'logoUnlocked', runner:'runnerUnlocked', story:'storyUnlocked', yedu:'yeduUnlocked', zjsz:'zjszUnlocked', news:'newsUnlocked', tv:'tvUnlocked' };
+    var map = { auto:'autoUnlocked', oneKey:'oneKeyUnlocked', almanac:'almanacUnlocked', logo:'logoUnlocked', runner:'runnerUnlocked', story:'storyUnlocked', yedu:'yeduUnlocked', zjsz:'zjszUnlocked', news:'newsUnlocked', tv:'tvUnlocked', background:'backgroundUnlocked' };
     return !!this[map[key]];
   },
 
@@ -2480,29 +2489,54 @@ var GAME = {
     var body = document.getElementById('discoverBody');
     if (!body) return;
     var groups = this._discoverGroups();
-    var rate = this._relockRate();
     var rateTxt = this._relockRateText();
     var html = '';
     groups.forEach(function(g){
       html += '<div class="discover-cat">' + g.cat + '</div>';
       (g.items || []).forEach(function(it){
         var un = GAME._isUnlocked(it.key);
-        html += '<div class="discover-item' + (un ? ' unlocked' : '') + '" data-key="' + it.key + '">'
-          + (un ? '<span class="disc-name">' + it.name + '</span>' : '<span class="disc-name locked">？？</span>')
-          + (un ? '<span class="disc-act">回撤破印 · ' + rateTxt + '</span>' : '<span class="disc-act">未发现</span>')
+        // 未解锁 → 显示？？，点击弹提示（不激活破印询问）
+        if (!un) {
+          html += '<div class="discover-item locked-item" data-key="' + it.key + '">'
+            + '<span class="disc-name locked">？？</span>'
+            + '<span class="disc-act">未发现</span>'
+            + '</div>';
+          return;
+        }
+        // 已解锁 → 名称可点击弹提示；不可回收（noRelock）项不显示回撤破印
+        if (it.noRelock) {
+          html += '<div class="discover-item unlocked" data-key="' + it.key + '">'
+            + '<span class="disc-name">' + it.name + '</span>'
+            + '<span class="disc-act">不可回收</span>'
+            + '</div>';
+          return;
+        }
+        html += '<div class="discover-item unlocked" data-key="' + it.key + '">'
+          + '<span class="disc-name">' + it.name + '</span>'
+          + '<span class="disc-act relock-act">回撤破印 · ' + rateTxt + '</span>'
           + '</div>';
       });
     });
     if (!html) html = '<div class="discover-cat">暂未配置发现秘藏</div>';
     body.innerHTML = html;
     var foot = document.getElementById('discoverFoot');
-    if (foot) foot.textContent = '已解锁秘藏点击可回撤破印，可得原破印真气' + rateTxt + '；未解锁秘藏点击可破除封印解锁';
+    if (foot) foot.textContent = '点击未发现的秘藏可查看获得方式；已发现的点击名称可查看说明，点击"回撤破印"可回收真气重新上锁';
     body.querySelectorAll('.discover-item').forEach(function(el){
+      // 整项点击：弹提示（未解锁 → lockedTip；已解锁 → unlockedTip），不激活破印
       el.addEventListener('click', function(){
         var key = el.dataset.key;
-        if (GAME._isUnlocked(key)) GAME.relockFeature(key);
-        else GAME.unlockFeature(key);
+        var it = GAME._findDiscoverItem(key);
+        var tip = it ? (GAME._isUnlocked(key) ? it.unlockedTip : it.lockedTip) : '';
+        GAME._showTip(GAME._isUnlocked(key) ? it.name : '未发现', tip || '暂无更多说明');
       });
+      // 回撤破印按钮：单独触发回收（阻止整项提示）
+      var relock = el.querySelector('.relock-act');
+      if (relock) {
+        relock.addEventListener('click', function(e){
+          e.stopPropagation();
+          GAME.relockFeature(el.dataset.key);
+        });
+      }
     });
   },
 
@@ -2532,6 +2566,11 @@ var GAME = {
   relockFeature: function(feature) {
     // 名称/回收操作名按配置原始 key 查（key 与 unlockCost 一致，无映射）
     var dItem = this._findDiscoverItem(feature);
+    // 不可回收项（noRelock，如法器乾坤镜）→ 直接提示，不回收
+    if (dItem && dItem.noRelock) {
+      this._showTip((dItem.name || feature), '此物不可回收（' + (dItem.unlockedTip || '永久持有') + '）');
+      return;
+    }
     var cfg = (typeof FEATURE_CONFIG !== 'undefined' && FEATURE_CONFIG && FEATURE_CONFIG.unlockCost) ? FEATURE_CONFIG.unlockCost : {}; // 成本一律读配置文件，不硬编码
     var cost = cfg[feature];
     if (!cost) return;
@@ -2579,7 +2618,8 @@ var GAME = {
             yeduUnlocked: (feature === 'yedu') ? 0 : lv('yedu'),
             zjszUnlocked: (feature === 'zjsz') ? 0 : lv('zjsz'),
             newsUnlocked: (feature === 'news') ? 0 : lv('news'),
-            tvUnlocked: (feature === 'tv') ? 0 : lv('tv')
+            tvUnlocked: (feature === 'tv') ? 0 : lv('tv'),
+            backgroundUnlocked: lv('background')
           };
           // 2. 写库阶段（真气融合中）；_writeState 内部成功后自动回读数据库
           setStatus('🔓 回撤破印', '正在融合真气..');
@@ -2746,7 +2786,8 @@ var GAME = {
             yeduUnlocked: lvU('yedu'),
             zjszUnlocked: lvU('zjsz'),
             newsUnlocked: lvU('news'),
-            tvUnlocked: lvU('tv')
+            tvUnlocked: lvU('tv'),
+            backgroundUnlocked: lvU('background')
           }, '境界提升至【' + nextName + '】').then(function(ok) {
             // 不前置显示升级提示，由 processRecords 读回确认后展示（与修炼+真气同一时序）
             self._pendingUpgradeMsg = { name: nextName, cost: realCost };
@@ -2816,7 +2857,7 @@ var GAME = {
             setStatus('无法破除结界', '真气不足，破除结界需要 ' + cost + ' 真气！');
             return;
           }
-          // 3. 写库：扣随机真气，解锁状态字段保留数据库原值（结界不记录解锁状态、不限次数）
+          // 3. 写库：扣随机真气，解锁状态字段保留数据库原值；本次成功破除结界并保存图片 → 乾坤镜（background）解锁
           setStatus(qTitle, '正在融合真气..');
           var now = new Date();
           var today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
@@ -2839,7 +2880,8 @@ var GAME = {
             yeduUnlocked: lvB('yedu'),
             zjszUnlocked: lvB('zjsz'),
             newsUnlocked: lvB('news'),
-            tvUnlocked: lvB('tv')
+            tvUnlocked: lvB('tv'),
+            backgroundUnlocked: 1  // 本次成功破除结界 → 获得乾坤镜（首次即解锁，永久持有）
           }, '破除结界 -' + cost + ' 真气').then(function(ok) {
             if (!ok) {
               setStatus('心魔困扰', '正遭受心魔困扰，点击恢复心神!');
@@ -3173,7 +3215,8 @@ var GAME = {
         yeduUnlocked: lvK('yedu'),
         zjszUnlocked: lvK('zjsz'),
         newsUnlocked: lvK('news'),
-        tvUnlocked: lvK('tv')
+        tvUnlocked: lvK('tv'),
+        backgroundUnlocked: lvK('background')
       }, '一键修炼完成 +' + totalGain + ' 真气').then(function(ok) {
         self._oneKeyMode = false;
         self.hideModeMask();
