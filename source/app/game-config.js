@@ -74,13 +74,47 @@ var UNLOCK_CONFIG = {
   oneKey: 999,
   almanac: 666,
   logo: 777,
-  plan: 888,
   story: 111,
   yedu: 222,
   zjsz: 333,
   news: 444,
   tv: 555,
   runner: 1000
+};
+
+/**
+ * 发现列表（打坐人形入口）配置
+ *   groups — 发现列表分组展示：
+ *     cat   — 分类名（术法 / 小世界 / 心法）
+ *     items — 各秘藏项：
+ *       key       — 解锁字段对应键（auto/oneKey/almanac/logo/奔跑/story/yedu/zjsz/news/tv）
+ *       name      — 秘藏显示名（已解锁显示名称，未解锁显示？？）
+ *       unlockMsg — 解锁成功提示文案
+ *       relockMsg — 回收 80% 真气重新上锁时的操作名
+ *   解锁成本统一由 UNLOCK_CONFIG 决定（同名 key）
+ *
+ * 注意：固魂大法（key: 奔跑）即"奔跑的人"——奔跑的人是其解锁窗口（解锁奔跑的人 = 发现固魂大法），
+ *   解锁状态以 runnerUnlocked 为准（无独立锁，成本走 runner: 1000）。
+ */
+var DISCOVER_CONFIG = {
+  groups: [
+    { cat: '术法', items: [
+      { key:'logo', name:'隐灵术', unlockMsg:'破除封印！获得【隐灵术】', relockMsg:'收灵破法重修' },
+      { key:'almanac', name:'轮回术', unlockMsg:'破除封印！获得【轮回术】', relockMsg:'收灵破法重修' },
+      { key:'奔跑', name:'固魂大法', unlockMsg:'破除封印！获得【固魂大法】', relockMsg:'收灵破法重修' }
+    ]},
+    { cat: '小世界', items: [
+      { key:'story', name:'小红故事', unlockMsg:'破除迷雾结界！发现【红光秘境】', relockMsg:'撤回结界入口破锁真气' },
+      { key:'yedu', name:'夜读', unlockMsg:'破除迷雾结界！发现【心灵秘境】', relockMsg:'撤回结界入口破锁真气' },
+      { key:'zjsz', name:'照见苏州', unlockMsg:'破除迷雾结界！发现【视界秘境】', relockMsg:'撤回结界入口破锁真气' },
+      { key:'news', name:'新闻', unlockMsg:'破除迷雾结界！发现【正能光量小世界】', relockMsg:'撤回结界入口破锁真气' },
+      { key:'tv', name:'播霸', unlockMsg:'破除迷雾结界！发现【光怪陆离小世界】', relockMsg:'撤回结界入口破锁真气' }
+    ]},
+    { cat: '心法', items: [
+      { key:'auto', name:'吐气纳灵心法', unlockMsg:'破除禁锢！习得【吐气纳灵心法】', relockMsg:'聚灵归海' },
+      { key:'oneKey', name:'引灵入体心法', unlockMsg:'破除禁锢！习得【引灵入体心法】', relockMsg:'聚灵归海' }
+    ]}
+  ]
 };
 
 /**
