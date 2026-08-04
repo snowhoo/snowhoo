@@ -26,11 +26,12 @@
     } catch(e){ return ''; }
   }
 
-  /* ---------- 2. 发音人配置（男声在前，默认男声） ---------- */
+  /* ---------- 2. 发音人配置（默认男声；含已授权的新一代音库，切到更自然） ---------- */
   var VOICES = [
-    { key: 'aisjiuxu', name: '许久' },                  // 男声（默认）
-    { key: 'xiaoyan',  name: '晓燕' },
-    { key: 'x4_lingxiaoxuan_oral', name: '凌晓萱' }
+    { key: 'aisjiuxu', name: '许久(男)' },            // 默认：男声
+    { key: 'x4_yezi', name: '叶子' },                 // 新一代音库（女声，更自然）
+    { key: 'x4_ziwen_assist', name: '紫文' },         // 新一代音库（assist 口播风）
+    { key: 'xiaoyan', name: '晓燕' }                  // 经典女声
   ];
 
   /* ---------- 3. 内部状态 ---------- */
