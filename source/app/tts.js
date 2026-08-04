@@ -226,6 +226,8 @@
           common: { app_id: _deobf(TTS_KEY.appid) },
           business: {
             aue: 'lame',
+            sfl: 1,                       // 文档要求：aue=lame 时需传 sfl=1（流式 mp3）
+            tte: 'utf8',                  // 文本编码格式：必须是 utf8（与 base64 文本编码一致，否则按 GBK 解读 → 中文乱码）
             auf: 'audio/L16;rate=16000',
             vcn: VOICES[state.voice].key,
             speed: state.speed,
