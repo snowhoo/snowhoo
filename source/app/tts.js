@@ -2,11 +2,11 @@
  * tts.js — 讯飞在线语音合成朗读器（前端直连）
  * 功能：分段合成、顺序播放、连续朗读、底部悬浮控制条
  * 密钥采用混淆存储，运行时解码（提高直接复制获取门槛）
- * v2.2 — 会话令牌 + 连接管理，修复播放错乱/多次播放报错
+ * v2.3 — 全手写 UTF-8/base64 编码，不依赖 TextEncoder/btoa/atob
  * ============================================================ */
 (function(){
   'use strict';
-  console.log('[TTS] 朗读器 v2.2 已加载');
+  console.log('[TTS] 朗读器 v2.3 已加载（手写编码）');
 
   /* ---------- 1. 密钥配置（混淆存储，运行解码） ---------- */
   var TTS_KEY = {
@@ -18,9 +18,9 @@
   function _deobf(s){
     if (!s) return '';
     try {
-      var t = atob(s);
+      var t = b64Decode(s);   // 手写 base64 解码 → 字节数组
       var out = '';
-      for (var i = 0; i < t.length; i++) out += String.fromCharCode((t.charCodeAt(i) - 13) ^ 0x5A);
+      for (var i = 0; i < t.length; i++) out += String.fromCharCode((t[i] - 13) ^ 0x5A);
       return decodeURIComponent(escape(out));
     } catch(e){ return ''; }
   }
@@ -54,17 +54,71 @@
     inited: false
   };
 
-  /* ---------- 4. 讯飞鉴权 ---------- */
-  function b64(input){
-    if (typeof input === 'string') {
-      var bytes = new TextEncoder().encode(input);
-      var bin = '';
-      bytes.forEach(function(b){ bin += String.fromCharCode(b); });
-      return btoa(bin);
+  /* ---------- 4. 编码工具（纯手写，不依赖 TextEncoder/btoa/atob，兼容任意 WebView） ---------- */
+  // 手写 UTF-8 编码：字符串 → 字节数组
+  function utf8Bytes(str){
+    var b = [], i = 0;
+    while (i < str.length) {
+      var c = str.charCodeAt(i);
+      if (c < 0x80) { b.push(c); i++; }
+      else if (c < 0x800) { b.push(0xc0 | (c >> 6), 0x80 | (c & 0x3f)); i++; }
+      else if (c >= 0xd800 && c < 0xdc00 && i + 1 < str.length) {
+        var c2 = str.charCodeAt(i + 1);
+        if (c2 >= 0xdc00 && c2 < 0xe000) {
+          var cp = 0x10000 + ((c - 0xd800) << 10) + (c2 - 0xdc00);
+          b.push(0xf0 | (cp >> 18), 0x80 | ((cp >> 12) & 0x3f), 0x80 | ((cp >> 6) & 0x3f), 0x80 | (cp & 0x3f)); i += 2;
+        } else { b.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f)); i++; }
+      } else { b.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f)); i++; }
     }
-    var bin2 = '';
-    input.forEach(function(b){ bin2 += String.fromCharCode(b); });
-    return btoa(bin2);
+    return b;
+  }
+
+  var B64CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  // 手写 base64 编码：字节数组 → base64 字符串
+  function b64Encode(bytes){
+    var out = '', i = 0;
+    for (; i + 2 < bytes.length; i += 3) {
+      var n = (bytes[i] << 16) | (bytes[i+1] << 8) | bytes[i+2];
+      out += B64CHARS[(n >> 18) & 63] + B64CHARS[(n >> 12) & 63] + B64CHARS[(n >> 6) & 63] + B64CHARS[n & 63];
+    }
+    var rem = bytes.length - i;
+    if (rem === 1) {
+      var n1 = bytes[i] << 16;
+      out += B64CHARS[(n1 >> 18) & 63] + B64CHARS[(n1 >> 12) & 63] + '==';
+    } else if (rem === 2) {
+      var n2 = (bytes[i] << 16) | (bytes[i+1] << 8);
+      out += B64CHARS[(n2 >> 18) & 63] + B64CHARS[(n2 >> 12) & 63] + B64CHARS[(n2 >> 6) & 63] + '=';
+    }
+    return out;
+  }
+  // 手写 base64 解码：base64 字符串 → 字节数组（自动跳过空白与 %XX）
+  function b64Decode(b64str){
+    var s = String(b64str);
+    if (s.indexOf('%') !== -1) { try { s = decodeURIComponent(s); } catch(e){} }
+    s = s.replace(/[\r\n\s]/g, '');
+    var bytes = [], i = 0;
+    for (; i < s.length; i += 4) {
+      var c1 = B64CHARS.indexOf(s[i]);
+      var c2 = B64CHARS.indexOf(s[i+1]);
+      var c3 = B64CHARS.indexOf(s[i+2]);
+      var c4 = B64CHARS.indexOf(s[i+3]);
+      if (c1 < 0 || c2 < 0) break;
+      var n = (c1 << 18) | (c2 << 12);
+      if (c3 >= 0) n |= (c3 << 6);
+      if (c4 >= 0) n |= c4;
+      bytes.push((n >> 16) & 255);
+      if (c3 >= 0) bytes.push((n >> 8) & 255);
+      if (c4 >= 0) bytes.push(n & 255);
+    }
+    return bytes;
+  }
+
+  // 通用 base64（字符串 → base64；或字节数组 → base64）
+  function b64(input){
+    if (typeof input === 'string') return b64Encode(utf8Bytes(input));
+    var arr = [];
+    for (var i = 0; i < input.length; i++) arr.push(input[i]);
+    return b64Encode(arr);
   }
 
   // 纯 JS HMAC-SHA256 → base64
@@ -126,9 +180,7 @@
     for (var i = 0; i < 64; i++) { ipad.push((i<keyBytes.length?keyBytes[i]:0)^0x36); opad.push((i<keyBytes.length?keyBytes[i]:0)^0x5c); }
     var inner = sha256Bytes(ipad.concat(toBytes(msgStr)));
     var outer = sha256Bytes(opad.concat(inner));
-    var bin = '';
-    for (var j = 0; j < outer.length; j++) bin += String.fromCharCode(outer[j]);
-    return btoa(bin);
+    return b64Encode(outer);   // 手写 base64，不依赖 btoa
   }
 
   function buildWsUrl(){
@@ -198,11 +250,9 @@
           clearTimeout(timeout);
           cleanup();
           if (!audioB64) { reject(new Error('无音频返回')); return; }
-          if (audioB64.indexOf('%') !== -1) { try { audioB64 = decodeURIComponent(audioB64); } catch(e){} }
-          audioB64 = audioB64.replace(/[\r\n\s]/g, '');
-          var bin = atob(audioB64);
-          var arr = new Uint8Array(bin.length);
-          for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          var audioBytes = b64Decode(audioB64);   // 手写 base64 解码（内部处理 %XX 与空白）
+          var arr = new Uint8Array(audioBytes.length);
+          for (var i = 0; i < audioBytes.length; i++) arr[i] = audioBytes[i];
           resolve(URL.createObjectURL(new Blob([arr], { type: 'audio/mp3' })));
         }
       };
@@ -217,7 +267,11 @@
   }
 
   /* ---------- 6. 文本智能分段（兼容无 lookbehind 的 WebView） ---------- */
-  function utf8Len(s){ return new TextEncoder().encode(s).length; }
+  // 单次合成上限：讯飞实测 800字(1872字节) 7s 成功、1300字 超时(10222)，
+  // 保守限制每段 ≤ 1200 字节（约 400 汉字），保证合成快速成功
+  var SEG_MAX = 1200;
+
+  function utf8Len(s){ return utf8Bytes(s).length; }
 
   function splitText(text){
     var segs = [];
@@ -226,7 +280,7 @@
     for (var p = 0; p < paras.length; p++) {
       var para = paras[p].replace(/\s+/g, ' ').trim();
       if (!para) continue;
-      if (utf8Len(para) > 7000) {
+      if (utf8Len(para) > SEG_MAX) {
         // 按句子拆（带捕获组保留标点），兼容不支持 lookbehind 的老 WebView
         var parts = para.split(/([。！？!?；;])/);
         var sentences = [];
@@ -237,7 +291,7 @@
         for (var s = 0; s < sentences.length; s++) {
           var sn = sentences[s].trim();
           if (!sn) continue;
-          if (utf8Len(buf + sn) > 7000) {
+          if (utf8Len(buf + sn) > SEG_MAX) {
             if (buf) segs.push(buf);
             buf = sn;
           } else {
@@ -252,9 +306,9 @@
     var final = [];
     for (var i = 0; i < segs.length; i++) {
       var seg = segs[i];
-      while (utf8Len(seg) > 7000) {
+      while (utf8Len(seg) > SEG_MAX) {
         var cut = Math.floor(seg.length * 0.9);
-        while (cut > 0 && utf8Len(seg.slice(0, cut)) > 7000) cut--;
+        while (cut > 0 && utf8Len(seg.slice(0, cut)) > SEG_MAX) cut--;
         final.push(seg.slice(0, cut));
         seg = seg.slice(cut);
       }
@@ -498,6 +552,11 @@
       state.itemStart = itemStart;
       state.cur = 0;
       state.curItem = 0;
+      // 诊断日志：确认发送给讯飞的文本是否正确
+      console.log('[TTS] speak 队列 ' + queue.length + ' 段');
+      for (var di = 0; di < Math.min(queue.length, 3); di++) {
+        console.log('[TTS] 段' + (di + 1) + ': ' + queue[di].text.slice(0, 50));
+      }
       initBar();
       showBar();
       updateUI();
