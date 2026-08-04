@@ -595,21 +595,22 @@ function createCards() {
       track.className = 'gallery-track';
       post.images.forEach(function(src, idx) {
         const img = document.createElement('img');
-        img.src = 'https://picsum.photos/seed/reader_' + i + '_' + idx + '/800/400';
+        const picsumUrl = 'https://picsum.photos/seed/reader_' + i + '_' + idx + '/800/400';
+        // 懒加载：不立即设 src（避免全量建卡时并发拉取所有文章图片），
+        // 由 loadNearbyImages 在翻到邻近卡片时加载（真图优先，失败回退占位图）
         img.alt = post.title;
         img.draggable = false;
+        img.loading = 'lazy';
         img.style.cursor = 'zoom-in';
         img.dataset.listIdx = idx;
+        img.dataset.picsum = picsumUrl;
+        img.dataset.src = resolveImageUrl(src);
+        img.onerror = function() { if (this.src !== picsumUrl) this.src = picsumUrl; };
         img.onclick = function(e) {
           e.stopPropagation();
           var list = post.images.map(function(s) { return resolveImageUrl(s); });
           openLightbox(list, idx);
         };
-        // Load real image
-        img.dataset.src = resolveImageUrl(src);
-        var loader = new Image();
-        loader.onload = function() { img.src = img.dataset.src; };
-        loader.src = img.dataset.src;
         track.appendChild(img);
       });
       galleryDiv.appendChild(track);
@@ -697,10 +698,13 @@ function createCards() {
       const track = document.createElement('div');
       track.className = 'gallery-track';
       const img = document.createElement('img');
-      img.src = 'https://picsum.photos/seed/reader_' + i + '/800/400';
+      const picsumUrl = 'https://picsum.photos/seed/reader_' + i + '/800/400';
+      // 懒加载（无真图：用占位图，邻近时加载）
       img.alt = post.title;
       img.draggable = false;
+      img.loading = 'lazy';
       img.style.cursor = 'zoom-in';
+      img.dataset.picsum = picsumUrl;
       img.onclick = function(e) {
         e.stopPropagation();
         openLightbox([img.src], 0);
@@ -714,17 +718,42 @@ function createCards() {
     titleDiv.className = 'card-title';
     titleDiv.innerHTML = '<h1>' + escapeHtml(post.title) + '</h1><div class="meta">' + post.date + '</div>';
 
-    // Content
+    // Content（正文懒渲染：翻到该篇才由 renderBody 填充，避免全量渲染所有文章正文 DOM）
     const contentDiv = document.createElement('div');
     contentDiv.className = 'card-content';
-    var bodyHtml = mdToText(post.content);
-    if (!bodyHtml.replace(/<[^>]+>/g, '').trim()) bodyHtml = '<p class="no-content">\u6682\u65E0\u6B63\u6587<br><br>\u6709\u65F6\u5019<br>\u9002\u5F53\u7559\u767D\u6BD4\u6587\u5B57<br>\u66F4\u5177\u5185\u6DB5<br>\u800C\u6C89\u9ED8\u6BD4\u5450\u558A<br>\u66F4\u5F70\u663E\u529B\u91CF</p>';
-    contentDiv.innerHTML = '<div class="body">' + bodyHtml + '</div>';
+    contentDiv.innerHTML = '<div class="body"></div>';
 
     card.appendChild(galleryDiv);
     card.appendChild(titleDiv);
     card.appendChild(contentDiv);
     app.appendChild(card);
+  });
+}
+
+// 渲染当前卡片正文（幂等；markdown → 正文；无正文用占位文案）
+function renderBody(card) {
+  var body = card.querySelector('.card-content .body');
+  if (!body || body.getAttribute('data-rendered')) return;
+  var posts = getFilteredPosts();
+  var post = posts[parseInt(card.dataset.index, 10)];
+  if (!post) return;
+  body.setAttribute('data-rendered', '1');
+  var bodyHtml = mdToText(post.content);
+  if (!bodyHtml.replace(/<[^>]+>/g, '').trim()) bodyHtml = '<p class="no-content">\u6682\u65E0\u6B63\u6587<br><br>\u6709\u65F6\u5019<br>\u9002\u5F53\u7559\u767D\u6BD4\u6587\u5B57<br>\u66F4\u5177\u5185\u6DB5<br>\u800C\u6C89\u9ED8\u6BD4\u5450\u558A<br>\u66F4\u5F70\u663E\u529B\u91CF</p>';
+  body.innerHTML = bodyHtml;
+}
+
+// 懒加载当前及相邻卡片图片（±1：真图优先，无真图用占位图；其余不加载）
+function loadNearbyImages() {
+  var imgs = app.querySelectorAll('.card .image-gallery img');
+  imgs.forEach(function(img) {
+    var card = img.closest('.card');
+    if (!card) return;
+    var idx = parseInt(card.dataset.index, 10);
+    if (idx >= currentIndex - 1 && idx <= currentIndex + 1) {
+      var target = img.dataset.src || img.dataset.picsum || '';
+      if (target && img.src !== target) img.src = target;
+    }
   });
 }
 
@@ -771,6 +800,9 @@ function updateCards() {
     hintEl.classList.remove('hidden');
     setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);
   }
+  // 懒渲染当前卡片正文 + 懒加载邻近图片
+  if (cards[currentIndex]) renderBody(cards[currentIndex]);
+  loadNearbyImages();
   var posts = getFilteredPosts();
   if (posts[currentIndex]) document.title = '小红故事|Blog – ' + escapeHtml(posts[currentIndex].title);
 }

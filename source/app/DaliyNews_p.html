@@ -295,6 +295,22 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   });
 
   // ===== 数据加载 =====
+  var firstShown = false;   // 首屏是否已提前渲染（不等全部栏目）
+  // 渲染首屏（综合新闻）+ 隐藏启动遮罩
+  function showFirstScreen() {
+    if (firstShown) return;
+    firstShown = true;
+    var d = new Date(parseInt(currentDateStr.slice(0,4)), parseInt(currentDateStr.slice(4,6))-1, parseInt(currentDateStr.slice(6,8)));
+    var dStr = d.getFullYear() + '\u5E74' + (d.getMonth()+1) + '\u6708' + d.getDate() + '\u65E5';
+    var weekdays = ['\u5468\u65E5','\u5468\u4E00','\u5468\u4E8C','\u5468\u4E09','\u5468\u56DB','\u5468\u4E94','\u5468\u516D'];
+    dateLabel.textContent = dStr + ' ' + weekdays[d.getDay()];
+    renderTabs();
+    renderList(0);
+    document.title = '小红故事|新闻 – ' + DISPLAY[0];
+    loadingEl.classList.add('hide');
+    setTimeout(function() { loadingEl.remove(); }, 500);
+  }
+
   function loadAll() {
     loadingCount = COLUMNS.length;
     COLUMNS.forEach(function(col) {
@@ -317,18 +333,16 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
   function checkLoaded() {
     loadingCount--;
-    if (loadingCount > 0) return;
+    if (loadingCount > 0) {
+      // 综合新闻已就绪 → 不等其余栏目，立即渲染首屏（其余在后台补载）
+      if (!firstShown && allData[COLUMNS[0]]) showFirstScreen();
+      return;
+    }
     loaded = true;
-    // 设置日期（使用当前选中的日期）
-    var d = new Date(parseInt(currentDateStr.slice(0,4)), parseInt(currentDateStr.slice(4,6))-1, parseInt(currentDateStr.slice(6,8)));
-    var dStr = d.getFullYear() + '\u5E74' + (d.getMonth()+1) + '\u6708' + d.getDate() + '\u65E5';
-    var weekdays = ['\u5468\u65E5','\u5468\u4E00','\u5468\u4E8C','\u5468\u4E09','\u5468\u56DB','\u5468\u4E94','\u5468\u516D'];
-    dateLabel.textContent = dStr + ' ' + weekdays[d.getDay()];
-    renderTabs();
-    renderList(0);
-    document.title = '小红故事|新闻 – ' + DISPLAY[0];
-    loadingEl.classList.add('hide');
-    setTimeout(function() { loadingEl.remove(); }, 500);
+    showFirstScreen();
+    // 后台补载完成：若用户已切到其他栏目且当时列表为空 → 刷新当前栏目
+    var cur = allData[COLUMNS[currentColumn]] || [];
+    if (!cur.length) renderList(currentColumn);
   }
 
   // ===== 标签栏 =====
