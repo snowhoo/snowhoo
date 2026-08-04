@@ -1143,8 +1143,14 @@ main();
         var div = document.createElement('div');
         div.innerHTML = html;
         var text = (div.textContent || '').replace(/\u00a0/g, ' ').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
-        if (!text) continue;
-        items.push({ title: p.title || '', text: (p.title ? p.title + '。' : '') + text });
+        // 无正文 → 用与页面一致的占位文案；标题始终朗读，不再整篇跳过
+        if (!text) {
+          text = '暂无正文。有时候，适当留白比文字更具内涵，而沉默比呐喊更彰显力量。';
+        }
+        var title = p.title || '';
+        var t = (title ? title + '。' : '') + text;
+        if (!t.trim()) continue;
+        items.push({ title: title, text: t });
       }
       return { items: items, label: '小红故事' };
     });

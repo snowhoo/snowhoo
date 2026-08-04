@@ -43,6 +43,7 @@
     voice: 0,
     speed: 50,
     audio: null,
+    audioEl: null,    // 持久复用的 Audio 元素（避免每次 new Audio 被自动播放策略拦截）
     playing: false,
     paused: false,
     fetching: false,  // 当前段合成/预取进行中
@@ -382,24 +383,48 @@
   var _audioUnlocked = false;
   function unlockAudio(){
     if (_audioUnlocked) return;
+    _audioUnlocked = true;
+    // ① Web Audio API 解锁（iOS 有效）
     try {
       var AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) { _audioUnlocked = true; return; }
-      var ctx = new AC();
-      var buf = ctx.createBuffer(1, 1, 22050);
-      var src = ctx.createBufferSource();
-      src.buffer = buf;
-      src.connect(ctx.destination);
-      src.start(0);
-      if (ctx.state === 'suspended') { try{ ctx.resume(); }catch(e){} }
-      _audioUnlocked = true;
-    } catch(e) { _audioUnlocked = true; }
+      if (AC) {
+        var ctx = new AC();
+        var buf = ctx.createBuffer(1, 1, 22050);
+        var src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        src.start(0);
+        if (ctx.state === 'suspended') { try{ ctx.resume(); }catch(e){} }
+      }
+    } catch(e) {}
+    // ② HTMLAudioElement 静音播放解锁（Android WebView 有效）
+    try {
+      var silent = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
+      silent.muted = true;
+      var pp = silent.play();
+      if (pp && pp.catch) pp.catch(function(){});
+    } catch(e) {}
+  }
+
+  // 获取持久复用的 Audio 元素：只创建一次，后续改 src 复用（多数 WebView 对重复 new Audio 每次都要手势）
+  function getAudioEl(){
+    if (!state.audioEl) {
+      var a = new Audio();
+      try { a.preload = 'auto'; } catch(e){}
+      try { a.setAttribute('playsinline', ''); } catch(e){}
+      try { a.setAttribute('webkit-playsinline', ''); } catch(e){}
+      state.audioEl = a;
+    }
+    return state.audioEl;
   }
 
   function startAudio(url, idx, sid){
-    if (state.audio) { try{ state.audio.pause(); state.audio.onended = null; }catch(e){} state.audio = null; }
-    var a = new Audio(url);
+    var a = getAudioEl();
     state.audio = a;
+    a.onended = null;
+    a.onerror = null;
+    try { a.pause(); } catch(e){}
+    a.src = url;
     a.onended = function(){
       URL.revokeObjectURL(url);
       if (sid !== state.session) return; // 会话已失效（已被 stop/新 speak 接管）
@@ -427,12 +452,14 @@
     state.playing = true;
     state.paused = false;
     updateUI();
-    // 播放：移动端自动播放可能被拦截 → 延迟重试一次；仍失败则暂停并提示（不假播放）
+    // 播放：移动端自动播放可能被拦截 → 递增间隔重试 2 次；仍失败则暂停并提示（不假播放）
     function doPlay(attempt){
       if (sid !== state.session) return;
-      a.play().catch(function(){
-        if (attempt < 1) {
-          setTimeout(function(){ if (sid === state.session) doPlay(attempt + 1); }, 350);
+      var p;
+      try { p = a.play(); } catch(e) { p = Promise.reject(e); }
+      if (p && p.catch) p.catch(function(){
+        if (attempt < 2) {
+          setTimeout(function(){ if (sid === state.session) doPlay(attempt + 1); }, attempt === 0 ? 350 : 900);
         } else {
           if (sid !== state.session) return;
           showToast('自动播放被拦截，点 ▶ 继续');
@@ -445,12 +472,15 @@
   }
 
   function pauseResume(){
-    if (!state.audio) return;
+    var a = state.audioEl || state.audio;
+    if (!a) return;
     if (state.paused) {
-      state.audio.play().catch(function(){});
+      var p;
+      try { p = a.play(); } catch(e){ p = Promise.reject(e); }
+      if (p && p.catch) p.catch(function(){});
       state.paused = false;
     } else {
-      state.audio.pause();
+      try { a.pause(); } catch(e){}
       state.paused = true;
     }
     updateUI();
@@ -461,7 +491,11 @@
     // 关闭所有进行中的 WebSocket
     for (var k in state.activeWs) { try{ state.activeWs[k].close(); }catch(e){} }
     state.activeWs = {};
-    if (state.audio) { try{ state.audio.pause(); state.audio.onended = null; }catch(e){} state.audio = null; }
+    // 暂停持久音频元素（复用不销毁）
+    if (state.audioEl) {
+      try { state.audioEl.pause(); state.audioEl.onended = null; state.audioEl.onerror = null; state.audioEl.removeAttribute('src'); }catch(e){}
+    }
+    state.audio = null;
     if (state.prefetched) { URL.revokeObjectURL(state.prefetched); state.prefetched = null; }
     state.prefetchedIdx = -1;
     state.playing = false; state.paused = false;
@@ -557,7 +591,8 @@
       if (state.playing) pauseResume();
       else if (state.cur >= 0) {
         state.paused = false;
-        if (state.audio) { state.audio.play().catch(function(){}); updateUI(); }
+        var pa = state.audioEl || state.audio;
+        if (pa) { var pp; try{ pp = pa.play(); }catch(e){ pp = Promise.reject(e); } if (pp && pp.catch) pp.catch(function(){}); updateUI(); }
         else playSegment(state.cur);
       }
     }
