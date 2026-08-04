@@ -1,12 +1,13 @@
 /* ============================================================
  * tts.js — 讯飞在线语音合成朗读器（前端直连）
- * 功能：分段合成、顺序播放、连续朗读、底部悬浮控制条
+ * 功能：分段合成、顺序播放、连续朗读、底部状态栏内嵌控制条
  * 密钥采用混淆存储，运行时解码（提高直接复制获取门槛）
- * v2.3 — 全手写 UTF-8/base64 编码，不依赖 TextEncoder/btoa/atob
+ * v2.4 — business 补 tte:'utf8'+sfl:1（修复中文乱码）；默认男声；
+ *        控制条内嵌底部状态栏；分段调小加速加载；移除调试面板
  * ============================================================ */
 (function(){
   'use strict';
-  console.log('[TTS] 朗读器 v2.3 已加载（手写编码）');
+  console.log('[TTS] 朗读器 v2.4 已加载');
 
   /* ---------- 1. 密钥配置（混淆存储，运行解码） ---------- */
   var TTS_KEY = {
@@ -25,10 +26,10 @@
     } catch(e){ return ''; }
   }
 
-  /* ---------- 2. 发音人配置 ---------- */
+  /* ---------- 2. 发音人配置（男声在前，默认男声） ---------- */
   var VOICES = [
+    { key: 'aisjiuxu', name: '许久' },                  // 男声（默认）
     { key: 'xiaoyan',  name: '晓燕' },
-    { key: 'aisjiuxu', name: '许久' },
     { key: 'x4_lingxiaoxuan_oral', name: '凌晓萱' }
   ];
 
@@ -51,7 +52,9 @@
     wsSeq: 0,
     native: false,
     el: null,
-    inited: false
+    inited: false,
+    mountEl: null,   // 控制条挂载容器（页面底部状态栏）
+    provider: null   // 页面提供朗读内容：fn() → {items, label} 或 items[]
   };
 
   /* ---------- 4. 编码工具（纯手写，不依赖 TextEncoder/btoa/atob，兼容任意 WebView） ---------- */
@@ -269,9 +272,10 @@
   }
 
   /* ---------- 6. 文本智能分段（兼容无 lookbehind 的 WebView） ---------- */
-  // 单次合成上限：讯飞实测 800字(1872字节) 7s 成功、1300字 超时(10222)，
-  // 保守限制每段 ≤ 1200 字节（约 400 汉字），保证合成快速成功
-  var SEG_MAX = 1200;
+  // 单次合成上限：讯飞实测 800字(1872字节) 7s 成功、1300字 超时(10222)。
+  // 每段 ≤ 500 字节（约 160 汉字）：优先按文章自然段落分段（短段落不拆），
+  // 长段落按句再拆，保证单段合成快速返回、加载更快。
+  var SEG_MAX = 500;
 
   function utf8Len(s){ return utf8Bytes(s).length; }
 
@@ -319,38 +323,6 @@
     return final;
   }
 
-  /* ---------- 6.5 调试面板：把发送给讯飞的文本实时显示在前端（供确认内容是否正确） ---------- */
-  function dbgShow(text, idx){
-    var el = document.getElementById('ttsDbg');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'ttsDbg';
-      el.style.cssText = 'position:fixed;top:8px;left:8px;right:8px;z-index:30000;background:rgba(10,10,12,.92);color:#7dff8a;font-size:11px;line-height:1.55;padding:8px 10px;border-radius:8px;max-height:45vh;overflow-y:auto;white-space:pre-wrap;word-break:break-all;font-family:monospace;box-shadow:0 4px 18px rgba(0,0,0,.5)';
-      document.body.appendChild(el);
-    }
-    el.style.display = 'block';
-    // 前 12 个字符的 Unicode 码点（十六进制）——判断字符串本身是否正常
-    var cps = [];
-    var max = Math.min(text.length, 12);
-    for (var i = 0; i < max; i++) cps.push(text.charCodeAt(i).toString(16).toUpperCase());
-    var b64v = b64(text); // 实际发送给讯飞的 base64（手写 UTF-8 编码）
-    // 关闭按钮
-    var close = document.createElement('span');
-    close.textContent = '✕';
-    close.style.cssText = 'float:right;color:#ff6b6b;cursor:pointer;font-size:14px;margin-left:10px;font-weight:bold';
-    close.onclick = function(){ el.style.display = 'none'; };
-    el.innerHTML = '';
-    el.appendChild(close);
-    var t = document.createElement('div');
-    t.textContent =
-      'TTS ' + (window.TTS && TTS.version ? TTS.version : '?') +
-      ' | 段 ' + (idx + 1) + '/' + state.queue.length + ' | 发送字节 ' + utf8Len(text) +
-      '\n码点(前12): ' + cps.join(' ') +
-      '\nbase64前60: ' + b64v.slice(0, 60) +
-      '\n────────── 发送给讯飞的文本 ──────────\n' + text;
-    el.appendChild(t);
-  }
-
   /* ---------- 7. 播放控制（会话令牌防错乱） ---------- */
   function playSegment(idx){
     if (!state.queue.length) return;
@@ -368,8 +340,6 @@
   function fetchAndPlay(idx){
     var sid = state.session;
     state.fetching = true;
-    // 调试：把发送给讯飞的文本显示在前端，供确认内容是否正确
-    try { dbgShow(state.queue[idx].text, idx); } catch(e) {}
     // 合成当前段
     synth(state.queue[idx].text).then(function(url){
       if (sid !== state.session) { URL.revokeObjectURL(url); return; } // 会话已失效，丢弃
@@ -450,8 +420,7 @@
     state.queue = []; state.cur = -1; state.curItem = -1; state.itemStart = [];
     state.fetching = false;
     if (state.native) { try{ speechSynthesis.cancel(); }catch(e){} state.native = false; }
-    updateUI();
-    hideBar();
+    updateUI();   // 控制条常驻，仅刷新为"已停止"
   }
 
   function finishAll(){ stop(); }
@@ -476,25 +445,21 @@
     updateUI();
   }
 
-  /* ---------- 9. 控制条 UI ---------- */
+  /* ---------- 9. 控制条 UI（内嵌底部状态栏，常驻） ---------- */
+  // 页面调用 TTS.mount(container) 把朗读控件挂到底部状态栏；未指定时挂 body 底部
   function initBar(){
-    if (state.inited) return;
+    if (state.inited && state.el) return;
     state.inited = true;
     var el = document.createElement('div');
     el.id = 'ttsBar';
-    el.style.cssText = 'position:fixed;left:0;right:0;bottom:52px;z-index:29990;display:none;justify-content:center;padding:0 12px;pointer-events:none;box-sizing:border-box';
+    el.style.cssText = 'display:flex;align-items:center;gap:2px;height:44px;flex-shrink:0;user-select:none;-webkit-user-select:none';
     el.innerHTML =
-      '<div style="pointer-events:auto;background:#1c1c1e;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:8px 14px;display:flex;align-items:center;gap:10px;max-width:100%;box-shadow:0 6px 24px rgba(0,0,0,.35)">' +
-        '<button data-act="prev" style="background:none;border:none;color:#fff;font-size:14px;cursor:pointer;padding:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center">⏮</button>' +
-        '<button data-act="play" style="background:#ff8c00;border:none;border-radius:50%;color:#fff;font-size:15px;cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center;padding:0">▶</button>' +
-        '<button data-act="next" style="background:none;border:none;color:#fff;font-size:14px;cursor:pointer;padding:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center">⏭</button>' +
-        '<button data-act="stop" style="background:none;border:none;color:#fff;font-size:13px;cursor:pointer;padding:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center">⏹</button>' +
-        '<span data-role="info" style="color:#ddd;font-size:12px;min-width:70px;text-align:center;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">准备朗读</span>' +
-        '<button data-act="speed" style="background:none;border:none;color:#ffb74d;font-size:12px;cursor:pointer;padding:2px 6px;white-space:nowrap">1.0x</button>' +
-        '<button data-act="voice" style="background:none;border:none;color:#a5d6ff;font-size:12px;cursor:pointer;padding:2px 6px;white-space:nowrap">晓燕</button>' +
-        '<button data-act="close" style="background:none;border:none;color:#999;font-size:12px;cursor:pointer;padding:2px 6px">✕</button>' +
-      '</div>';
-    document.body.appendChild(el);
+      '<button data-act="play" title="播放/暂停朗读" style="background:none;border:none;cursor:pointer;color:var(--tts-accent,#ff8c00);font-size:17px;line-height:1;padding:0 6px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>' +
+      '<button data-act="stop" title="停止" style="background:none;border:none;cursor:pointer;color:#999;font-size:14px;line-height:1;padding:0 5px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0">⏹</button>' +
+      '<button data-act="voice" title="发音人（点按切换）" style="background:none;border:none;cursor:pointer;color:var(--tts-accent,#a5d6ff);font-size:12px;padding:0 4px;height:34px;white-space:nowrap;flex-shrink:0">' + VOICES[state.voice].name + '</button>' +
+      '<button data-act="speed" title="语速（点按切换）" style="background:none;border:none;cursor:pointer;color:var(--tts-accent,#ffb74d);font-size:12px;padding:0 4px;height:34px;white-space:nowrap;flex-shrink:0">1.0x</button>';
+    var container = state.mountEl || document.body;
+    container.appendChild(el);
     state.el = el;
 
     el.addEventListener('click', function(e){
@@ -502,19 +467,25 @@
       if (!btn) return;
       var act = btn.getAttribute('data-act');
       if (act === 'play') {
+        // 无队列（未开始朗读）→ 调用页面提供的内容函数启动朗读
+        if (!state.queue.length) {
+          if (state.provider) {
+            var r = state.provider();
+            var items = (r && r.items) ? r.items : r;
+            if (items && items.length) speak(items, { title: (r && r.label) || '' });
+          }
+          return;
+        }
         if (state.playing) pauseResume();
-        else if (state.queue.length && state.cur >= 0) {
+        else if (state.cur >= 0) {
           state.paused = false;
           if (state.audio) { state.audio.play().catch(function(){}); updateUI(); }
           else playSegment(state.cur);
         }
       }
       else if (act === 'stop') stop();
-      else if (act === 'prev') { if (state.cur > 0) playSegment(state.cur - 1); }
-      else if (act === 'next') { if (state.cur < state.queue.length - 1) playSegment(state.cur + 1); }
       else if (act === 'speed') { cycleSpeed(); }
       else if (act === 'voice') { cycleVoice(); }
-      else if (act === 'close') stop();
     });
   }
 
@@ -572,7 +543,18 @@
 
   /* ---------- 11. 对外 API ---------- */
   window.TTS = {
-    version: 'v2.3',   // 版本号：供页面在 🔊 按钮 title 显示，移动端可直接确认加载版本
+    version: 'v2.4',   // 版本号：v2.4 修复 tte 编码（中文乱码）并内嵌底部状态栏
+    // 把朗读控制条挂载到指定容器（页面底部状态栏）；容器缺省挂 body
+    mount: function(container){
+      if (container) state.mountEl = container;
+      initBar();
+      showBar();
+    },
+    // 设置朗读内容提供函数：fn() → {items:[{title,text}], label} 或 [{title,text}]
+    // 点播放按钮但未开始朗读时调用（由页面传入"构建当前文章/栏目"逻辑）
+    setProvider: function(fn){
+      state.provider = fn;
+    },
     speak: function(items, opts){
       if (!items || !items.length) return;
       stop();                 // 关闭旧会话（连接/音频/回调全部作废）

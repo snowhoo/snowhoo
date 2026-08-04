@@ -228,6 +228,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   </div>
   <div style="display:flex;align-items:center;gap:20px">
     <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
+    <div id="ttsBarMount"></div>
     <div class="page-nav-group">
       <span class="page-nav-btn" id="firstBtn">‹‹</span>
       <span class="page-btn" id="pageBtn">1</span>
@@ -1123,34 +1124,18 @@ main();
     var s = document.createElement('script');
     s.src = 'tts.js?ts=' + Date.now();
     s.onload = function(){ cb && cb(); };
-    s.onerror = function(){ /* 加载失败静默：按钮点击时 TTS 为空自动无操作 */ };
+    s.onerror = function(){ /* 加载失败静默：控制条为空自动隐藏 */ };
     document.head.appendChild(s);
   }
   loadTTS(function(){
-    // ===== 朗读入口：底部右侧浮动按钮，点击朗读当前文章（连续向后） =====
-    var btn = document.createElement('button');
-    btn.id = 'ttsReadBtn';
-    btn.textContent = '🔊';
-    btn.setAttribute('aria-label', '朗读当前文章');
-    btn.title = '朗读当前文章（连续）· ' + (window.TTS && TTS.version ? TTS.version : '加载中…');
-    btn.style.cssText = 'position:fixed;bottom:110px;right:14px;z-index:29980;width:44px;height:44px;border-radius:50%;background:#e94560;color:#fff;font-size:18px;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;transition:opacity .2s';
-    document.body.appendChild(btn);
+    // 朗读控制条挂载到底部状态栏（常驻）：▶ 播放/暂停 · ⏹ 停止 · 语速 · 发音人
+    var mount = document.getElementById('ttsBarMount');
+    if (mount) TTS.mount(mount);
 
-    // 切换到新文章时若正在朗读 → 停止（避免与正在读的内容错位）
-    var _origUpdate = window.updateCards;
-    if (typeof _origUpdate === 'function') {
-      window.updateCards = function(){
-        var r = _origUpdate.apply(this, arguments);
-        if (window.TTS && TTS.isSpeaking()) TTS.stop();
-        return r;
-      };
-    }
-
-    btn.addEventListener('click', function(){
-      if (!window.TTS) return;
-      if (TTS.isSpeaking()) { TTS.stop(); return; }
+    // 朗读内容提供函数：从当前文章开始连续向后构建朗读队列
+    TTS.setProvider(function(){
       var posts = getFilteredPosts();
-      if (!posts.length || !posts[currentIndex]) return;
+      if (!posts.length || !posts[currentIndex]) return [];
       var items = [];
       for (var i = currentIndex; i < posts.length; i++) {
         var p = posts[i];
@@ -1161,9 +1146,18 @@ main();
         if (!text) continue;
         items.push({ title: p.title || '', text: (p.title ? p.title + '。' : '') + text });
       }
-      if (!items.length) return;
-      TTS.speak(items, { title: '小红故事' });
+      return { items: items, label: '小红故事' };
     });
+
+    // 切换到新文章时若正在朗读 → 停止（避免与正在读的内容错位）
+    var _origUpdate = window.updateCards;
+    if (typeof _origUpdate === 'function') {
+      window.updateCards = function(){
+        var r = _origUpdate.apply(this, arguments);
+        if (window.TTS && TTS.isSpeaking()) TTS.stop();
+        return r;
+      };
+    }
   });
 })();
 </script>

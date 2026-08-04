@@ -221,7 +221,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   </div>
   <div style="display:flex;align-items:center;gap:20px">
     <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
-    
+    <div id="ttsBarMount"></div>
   </div>
   
   <div class="user-area" id="userArea">
@@ -783,26 +783,20 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     var s = document.createElement('script');
     s.src = 'tts.js?ts=' + Date.now();
     s.onload = function(){ cb && cb(); };
-    s.onerror = function(){ /* 加载失败静默：按钮点击时 TTS 为空自动无操作 */ };
+    s.onerror = function(){ /* 加载失败静默：控制条为空自动隐藏 */ };
     document.head.appendChild(s);
   }
   loadTTS(function(){
-    // ===== 朗读入口：底部右侧浮动按钮，朗读当前栏目（从展开项/首条开始连续向后） =====
-    var btn = document.createElement('button');
-    btn.id = 'ttsReadBtn';
-    btn.textContent = '🔊';
-    btn.setAttribute('aria-label', '朗读新闻');
-    btn.title = '朗读当前栏目新闻（连续）· ' + (window.TTS && TTS.version ? TTS.version : '加载中…');
-    btn.style.cssText = 'position:fixed;bottom:110px;right:14px;z-index:29980;width:44px;height:44px;border-radius:50%;background:#ff8c00;color:#fff;font-size:18px;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;transition:opacity .2s';
-    document.body.appendChild(btn);
+    // 朗读控制条挂载到底部状态栏（常驻）：▶ 播放/暂停 · ⏹ 停止 · 语速 · 发音人
+    var mount = document.getElementById('ttsBarMount');
+    if (mount) TTS.mount(mount);
 
-    btn.addEventListener('click', function(){
-      if (!window.TTS) return;
-      if (TTS.isSpeaking()) { TTS.stop(); return; }
-      if (!window.__newsTTSRead) return;
+    // 朗读内容提供函数：从当前展开项/首条开始连续朗读当前栏目
+    TTS.setProvider(function(){
+      if (!window.__newsTTSRead) return [];
       var data = window.__newsTTSRead();
-      if (!data || !data.items.length) return;
-      TTS.speak(data.items, { title: data.label });
+      if (!data || !data.items) return [];
+      return { items: data.items, label: data.label };
     });
   });
 })();
