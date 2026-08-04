@@ -317,6 +317,38 @@
     return final;
   }
 
+  /* ---------- 6.5 调试面板：把发送给讯飞的文本实时显示在前端（供确认内容是否正确） ---------- */
+  function dbgShow(text, idx){
+    var el = document.getElementById('ttsDbg');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'ttsDbg';
+      el.style.cssText = 'position:fixed;top:8px;left:8px;right:8px;z-index:30000;background:rgba(10,10,12,.92);color:#7dff8a;font-size:11px;line-height:1.55;padding:8px 10px;border-radius:8px;max-height:45vh;overflow-y:auto;white-space:pre-wrap;word-break:break-all;font-family:monospace;box-shadow:0 4px 18px rgba(0,0,0,.5)';
+      document.body.appendChild(el);
+    }
+    el.style.display = 'block';
+    // 前 12 个字符的 Unicode 码点（十六进制）——判断字符串本身是否正常
+    var cps = [];
+    var max = Math.min(text.length, 12);
+    for (var i = 0; i < max; i++) cps.push(text.charCodeAt(i).toString(16).toUpperCase());
+    var b64v = b64(text); // 实际发送给讯飞的 base64（手写 UTF-8 编码）
+    // 关闭按钮
+    var close = document.createElement('span');
+    close.textContent = '✕';
+    close.style.cssText = 'float:right;color:#ff6b6b;cursor:pointer;font-size:14px;margin-left:10px;font-weight:bold';
+    close.onclick = function(){ el.style.display = 'none'; };
+    el.innerHTML = '';
+    el.appendChild(close);
+    var t = document.createElement('div');
+    t.textContent =
+      'TTS ' + (window.TTS && TTS.version ? TTS.version : '?') +
+      ' | 段 ' + (idx + 1) + '/' + state.queue.length + ' | 发送字节 ' + utf8Len(text) +
+      '\n码点(前12): ' + cps.join(' ') +
+      '\nbase64前60: ' + b64v.slice(0, 60) +
+      '\n────────── 发送给讯飞的文本 ──────────\n' + text;
+    el.appendChild(t);
+  }
+
   /* ---------- 7. 播放控制（会话令牌防错乱） ---------- */
   function playSegment(idx){
     if (!state.queue.length) return;
@@ -334,6 +366,8 @@
   function fetchAndPlay(idx){
     var sid = state.session;
     state.fetching = true;
+    // 调试：把发送给讯飞的文本显示在前端，供确认内容是否正确
+    try { dbgShow(state.queue[idx].text, idx); } catch(e) {}
     // 合成当前段
     synth(state.queue[idx].text).then(function(url){
       if (sid !== state.session) { URL.revokeObjectURL(url); return; } // 会话已失效，丢弃
