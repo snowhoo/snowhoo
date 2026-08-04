@@ -298,7 +298,7 @@
       console.warn('[TTS] 合成失败:', e);
       state.fetching = false;
       showToast('语音合成失败，已切换系统语音');
-      fallbackNative(idx); // 讯飞失败降级系统 TTS
+      fallbackNative(idx, '讯飞合成失败：' + (e && e.message ? e.message : e)); // 讯飞失败降级系统 TTS
       return;
     }
   }
@@ -357,8 +357,14 @@
   }
 
   /* ---------- 8. 系统 TTS 降级（讯飞未配置/失败时） ---------- */
-  function fallbackNative(idx){
-    if (!('speechSynthesis' in window)) { showToast('当前环境不支持语音朗读'); stop(); return; }
+  function fallbackNative(idx, reason){
+    if (!('speechSynthesis' in window)) {
+      // 系统语音也没有 → 明确提示失败原因，便于定位
+      console.warn('[TTS] 降级失败, 无 speechSynthesis. 原因:', reason || '未知');
+      showToast('朗读不可用：' + (reason || '当前环境不支持语音朗读'));
+      stop();
+      return;
+    }
     state.native = true;
     state.playing = true; state.paused = false;
     var u = new SpeechSynthesisUtterance(state.queue[idx].text);
@@ -484,7 +490,7 @@
       // 讯飞密钥未配置 → 直接系统 TTS
       if (!_deobf(TTS_KEY.appid) || !_deobf(TTS_KEY.apikey) || !_deobf(TTS_KEY.apisecret)) {
         showToast('讯飞未配置，使用系统语音');
-        fallbackNative(0);
+        fallbackNative(0, '讯飞密钥未配置');
         return;
       }
       fetchAndPlay(0);
