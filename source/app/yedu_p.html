@@ -325,12 +325,22 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         return r.json();
       })
       .then(function(files) {
-        return Promise.all(files.map(function(f) {
-          return fetch(basePath + 'yedu_data/' + f).then(function(r) {
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            return r.text();
+        // 分批并发拉取（每批 6 个，防一次性 80+ 请求挤爆同域连接池）
+        var BATCH = 6;
+        var results = [];
+        function fetchBatch(start) {
+          if (start >= files.length) return Promise.resolve(results);
+          return Promise.all(files.slice(start, start + BATCH).map(function(f) {
+            return fetch(basePath + 'yedu_data/' + f).then(function(r) {
+              if (!r.ok) throw new Error('HTTP ' + r.status);
+              return r.text();
+            });
+          })).then(function(arr) {
+            results = results.concat(arr);
+            return fetchBatch(start + BATCH);
           });
-        }));
+        }
+        return fetchBatch(0);
       })
       .then(function(texts) {
         texts.forEach(function(text) {
@@ -400,10 +410,13 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       const imgSrc = post.coverSrc || '';
       const picsumUrl = 'https://picsum.photos/seed/yedu_' + i + '/800/400';
       const img = document.createElement('img');
-      img.src = picsumUrl;
+      // 懒加载：不立即设置 src（避免首屏并发加载全部占位图，85 篇会拉满连接池），
+      // 仅记录占位图/真图地址，由 loadNearbyImages 在邻近当前页时再加载
       img.alt = post.title;
       img.draggable = false;
+      img.loading = 'lazy';
       img.style.cursor = 'zoom-in';
+      img.dataset.picsum = picsumUrl;
       if (imgSrc) {
         img.dataset.src = imgSrc;
         img.onerror = function() { if (this.src !== picsumUrl) this.src = picsumUrl; };
@@ -424,24 +437,34 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       const dateHtml = post.pubDate ? '<div class="meta">' + escapeHtml(post.pubDate) + '</div>' : '';
       titleDiv.innerHTML = '<h1>' + escapeHtml(post.title) + '</h1>' + dateHtml;
 
-      // Content
+      // Content（正文懒渲染：建卡时为空，翻到该篇时由 updateCards 填充，
+      // 避免一次性渲染 80+ 篇正文 DOM 拖慢首屏）
       const contentDiv = document.createElement('div');
       contentDiv.className = 'card-content';
-      
-      let paragraphsHtml = '';
-      if (post.paragraphs && post.paragraphs.length) {
-        for (let j = 0; j < post.paragraphs.length; j++) {
-          paragraphsHtml += '<p>' + post.paragraphs[j] + '</p>';
-        }
-      }
-      if (!paragraphsHtml) paragraphsHtml = '<p class="no-content">暂无正文<br><br>有时候<br>适当留白比文字<br>更具内涵<br>而沉默比呐喊<br>更彰显力量</p>';
-      contentDiv.innerHTML = '<div class="body">' + paragraphsHtml + '</div>';
+      contentDiv.innerHTML = '<div class="body"></div>';
 
       card.appendChild(coverDiv);
       card.appendChild(titleDiv);
       card.appendChild(contentDiv);
       app.appendChild(card);
     });
+  }
+
+  // 渲染当前卡片正文（幂等：已渲染跳过；无正文用占位文案）
+  function renderBody(card) {
+    var body = card.querySelector('.card-content .body');
+    if (!body || body.getAttribute('data-rendered')) return;
+    var post = articles[parseInt(card.dataset.index, 10)];
+    if (!post) return;
+    body.setAttribute('data-rendered', '1');
+    var paragraphsHtml = '';
+    if (post.paragraphs && post.paragraphs.length) {
+      for (var j = 0; j < post.paragraphs.length; j++) {
+        paragraphsHtml += '<p>' + post.paragraphs[j] + '</p>';
+      }
+    }
+    if (!paragraphsHtml) paragraphsHtml = '<p class="no-content">暂无正文<br><br>有时候<br>适当留白比文字<br>更具内涵<br>而沉默比呐喊<br>更彰显力量</p>';
+    body.innerHTML = paragraphsHtml;
   }
 
   function createPageNav() {
@@ -483,25 +506,28 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);
     }
     
+    // 懒渲染当前卡片正文（翻到哪篇渲染哪篇）
+    if (cards[currentIndex]) renderBody(cards[currentIndex]);
     // 更新音频按钮事件
     updateAudioButtons();
-    // 懒加载图片
+    // 懒加载图片（当前页及相邻卡片）
     loadNearbyImages();
     // 更新图片点击事件
     updateImageClick();
     if (articles[currentIndex]) document.title = '小红故事|夜读 – ' + escapeHtml(articles[currentIndex].title);
   }
 
-  // 懒加载当前及相邻卡片图片
+  // 懒加载当前及相邻卡片图片（±1 范围：真图优先，无真图用占位图；其余不加载）
   function loadNearbyImages() {
-    var imgs = app.querySelectorAll('.yedu-cover img[data-src]');
+    var imgs = app.querySelectorAll('.yedu-cover img');
     imgs.forEach(function(img) {
       var card = img.closest('.card');
       if (!card) return;
       var idx = parseInt(card.dataset.index, 10);
       if (idx >= currentIndex - 1 && idx <= currentIndex + 1) {
-        if (img.src !== img.dataset.src) {
-          img.src = img.dataset.src;
+        var target = img.dataset.src || img.dataset.picsum || '';
+        if (target && img.src !== target) {
+          img.src = target;
         }
       }
     });
