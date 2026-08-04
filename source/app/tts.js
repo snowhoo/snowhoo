@@ -2,13 +2,15 @@
  * tts.js — 讯飞在线语音合成朗读器（前端直连）
  * 功能：分段合成、顺序播放、连续朗读、底部固定栏第二行完整播放条
  * 密钥采用混淆存储，运行时解码（提高直接复制获取门槛）
+ * v2.7 — 播放控件全面跟随页面主题色（--tts-accent：播放/停止/进度/音色/语速）；
+ *        音色/语速由点击循环切换改为弹出菜单选择（当前项勾选高亮）；
  * v2.6 — 新增 onPlayState 播放状态钩子（播放/暂停/停止/外部中断时回调，
  *        页面据此记录"继续播放"恢复点：点击系统媒体卡片可跳回播放页位置）；
  * v2.5 — 完整播放条（▶ ⏹ 标题+进度 音色 语速）+ 首篇触发 onItemChange(0)
  * ============================================================ */
 (function(){
   'use strict';
-  console.log('[TTS] 朗读器 v2.6 已加载');
+  console.log('[TTS] 朗读器 v2.7 已加载');
 
   /* ---------- 1. 密钥配置（混淆存储，运行解码） ---------- */
   var TTS_KEY = {
@@ -611,17 +613,25 @@
       '#ttsBar .tts-btn{display:flex;align-items:center;justify-content:center;height:30px;border-radius:6px;flex-shrink:0;line-height:1}' +
       '#ttsBar .tts-btn:active{background:rgba(128,128,128,.18)}' +
       '#ttsBar .tts-play{width:34px;font-size:16px;color:var(--tts-accent,#ff8c00)}' +
-      '#ttsBar .tts-stop{width:28px;font-size:13px;color:#999}' +
+      '#ttsBar .tts-stop{width:28px;font-size:13px;color:var(--tts-accent,#ff8c00);opacity:.75}' +
       '#ttsBar .tts-info{flex:1;min-width:0;padding:0 6px;display:flex;flex-direction:column;justify-content:center;gap:3px}' +
       '#ttsBar .tts-title{font-size:12px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}' +
       '#ttsBar .tts-prog{height:3px;background:rgba(128,128,128,.18);border-radius:2px;overflow:hidden}' +
       '#ttsBar .tts-prog i{display:block;height:100%;width:0%;background:var(--tts-accent,#ff8c00);border-radius:2px;transition:width .3s}' +
-      '#ttsBar .tts-tag{height:24px;padding:0 8px;font-size:11px;border-radius:12px;flex-shrink:0;color:#555}' +
+      '#ttsBar .tts-tag{height:24px;padding:0 8px;font-size:11px;border-radius:12px;flex-shrink:0;color:var(--tts-accent,#ff8c00);opacity:.9}' +
       '#ttsBar .tts-tag:active{background:rgba(128,128,128,.18)}' +
+      '.tts-pop{position:fixed;z-index:29999;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.18);padding:4px 0;min-width:104px;display:none;overflow:hidden}' +
+      '.tts-pop.show{display:block}' +
+      '.tts-pop .tts-pop-item{padding:10px 14px;font-size:13px;color:#333;cursor:pointer;white-space:nowrap;display:flex;align-items:center;justify-content:space-between;gap:10px}' +
+      '.tts-pop .tts-pop-item:active{background:rgba(0,0,0,.06)}' +
+      '.tts-pop .tts-pop-item.sel{color:var(--tts-accent,#ff8c00);font-weight:600}' +
+      '.tts-pop .tts-pop-item .tts-pop-check{opacity:0;font-size:12px}' +
+      '.tts-pop .tts-pop-item.sel .tts-pop-check{opacity:1}' +
       '[data-theme="dark"] #ttsBar{color:#aaa}' +
       '[data-theme="dark"] #ttsBar .tts-title{color:#ddd}' +
-      '[data-theme="dark"] #ttsBar .tts-tag{color:#bbb}' +
-      '@media(prefers-color-scheme:dark){#ttsBar{color:#aaa}#ttsBar .tts-title{color:#ddd}#ttsBar .tts-tag{color:#bbb}}';
+      '[data-theme="dark"] .tts-pop{background:#1e1e1e}' +
+      '[data-theme="dark"] .tts-pop .tts-pop-item{color:#ddd}' +
+      '@media(prefers-color-scheme:dark){#ttsBar{color:#aaa}#ttsBar .tts-title{color:#ddd}.tts-pop{background:#1e1e1e}.tts-pop .tts-pop-item{color:#ddd}}';
     var st = document.createElement('style');
     st.id = 'ttsBarStyle';
     st.textContent = css;
@@ -640,8 +650,8 @@
         '<div class="tts-title" id="ttsBarTitle">语音朗读</div>' +
         '<div class="tts-prog"><i id="ttsBarProg"></i></div>' +
       '</div>' +
-      '<button class="tts-tag" data-act="voice" id="ttsBarVoice" title="发音人（点按切换）">' + VOICES[state.voice].name + '</button>' +
-      '<button class="tts-tag" data-act="speed" id="ttsBarSpeed" title="语速（点按切换）">' + (state.speed / 50).toFixed(1) + 'x</button>';
+      '<button class="tts-tag" data-act="voice" id="ttsBarVoice" title="发音人（点击选择）">' + VOICES[state.voice].name + '</button>' +
+      '<button class="tts-tag" data-act="speed" id="ttsBarSpeed" title="语速（点击选择）">' + (state.speed / 50).toFixed(1) + 'x</button>';
     var container = state.mountEl || document.body;
     container.appendChild(el);
     state.el = el;
@@ -657,6 +667,55 @@
         });
       })(acts[ai]);
     }
+
+    // ---- 音色/语速弹出选择菜单（fixed 定位，点外部关闭） ----
+    var voicePop = document.createElement('div');
+    voicePop.className = 'tts-pop';
+    voicePop.id = 'ttsVoicePop';
+    registerPop(voicePop);
+    voicePop.innerHTML = (function(){
+      var h = '';
+      for (var i = 0; i < VOICES.length; i++) {
+        h += '<div class="tts-pop-item" data-v="' + i + '"><span>' + VOICES[i].name + '</span><span class="tts-pop-check">✓</span></div>';
+      }
+      return h;
+    })();
+    document.body.appendChild(voicePop);
+    var vItems = voicePop.querySelectorAll('.tts-pop-item');
+    for (var vi = 0; vi < vItems.length; vi++) {
+      (function(item){
+        item.addEventListener('click', function(e){
+          e.stopPropagation();
+          setVoice(parseInt(item.getAttribute('data-v'), 10));
+        });
+      })(vItems[vi]);
+    }
+
+    var speedPop = document.createElement('div');
+    speedPop.className = 'tts-pop';
+    speedPop.id = 'ttsSpeedPop';
+    registerPop(speedPop);
+    speedPop.innerHTML = (function(){
+      var h = '', speeds = [40, 50, 60];
+      for (var i = 0; i < speeds.length; i++) {
+        h += '<div class="tts-pop-item" data-s="' + speeds[i] + '"><span>' + (speeds[i] / 50).toFixed(1) + 'x</span><span class="tts-pop-check">✓</span></div>';
+      }
+      return h;
+    })();
+    document.body.appendChild(speedPop);
+    var sItems = speedPop.querySelectorAll('.tts-pop-item');
+    for (var si = 0; si < sItems.length; si++) {
+      (function(item){
+        item.addEventListener('click', function(e){
+          e.stopPropagation();
+          setSpeed(parseInt(item.getAttribute('data-s'), 10));
+        });
+      })(sItems[si]);
+    }
+
+    // 点击页面其他区域关闭菜单
+    document.addEventListener('click', function(){ closePops(); });
+
     setupMediaActions();
     updateUI();
   }
@@ -747,29 +806,77 @@
       }
     }
     else if (act === 'stop') stop();
-    else if (act === 'speed') cycleSpeed();
-    else if (act === 'voice') cycleVoice();
+    else if (act === 'speed') togglePop('speed');
+    else if (act === 'voice') togglePop('voice');
   }
 
   function showBar(){ if (state.el) state.el.style.display = 'flex'; }
   function hideBar(){ if (state.el) state.el.style.display = 'none'; }
 
-  function cycleSpeed(){
-    var speeds = [40, 50, 60];
-    var idx = speeds.indexOf(state.speed);
-    state.speed = speeds[(idx + 1) % speeds.length];
-    var btn = state.el.querySelector('[data-act="speed"]');
-    if (btn) btn.textContent = (state.speed / 50).toFixed(1) + 'x';
-    updateCard();
-    showToast('语速 ' + (state.speed / 50).toFixed(1) + 'x（下一段生效）');
+  // ---- 音色/语速弹出菜单 ----
+  var _pops = [];
+  function registerPop(p){ _pops.push(p); return p; }
+  function closePops(){
+    for (var i = 0; i < _pops.length; i++) _pops[i].classList.remove('show');
+  }
+  // 定位菜单：按钮上方；空间不足则下方
+  function positionPop(anchor, pop){
+    try {
+      var r = anchor.getBoundingClientRect();
+      var pw = pop.offsetWidth || 104;
+      var ph = pop.offsetHeight || 120;
+      var left = Math.min(Math.max(6, r.right - pw), (window.innerWidth || 360) - pw - 6);
+      var top = r.top - ph - 6;
+      if (top < 6) top = r.bottom + 6;
+      pop.style.left = left + 'px';
+      pop.style.top = top + 'px';
+    } catch(e){}
+  }
+  // 高亮当前选项（勾选）
+  function renderPopSel(){
+    var vp = document.getElementById('ttsVoicePop');
+    if (vp) {
+      var items = vp.querySelectorAll('.tts-pop-item');
+      for (var i = 0; i < items.length; i++) items[i].classList.toggle('sel', i === state.voice);
+    }
+    var sp = document.getElementById('ttsSpeedPop');
+    if (sp) {
+      var sitems = sp.querySelectorAll('.tts-pop-item');
+      var speeds = [40, 50, 60];
+      for (var j = 0; j < sitems.length; j++) sitems[j].classList.toggle('sel', speeds[j] === state.speed);
+    }
+  }
+  function togglePop(type){
+    var btn = state.el.querySelector('[data-act="' + type + '"]');
+    var pop = document.getElementById(type === 'voice' ? 'ttsVoicePop' : 'ttsSpeedPop');
+    if (!btn || !pop) return;
+    var isShow = pop.classList.contains('show');
+    closePops();
+    if (!isShow) {
+      renderPopSel();
+      positionPop(btn, pop);
+      pop.classList.add('show');
+    }
   }
 
-  function cycleVoice(){
-    state.voice = (state.voice + 1) % VOICES.length;
-    var btn = state.el.querySelector('[data-act="voice"]');
-    if (btn) btn.textContent = VOICES[state.voice].name;
+  // 设置语速（菜单选择）
+  function setSpeed(v){
+    state.speed = v;
+    var btn = state.el.querySelector('[data-act="speed"]');
+    if (btn) btn.textContent = (v / 50).toFixed(1) + 'x';
     updateCard();
-    showToast('发音人：' + VOICES[state.voice].name + '（下一段生效）');
+    closePops();
+    showToast('语速 ' + (v / 50).toFixed(1) + 'x（下一段生效）');
+  }
+
+  // 设置发音人（菜单选择）
+  function setVoice(i){
+    state.voice = i;
+    var btn = state.el.querySelector('[data-act="voice"]');
+    if (btn) btn.textContent = VOICES[i].name;
+    updateCard();
+    closePops();
+    showToast('发音人：' + VOICES[i].name + '（下一段生效）');
   }
 
   function updateUI(){
@@ -801,7 +908,7 @@
 
   /* ---------- 11. 对外 API ---------- */
   window.TTS = {
-    version: 'v2.6',   // v2.6：新增 onPlayState 播放状态钩子（供页面记录"继续播放"恢复点）
+    version: 'v2.7',   // v2.7：控件主题色 --tts-accent + 音色/语速弹出菜单
     // 把朗读控制条挂载到指定容器（页面底部状态栏）；容器缺省挂 body
     mount: function(container){
       if (container) state.mountEl = container;
