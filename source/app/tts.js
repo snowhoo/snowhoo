@@ -2,9 +2,11 @@
  * tts.js — 讯飞在线语音合成朗读器（前端直连）
  * 功能：分段合成、顺序播放、连续朗读、底部悬浮控制条
  * 密钥采用混淆存储，运行时解码（提高直接复制获取门槛）
+ * v2.1 — WebSocket 协议 + 纯 JS HMAC-SHA256（http/https 均可用）
  * ============================================================ */
 (function(){
   'use strict';
+  console.log('[TTS] 朗读器 v2.1 已加载');
 
   /* ---------- 1. 密钥配置（混淆存储，运行解码） ---------- */
   // 混淆规则：btoa( utf8( 每字符码 ^ 0x5A 后+13 ) )
@@ -55,7 +57,7 @@
     inited: false
   };
 
-  /* ---------- 4. 讯飞鉴权（WebSocket 握手，HMAC-SHA256，Web Crypto） ---------- */
+  /* ---------- 4. 讯飞鉴权（WebSocket 握手，纯 JS HMAC-SHA256，兼容 http/file 环境） ---------- */
   function b64(input){
     // 支持字符串 / Uint8Array
     if (typeof input === 'string') {
@@ -69,21 +71,79 @@
     return btoa(bin2);
   }
 
-  async function hmacSha256(secret, data){
-    var enc = new TextEncoder();
-    var key = await crypto.subtle.importKey('raw', enc.encode(secret), {name:'HMAC', hash:'SHA-256'}, false, ['sign']);
-    var sig = await crypto.subtle.sign('HMAC', key, enc.encode(data));
-    return b64(new Uint8Array(sig));
+  // 纯 JS HMAC-SHA256 → base64（不依赖 crypto.subtle，HTTPS 非必需）
+  function jsHmacSha256B64(secretStr, msgStr){
+    function toBytes(s){
+      var b = [], i = 0;
+      while (i < s.length) {
+        var c = s.charCodeAt(i);
+        if (c < 0x80) { b.push(c); i++; }
+        else if (c < 0x800) { b.push(0xc0 | (c >> 6), 0x80 | (c & 0x3f)); i++; }
+        else if (c >= 0xd800 && c < 0xdc00 && i + 1 < s.length) {
+          var c2 = s.charCodeAt(i + 1);
+          if (c2 >= 0xdc00 && c2 < 0xe000) {
+            var cp = 0x10000 + ((c - 0xd800) << 10) + (c2 - 0xdc00);
+            b.push(0xf0 | (cp >> 18), 0x80 | ((cp >> 12) & 0x3f), 0x80 | ((cp >> 6) & 0x3f), 0x80 | (cp & 0x3f)); i += 2;
+          } else { b.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f)); i++; }
+        } else { b.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f)); i++; }
+      }
+      return b;
+    }
+    function sha256Bytes(bytes){
+      var K = [0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+      var H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+      var bitLen = bytes.length * 8;
+      var msg = bytes.slice();
+      msg.push(0x80);
+      while (msg.length % 64 !== 56) msg.push(0);
+      var hi = Math.floor(bitLen / 4294967296), lo = bitLen >>> 0;
+      msg.push((hi>>>24)&255,(hi>>>16)&255,(hi>>>8)&255,hi&255,(lo>>>24)&255,(lo>>>16)&255,(lo>>>8)&255,lo&255);
+      function rotr(x, n){ return (x >>> n) | (x << (32 - n)); }
+      for (var off = 0; off < msg.length; off += 64) {
+        var w = new Array(64);
+        for (var t = 0; t < 16; t++) w[t] = ((msg[off+t*4]<<24)|(msg[off+t*4+1]<<16)|(msg[off+t*4+2]<<8)|msg[off+t*4+3])>>>0;
+        for (var t2 = 16; t2 < 64; t2++) {
+          var s0 = rotr(w[t2-15],7) ^ rotr(w[t2-15],18) ^ (w[t2-15]>>>3);
+          var s1 = rotr(w[t2-2],17) ^ rotr(w[t2-2],19) ^ (w[t2-2]>>>10);
+          w[t2] = (w[t2-16] + s0 + w[t2-7] + s1) >>> 0;
+        }
+        var a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+        for (var t3 = 0; t3 < 64; t3++) {
+          var S1 = rotr(e,6) ^ rotr(e,11) ^ rotr(e,25);
+          var ch = (e & f) ^ (~e & g);
+          var t1 = (h + S1 + ch + K[t3] + w[t3]) >>> 0;
+          var S0 = rotr(a,2) ^ rotr(a,13) ^ rotr(a,22);
+          var maj = (a & b) ^ (a & c) ^ (b & c);
+          var t2 = (S0 + maj) >>> 0;
+          h=g; g=f; f=e; e=(d+t1)>>>0; d=c; c=b; b=a; a=(t1+t2)>>>0;
+        }
+        H[0]=(H[0]+a)>>>0; H[1]=(H[1]+b)>>>0; H[2]=(H[2]+c)>>>0; H[3]=(H[3]+d)>>>0;
+        H[4]=(H[4]+e)>>>0; H[5]=(H[5]+f)>>>0; H[6]=(H[6]+g)>>>0; H[7]=(H[7]+h)>>>0;
+      }
+      var out = [];
+      for (var i = 0; i < 8; i++) out.push((H[i]>>>24)&255,(H[i]>>>16)&255,(H[i]>>>8)&255,H[i]&255);
+      return out;
+    }
+    var keyBytes = toBytes(secretStr);
+    if (keyBytes.length > 64) keyBytes = sha256Bytes(keyBytes);
+    var ipad = [], opad = [];
+    for (var i = 0; i < 64; i++) { ipad.push((i<keyBytes.length?keyBytes[i]:0)^0x36); opad.push((i<keyBytes.length?keyBytes[i]:0)^0x5c); }
+    var inner = sha256Bytes(ipad.concat(toBytes(msgStr)));
+    var outer = sha256Bytes(opad.concat(inner));
+    var bin = '';
+    for (var j = 0; j < outer.length; j++) bin += String.fromCharCode(outer[j]);
+    return btoa(bin);
   }
 
   // 构造 WebSocket 连接 URL（鉴权参数拼在 URL 上：authorization / date / host）
-  async function buildWsUrl(){
+  function buildWsUrl(){
+    if (typeof WebSocket === 'undefined') throw new Error('环境不支持 WebSocket');
     var host = 'tts-api.xfyun.cn';
     var path = '/v2/tts';
     var date = new Date().toUTCString();
     // WebSocket 握手为 GET
     var signatureOrigin = 'host: ' + host + '\ndate: ' + date + '\nGET ' + path + ' HTTP/1.1';
-    var signature = await hmacSha256(_deobf(TTS_KEY.apisecret), signatureOrigin);
+    var signature = jsHmacSha256B64(_deobf(TTS_KEY.apisecret), signatureOrigin);
     var authorizationOrigin = 'hmac username="' + _deobf(TTS_KEY.apikey) + '", algorithm="hmac-sha256", headers="host date request-line", signature="' + signature + '"';
     var authorization = b64(authorizationOrigin);
     return 'wss://' + host + path +
@@ -96,64 +156,64 @@
   // 返回音频 blob URL；失败抛错
   function synth(text){
     return new Promise(function(resolve, reject){
-      buildWsUrl().then(function(url){
-        var ws = new WebSocket(url);
-        var audioB64 = '';
-        var settled = false;
-        var timeout = setTimeout(function(){
+      var url;
+      try { url = buildWsUrl(); } catch(e) { reject(e); return; }
+      var ws = new WebSocket(url);
+      var audioB64 = '';
+      var settled = false;
+      var timeout = setTimeout(function(){
+        if (settled) return;
+        settled = true;
+        try { ws.close(); } catch(e){}
+        reject(new Error('合成超时'));
+      }, 20000);
+
+      ws.onopen = function(){
+        ws.send(JSON.stringify({
+          common: { app_id: _deobf(TTS_KEY.appid) },
+          business: {
+            aue: 'lame',                        // mp3
+            auf: 'audio/L16;rate=16000',
+            vcn: VOICES[state.voice].key,       // 发音人（v2 字段名是 vcn）
+            speed: state.speed,
+            volume: 50,
+            pitch: 50
+          },
+          data: { status: 2, text: b64(text), encoding: 'utf8' }
+        }));
+      };
+      ws.onmessage = function(ev){
+        var j;
+        try { j = JSON.parse(ev.data); } catch(e){ return; }
+        if (j.code !== 0) {
+          if (!settled) { settled = true; clearTimeout(timeout); try{ ws.close(); }catch(e){} }
+          reject(new Error('讯飞 ' + j.code + ' ' + (j.message || '')));
+          return;
+        }
+        if (j.data && j.data.audio) audioB64 += j.data.audio;
+        if (j.data && j.data.status === 2) {
           if (settled) return;
           settled = true;
+          clearTimeout(timeout);
           try { ws.close(); } catch(e){}
-          reject(new Error('合成超时'));
-        }, 20000);
-
-        ws.onopen = function(){
-          ws.send(JSON.stringify({
-            common: { app_id: _deobf(TTS_KEY.appid) },
-            business: {
-              aue: 'lame',                        // mp3
-              auf: 'audio/L16;rate=16000',
-              vcn: VOICES[state.voice].key,       // 发音人（v2 字段名是 vcn）
-              speed: state.speed,
-              volume: 50,
-              pitch: 50
-            },
-            data: { status: 2, text: b64(text), encoding: 'utf8' }
-          }));
-        };
-        ws.onmessage = function(ev){
-          var j;
-          try { j = JSON.parse(ev.data); } catch(e){ return; }
-          if (j.code !== 0) {
-            if (!settled) { settled = true; clearTimeout(timeout); try{ ws.close(); }catch(e){} }
-            reject(new Error('讯飞 ' + j.code + ' ' + (j.message || '')));
-            return;
-          }
-          if (j.data && j.data.audio) audioB64 += j.data.audio;
-          if (j.data && j.data.status === 2) {
-            if (settled) return;
-            settled = true;
-            clearTimeout(timeout);
-            try { ws.close(); } catch(e){}
-            if (!audioB64) { reject(new Error('无音频返回')); return; }
-            // 兼容响应中 base64 可能带换行/URL 编码
-            if (audioB64.indexOf('%') !== -1) { try { audioB64 = decodeURIComponent(audioB64); } catch(e){} }
-            audioB64 = audioB64.replace(/[\r\n\s]/g, '');
-            var bin = atob(audioB64);
-            var arr = new Uint8Array(bin.length);
-            for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-            resolve(URL.createObjectURL(new Blob([arr], { type: 'audio/mp3' })));
-          }
-        };
-        ws.onerror = function(){
-          if (!settled) { settled = true; clearTimeout(timeout); }
-          reject(new Error('WebSocket 连接失败'));
-        };
-        ws.onclose = function(){
-          // 正常结束由 status=2 分支 resolve/reject；此处兜底
-          if (!settled) { settled = true; clearTimeout(timeout); reject(new Error('连接已关闭')); }
-        };
-      }).catch(reject);
+          if (!audioB64) { reject(new Error('无音频返回')); return; }
+          // 兼容响应中 base64 可能带换行/URL 编码
+          if (audioB64.indexOf('%') !== -1) { try { audioB64 = decodeURIComponent(audioB64); } catch(e){} }
+          audioB64 = audioB64.replace(/[\r\n\s]/g, '');
+          var bin = atob(audioB64);
+          var arr = new Uint8Array(bin.length);
+          for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          resolve(URL.createObjectURL(new Blob([arr], { type: 'audio/mp3' })));
+        }
+      };
+      ws.onerror = function(){
+        if (!settled) { settled = true; clearTimeout(timeout); }
+        reject(new Error('WebSocket 连接失败'));
+      };
+      ws.onclose = function(){
+        // 正常结束由 status=2 分支 resolve/reject；此处兜底
+        if (!settled) { settled = true; clearTimeout(timeout); reject(new Error('连接已关闭')); }
+      };
     });
   }
 
