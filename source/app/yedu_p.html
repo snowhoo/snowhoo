@@ -38,10 +38,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .card-content .body .no-content{text-align:center;color:#999;padding:40px 0;font-size:.9rem}
 .card-content .body strong,.card-content .body b{color:#222}
 
-/* 底部导航（两行：第一行功能导航 / 第二行朗读播放条） */
+/* 底部导航（两行：第一行朗读播放条 / 第二行功能导航） */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;border-top:1px solid #eee;display:flex;flex-direction:column;padding:0;font-size:.8rem;user-select:none;-webkit-user-select:none}
 .bottom-nav .bn-row{display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:44px;width:100%;flex-shrink:0;min-width:0}
-.bottom-nav .bn-tts-row{height:42px;padding:0 4px 0 0;border-top:1px solid #f0f0f0;justify-content:stretch}
+.bottom-nav .bn-row:not(:first-child){border-top:1px solid #eee}
+.bottom-nav .bn-tts-row{height:42px;padding:0 4px 0 0;justify-content:stretch}
 /* 第二行：文章自带音频播放条（▶/⏸ ⏹ 标题+进度） */
 .yedu-play-bar{display:flex;align-items:center;gap:2px;height:42px;width:100%;min-width:0;padding:0 8px;font-size:12px;color:#555;user-select:none;-webkit-user-select:none;box-sizing:border-box}
 .yedu-play-bar button{background:none;border:none;cursor:pointer;color:inherit;padding:0;margin:0;font-family:inherit}
@@ -125,7 +126,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .card-content .body p{color:#ccc}
   .card-content .body strong,.card-content .body b{color:#eee}
   .bottom-nav{background:#1a1a1a;border-color:#333}
-  .bottom-nav .bn-tts-row{border-top-color:#333}
+  .bottom-nav .bn-row:not(:first-child){border-top-color:#333}
   .bottom-nav .page-btn{color:#999}
   .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
   .page-nav-btn{color:#666}
@@ -139,7 +140,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .card-content .body p{color:#ccc}
   .card-content .body strong,.card-content .body b{color:#eee}
   .bottom-nav{background:#1a1a1a;border-color:#333}
-  .bottom-nav .bn-tts-row{border-top-color:#333}
+  .bottom-nav .bn-row:not(:first-child){border-top-color:#333}
   .bottom-nav .page-btn{color:#999}
   .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
   .page-nav-btn{color:#666}
@@ -193,6 +194,16 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 <div class="lightbox" id="lightbox"><button class="close-btn" id="lightboxClose">✕</button><img id="lightboxImg" src="" alt=""></div>
 
 <div class="bottom-nav" id="bottomNav">
+  <div class="bn-row bn-tts-row">
+    <div class="yedu-play-bar" id="yeduPlayBar">
+      <button class="yp-btn yp-play" id="yeduPlayBtn" title="播放/暂停">▶</button>
+      <button class="yp-btn yp-stop" id="yeduStopBtn" title="停止">⏹</button>
+      <div class="yp-info">
+        <div class="yp-title" id="yeduPlayTitle">语音播放</div>
+        <div class="yp-prog"><i id="yeduPlayProg"></i></div>
+      </div>
+    </div>
+  </div>
   <div class="bn-row">
     <div class="yedu-float-wrap">
       <button class="yedu-float-btn" id="yeduFloatBtn">夜读</button>
@@ -218,16 +229,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     </div>
     <div class="user-area" id="userArea">
       <img class="user-avatar" id="userAvatar" alt="">
-    </div>
-  </div>
-  <div class="bn-row bn-tts-row">
-    <div class="yedu-play-bar" id="yeduPlayBar">
-      <button class="yp-btn yp-play" id="yeduPlayBtn" title="播放/暂停">▶</button>
-      <button class="yp-btn yp-stop" id="yeduStopBtn" title="停止">⏹</button>
-      <div class="yp-info">
-        <div class="yp-title" id="yeduPlayTitle">语音播放</div>
-        <div class="yp-prog"><i id="yeduPlayProg"></i></div>
-      </div>
     </div>
   </div>
 </div>

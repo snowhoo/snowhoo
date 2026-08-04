@@ -105,10 +105,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .lightbox .lb-nav.lb-next{right:0}
 .lightbox .lb-counter{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.7);font-size:.8rem;background:rgba(0,0,0,.4);padding:3px 12px;border-radius:12px;z-index:10;pointer-events:none}
 
-/* 底部导航（两行：第一行功能导航 / 第二行朗读播放条） */
+/* 底部导航（两行：第一行朗读播放条 / 第二行功能导航） */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;border-top:1px solid #eee;display:flex;flex-direction:column;padding:0;font-size:.8rem;user-select:none;-webkit-user-select:none}
 .bottom-nav .bn-row{display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:44px;width:100%;flex-shrink:0;min-width:0}
-.bottom-nav .bn-tts-row{height:42px;padding:0 4px 0 0;border-top:1px solid #f0f0f0;justify-content:stretch}
+.bottom-nav .bn-row:not(:first-child){border-top:1px solid #eee}
+.bottom-nav .bn-tts-row{height:42px;padding:0 4px 0 0;justify-content:stretch}
 #ttsBarMount{width:100%;display:flex;min-width:0}
 .bottom-nav .page-btn{display:flex;align-items:center;gap:4px;padding:4px 16px;border-radius:4px;cursor:pointer;color:#666}
 .bottom-nav .page-btn:active{background:rgba(0,0,0,.05)}
@@ -138,7 +139,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .card-content .body p{color:#ccc}
   .card-content .body strong,.card-content .body b{color:#eee}
   .bottom-nav{background:#1a1a1a;border-color:#333}
-  .bottom-nav .bn-tts-row{border-top-color:#333}
+  .bottom-nav .bn-row:not(:first-child){border-top-color:#333}
   .bottom-nav .page-btn{color:#999}
   .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
   .page-nav-btn{color:#666}
@@ -155,7 +156,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .card-content .body p{color:#ccc}
   .card-content .body strong,.card-content .body b{color:#eee}
   .bottom-nav{background:#1a1a1a;border-color:#333}
-  .bottom-nav .bn-tts-row{border-top-color:#333}
+  .bottom-nav .bn-row:not(:first-child){border-top-color:#333}
   .bottom-nav .page-btn{color:#999}
   .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
   .page-nav-btn{color:#666}
@@ -218,6 +219,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 </div>
 
 <div class="bottom-nav" id="bottomNav">
+  <div class="bn-row bn-tts-row"><div id="ttsBarMount"></div></div>
   <div class="bn-row">
     <div class="reader-float-wrap">
       <button class="reader-float-btn" id="readerFloatBtn"><span>小红</span><span>故事</span></button>
@@ -249,7 +251,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       <img class="user-avatar" id="userAvatar" alt="">
     </div>
   </div>
-  <div class="bn-row bn-tts-row"><div id="ttsBarMount"></div></div>
 </div>
 
 <script>
