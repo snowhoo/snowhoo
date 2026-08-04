@@ -1150,14 +1150,27 @@ main();
     });
 
     // 切换到新文章时若正在朗读 → 停止（避免与正在读的内容错位）
-    var _origUpdate = window.updateCards;
-    if (typeof _origUpdate === 'function') {
+    var _rawUpdate = window.updateCards;
+    if (typeof _rawUpdate === 'function') {
       window.updateCards = function(){
-        var r = _origUpdate.apply(this, arguments);
+        var r = _rawUpdate.apply(this, arguments);
         if (window.TTS && TTS.isSpeaking()) TTS.stop();
         return r;
       };
     }
+
+    // 朗读跨篇时自动翻页（保持"看到的=听到的"）：
+    // 朗读队列从 currentIndex 开始构建，第 itemIdx 篇对应文章 currentIndex + itemIdx；
+    // 用原始 updateCards 翻页（不触发上方"翻页即停朗读"逻辑）
+    TTS.onItemChange(function(itemIdx){
+      if (!_rawUpdate) return;
+      var posts = getFilteredPosts();
+      var target = currentIndex + itemIdx;
+      if (target >= 0 && target < posts.length && target !== currentIndex) {
+        currentIndex = target;
+        _rawUpdate();
+      }
+    });
   });
 })();
 </script>

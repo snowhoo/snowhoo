@@ -54,7 +54,9 @@
     el: null,
     inited: false,
     mountEl: null,   // 控制条挂载容器（页面底部状态栏）
-    provider: null   // 页面提供朗读内容：fn() → {items, label} 或 items[]
+    provider: null,  // 页面提供朗读内容：fn() → {items, label} 或 items[]
+    itemChangeCb: null,  // 朗读项切换回调：fn(itemIdx)（itemIdx=队列中第几篇，0 起）
+    lastItem: -1         // 上次播放的 item 索引（用于检测跨篇切换）
   };
 
   /* ---------- 4. 编码工具（纯手写，不依赖 TextEncoder/btoa/atob，兼容任意 WebView） ---------- */
@@ -324,14 +326,26 @@
   }
 
   /* ---------- 7. 播放控制（会话令牌防错乱） ---------- */
+  // 计算当前所在篇目（item）索引；跨篇切换时触发页面回调（用于自动翻页）
+  function advanceItem(){
+    var ci = -1;
+    for (var i = 0; i < state.itemStart.length; i++) {
+      if (state.itemStart[i] <= state.cur) ci = i;
+    }
+    if (ci !== state.lastItem) {
+      state.lastItem = ci;
+      if (state.itemChangeCb && ci >= 0) {
+        try { state.itemChangeCb(ci); } catch(e){}
+      }
+    }
+    return ci;
+  }
+
   function playSegment(idx){
     if (!state.queue.length) return;
     if (idx < 0 || idx >= state.queue.length) { finishAll(); return; }
     state.cur = idx;
-    state.curItem = -1;
-    for (var i = 0; i < state.itemStart.length; i++) {
-      if (state.itemStart[i] <= idx) state.curItem = i;
-    }
+    state.curItem = advanceItem();
     updateUI();
     if (state.fetching) return; // 正在合成/预取中，忽略重复请求
     fetchAndPlay(idx);
@@ -376,6 +390,7 @@
         var pu = state.prefetched;
         state.prefetched = null; state.prefetchedIdx = -1;
         state.cur++;
+        state.curItem = advanceItem();
         updateUI();
         startAudio(pu, state.cur, sid);
         return;
@@ -418,6 +433,7 @@
     state.prefetchedIdx = -1;
     state.playing = false; state.paused = false;
     state.queue = []; state.cur = -1; state.curItem = -1; state.itemStart = [];
+    state.lastItem = -1;
     state.fetching = false;
     if (state.native) { try{ speechSynthesis.cancel(); }catch(e){} state.native = false; }
     updateUI();   // 控制条常驻，仅刷新为"已停止"
@@ -573,6 +589,11 @@
     setProvider: function(fn){
       state.provider = fn;
     },
+    // 设置朗读跨篇切换回调：fn(itemIdx)——itemIdx 为朗读队列中的第几篇（0 起）。
+    // 页面可据此自动翻页/高亮，保持"看到的=听到的"（首篇不触发）
+    onItemChange: function(fn){
+      state.itemChangeCb = fn;
+    },
     speak: function(items, opts){
       if (!items || !items.length) return;
       stop();                 // 关闭旧会话（连接/音频/回调全部作废）
@@ -589,6 +610,7 @@
       state.itemStart = itemStart;
       state.cur = 0;
       state.curItem = 0;
+      state.lastItem = 0;   // 首篇即当前页，不触发翻页；从第二篇起跨篇时触发 itemChangeCb
       // 诊断日志：确认发送给讯飞的文本是否正确
       console.log('[TTS] speak 队列 ' + queue.length + ' 段');
       for (var di = 0; di < Math.min(queue.length, 3); di++) {
