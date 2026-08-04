@@ -489,7 +489,7 @@
           }
           items = (r && r.items) ? r.items : r;
           if (!items || !items.length) { showToast('没有可朗读的文本'); return; }
-          speak(items, { title: (r && r.label) || '' });
+          window.TTS.speak(items, { title: (r && r.label) || '' });
         } else {
           showToast('朗读内容未配置');
         }
