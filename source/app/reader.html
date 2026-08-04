@@ -29,7 +29,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .card-title h1{font-size:1.2rem;font-weight:500;line-height:1.35;color:#222;margin-bottom:4px}
 .card-title .meta{font-size:.78rem;color:#999}
 
-.card-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 18px 60px;background:#fafafa}
+.card-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 18px 108px;background:#fafafa}
 .card-content::-webkit-scrollbar{width:0}
 .card-content .body p{line-height:1.5;margin-bottom:10px;font-size:1.1rem;font-weight:300;color:#333}
 .card-content .body .no-content{text-align:center;color:#999;padding:40px 0;font-size:.9rem}
@@ -105,7 +105,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .lightbox .lb-nav.lb-next{right:0}
 .lightbox .lb-counter{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.7);font-size:.8rem;background:rgba(0,0,0,.4);padding:3px 12px;border-radius:12px;z-index:10;pointer-events:none}
 
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:#fff;border-top:1px solid #eee;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:.8rem;user-select:none;-webkit-user-select:none}
+/* 底部导航（两行：第一行功能导航 / 第二行朗读播放条） */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;border-top:1px solid #eee;display:flex;flex-direction:column;padding:0;font-size:.8rem;user-select:none;-webkit-user-select:none}
+.bottom-nav .bn-row{display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:44px;width:100%;flex-shrink:0;min-width:0}
+.bottom-nav .bn-tts-row{height:42px;padding:0 4px 0 0;border-top:1px solid #f0f0f0;justify-content:stretch}
+#ttsBarMount{width:100%;display:flex;min-width:0}
 .bottom-nav .page-btn{display:flex;align-items:center;gap:4px;padding:4px 16px;border-radius:4px;cursor:pointer;color:#666}
 .bottom-nav .page-btn:active{background:rgba(0,0,0,.05)}
 .page-nav-group{display:flex;align-items:center;gap:2px}
@@ -134,6 +138,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .card-content .body p{color:#ccc}
   .card-content .body strong,.card-content .body b{color:#eee}
   .bottom-nav{background:#1a1a1a;border-color:#333}
+  .bottom-nav .bn-tts-row{border-top-color:#333}
   .bottom-nav .page-btn{color:#999}
   .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
   .page-nav-btn{color:#666}
@@ -150,6 +155,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .card-content .body p{color:#ccc}
   .card-content .body strong,.card-content .body b{color:#eee}
   .bottom-nav{background:#1a1a1a;border-color:#333}
+  .bottom-nav .bn-tts-row{border-top-color:#333}
   .bottom-nav .page-btn{color:#999}
   .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
   .page-nav-btn{color:#666}
@@ -212,37 +218,38 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 </div>
 
 <div class="bottom-nav" id="bottomNav">
-  <div class="reader-float-wrap">
-    <button class="reader-float-btn" id="readerFloatBtn"><span>小红</span><span>故事</span></button>
-    <div class="reader-float-menu" id="readerFloatMenu">
-      <span style="display:flex;align-items:center;padding:10px 16px;color:#e94560;font-size:.82rem;font-weight:600;white-space:nowrap;cursor:default">
-        <span class="menu-indicator circulated" style="background:#e94560">小</span>小红故事·Blog
-        <span style="margin-left:8px;color:#e94560">&#x2713;</span>
-      </span>
-      <a class="menu-item" href="https://snowhoo.net/app/yedu_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#764ba2">夜</span>夜读·每晚十点</a>
-      <a class="menu-item" href="https://snowhoo.net/app/zjsz_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#3b82f6">照</span>照见苏州·摄影专辑</a>
-      <a class="menu-item" href="https://snowhoo.net/app/DaliyNews_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#ff8c00">新</span>新闻·每日速览</a>
-      <a class="menu-item" href="https://snowhoo.net/app/tv_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#22c55e">播</span>播霸·在线影视</a>
-      <a class="menu-item menu-home" href="https://snowhoo.net/app/APP.html" onclick="event.preventDefault();window.location.replace('https://snowhoo.net/app/APP.html')"><span class="menu-indicator circulated" style="background:#e8793a;width:24px;height:24px;line-height:24px;font-size:16px">界</span>传送回修真小世界</a>
+  <div class="bn-row">
+    <div class="reader-float-wrap">
+      <button class="reader-float-btn" id="readerFloatBtn"><span>小红</span><span>故事</span></button>
+      <div class="reader-float-menu" id="readerFloatMenu">
+        <span style="display:flex;align-items:center;padding:10px 16px;color:#e94560;font-size:.82rem;font-weight:600;white-space:nowrap;cursor:default">
+          <span class="menu-indicator circulated" style="background:#e94560">小</span>小红故事·Blog
+          <span style="margin-left:8px;color:#e94560">&#x2713;</span>
+        </span>
+        <a class="menu-item" href="https://snowhoo.net/app/yedu_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#764ba2">夜</span>夜读·每晚十点</a>
+        <a class="menu-item" href="https://snowhoo.net/app/zjsz_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#3b82f6">照</span>照见苏州·摄影专辑</a>
+        <a class="menu-item" href="https://snowhoo.net/app/DaliyNews_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#ff8c00">新</span>新闻·每日速览</a>
+        <a class="menu-item" href="https://snowhoo.net/app/tv_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#22c55e">播</span>播霸·在线影视</a>
+        <a class="menu-item menu-home" href="https://snowhoo.net/app/APP.html" onclick="event.preventDefault();window.location.replace('https://snowhoo.net/app/APP.html')"><span class="menu-indicator circulated" style="background:#e8793a;width:24px;height:24px;line-height:24px;font-size:16px">界</span>传送回修真小世界</a>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:20px">
+      <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
+      <div class="page-nav-group">
+        <span class="page-nav-btn" id="firstBtn">‹‹</span>
+        <span class="page-btn" id="pageBtn">1</span>
+        <span class="page-nav-btn" id="lastBtn">››</span>
+      </div>
+      <div class="cat-wrap">
+        <button class="cat-btn" id="catBtn">全部</button>
+        <div class="cat-menu" id="catMenu"></div>
+      </div>
+    </div>
+    <div class="user-area" id="userArea">
+      <img class="user-avatar" id="userAvatar" alt="">
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:20px">
-    <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
-    <div id="ttsBarMount"></div>
-    <div class="page-nav-group">
-      <span class="page-nav-btn" id="firstBtn">‹‹</span>
-      <span class="page-btn" id="pageBtn">1</span>
-      <span class="page-nav-btn" id="lastBtn">››</span>
-    </div>
-    <div class="cat-wrap">
-      <button class="cat-btn" id="catBtn">全部</button>
-      <div class="cat-menu" id="catMenu"></div>
-    </div>
-  </div>
-  
-  <div class="user-area" id="userArea">
-    <img class="user-avatar" id="userAvatar" alt="">
-  </div>
+  <div class="bn-row bn-tts-row"><div id="ttsBarMount"></div></div>
 </div>
 
 <script>

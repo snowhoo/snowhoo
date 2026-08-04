@@ -1,13 +1,15 @@
 /* ============================================================
  * tts.js — 讯飞在线语音合成朗读器（前端直连）
- * 功能：分段合成、顺序播放、连续朗读、底部状态栏内嵌控制条
+ * 功能：分段合成、顺序播放、连续朗读、底部固定栏第二行完整播放条
  * 密钥采用混淆存储，运行时解码（提高直接复制获取门槛）
- * v2.4 — business 补 tte:'utf8'+sfl:1（修复中文乱码）；默认男声；
- *        控制条内嵌底部状态栏；分段调小加速加载；移除调试面板
+ * v2.5 — 播放条升级为完整版（▶ ⏹ 标题+进度 音色 语速 全部功能，
+ *        不再用浮动卡片）；首篇播放也触发 onItemChange(0)
+ *        （修复新闻/夜读第一项不展开不高亮）；
+ *        移除 ttsCard 浮动卡片，进度条改 ttsBarProg
  * ============================================================ */
 (function(){
   'use strict';
-  console.log('[TTS] 朗读器 v2.4 已加载');
+  console.log('[TTS] 朗读器 v2.5 已加载');
 
   /* ---------- 1. 密钥配置（混淆存储，运行解码） ---------- */
   var TTS_KEY = {
@@ -420,6 +422,17 @@
       try { a.preload = 'auto'; } catch(e){}
       try { a.setAttribute('playsinline', ''); } catch(e){}
       try { a.setAttribute('webkit-playsinline', ''); } catch(e){}
+      // 外部暂停（系统音频焦点被抢 / 来电 / WebView 切换页面等）→ 同步 UI，杜绝"假播放"
+      a.addEventListener('pause', function(){
+        if (state.playing && !state.paused) {
+          state.playing = false;
+          state.paused = true;
+          updateUI();
+          updateCard();
+          syncMediaSession(false, '', '');
+          notifyNative(false, '', '');
+        }
+      });
       state.audioEl = a;
     }
     return state.audioEl;
@@ -431,13 +444,15 @@
     a.onended = null;
     a.onerror = null;
     a.ontimeupdate = null;
-    try { a.pause(); } catch(e){}
+    // 释放旧 blob 资源（不 removeAttribute src，避免部分 WebView 重新赋值 src 后无声）
+    try { if (a.src && a.src.indexOf('blob:') === 0) URL.revokeObjectURL(a.src); } catch(e){}
     a.src = url;
+    try { a.load(); } catch(e){}
     // 进度：音乐卡片进度条 + 锁屏媒体进度
     a.ontimeupdate = function(){
       if (sid !== state.session) return;
       if (a.duration) {
-        var prog = document.getElementById('ttsCardProg');
+        var prog = document.getElementById('ttsBarProg');
         if (prog) prog.style.width = Math.min(100, a.currentTime / a.duration * 100) + '%';
         if (navigator.mediaSession && navigator.mediaSession.setPositionState) {
           try { navigator.mediaSession.setPositionState({ duration: a.duration, position: a.currentTime || 0, playbackRate: 1 }); } catch(e){}
@@ -448,7 +463,7 @@
       URL.revokeObjectURL(url);
       if (sid !== state.session) return; // 会话已失效（已被 stop/新 speak 接管）
       if (state.cur !== idx) return;
-      var prog = document.getElementById('ttsCardProg');
+      var prog = document.getElementById('ttsBarProg');
       if (prog) prog.style.width = '0%';
       // 有预取且预取正是下一段 → 无缝衔接
       if (state.prefetched && state.prefetchedIdx === idx + 1) {
@@ -502,8 +517,8 @@
       if (p && p.catch) p.catch(function(){});
       state.paused = false;
     } else {
+      state.paused = true;          // 先标记（外部 pause 监听据此跳过内部暂停）
       try { a.pause(); } catch(e){}
-      state.paused = true;
     }
     updateUI();
   }
@@ -513,9 +528,17 @@
     // 关闭所有进行中的 WebSocket
     for (var k in state.activeWs) { try{ state.activeWs[k].close(); }catch(e){} }
     state.activeWs = {};
-    // 暂停持久音频元素（复用不销毁）
+    state.playing = false; state.paused = false;   // 先复位（外部 pause 监听据此跳过内部暂停）
+    // 暂停持久音频元素（复用不销毁）；释放 blob 资源但不清空 src（避免重新赋值 src 后无声）
     if (state.audioEl) {
-      try { state.audioEl.pause(); state.audioEl.onended = null; state.audioEl.onerror = null; state.audioEl.removeAttribute('src'); }catch(e){}
+      try {
+        var cs = state.audioEl.src;
+        state.audioEl.pause();
+        state.audioEl.onended = null;
+        state.audioEl.onerror = null;
+        state.audioEl.ontimeupdate = null;
+        if (cs && cs.indexOf('blob:') === 0) { try{ URL.revokeObjectURL(cs); }catch(e){} }
+      } catch(e){}
     }
     state.audio = null;
     if (state.prefetched) { URL.revokeObjectURL(state.prefetched); state.prefetched = null; }
@@ -525,9 +548,8 @@
     state.lastItem = -1;
     state.fetching = false;
     if (state.native) { try{ speechSynthesis.cancel(); }catch(e){} state.native = false; }
-    // 音乐卡片/锁屏/原生桥复位
-    hideCard();
-    var prog = document.getElementById('ttsCardProg');
+    // 播放条/锁屏/原生桥复位
+    var prog = document.getElementById('ttsBarProg');
     if (prog) prog.style.width = '0%';
     syncMediaSession(false, '', '');
     notifyNative(false, '', '');
@@ -565,19 +587,48 @@
     updateUI();
   }
 
-  /* ---------- 9. 控制条 UI（内嵌底部状态栏，常驻）+ 音乐播放卡片 ---------- */
-  // 页面调用 TTS.mount(container) 把朗读控件挂到底部状态栏；未指定时挂 body 底部
+  /* ---------- 9. 控制条 UI（底部固定栏第二行，常驻完整播放条） ---------- */
+  // 播放条结构：[▶ 播放/暂停] [⏹ 停止] [标题+进度条(弹性)] [音色] [语速]
+  // 页面把 #ttsBarMount 放到底部固定栏第二行并 TTS.mount 挂载；未指定时挂 body 底部
+  function injectBarStyle(){
+    if (document.getElementById('ttsBarStyle')) return;
+    var css =
+      '#ttsBar{display:flex;align-items:center;gap:2px;height:42px;flex-shrink:0;user-select:none;-webkit-user-select:none;padding:0 8px;font-size:12px;color:#555;width:100%;box-sizing:border-box}' +
+      '#ttsBar button{background:none;border:none;cursor:pointer;color:inherit;padding:0;margin:0;font-family:inherit}' +
+      '#ttsBar .tts-btn{display:flex;align-items:center;justify-content:center;height:30px;border-radius:6px;flex-shrink:0;line-height:1}' +
+      '#ttsBar .tts-btn:active{background:rgba(128,128,128,.18)}' +
+      '#ttsBar .tts-play{width:34px;font-size:16px;color:var(--tts-accent,#ff8c00)}' +
+      '#ttsBar .tts-stop{width:28px;font-size:13px;color:#999}' +
+      '#ttsBar .tts-info{flex:1;min-width:0;padding:0 6px;display:flex;flex-direction:column;justify-content:center;gap:3px}' +
+      '#ttsBar .tts-title{font-size:12px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}' +
+      '#ttsBar .tts-prog{height:3px;background:rgba(128,128,128,.18);border-radius:2px;overflow:hidden}' +
+      '#ttsBar .tts-prog i{display:block;height:100%;width:0%;background:var(--tts-accent,#ff8c00);border-radius:2px;transition:width .3s}' +
+      '#ttsBar .tts-tag{height:24px;padding:0 8px;font-size:11px;border-radius:12px;flex-shrink:0;color:#555}' +
+      '#ttsBar .tts-tag:active{background:rgba(128,128,128,.18)}' +
+      '[data-theme="dark"] #ttsBar{color:#aaa}' +
+      '[data-theme="dark"] #ttsBar .tts-title{color:#ddd}' +
+      '[data-theme="dark"] #ttsBar .tts-tag{color:#bbb}' +
+      '@media(prefers-color-scheme:dark){#ttsBar{color:#aaa}#ttsBar .tts-title{color:#ddd}#ttsBar .tts-tag{color:#bbb}}';
+    var st = document.createElement('style');
+    st.id = 'ttsBarStyle';
+    st.textContent = css;
+    (document.head || document.documentElement).appendChild(st);
+  }
   function initBar(){
     if (state.inited && state.el) return;
     state.inited = true;
+    injectBarStyle();
     var el = document.createElement('div');
     el.id = 'ttsBar';
-    el.style.cssText = 'display:flex;align-items:center;gap:2px;height:44px;flex-shrink:0;user-select:none;-webkit-user-select:none';
     el.innerHTML =
-      '<button data-act="play" title="播放/暂停朗读" style="background:none;border:none;cursor:pointer;color:var(--tts-accent,#ff8c00);font-size:17px;line-height:1;padding:0 6px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0">▶</button>' +
-      '<button data-act="stop" title="停止" style="background:none;border:none;cursor:pointer;color:#999;font-size:14px;line-height:1;padding:0 5px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0">⏹</button>' +
-      '<button data-act="voice" title="发音人（点按切换）" style="background:none;border:none;cursor:pointer;color:var(--tts-accent,#a5d6ff);font-size:12px;padding:0 4px;height:34px;white-space:nowrap;flex-shrink:0">' + VOICES[state.voice].name + '</button>' +
-      '<button data-act="speed" title="语速（点按切换）" style="background:none;border:none;cursor:pointer;color:var(--tts-accent,#ffb74d);font-size:12px;padding:0 4px;height:34px;white-space:nowrap;flex-shrink:0">' + (state.speed / 50).toFixed(1) + 'x</button>';
+      '<button class="tts-btn tts-play" data-act="play" title="播放/暂停朗读">▶</button>' +
+      '<button class="tts-btn tts-stop" data-act="stop" title="停止">⏹</button>' +
+      '<div class="tts-info">' +
+        '<div class="tts-title" id="ttsBarTitle">语音朗读</div>' +
+        '<div class="tts-prog"><i id="ttsBarProg"></i></div>' +
+      '</div>' +
+      '<button class="tts-tag" data-act="voice" id="ttsBarVoice" title="发音人（点按切换）">' + VOICES[state.voice].name + '</button>' +
+      '<button class="tts-tag" data-act="speed" id="ttsBarSpeed" title="语速（点按切换）">' + (state.speed / 50).toFixed(1) + 'x</button>';
     var container = state.mountEl || document.body;
     container.appendChild(el);
     state.el = el;
@@ -593,50 +644,18 @@
         });
       })(acts[ai]);
     }
-
-    // ---- 音乐播放卡片（朗读时显示：标题/进度/控制；配合 MediaSession 支持锁屏/后台播放） ----
-    var card = document.createElement('div');
-    card.id = 'ttsCard';
-    card.style.cssText = 'position:fixed;left:10px;right:10px;bottom:56px;z-index:29990;display:none;background:rgba(20,18,16,.94);border-radius:14px;padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.4);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)';
-    card.innerHTML =
-      '<div style="display:flex;align-items:center;gap:10px">' +
-        '<div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#ff8c00,#ffb74d);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;flex-shrink:0">📰</div>' +
-        '<div style="flex:1;min-width:0">' +
-          '<div id="ttsCardTitle" style="color:#fff;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">语音朗读</div>' +
-          '<div id="ttsCardSub" style="color:rgba(255,255,255,.5);font-size:10px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">朗读中</div>' +
-          '<div style="height:3px;background:rgba(255,255,255,.16);border-radius:2px;margin-top:6px;overflow:hidden">' +
-            '<div id="ttsCardProg" style="height:100%;width:0%;background:#ff8c00;border-radius:2px;transition:width .3s"></div>' +
-          '</div>' +
-        '</div>' +
-        '<button id="ttsCardPlay" title="播放/暂停" style="background:none;border:none;cursor:pointer;color:#ff8c00;font-size:18px;padding:4px;flex-shrink:0">▶</button>' +
-        '<button id="ttsCardStop" title="停止" style="background:none;border:none;cursor:pointer;color:#999;font-size:15px;padding:4px;flex-shrink:0">⏹</button>' +
-      '</div>';
-    document.body.appendChild(card);
-    state.card = card;
-    var cardPlay = document.getElementById('ttsCardPlay');
-    var cardStop = document.getElementById('ttsCardStop');
-    if (cardPlay) cardPlay.addEventListener('click', function(e){ e.stopPropagation(); handleAct('play'); });
-    if (cardStop) cardStop.addEventListener('click', function(e){ e.stopPropagation(); handleAct('stop'); });
     setupMediaActions();
+    updateUI();
   }
 
-  // ---- 音乐卡片显示/隐藏/更新 ----
-  function showCard(){
-    if (state.card) state.card.style.display = 'block';
-  }
-  function hideCard(){
-    if (state.card) state.card.style.display = 'none';
-  }
+  // ---- 播放条标题更新（当前段标题；进度条由音频 timeupdate 驱动） ----
   function updateCard(){
-    if (!state.card) return;
-    var titleEl = document.getElementById('ttsCardTitle');
-    var subEl = document.getElementById('ttsCardSub');
-    var playEl = document.getElementById('ttsCardPlay');
+    if (!state.el) return;
+    var titleEl = document.getElementById('ttsBarTitle');
+    if (!titleEl) return;
     var q = state.queue, idx = state.cur;
     var title = (idx >= 0 && q[idx]) ? (q[idx].title || '语音朗读') : '语音朗读';
-    if (titleEl && titleEl.textContent !== title) titleEl.textContent = title;
-    if (subEl) subEl.textContent = (state.playing ? (state.paused ? '已暂停' : '朗读中') : '已停止') + ' · ' + VOICES[state.voice].name + ' · ' + (state.speed / 50).toFixed(1) + 'x';
-    if (playEl) playEl.textContent = (state.playing && !state.paused) ? '⏸' : '▶';
+    if (titleEl.textContent !== title) titleEl.textContent = title;
   }
 
   // ---- 锁屏/系统媒体卡片（MediaSession：通知栏与锁屏显示标题/封面/进度，支持系统媒体控制） ----
@@ -742,20 +761,13 @@
 
   function updateUI(){
     if (!state.el) return;
-    var info = state.el.querySelector('[data-role="info"]');
-    if (info) {
-      var total = state.queue.length;
-      var itemLabel = '';
-      if (state.curItem >= 0 && state.itemStart.length > 1) {
-        itemLabel = (state.curItem + 1) + '/' + state.itemStart.length + ' · ';
-      }
-      info.textContent = state.playing
-        ? (itemLabel + (state.cur + 1) + '/' + total + (state.paused ? ' 已暂停' : ''))
-        : '已停止';
-    }
     var playBtn = state.el.querySelector('[data-act="play"]');
     if (playBtn) playBtn.textContent = (state.playing && !state.paused) ? '⏸' : '▶';
-    updateCard();   // 音乐卡片同步（标题/子行/播放按钮）
+    var v = state.el.querySelector('[data-act="voice"]');
+    if (v) v.textContent = VOICES[state.voice].name;
+    var sp = state.el.querySelector('[data-act="speed"]');
+    if (sp) sp.textContent = (state.speed / 50).toFixed(1) + 'x';
+    updateCard();   // 播放条标题同步（当前段标题）
   }
 
   /* ---------- 10. 轻提示 ---------- */
@@ -776,7 +788,7 @@
 
   /* ---------- 11. 对外 API ---------- */
   window.TTS = {
-    version: 'v2.4',   // 版本号：v2.4 修复 tte 编码（中文乱码）并内嵌底部状态栏
+    version: 'v2.5',   // v2.5：完整播放条（标题+进度+音色+语速）+ 首篇触发 onItemChange
     // 把朗读控制条挂载到指定容器（页面底部状态栏）；容器缺省挂 body
     mount: function(container){
       if (container) state.mountEl = container;
@@ -789,7 +801,8 @@
       state.provider = fn;
     },
     // 设置朗读跨篇切换回调：fn(itemIdx)——itemIdx 为朗读队列中的第几篇（0 起）。
-    // 页面可据此自动翻页/高亮，保持"看到的=听到的"（首篇不触发）
+    // 首篇（0）与每次跨篇切换都会触发；页面可据此自动翻页/展开/高亮，
+    // 保持"看到的=听到的"
     onItemChange: function(fn){
       state.itemChangeCb = fn;
     },
@@ -809,8 +822,10 @@
       state.itemStart = itemStart;
       state.cur = 0;
       state.curItem = 0;
-      state.lastItem = 0;   // 首篇即当前页，不触发翻页；从第二篇起跨篇时触发 itemChangeCb
+      state.lastItem = 0;   // 首篇即当前页；跨篇切换由 advanceItem 触发回调
       state.label = opts.title || '';
+      // 首篇也通知页面（itemIdx=0）：用于展开/高亮第一条，修复"第一篇不展开"
+      if (state.itemChangeCb) { try { state.itemChangeCb(0); } catch(e){} }
       // 诊断日志：确认发送给讯飞的文本是否正确
       console.log('[TTS] speak 队列 ' + queue.length + ' 段');
       for (var di = 0; di < Math.min(queue.length, 3); di++) {
@@ -818,7 +833,6 @@
       }
       initBar();
       showBar();
-      showCard();
       updateUI();
       updateCard();
       // 锁屏/后台媒体卡片 + 原生桥通知
