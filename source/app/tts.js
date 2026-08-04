@@ -26,10 +26,10 @@
     } catch(e){ return ''; }
   }
 
-  /* ---------- 2. 发音人配置（默认男声；含已授权的新一代音库，切到更自然） ---------- */
+  /* ---------- 2. 发音人配置（默认叶子，新一代音库更自然；其余可切换） ---------- */
   var VOICES = [
-    { key: 'aisjiuxu', name: '许久(男)' },            // 默认：男声
-    { key: 'x4_yezi', name: '叶子' },                 // 新一代音库（女声，更自然）
+    { key: 'x4_yezi', name: '叶子' },                 // 默认：新一代音库（更自然）
+    { key: 'aisjiuxu', name: '许久(男)' },            // 男声
     { key: 'x4_ziwen_assist', name: '紫文' },         // 新一代音库（assist 口播风）
     { key: 'xiaoyan', name: '晓燕' }                  // 经典女声
   ];
@@ -378,6 +378,24 @@
     });
   }
 
+  // 移动端 WebView 音频解锁：用户手势时调用，放开后续自动播放（连续播下一段不被拦截）
+  var _audioUnlocked = false;
+  function unlockAudio(){
+    if (_audioUnlocked) return;
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) { _audioUnlocked = true; return; }
+      var ctx = new AC();
+      var buf = ctx.createBuffer(1, 1, 22050);
+      var src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+      if (ctx.state === 'suspended') { try{ ctx.resume(); }catch(e){} }
+      _audioUnlocked = true;
+    } catch(e) { _audioUnlocked = true; }
+  }
+
   function startAudio(url, idx, sid){
     if (state.audio) { try{ state.audio.pause(); state.audio.onended = null; }catch(e){} state.audio = null; }
     var a = new Audio(url);
@@ -408,8 +426,22 @@
     };
     state.playing = true;
     state.paused = false;
-    a.play().catch(function(){});
     updateUI();
+    // 播放：移动端自动播放可能被拦截 → 延迟重试一次；仍失败则暂停并提示（不假播放）
+    function doPlay(attempt){
+      if (sid !== state.session) return;
+      a.play().catch(function(){
+        if (attempt < 1) {
+          setTimeout(function(){ if (sid === state.session) doPlay(attempt + 1); }, 350);
+        } else {
+          if (sid !== state.session) return;
+          showToast('自动播放被拦截，点 ▶ 继续');
+          state.playing = false;
+          updateUI();
+        }
+      });
+    }
+    doPlay(0);
   }
 
   function pauseResume(){
@@ -455,10 +487,19 @@
     var u = new SpeechSynthesisUtterance(state.queue[idx].text);
     u.lang = 'zh-CN';
     u.rate = state.speed / 50;
-    u.onend = function(){ playSegment(state.cur + 1); };
-    u.onerror = function(){ playSegment(state.cur + 1); };
+    var silentTimer = null;
+    function done(){ if (silentTimer) clearTimeout(silentTimer); silentTimer = null; playSegment(state.cur + 1); }
+    u.onend = done;
+    u.onerror = done;
     speechSynthesis.cancel();
     speechSynthesis.speak(u);
+    // 静默兜底：8s 无结束回调 → 视为系统语音无声（部分设备无中文包），停止并提示
+    silentTimer = setTimeout(function(){
+      if (state.native && state.cur === idx) {
+        showToast('系统语音不可用，请重试');
+        stop();
+      }
+    }, 8000);
     updateUI();
   }
 
@@ -496,6 +537,7 @@
   function handleAct(act){
     if (!state.el) return;
     if (act === 'play') {
+      unlockAudio();   // 用户手势：解锁移动端自动播放限制（保证连续播下一段不被拦截）
       // 无队列（未开始朗读）→ 调用页面提供的内容函数启动朗读
       if (!state.queue.length) {
         if (state.provider) {
