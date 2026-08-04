@@ -1116,46 +1116,54 @@ main();
 })();
 </script>
 
-<!-- 讯飞语音朗读：通用朗读器 -->
-<script src="tts.js?v=20260804"></script>
+<!-- 讯飞语音朗读：通用朗读器（时间戳强制最新版，彻底绕开 WebView 顽固缓存） -->
 <script>
-// ===== 朗读入口：底部右侧浮动按钮，点击朗读当前文章（连续向后） =====
 (function(){
-  var btn = document.createElement('button');
-  btn.id = 'ttsReadBtn';
-  btn.textContent = '🔊';
-  btn.setAttribute('aria-label', '朗读当前文章');
-  btn.title = '朗读当前文章（连续）';
-  btn.style.cssText = 'position:fixed;bottom:110px;right:14px;z-index:29980;width:44px;height:44px;border-radius:50%;background:#e94560;color:#fff;font-size:18px;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;transition:opacity .2s';
-  document.body.appendChild(btn);
-
-  // 切换到新文章时若正在朗读 → 停止（避免与正在读的内容错位）
-  var _origUpdate = window.updateCards;
-  if (typeof _origUpdate === 'function') {
-    window.updateCards = function(){
-      var r = _origUpdate.apply(this, arguments);
-      if (window.TTS && TTS.isSpeaking()) TTS.stop();
-      return r;
-    };
+  function loadTTS(cb){
+    var s = document.createElement('script');
+    s.src = 'tts.js?ts=' + Date.now();
+    s.onload = function(){ cb && cb(); };
+    s.onerror = function(){ /* 加载失败静默：按钮点击时 TTS 为空自动无操作 */ };
+    document.head.appendChild(s);
   }
+  loadTTS(function(){
+    // ===== 朗读入口：底部右侧浮动按钮，点击朗读当前文章（连续向后） =====
+    var btn = document.createElement('button');
+    btn.id = 'ttsReadBtn';
+    btn.textContent = '🔊';
+    btn.setAttribute('aria-label', '朗读当前文章');
+    btn.title = '朗读当前文章（连续）· ' + (window.TTS && TTS.version ? TTS.version : '加载中…');
+    btn.style.cssText = 'position:fixed;bottom:110px;right:14px;z-index:29980;width:44px;height:44px;border-radius:50%;background:#e94560;color:#fff;font-size:18px;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;transition:opacity .2s';
+    document.body.appendChild(btn);
 
-  btn.addEventListener('click', function(){
-    if (!window.TTS) return;
-    if (TTS.isSpeaking()) { TTS.stop(); return; }
-    var posts = getFilteredPosts();
-    if (!posts.length || !posts[currentIndex]) return;
-    var items = [];
-    for (var i = currentIndex; i < posts.length; i++) {
-      var p = posts[i];
-      var html = mdToText(p.content || '');
-      var div = document.createElement('div');
-      div.innerHTML = html;
-      var text = (div.textContent || '').replace(/\u00a0/g, ' ').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
-      if (!text) continue;
-      items.push({ title: p.title || '', text: (p.title ? p.title + '。' : '') + text });
+    // 切换到新文章时若正在朗读 → 停止（避免与正在读的内容错位）
+    var _origUpdate = window.updateCards;
+    if (typeof _origUpdate === 'function') {
+      window.updateCards = function(){
+        var r = _origUpdate.apply(this, arguments);
+        if (window.TTS && TTS.isSpeaking()) TTS.stop();
+        return r;
+      };
     }
-    if (!items.length) return;
-    TTS.speak(items, { title: '小红故事' });
+
+    btn.addEventListener('click', function(){
+      if (!window.TTS) return;
+      if (TTS.isSpeaking()) { TTS.stop(); return; }
+      var posts = getFilteredPosts();
+      if (!posts.length || !posts[currentIndex]) return;
+      var items = [];
+      for (var i = currentIndex; i < posts.length; i++) {
+        var p = posts[i];
+        var html = mdToText(p.content || '');
+        var div = document.createElement('div');
+        div.innerHTML = html;
+        var text = (div.textContent || '').replace(/\u00a0/g, ' ').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+        if (!text) continue;
+        items.push({ title: p.title || '', text: (p.title ? p.title + '。' : '') + text });
+      }
+      if (!items.length) return;
+      TTS.speak(items, { title: '小红故事' });
+    });
   });
 })();
 </script>

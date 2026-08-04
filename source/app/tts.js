@@ -536,6 +536,7 @@
 
   /* ---------- 11. 对外 API ---------- */
   window.TTS = {
+    version: 'v2.3',   // 版本号：供页面在 🔊 按钮 title 显示，移动端可直接确认加载版本
     speak: function(items, opts){
       if (!items || !items.length) return;
       stop();                 // 关闭旧会话（连接/音频/回调全部作废）
