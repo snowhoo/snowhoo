@@ -187,7 +187,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         </span>
         <a class="menu-item" href="https://snowhoo.net/app/DaliyNews_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#ff8c00">新</span>新闻·每日速览</a>
         <a class="menu-item" href="https://snowhoo.net/app/tv_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#22c55e">播</span>播霸·在线影视</a>
-        <a class="menu-item menu-home" href="https://snowhoo.net/app/APP.html" onclick="event.preventDefault();window.location.replace('https://snowhoo.net/app/APP.html')"><span class="menu-indicator circulated" style="background:#e8793a;width:24px;height:24px;line-height:24px;font-size:16px">界</span>传送回修真小世界</a>
+        <a class="menu-item menu-home" href="https://snowhoo.net/app/APP.html" onclick="event.preventDefault();try{localStorage.removeItem('resume_play');}catch(e){}window.location.replace('https://snowhoo.net/app/APP.html')"><span class="menu-indicator circulated" style="background:#e8793a;width:24px;height:24px;line-height:24px;font-size:16px">界</span>传送回修真小世界</a>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:20px">
@@ -776,6 +776,53 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       var target = start + itemIdx;
       if (target >= 0 && target < total && target !== start) window.__zjszGoTo(target);
     });
+
+    // ===== 继续播放恢复点：记录当前文章页码 =====
+    var RESUME_KEY = 'resume_play';
+    function saveResume(playing){
+      try {
+        var idx = (typeof window.__zjszGetIndex === 'function') ? window.__zjszGetIndex() : 0;
+        localStorage.setItem(RESUME_KEY, JSON.stringify({ page: 'zjsz_p.html', index: idx, playing: !!playing, ts: Date.now() }));
+      } catch(e){}
+    }
+    function clearResume(){ try { localStorage.removeItem(RESUME_KEY); } catch(e){} }
+    // 播放状态钩子：播放→记录；暂停→记录(标记非播放中)；停止→清除
+    TTS.onPlayState(function(s){
+      if (s.playing) saveResume(true);
+      else if (!s.paused) clearResume();
+      else saveResume(false);
+    });
+
+    // ===== 从系统媒体卡片进入（?resume=1）：恢复页码并自动续播 =====
+    (function(){
+      if (location.search.indexOf('resume=1') < 0) return;
+      var r = null;
+      try {
+        r = JSON.parse(localStorage.getItem(RESUME_KEY) || 'null');
+        if (!r || r.page !== 'zjsz_p.html') r = null;
+      } catch(e){ r = null; }
+      if (!r) return;
+      var tries = 0;
+      (function wait(){
+        if (document.querySelectorAll('#app .card').length || tries++ > 100) {
+          applyZjszResume(r);
+        } else {
+          setTimeout(wait, 100);
+        }
+      })();
+      function applyZjszResume(rr){
+        if (window.__zjszGoTo && window.__zjszCount) {
+          var total = window.__zjszCount();
+          var cur = (typeof window.__zjszGetIndex === 'function') ? window.__zjszGetIndex() : 0;
+          if (rr.index >= 0 && rr.index < total && rr.index !== cur) window.__zjszGoTo(rr.index);
+        }
+        // 自动续播（provider 从当前 index 起构建）；被自动播放策略拦截时用户点 ▶ 继续
+        if (rr.playing) {
+          var pb = document.querySelector('#ttsBar [data-act="play"]');
+          if (pb) { try { pb.click(); } catch(e){} }
+        }
+      }
+    })();
   });
 })();
 </script>

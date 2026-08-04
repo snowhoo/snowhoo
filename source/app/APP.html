@@ -320,6 +320,30 @@ body{display:flex;flex-direction:column}
 </head>
 <body>
 
+<!-- 继续播放跳转：点系统媒体卡片/通知进入 App 时，若仍有播放会话（resume_play），
+     自动跳回正在播放的栏目页并定位（如新闻对应条目/文章页码）；用户手动打开首页
+     时若点击了页面则取消跳转 -->
+<script>
+(function(){
+  try {
+    var v = localStorage.getItem('resume_play');
+    if (!v) return;
+    var r = JSON.parse(v);
+    if (!r || !r.page || r.page === 'APP.html') return;
+    // 30 分钟内且有播放会话才跳转（防残留误跳）
+    if (Date.now() - (r.ts || 0) > 30 * 60 * 1000) return;
+    var cancelled = false;
+    function onceCancel(){ cancelled = true; }
+    document.addEventListener('touchstart', onceCancel, { once: true, passive: true });
+    document.addEventListener('click', onceCancel, { once: true });
+    setTimeout(function(){
+      if (cancelled) return;
+      try { location.replace(r.page + '?resume=1'); } catch(e){}
+    }, 500);
+  } catch(e){}
+})();
+</script>
+
 <!-- 启动进度遮罩：打开/刷新时显示，待背景图与数据加载完整后淡出 -->
 <div class="boot-splash" id="bootSplash">
   <div class="boot-inner">

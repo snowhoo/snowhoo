@@ -2,14 +2,13 @@
  * tts.js — 讯飞在线语音合成朗读器（前端直连）
  * 功能：分段合成、顺序播放、连续朗读、底部固定栏第二行完整播放条
  * 密钥采用混淆存储，运行时解码（提高直接复制获取门槛）
- * v2.5 — 播放条升级为完整版（▶ ⏹ 标题+进度 音色 语速 全部功能，
- *        不再用浮动卡片）；首篇播放也触发 onItemChange(0)
- *        （修复新闻/夜读第一项不展开不高亮）；
- *        移除 ttsCard 浮动卡片，进度条改 ttsBarProg
+ * v2.6 — 新增 onPlayState 播放状态钩子（播放/暂停/停止/外部中断时回调，
+ *        页面据此记录"继续播放"恢复点：点击系统媒体卡片可跳回播放页位置）；
+ * v2.5 — 完整播放条（▶ ⏹ 标题+进度 音色 语速）+ 首篇触发 onItemChange(0)
  * ============================================================ */
 (function(){
   'use strict';
-  console.log('[TTS] 朗读器 v2.5 已加载');
+  console.log('[TTS] 朗读器 v2.6 已加载');
 
   /* ---------- 1. 密钥配置（混淆存储，运行解码） ---------- */
   var TTS_KEY = {
@@ -62,8 +61,16 @@
     provider: null,  // 页面提供朗读内容：fn() → {items, label} 或 items[]
     itemChangeCb: null,  // 朗读项切换回调：fn(itemIdx)（itemIdx=队列中第几篇，0 起）
     lastItem: -1,        // 上次播放的 item 索引（用于检测跨篇切换）
-    label: ''            // 朗读来源标签（如"综合新闻"），用于媒体卡片/锁屏
+    label: '',           // 朗读来源标签（如"综合新闻"），用于媒体卡片/锁屏
+    playStateCb: null    // 播放状态变化回调：fn({playing, paused})（供页面写"继续播放"恢复点）
   };
+
+  // 播放状态变化广播：页面据此记录/清除"继续播放"恢复点（localStorage.resume_play）
+  function emitPlayState(){
+    if (state.playStateCb) {
+      try { state.playStateCb({ playing: !!state.playing, paused: !!state.paused }); } catch(e){}
+    }
+  }
 
   /* ---------- 4. 编码工具（纯手写，不依赖 TextEncoder/btoa/atob，兼容任意 WebView） ---------- */
   // 手写 UTF-8 编码：字符串 → 字节数组
@@ -431,6 +438,7 @@
           updateCard();
           syncMediaSession(false, '', '');
           notifyNative(false, '', '');
+          emitPlayState();
         }
       });
       state.audioEl = a;
@@ -489,6 +497,7 @@
     state.playing = true;
     state.paused = false;
     updateUI();
+    emitPlayState();
     // 播放：移动端自动播放可能被拦截 → 递增间隔重试 2 次；仍失败则暂停并提示（不假播放）
     function doPlay(attempt){
       if (sid !== state.session) return;
@@ -516,9 +525,11 @@
       try { p = a.play(); } catch(e){ p = Promise.reject(e); }
       if (p && p.catch) p.catch(function(){});
       state.paused = false;
+      emitPlayState();
     } else {
       state.paused = true;          // 先标记（外部 pause 监听据此跳过内部暂停）
       try { a.pause(); } catch(e){}
+      emitPlayState();
     }
     updateUI();
   }
@@ -554,6 +565,7 @@
     syncMediaSession(false, '', '');
     notifyNative(false, '', '');
     updateUI();   // 控制条常驻，仅刷新为"已停止"
+    emitPlayState();
   }
 
   function finishAll(){ stop(); }
@@ -568,6 +580,7 @@
     }
     state.native = true;
     state.playing = true; state.paused = false;
+    emitPlayState();
     var u = new SpeechSynthesisUtterance(state.queue[idx].text);
     u.lang = 'zh-CN';
     u.rate = state.speed / 50;
@@ -788,7 +801,7 @@
 
   /* ---------- 11. 对外 API ---------- */
   window.TTS = {
-    version: 'v2.5',   // v2.5：完整播放条（标题+进度+音色+语速）+ 首篇触发 onItemChange
+    version: 'v2.6',   // v2.6：新增 onPlayState 播放状态钩子（供页面记录"继续播放"恢复点）
     // 把朗读控制条挂载到指定容器（页面底部状态栏）；容器缺省挂 body
     mount: function(container){
       if (container) state.mountEl = container;
@@ -805,6 +818,11 @@
     // 保持"看到的=听到的"
     onItemChange: function(fn){
       state.itemChangeCb = fn;
+    },
+    // 设置播放状态变化回调：fn({playing, paused})——播放开始/暂停/停止/外部中断时触发。
+    // 页面据此记录或清除"继续播放"恢复点（点击系统媒体卡片回到播放页）
+    onPlayState: function(fn){
+      state.playStateCb = fn;
     },
     speak: function(items, opts){
       if (!items || !items.length) return;

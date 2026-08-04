@@ -224,7 +224,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
           <span style="margin-left:8px;color:#ff8c00">&#x2713;</span>
         </span>
         <a class="menu-item" href="https://snowhoo.net/app/tv_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#22c55e">播</span>播霸·在线影视</a>
-        <a class="menu-item menu-home" href="https://snowhoo.net/app/APP.html" onclick="event.preventDefault();window.location.replace('https://snowhoo.net/app/APP.html')"><span class="menu-indicator circulated" style="background:#e8793a;width:24px;height:24px;line-height:24px;font-size:16px">界</span>传送回修真小世界</a>
+        <a class="menu-item menu-home" href="https://snowhoo.net/app/APP.html" onclick="event.preventDefault();try{localStorage.removeItem('resume_play');}catch(e){}window.location.replace('https://snowhoo.net/app/APP.html')"><span class="menu-indicator circulated" style="background:#e8793a;width:24px;height:24px;line-height:24px;font-size:16px">界</span>传送回修真小世界</a>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:20px">
@@ -800,16 +800,45 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
     // 朗读起始项索引（与 __newsTTSRead 一致：当前展开项或首条），朗读期间固定
     var ttsStart = 0;
+    var RESUME_KEY = 'resume_play';
+
+    // ===== 继续播放恢复点：记录当前播放位置（栏目+条目） =====
+    function resumePos(){
+      var col = 0;
+      var tabs = document.querySelectorAll('.column-tab');
+      for (var i = 0; i < tabs.length; i++) { if (tabs[i].classList.contains('active')) { col = i; break; } }
+      var item = 0;
+      var els = document.querySelectorAll('#newsList .news-item');
+      for (var j = 0; j < els.length; j++) { if (els[j].classList.contains('expanded')) { item = j; break; } }
+      return { col: col, item: item };
+    }
+    function saveResume(playing){
+      try {
+        var pos = resumePos();
+        localStorage.setItem(RESUME_KEY, JSON.stringify({ page: 'DaliyNews_p.html', col: pos.col, item: pos.item, playing: !!playing, ts: Date.now() }));
+      } catch(e){}
+    }
+    function clearResume(){ try { localStorage.removeItem(RESUME_KEY); } catch(e){} }
+    // 播放状态钩子：播放→记录；暂停→记录(标记非播放中)；停止→清除
+    TTS.onPlayState(function(s){
+      if (s.playing) saveResume(true);
+      else if (!s.paused) clearResume();
+      else saveResume(false);
+    });
+
+    function syncTtsStart(){
+      var nl = document.getElementById('newsList');
+      if (!nl) return;
+      var els = nl.querySelectorAll('.news-item');
+      ttsStart = 0;
+      for (var i = 0; i < els.length; i++) {
+        if (els[i].classList.contains('expanded')) { ttsStart = i; break; }
+      }
+    }
+
     // 朗读内容提供函数：从当前展开项/首条开始连续朗读当前栏目
     TTS.setProvider(function(){
-      var nl = document.getElementById('newsList');
-      if (nl) {
-        var els = nl.querySelectorAll('.news-item');
-        ttsStart = 0;
-        for (var i = 0; i < els.length; i++) {
-          if (els[i].classList.contains('expanded')) { ttsStart = i; break; }
-        }
-      }
+      syncTtsStart();
       if (!window.__newsTTSRead) return [];
       var data = window.__newsTTSRead();
       if (!data || !data.items) return [];
@@ -826,6 +855,48 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       el.classList.add('expanded');
       try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) { el.scrollIntoView(); }
     });
+
+    // ===== 从系统媒体卡片进入（?resume=1）：定位到播放条目并自动续播 =====
+    function getResume(){
+      try {
+        var r = JSON.parse(localStorage.getItem(RESUME_KEY) || 'null');
+        return (r && r.page === 'DaliyNews_p.html') ? r : null;
+      } catch(e){ return null; }
+    }
+    function tryResume(){
+      if (location.search.indexOf('resume=1') < 0) return;
+      var r = getResume();
+      if (!r) return;
+      var tries = 0;
+      (function wait(){
+        var els = document.querySelectorAll('#newsList .news-item');
+        if (els.length || document.querySelector('#newsList .empty-state') || tries++ > 100) {
+          applyResume(r);
+        } else {
+          setTimeout(wait, 100);
+        }
+      })();
+    }
+    function applyResume(r){
+      // 切回播放时的栏目
+      var tabs = document.querySelectorAll('.column-tab');
+      if (tabs[r.col]) { try { tabs[r.col].click(); } catch(e){} }
+      setTimeout(function(){
+        var els = document.querySelectorAll('#newsList .news-item');
+        var el = els[r.item];
+        if (el) {
+          el.classList.add('expanded');
+          try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) { el.scrollIntoView(); }
+        }
+        // 自动续播（从当前展开项起）；被自动播放策略拦截时用户点 ▶ 继续
+        if (r.playing && window.__newsTTSRead) {
+          syncTtsStart();
+          var d = window.__newsTTSRead();
+          if (d && d.items && d.items.length) window.TTS.speak(d.items, { title: d.label });
+        }
+      }, 80);
+    }
+    tryResume();
   });
 })();
 </script>
