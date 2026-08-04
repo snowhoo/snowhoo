@@ -462,31 +462,49 @@
     container.appendChild(el);
     state.el = el;
 
-    el.addEventListener('click', function(e){
-      var btn = e.target.closest('[data-act]');
-      if (!btn) return;
-      var act = btn.getAttribute('data-act');
-      if (act === 'play') {
-        // 无队列（未开始朗读）→ 调用页面提供的内容函数启动朗读
-        if (!state.queue.length) {
-          if (state.provider) {
-            var r = state.provider();
-            var items = (r && r.items) ? r.items : r;
-            if (items && items.length) speak(items, { title: (r && r.label) || '' });
+    // 按钮直接绑定（不依赖 closest 事件委托，兼容老 WebView）
+    var acts = el.querySelectorAll('[data-act]');
+    for (var ai = 0; ai < acts.length; ai++) {
+      (function(btn){
+        btn.addEventListener('click', function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          handleAct(btn.getAttribute('data-act'));
+        });
+      })(acts[ai]);
+    }
+  }
+
+  // 控制条动作处理（播放/停止/语速/发音人）
+  function handleAct(act){
+    if (!state.el) return;
+    if (act === 'play') {
+      // 无队列（未开始朗读）→ 调用页面提供的内容函数启动朗读
+      if (!state.queue.length) {
+        if (state.provider) {
+          var r, items = null;
+          try { r = state.provider(); } catch(err) {
+            showToast('朗读内容获取失败：' + (err && err.message ? err.message : err));
+            return;
           }
-          return;
+          items = (r && r.items) ? r.items : r;
+          if (!items || !items.length) { showToast('没有可朗读的文本'); return; }
+          speak(items, { title: (r && r.label) || '' });
+        } else {
+          showToast('朗读内容未配置');
         }
-        if (state.playing) pauseResume();
-        else if (state.cur >= 0) {
-          state.paused = false;
-          if (state.audio) { state.audio.play().catch(function(){}); updateUI(); }
-          else playSegment(state.cur);
-        }
+        return;
       }
-      else if (act === 'stop') stop();
-      else if (act === 'speed') { cycleSpeed(); }
-      else if (act === 'voice') { cycleVoice(); }
-    });
+      if (state.playing) pauseResume();
+      else if (state.cur >= 0) {
+        state.paused = false;
+        if (state.audio) { state.audio.play().catch(function(){}); updateUI(); }
+        else playSegment(state.cur);
+      }
+    }
+    else if (act === 'stop') stop();
+    else if (act === 'speed') cycleSpeed();
+    else if (act === 'voice') cycleVoice();
   }
 
   function showBar(){ if (state.el) state.el.style.display = 'flex'; }
