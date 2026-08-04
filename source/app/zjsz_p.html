@@ -760,7 +760,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   loadTTS(function(){
     // 完整播放条挂载到底部固定栏第一行（常驻）：▶ ⏹ 标题+进度 音色 语速
     var mount = document.getElementById('ttsBarMount');
-    if (mount) TTS.mount(mount);
+    if (mount) { TTS.setAccent('#3b82f6'); TTS.mount(mount); }
 
     // 朗读内容提供：从当前文章起连续向后朗读
     TTS.setProvider(function(){

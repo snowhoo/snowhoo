@@ -2,6 +2,9 @@
  * tts.js — 讯飞在线语音合成朗读器（前端直连）
  * 功能：分段合成、顺序播放、连续朗读、底部固定栏第二行完整播放条
  * 密钥采用混淆存储，运行时解码（提高直接复制获取门槛）
+ * v2.9 — 播放/暂停/停止改为自绘 SVG 按钮（主题色直接内联进 fill，
+ *        彻底摆脱系统默认控件与字体字形，颜色必生效）；音色/语速按钮黑色；
+ *        新增 TTS.setAccent() 显式主题色（页面 mount 前调用）
  * v2.8 — 后台连播加固：预取链加深至后 2 段（无缝段后继续补池）；
  *        合成失败自动重试 3 次（600/1200ms），超时放宽到 30s；
  *        后台合成失败/自动播放被拦截 → 挂起等前台恢复（不再降级系统语音
@@ -14,7 +17,7 @@
  * ============================================================ */
 (function(){
   'use strict';
-  console.log('[TTS] 朗读器 v2.8 已加载');
+  console.log('[TTS] 朗读器 v2.9 已加载');
 
   /* ---------- 1. 密钥配置（混淆存储，运行解码） ---------- */
   var TTS_KEY = {
@@ -69,7 +72,9 @@
     lastItem: -1,        // 上次播放的 item 索引（用于检测跨篇切换）
     label: '',           // 朗读来源标签（如"综合新闻"），用于媒体卡片/锁屏
     playStateCb: null,   // 播放状态变化回调：fn({playing, paused})（供页面写"继续播放"恢复点）
-    hiddenPaused: false  // 后台挂起标志：切后台时合成/播放被系统中断，回前台自动恢复
+    hiddenPaused: false, // 后台挂起标志：切后台时合成/播放被系统中断，回前台自动恢复
+    accent: '',          // 主题色（页面 TTS.setAccent 传入；未传则读 :root 的 --tts-accent）
+    _accent: '#ff8c00'   // 已解析的主题色（内联使用）
   };
 
   // 播放状态变化广播：页面据此记录/清除"继续播放"恢复点（localStorage.resume_play）
@@ -710,15 +715,25 @@
       return c || '#ff8c00';
     } catch(e){ return '#ff8c00'; }
   }
+  // 自绘 SVG 图标按钮（彻底摆脱系统默认控件外观与字体字形）
+  // type: play(▶) | pause(⏸) | stop(⏹)；fill 用主题色内联
+  function svgIcon(type, color){
+    var c = color || '#ff8c00';
+    if (type === 'play')  return '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M8 5v14l11-7z" fill="' + c + '"/></svg>';
+    if (type === 'pause') return '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="' + c + '"/></svg>';
+    if (type === 'stop')  return '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="5" y="5" width="14" height="14" rx="2.5" fill="' + c + '" opacity="0.85"/></svg>';
+    return '';
+  }
   function initBar(){
     if (state.inited && state.el) return;
     state.inited = true;
     injectBarStyle();
+    state._accent = state.accent || getAccent() || '#ff8c00';
     var el = document.createElement('div');
     el.id = 'ttsBar';
     el.innerHTML =
-      '<button class="tts-btn tts-play" data-act="play" title="播放/暂停朗读">▶</button>' +
-      '<button class="tts-btn tts-stop" data-act="stop" title="停止">⏹</button>' +
+      '<button class="tts-btn tts-play" data-act="play" title="播放/暂停朗读">' + svgIcon('play', state._accent) + '</button>' +
+      '<button class="tts-btn tts-stop" data-act="stop" title="停止">' + svgIcon('stop', state._accent) + '</button>' +
       '<div class="tts-info">' +
         '<div class="tts-title" id="ttsBarTitle">语音朗读</div>' +
         '<div class="tts-prog"><i id="ttsBarProg"></i></div>' +
@@ -792,14 +807,9 @@
     // 切回前台自动恢复（后台挂起的会话）
     bindVisibility();
 
-    // 内联主题色兜底：播放/停止/进度条直接设色（页面 :root 的 --tts-accent）
-    var accent = getAccent();
-    var _play = el.querySelector('[data-act="play"]');
-    if (_play) _play.style.color = accent;
-    var _stop = el.querySelector('[data-act="stop"]');
-    if (_stop) _stop.style.color = accent;
+    // 进度条内联主题色（SVG 按钮已在 innerHTML 中直接用主题色填充）
     var _prog = document.getElementById('ttsBarProg');
-    if (_prog) _prog.style.background = accent;
+    if (_prog) _prog.style.background = state._accent;
 
     setupMediaActions();
     updateUI();
@@ -917,9 +927,9 @@
       pop.style.top = top + 'px';
     } catch(e){}
   }
-  // 高亮当前选项（勾选 + 内联主题色兜底）
+  // 高亮当前选项（勾选 + 主题色内联）
   function renderPopSel(){
-    var accent = getAccent();
+    var accent = state._accent || getAccent() || '#ff8c00';
     var vp = document.getElementById('ttsVoicePop');
     if (vp) {
       var items = vp.querySelectorAll('.tts-pop-item');
@@ -974,7 +984,7 @@
   function updateUI(){
     if (!state.el) return;
     var playBtn = state.el.querySelector('[data-act="play"]');
-    if (playBtn) playBtn.textContent = (state.playing && !state.paused) ? '⏸' : '▶';
+    if (playBtn) playBtn.innerHTML = (state.playing && !state.paused) ? svgIcon('pause', state._accent) : svgIcon('play', state._accent);
     var v = state.el.querySelector('[data-act="voice"]');
     if (v) v.textContent = VOICES[state.voice].name;
     var sp = state.el.querySelector('[data-act="speed"]');
@@ -1000,7 +1010,8 @@
 
   /* ---------- 11. 对外 API ---------- */
   window.TTS = {
-    version: 'v2.8',   // v2.8：后台连播加固（预取加深+合成重试+后台挂起待前台恢复）
+    version: 'v2.9',   // v2.9：播放/暂停/停止自绘 SVG 按钮（主题色内联，彻底摆脱默认控件）；
+    //                音色/语速按钮黑色；新增 TTS.setAccent 显式主题色
     // 把朗读控制条挂载到指定容器（页面底部状态栏）；容器缺省挂 body
     mount: function(container){
       if (container) state.mountEl = container;
@@ -1022,6 +1033,11 @@
     // 页面据此记录或清除"继续播放"恢复点（点击系统媒体卡片回到播放页）
     onPlayState: function(fn){
       state.playStateCb = fn;
+    },
+    // 显式设置主题色（页面在 mount 前调用，如 TTS.setAccent('#e94560')）；
+    // 未设置时自动读 :root 的 --tts-accent，再回退默认橙
+    setAccent: function(color){
+      if (typeof color === 'string' && color) state.accent = color;
     },
     speak: function(items, opts){
       if (!items || !items.length) return;

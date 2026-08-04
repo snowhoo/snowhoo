@@ -798,7 +798,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   loadTTS(function(){
     // 朗读控制条挂载到底部状态栏（常驻）：▶ 播放/暂停 · ⏹ 停止 · 语速 · 发音人
     var mount = document.getElementById('ttsBarMount');
-    if (mount) TTS.mount(mount);
+    if (mount) { TTS.setAccent('#ff8c00'); TTS.mount(mount); }
 
     // 朗读起始项索引（与 __newsTTSRead 一致：当前展开项或首条），朗读期间固定
     var ttsStart = 0;
