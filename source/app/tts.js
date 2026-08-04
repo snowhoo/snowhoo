@@ -681,7 +681,7 @@
       '#ttsBar .tts-title{font-size:12px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}' +
       '#ttsBar .tts-prog{height:3px;background:rgba(128,128,128,.18);border-radius:2px;overflow:hidden}' +
       '#ttsBar .tts-prog i{display:block;height:100%;width:0%;background:var(--tts-accent,#ff8c00);border-radius:2px;transition:width .3s}' +
-      '#ttsBar .tts-tag{height:24px;padding:0 8px;font-size:11px;border-radius:12px;flex-shrink:0;color:var(--tts-accent,#ff8c00);opacity:.9}' +
+      '#ttsBar .tts-tag{height:24px;padding:0 8px;font-size:11px;border-radius:12px;flex-shrink:0;color:#333}' +
       '#ttsBar .tts-tag:active{background:rgba(128,128,128,.18)}' +
       '.tts-pop{position:fixed;z-index:29999;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.18);padding:4px 0;min-width:104px;display:none;overflow:hidden}' +
       '.tts-pop.show{display:block}' +
@@ -692,14 +692,23 @@
       '.tts-pop .tts-pop-item.sel .tts-pop-check{opacity:1}' +
       '[data-theme="dark"] #ttsBar{color:#aaa}' +
       '[data-theme="dark"] #ttsBar .tts-title{color:#ddd}' +
+      '[data-theme="dark"] #ttsBar .tts-tag{color:#ccc}' +
       '[data-theme="dark"] .tts-pop{background:#1e1e1e}' +
       '[data-theme="dark"] .tts-pop .tts-pop-item{color:#ddd}' +
       '[data-theme="dark"] .tts-pop .tts-pop-item.sel{color:var(--tts-accent,#ffb74d)}' +
-      '@media(prefers-color-scheme:dark){#ttsBar{color:#aaa}#ttsBar .tts-title{color:#ddd}.tts-pop{background:#1e1e1e}.tts-pop .tts-pop-item{color:#ddd}.tts-pop .tts-pop-item.sel{color:var(--tts-accent,#ffb74d)}}';
+      '@media(prefers-color-scheme:dark){#ttsBar{color:#aaa}#ttsBar .tts-title{color:#ddd}#ttsBar .tts-tag{color:#ccc}.tts-pop{background:#1e1e1e}.tts-pop .tts-pop-item{color:#ddd}.tts-pop .tts-pop-item.sel{color:var(--tts-accent,#ffb74d)}}';
     var st = document.createElement('style');
     st.id = 'ttsBarStyle';
     st.textContent = css;
     (document.head || document.documentElement).appendChild(st);
+  }
+  // 读取页面主题色（--tts-accent，页面 CSS 定义在 :root）；用于内联兜底
+  // （兼容 var() 在个别 WebView 解析异常，确保播放/停止/进度/菜单选中项颜色一定生效）
+  function getAccent(){
+    try {
+      var c = getComputedStyle(document.documentElement).getPropertyValue('--tts-accent').trim();
+      return c || '#ff8c00';
+    } catch(e){ return '#ff8c00'; }
   }
   function initBar(){
     if (state.inited && state.el) return;
@@ -782,6 +791,15 @@
 
     // 切回前台自动恢复（后台挂起的会话）
     bindVisibility();
+
+    // 内联主题色兜底：播放/停止/进度条直接设色（页面 :root 的 --tts-accent）
+    var accent = getAccent();
+    var _play = el.querySelector('[data-act="play"]');
+    if (_play) _play.style.color = accent;
+    var _stop = el.querySelector('[data-act="stop"]');
+    if (_stop) _stop.style.color = accent;
+    var _prog = document.getElementById('ttsBarProg');
+    if (_prog) _prog.style.background = accent;
 
     setupMediaActions();
     updateUI();
@@ -899,18 +917,25 @@
       pop.style.top = top + 'px';
     } catch(e){}
   }
-  // 高亮当前选项（勾选）
+  // 高亮当前选项（勾选 + 内联主题色兜底）
   function renderPopSel(){
+    var accent = getAccent();
     var vp = document.getElementById('ttsVoicePop');
     if (vp) {
       var items = vp.querySelectorAll('.tts-pop-item');
-      for (var i = 0; i < items.length; i++) items[i].classList.toggle('sel', i === state.voice);
+      for (var i = 0; i < items.length; i++) {
+        items[i].classList.toggle('sel', i === state.voice);
+        items[i].style.color = (i === state.voice) ? accent : '';
+      }
     }
     var sp = document.getElementById('ttsSpeedPop');
     if (sp) {
       var sitems = sp.querySelectorAll('.tts-pop-item');
       var speeds = [40, 50, 60];
-      for (var j = 0; j < sitems.length; j++) sitems[j].classList.toggle('sel', speeds[j] === state.speed);
+      for (var j = 0; j < sitems.length; j++) {
+        sitems[j].classList.toggle('sel', speeds[j] === state.speed);
+        sitems[j].style.color = (speeds[j] === state.speed) ? accent : '';
+      }
     }
   }
   function togglePop(type){
