@@ -1615,22 +1615,9 @@ var GAME = {
       this.showXp('+0 真气','请登录赚取修炼真气');
       return Promise.resolve(false);
     }
-    var remaining = this.todayCounts[key] || 0;
-    // 数据库中有记录时才检查剩余次数；无记录（新用户）跳过此检查
-    if (!this._noDbData && remaining <= 0) {
-      this.showXp('+0 真气','今日此项修炼已毕');
-      return Promise.resolve(false);
-    }
-    // 单次经验值由 LEVEL_CONFIG[level] 决定（旧 GAME_CONFIG.points 已废弃）
-    var points = this.getActionPoints(key);
-    if (points <= 0) {
-      this.showXp('+0 真气','当前境界此项无经验奖励');
-      return Promise.resolve(false);
-    }
-    // 记录操作前快照，写→读成功后根据实际增益显示
-    this._beforePoints = this.totalPoints;
-    // 写数据库→读数据库→更新 UI（返回 Promise 供链式调用）
-    return this.syncToWaline(key, points, user);
+    // ① 点击任务 → 直接进入读库链路（performCultivate 内：读库 → 判断剩余/经验(数据库为准) → 写库 → 回读）
+    // 剩余次数、经验值、真气快照全部以数据库为准，不再读任何内存缓存
+    return this.syncToWaline(key, undefined, user);
   },
 
   updateBadge: function() {
@@ -2211,14 +2198,14 @@ var GAME = {
     } catch(e){ console.warn('[GAME] Waline 同步异常:', e); return Promise.resolve(false); }
   },
 
-  // 核心修炼：读库真实数据 → 基于真实值计算 → 写库（PUT/POST）→ 读回确认
+  // 核心修炼：点击任务后 ①读库真实数据 → ②判断（剩余次数/经验，一律以数据库为准）→ ③写库（PUT/POST）→ ④读回确认
   // 返回 Promise<boolean>：写库成功 true，失败 false（失败时已显示心魔困扰）
   performCultivate: function(key, user, opts) {
     var self = this;
     opts = opts || {};
-    // 记录操作前真气快照（与手动修炼 doAction 一致），读回后按实际增益显示 +真气
-    this._beforePoints = this.totalPoints;
-    // 读库阶段：真气恢复中（saving 由 _writeState 在真正写库时设置）
+    // 真气快照不读内存：读库后以数据库真实值设置（回读后按实际增益显示 +真气）
+    this._beforePoints = undefined;
+    // ① 读库阶段：真气恢复中（saving 由 _writeState 在真正写库时设置）
     this.setSyncState('loading');
     return this._fetchCurrentRecord(user).then(function(res) {
       var basePoints = res.data ? res.data.points : 0;
@@ -2231,9 +2218,31 @@ var GAME = {
       var baseLogo = res.data ? (res.data.logoUnlocked ? 1 : 0) : 0;
       // 找到真实记录 → 用其 objectId，确保 PUT 更新同一条（不产生新记录）
       if (res.foundId) self._gameObjectId = res.foundId;
-      // 单次经验值（可覆盖：一键批量用自身计算，正常修炼按境界查表）
-      var points = (opts.points !== undefined) ? opts.points : self.getActionPoints(key);
-      // 基于真实数据计算
+      // ② 剩余次数以数据库为准（手动任务检查；自动/一键模式由外层流程管理，跳过）
+      if (!opts.skipCheck) {
+        var dbRemaining = (typeof baseRemaining[key] === 'number') ? baseRemaining[key] : 0;
+        if (dbRemaining <= 0) {
+          self.setSyncState('idle');
+          self.showXp('+0 真气', '今日此项修炼已毕');
+          self.updateBadge();
+          self.updateTaskDots();
+          return false;
+        }
+      }
+      // 单次经验值以数据库 level 查表（opts.points 可覆盖：一键批量用自身计算）
+      var lvCfg = (typeof LEVEL_CONFIG !== 'undefined' && LEVEL_CONFIG[baseLevel]) ? LEVEL_CONFIG[baseLevel] : null;
+      var points = (opts.points !== undefined) ? opts.points
+        : (lvCfg && lvCfg.points && typeof lvCfg.points[key] === 'number' ? lvCfg.points[key] : 0);
+      if (points <= 0) {
+        self.setSyncState('idle');
+        self.showXp('+0 真气', '当前境界此项无经验奖励');
+        self.updateBadge();
+        self.updateTaskDots();
+        return false;
+      }
+      // 真气快照以数据库真实值为准
+      self._beforePoints = basePoints;
+      // ③ 基于真实数据计算
       var newPoints = basePoints + points;
       var newRemaining = self._normalizeRemaining(baseRemaining);
       if (typeof newRemaining[key] === 'number') newRemaining[key]--;
@@ -3115,7 +3124,8 @@ var GAME = {
         clearTimeout(timer);
         if (!ok) { setTimeout(step, 120); return; } // 面板加载失败：跳过
         // 数据加载完成 → 修炼（读库→写库→读回确认），写库完成后进入下一动作
-        self.performCultivate(next, user, {}).then(function(ok2) {
+        // skipCheck: 自动模式由 step 自身管理剩余次数，不在此重复判断
+        self.performCultivate(next, user, {skipCheck: true}).then(function(ok2) {
           if (!ok2) {
             // 写库失败：停止自动修炼（错误提示已由 _writeState 显示）
             self._autoMode = false;
@@ -4006,6 +4016,43 @@ commentOverlay.addEventListener('click', function(e) {
   var t = setInterval(function(){ if (ready()) { clearInterval(t); finish(); } }, 150);
   // 兜底：GAME 脚本异常等极端情况最多等 10s（长于 waline 8s 超时，正常路径不会被兜底抢先）
   setTimeout(function(){ clearInterval(t); finish(); }, 10000);
+})();
+</script>
+
+<script>
+// ===== WebView 封装场景：从后台切回前台时自动读库刷新（数据一律以数据库为准） =====
+(function(){
+  var wasHidden = false;    // 是否经历过"切后台"（避免页面初次加载误触发读库）
+  var lastRead = 0;         // 上次读库时间（防抖）
+  var MIN_INTERVAL = 2000;  // 防抖：2 秒内不重复读库
+
+  function reloadFromDB(){
+    var now = Date.now();
+    if (now - lastRead < MIN_INTERVAL) return;
+    lastRead = now;
+    // GAME 未就绪 / 修炼中 / 写库进行中 → 不打断
+    if (typeof GAME === 'undefined' || !GAME) return;
+    if (GAME._autoMode || GAME._oneKeyMode) return;
+    if (GAME.syncState && GAME.syncState !== 'idle') return;
+    // 未登录无需读库（无用户时内部直接置 idle）
+    if (!GAME.getWalineUser || !GAME.getWalineUser()) return;
+    // 读库 → processRecords 刷新红点/真气/任务列表（含跨天自动重建）
+    GAME.loadFromServer();
+  }
+  function onVisible(){
+    // 只有确实经历过"切后台"才读库；初次加载/输入框聚焦不触发
+    if (!wasHidden) return;
+    reloadFromDB();
+  }
+  // 主事件：页面可见性变化（Android/iOS WebView 均支持）
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) { wasHidden = true; return; }
+    onVisible();
+  });
+  // 兜底1：部分 WebView 切回前台不触发 visibilitychange，用 focus 补一次
+  window.addEventListener('focus', onVisible);
+  // 兜底2：iOS 页面被系统回收后从 bfcache 恢复（persisted=true）时刷新
+  window.addEventListener('pageshow', function(e){ if (e.persisted) onVisible(); });
 })();
 </script>
 </body>

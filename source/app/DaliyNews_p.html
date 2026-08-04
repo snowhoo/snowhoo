@@ -579,6 +579,35 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   // ===== 启动 =====
   loadAll();
 
+  // 供外部朗读按钮调用的数据接口（返回当前栏目待朗读列表）
+  window.__newsTTSRead = function() {
+    var col = COLUMNS[currentColumn];
+    var items = allData[col] || [];
+    if (!items.length) return null;
+    // 找到当前展开项索引；无展开项则从第一条开始
+    var start = 0;
+    var els = newsList.querySelectorAll('.news-item');
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].classList.contains('expanded')) { start = i; break; }
+    }
+    var arr = [];
+    for (var j = start; j < items.length; j++) {
+      var it = items[j];
+      var t = it.title || '';
+      var b = it.brief || '';
+      if (!t && !b) continue;
+      arr.push({ title: t, text: t + (b ? '。' + b : '') });
+    }
+    return arr.length ? { items: arr, label: DISPLAY[currentColumn] + '新闻' } : null;
+  };
+  // 切换栏目时若正在朗读 → 停止
+  var _sw = switchColumn;
+  switchColumn = function(idx) {
+    var r = _sw.apply(this, arguments);
+    if (window.TTS && TTS.isSpeaking()) TTS.stop();
+    return r;
+  };
+
 })();
 </script>
 
@@ -744,6 +773,30 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       } catch(e){ console.warn('[留言] Waline init error:', e); }
     }).catch(function(e){ console.warn('[留言] Waline import error:', e); });
   } catch(e){ console.warn('[留言] Waline 初始化失败:', e); }
+})();
+</script>
+
+<!-- 讯飞语音朗读：通用朗读器 -->
+<script src="tts.js"></script>
+<script>
+// ===== 朗读入口：底部右侧浮动按钮，朗读当前栏目（从展开项/首条开始连续向后） =====
+(function(){
+  var btn = document.createElement('button');
+  btn.id = 'ttsReadBtn';
+  btn.textContent = '🔊';
+  btn.setAttribute('aria-label', '朗读新闻');
+  btn.title = '朗读当前栏目新闻（连续）';
+  btn.style.cssText = 'position:fixed;bottom:110px;right:14px;z-index:29980;width:44px;height:44px;border-radius:50%;background:#ff8c00;color:#fff;font-size:18px;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;transition:opacity .2s';
+  document.body.appendChild(btn);
+
+  btn.addEventListener('click', function(){
+    if (!window.TTS) return;
+    if (TTS.isSpeaking()) { TTS.stop(); return; }
+    if (!window.__newsTTSRead) return;
+    var data = window.__newsTTSRead();
+    if (!data || !data.items.length) return;
+    TTS.speak(data.items, { title: data.label });
+  });
 })();
 </script>
 </body>

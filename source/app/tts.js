@@ -1,0 +1,401 @@
+/* ============================================================
+ * tts.js — 讯飞在线语音合成朗读器（前端直连）
+ * 功能：分段合成、顺序播放、连续朗读、底部悬浮控制条
+ * 密钥采用混淆存储，运行时解码（提高直接复制获取门槛）
+ * ============================================================ */
+(function(){
+  'use strict';
+
+  /* ---------- 1. 密钥配置（混淆存储，运行解码） ---------- */
+  // 混淆规则：btoa( utf8( 每字符码 ^ 0x5A 后+13 ) )
+  // 生成方式见下方工具函数 _obfuscate（部署时用 node 生成后填入）
+  var TTS_KEY = {
+    appid: '',        // 填入混淆后的 AppID
+    apikey: '',       // 填入混淆后的 APIKey
+    apisecret: ''     // 填入混淆后的 APISecret
+  };
+
+  function _deobf(s){
+    if (!s) return '';
+    try {
+      var t = atob(s);
+      var out = '';
+      for (var i = 0; i < t.length; i++) out += String.fromCharCode((t.charCodeAt(i) - 13) ^ 0x5A);
+      return decodeURIComponent(escape(out));
+    } catch(e){ return ''; }
+  }
+
+  // 生成混淆串的工具（部署时在 node 中运行，把结果填入 TTS_KEY）
+  // function _obfuscate(str){
+  //   var t = '';
+  //   for (var i = 0; i < str.length; i++) t += String.fromCharCode((str.charCodeAt(i) ^ 0x5A) + 13);
+  //   return btoa(t);
+  // }
+
+  /* ---------- 2. 发音人配置 ---------- */
+  var VOICES = [
+    { key: 'xiaoyan',  name: '晓燕' },
+    { key: 'aisjiuxu', name: '许久' },
+    { key: 'x4_lingxiaoxuan_oral', name: '凌晓萱' }
+  ];
+
+  /* ---------- 3. 内部状态 ---------- */
+  var AUDIO_HOST = 'https://tts-api.xfyun.cn/v2/tts';
+  var state = {
+    queue: [],        // [{text, title}] 待播列表（支持连续朗读）
+    cur: -1,          // 当前段索引
+    curItem: -1,      // 当前"条"索引（一篇文章/新闻为一条，可拆多段）
+    itemStart: [],    // 每条在队列中的起始段索引
+    voice: 0,         // 发音人索引
+    speed: 50,        // 讯飞语速 0-100（UI 显示 0.8/1.0/1.2）
+    audio: null,      // 当前 Audio
+    playing: false,
+    paused: false,
+    fetching: false,  // 正在预取下一段
+    el: null,         // 控制条根元素
+    inited: false
+  };
+
+  /* ---------- 4. 讯飞鉴权（HMAC-SHA256，Web Crypto） ---------- */
+  function b64(input){
+    // 支持字符串 / Uint8Array
+    if (typeof input === 'string') {
+      var bytes = new TextEncoder().encode(input);
+      var bin = '';
+      bytes.forEach(function(b){ bin += String.fromCharCode(b); });
+      return btoa(bin);
+    }
+    var bin2 = '';
+    input.forEach(function(b){ bin2 += String.fromCharCode(b); });
+    return btoa(bin2);
+  }
+
+  async function hmacSha256(secret, data){
+    var enc = new TextEncoder();
+    var key = await crypto.subtle.importKey('raw', enc.encode(secret), {name:'HMAC', hash:'SHA-256'}, false, ['sign']);
+    var sig = await crypto.subtle.sign('HMAC', key, enc.encode(data));
+    return b64(new Uint8Array(sig));
+  }
+
+  async function buildAuthHeader(){
+    var host = 'tts-api.xfyun.cn';
+    var date = new Date().toUTCString();
+    var requestLine = 'POST /v2/tts HTTP/1.1';
+    var signatureOrigin = 'host: ' + host + '\ndate: ' + date + '\n' + requestLine;
+    var signature = await hmacSha256(_deobf(TTS_KEY.apisecret), signatureOrigin);
+    var authorizationOrigin = 'api_key="' + _deobf(TTS_KEY.apikey) + '", algorithm="hmac-sha256", headers="host date request-line", signature="' + signature + '"';
+    return b64(authorizationOrigin);
+  }
+
+  /* ---------- 5. 单段文本合成 ---------- */
+  // 返回音频 blob URL；失败抛错
+  async function synth(text){
+    var auth = await buildAuthHeader();
+    var payload = {
+      header: { app_id: _deobf(TTS_KEY.appid) },
+      parameter: { tts: {
+        aue: 'lame',                        // mp3
+        auf: 'audio/L16;rate=16000',
+        voice: VOICES[state.voice].key,
+        speed: state.speed,
+        volume: 50,
+        pitch: 50
+      }},
+      payload: { text: { encoding: 'utf8', status: 2, text: b64(text) } }
+    };
+    var resp = await fetch(AUDIO_HOST, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': auth },
+      body: JSON.stringify(payload)
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var j = await resp.json();
+    if (j.code !== 0) throw new Error('讯飞 ' + j.code + ' ' + (j.message || ''));
+    var audioB64 = (j.data && j.data.audio) || '';
+    if (!audioB64) throw new Error('无音频返回');
+    // 兼容响应中 base64 可能带换行/URL 编码
+    if (audioB64.indexOf('%') !== -1) { try { audioB64 = decodeURIComponent(audioB64); } catch(e){} }
+    audioB64 = audioB64.replace(/[\r\n\s]/g, '');
+    var bin = atob(audioB64);
+    var arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return URL.createObjectURL(new Blob([arr], { type: 'audio/mp3' }));
+  }
+
+  /* ---------- 6. 文本智能分段（每段 ≤ 7000 字节，留余量） ---------- */
+  function utf8Len(s){ return new TextEncoder().encode(s).length; }
+
+  function splitText(text){
+    var segs = [];
+    if (!text) return segs;
+    // 1. 先按段落拆
+    var paras = text.split(/\n{2,}/);
+    for (var p = 0; p < paras.length; p++) {
+      var para = paras[p].replace(/\s+/g, ' ').trim();
+      if (!para) continue;
+      // 2. 段落超长再按句子拆
+      if (utf8Len(para) > 7000) {
+        var sentences = para.split(/(?<=[。！？!?；;])/);
+        var buf = '';
+        for (var s = 0; s < sentences.length; s++) {
+          var sn = sentences[s].trim();
+          if (!sn) continue;
+          if (utf8Len(buf + sn) > 7000) {
+            if (buf) segs.push(buf);
+            buf = sn;
+          } else {
+            buf += sn;
+          }
+        }
+        if (buf) segs.push(buf);
+      } else {
+        segs.push(para);
+      }
+    }
+    // 3. 单段超过 7000（极端长无标点）→ 硬切
+    var final = [];
+    for (var i = 0; i < segs.length; i++) {
+      var seg = segs[i];
+      while (utf8Len(seg) > 7000) {
+        var cut = Math.floor(seg.length * 0.9);
+        while (cut > 0 && utf8Len(seg.slice(0, cut)) > 7000) cut--;
+        final.push(seg.slice(0, cut));
+        seg = seg.slice(cut);
+      }
+      if (seg) final.push(seg);
+    }
+    return final;
+  }
+
+  /* ---------- 7. 播放控制 ---------- */
+  function playSegment(idx){
+    if (!state.queue.length) return;
+    if (idx < 0 || idx >= state.queue.length) { finishAll(); return; }
+    state.cur = idx;
+    state.curItem = -1;
+    for (var i = 0; i < state.itemStart.length; i++) {
+      if (state.itemStart[i] <= idx) state.curItem = i;
+    }
+    updateUI();
+    // 预取：当前段 + 下一段
+    if (state.fetching) return; // 已有预取进行中
+    fetchAndPlay(idx);
+  }
+
+  async function fetchAndPlay(idx){
+    state.fetching = true;
+    try {
+      var url = await synth(state.queue[idx].text);
+      if (state.cur !== idx) { // 播放过程中用户已切换
+        URL.revokeObjectURL(url);
+        state.fetching = false;
+        return;
+      }
+      // 预取下一段
+      var nextUrl = null;
+      if (idx + 1 < state.queue.length) {
+        synth(state.queue[idx + 1].text).then(function(u){
+          state._prefetched = u;
+        }).catch(function(){});
+      }
+      startAudio(url, idx);
+    } catch(e) {
+      console.warn('[TTS] 合成失败:', e);
+      state.fetching = false;
+      showToast('语音合成失败，已切换系统语音');
+      fallbackNative(idx); // 讯飞失败降级系统 TTS
+      return;
+    }
+  }
+
+  function startAudio(url, idx){
+    if (state.audio) { try{ state.audio.pause(); }catch(e){} state.audio = null; }
+    var a = new Audio(url);
+    state.audio = a;
+    a.onended = function(){
+      URL.revokeObjectURL(url);
+      if (state._prefetched) {
+        var pu = state._prefetched;
+        state._prefetched = null;
+        URL.revokeObjectURL(url);
+        if (state.cur === idx) { state.cur++; updateUI(); startAudio(pu, state.cur); return; }
+      }
+      state.fetching = false;
+      playSegment(state.cur + 1); // 自动播下一段（连续朗读）
+    };
+    a.onerror = function(){
+      URL.revokeObjectURL(url);
+      state.fetching = false;
+      playSegment(state.cur + 1);
+    };
+    state.playing = true;
+    state.paused = false;
+    a.play().catch(function(){});
+    updateUI();
+  }
+
+  function pauseResume(){
+    if (!state.audio) return;
+    if (state.paused) {
+      state.audio.play().catch(function(){});
+      state.paused = false;
+    } else {
+      state.audio.pause();
+      state.paused = true;
+    }
+    updateUI();
+  }
+
+  function stop(){
+    if (state.audio) { try{ state.audio.pause(); state.audio.onended = null; }catch(e){} state.audio = null; }
+    if (state._prefetched) { URL.revokeObjectURL(state._prefetched); state._prefetched = null; }
+    state.playing = false; state.paused = false;
+    state.queue = []; state.cur = -1; state.curItem = -1; state.itemStart = [];
+    state.fetching = false;
+    if (state.native) { try{ speechSynthesis.cancel(); }catch(e){} state.native = false; }
+    updateUI();
+    hideBar();
+  }
+
+  function finishAll(){
+    stop();
+  }
+
+  /* ---------- 8. 系统 TTS 降级（讯飞未配置/失败时） ---------- */
+  function fallbackNative(idx){
+    if (!('speechSynthesis' in window)) { showToast('当前环境不支持语音朗读'); stop(); return; }
+    state.native = true;
+    state.playing = true; state.paused = false;
+    var u = new SpeechSynthesisUtterance(state.queue[idx].text);
+    u.lang = 'zh-CN';
+    u.rate = state.speed / 50;
+    u.onend = function(){ playSegment(state.cur + 1); };
+    u.onerror = function(){ playSegment(state.cur + 1); };
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+    updateUI();
+  }
+
+  /* ---------- 9. 控制条 UI ---------- */
+  function initBar(){
+    if (state.inited) return;
+    state.inited = true;
+    var el = document.createElement('div');
+    el.id = 'ttsBar';
+    el.style.cssText = 'position:fixed;left:0;right:0;bottom:52px;z-index:29990;display:none;justify-content:center;padding:0 12px;pointer-events:none;box-sizing:border-box';
+    el.innerHTML =
+      '<div style="pointer-events:auto;background:#1c1c1e;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:8px 14px;display:flex;align-items:center;gap:10px;max-width:100%;box-shadow:0 6px 24px rgba(0,0,0,.35)">' +
+        '<button data-act="prev" style="background:none;border:none;color:#fff;font-size:14px;cursor:pointer;padding:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center">⏮</button>' +
+        '<button data-act="play" style="background:#ff8c00;border:none;border-radius:50%;color:#fff;font-size:15px;cursor:pointer;width:36px;height:36px;display:flex;align-items:center;justify-content:center;padding:0">▶</button>' +
+        '<button data-act="next" style="background:none;border:none;color:#fff;font-size:14px;cursor:pointer;padding:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center">⏭</button>' +
+        '<button data-act="stop" style="background:none;border:none;color:#fff;font-size:13px;cursor:pointer;padding:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center">⏹</button>' +
+        '<span data-role="info" style="color:#ddd;font-size:12px;min-width:70px;text-align:center;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">准备朗读</span>' +
+        '<button data-act="speed" style="background:none;border:none;color:#ffb74d;font-size:12px;cursor:pointer;padding:2px 6px;white-space:nowrap">1.0x</button>' +
+        '<button data-act="voice" style="background:none;border:none;color:#a5d6ff;font-size:12px;cursor:pointer;padding:2px 6px;white-space:nowrap">晓燕</button>' +
+        '<button data-act="close" style="background:none;border:none;color:#999;font-size:12px;cursor:pointer;padding:2px 6px">✕</button>' +
+      '</div>';
+    document.body.appendChild(el);
+    state.el = el;
+
+    el.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      var act = btn.getAttribute('data-act');
+      if (act === 'play') { if (state.playing) pauseResume(); else if (state.queue.length && state.cur >= 0) { state.paused = false; if(state.audio){ state.audio.play(); updateUI(); } } }
+      else if (act === 'stop') stop();
+      else if (act === 'prev') { if (state.cur > 0) playSegment(state.cur - 1); }
+      else if (act === 'next') { if (state.cur < state.queue.length - 1) playSegment(state.cur + 1); }
+      else if (act === 'speed') { cycleSpeed(); }
+      else if (act === 'voice') { cycleVoice(); }
+      else if (act === 'close') stop();
+    });
+  }
+
+  function showBar(){ if (state.el) state.el.style.display = 'flex'; }
+  function hideBar(){ if (state.el) state.el.style.display = 'none'; }
+
+  function cycleSpeed(){
+    var speeds = [40, 50, 60];
+    var idx = speeds.indexOf(state.speed);
+    state.speed = speeds[(idx + 1) % speeds.length];
+    // 已合成音频不变，仅对后续段生效
+    var btn = state.el.querySelector('[data-act="speed"]');
+    if (btn) btn.textContent = (state.speed / 50).toFixed(1) + 'x';
+    showToast('语速 ' + (state.speed / 50).toFixed(1) + 'x（下一段生效）');
+  }
+
+  function cycleVoice(){
+    state.voice = (state.voice + 1) % VOICES.length;
+    var btn = state.el.querySelector('[data-act="voice"]');
+    if (btn) btn.textContent = VOICES[state.voice].name;
+    showToast('发音人：' + VOICES[state.voice].name + '（下一段生效）');
+  }
+
+  function updateUI(){
+    if (!state.el) return;
+    var info = state.el.querySelector('[data-role="info"]');
+    if (info) {
+      var total = state.queue.length;
+      var itemLabel = '';
+      if (state.curItem >= 0 && state.itemStart.length > 1) {
+        itemLabel = (state.curItem + 1) + '/' + state.itemStart.length + ' · ';
+      }
+      info.textContent = state.playing
+        ? (itemLabel + (state.cur + 1) + '/' + total + (state.paused ? ' 已暂停' : ''))
+        : '已停止';
+    }
+    var playBtn = state.el.querySelector('[data-act="play"]');
+    if (playBtn) playBtn.textContent = (state.playing && !state.paused) ? '⏸' : '▶';
+  }
+
+  /* ---------- 10. 轻提示 ---------- */
+  var _toastTimer = null;
+  function showToast(msg){
+    var t = document.getElementById('ttsToast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'ttsToast';
+      t.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:29999;background:rgba(0,0,0,.75);color:#fff;padding:6px 16px;border-radius:18px;font-size:12px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.opacity = '1';
+    if (_toastTimer) clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(function(){ t.style.opacity = '0'; }, 1800);
+  }
+
+  /* ---------- 11. 对外 API ---------- */
+  // speak(items, opts)：items = [{title, text}]（可多条，支持连续朗读）
+  // opts.title 可选：当前朗读的栏目名
+  window.TTS = {
+    speak: function(items, opts){
+      if (!items || !items.length) return;
+      stop();
+      opts = opts || {};
+      var queue = [], itemStart = [];
+      for (var i = 0; i < items.length; i++) {
+        itemStart.push(queue.length);
+        var segs = splitText(items[i].text || '');
+        for (var j = 0; j < segs.length; j++) queue.push({ text: segs[j], title: items[i].title || '' });
+      }
+      if (!queue.length) { showToast('没有可朗读的文本'); return; }
+      state.queue = queue;
+      state.itemStart = itemStart;
+      state.cur = 0;
+      state.curItem = 0;
+      initBar();
+      showBar();
+      updateUI();
+      // 讯飞密钥未配置 → 直接系统 TTS
+      if (!_deobf(TTS_KEY.appid) || !_deobf(TTS_KEY.apikey) || !_deobf(TTS_KEY.apisecret)) {
+        showToast('讯飞未配置，使用系统语音');
+        fallbackNative(0);
+        return;
+      }
+      fetchAndPlay(0);
+    },
+    stop: stop,
+    pause: pauseResume,
+    isSpeaking: function(){ return state.playing; }
+  };
+})();

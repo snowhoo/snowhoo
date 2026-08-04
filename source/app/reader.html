@@ -1112,7 +1112,51 @@ main();
         });
       } catch(e){ console.warn('[留言] Waline init error:', e); }
     }).catch(function(e){ console.warn('[留言] Waline import error:', e); });
-  } catch(e){ console.warn('[留言] Waline 初始化失败:', e); }
+      } catch(e){ console.warn('[留言] Waline 初始化失败:', e); }
+})();
+</script>
+
+<!-- 讯飞语音朗读：通用朗读器 -->
+<script src="tts.js"></script>
+<script>
+// ===== 朗读入口：底部右侧浮动按钮，点击朗读当前文章（连续向后） =====
+(function(){
+  var btn = document.createElement('button');
+  btn.id = 'ttsReadBtn';
+  btn.textContent = '🔊';
+  btn.setAttribute('aria-label', '朗读当前文章');
+  btn.title = '朗读当前文章（连续）';
+  btn.style.cssText = 'position:fixed;bottom:110px;right:14px;z-index:29980;width:44px;height:44px;border-radius:50%;background:#e94560;color:#fff;font-size:18px;border:none;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;transition:opacity .2s';
+  document.body.appendChild(btn);
+
+  // 切换到新文章时若正在朗读 → 停止（避免与正在读的内容错位）
+  var _origUpdate = window.updateCards;
+  if (typeof _origUpdate === 'function') {
+    window.updateCards = function(){
+      var r = _origUpdate.apply(this, arguments);
+      if (window.TTS && TTS.isSpeaking()) TTS.stop();
+      return r;
+    };
+  }
+
+  btn.addEventListener('click', function(){
+    if (!window.TTS) return;
+    if (TTS.isSpeaking()) { TTS.stop(); return; }
+    var posts = getFilteredPosts();
+    if (!posts.length || !posts[currentIndex]) return;
+    var items = [];
+    for (var i = currentIndex; i < posts.length; i++) {
+      var p = posts[i];
+      var html = mdToText(p.content || '');
+      var div = document.createElement('div');
+      div.innerHTML = html;
+      var text = (div.textContent || '').replace(/\u00a0/g, ' ').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+      if (!text) continue;
+      items.push({ title: p.title || '', text: (p.title ? p.title + '。' : '') + text });
+    }
+    if (!items.length) return;
+    TTS.speak(items, { title: '小红故事' });
+  });
 })();
 </script>
 </body>
