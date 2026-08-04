@@ -42,7 +42,24 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;border-top:1px solid #eee;display:flex;flex-direction:column;padding:0;font-size:.8rem;user-select:none;-webkit-user-select:none}
 .bottom-nav .bn-row{display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:44px;width:100%;flex-shrink:0;min-width:0}
 .bottom-nav .bn-tts-row{height:42px;padding:0 4px 0 0;border-top:1px solid #f0f0f0;justify-content:stretch}
-#ttsBarMount{width:100%;display:flex;min-width:0}
+/* 第二行：文章自带音频播放条（▶/⏸ ⏹ 标题+进度） */
+.yedu-play-bar{display:flex;align-items:center;gap:2px;height:42px;width:100%;min-width:0;padding:0 8px;font-size:12px;color:#555;user-select:none;-webkit-user-select:none;box-sizing:border-box}
+.yedu-play-bar button{background:none;border:none;cursor:pointer;color:inherit;padding:0;margin:0;font-family:inherit}
+.yedu-play-bar .yp-btn{display:flex;align-items:center;justify-content:center;height:30px;border-radius:6px;flex-shrink:0;line-height:1}
+.yedu-play-bar .yp-btn:active{background:rgba(128,128,128,.18)}
+.yedu-play-bar .yp-play{width:34px;font-size:16px;color:#764ba2}
+.yedu-play-bar .yp-stop{width:28px;font-size:13px;color:#999}
+.yedu-play-bar .yp-info{flex:1;min-width:0;padding:0 6px;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.yedu-play-bar .yp-title{font-size:12px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.yedu-play-bar .yp-prog{height:3px;background:rgba(128,128,128,.18);border-radius:2px;overflow:hidden}
+.yedu-play-bar .yp-prog i{display:block;height:100%;width:0%;background:#764ba2;border-radius:2px;transition:width .3s}
+.yedu-play-bar.disabled .yp-title{color:#999}
+.yedu-play-bar.disabled button{color:#bbb;pointer-events:none}
+[data-theme="dark"] .yedu-play-bar{color:#aaa}
+[data-theme="dark"] .yedu-play-bar .yp-title{color:#ddd}
+[data-theme="dark"] .yedu-play-bar .yp-play{color:#b18ae0}
+[data-theme="dark"] .yedu-play-bar .yp-stop{color:#777}
+@media(prefers-color-scheme:dark){.yedu-play-bar{color:#aaa}.yedu-play-bar .yp-title{color:#ddd}.yedu-play-bar .yp-play{color:#b18ae0}.yedu-play-bar .yp-stop{color:#777}}
 .bottom-nav .page-btn{display:flex;align-items:center;gap:4px;padding:4px 16px;border-radius:4px;cursor:pointer;color:#666}
 .bottom-nav .page-btn:active{background:rgba(0,0,0,.05)}
 .page-nav-group{display:flex;align-items:center;gap:2px}
@@ -193,7 +210,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     </div>
     <div style="display:flex;align-items:center;gap:20px">
       <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
-      <button class="yedu-audio-btn" id="yeduAudioBtn" style="display:none"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
       <div class="page-nav-group">
         <span class="page-nav-btn" id="firstBtn">‹‹</span>
         <span class="page-btn" id="pageBtn">1</span>
@@ -204,14 +220,21 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       <img class="user-avatar" id="userAvatar" alt="">
     </div>
   </div>
-  <div class="bn-row bn-tts-row"><div id="ttsBarMount"></div></div>
+  <div class="bn-row bn-tts-row">
+    <div class="yedu-play-bar" id="yeduPlayBar">
+      <button class="yp-btn yp-play" id="yeduPlayBtn" title="播放/暂停">▶</button>
+      <button class="yp-btn yp-stop" id="yeduStopBtn" title="停止">⏹</button>
+      <div class="yp-info">
+        <div class="yp-title" id="yeduPlayTitle">语音播放</div>
+        <div class="yp-prog"><i id="yeduPlayProg"></i></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 (function() {
   var basePath = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '/js/sevencolor/1/');
-  var pausePath = 'M6 19h4V5H6v14zm8-14v14h4V5h-4z';
-  var playPath = 'M8 5v14l11-7z';
   
   let articles = [];
   let currentIndex = 0;
@@ -228,7 +251,12 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightboxImg');
   const lightboxClose = document.getElementById('lightboxClose');
-  const audioBtn = document.getElementById('yeduAudioBtn');
+  // 第二行播放条（文章自带音频）：▶/⏸ · ⏹ · 标题+进度
+  const playBar = document.getElementById('yeduPlayBar');
+  const playBtn = document.getElementById('yeduPlayBtn');
+  const stopBtn = document.getElementById('yeduStopBtn');
+  const playTitle = document.getElementById('yeduPlayTitle');
+  const playProg = document.getElementById('yeduPlayProg');
 
   // 主题检测
   function detectTheme() {
@@ -554,19 +582,31 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     } catch (e) {}
   }
 
+  // 播放条按钮 UI 同步（▶/⏸ 文字按钮，无 svg path）
+  function setPlayBtnUI(playing) {
+    if (!playBtn) return;
+    playBtn.textContent = playing ? '⏸' : '▶';
+    playBtn.classList.toggle('playing', !!playing);
+  }
+  // 播放条进度同步（无音频/未加载时归零）
+  function setPlayProg() {
+    if (!playProg) return;
+    if (_scAudio && _scAudio.duration) {
+      playProg.style.width = Math.min(100, _scAudio.currentTime / _scAudio.duration * 100) + '%';
+    } else {
+      playProg.style.width = '0%';
+    }
+  }
+
   function toggleAudio(index, btn) {
     var src = btn.dataset.src;
-    var progressBar = document.getElementById('yedu-progress-' + index);
-    var svg = btn.querySelector('svg');
-    var pathEl = svg.querySelector('path');
 
     if (_scAudio && _scAudio._scSrc === src) {
       if (_scAudio.paused) {
         playCurrentAudio();
       } else {
         _scAudio.pause();
-        btn.classList.remove('playing');
-        pathEl.setAttribute('d', playPath);
+        setPlayBtnUI(false);
         notifyNative(false, (articles[index] || {}).title, '小红故事·夜读', (articles[index] || {}).coverSrc, _scAudio.duration, _scAudio.currentTime, true);
         setMediaSession(false, (articles[index] || {}).title, (articles[index] || {}).coverSrc);
       }
@@ -575,15 +615,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
     if (_scAudio) {
       _scAudio.pause();
-      if (_scAudioBtn) {
-        _scAudioBtn.classList.remove('playing');
-        var op = _scAudioBtn.querySelector('svg path');
-        if (op) op.setAttribute('d', playPath);
-      }
+      setPlayBtnUI(false);
     }
-
-    // 播放文章自带音频 → 先停语音朗读（避免双音源）
-    if (window.TTS && TTS.isSpeaking()) window.TTS.stop();
 
     var audio = new Audio(src);
     audio._scSrc = src;
@@ -592,9 +625,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
     var lastPosSync = 0; // 进度同步节流（1s 一次，避免频繁 JS bridge 调用）
     audio.addEventListener('timeupdate', function() {
-      if (audio.duration && progressBar) {
-        progressBar.style.width = (audio.currentTime / audio.duration * 100) + '%';
-      }
+      setPlayProg();
       var now = Date.now();
       if (now - lastPosSync > 1000 && !audio.paused) { // 仅播放中同步（防停止/暂停后残留 timeupdate 把服务拉回）
         lastPosSync = now;
@@ -603,9 +634,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       }
     });
     audio.addEventListener('ended', function() {
-      btn.classList.remove('playing');
-      pathEl.setAttribute('d', playPath);
-      if (progressBar) progressBar.style.width = '0%';
+      setPlayBtnUI(false);
+      setPlayProg();
       notifyNative(false, '', '', '', 0, 0);
       setMediaSession(false);
     });
@@ -613,22 +643,19 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     // （keepAlive 保留服务可恢复；非当前音频的 pause 忽略，避免切歌竞态）
     audio.addEventListener('pause', function() {
       if (!_scAudio || audio._scSrc !== _scAudio._scSrc) return; // 已切歌/旧 audio，忽略
-      btn.classList.remove('playing');
-      pathEl.setAttribute('d', playPath);
+      setPlayBtnUI(false);
       notifyNative(false, (articles[index] || {}).title, '小红故事·夜读',
         (articles[index] || {}).coverSrc, audio.duration, audio.currentTime, true);
       setMediaSession(false, (articles[index] || {}).title, (articles[index] || {}).coverSrc);
     });
     audio.addEventListener('error', function() {
-      btn.classList.remove('playing');
-      pathEl.setAttribute('d', playPath);
-      if (progressBar) progressBar.style.width = '0%';
+      setPlayBtnUI(false);
+      setPlayProg();
       notifyNative(false, '', '', '', 0, 0);
       setMediaSession(false);
     });
 
-    btn.classList.add('playing');
-    pathEl.setAttribute('d', pausePath);
+    setPlayBtnUI(true);
     notifyNative(true, (articles[index] || {}).title, '小红故事·夜读', (articles[index] || {}).coverSrc, audio.duration, audio.currentTime);
     setMediaSession(true, (articles[index] || {}).title, (articles[index] || {}).coverSrc);
     // 系统媒体通知的控制按钮（播放/暂停）→ 控制页面音频
@@ -639,23 +666,17 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       }
     } catch (e) {}
     audio.play().catch(function() {
-      btn.classList.remove('playing');
-      pathEl.setAttribute('d', playPath);
+      setPlayBtnUI(false);
       notifyNative(false, '', '', '', 0, 0);
       setMediaSession(false);
     });
   }
 
-  // 刷新当前播放按钮 UI（按钮图标 + 进度条），供原生媒体卡片控制后同步
+  // 刷新播放条 UI（按钮图标 + 进度条），供原生媒体卡片控制后同步
   function refreshAudioUI() {
-    if (!_scAudioBtn) return;
-    var svg = _scAudioBtn.querySelector('svg');
-    var pathEl = svg ? svg.querySelector('path') : null;
     var playing = _scAudio && !_scAudio.paused;
-    _scAudioBtn.classList.toggle('playing', playing);
-    if (pathEl) pathEl.setAttribute('d', playing ? pausePath : playPath);
-    var pb = document.getElementById('yedu-progress-' + _scAudioBtn.dataset.index);
-    if (pb) pb.style.width = (_scAudio && _scAudio.duration ? (_scAudio.currentTime / _scAudio.duration * 100) : 0) + '%';
+    setPlayBtnUI(playing);
+    setPlayProg();
   }
 
   // 播放当前 _scAudio：play() 结果确认后再同步 UI 与原生（防"显示播放但无声"的假播放；
@@ -705,27 +726,46 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     } catch (e) {}
   };
 
+  // 播放条事件：▶/⏸ 播放暂停 · ⏹ 停止（回到开头）
+  playBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (playBtn.dataset.src) toggleAudio(parseInt(playBtn.dataset.index, 10), playBtn);
+  });
+  stopBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (_scAudio) {
+      _scAudio.pause();
+      _scAudio.currentTime = 0;
+      refreshAudioUI();
+      notifyNative(false, '', '', '', 0, 0);
+      setMediaSession(false);
+    }
+  });
+
+  // 刷新第二行播放条：文章有音频 → 启用并显示标题；无音频 → 置灰占位
   function updateAudioButtons() {
     var post = articles[currentIndex];
+    // 切到新文章：若在播的是其他文章的音频 → 停止并复位（保持"看到的=听到的"）
+    if (_scAudio && !_scAudio.paused && (!post || _scAudio._scSrc !== post.audioSrc)) {
+      try { _scAudio.pause(); } catch(e){}
+      try { _scAudio.currentTime = 0; } catch(e){}
+      notifyNative(false, '', '', '', 0, 0);
+      setMediaSession(false);
+    }
     if (post && post.audioSrc) {
-      audioBtn.style.display = 'flex';
-      audioBtn.dataset.src = post.audioSrc;
-      audioBtn.dataset.index = currentIndex;
-      var svg = audioBtn.querySelector('svg');
-      var pathEl = svg.querySelector('path');
-      if (_scAudio && _scAudio._scSrc === post.audioSrc && !_scAudio.paused) {
-        audioBtn.classList.add('playing');
-        pathEl.setAttribute('d', pausePath);
-      } else {
-        audioBtn.classList.remove('playing');
-        pathEl.setAttribute('d', playPath);
-      }
-      audioBtn.onclick = function(e) {
-        e.stopPropagation();
-        toggleAudio(parseInt(audioBtn.dataset.index), audioBtn);
-      };
+      playBar.classList.remove('disabled');
+      if (playTitle) playTitle.textContent = post.title;
+      playBtn.dataset.src = post.audioSrc;
+      playBtn.dataset.index = currentIndex;
+      setPlayBtnUI(!!(_scAudio && _scAudio._scSrc === post.audioSrc && !_scAudio.paused));
+      setPlayProg();
     } else {
-      audioBtn.style.display = 'none';
+      playBar.classList.add('disabled');
+      if (playTitle) playTitle.textContent = '暂无音频';
+      playBtn.dataset.src = '';
+      playBtn.dataset.index = '';
+      setPlayBtnUI(false);
+      setPlayProg();
     }
   }
 
@@ -764,49 +804,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   }
 
   // 分享功能（已移除）
-
-  // ===== TTS 语音朗读钩子（供页尾 tts.js 集成脚本调用） =====
-  // 原始翻页函数：TTS 自动翻页使用（不触发"手动翻页即停朗读"）；手动翻页走包装版
-  var _rawUpdateCards = updateCards;
-  window.__yeduRawUpdate = function(){ _rawUpdateCards(); };
-  // 手动翻页（手势/页码/首尾/键盘）→ 正在朗读则停止（朗读队列与当前页错位）
-  updateCards = function(){
-    var r = _rawUpdateCards.apply(this, arguments);
-    if (window.TTS && TTS.isSpeaking()) window.TTS.stop();
-    return r;
-  };
-  window.__yeduGetIndex = function(){ return currentIndex; };
-  window.__yeduCount = function(){ return articles.length; };
-  window.__yeduGoTo = function(n){
-    if (n >= 0 && n < articles.length) {
-      currentIndex = n;
-      _rawUpdateCards();   // 原始翻页：不中断朗读（保持"听到的=看到的"）
-    }
-  };
-  // 朗读队列构建：从当前文章起连续向后（标题+正文段落；无正文用占位文案）
-  window.__yeduProvider = function(){
-    if (!articles.length || !articles[currentIndex]) return null;
-    var items = [];
-    for (var i = currentIndex; i < articles.length; i++) {
-      var p = articles[i] || {};
-      var paras = (p.paragraphs && p.paragraphs.length) ? p.paragraphs.join('。') : '';
-      if (!paras) paras = '暂无正文。有时候，适当留白比文字更具内涵，而沉默比呐喊更彰显力量。';
-      var title = p.title || '';
-      var t = (title ? title + '。' : '') + paras;
-      if (!t.trim()) continue;
-      items.push({ title: title, text: t });
-    }
-    return items.length ? { items: items, label: '夜读' } : null;
-  };
-  // 停止文章自带音频（TTS 朗读开始时调用，避免两个音源同时播放）
-  window.__yeduAudioStop = function(){
-    if (_scAudio && !_scAudio.paused) {
-      try { _scAudio.pause(); } catch(e){}
-      refreshAudioUI();
-      notifyNative(false, '', '', '', 0, 0);
-      setMediaSession(false);
-    }
-  };
 
   loadData();
 })();
@@ -974,41 +971,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       } catch(e){ console.warn('[留言] Waline init error:', e); }
     }).catch(function(e){ console.warn('[留言] Waline import error:', e); });
   } catch(e){ console.warn('[留言] Waline 初始化失败:', e); }
-})();
-</script>
-<!-- 讯飞语音朗读：通用朗读器（时间戳强制最新版，彻底绕开 WebView 顽固缓存） -->
-<script>
-(function(){
-  function loadTTS(cb){
-    var s = document.createElement('script');
-    s.src = 'tts.js?ts=' + Date.now();
-    s.onload = function(){ cb && cb(); };
-    s.onerror = function(){ /* 加载失败静默：控制条为空自动隐藏 */ };
-    document.head.appendChild(s);
-  }
-  loadTTS(function(){
-    // 完整播放条挂载到底部固定栏第二行（常驻）：▶ ⏹ 标题+进度 音色 语速
-    var mount = document.getElementById('ttsBarMount');
-    if (mount) TTS.mount(mount);
-
-    // 朗读内容提供：从当前文章起连续向后朗读；若文章自带音频在播 → 先停（避免双音源）
-    TTS.setProvider(function(){
-      if (window.__yeduAudioStop) window.__yeduAudioStop();
-      if (window.__yeduProvider) return window.__yeduProvider();
-      return [];
-    });
-
-    // 朗读跨篇时自动翻页（保持"看到的=听到的"）：
-    // 队列从 currentIndex 开始构建，第 itemIdx 篇对应文章 currentIndex + itemIdx；
-    // 用原始 updateCards 翻页（不触发"手动翻页即停朗读"逻辑）
-    TTS.onItemChange(function(itemIdx){
-      if (!window.__yeduRawUpdate || !window.__yeduGoTo) return;
-      var start = (typeof window.__yeduGetIndex === 'function') ? window.__yeduGetIndex() : 0;
-      var total = (typeof window.__yeduCount === 'function') ? window.__yeduCount() : 0;
-      var target = start + itemIdx;
-      if (target >= 0 && target < total && target !== start) window.__yeduGoTo(target);
-    });
-  });
 })();
 </script>
 </body>
