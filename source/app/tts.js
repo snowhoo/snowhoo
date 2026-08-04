@@ -2,19 +2,17 @@
  * tts.js — 讯飞在线语音合成朗读器（前端直连）
  * 功能：分段合成、顺序播放、连续朗读、底部悬浮控制条
  * 密钥采用混淆存储，运行时解码（提高直接复制获取门槛）
- * v2.1 — WebSocket 协议 + 纯 JS HMAC-SHA256（http/https 均可用）
+ * v2.2 — 会话令牌 + 连接管理，修复播放错乱/多次播放报错
  * ============================================================ */
 (function(){
   'use strict';
-  console.log('[TTS] 朗读器 v2.1 已加载');
+  console.log('[TTS] 朗读器 v2.2 已加载');
 
   /* ---------- 1. 密钥配置（混淆存储，运行解码） ---------- */
-  // 混淆规则：btoa( utf8( 每字符码 ^ 0x5A 后+13 ) )
-  // 生成方式见下方工具函数 _obfuscate（部署时用 node 生成后填入）
   var TTS_KEY = {
-    appid: 'TEVvd0tGSXo=',        // 填入混淆后的 AppID
-    apikey: 'dXd7eHt7fHl6SEt8RUxGeHZLTEtId0h6fG9ISEVMdUs=',       // 填入混淆后的 APIKey
-    apisecret: 'EC0YfCE9IUAhRBAvIUQkLSF1GT4QGiFEIRsZPxAtPz0='     // 填入混淆后的 APISecret
+    appid: 'TEVvd0tGSXo=',
+    apikey: 'dXd7eHt7fHl6SEt8RUxGeHZLTEtId0h6fG9ISEVMdUs=',
+    apisecret: 'EC0YfCE9IUAhRBAvIUQkLSF1GT4QGiFEIRsZPxAtPz0='
   };
 
   function _deobf(s){
@@ -27,13 +25,6 @@
     } catch(e){ return ''; }
   }
 
-  // 生成混淆串的工具（部署时在 node 中运行，把结果填入 TTS_KEY）
-  // function _obfuscate(str){
-  //   var t = '';
-  //   for (var i = 0; i < str.length; i++) t += String.fromCharCode((str.charCodeAt(i) ^ 0x5A) + 13);
-  //   return btoa(t);
-  // }
-
   /* ---------- 2. 发音人配置 ---------- */
   var VOICES = [
     { key: 'xiaoyan',  name: '晓燕' },
@@ -43,23 +34,28 @@
 
   /* ---------- 3. 内部状态 ---------- */
   var state = {
-    queue: [],        // [{text, title}] 待播列表（支持连续朗读）
+    queue: [],        // [{text, title}] 待播列表
     cur: -1,          // 当前段索引
-    curItem: -1,      // 当前"条"索引（一篇文章/新闻为一条，可拆多段）
-    itemStart: [],    // 每条在队列中的起始段索引
-    voice: 0,         // 发音人索引
-    speed: 50,        // 讯飞语速 0-100（UI 显示 0.8/1.0/1.2）
-    audio: null,      // 当前 Audio
+    curItem: -1,
+    itemStart: [],
+    voice: 0,
+    speed: 50,
+    audio: null,
     playing: false,
     paused: false,
-    fetching: false,  // 正在预取下一段
-    el: null,         // 控制条根元素
+    fetching: false,  // 当前段合成/预取进行中
+    prefetched: null, // 预取音频 URL
+    prefetchedIdx: -1,
+    session: 0,       // 会话令牌：每次 speak/stop 递增，用于丢弃过期回调
+    activeWs: {},     // 进行中的 WebSocket（id → ws），stop 时全部关闭
+    wsSeq: 0,
+    native: false,
+    el: null,
     inited: false
   };
 
-  /* ---------- 4. 讯飞鉴权（WebSocket 握手，纯 JS HMAC-SHA256，兼容 http/file 环境） ---------- */
+  /* ---------- 4. 讯飞鉴权 ---------- */
   function b64(input){
-    // 支持字符串 / Uint8Array
     if (typeof input === 'string') {
       var bytes = new TextEncoder().encode(input);
       var bin = '';
@@ -71,7 +67,7 @@
     return btoa(bin2);
   }
 
-  // 纯 JS HMAC-SHA256 → base64（不依赖 crypto.subtle，HTTPS 非必需）
+  // 纯 JS HMAC-SHA256 → base64
   function jsHmacSha256B64(secretStr, msgStr){
     function toBytes(s){
       var b = [], i = 0;
@@ -135,13 +131,11 @@
     return btoa(bin);
   }
 
-  // 构造 WebSocket 连接 URL（鉴权参数拼在 URL 上：authorization / date / host）
   function buildWsUrl(){
     if (typeof WebSocket === 'undefined') throw new Error('环境不支持 WebSocket');
     var host = 'tts-api.xfyun.cn';
     var path = '/v2/tts';
     var date = new Date().toUTCString();
-    // WebSocket 握手为 GET
     var signatureOrigin = 'host: ' + host + '\ndate: ' + date + '\nGET ' + path + ' HTTP/1.1';
     var signature = jsHmacSha256B64(_deobf(TTS_KEY.apisecret), signatureOrigin);
     var authorizationOrigin = 'hmac username="' + _deobf(TTS_KEY.apikey) + '", algorithm="hmac-sha256", headers="host date request-line", signature="' + signature + '"';
@@ -152,19 +146,26 @@
       '&host=' + encodeURIComponent(host);
   }
 
-  /* ---------- 5. 单段文本合成（WebSocket 流式） ---------- */
-  // 返回音频 blob URL；失败抛错
+  /* ---------- 5. 单段文本合成（WebSocket 流式，连接受管理） ---------- */
   function synth(text){
     return new Promise(function(resolve, reject){
       var url;
       try { url = buildWsUrl(); } catch(e) { reject(e); return; }
       var ws = new WebSocket(url);
+      var wsId = ++state.wsSeq;
+      state.activeWs[wsId] = ws;
       var audioB64 = '';
       var settled = false;
+
+      function cleanup(){
+        if (state.activeWs[wsId]) delete state.activeWs[wsId];
+        try { ws.close(); } catch(e){}
+      }
+
       var timeout = setTimeout(function(){
         if (settled) return;
         settled = true;
-        try { ws.close(); } catch(e){}
+        cleanup();
         reject(new Error('合成超时'));
       }, 20000);
 
@@ -172,9 +173,9 @@
         ws.send(JSON.stringify({
           common: { app_id: _deobf(TTS_KEY.appid) },
           business: {
-            aue: 'lame',                        // mp3
+            aue: 'lame',
             auf: 'audio/L16;rate=16000',
-            vcn: VOICES[state.voice].key,       // 发音人（v2 字段名是 vcn）
+            vcn: VOICES[state.voice].key,
             speed: state.speed,
             volume: 50,
             pitch: 50
@@ -186,7 +187,7 @@
         var j;
         try { j = JSON.parse(ev.data); } catch(e){ return; }
         if (j.code !== 0) {
-          if (!settled) { settled = true; clearTimeout(timeout); try{ ws.close(); }catch(e){} }
+          if (!settled) { settled = true; clearTimeout(timeout); cleanup(); }
           reject(new Error('讯飞 ' + j.code + ' ' + (j.message || '')));
           return;
         }
@@ -195,9 +196,8 @@
           if (settled) return;
           settled = true;
           clearTimeout(timeout);
-          try { ws.close(); } catch(e){}
+          cleanup();
           if (!audioB64) { reject(new Error('无音频返回')); return; }
-          // 兼容响应中 base64 可能带换行/URL 编码
           if (audioB64.indexOf('%') !== -1) { try { audioB64 = decodeURIComponent(audioB64); } catch(e){} }
           audioB64 = audioB64.replace(/[\r\n\s]/g, '');
           var bin = atob(audioB64);
@@ -207,30 +207,32 @@
         }
       };
       ws.onerror = function(){
-        if (!settled) { settled = true; clearTimeout(timeout); }
+        if (!settled) { settled = true; clearTimeout(timeout); cleanup(); }
         reject(new Error('WebSocket 连接失败'));
       };
       ws.onclose = function(){
-        // 正常结束由 status=2 分支 resolve/reject；此处兜底
-        if (!settled) { settled = true; clearTimeout(timeout); reject(new Error('连接已关闭')); }
+        if (!settled) { settled = true; clearTimeout(timeout); cleanup(); reject(new Error('连接已关闭')); }
       };
     });
   }
 
-  /* ---------- 6. 文本智能分段（每段 ≤ 7000 字节，留余量） ---------- */
+  /* ---------- 6. 文本智能分段（兼容无 lookbehind 的 WebView） ---------- */
   function utf8Len(s){ return new TextEncoder().encode(s).length; }
 
   function splitText(text){
     var segs = [];
     if (!text) return segs;
-    // 1. 先按段落拆
     var paras = text.split(/\n{2,}/);
     for (var p = 0; p < paras.length; p++) {
       var para = paras[p].replace(/\s+/g, ' ').trim();
       if (!para) continue;
-      // 2. 段落超长再按句子拆
       if (utf8Len(para) > 7000) {
-        var sentences = para.split(/(?<=[。！？!?；;])/);
+        // 按句子拆（带捕获组保留标点），兼容不支持 lookbehind 的老 WebView
+        var parts = para.split(/([。！？!?；;])/);
+        var sentences = [];
+        for (var k = 0; k < parts.length; k += 2) {
+          sentences.push((parts[k] || '') + (parts[k+1] || ''));
+        }
         var buf = '';
         for (var s = 0; s < sentences.length; s++) {
           var sn = sentences[s].trim();
@@ -247,7 +249,6 @@
         segs.push(para);
       }
     }
-    // 3. 单段超过 7000（极端长无标点）→ 硬切
     var final = [];
     for (var i = 0; i < segs.length; i++) {
       var seg = segs[i];
@@ -262,7 +263,7 @@
     return final;
   }
 
-  /* ---------- 7. 播放控制 ---------- */
+  /* ---------- 7. 播放控制（会话令牌防错乱） ---------- */
   function playSegment(idx){
     if (!state.queue.length) return;
     if (idx < 0 || idx >= state.queue.length) { finishAll(); return; }
@@ -272,54 +273,60 @@
       if (state.itemStart[i] <= idx) state.curItem = i;
     }
     updateUI();
-    // 预取：当前段 + 下一段
-    if (state.fetching) return; // 已有预取进行中
+    if (state.fetching) return; // 正在合成/预取中，忽略重复请求
     fetchAndPlay(idx);
   }
 
-  async function fetchAndPlay(idx){
+  function fetchAndPlay(idx){
+    var sid = state.session;
     state.fetching = true;
-    try {
-      var url = await synth(state.queue[idx].text);
-      if (state.cur !== idx) { // 播放过程中用户已切换
-        URL.revokeObjectURL(url);
-        state.fetching = false;
-        return;
-      }
-      // 预取下一段
-      var nextUrl = null;
+    // 合成当前段
+    synth(state.queue[idx].text).then(function(url){
+      if (sid !== state.session) { URL.revokeObjectURL(url); return; } // 会话已失效，丢弃
+      if (state.cur !== idx) { URL.revokeObjectURL(url); state.fetching = false; return; }
+      // 预取下一段（绑定会话与索引，防错乱）
       if (idx + 1 < state.queue.length) {
-        synth(state.queue[idx + 1].text).then(function(u){
-          state._prefetched = u;
+        var nextIdx = idx + 1;
+        synth(state.queue[nextIdx].text).then(function(u){
+          if (sid !== state.session) { URL.revokeObjectURL(u); return; }
+          state.prefetched = u;
+          state.prefetchedIdx = nextIdx;
         }).catch(function(){});
       }
-      startAudio(url, idx);
-    } catch(e) {
-      console.warn('[TTS] 合成失败:', e);
+      startAudio(url, idx, sid);
+    }).catch(function(e){
+      if (sid !== state.session) return; // 过期失败不处理
       state.fetching = false;
-      showToast('语音合成失败，已切换系统语音');
-      fallbackNative(idx, '讯飞合成失败：' + (e && e.message ? e.message : e)); // 讯飞失败降级系统 TTS
-      return;
-    }
+      console.warn('[TTS] 合成失败:', e);
+      showToast('语音合成失败');
+      fallbackNative(idx, '讯飞合成失败：' + (e && e.message ? e.message : e));
+    });
   }
 
-  function startAudio(url, idx){
-    if (state.audio) { try{ state.audio.pause(); }catch(e){} state.audio = null; }
+  function startAudio(url, idx, sid){
+    if (state.audio) { try{ state.audio.pause(); state.audio.onended = null; }catch(e){} state.audio = null; }
     var a = new Audio(url);
     state.audio = a;
     a.onended = function(){
       URL.revokeObjectURL(url);
-      if (state._prefetched) {
-        var pu = state._prefetched;
-        state._prefetched = null;
-        URL.revokeObjectURL(url);
-        if (state.cur === idx) { state.cur++; updateUI(); startAudio(pu, state.cur); return; }
+      if (sid !== state.session) return; // 会话已失效（已被 stop/新 speak 接管）
+      if (state.cur !== idx) return;
+      // 有预取且预取正是下一段 → 无缝衔接
+      if (state.prefetched && state.prefetchedIdx === idx + 1) {
+        var pu = state.prefetched;
+        state.prefetched = null; state.prefetchedIdx = -1;
+        state.cur++;
+        updateUI();
+        startAudio(pu, state.cur, sid);
+        return;
       }
       state.fetching = false;
-      playSegment(state.cur + 1); // 自动播下一段（连续朗读）
+      playSegment(state.cur + 1); // 自动播下一段
     };
     a.onerror = function(){
       URL.revokeObjectURL(url);
+      if (sid !== state.session) return;
+      if (state.cur !== idx) return;
       state.fetching = false;
       playSegment(state.cur + 1);
     };
@@ -342,8 +349,13 @@
   }
 
   function stop(){
+    state.session++;                 // 使所有进行中回调失效
+    // 关闭所有进行中的 WebSocket
+    for (var k in state.activeWs) { try{ state.activeWs[k].close(); }catch(e){} }
+    state.activeWs = {};
     if (state.audio) { try{ state.audio.pause(); state.audio.onended = null; }catch(e){} state.audio = null; }
-    if (state._prefetched) { URL.revokeObjectURL(state._prefetched); state._prefetched = null; }
+    if (state.prefetched) { URL.revokeObjectURL(state.prefetched); state.prefetched = null; }
+    state.prefetchedIdx = -1;
     state.playing = false; state.paused = false;
     state.queue = []; state.cur = -1; state.curItem = -1; state.itemStart = [];
     state.fetching = false;
@@ -352,14 +364,11 @@
     hideBar();
   }
 
-  function finishAll(){
-    stop();
-  }
+  function finishAll(){ stop(); }
 
-  /* ---------- 8. 系统 TTS 降级（讯飞未配置/失败时） ---------- */
+  /* ---------- 8. 系统 TTS 降级 ---------- */
   function fallbackNative(idx, reason){
     if (!('speechSynthesis' in window)) {
-      // 系统语音也没有 → 明确提示失败原因，便于定位
       console.warn('[TTS] 降级失败, 无 speechSynthesis. 原因:', reason || '未知');
       showToast('朗读不可用：' + (reason || '当前环境不支持语音朗读'));
       stop();
@@ -402,7 +411,14 @@
       var btn = e.target.closest('[data-act]');
       if (!btn) return;
       var act = btn.getAttribute('data-act');
-      if (act === 'play') { if (state.playing) pauseResume(); else if (state.queue.length && state.cur >= 0) { state.paused = false; if(state.audio){ state.audio.play(); updateUI(); } } }
+      if (act === 'play') {
+        if (state.playing) pauseResume();
+        else if (state.queue.length && state.cur >= 0) {
+          state.paused = false;
+          if (state.audio) { state.audio.play().catch(function(){}); updateUI(); }
+          else playSegment(state.cur);
+        }
+      }
       else if (act === 'stop') stop();
       else if (act === 'prev') { if (state.cur > 0) playSegment(state.cur - 1); }
       else if (act === 'next') { if (state.cur < state.queue.length - 1) playSegment(state.cur + 1); }
@@ -419,7 +435,6 @@
     var speeds = [40, 50, 60];
     var idx = speeds.indexOf(state.speed);
     state.speed = speeds[(idx + 1) % speeds.length];
-    // 已合成音频不变，仅对后续段生效
     var btn = state.el.querySelector('[data-act="speed"]');
     if (btn) btn.textContent = (state.speed / 50).toFixed(1) + 'x';
     showToast('语速 ' + (state.speed / 50).toFixed(1) + 'x（下一段生效）');
@@ -466,12 +481,11 @@
   }
 
   /* ---------- 11. 对外 API ---------- */
-  // speak(items, opts)：items = [{title, text}]（可多条，支持连续朗读）
-  // opts.title 可选：当前朗读的栏目名
   window.TTS = {
     speak: function(items, opts){
       if (!items || !items.length) return;
-      stop();
+      stop();                 // 关闭旧会话（连接/音频/回调全部作废）
+      state.session++;        // 开启新会话
       opts = opts || {};
       var queue = [], itemStart = [];
       for (var i = 0; i < items.length; i++) {
@@ -487,7 +501,6 @@
       initBar();
       showBar();
       updateUI();
-      // 讯飞密钥未配置 → 直接系统 TTS
       if (!_deobf(TTS_KEY.appid) || !_deobf(TTS_KEY.apikey) || !_deobf(TTS_KEY.apisecret)) {
         showToast('讯飞未配置，使用系统语音');
         fallbackNative(0, '讯飞密钥未配置');
