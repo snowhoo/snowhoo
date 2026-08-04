@@ -10,9 +10,9 @@
   // 混淆规则：btoa( utf8( 每字符码 ^ 0x5A 后+13 ) )
   // 生成方式见下方工具函数 _obfuscate（部署时用 node 生成后填入）
   var TTS_KEY = {
-    appid: '',        // 填入混淆后的 AppID
-    apikey: '',       // 填入混淆后的 APIKey
-    apisecret: ''     // 填入混淆后的 APISecret
+    appid: 'TEVvd0tGSXo=',        // 填入混淆后的 AppID
+    apikey: 'dXd7eHt7fHl6SEt8RUxGeHZLTEtId0h6fG9ISEVMdUs=',       // 填入混淆后的 APIKey
+    apisecret: 'EC0YfCE9IUAhRBAvIUQkLSF1GT4QGiFEIRsZPxAtPz0='     // 填入混淆后的 APISecret
   };
 
   function _deobf(s){
@@ -40,7 +40,6 @@
   ];
 
   /* ---------- 3. 内部状态 ---------- */
-  var AUDIO_HOST = 'https://tts-api.xfyun.cn/v2/tts';
   var state = {
     queue: [],        // [{text, title}] 待播列表（支持连续朗读）
     cur: -1,          // 当前段索引
@@ -56,7 +55,7 @@
     inited: false
   };
 
-  /* ---------- 4. 讯飞鉴权（HMAC-SHA256，Web Crypto） ---------- */
+  /* ---------- 4. 讯飞鉴权（WebSocket 握手，HMAC-SHA256，Web Crypto） ---------- */
   function b64(input){
     // 支持字符串 / Uint8Array
     if (typeof input === 'string') {
@@ -77,49 +76,85 @@
     return b64(new Uint8Array(sig));
   }
 
-  async function buildAuthHeader(){
+  // 构造 WebSocket 连接 URL（鉴权参数拼在 URL 上：authorization / date / host）
+  async function buildWsUrl(){
     var host = 'tts-api.xfyun.cn';
+    var path = '/v2/tts';
     var date = new Date().toUTCString();
-    var requestLine = 'POST /v2/tts HTTP/1.1';
-    var signatureOrigin = 'host: ' + host + '\ndate: ' + date + '\n' + requestLine;
+    // WebSocket 握手为 GET
+    var signatureOrigin = 'host: ' + host + '\ndate: ' + date + '\nGET ' + path + ' HTTP/1.1';
     var signature = await hmacSha256(_deobf(TTS_KEY.apisecret), signatureOrigin);
-    var authorizationOrigin = 'api_key="' + _deobf(TTS_KEY.apikey) + '", algorithm="hmac-sha256", headers="host date request-line", signature="' + signature + '"';
-    return b64(authorizationOrigin);
+    var authorizationOrigin = 'hmac username="' + _deobf(TTS_KEY.apikey) + '", algorithm="hmac-sha256", headers="host date request-line", signature="' + signature + '"';
+    var authorization = b64(authorizationOrigin);
+    return 'wss://' + host + path +
+      '?authorization=' + encodeURIComponent(authorization) +
+      '&date=' + encodeURIComponent(date) +
+      '&host=' + encodeURIComponent(host);
   }
 
-  /* ---------- 5. 单段文本合成 ---------- */
+  /* ---------- 5. 单段文本合成（WebSocket 流式） ---------- */
   // 返回音频 blob URL；失败抛错
-  async function synth(text){
-    var auth = await buildAuthHeader();
-    var payload = {
-      header: { app_id: _deobf(TTS_KEY.appid) },
-      parameter: { tts: {
-        aue: 'lame',                        // mp3
-        auf: 'audio/L16;rate=16000',
-        voice: VOICES[state.voice].key,
-        speed: state.speed,
-        volume: 50,
-        pitch: 50
-      }},
-      payload: { text: { encoding: 'utf8', status: 2, text: b64(text) } }
-    };
-    var resp = await fetch(AUDIO_HOST, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': auth },
-      body: JSON.stringify(payload)
+  function synth(text){
+    return new Promise(function(resolve, reject){
+      buildWsUrl().then(function(url){
+        var ws = new WebSocket(url);
+        var audioB64 = '';
+        var settled = false;
+        var timeout = setTimeout(function(){
+          if (settled) return;
+          settled = true;
+          try { ws.close(); } catch(e){}
+          reject(new Error('合成超时'));
+        }, 20000);
+
+        ws.onopen = function(){
+          ws.send(JSON.stringify({
+            common: { app_id: _deobf(TTS_KEY.appid) },
+            business: {
+              aue: 'lame',                        // mp3
+              auf: 'audio/L16;rate=16000',
+              vcn: VOICES[state.voice].key,       // 发音人（v2 字段名是 vcn）
+              speed: state.speed,
+              volume: 50,
+              pitch: 50
+            },
+            data: { status: 2, text: b64(text), encoding: 'utf8' }
+          }));
+        };
+        ws.onmessage = function(ev){
+          var j;
+          try { j = JSON.parse(ev.data); } catch(e){ return; }
+          if (j.code !== 0) {
+            if (!settled) { settled = true; clearTimeout(timeout); try{ ws.close(); }catch(e){} }
+            reject(new Error('讯飞 ' + j.code + ' ' + (j.message || '')));
+            return;
+          }
+          if (j.data && j.data.audio) audioB64 += j.data.audio;
+          if (j.data && j.data.status === 2) {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeout);
+            try { ws.close(); } catch(e){}
+            if (!audioB64) { reject(new Error('无音频返回')); return; }
+            // 兼容响应中 base64 可能带换行/URL 编码
+            if (audioB64.indexOf('%') !== -1) { try { audioB64 = decodeURIComponent(audioB64); } catch(e){} }
+            audioB64 = audioB64.replace(/[\r\n\s]/g, '');
+            var bin = atob(audioB64);
+            var arr = new Uint8Array(bin.length);
+            for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+            resolve(URL.createObjectURL(new Blob([arr], { type: 'audio/mp3' })));
+          }
+        };
+        ws.onerror = function(){
+          if (!settled) { settled = true; clearTimeout(timeout); }
+          reject(new Error('WebSocket 连接失败'));
+        };
+        ws.onclose = function(){
+          // 正常结束由 status=2 分支 resolve/reject；此处兜底
+          if (!settled) { settled = true; clearTimeout(timeout); reject(new Error('连接已关闭')); }
+        };
+      }).catch(reject);
     });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    var j = await resp.json();
-    if (j.code !== 0) throw new Error('讯飞 ' + j.code + ' ' + (j.message || ''));
-    var audioB64 = (j.data && j.data.audio) || '';
-    if (!audioB64) throw new Error('无音频返回');
-    // 兼容响应中 base64 可能带换行/URL 编码
-    if (audioB64.indexOf('%') !== -1) { try { audioB64 = decodeURIComponent(audioB64); } catch(e){} }
-    audioB64 = audioB64.replace(/[\r\n\s]/g, '');
-    var bin = atob(audioB64);
-    var arr = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-    return URL.createObjectURL(new Blob([arr], { type: 'audio/mp3' }));
   }
 
   /* ---------- 6. 文本智能分段（每段 ≤ 7000 字节，留余量） ---------- */
