@@ -2,6 +2,10 @@
  * tts.js — 讯飞在线语音合成朗读器（前端直连）
  * 功能：分段合成、顺序播放、连续朗读、底部固定栏第二行完整播放条
  * 密钥采用混淆存储，运行时解码（提高直接复制获取门槛）
+ * v2.8 — 后台连播加固：预取链加深至后 2 段（无缝段后继续补池）；
+ *        合成失败自动重试 3 次（600/1200ms），超时放宽到 30s；
+ *        后台合成失败/自动播放被拦截 → 挂起等前台恢复（不再降级系统语音
+ *        静默 8s 兜底 stop，杜绝"播完当前段就中断退出"）
  * v2.7 — 播放控件全面跟随页面主题色（--tts-accent：播放/停止/进度/音色/语速）；
  *        音色/语速由点击循环切换改为弹出菜单选择（当前项勾选高亮）；
  * v2.6 — 新增 onPlayState 播放状态钩子（播放/暂停/停止/外部中断时回调，
@@ -10,7 +14,7 @@
  * ============================================================ */
 (function(){
   'use strict';
-  console.log('[TTS] 朗读器 v2.7 已加载');
+  console.log('[TTS] 朗读器 v2.8 已加载');
 
   /* ---------- 1. 密钥配置（混淆存储，运行解码） ---------- */
   var TTS_KEY = {
@@ -64,7 +68,8 @@
     itemChangeCb: null,  // 朗读项切换回调：fn(itemIdx)（itemIdx=队列中第几篇，0 起）
     lastItem: -1,        // 上次播放的 item 索引（用于检测跨篇切换）
     label: '',           // 朗读来源标签（如"综合新闻"），用于媒体卡片/锁屏
-    playStateCb: null    // 播放状态变化回调：fn({playing, paused})（供页面写"继续播放"恢复点）
+    playStateCb: null,   // 播放状态变化回调：fn({playing, paused})（供页面写"继续播放"恢复点）
+    hiddenPaused: false  // 后台挂起标志：切后台时合成/播放被系统中断，回前台自动恢复
   };
 
   // 播放状态变化广播：页面据此记录/清除"继续播放"恢复点（localStorage.resume_play）
@@ -239,7 +244,7 @@
         settled = true;
         cleanup();
         reject(new Error('合成超时'));
-      }, 20000);
+      }, 30000);
 
       ws.onopen = function(){
         ws.send(JSON.stringify({
@@ -285,6 +290,16 @@
       ws.onclose = function(){
         if (!settled) { settled = true; clearTimeout(timeout); cleanup(); reject(new Error('连接已关闭')); }
       };
+    });
+  }
+
+  // 合成失败自动重试（网络抖动/后台慢时容错）：最多 3 次，间隔 600ms/1200ms
+  function synthRetry(text, attempt){
+    return synth(text).catch(function(e){
+      if (attempt >= 2) throw e;
+      return new Promise(function(res){
+        setTimeout(function(){ res(synthRetry(text, attempt + 1)); }, 600 * (attempt + 1));
+      });
     });
   }
 
@@ -371,27 +386,37 @@
     fetchAndPlay(idx);
   }
 
+  // 预取下一段（链式加深到 idx+2）：当前段播放中提前合成后续，后台也能无缝连播
+  function prefetchAhead(idx, sid, depth){
+    if (state.session !== sid) return;
+    if (depth >= 2) return;                              // 最多备到 idx+2
+    var next = idx + 1;
+    if (next >= state.queue.length) return;
+    if (state.prefetched && state.prefetchedIdx === next) return;  // 已预取
+    synth(state.queue[next].text).then(function(u){
+      if (state.session !== sid) { URL.revokeObjectURL(u); return; }
+      state.prefetched = u;
+      state.prefetchedIdx = next;
+      prefetchAhead(next, sid, depth + 1);               // 再备一段
+    }).catch(function(){});
+  }
+
   function fetchAndPlay(idx){
     var sid = state.session;
     state.fetching = true;
-    // 合成当前段
-    synth(state.queue[idx].text).then(function(url){
+    // 合成当前段（失败自动重试）
+    synthRetry(state.queue[idx].text, 0).then(function(url){
       if (sid !== state.session) { URL.revokeObjectURL(url); return; } // 会话已失效，丢弃
       if (state.cur !== idx) { URL.revokeObjectURL(url); state.fetching = false; return; }
-      // 预取下一段（绑定会话与索引，防错乱）
-      if (idx + 1 < state.queue.length) {
-        var nextIdx = idx + 1;
-        synth(state.queue[nextIdx].text).then(function(u){
-          if (sid !== state.session) { URL.revokeObjectURL(u); return; }
-          state.prefetched = u;
-          state.prefetchedIdx = nextIdx;
-        }).catch(function(){});
-      }
+      // 预取后续段（链式加深，绑定会话与索引，防错乱）
+      prefetchAhead(idx, sid, 0);
       startAudio(url, idx, sid);
     }).catch(function(e){
       if (sid !== state.session) return; // 过期失败不处理
       state.fetching = false;
       console.warn('[TTS] 合成失败:', e);
+      // 后台：挂起等待前台恢复（避免降级系统语音后无声兜底 → 中断退出）
+      if (document.hidden) { suspendToBackground(); return; }
       showToast('语音合成失败');
       fallbackNative(idx, '讯飞合成失败：' + (e && e.message ? e.message : e));
     });
@@ -484,6 +509,7 @@
         updateUI();
         updateCard();
         startAudio(pu, state.cur, sid);
+        prefetchAhead(state.cur, sid, 0);   // 无缝段后继续备下一段（保持预取池）
         return;
       }
       state.fetching = false;
@@ -510,6 +536,8 @@
           setTimeout(function(){ if (sid === state.session) doPlay(attempt + 1); }, attempt === 0 ? 350 : 900);
         } else {
           if (sid !== state.session) return;
+          // 后台被自动播放策略拦截：挂起等前台恢复，不假播放也不中断会话
+          if (document.hidden) { suspendToBackground(); return; }
           showToast('自动播放被拦截，点 ▶ 继续');
           state.playing = false;
           updateUI();
@@ -557,6 +585,7 @@
     if (state.prefetched) { URL.revokeObjectURL(state.prefetched); state.prefetched = null; }
     state.prefetchedIdx = -1;
     state.playing = false; state.paused = false;
+    state.hiddenPaused = false;
     state.queue = []; state.cur = -1; state.curItem = -1; state.itemStart = [];
     state.lastItem = -1;
     state.fetching = false;
@@ -568,6 +597,40 @@
     notifyNative(false, '', '');
     updateUI();   // 控制条常驻，仅刷新为"已停止"
     emitPlayState();
+  }
+
+  // 后台挂起：切后台时新段合成失败/自动播放被拦截 → 不终止会话，暂停等待前台恢复
+  // （避免降级到系统语音后静默兜底 8s → stop 造成"播完当前段就中断退出"）
+  function suspendToBackground(){
+    if (state.hiddenPaused) return;
+    state.hiddenPaused = true;
+    state.playing = false;
+    state.paused = true;
+    state.fetching = false;   // 释放合成/预取占位，前台恢复时可立即重取
+    try { var a = state.audioEl || state.audio; if (a) a.pause(); } catch(e){}
+    updateUI();
+    updateCard();
+    syncMediaSession(false, '', '');
+    notifyNative(false, '', '');
+    emitPlayState();
+  }
+  // 回到前台：若会话因后台挂起 → 从当前段继续播放
+  function resumeFromBackground(){
+    if (!state.hiddenPaused) return;
+    state.hiddenPaused = false;
+    state.paused = false;
+    if (state.queue.length) {
+      if (state.cur >= 0 && state.cur < state.queue.length) playSegment(state.cur);
+      else playSegment(0);
+    }
+  }
+  // 注册一次：切回前台自动恢复（用户手动暂停不触发恢复）
+  function bindVisibility(){
+    try {
+      document.addEventListener('visibilitychange', function(){
+        if (!document.hidden) resumeFromBackground();
+      });
+    } catch(e){}
   }
 
   function finishAll(){ stop(); }
@@ -609,7 +672,7 @@
     if (document.getElementById('ttsBarStyle')) return;
     var css =
       '#ttsBar{display:flex;align-items:center;gap:2px;height:42px;flex-shrink:0;user-select:none;-webkit-user-select:none;padding:0 8px;font-size:12px;color:#555;width:100%;box-sizing:border-box}' +
-      '#ttsBar button{background:none;border:none;cursor:pointer;color:inherit;padding:0;margin:0;font-family:inherit}' +
+      '#ttsBar button{background:none;border:none;cursor:pointer;padding:0;margin:0;font-family:inherit}' +
       '#ttsBar .tts-btn{display:flex;align-items:center;justify-content:center;height:30px;border-radius:6px;flex-shrink:0;line-height:1}' +
       '#ttsBar .tts-btn:active{background:rgba(128,128,128,.18)}' +
       '#ttsBar .tts-play{width:34px;font-size:16px;color:var(--tts-accent,#ff8c00)}' +
@@ -631,7 +694,8 @@
       '[data-theme="dark"] #ttsBar .tts-title{color:#ddd}' +
       '[data-theme="dark"] .tts-pop{background:#1e1e1e}' +
       '[data-theme="dark"] .tts-pop .tts-pop-item{color:#ddd}' +
-      '@media(prefers-color-scheme:dark){#ttsBar{color:#aaa}#ttsBar .tts-title{color:#ddd}.tts-pop{background:#1e1e1e}.tts-pop .tts-pop-item{color:#ddd}}';
+      '[data-theme="dark"] .tts-pop .tts-pop-item.sel{color:var(--tts-accent,#ffb74d)}' +
+      '@media(prefers-color-scheme:dark){#ttsBar{color:#aaa}#ttsBar .tts-title{color:#ddd}.tts-pop{background:#1e1e1e}.tts-pop .tts-pop-item{color:#ddd}.tts-pop .tts-pop-item.sel{color:var(--tts-accent,#ffb74d)}}';
     var st = document.createElement('style');
     st.id = 'ttsBarStyle';
     st.textContent = css;
@@ -715,6 +779,9 @@
 
     // 点击页面其他区域关闭菜单
     document.addEventListener('click', function(){ closePops(); });
+
+    // 切回前台自动恢复（后台挂起的会话）
+    bindVisibility();
 
     setupMediaActions();
     updateUI();
@@ -908,7 +975,7 @@
 
   /* ---------- 11. 对外 API ---------- */
   window.TTS = {
-    version: 'v2.7',   // v2.7：控件主题色 --tts-accent + 音色/语速弹出菜单
+    version: 'v2.8',   // v2.8：后台连播加固（预取加深+合成重试+后台挂起待前台恢复）
     // 把朗读控制条挂载到指定容器（页面底部状态栏）；容器缺省挂 body
     mount: function(container){
       if (container) state.mountEl = container;
