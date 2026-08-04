@@ -681,7 +681,7 @@
       '#ttsBar .tts-btn{display:flex;align-items:center;justify-content:center;height:30px;border-radius:6px;flex-shrink:0;line-height:1}' +
       '#ttsBar .tts-btn:active{background:rgba(128,128,128,.18)}' +
       '#ttsBar .tts-play{width:34px;font-size:16px;color:var(--tts-accent,#ff8c00)}' +
-      '#ttsBar .tts-stop{width:28px;font-size:13px;color:var(--tts-accent,#ff8c00);opacity:.75}' +
+      '#ttsBar .tts-stop{width:28px;font-size:13px;color:var(--tts-accent,#ff8c00)}' +
       '#ttsBar .tts-info{flex:1;min-width:0;padding:0 6px;display:flex;flex-direction:column;justify-content:center;gap:3px}' +
       '#ttsBar .tts-title{font-size:12px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}' +
       '#ttsBar .tts-prog{height:3px;background:rgba(128,128,128,.18);border-radius:2px;overflow:hidden}' +
@@ -716,12 +716,12 @@
     } catch(e){ return '#ff8c00'; }
   }
   // 自绘 SVG 图标按钮（彻底摆脱系统默认控件外观与字体字形）
-  // type: play(▶) | pause(⏸) | stop(⏹)；fill 用主题色内联
+  // type: play(▶) | pause(⏸) | stop(⏹)；fill 用主题色内联，不叠加透明度（与页面原配色完全一致）
   function svgIcon(type, color){
     var c = color || '#ff8c00';
     if (type === 'play')  return '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M8 5v14l11-7z" fill="' + c + '"/></svg>';
     if (type === 'pause') return '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="' + c + '"/></svg>';
-    if (type === 'stop')  return '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="5" y="5" width="14" height="14" rx="2.5" fill="' + c + '" opacity="0.85"/></svg>';
+    if (type === 'stop')  return '<svg viewBox="0 0 24 24" width="14" height="14"><rect x="5" y="5" width="14" height="14" rx="2.5" fill="' + c + '"/></svg>';
     return '';
   }
   function initBar(){
