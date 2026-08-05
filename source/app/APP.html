@@ -180,6 +180,10 @@ body{display:flex;flex-direction:column}
 .z-ring.r3 .z-item{pointer-events:auto}
 .z-ring.r1{pointer-events:none}
 .z-ring.r1 .z-item{pointer-events:auto}
+/* 外围指示箭头（随转盘旋转，指向紫微宫扇区中心）与固定 12 点圆点 */
+.z-ring-arrow{position:absolute;transform:translate(-50%,-50%);z-index:2;pointer-events:none;filter:drop-shadow(0 0 4px rgba(255,140,0,.55))}
+.z-ring-arrow svg{display:block}
+.z-ring-dot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) translateY(-158px);width:10px;height:10px;border-radius:50%;background:#ff8c00;box-shadow:0 0 8px rgba(255,140,0,.9);z-index:2;pointer-events:none}
 .z-ring .z-item.sel .zt{color:#ff8c00;font-weight:600}
 .zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:103px;height:103px;text-align:left;color:#ff8c00;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6;display:flex;flex-direction:column;justify-content:center;align-items:stretch}
 .zodiac-center .zc-sub{font-size:.56rem;opacity:.95;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:7;overflow:hidden;text-overflow:ellipsis;color:#ff8c00;text-align:left;padding:0 2px;pointer-events:auto;-webkit-tap-highlight-color:transparent}
@@ -960,7 +964,15 @@ document.getElementById('constellationBtn').addEventListener('click', function()
         + '<span class="zt" style="transform:rotate(' + (k * step + step / 2) + 'deg)">' + d.name + '</span></div>';
     }
     html += '</div>';
+    // 外围指示箭头：位于内圈紫微宫扇区中心方向（随转盘旋转，始终指向紫微宫扇形中间）
+    var arrAng = 0 * innerStep + innerStep / 2;            // 紫微宫扇区中心角度（相对圆心）
+    var arrPos = lineXY(arrAng, 158);
+    html += '<div class="z-ring-arrow" style="left:' + arrPos.x.toFixed(0) + 'px;top:' + arrPos.y.toFixed(0) + 'px">'
+      + '<svg viewBox="0 0 24 24" width="20" height="20" style="transform:rotate(' + ((arrAng - 90) + 270) + 'deg)"><path d="M12 2 L20 22 L12 17 L4 22 Z" fill="#ff8c00"/></svg>'
+      + '</div>';
     html += '</div>';
+    // 固定 12 点方向圆点（不随转盘旋转，作为顶部基准指示）
+    html += '<div class="z-ring-dot"></div>';
     area.innerHTML = html;
     area._activeBtn = 'constellationBtn';
     // 星象内容加载完成→记录修炼（自动模式下通知自动流程，不直接修炼）
@@ -973,7 +985,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     var midItems = area.querySelectorAll('.z-ring.r2 .z-item');      // 中圈 4 象（联动高亮）
     var innerItems = area.querySelectorAll('.z-ring.r1 .z-item');    // 内圈 3 宫（可点击）
     var centerSub = area.querySelector('.zc-sub');
-    var currentAngle = 0, startX, startY, startAngle = 0;
+    var currentAngle = -60, startX, startY, startAngle = 0;   // 默认 -60°：紫微宫扇区中心对齐 12 点
     var isDragging = false;
     var selKind = 'palace';   // 'palace'=内圈三宫 | 'star'=外圈二十八宿
     var selIdx = 0;
@@ -1000,8 +1012,10 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       zodiacItems.forEach(function(el){el.classList.remove('sel')});
       updateCenter(d);
     }
-    // 默认选中紫微宫
+    // 默认选中紫微宫（内圈）并旋转到扇区中心朝 12 点
     selectPalace(0);
+    wheel.style.transform = 'rotate(' + currentAngle + 'deg)';
+    centerEl.style.transform = 'translate(-50%,-50%) rotate(' + (-currentAngle) + 'deg)';
     // 点击中间歌诀区 → 弹窗显示全文（含分类标题）
     function hideDetail(){
       var mask = document.getElementById('xzDetailMask');
