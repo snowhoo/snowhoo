@@ -13,7 +13,7 @@
 var GAME_CONFIG = [
   { key:'poetry',        name:'诗词', taskName:'吟诗作对', color:'#f43f5e' },
   { key:'history',       name:'今日', taskName:'上古传承', color:'#8b5cf6' },
-  { key:'constellation', name:'星座', taskName:'夜观星象', color:'#f59e0b' },
+  { key:'constellation', name:'星象', taskName:'夜观星象', color:'#f59e0b' },
   { key:'explore',       name:'探索', taskName:'秘境探寻', color:'#06b6d4' }
 ];
 

@@ -167,18 +167,23 @@ body{display:flex;flex-direction:column}
 .content-area .history-item .hyear{flex-shrink:0;width:auto;margin-right:0.6em;color:rgba(255,255,255,.6);font-size:.7rem;font-family:sans-serif}
 .content-area .history-item .htext{text-align:left}
 
-/* 星座转盘样式 */
+/* 星象转盘样式（三层同心：内圈 三垣/二十八宿；中圈 三垣三宫+四象；外圈 31 天区） */
 .zodiac-wheel{position:relative;width:320px;height:320px;margin:8px auto 0;cursor:pointer;touch-action:none}
-.zodiac-item{position:absolute;text-align:center;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);width:80px;line-height:1.3;transition:all .35s;cursor:pointer;user-select:none;-webkit-user-select:none}
-.zodiac-item .zn{font-size:.7rem;font-weight:300;display:block;transition:all .35s;line-height:1.4}
-.zodiac-item .zn .zn-date{opacity:.55;font-size:.55rem}
-.zodiac-item.selected .zn{color:#ff8c00}
-.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:160px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.7}
-.zodiac-center .zc-name{font-size:1.05rem;font-weight:700;display:block;margin-bottom:6px;color:#ff8c00;letter-spacing:1px}
-.zodiac-center .zc-line{font-size:.72rem;opacity:1;display:block;white-space:nowrap;color:#fff}
-.zodiac-center .zc-sub{font-size:.65rem;opacity:.55;display:block;white-space:nowrap;color:rgba(255,255,255,.9)}
+.z-ring{position:absolute;top:0;left:0;width:320px;height:320px;pointer-events:none}
+.z-ring .z-item{position:absolute;text-align:center;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);cursor:pointer;user-select:none;-webkit-user-select:none;transition:all .35s;line-height:1.3}
+.z-ring .z-item .zt{display:block;font-weight:300;transition:all .35s;line-height:1.3}
+.z-ring.r1 .z-item{width:66px;font-size:.6rem}
+.z-ring.r2 .z-item{width:58px;font-size:.54rem}
+.z-ring.r3 .z-item{width:46px;font-size:.5rem}
+.z-ring.r3{pointer-events:none}
+.z-ring.r3 .z-item{pointer-events:auto}
+.z-ring .z-item.sel .zt{color:#ff8c00;font-weight:600}
+.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:118px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6}
+.zodiac-center .zc-name{font-size:.98rem;font-weight:700;display:block;margin-bottom:2px;color:#ff8c00;letter-spacing:1px}
+.zodiac-center .zc-line{font-size:.6rem;opacity:.9;display:block;white-space:nowrap;color:#fff}
+.zodiac-center .zc-sub{font-size:.52rem;opacity:.8;display:block;color:rgba(255,255,255,.95);max-height:72px;overflow-y:auto;line-height:1.55;margin-top:2px;padding:0 2px;pointer-events:auto;-webkit-overflow-scrolling:touch}
 
-/* 星座星空背景覆盖层 */
+/* 星象星空背景覆盖层 */
 .stars-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:url('bg-stars.jpg') center/cover no-repeat;opacity:0;transition:opacity .6s ease;pointer-events:none;z-index:1}
 .stars-overlay.show{opacity:1}
 .poetry-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:url('poetry-bg.jpg') center/cover no-repeat;opacity:0;transition:opacity .8s ease;pointer-events:none;z-index:1}
@@ -245,7 +250,7 @@ body{display:flex;flex-direction:column}
 .bg-save-img{max-width:94%;max-height:78vh;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);-webkit-user-select:none;user-select:none;-webkit-touch-callout:default}
 .bg-save-close{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.4);color:#fff;font-size:.8rem;cursor:pointer;z-index:1}
 
-/* ===== 日程计划：与诗词/今日/星座同位置（中央内容区），互斥切换 ===== */
+/* ===== 日程计划：与诗词/今日/星象同位置（中央内容区），互斥切换 ===== */
 .plan-panel{position:absolute;top:calc(50% + 10px);left:15px;right:15px;z-index:5;max-width:620px;margin:0 auto;transform:translateY(-50%);max-height:calc(100% - 180px);background:rgba(255,255,255,.8);border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .4s ease,visibility .4s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .plan-panel.show{opacity:1;visibility:visible}
 .plan-panel-body{flex:1;min-height:0;overflow:hidden;padding:10px;display:flex;flex-direction:column}
@@ -355,11 +360,11 @@ body{display:flex;flex-direction:column}
   <div class="top-left-badges">
     <span class="badge" id="poetryBtn"><span class="badge-icon">☐</span>诗词<span class="task-dot" id="poetryDot"></span></span>
     <span class="badge" id="historyBtn"><span class="badge-icon">◎</span>今日<span class="task-dot" id="historyDot"></span></span>
-    <span class="badge" id="constellationBtn"><span class="badge-icon">✦</span>星座<span class="task-dot" id="constellationDot"></span></span>
+    <span class="badge" id="constellationBtn"><span class="badge-icon">✦</span>星象<span class="task-dot" id="constellationDot"></span></span>
     <span class="badge" id="planBtn"><span class="badge-icon">▤</span>日程</span>
   </div>
   <div class="content-area" id="contentArea"></div>
-  <!-- 日程计划：与诗词/今日/星座同位置（中央内容区）互斥切换 -->
+  <!-- 日程计划：与诗词/今日/星象同位置（中央内容区）互斥切换 -->
   <div class="plan-panel" id="planPanel">
     <div class="plan-panel-body">
       <div class="plan-topbar">
@@ -499,7 +504,7 @@ document.querySelector('.welcome').addEventListener('click', function() {
   cancelAllRequests();
   var area = document.getElementById('contentArea');
   var img = document.getElementById('bgImage');
-  // 关闭所有背景覆盖层（诗词/星座），确保探索图片不被遮挡
+  // 关闭所有背景覆盖层（诗词/星象），确保探索图片不被遮挡
   closeAllOverlays();
   // 收起所有展开面板（通过 class 控制）
   area.classList.remove('show');
@@ -625,7 +630,7 @@ items.forEach(function(el) {
   });
 });
 
-// 关闭所有背景覆盖层（诗词/星座），安全可重复调用
+// 关闭所有背景覆盖层（诗词/星象），安全可重复调用
 function closeAllOverlays() {
   var so = document.getElementById('starsOverlay');
   var po = document.getElementById('poetryOverlay');
@@ -645,7 +650,7 @@ function cancelAllRequests() {
   if (!area) return;
   var now = Date.now() + '_cancelled';
   area._toggleReqId = now;           // 取消诗词/今日
-  area._constellationReqId = now;    // 取消星座
+  area._constellationReqId = now;    // 取消星象
   area._exploreReqId = now;          // 取消探索
 }
 
@@ -664,9 +669,9 @@ function toggleContent(btnId, url, renderFn, onLoaded) {
   }
   document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
   btn.classList.add('selected');
-  // 关闭所有背景覆盖层（诗词/星座）
+  // 关闭所有背景覆盖层（诗词/星象）
   closeAllOverlays();
-  // 终止后台正在加载的星座请求
+  // 终止后台正在加载的星象请求
   if (area._activeBtn === 'constellationBtn') {
     area._constellationReqId = Date.now() + '_cancelled';
   }
@@ -694,7 +699,7 @@ function toggleContent(btnId, url, renderFn, onLoaded) {
   });
 }
 
-// 诗词按钮：和星座同样的"先显示背景+加载提示，再异步加载内容"流程
+// 诗词按钮：和星象同样的"先显示背景+加载提示，再异步加载内容"流程
 function togglePoetry() {
   if ((GAME._autoMode || GAME._oneKeyMode) && !GAME._autoPanelOpen) return; // 修炼中屏蔽（自动模式主动打开除外）
   cancelAllRequests();
@@ -825,7 +830,7 @@ function toggleHistory() {
 
 document.getElementById('historyBtn').addEventListener('click', toggleHistory);
 
-// 星座按钮
+// 星象按钮
 document.getElementById('constellationBtn').addEventListener('click', function() {
   if ((GAME._autoMode || GAME._oneKeyMode) && !GAME._autoPanelOpen) return; // 修炼中屏蔽（自动模式主动打开除外）
   cancelAllRequests();
@@ -837,7 +842,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     btn.classList.remove('selected');
     area._activeBtn = null;
     closeAllOverlays();
-    // 终止后台正在加载的星座请求
+    // 终止后台正在加载的星象请求
     area._constellationReqId = Date.now() + '_cancelled';
     return;
   }
@@ -859,96 +864,111 @@ document.getElementById('constellationBtn').addEventListener('click', function()
   area.style.textAlign = 'center';
   // 切换背景（使用星空覆盖层，不修改原始背景图）
   document.getElementById('starsOverlay').classList.add('show');
-  // 第二步：背景渐入后，再加载星座数据
+  // 第二步：背景渐入后，再加载星象数据
   setTimeout(function(){
     // 如果已切换到其他面板，放弃
     if (area._constellationReqId !== _reqId) return;
-      fetch('https://www.52api.cn/api/constellation?key=G84cVgxx8BqrzOEPUZlpRSK41r').then(function(r){return r.json()}).then(function(data){
+      fetch('./btg.json').then(function(r){return r.json()}).then(function(data){
     // 如果已切换到其他面板，放弃
     if (area._constellationReqId !== _reqId) return;
-    if (data.code !== 200 || !data.data) {
-      area.innerHTML = '<div class="content-line" style="font-size:.72rem;opacity:.6">星座数据加载失败</div>';
+    if (!data || !data.all || !data.all.length) {
+      area.innerHTML = '<div class="content-line" style="font-size:.72rem;opacity:.6">星象数据加载失败</div>';
       if (GAME._autoMode) GAME._autoPanelLoaded('constellation', false);
       return;
     }
-    var signs = {Aries:{cn:'白羊座',emoji:'♈',date:'3.21-4.19'},Taurus:{cn:'金牛座',emoji:'♉',date:'4.20-5.20'},Gemini:{cn:'双子座',emoji:'♊',date:'5.21-6.21'},Cancer:{cn:'巨蟹座',emoji:'♋',date:'6.22-7.22'},Leo:{cn:'狮子座',emoji:'♌',date:'7.23-8.22'},Virgo:{cn:'处女座',emoji:'♍',date:'8.23-9.22'},Libra:{cn:'天秤座',emoji:'♎',date:'9.23-10.23'},Scorpio:{cn:'天蝎座',emoji:'♏',date:'10.24-11.22'},Sagittarius:{cn:'射手座',emoji:'♐',date:'11.23-12.21'},Capricorn:{cn:'摩羯座',emoji:'♑',date:'12.22-1.19'},Aquarius:{cn:'水瓶座',emoji:'♒',date:'1.20-2.18'},Pisces:{cn:'双鱼座',emoji:'♓',date:'2.19-3.20'}};
-    var order = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
-    // 提取数据
-    var items = [];
-    order.forEach(function(key){
-      var s = data.data[key];
-      if (!s || !s.detail || !s.detail.today) return;
-      var td = s.detail.today;
-      var info = td.info || [];
-      var d = {key:key, cn:signs[key].cn, emoji:signs[key].emoji, date:signs[key].date, overall:'', love:'', wealth:'', work:'', lucky:'', color:'', star:'', time:''};
-      info.forEach(function(v){
-        if (v.indexOf('综合运势') === 0) d.overall = v.replace('综合运势：','');
-        if (v.indexOf('爱情运势') === 0) d.love = v.replace('爱情运势：','');
-        if (v.indexOf('财富运势') === 0) d.wealth = v.replace('财富运势：','');
-        if (v.indexOf('工作运势') === 0) d.work = v.replace('工作运势：','');
-        if (v.indexOf('幸运数字') === 0) d.lucky = v.replace('幸运数字：','');
-        if (v.indexOf('幸运颜色') === 0) d.color = v.replace('幸运颜色：','');
-        if (v.indexOf('贵人星座') === 0) d.star = v.replace('贵人星座：','');
-        if (v.indexOf('幸运时间') === 0) d.time = v.replace('幸运时间：','');
-      });
-      items.push(d);
-    });
-    // 构建转盘
-    var cx = 160, cy = 160, r = 125;
+    var items = data.all;   // 三垣二十八宿，31 个天区：{group, name, poem}
+    var N = items.length;
+    var step = 360 / N;     // 外圈每区角度
+    var cx = 160, cy = 160;
+    // 内圈：三垣 / 二十八宿
+    var INNER = ['三垣', '二十八宿'];
+    // 中圈：三垣三宫 + 四象
+    var MID = ['紫微宫', '太微宫', '天市宫', '东方苍龙', '北方玄武', '西方白虎', '南方朱雀'];
+    var midStep = 360 / MID.length;
+    // 构建三层转盘（同心圆）
     var html = '<div class="zodiac-wheel">';
-    // 中心信息面板
+    // 中心信息面板：选中天区名称 + 所属 + 星象歌诀
     html += '<div class="zodiac-center">'
-          + '<span class="zc-name">' + items[0].cn + '</span>'
-          + '<span class="zc-line">综合' + items[0].overall + ' 爱情' + items[0].love + ' 财富' + items[0].wealth + ' 工作' + items[0].work + '</span>'
-          + '<span class="zc-line">幸运数' + items[0].lucky + ' ' + items[0].color + '</span>'
-          + '<span class="zc-sub">贵人星座 ' + items[0].star + '</span>'
-          + '<span class="zc-sub">幸运时间 ' + items[0].time + '</span>'
+          + '<span class="zc-name">' + items[0].name + '</span>'
+          + '<span class="zc-line">' + items[0].group + '</span>'
+          + '<span class="zc-sub">' + items[0].poem + '</span>'
           + '</div>';
-    for (var i = 0; i < items.length; i++) {
-      var d = items[i];
-      var angle = i * 30 - 90;
-      var rad = angle * Math.PI / 180;
-      var x = cx + r * Math.cos(rad);
-      var y = cy + r * Math.sin(rad);
-      var rot = i * 30;
-      html += '<div class="zodiac-item" data-index="' + i + '" style="left:' + x.toFixed(0) + 'px;top:' + y.toFixed(0) + 'px">'
-        + '<span class="zn" style="transform:rotate(' + rot + 'deg)">' + d.emoji + ' ' + d.cn + '<br><span class="zn-date">' + d.date + '</span></span>'
-        + '</div>';
+    // 内圈 2 项（r=72）
+    html += '<div class="z-ring r1">';
+    for (var ii = 0; ii < INNER.length; ii++) {
+      var a1 = ii * 180 - 90;
+      var r1 = a1 * Math.PI / 180;
+      html += '<div class="z-item" data-name="' + INNER[ii] + '" style="left:' + (cx + 72 * Math.cos(r1)).toFixed(0) + 'px;top:' + (cy + 72 * Math.sin(r1)).toFixed(0) + 'px">'
+        + '<span class="zt" style="transform:rotate(' + (ii * 180) + 'deg)">' + INNER[ii] + '</span></div>';
     }
+    html += '</div>';
+    // 中圈 7 项（r=98）
+    html += '<div class="z-ring r2">';
+    for (var j = 0; j < MID.length; j++) {
+      var a2 = j * midStep - 90;
+      var r2 = a2 * Math.PI / 180;
+      html += '<div class="z-item" data-name="' + MID[j] + '" style="left:' + (cx + 98 * Math.cos(r2)).toFixed(0) + 'px;top:' + (cy + 98 * Math.sin(r2)).toFixed(0) + 'px">'
+        + '<span class="zt" style="transform:rotate(' + (j * midStep) + 'deg)">' + MID[j] + '</span></div>';
+    }
+    html += '</div>';
+    // 外圈 31 个天区（r=125，可点击）
+    html += '<div class="z-ring r3">';
+    for (var k = 0; k < items.length; k++) {
+      var d = items[k];
+      var a3 = k * step - 90;
+      var r3 = a3 * Math.PI / 180;
+      html += '<div class="z-item" data-index="' + k + '" style="left:' + (cx + 125 * Math.cos(r3)).toFixed(0) + 'px;top:' + (cy + 125 * Math.sin(r3)).toFixed(0) + 'px">'
+        + '<span class="zt" style="transform:rotate(' + (k * step) + 'deg)">' + d.name + '</span></div>';
+    }
+    html += '</div>';
     html += '</div>';
     area.innerHTML = html;
     area._activeBtn = 'constellationBtn';
-    // 星座内容加载完成→记录修炼（自动模式下通知自动流程，不直接修炼）
+    // 星象内容加载完成→记录修炼（自动模式下通知自动流程，不直接修炼）
     if (GAME._autoMode) { GAME._autoPanelLoaded('constellation', true); }
     else { GAME.doAction('constellation'); }
     // ===== 转盘交互 =====
     var wheel = area.querySelector('.zodiac-wheel');
     var centerEl = area.querySelector('.zodiac-center');
-    var zodiacItems = area.querySelectorAll('.zodiac-item');
+    var zodiacItems = area.querySelectorAll('.z-ring.r3 .z-item');   // 外圈 31 天区（可点击）
+    var midItems = area.querySelectorAll('.z-ring.r2 .z-item');      // 中圈 7 项
+    var innerItems = area.querySelectorAll('.z-ring.r1 .z-item');    // 内圈 2 项
     var centerName = area.querySelector('.zc-name');
-    var centerLines = area.querySelectorAll('.zc-line');
-    var centerSubs = area.querySelectorAll('.zc-sub');
+    var centerLine = area.querySelector('.zc-line');
+    var centerSub = area.querySelector('.zc-sub');
     var currentAngle = 0, startX, startY, startAngle = 0;
     var isDragging = false;
     // 默认选中第一个
-    zodiacItems[0].classList.add('selected');
+    zodiacItems[0].classList.add('sel');
     function updateCenter(idx) {
       var d = items[idx];
-      centerName.textContent = d.cn;
-      centerLines[0].textContent = '综合' + d.overall + ' 爱情' + d.love + ' 财富' + d.wealth + ' 工作' + d.work;
-      centerLines[1].textContent = '幸运数' + d.lucky + ' ' + d.color;
-      centerSubs[0].textContent = '贵人星座 ' + d.star;
-      centerSubs[1].textContent = '幸运时间 ' + d.time;
+      centerName.textContent = d.name;
+      centerLine.textContent = d.group;
+      centerSub.textContent = d.poem;
+      if (centerSub.scrollTop) centerSub.scrollTop = 0;
     }
     function selectItem(idx) {
-      zodiacItems.forEach(function(el){el.classList.remove('selected')});
-      zodiacItems[idx].classList.add('selected');
+      var d = items[idx];
+      // 外圈高亮
+      zodiacItems.forEach(function(el){el.classList.remove('sel')});
+      zodiacItems[idx].classList.add('sel');
+      // 中圈高亮：三垣项按名称（紫微宫/太微宫/天市宫），二十八宿按所属四象
+      var isSansi = d.group === '三垣';
+      midItems.forEach(function(el){
+        var m = el.getAttribute('data-name');
+        el.classList.toggle('sel', isSansi ? m === d.name : m === d.group);
+      });
+      // 内圈高亮：三垣 / 二十八宿
+      innerItems.forEach(function(el){
+        var n = el.getAttribute('data-name');
+        el.classList.toggle('sel', n === (isSansi ? '三垣' : '二十八宿'));
+      });
       updateCenter(idx);
     }
     function snapToNearest() {
-      var rawIdx = -currentAngle / 30;
-      var nearest = ((Math.round(rawIdx) % 12) + 12) % 12;
-      currentAngle = -Math.round(rawIdx) * 30;
+      var rawIdx = -currentAngle / step;
+      var nearest = ((Math.round(rawIdx) % N) + N) % N;
+      currentAngle = -Math.round(rawIdx) * step;
       wheel.style.transition = 'transform .35s ease-out';
       wheel.style.transform = 'rotate(' + currentAngle + 'deg)';
       centerEl.style.transition = 'transform .35s ease-out';
@@ -995,7 +1015,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     zodiacItems.forEach(function(el){
       el.addEventListener('click', function(){
         var idx = parseInt(el.dataset.index);
-        currentAngle = -idx * 30;
+        currentAngle = -idx * step;
         wheel.style.transition = 'transform .35s ease-out';
         wheel.style.transform = 'rotate(' + currentAngle + 'deg)';
         centerEl.style.transition = 'transform .35s ease-out';
@@ -3063,7 +3083,7 @@ var GAME = {
   },
 
   // 自动修炼：与手动修炼一致——展开面板（真实加载数据）→ 数据加载完成 → 读库→写库→读回确认
-  // 依次展开诗词/今日/星座/探索，有剩余次数则循环；每次写库完成后才进入下一动作
+  // 依次展开诗词/今日/星象/探索，有剩余次数则循环；每次写库完成后才进入下一动作
   autoCultivate: function() {
     if (this._autoMode || this._oneKeyMode) return;
     if (this.syncState !== 'idle') {
@@ -3723,7 +3743,7 @@ var PlanSvc = (function(){
 })();
 PlanSvc.init();
 
-// 打开/关闭日程面板（与诗词/今日/星座同一区域互斥切换，参照诗词面板：互斥关闭其它层 + 修炼中屏蔽）
+// 打开/关闭日程面板（与诗词/今日/星象同一区域互斥切换，参照诗词面板：互斥关闭其它层 + 修炼中屏蔽）
 function togglePlan() {
   if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
   var panel = document.getElementById('planPanel');
@@ -3737,7 +3757,7 @@ function togglePlan() {
   }
   cancelAllRequests();
   closeAllOverlays();
-  // 清理中央内容区（诗词/今日/星座）与徽章选中态
+  // 清理中央内容区（诗词/今日/星象）与徽章选中态
   var area = document.getElementById('contentArea');
   if (area) { area.classList.remove('show'); area._activeBtn = null; }
   document.querySelectorAll('.badge').forEach(function(b){ b.classList.remove('selected'); });

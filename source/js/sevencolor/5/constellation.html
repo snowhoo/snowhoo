@@ -223,14 +223,14 @@ body::after{
 <div id="cst-app">
 
 <div class="header">
-  <h1>✦ 每日星座运势</h1>
-  <p>点击星座查看今日运势</p>
+  <h1>✦ 每日星象</h1>
+  <p>点击星象查看今日运势</p>
 </div>
 
 <div class="cst-grid" id="cstGrid"></div>
 <div class="type-bar" id="cstTypeBar"></div>
 <div class="result" id="cstResult">
-  <div class="loading">👆 选择一个星座查看运势</div>
+  <div class="loading">👆 选择一个星象查看运势</div>
 </div>
 
 <div class="footer">
@@ -241,7 +241,7 @@ body::after{
 
 <script>
 (function() {
-// ===== 十二星座彩色卡通 SVG 图标 =====
+// ===== 十二星象彩色卡通 SVG 图标 =====
 var ZODIAC_ICONS = {
   白羊座: { gradient: ['#FF6B6B','#EE5A24'], path: 'M20 8c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm-2-8c-.6 0-1 .4-1 1s.4 1 1 1 1-.4 1-1-.4-1-1-1zm4 0c-.6 0-1 .4-1 1s.4 1 1 1 1-.4 1-1-.4-1-1-1zM18 6c-.6 0-1 .4-1 1s.4 1 1 1 1-.4 1-1-.4-1-1-1zm-4 2c-.6 0-1 .4-1 1s.4 1 1 1 1-.4 1-1-.4-1-1-1zm8 0c-.6 0-1 .4-1 1s.4 1 1 1 1-.4 1-1-.4-1-1-1zm-6 10c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z' },
   金牛座: { gradient: ['#4ECDC4','#0EA5E9'], path: 'M16 3C9.4 3 4 8.4 4 15c0 5.1 3.3 9.4 8 10.8V27c0 1.1.9 2 2 2s2-.9 2-2v-1.2c4.7-1.4 8-5.7 8-10.8 0-6.6-5.4-12-12-12zm0 20c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8zm-2-12c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm4 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-2 8c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4-1.8-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z' },
@@ -257,7 +257,7 @@ var ZODIAC_ICONS = {
   双鱼座: { gradient: ['#818CF8','#6366F1'], path: 'M12 3C8.1 3 5 5.5 5 8.5c0 2 1.5 3.7 3.5 4.5-2 .8-3.5 2.5-3.5 4.5C5 20.5 8.1 23 12 23s7-2.5 7-5.5c0-2-1.5-3.7-3.5-4.5 2-.8 3.5-2.5 3.5-4.5C19 5.5 15.9 3 12 3zm0 2c2.5 0 4.5 1.5 4.5 3.5S14.5 12 12 12s-4.5-1.5-4.5-3.5S9.5 5 12 5zm0 14c-2.5 0-4.5-1.5-4.5-3.5S9.5 12 12 12s4.5 1.5 4.5 3.5S14.5 19 12 19z' }
 };
 
-// ===== 星座列表 =====
+// ===== 星象列表 =====
 var CONSTELLATIONS = [
   { name: '白羊座', en: 'Aries', date: '3.21-4.19' },
   { name: '金牛座', en: 'Taurus', date: '4.20-5.20' },
@@ -317,7 +317,7 @@ var ZODIAC_BG = {
   摩羯座: '#6B7280', 水瓶座: '#22D3EE', 双鱼座: '#818CF8'
 };
 
-// 渲染星座网格
+// 渲染星象网格
 CONSTELLATIONS.forEach(function(c) {
   var el = document.createElement('div');
   el.className = 'cst-item';
@@ -481,7 +481,7 @@ function renderResult(data) {
   var luckyItems = [];
   if (luckyNum) luckyItems.push({ label: '幸运数字', val: luckyNum, cls: 'gold' });
   if (luckyColor) luckyItems.push({ label: '幸运颜色', val: luckyColor, cls: 'green' });
-  if (luckyStar) luckyItems.push({ label: '贵人星座', val: luckyStar, cls: 'purple' });
+  if (luckyStar) luckyItems.push({ label: '贵人星象', val: luckyStar, cls: 'purple' });
   if (luckyTime) luckyItems.push({ label: '幸运时间', val: luckyTime, cls: 'rose' });
 
   var luckyHtml = '';
