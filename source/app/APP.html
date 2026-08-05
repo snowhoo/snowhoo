@@ -916,6 +916,13 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       var a = (angDeg - 90) * Math.PI / 180;
       return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
     }
+	
+	// 分割线：三恒内圆角度线单独调用该函数）
+	 function lineXY1(angDeg, r) {
+      var a = (angDeg - 90) * Math.PI / 180;
+      return { x: cx + r * Math.cos(a), y: cy + 9 + r * Math.sin(a) }; //cy + 9px，以修正位置
+    }
+	
     var svg = '<svg class="z-ring-lines" viewBox="0 0 360 360">';
     var rings = [80, 110, 140];
     for (var rc = 0; rc < rings.length; rc++) {
@@ -960,8 +967,8 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     // 内圈角度线（固定，不随转）：从中心面板边缘(r=52)画到 80 圆，避开面板遮挡、清晰可见
     var svgIn = '<svg class="z-ring-lines-inner" viewBox="0 0 360 360">';
     for (var n1 = 0; n1 < INNER.length; n1++) {   // 内圈 3 条（120°），扇区边界
-      var q1a = lineXY(n1 * innerStep - 60, 52), q1b = lineXY(n1 * innerStep - 60, 78); //+- 9px，以修正位置
-      svgIn += '<line x1="' + q1a.x.toFixed(1) + '" y1="' + 5 + q1a.y.toFixed(1) + '" x2="' + q1b.x.toFixed(1) + '" y2="' + 9 + q1b.y.toFixed(1) + '" stroke="rgba(255,255,255,.22)" stroke-width="1"/>';
+      var q1a = lineXY1(n1 * innerStep - 60, 52), q1b = lineXY1(n1 * innerStep - 60, 78); 
+      svgIn += '<line x1="' + q1a.x.toFixed(1) + '" y1="' + q1a.y.toFixed(1) + '" x2="' + q1b.x.toFixed(1) + '" y2="' + q1b.y.toFixed(1) + '" stroke="rgba(255,255,255,.22)" stroke-width="1"/>';
     }
     svgIn += '</svg>';
     html += svgIn;
