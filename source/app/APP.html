@@ -180,19 +180,17 @@ body{display:flex;flex-direction:column}
 .z-ring.r3 .z-item{pointer-events:auto}
 .z-ring .z-item.sel .zt{color:#ff8c00;font-weight:600}
 .zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:103px;height:103px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6}
-.zodiac-center .zc-sub{font-size:.56rem;opacity:.85;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:6;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.95);padding:0 2px;pointer-events:auto;-webkit-tap-highlight-color:transparent}
-/* 星象全文弹窗 */
-.xz-detail-mask{position:fixed;top:0;left:0;right:0;bottom:0;z-index:30001;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;padding:24px}
+.zodiac-center .zc-sub{font-size:.56rem;opacity:.85;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:7;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.95);padding:0 2px;pointer-events:auto;-webkit-tap-highlight-color:transparent}
+/* 星象全文弹窗（参照发现弹窗风格：深紫渐变卡片） */
+.xz-detail-mask{position:fixed;top:0;left:0;right:0;bottom:0;z-index:30001;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;padding:24px;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .xz-detail-mask.show{opacity:1;visibility:visible}
-.xz-detail-panel{background:#fff;color:#333;width:100%;max-width:340px;max-height:72vh;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.35);transform:translateY(12px);transition:transform .3s ease}
+.xz-detail-panel{background:linear-gradient(160deg,#2c2340,#1a1526);border:1px solid rgba(139,92,246,.5);border-radius:16px;width:min(92vw,360px);max-height:78vh;display:flex;flex-direction:column;color:#f6f2ff;box-shadow:0 10px 40px rgba(0,0,0,.6);overflow:hidden;transform:translateY(12px);transition:transform .3s ease}
 .xz-detail-mask.show .xz-detail-panel{transform:translateY(0)}
-.xz-detail-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #eee;flex-shrink:0}
-.xz-detail-title{font-size:.95rem;font-weight:700;color:#e8793a;letter-spacing:1px}
-.xz-detail-close{font-size:1.15rem;color:#999;cursor:pointer;line-height:1;padding:2px 4px;border:none;background:none}
-.xz-detail-body{flex:1;min-height:0;overflow-y:auto;padding:14px 16px;font-size:.9rem;line-height:1.9;color:#444;-webkit-overflow-scrolling:touch;text-align:left}
-[data-theme="dark"] .xz-detail-panel{background:#1e1e1e}
-[data-theme="dark"] .xz-detail-body{color:#ccc}
-[data-theme="dark"] .xz-detail-head{border-color:#333}
+.xz-detail-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid rgba(139,92,246,.3);flex-shrink:0}
+.xz-detail-title{font-size:.92rem;font-weight:600;letter-spacing:2px;color:#ff8c00}
+.xz-detail-close{background:none;border:none;color:#b9aee0;font-size:1.15rem;cursor:pointer;padding:2px 6px;line-height:1}
+.xz-detail-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 18px 16px;font-size:.9rem;line-height:2;color:#f6f2ff;text-align:left}
+.xz-detail-foot{padding:10px 16px 14px;border-top:1px solid rgba(139,92,246,.3);font-size:.62rem;color:#a49cc4;text-align:center;line-height:1.6;flex-shrink:0}
 
 /* 星象星空背景覆盖层 */
 .stars-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:url('bg-stars.jpg') center/cover no-repeat;opacity:0;transition:opacity .6s ease;pointer-events:none;z-index:1}
@@ -1010,6 +1008,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
         mask.innerHTML = '<div class="xz-detail-panel">'
           + '<div class="xz-detail-head"><span class="xz-detail-title"></span><button class="xz-detail-close">✕</button></div>'
           + '<div class="xz-detail-body"></div>'
+          + '<div class="xz-detail-foot">✦ 三垣二十八宿 · 星象歌诀 ✦</div>'
           + '</div>';
         document.body.appendChild(mask);
         mask.addEventListener('click', function(ev){ if (ev.target === mask) hideDetail(); });
