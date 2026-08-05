@@ -81,24 +81,24 @@ body{display:flex;flex-direction:column}
 .confirm-mask.green .confirm-btn.ok{background:linear-gradient(135deg,#16a34a,#0f7a35);color:#fff;font-weight:600;box-shadow:0 3px 10px rgba(22,163,74,.35)}
 .almanac .lock-overlay svg{width:14px;height:14px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-/* ===== 发现列表弹层（点击打坐人形打开） ===== */
+/* ===== 发现列表弹层（点击打坐人形打开）：深蓝渐变卡片 + 蓝色描边 ===== */
 .discover-mask{position:fixed;top:0;left:0;right:0;bottom:0;z-index:20010;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .discover-mask.show{display:flex}
-.discover-box{background:linear-gradient(160deg,#2c2340,#1a1526);border:1px solid rgba(139,92,246,.5);border-radius:16px;width:min(92vw,360px);max-height:78vh;display:flex;flex-direction:column;color:#f6f2ff;box-shadow:0 10px 40px rgba(0,0,0,.6);overflow:hidden}
-.discover-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid rgba(139,92,246,.3);flex-shrink:0}
-.discover-title{font-size:.92rem;font-weight:600;letter-spacing:2px;color:#ddd2ff}
-.discover-close{background:none;border:none;color:#b9aee0;font-size:1.15rem;cursor:pointer;padding:2px 6px;line-height:1}
+.discover-box{background:linear-gradient(160deg,#1f3a5f,#14223c);border:1px solid rgba(59,130,246,.55);border-radius:16px;width:min(92vw,360px);max-height:78vh;display:flex;flex-direction:column;color:#f0f6ff;box-shadow:0 10px 40px rgba(0,0,0,.6);overflow:hidden}
+.discover-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid rgba(59,130,246,.3);flex-shrink:0}
+.discover-title{font-size:.92rem;font-weight:600;letter-spacing:2px;color:#bcd7ff}
+.discover-close{background:none;border:none;color:#93b4e8;font-size:1.15rem;cursor:pointer;padding:2px 6px;line-height:1}
 .discover-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 16px 16px}
-.discover-cat{font-size:.72rem;color:#c9b8ff;letter-spacing:3px;margin:12px 0 8px;font-weight:600;display:flex;align-items:center;gap:8px}
-.discover-cat::before,.discover-cat::after{content:'';flex:1;height:1px;background:rgba(139,92,246,.3)}
+.discover-cat{font-size:.72rem;color:#9db8ff;letter-spacing:3px;margin:12px 0 8px;font-weight:600;display:flex;align-items:center;gap:8px}
+.discover-cat::before,.discover-cat::after{content:'';flex:1;height:1px;background:rgba(59,130,246,.3)}
 .discover-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);margin-bottom:8px;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.05)}
 .discover-item:active{transform:scale(.98)}
 .discover-item .disc-name{font-size:.85rem;color:#ffffff;font-weight:500}
-.discover-item .disc-name.locked{color:#a49cc4;letter-spacing:3px}
-.discover-item .disc-act{font-size:.68rem;color:#b9aee0;white-space:nowrap}
+.discover-item .disc-name.locked{color:#8fa6c8;letter-spacing:3px}
+.discover-item .disc-act{font-size:.68rem;color:#93b4e8;white-space:nowrap}
 .discover-item.unlocked{border-color:rgba(52,211,153,.45)}
 .discover-item.unlocked .disc-act{color:#4ade80}
-.discover-foot{padding:10px 16px 14px;border-top:1px solid rgba(139,92,246,.3);font-size:.62rem;color:#a49cc4;text-align:center;line-height:1.6;flex-shrink:0}
+.discover-foot{padding:10px 16px 14px;border-top:1px solid rgba(59,130,246,.3);font-size:.62rem;color:#8fa6c8;text-align:center;line-height:1.6;flex-shrink:0}
 .xz-man{cursor:pointer;pointer-events:auto}
 
 /* ===== 底部面板：固定高度 ===== */
@@ -173,14 +173,14 @@ body{display:flex;flex-direction:column}
 .z-ring{position:absolute;top:0;left:0;width:360px;height:360px;pointer-events:none;z-index:1}
 .z-ring .z-item{position:absolute;text-align:center;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);cursor:pointer;user-select:none;-webkit-user-select:none;transition:all .35s;line-height:1.3}
 .z-ring .z-item .zt{display:block;font-weight:300;transition:all .35s;line-height:1.3}
-.z-ring.r1 .z-item{width:74px;font-size:.68rem}
-.z-ring.r2 .z-item{width:66px;font-size:.62rem}
+.z-ring.r1 .z-item{width:80px;font-size:.74rem}
+.z-ring.r2 .z-item{width:72px;font-size:.66rem}
 .z-ring.r3 .z-item{width:54px;font-size:.58rem}
 .z-ring.r3{pointer-events:none}
 .z-ring.r3 .z-item{pointer-events:auto}
 .z-ring .z-item.sel .zt{color:#ff8c00;font-weight:600}
-.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:103px;height:103px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6}
-.zodiac-center .zc-sub{font-size:.56rem;opacity:.85;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:7;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.95);padding:0 2px;pointer-events:auto;-webkit-tap-highlight-color:transparent}
+.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:103px;height:103px;text-align:left;color:#ff8c00;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6;display:flex;flex-direction:column;justify-content:center;align-items:stretch}
+.zodiac-center .zc-sub{font-size:.56rem;opacity:.95;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:7;overflow:hidden;text-overflow:ellipsis;color:#ff8c00;text-align:left;padding:0 2px;pointer-events:auto;-webkit-tap-highlight-color:transparent}
 /* 星象全文弹窗（参照发现弹窗风格：深紫渐变卡片） */
 .xz-detail-mask{position:fixed;top:0;left:0;right:0;bottom:0;z-index:30001;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;padding:24px;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .xz-detail-mask.show{opacity:1;visibility:visible}
@@ -968,8 +968,8 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     var currentAngle = 0, startX, startY, startAngle = 0;
     var isDragging = false;
     var selIdx = 0;   // 当前选中天区索引
-    // 默认选中第一个
-    zodiacItems[0].classList.add('sel');
+    // 默认选中第一个（紫微宫）：三层联动高亮 + 歌诀
+    selectItem(0);
     function updateCenter(idx) {
       centerSub.textContent = items[idx].poem;
     }
