@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 修炼任务基础配置（仅保留元数据，不再决定经验和次数）
  * 修改或扩充任务只需编辑此文件：
  *   key       — 编程键名（唯一标识，用作元素 ID 后缀）
@@ -115,19 +115,19 @@ var FEATURE_CONFIG = {
         unlockedTip:'固魂大法·稳固神魂，日程计划之门。解锁后即可使用日程计划。' }
     ]},
     { cat: '小世界', items: [
-      { key:'story', name:'小红故事', unlockMsg:'破除迷雾结界！发现【红光秘境】', relockMsg:'回撤结界破锁真气',
+      { key:'story', name:'红光秘境', unlockMsg:'破除迷雾结界！发现【红光秘境】', relockMsg:'回撤结界破锁真气',
         lockedTip:'小红故事秘境藏于迷雾之中，点击首页对应入口破除迷雾结界即可发现。',
         unlockedTip:'红光秘境·万千故事汇聚的小世界，点击首页入口即可进入。' },
-      { key:'yedu', name:'夜读', unlockMsg:'破除迷雾结界！发现【心灵秘境】', relockMsg:'回撤结界破锁真气',
+      { key:'yedu', name:'心灵秘境', unlockMsg:'破除迷雾结界！发现【心灵秘境】', relockMsg:'回撤结界破锁真气',
         lockedTip:'心灵秘境藏于迷雾之中，点击首页对应入口破除迷雾结界即可发现。',
         unlockedTip:'心灵秘境·每晚十点的静心小世界，点击首页入口即可进入。' },
-      { key:'zjsz', name:'照见苏州', unlockMsg:'破除迷雾结界！发现【视界秘境】', relockMsg:'回撤结界破锁真气',
+      { key:'zjsz', name:'视界秘境', unlockMsg:'破除迷雾结界！发现【视界秘境】', relockMsg:'回撤结界破锁真气',
         lockedTip:'视界秘境藏于迷雾之中，点击首页对应入口破除迷雾结界即可发现。',
         unlockedTip:'视界秘境·光影中的苏州小世界，点击首页入口即可进入。' },
-      { key:'news', name:'新闻', unlockMsg:'破除迷雾结界！发现【正能光量小世界】', relockMsg:'回撤结界破锁真气',
+      { key:'news', name:'正能光量小世界', unlockMsg:'破除迷雾结界！发现【正能光量小世界】', relockMsg:'回撤结界破锁真气',
         lockedTip:'正能光量小世界藏于迷雾之中，点击首页对应入口破除迷雾结界即可发现。',
         unlockedTip:'正能光量小世界·每日正能量的新闻天地，点击首页入口即可进入。' },
-      { key:'tv', name:'播霸', unlockMsg:'破除迷雾结界！发现【光怪陆离小世界】', relockMsg:'回撤结界破锁真气',
+      { key:'tv', name:'光怪陆离小世界', unlockMsg:'破除迷雾结界！发现【光怪陆离小世界】', relockMsg:'回撤结界破锁真气',
         lockedTip:'光怪陆离小世界藏于迷雾之中，点击首页对应入口破除迷雾结界即可发现。',
         unlockedTip:'光怪陆离小世界·光影斑驳的影视天地，点击首页入口即可进入。' }
     ]},
