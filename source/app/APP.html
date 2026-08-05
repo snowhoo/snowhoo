@@ -169,7 +169,8 @@ body{display:flex;flex-direction:column}
 
 /* 星象转盘样式（三层同心：内圈 三垣/二十八宿；中圈 三垣三宫+四象；外圈 31 天区） */
 .zodiac-wheel{position:relative;width:320px;height:320px;margin:8px auto 0;cursor:pointer;touch-action:none}
-.z-ring{position:absolute;top:0;left:0;width:320px;height:320px;pointer-events:none}
+.z-ring-lines{position:absolute;top:0;left:0;width:320px;height:320px;pointer-events:none;z-index:0}
+.z-ring{position:absolute;top:0;left:0;width:320px;height:320px;pointer-events:none;z-index:1}
 .z-ring .z-item{position:absolute;text-align:center;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);cursor:pointer;user-select:none;-webkit-user-select:none;transition:all .35s;line-height:1.3}
 .z-ring .z-item .zt{display:block;font-weight:300;transition:all .35s;line-height:1.3}
 .z-ring.r1 .z-item{width:66px;font-size:.6rem}
@@ -885,8 +886,32 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     // 中圈：三垣三宫 + 四象
     var MID = ['紫微宫', '太微宫', '天市宫', '东方苍龙', '北方玄武', '西方白虎', '南方朱雀'];
     var midStep = 360 / MID.length;
-    // 构建三层转盘（同心圆）
+    // 构建三层转盘（同心圆 + 分割线）
     var html = '<div class="zodiac-wheel">';
+    // 分割线：同心圆 + 各层角度线（SVG，置于标签下层）
+    function lineXY(angDeg, r) {
+      var a = (angDeg - 90) * Math.PI / 180;
+      return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+    }
+    var svg = '<svg class="z-ring-lines" viewBox="0 0 320 320">';
+    var rings = [72, 98, 125];
+    for (var rc = 0; rc < rings.length; rc++) {
+      svg += '<circle cx="160" cy="160" r="' + rings[rc] + '" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1"/>';
+    }
+    for (var n1 = 0; n1 < INNER.length; n1++) {   // 内圈 2 条
+      var q1 = lineXY(n1 * 180, 72);
+      svg += '<line x1="160" y1="160" x2="' + q1.x.toFixed(1) + '" y2="' + q1.y.toFixed(1) + '" stroke="rgba(255,255,255,.2)" stroke-width="1"/>';
+    }
+    for (var n2 = 0; n2 < MID.length; n2++) {     // 中圈 7 条
+      var qa = lineXY(n2 * midStep, 72), qb = lineXY(n2 * midStep, 98);
+      svg += '<line x1="' + qa.x.toFixed(1) + '" y1="' + qa.y.toFixed(1) + '" x2="' + qb.x.toFixed(1) + '" y2="' + qb.y.toFixed(1) + '" stroke="rgba(255,255,255,.2)" stroke-width="1"/>';
+    }
+    for (var n3 = 0; n3 < items.length; n3++) {   // 外圈 31 条
+      var pa = lineXY(n3 * step, 98), pb = lineXY(n3 * step, 125);
+      svg += '<line x1="' + pa.x.toFixed(1) + '" y1="' + pa.y.toFixed(1) + '" x2="' + pb.x.toFixed(1) + '" y2="' + pb.y.toFixed(1) + '" stroke="rgba(255,255,255,.2)" stroke-width="1"/>';
+    }
+    svg += '</svg>';
+    html += svg;
     // 中心信息面板：选中天区名称 + 所属 + 星象歌诀
     html += '<div class="zodiac-center">'
           + '<span class="zc-name">' + items[0].name + '</span>'
