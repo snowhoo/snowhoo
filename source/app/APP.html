@@ -178,12 +178,11 @@ body{display:flex;flex-direction:column}
 .z-ring.r3 .z-item{width:54px;font-size:.58rem}
 .z-ring.r3{pointer-events:none}
 .z-ring.r3 .z-item{pointer-events:auto}
-.z-ring.r1{pointer-events:none}
+.z-ring.r1{position:absolute;top:0;left:0;width:360px;height:360px;pointer-events:none;z-index:3}
 .z-ring.r1 .z-item{pointer-events:auto}
-/* 外围指示箭头（随转盘旋转，指向紫微宫扇区中心）与固定 12 点圆点 */
-.z-ring-arrow{position:absolute;transform:translate(-50%,-50%);z-index:2;pointer-events:none;filter:drop-shadow(0 0 4px rgba(255,140,0,.55))}
-.z-ring-arrow svg{display:block}
-.z-ring-dot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) translateY(-158px);width:10px;height:10px;border-radius:50%;background:#ff8c00;box-shadow:0 0 8px rgba(255,140,0,.9);z-index:2;pointer-events:none}
+/* 内圈三宫固定层（不随转盘旋转）：角度线 + 12 点圆点 */
+.z-ring-lines-inner{position:absolute;top:0;left:0;width:360px;height:360px;pointer-events:none;z-index:2}
+.z-ring-dot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) translateY(-158px);width:10px;height:10px;border-radius:50%;background:#ff8c00;box-shadow:0 0 8px rgba(255,140,0,.9);z-index:4;pointer-events:none}
 .z-ring .z-item.sel .zt{color:#ff8c00;font-weight:600}
 .zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:103px;height:103px;text-align:center;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:auto;line-height:1.6;display:flex;flex-direction:column;justify-content:center;align-items:center;-webkit-tap-highlight-color:transparent}
 .zodiac-center .zc-name{font-size:1.02rem;font-weight:700;color:#ff8c00;display:block;letter-spacing:1px}
@@ -902,7 +901,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     }
     var INNER = sansi3;                                   // 内圈 3 宫
     // 三垣宫名显示映射（宫→恒 称谓）与职能副标题
-    var PALACE_RENAME = { '紫微宫': '紫薇恒', '太微宫': '太微恒', '天市宫': '天市恒' };
+    var PALACE_RENAME = { '紫微宫': '紫微恒', '太微宫': '太微恒', '天市宫': '天市恒' };
     var PALACE_SUB = { '紫微宫': '天帝居所', '太微宫': '天帝议事', '天市宫': '天帝市集' };
     var MID = ['东方苍龙', '北方玄武', '西方白虎', '南方朱雀'];   // 中圈 4 象
     var N = stars28.length;                               // 外圈 28 宿
@@ -910,9 +909,9 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     var innerStep = 360 / INNER.length;                   // 内圈 120°
     var midStep = 360 / MID.length;                       // 中圈 90°
     var cx = 180, cy = 180;
-    // 构建三层转盘（同心圆 + 分割线）
+    // 构建转盘
     var html = '<div class="zodiac-wheel">';
-    // 分割线：同心圆 + 各层角度线（SVG，置于标签下层）
+    // 分割线：同心圆 + 中圈/外圈角度线（SVG，置于标签下层；随转盘旋转）
     function lineXY(angDeg, r) {
       var a = (angDeg - 90) * Math.PI / 180;
       return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
@@ -921,10 +920,6 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     var rings = [80, 110, 140];
     for (var rc = 0; rc < rings.length; rc++) {
       svg += '<circle cx="180" cy="180" r="' + rings[rc] + '" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1"/>';
-    }
-    for (var n1 = 0; n1 < INNER.length; n1++) {   // 内圈 3 条（120°）
-      var q1 = lineXY(n1 * innerStep, 80);
-      svg += '<line x1="180" y1="180" x2="' + q1.x.toFixed(1) + '" y2="' + q1.y.toFixed(1) + '" stroke="rgba(255,255,255,.2)" stroke-width="1"/>';
     }
     for (var n2 = 0; n2 < MID.length; n2++) {     // 中圈 4 条（90°）
       var qa = lineXY(n2 * midStep, 80), qb = lineXY(n2 * midStep, 110);
@@ -936,45 +931,48 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     }
     svg += '</svg>';
     html += svg;
-    // 中心信息面板：名称 + 分类（如"紫薇恒 / 三垣 · 天帝居所"、"角宿 / 二十八宿 · 东方苍龙"）
+    // 中心信息面板：名称 + 分类（如"紫微恒 / 三垣 · 天帝居所"、"角宿 / 二十八宿 · 东方苍龙"）
     html += '<div class="zodiac-center">'
           + '<span class="zc-name">' + (PALACE_RENAME[sansi3[0].name] || sansi3[0].name) + '</span>'
           + '<span class="zc-line">三垣 · ' + (PALACE_SUB[sansi3[0].name] || '') + '</span>'
           + '</div>';
-    // 内圈 3 宫（r=80，可点击，文字置于扇区中心）
-    html += '<div class="z-ring r1">';
-    for (var ii = 0; ii < INNER.length; ii++) {
-      var a1 = ii * innerStep + innerStep / 2 - 90;
-      var r1 = a1 * Math.PI / 180;
-      html += '<div class="z-item" data-palace="' + ii + '" style="left:' + (cx + 80 * Math.cos(r1)).toFixed(0) + 'px;top:' + (cy + 80 * Math.sin(r1)).toFixed(0) + 'px">'
-        + '<span class="zt" style="transform:rotate(' + (ii * innerStep + innerStep / 2) + 'deg)">' + (PALACE_RENAME[INNER[ii].name] || INNER[ii].name) + '</span></div>';
-    }
-    html += '</div>';
-    // 中圈 4 象（r=110，文字置于扇区中心）
+    // 中圈 4 象（r=95，位于 80~110 环带中间，文字置于扇区中心）
     html += '<div class="z-ring r2">';
     for (var j = 0; j < MID.length; j++) {
       var a2 = j * midStep + midStep / 2 - 90;
       var r2 = a2 * Math.PI / 180;
-      html += '<div class="z-item" data-name="' + MID[j] + '" style="left:' + (cx + 110 * Math.cos(r2)).toFixed(0) + 'px;top:' + (cy + 110 * Math.sin(r2)).toFixed(0) + 'px">'
+      html += '<div class="z-item" data-name="' + MID[j] + '" style="left:' + (cx + 95 * Math.cos(r2)).toFixed(0) + 'px;top:' + (cy + 95 * Math.sin(r2)).toFixed(0) + 'px">'
         + '<span class="zt" style="transform:rotate(' + (j * midStep + midStep / 2) + 'deg)">' + MID[j] + '</span></div>';
     }
     html += '</div>';
-    // 外圈 28 宿（r=140，文字置于扇区中心）
+    // 外圈 28 宿（r=126，位于 110~140 环带中间，文字置于扇区中心）
     html += '<div class="z-ring r3">';
     for (var k = 0; k < stars28.length; k++) {
       var d = stars28[k];
       var a3 = k * step + step / 2 - 90;
       var r3 = a3 * Math.PI / 180;
-      html += '<div class="z-item" data-index="' + k + '" style="left:' + (cx + 140 * Math.cos(r3)).toFixed(0) + 'px;top:' + (cy + 140 * Math.sin(r3)).toFixed(0) + 'px">'
+      html += '<div class="z-item" data-index="' + k + '" style="left:' + (cx + 126 * Math.cos(r3)).toFixed(0) + 'px;top:' + (cy + 126 * Math.sin(r3)).toFixed(0) + 'px">'
         + '<span class="zt" style="transform:rotate(' + (k * step + step / 2) + 'deg)">' + d.name + '</span></div>';
     }
     html += '</div>';
-    // 外围指示箭头：位于内圈紫微宫扇区中心方向（随转盘旋转，始终指向紫微宫扇形中间）
-    var arrAng = 0 * innerStep + innerStep / 2;            // 紫微宫扇区中心角度（相对圆心）
-    var arrPos = lineXY(arrAng, 158);
-    html += '<div class="z-ring-arrow" style="left:' + arrPos.x.toFixed(0) + 'px;top:' + arrPos.y.toFixed(0) + 'px">'
-      + '<svg viewBox="0 0 24 24" width="20" height="20" style="transform:rotate(' + ((arrAng - 90) + 270) + 'deg)"><path d="M12 2 L20 22 L12 17 L4 22 Z" fill="#ff8c00"/></svg>'
-      + '</div>';
+    html += '</div>';
+    // 内圈 3 宫：不随转盘旋转（固定层，紫微恒扇区中心在 12 点，r=64 位于圆心面板外）
+    // 内圈角度线（固定，不随转）
+    var svgIn = '<svg class="z-ring-lines-inner" viewBox="0 0 360 360">';
+    for (var n1 = 0; n1 < INNER.length; n1++) {   // 内圈 3 条（120°），扇区边界
+      var q1 = lineXY(n1 * innerStep - 60, 80);
+      svgIn += '<line x1="180" y1="180" x2="' + q1.x.toFixed(1) + '" y2="' + q1.y.toFixed(1) + '" stroke="rgba(255,255,255,.2)" stroke-width="1"/>';
+    }
+    svgIn += '</svg>';
+    html += svgIn;
+    // 内圈 3 宫文字（固定，水平显示）
+    html += '<div class="z-ring r1">';
+    for (var ii = 0; ii < INNER.length; ii++) {
+      var a1 = ii * innerStep + innerStep / 2 - 90 - 60;   // 固定布局：紫微恒中心在 12 点
+      var r1 = a1 * Math.PI / 180;
+      html += '<div class="z-item" data-palace="' + ii + '" style="left:' + (cx + 64 * Math.cos(r1)).toFixed(0) + 'px;top:' + (cy + 64 * Math.sin(r1)).toFixed(0) + 'px">'
+        + '<span class="zt">' + (PALACE_RENAME[INNER[ii].name] || INNER[ii].name) + '</span></div>';
+    }
     html += '</div>';
     // 固定 12 点方向圆点（不随转盘旋转，作为顶部基准指示）
     html += '<div class="z-ring-dot"></div>';
@@ -991,7 +989,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     var innerItems = area.querySelectorAll('.z-ring.r1 .z-item');    // 内圈 3 宫（可点击）
     var centerName = area.querySelector('.zc-name');
     var centerLine = area.querySelector('.zc-line');
-    var currentAngle = -60, startX, startY, startAngle = 0;   // 默认 -60°：紫微宫扇区中心对齐 12 点
+    var currentAngle = 0, startX, startY, startAngle = 0;   // 内圈三宫固定不转，转盘默认不旋转
     var isDragging = false;
     var selKind = 'palace';   // 'palace'=内圈三宫 | 'star'=外圈二十八宿
     var selIdx = 0;
