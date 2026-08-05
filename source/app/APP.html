@@ -168,9 +168,9 @@ body{display:flex;flex-direction:column}
 .content-area .history-item .htext{text-align:left}
 
 /* 星象转盘样式（三层同心：内圈 三垣/二十八宿；中圈 三垣三宫+四象；外圈 31 天区） */
-.zodiac-wheel{position:relative;width:320px;height:320px;margin:8px auto 0;cursor:pointer;touch-action:none}
-.z-ring-lines{position:absolute;top:0;left:0;width:320px;height:320px;pointer-events:none;z-index:0}
-.z-ring{position:absolute;top:0;left:0;width:320px;height:320px;pointer-events:none;z-index:1}
+.zodiac-wheel{position:relative;width:340px;height:340px;margin:8px auto 0;cursor:pointer;touch-action:none}
+.z-ring-lines{position:absolute;top:0;left:0;width:340px;height:340px;pointer-events:none;z-index:0}
+.z-ring{position:absolute;top:0;left:0;width:340px;height:340px;pointer-events:none;z-index:1}
 .z-ring .z-item{position:absolute;text-align:center;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);transform:translate(-50%,-50%);cursor:pointer;user-select:none;-webkit-user-select:none;transition:all .35s;line-height:1.3}
 .z-ring .z-item .zt{display:block;font-weight:300;transition:all .35s;line-height:1.3}
 .z-ring.r1 .z-item{width:66px;font-size:.6rem}
@@ -179,10 +179,8 @@ body{display:flex;flex-direction:column}
 .z-ring.r3{pointer-events:none}
 .z-ring.r3 .z-item{pointer-events:auto}
 .z-ring .z-item.sel .zt{color:#ff8c00;font-weight:600}
-.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:118px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6}
-.zodiac-center .zc-name{font-size:.98rem;font-weight:700;display:block;margin-bottom:2px;color:#ff8c00;letter-spacing:1px}
-.zodiac-center .zc-line{font-size:.6rem;opacity:.9;display:block;white-space:nowrap;color:#fff}
-.zodiac-center .zc-sub{font-size:.52rem;opacity:.8;display:block;color:rgba(255,255,255,.95);max-height:72px;overflow-y:auto;line-height:1.55;margin-top:2px;padding:0 2px;pointer-events:auto;-webkit-overflow-scrolling:touch}
+.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:128px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6}
+.zodiac-center .zc-sub{font-size:.52rem;opacity:.85;display:block;color:rgba(255,255,255,.95);max-height:92px;overflow-y:auto;line-height:1.6;padding:0 2px;pointer-events:auto;-webkit-overflow-scrolling:touch}
 
 /* 星象星空背景覆盖层 */
 .stars-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:url('bg-stars.jpg') center/cover no-repeat;opacity:0;transition:opacity .6s ease;pointer-events:none;z-index:1}
@@ -880,7 +878,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     var items = data.all;   // 三垣二十八宿，31 个天区：{group, name, poem}
     var N = items.length;
     var step = 360 / N;     // 外圈每区角度
-    var cx = 160, cy = 160;
+    var cx = 170, cy = 170;
     // 内圈：三垣 / 二十八宿
     var INNER = ['三垣', '二十八宿'];
     // 中圈：三垣三宫 + 四象
@@ -893,56 +891,54 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       var a = (angDeg - 90) * Math.PI / 180;
       return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
     }
-    var svg = '<svg class="z-ring-lines" viewBox="0 0 320 320">';
-    var rings = [72, 98, 125];
+    var svg = '<svg class="z-ring-lines" viewBox="0 0 340 340">';
+    var rings = [76, 104, 133];
     for (var rc = 0; rc < rings.length; rc++) {
-      svg += '<circle cx="160" cy="160" r="' + rings[rc] + '" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1"/>';
+      svg += '<circle cx="170" cy="170" r="' + rings[rc] + '" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1"/>';
     }
     for (var n1 = 0; n1 < INNER.length; n1++) {   // 内圈 2 条
-      var q1 = lineXY(n1 * 180, 72);
-      svg += '<line x1="160" y1="160" x2="' + q1.x.toFixed(1) + '" y2="' + q1.y.toFixed(1) + '" stroke="rgba(255,255,255,.2)" stroke-width="1"/>';
+      var q1 = lineXY(n1 * 180, 76);
+      svg += '<line x1="170" y1="170" x2="' + q1.x.toFixed(1) + '" y2="' + q1.y.toFixed(1) + '" stroke="rgba(255,255,255,.2)" stroke-width="1"/>';
     }
     for (var n2 = 0; n2 < MID.length; n2++) {     // 中圈 7 条
-      var qa = lineXY(n2 * midStep, 72), qb = lineXY(n2 * midStep, 98);
+      var qa = lineXY(n2 * midStep, 76), qb = lineXY(n2 * midStep, 104);
       svg += '<line x1="' + qa.x.toFixed(1) + '" y1="' + qa.y.toFixed(1) + '" x2="' + qb.x.toFixed(1) + '" y2="' + qb.y.toFixed(1) + '" stroke="rgba(255,255,255,.2)" stroke-width="1"/>';
     }
     for (var n3 = 0; n3 < items.length; n3++) {   // 外圈 31 条
-      var pa = lineXY(n3 * step, 98), pb = lineXY(n3 * step, 125);
+      var pa = lineXY(n3 * step, 104), pb = lineXY(n3 * step, 133);
       svg += '<line x1="' + pa.x.toFixed(1) + '" y1="' + pa.y.toFixed(1) + '" x2="' + pb.x.toFixed(1) + '" y2="' + pb.y.toFixed(1) + '" stroke="rgba(255,255,255,.2)" stroke-width="1"/>';
     }
     svg += '</svg>';
     html += svg;
-    // 中心信息面板：选中天区名称 + 所属 + 星象歌诀
+    // 中心信息面板：仅显示选中天区的星象歌诀
     html += '<div class="zodiac-center">'
-          + '<span class="zc-name">' + items[0].name + '</span>'
-          + '<span class="zc-line">' + items[0].group + '</span>'
           + '<span class="zc-sub">' + items[0].poem + '</span>'
           + '</div>';
-    // 内圈 2 项（r=72）
+    // 内圈 2 项（r=76）
     html += '<div class="z-ring r1">';
     for (var ii = 0; ii < INNER.length; ii++) {
       var a1 = ii * 180 - 90;
       var r1 = a1 * Math.PI / 180;
-      html += '<div class="z-item" data-name="' + INNER[ii] + '" style="left:' + (cx + 72 * Math.cos(r1)).toFixed(0) + 'px;top:' + (cy + 72 * Math.sin(r1)).toFixed(0) + 'px">'
+      html += '<div class="z-item" data-name="' + INNER[ii] + '" style="left:' + (cx + 76 * Math.cos(r1)).toFixed(0) + 'px;top:' + (cy + 76 * Math.sin(r1)).toFixed(0) + 'px">'
         + '<span class="zt" style="transform:rotate(' + (ii * 180) + 'deg)">' + INNER[ii] + '</span></div>';
     }
     html += '</div>';
-    // 中圈 7 项（r=98）
+    // 中圈 7 项（r=104）
     html += '<div class="z-ring r2">';
     for (var j = 0; j < MID.length; j++) {
       var a2 = j * midStep - 90;
       var r2 = a2 * Math.PI / 180;
-      html += '<div class="z-item" data-name="' + MID[j] + '" style="left:' + (cx + 98 * Math.cos(r2)).toFixed(0) + 'px;top:' + (cy + 98 * Math.sin(r2)).toFixed(0) + 'px">'
+      html += '<div class="z-item" data-name="' + MID[j] + '" style="left:' + (cx + 104 * Math.cos(r2)).toFixed(0) + 'px;top:' + (cy + 104 * Math.sin(r2)).toFixed(0) + 'px">'
         + '<span class="zt" style="transform:rotate(' + (j * midStep) + 'deg)">' + MID[j] + '</span></div>';
     }
     html += '</div>';
-    // 外圈 31 个天区（r=125，可点击）
+    // 外圈 31 个天区（r=133，可点击）
     html += '<div class="z-ring r3">';
     for (var k = 0; k < items.length; k++) {
       var d = items[k];
       var a3 = k * step - 90;
       var r3 = a3 * Math.PI / 180;
-      html += '<div class="z-item" data-index="' + k + '" style="left:' + (cx + 125 * Math.cos(r3)).toFixed(0) + 'px;top:' + (cy + 125 * Math.sin(r3)).toFixed(0) + 'px">'
+      html += '<div class="z-item" data-index="' + k + '" style="left:' + (cx + 133 * Math.cos(r3)).toFixed(0) + 'px;top:' + (cy + 133 * Math.sin(r3)).toFixed(0) + 'px">'
         + '<span class="zt" style="transform:rotate(' + (k * step) + 'deg)">' + d.name + '</span></div>';
     }
     html += '</div>';
@@ -958,8 +954,6 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     var zodiacItems = area.querySelectorAll('.z-ring.r3 .z-item');   // 外圈 31 天区（可点击）
     var midItems = area.querySelectorAll('.z-ring.r2 .z-item');      // 中圈 7 项
     var innerItems = area.querySelectorAll('.z-ring.r1 .z-item');    // 内圈 2 项
-    var centerName = area.querySelector('.zc-name');
-    var centerLine = area.querySelector('.zc-line');
     var centerSub = area.querySelector('.zc-sub');
     var currentAngle = 0, startX, startY, startAngle = 0;
     var isDragging = false;
@@ -967,8 +961,6 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     zodiacItems[0].classList.add('sel');
     function updateCenter(idx) {
       var d = items[idx];
-      centerName.textContent = d.name;
-      centerLine.textContent = d.group;
       centerSub.textContent = d.poem;
       if (centerSub.scrollTop) centerSub.scrollTop = 0;
     }
