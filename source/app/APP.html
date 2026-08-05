@@ -179,8 +179,20 @@ body{display:flex;flex-direction:column}
 .z-ring.r3{pointer-events:none}
 .z-ring.r3 .z-item{pointer-events:auto}
 .z-ring .z-item.sel .zt{color:#ff8c00;font-weight:600}
-.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:132px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6}
-.zodiac-center .zc-sub{font-size:.56rem;opacity:.85;display:block;color:rgba(255,255,255,.95);max-height:96px;overflow-y:auto;line-height:1.6;padding:0 2px;pointer-events:auto;-webkit-overflow-scrolling:touch}
+.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:103px;height:103px;text-align:center;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6}
+.zodiac-center .zc-sub{font-size:.56rem;opacity:.85;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:6;overflow:hidden;text-overflow:ellipsis;color:rgba(255,255,255,.95);padding:0 2px;pointer-events:auto;-webkit-tap-highlight-color:transparent}
+/* 星象全文弹窗 */
+.xz-detail-mask{position:fixed;top:0;left:0;right:0;bottom:0;z-index:30001;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;padding:24px}
+.xz-detail-mask.show{opacity:1;visibility:visible}
+.xz-detail-panel{background:#fff;color:#333;width:100%;max-width:340px;max-height:72vh;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.35);transform:translateY(12px);transition:transform .3s ease}
+.xz-detail-mask.show .xz-detail-panel{transform:translateY(0)}
+.xz-detail-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #eee;flex-shrink:0}
+.xz-detail-title{font-size:.95rem;font-weight:700;color:#e8793a;letter-spacing:1px}
+.xz-detail-close{font-size:1.15rem;color:#999;cursor:pointer;line-height:1;padding:2px 4px;border:none;background:none}
+.xz-detail-body{flex:1;min-height:0;overflow-y:auto;padding:14px 16px;font-size:.9rem;line-height:1.9;color:#444;-webkit-overflow-scrolling:touch;text-align:left}
+[data-theme="dark"] .xz-detail-panel{background:#1e1e1e}
+[data-theme="dark"] .xz-detail-body{color:#ccc}
+[data-theme="dark"] .xz-detail-head{border-color:#333}
 
 /* 星象星空背景覆盖层 */
 .stars-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:url('bg-stars.jpg') center/cover no-repeat;opacity:0;transition:opacity .6s ease;pointer-events:none;z-index:1}
@@ -957,15 +969,15 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     var centerSub = area.querySelector('.zc-sub');
     var currentAngle = 0, startX, startY, startAngle = 0;
     var isDragging = false;
+    var selIdx = 0;   // 当前选中天区索引
     // 默认选中第一个
     zodiacItems[0].classList.add('sel');
     function updateCenter(idx) {
-      var d = items[idx];
-      centerSub.textContent = d.poem;
-      if (centerSub.scrollTop) centerSub.scrollTop = 0;
+      centerSub.textContent = items[idx].poem;
     }
     function selectItem(idx) {
       var d = items[idx];
+      selIdx = idx;
       // 外圈高亮
       zodiacItems.forEach(function(el){el.classList.remove('sel')});
       zodiacItems[idx].classList.add('sel');
@@ -982,6 +994,35 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       });
       updateCenter(idx);
     }
+    // 点击中间歌诀区 → 弹窗显示全文（含分类标题）
+    function hideDetail(){
+      var mask = document.getElementById('xzDetailMask');
+      if (mask) mask.classList.remove('show');
+    }
+    function showDetail(){
+      var d = items[selIdx];
+      if (!d) return;
+      var mask = document.getElementById('xzDetailMask');
+      if (!mask) {
+        mask = document.createElement('div');
+        mask.id = 'xzDetailMask';
+        mask.className = 'xz-detail-mask';
+        mask.innerHTML = '<div class="xz-detail-panel">'
+          + '<div class="xz-detail-head"><span class="xz-detail-title"></span><button class="xz-detail-close">✕</button></div>'
+          + '<div class="xz-detail-body"></div>'
+          + '</div>';
+        document.body.appendChild(mask);
+        mask.addEventListener('click', function(ev){ if (ev.target === mask) hideDetail(); });
+        mask.querySelector('.xz-detail-close').addEventListener('click', function(ev){ ev.stopPropagation(); hideDetail(); });
+      }
+      mask.querySelector('.xz-detail-title').textContent = d.group + ' · ' + d.name;
+      mask.querySelector('.xz-detail-body').textContent = d.poem;
+      mask.classList.add('show');
+    }
+    centerSub.addEventListener('click', function(e){
+      e.stopPropagation();
+      showDetail();
+    });
     function snapToNearest() {
       var rawIdx = -currentAngle / step;
       var nearest = ((Math.round(rawIdx) % N) + N) % N;
