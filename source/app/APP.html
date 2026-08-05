@@ -932,32 +932,32 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     html += '<div class="zodiac-center">'
           + '<span class="zc-sub">' + sansi3[0].poem + '</span>'
           + '</div>';
-    // 内圈 3 宫（r=80，可点击）
+    // 内圈 3 宫（r=80，可点击，文字置于扇区中心）
     html += '<div class="z-ring r1">';
     for (var ii = 0; ii < INNER.length; ii++) {
-      var a1 = ii * innerStep - 90;
+      var a1 = ii * innerStep + innerStep / 2 - 90;
       var r1 = a1 * Math.PI / 180;
       html += '<div class="z-item" data-palace="' + ii + '" style="left:' + (cx + 80 * Math.cos(r1)).toFixed(0) + 'px;top:' + (cy + 80 * Math.sin(r1)).toFixed(0) + 'px">'
-        + '<span class="zt" style="transform:rotate(' + (ii * innerStep) + 'deg)">' + INNER[ii].name + '</span></div>';
+        + '<span class="zt" style="transform:rotate(' + (ii * innerStep + innerStep / 2) + 'deg)">' + INNER[ii].name + '</span></div>';
     }
     html += '</div>';
-    // 中圈 4 象（r=110，随外圈联动高亮）
+    // 中圈 4 象（r=110，文字置于扇区中心）
     html += '<div class="z-ring r2">';
     for (var j = 0; j < MID.length; j++) {
-      var a2 = j * midStep - 90;
+      var a2 = j * midStep + midStep / 2 - 90;
       var r2 = a2 * Math.PI / 180;
       html += '<div class="z-item" data-name="' + MID[j] + '" style="left:' + (cx + 110 * Math.cos(r2)).toFixed(0) + 'px;top:' + (cy + 110 * Math.sin(r2)).toFixed(0) + 'px">'
-        + '<span class="zt" style="transform:rotate(' + (j * midStep) + 'deg)">' + MID[j] + '</span></div>';
+        + '<span class="zt" style="transform:rotate(' + (j * midStep + midStep / 2) + 'deg)">' + MID[j] + '</span></div>';
     }
     html += '</div>';
-    // 外圈 28 宿（r=140，可点击）
+    // 外圈 28 宿（r=140，文字置于扇区中心）
     html += '<div class="z-ring r3">';
     for (var k = 0; k < stars28.length; k++) {
       var d = stars28[k];
-      var a3 = k * step - 90;
+      var a3 = k * step + step / 2 - 90;
       var r3 = a3 * Math.PI / 180;
       html += '<div class="z-item" data-index="' + k + '" style="left:' + (cx + 140 * Math.cos(r3)).toFixed(0) + 'px;top:' + (cy + 140 * Math.sin(r3)).toFixed(0) + 'px">'
-        + '<span class="zt" style="transform:rotate(' + (k * step) + 'deg)">' + d.name + '</span></div>';
+        + '<span class="zt" style="transform:rotate(' + (k * step + step / 2) + 'deg)">' + d.name + '</span></div>';
     }
     html += '</div>';
     html += '</div>';
@@ -1028,6 +1028,11 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       mask.querySelector('.xz-detail-body').textContent = d.poem;
       mask.classList.add('show');
     }
+    // 点击中间歌诀区 → 弹窗显示全文（含分类标题）
+    // 注意：先阻止 mousedown/touchstart 冒泡，避免触发转盘拖动→吸附旋转→选中被改写成外圈星宿
+    ['mousedown', 'touchstart'].forEach(function(ev){
+      centerSub.addEventListener(ev, function(e){ e.stopPropagation(); }, { passive: true });
+    });
     centerSub.addEventListener('click', function(e){
       e.stopPropagation();
       showDetail();
@@ -1043,9 +1048,10 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       });
     });
     function snapToNearest() {
+      // 吸附到扇区中心（文字位于扇区中间，选中后正对 12 点方向）
       var rawIdx = -currentAngle / step;
-      var nearest = ((Math.round(rawIdx) % N) + N) % N;
-      currentAngle = -Math.round(rawIdx) * step;
+      var nearest = ((Math.round(rawIdx - 0.5) % N) + N) % N;
+      currentAngle = -(nearest * step + step / 2);
       wheel.style.transition = 'transform .35s ease-out';
       wheel.style.transform = 'rotate(' + currentAngle + 'deg)';
       centerEl.style.transition = 'transform .35s ease-out';
@@ -1088,11 +1094,11 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     wheel.addEventListener('touchstart', onStart, {passive: true});
     document.addEventListener('touchmove', onMove, {passive: true});
     document.addEventListener('touchend', onEnd);
-    // 点击选择（外圈二十八宿）
+    // 点击选择（外圈二十八宿，旋转到扇区中心）
     zodiacItems.forEach(function(el){
       el.addEventListener('click', function(){
         var idx = parseInt(el.dataset.index);
-        currentAngle = -idx * step;
+        currentAngle = -(idx * step + step / 2);
         wheel.style.transition = 'transform .35s ease-out';
         wheel.style.transform = 'rotate(' + currentAngle + 'deg)';
         centerEl.style.transition = 'transform .35s ease-out';
