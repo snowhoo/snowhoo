@@ -185,8 +185,9 @@ body{display:flex;flex-direction:column}
 .z-ring-arrow svg{display:block}
 .z-ring-dot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) translateY(-158px);width:10px;height:10px;border-radius:50%;background:#ff8c00;box-shadow:0 0 8px rgba(255,140,0,.9);z-index:2;pointer-events:none}
 .z-ring .z-item.sel .zt{color:#ff8c00;font-weight:600}
-.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:103px;height:103px;text-align:left;color:#ff8c00;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:none;line-height:1.6;display:flex;flex-direction:column;justify-content:center;align-items:stretch}
-.zodiac-center .zc-sub{font-size:.56rem;opacity:.95;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:7;overflow:hidden;text-overflow:ellipsis;color:#ff8c00;text-align:left;padding:0 2px;pointer-events:auto;-webkit-tap-highlight-color:transparent}
+.zodiac-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:103px;height:103px;text-align:center;text-shadow:0 1px 6px rgba(0,0,0,.7);pointer-events:auto;line-height:1.6;display:flex;flex-direction:column;justify-content:center;align-items:center;-webkit-tap-highlight-color:transparent}
+.zodiac-center .zc-name{font-size:1.02rem;font-weight:700;color:#ff8c00;display:block;letter-spacing:1px}
+.zodiac-center .zc-line{font-size:.58rem;color:rgba(255,255,255,.92);display:block;white-space:nowrap;margin-top:3px}
 /* 星象全文弹窗（参照发现弹窗风格：深紫渐变卡片） */
 .xz-detail-mask{position:fixed;top:0;left:0;right:0;bottom:0;z-index:30001;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;padding:24px;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 .xz-detail-mask.show{opacity:1;visibility:visible}
@@ -900,6 +901,9 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       else stars28.push(items[it0]);
     }
     var INNER = sansi3;                                   // 内圈 3 宫
+    // 三垣宫名显示映射（宫→恒 称谓）与职能副标题
+    var PALACE_RENAME = { '紫微宫': '紫薇恒', '太微宫': '太微恒', '天市宫': '天市恒' };
+    var PALACE_SUB = { '紫微宫': '天帝居所', '太微宫': '天帝议事', '天市宫': '天帝市集' };
     var MID = ['东方苍龙', '北方玄武', '西方白虎', '南方朱雀'];   // 中圈 4 象
     var N = stars28.length;                               // 外圈 28 宿
     var step = 360 / N;                                   // 外圈每区角度
@@ -932,9 +936,10 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     }
     svg += '</svg>';
     html += svg;
-    // 中心信息面板：仅显示选中天区的星象歌诀（默认紫微宫）
+    // 中心信息面板：名称 + 分类（如"紫薇恒 / 三垣 · 天帝居所"、"角宿 / 二十八宿 · 东方苍龙"）
     html += '<div class="zodiac-center">'
-          + '<span class="zc-sub">' + sansi3[0].poem + '</span>'
+          + '<span class="zc-name">' + (PALACE_RENAME[sansi3[0].name] || sansi3[0].name) + '</span>'
+          + '<span class="zc-line">三垣 · ' + (PALACE_SUB[sansi3[0].name] || '') + '</span>'
           + '</div>';
     // 内圈 3 宫（r=80，可点击，文字置于扇区中心）
     html += '<div class="z-ring r1">';
@@ -942,7 +947,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       var a1 = ii * innerStep + innerStep / 2 - 90;
       var r1 = a1 * Math.PI / 180;
       html += '<div class="z-item" data-palace="' + ii + '" style="left:' + (cx + 80 * Math.cos(r1)).toFixed(0) + 'px;top:' + (cy + 80 * Math.sin(r1)).toFixed(0) + 'px">'
-        + '<span class="zt" style="transform:rotate(' + (ii * innerStep + innerStep / 2) + 'deg)">' + INNER[ii].name + '</span></div>';
+        + '<span class="zt" style="transform:rotate(' + (ii * innerStep + innerStep / 2) + 'deg)">' + (PALACE_RENAME[INNER[ii].name] || INNER[ii].name) + '</span></div>';
     }
     html += '</div>';
     // 中圈 4 象（r=110，文字置于扇区中心）
@@ -984,13 +989,20 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     var zodiacItems = area.querySelectorAll('.z-ring.r3 .z-item');   // 外圈 28 宿（可点击）
     var midItems = area.querySelectorAll('.z-ring.r2 .z-item');      // 中圈 4 象（联动高亮）
     var innerItems = area.querySelectorAll('.z-ring.r1 .z-item');    // 内圈 3 宫（可点击）
-    var centerSub = area.querySelector('.zc-sub');
+    var centerName = area.querySelector('.zc-name');
+    var centerLine = area.querySelector('.zc-line');
     var currentAngle = -60, startX, startY, startAngle = 0;   // 默认 -60°：紫微宫扇区中心对齐 12 点
     var isDragging = false;
     var selKind = 'palace';   // 'palace'=内圈三宫 | 'star'=外圈二十八宿
     var selIdx = 0;
-    function updateCenter(d) { centerSub.textContent = d.poem; }
-    // 选中二十八宿（外圈）：歌诀 + 中圈对应四象高亮
+    // 中心两行：名称 + 分类（三宫：三垣·职能；二十八宿：二十八宿·四象）
+    function updateCenter(d, dname) {
+      centerName.textContent = dname;
+      centerLine.textContent = (d.group === '三垣')
+        ? ('三垣 · ' + (PALACE_SUB[d.name] || ''))
+        : ('二十八宿 · ' + d.group);
+    }
+    // 选中二十八宿（外圈）：中心信息 + 中圈对应四象高亮
     function selectStar(idx) {
       var d = stars28[idx];
       selKind = 'star'; selIdx = idx;
@@ -1000,9 +1012,9 @@ document.getElementById('constellationBtn').addEventListener('click', function()
         el.classList.toggle('sel', el.getAttribute('data-name') === d.group);
       });
       innerItems.forEach(function(el){el.classList.remove('sel')});
-      updateCenter(d);
+      updateCenter(d, d.name);
     }
-    // 选中三垣宫（内圈）：歌诀 + 内圈高亮，外圈/中圈取消
+    // 选中三垣宫（内圈）：中心信息 + 内圈高亮，外圈/中圈取消
     function selectPalace(idx) {
       var d = sansi3[idx];
       selKind = 'palace'; selIdx = idx;
@@ -1010,13 +1022,13 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       innerItems[idx].classList.add('sel');
       midItems.forEach(function(el){el.classList.remove('sel')});
       zodiacItems.forEach(function(el){el.classList.remove('sel')});
-      updateCenter(d);
+      updateCenter(d, PALACE_RENAME[d.name] || d.name);
     }
     // 默认选中紫微宫（内圈）并旋转到扇区中心朝 12 点
     selectPalace(0);
     wheel.style.transform = 'rotate(' + currentAngle + 'deg)';
     centerEl.style.transform = 'translate(-50%,-50%) rotate(' + (-currentAngle) + 'deg)';
-    // 点击中间歌诀区 → 弹窗显示全文（含分类标题）
+    // 点击中心 → 弹窗显示全文歌诀（含分类标题）
     function hideDetail(){
       var mask = document.getElementById('xzDetailMask');
       if (mask) mask.classList.remove('show');
@@ -1024,6 +1036,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     function showDetail(){
       var d = (selKind === 'palace') ? sansi3[selIdx] : stars28[selIdx];
       if (!d) return;
+      var dname = (selKind === 'palace') ? (PALACE_RENAME[d.name] || d.name) : d.name;
       var mask = document.getElementById('xzDetailMask');
       if (!mask) {
         mask = document.createElement('div');
@@ -1038,16 +1051,15 @@ document.getElementById('constellationBtn').addEventListener('click', function()
         mask.addEventListener('click', function(ev){ if (ev.target === mask) hideDetail(); });
         mask.querySelector('.xz-detail-close').addEventListener('click', function(ev){ ev.stopPropagation(); hideDetail(); });
       }
-      mask.querySelector('.xz-detail-title').textContent = d.group + ' · ' + d.name;
+      mask.querySelector('.xz-detail-title').textContent = d.group + ' · ' + dname;
       mask.querySelector('.xz-detail-body').textContent = d.poem;
       mask.classList.add('show');
     }
-    // 点击中间歌诀区 → 弹窗显示全文（含分类标题）
-    // 注意：先阻止 mousedown/touchstart 冒泡，避免触发转盘拖动→吸附旋转→选中被改写成外圈星宿
+    // 点击中心信息区：先阻止 mousedown/touchstart 冒泡，避免触发转盘拖动→吸附旋转→选中被改写
     ['mousedown', 'touchstart'].forEach(function(ev){
-      centerSub.addEventListener(ev, function(e){ e.stopPropagation(); }, { passive: true });
+      centerEl.addEventListener(ev, function(e){ e.stopPropagation(); }, { passive: true });
     });
-    centerSub.addEventListener('click', function(e){
+    centerEl.addEventListener('click', function(e){
       e.stopPropagation();
       showDetail();
     });
