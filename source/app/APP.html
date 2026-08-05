@@ -920,7 +920,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
 	// 分割线：三恒内圆角度线单独调用该函数）
 	 function lineXY1(angDeg, r) {
       var a = (angDeg - 90) * Math.PI / 180;
-      return { x: cx + r * Math.cos(a), y: cy + 9 + r * Math.sin(a) }; //cy + 9px，以修正位置
+      return { x: cx + r * Math.cos(a), y: cy + 8 + r * Math.sin(a) }; //cy + 8px，以修正位置
     }
 	
     var svg = '<svg class="z-ring-lines" viewBox="0 0 360 360">';
@@ -977,7 +977,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     for (var ii = 0; ii < INNER.length; ii++) {
       var a1 = ii * innerStep + innerStep / 2 - 90 - 60;   // 固定布局：紫微恒中心在 12 点
       var r1 = a1 * Math.PI / 180;
-      html += '<div class="z-item" data-palace="' + ii + '" style="left:' + (cx + 66 * Math.cos(r1)).toFixed(0) + 'px;top:' + (cy + 9 + 66 * Math.sin(r1)).toFixed(0) + 'px">' //cy + 9px，以修正位置
+      html += '<div class="z-item" data-palace="' + ii + '" style="left:' + (cx + 66 * Math.cos(r1)).toFixed(0) + 'px;top:' + (cy + 8 + 66 * Math.sin(r1)).toFixed(0) + 'px">' //cy + 8px，以修正位置
         + '<span class="zt" style="transform:rotate(' + (a1 + 90) + 'deg)">' + (PALACE_RENAME[INNER[ii].name] || INNER[ii].name) + '</span></div>';
     }
     html += '</div>';
