@@ -175,7 +175,7 @@ body{display:flex;flex-direction:column}
 .z-ring .z-item .zt{display:block;font-weight:300;transition:all .35s;line-height:1.3}
 .z-ring.r1 .z-item{width:80px;font-size:.74rem}
 .z-ring.r2 .z-item{width:72px;font-size:.66rem}
-.z-ring.r3 .z-item{width:54px;font-size:.58rem}
+.z-ring.r3 .z-item{width:54px;font-size:.74rem}
 .z-ring.r3{pointer-events:none}
 .z-ring.r3 .z-item{pointer-events:auto}
 .z-ring.r1{position:absolute;top:0;left:0;width:360px;height:360px;pointer-events:none;z-index:3}
@@ -952,14 +952,14 @@ document.getElementById('constellationBtn').addEventListener('click', function()
         + '<span class="zt" style="transform:rotate(' + (j * midStep + midStep / 2) + 'deg)">' + MID[j] + '</span></div>';
     }
     html += '</div>';
-    // 外圈 28 宿（r=126，位于 110~140 环带中间，文字置于扇区中心）
+    // 外圈 28 宿（r=126，位于 110~140 环带中间，文字置于扇区中心；显示单字"角、亢…"，数据 name 不变供播放/弹窗使用）
     html += '<div class="z-ring r3">';
     for (var k = 0; k < stars28.length; k++) {
       var d = stars28[k];
       var a3 = k * step + step / 2 - 90;
       var r3 = a3 * Math.PI / 180;
       html += '<div class="z-item" data-index="' + k + '" style="left:' + (cx + 126 * Math.cos(r3)).toFixed(0) + 'px;top:' + (cy + 126 * Math.sin(r3)).toFixed(0) + 'px">'
-        + '<span class="zt" style="transform:rotate(' + (k * step + step / 2) + 'deg)">' + d.name + '</span></div>';
+        + '<span class="zt" style="transform:rotate(' + (k * step + step / 2) + 'deg)">' + d.name.replace('宿', '') + '</span></div>';
     }
     html += '</div>';
     html += '</div>';
