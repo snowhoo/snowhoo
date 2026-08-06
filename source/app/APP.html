@@ -996,7 +996,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     var innerItems = area.querySelectorAll('.z-ring.r1 .z-item');    // 内圈 3 宫（可点击）
     var centerName = area.querySelector('.zc-name');
     var centerLine = area.querySelector('.zc-line');
-    var currentAngle = 0, startX, startY, startAngle = 0;   // 内圈三宫固定不转，转盘默认不旋转
+    var currentAngle = -135, startX, startY, startAngle = 0;   // 默认 -135°：北方玄武扇区中心（45°）转到 12 点正北方；内圈三宫固定不转
     var isDragging = false;
     var selKind = 'palace';   // 'palace'=内圈三宫 | 'star'=外圈二十八宿
     var selIdx = 0;
