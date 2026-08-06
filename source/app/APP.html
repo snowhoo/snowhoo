@@ -1069,13 +1069,17 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       showDetail();
     });
     // 内圈三宫点击：只切换内容，不旋转转盘（阻止拖动事件冒泡）
-    var _xzAudio = null;   // 星象测试音频（点击三恒播放对应"发现_xx恒.mp3"）
-    var XZ_AUDIO = ['发现_紫微恒.mp3', '发现_太微恒.mp3', '发现_天市恒.mp3'];
-    function playXZTest(pidx){
-      if (pidx < 0 || pidx >= XZ_AUDIO.length) return;
+    var _xzAudio = null;   // 星象音频（点击三恒/二十八宿播放"发现_xx.mp3"）
+    var XZ_AUDIO = {
+      '紫微恒': '发现_紫微恒.mp3', '太微恒': '发现_太微恒.mp3', '天市恒': '发现_天市恒.mp3'
+    };
+    // 播放星象音频：三恒用显式映射；二十八宿按命名规则"发现_<宿名>.mp3"自动拼接。
+    // 不校验文件是否存在——文件缺失时播放失败被静默忽略，后续往 app 目录放对应音频即可直接生效
+    function playXZ(name){
+      var f = XZ_AUDIO[name] || ('发现_' + name + '.mp3');
       try {
         if (_xzAudio) { _xzAudio.pause(); _xzAudio = null; }
-        _xzAudio = new Audio(encodeURI('./' + XZ_AUDIO[pidx]));
+        _xzAudio = new Audio(encodeURI('./' + f));
         _xzAudio.play().catch(function(){});
       } catch(e){}
     }
@@ -1087,7 +1091,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
         e.stopPropagation();
         var pidx = parseInt(el.getAttribute('data-palace'), 10);
         selectPalace(pidx);
-        playXZTest(pidx);
+        playXZ(PALACE_RENAME[INNER[pidx].name] || INNER[pidx].name);
       });
     });
     function snapToNearest() {
@@ -1147,6 +1151,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
         centerEl.style.transition = 'transform .35s ease-out';
         centerEl.style.transform = 'translate(-50%,-50%) rotate(' + (-currentAngle) + 'deg)';
         selectStar(idx);
+        playXZ(stars28[idx].name);   // 有对应音频的星宿（东方苍龙七宿）点击播放
       });
     });
   }).catch(function(){
