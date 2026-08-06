@@ -529,6 +529,7 @@ document.querySelector('.welcome').addEventListener('click', function() {
   area.style.width = '';
   area.style.transform = 'translateY(-50%)';
   area.style.textAlign = 'center';
+  area.style.overflowY = '';   // 恢复滚动（星象面板会锁定）
   area._activeBtn = null;
   document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
   // 生成唯一标记，防止异步回调覆盖其他面板
@@ -695,6 +696,7 @@ function toggleContent(btnId, url, renderFn, onLoaded) {
   area.style.width = '';
   area.style.transform = 'translateY(-50%)';
   area.style.textAlign = 'center';
+  area.style.overflowY = '';   // 恢复滚动（星象面板会锁定）
   // 生成唯一标记，防止异步回调覆盖
   var _reqId = Date.now() + '_' + Math.random();
   area._toggleReqId = _reqId;
@@ -746,6 +748,7 @@ function togglePoetry() {
   area.style.width = '';
   area.style.transform = 'translateY(-50%)';
   area.style.textAlign = 'center';
+  area.style.overflowY = '';   // 恢复滚动（星象面板会锁定）
 
   // 显示诗词背景（淡入 0.8s 与 CSS transition 一致）
   overlay.classList.add('show');
@@ -856,6 +859,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     area.classList.remove('show');
     btn.classList.remove('selected');
     area._activeBtn = null;
+    area.style.overflowY = '';   // 恢复滚动
     closeAllOverlays();
     // 终止后台正在加载的星象请求
     area._constellationReqId = Date.now() + '_cancelled';
@@ -877,6 +881,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
   area.style.transform = 'translate(-50%, -50%)';
   area.style.width = '360px';
   area.style.textAlign = 'center';
+  area.style.overflowY = 'hidden';   // 星象转盘固定：锁定区域内滚动，防止滑动时转盘位移
   // 切换背景（使用星空覆盖层，不修改原始背景图）
   document.getElementById('starsOverlay').classList.add('show');
   // 第二步：背景渐入后，再加载星象数据
