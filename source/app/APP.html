@@ -1069,12 +1069,13 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       showDetail();
     });
     // 内圈三宫点击：只切换内容，不旋转转盘（阻止拖动事件冒泡）
-    var _xzAudio = null;   // 星象测试音频（点击紫微恒播放"发现_紫微恒.mp3"）
+    var _xzAudio = null;   // 星象测试音频（点击三恒播放对应"发现_xx恒.mp3"）
+    var XZ_AUDIO = ['发现_紫微恒.mp3', '发现_太微恒.mp3', '发现_天市恒.mp3'];
     function playXZTest(pidx){
-      if (pidx !== 0) return;   // 目前仅紫微恒有测试音频
+      if (pidx < 0 || pidx >= XZ_AUDIO.length) return;
       try {
         if (_xzAudio) { _xzAudio.pause(); _xzAudio = null; }
-        _xzAudio = new Audio(encodeURI('./发现_紫微恒.mp3'));
+        _xzAudio = new Audio(encodeURI('./' + XZ_AUDIO[pidx]));
         _xzAudio.play().catch(function(){});
       } catch(e){}
     }
