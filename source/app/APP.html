@@ -91,6 +91,20 @@ body{display:flex;flex-direction:column}
 .discover-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 16px 16px}
 .discover-cat{font-size:.72rem;color:#9db8ff;letter-spacing:3px;margin:12px 0 8px;font-weight:600;display:flex;align-items:center;gap:8px}
 .discover-cat::before,.discover-cat::after{content:'';flex:1;height:1px;background:rgba(59,130,246,.3)}
+/* 发现页图标网格 */
+.discover-grid{display:flex;flex-wrap:wrap;gap:10px;padding:2px 0 4px}
+.disc-item{width:calc(33.33% - 7px);display:flex;flex-direction:column;align-items:center;padding:10px 2px 8px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;transition:all .15s;text-align:center;box-sizing:border-box}
+.disc-item:active{transform:scale(.96)}
+.disc-item .disc-icon{position:relative;width:64px;height:64px;border-radius:50%;overflow:hidden;margin-bottom:7px;border:2px solid rgba(59,130,246,.5);box-shadow:0 2px 10px rgba(0,0,0,.35);flex-shrink:0;background:#101c30}
+.disc-item .disc-icon img{width:100%;height:100%;object-fit:cover;display:block}
+.disc-item .disc-icon .disc-lock{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(8,12,24,.62);color:#9db8ff;font-size:1.1rem;letter-spacing:2px;font-weight:600}
+.disc-item .disc-dname{font-size:.72rem;color:#fff;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.3}
+.disc-item .disc-dname.locked{color:#8fa6c8;letter-spacing:3px}
+.disc-item .disc-act{font-size:.55rem;color:#93b4e8;margin-top:2px;white-space:nowrap;line-height:1.2}
+.disc-item.unlocked .disc-icon{border-color:rgba(52,211,153,.55)}
+.disc-item.unlocked .disc-act{color:#4ade80}
+.disc-item .relock-act{color:#93b4e8}
+.disc-item .relock-act:active{opacity:.6}
 .discover-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);margin-bottom:8px;cursor:pointer;transition:all .15s;background:rgba(255,255,255,.05)}
 .discover-item:active{transform:scale(.98)}
 .discover-item .disc-name{font-size:.85rem;color:#ffffff;font-weight:500}
@@ -2685,35 +2699,44 @@ var GAME = {
     var html = '';
     groups.forEach(function(g){
       html += '<div class="discover-cat">' + g.cat + '</div>';
+      html += '<div class="discover-grid">';
       (g.items || []).forEach(function(it){
         var un = GAME._isUnlocked(it.key);
-        // 未解锁 → 显示？？，点击弹提示（不激活破印询问）
+        // 图标：优先 png（用户可替换），缺失回退内置 svg 占位
+        var icon = 'discover_' + it.key + '.png';
+        var iconFallback = 'discover_' + it.key + '.svg';
+        var imgHtml = '<img src="' + icon + '" alt="" onerror="this.onerror=null;this.src=\'' + iconFallback + '\'">';
+        // 未解锁 → ？？ + 遮罩
         if (!un) {
-          html += '<div class="discover-item locked-item" data-key="' + it.key + '">'
-            + '<span class="disc-name locked">？？</span>'
+          html += '<div class="disc-item locked-item" data-key="' + it.key + '">'
+            + '<div class="disc-icon">' + imgHtml + '<span class="disc-lock">？</span></div>'
+            + '<span class="disc-dname locked">？？</span>'
             + '<span class="disc-act">未发现</span>'
             + '</div>';
           return;
         }
         // 已解锁 → 名称可点击弹提示；不可回收（noRelock）项不显示回撤破印
         if (it.noRelock) {
-          html += '<div class="discover-item unlocked" data-key="' + it.key + '">'
-            + '<span class="disc-name">' + it.name + '</span>'
+          html += '<div class="disc-item unlocked" data-key="' + it.key + '">'
+            + '<div class="disc-icon">' + imgHtml + '</div>'
+            + '<span class="disc-dname">' + it.name + '</span>'
             + '<span class="disc-act">不可回收</span>'
             + '</div>';
           return;
         }
-        html += '<div class="discover-item unlocked" data-key="' + it.key + '">'
-          + '<span class="disc-name">' + it.name + '</span>'
+        html += '<div class="disc-item unlocked" data-key="' + it.key + '">'
+          + '<div class="disc-icon">' + imgHtml + '</div>'
+          + '<span class="disc-dname">' + it.name + '</span>'
           + '<span class="disc-act relock-act">回撤破印 · ' + rateTxt + '</span>'
           + '</div>';
       });
+      html += '</div>';
     });
     if (!html) html = '<div class="discover-cat">暂未配置发现秘藏</div>';
     body.innerHTML = html;
     var foot = document.getElementById('discoverFoot');
     if (foot) foot.textContent = '点击未发现的秘藏可查看获得方式；已发现的点击名称可查看说明，点击"回撤破印"可回收真气重新上锁';
-    body.querySelectorAll('.discover-item').forEach(function(el){
+    body.querySelectorAll('.disc-item').forEach(function(el){
       // 整项点击：弹提示（未解锁 → lockedTip；已解锁 → unlockedTip），不激活破印
       el.addEventListener('click', function(){
         var key = el.dataset.key;
