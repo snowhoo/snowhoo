@@ -2697,7 +2697,7 @@ var GAME = {
         var un = GAME._isUnlocked(it.key);
         // 图标：优先 png（用户可替换），缺失回退内置 svg 占位
         var icon = 'discover_' + it.key + '.png';
-        var iconFallback = 'discover_' + it.key + '.svg';
+        var iconFallback = 'discover_' + it.key + '.png';
         var imgHtml = '<img src="' + icon + '" alt="" onerror="this.onerror=null;this.src=\'' + iconFallback + '\'">';
         // 未解锁 → ？？ + 遮罩
         if (!un) {
