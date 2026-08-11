@@ -243,6 +243,9 @@ body{display:flex;flex-direction:column}
 /* 阴模式：上半部分背景图拓展成全屏（背景不分段，覆盖到底部区域）；底部功能控件固定在底部保留在背景之上 */
 .image-area.yin{position:fixed;top:0;left:0;right:0;bottom:0;z-index:5}
 .image-area.yin ~ .bottom-panel{position:fixed;bottom:0;left:0;right:0;height:220px;background:transparent;z-index:6}
+/* 阴模式：探索/日历保持原视口位置（背景图原底部上方，不被底部控件区遮挡） */
+.image-area.yin .welcome,
+.image-area.yin .almanac{bottom:236px}
 
 /* 今日修炼任务菜单 */
 .task-menu{position:absolute;bottom:15px;z-index:10001;display:flex;flex-direction:column;align-items:center;gap:4px}
