@@ -20,7 +20,8 @@ body{display:flex;flex-direction:column}
 .image-area img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .6s ease}
 .image-area .gradient{position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(transparent,rgba(0,0,0,.45));pointer-events:none}
 .image-area .gradient-top{position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(rgba(0,0,0,.45),transparent);pointer-events:none}
-.image-area .welcome{position:absolute;bottom:16px;left:15px;color:#fff;font-size:1.6rem;font-weight:300;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,.3);cursor:pointer;animation:welcomePulse 2.5s ease-in-out infinite;z-index:2}
+.image-area .welcome{position:absolute;bottom:16px;left:15px;color:#fff;font-size:1.6rem;font-weight:300;letter-spacing:2px;text-shadow:0 2px 8px rgba(0,0,0,.3);cursor:pointer;animation:welcomePulse 2.5s ease-in-out infinite;z-index:2;transition:color .3s}
+.image-area .welcome.active{color:#ff8c00;animation:none;text-shadow:0 2px 8px rgba(0,0,0,.5)}
 @keyframes welcomePulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 .image-area .welcome small{display:block;font-size:.75rem;font-weight:400;opacity:.7;margin-top:6px;letter-spacing:1px}
 
@@ -515,45 +516,51 @@ body{display:flex;flex-direction:column}
   document.getElementById('runnerFloat').style.left = (pct * 100) + '%';
 })();
 
-// 随机图片（crossOrigin=anonymous 保证可被 canvas 捕获保存，且与页面显示一致）
+// 背景图：默认 bg.jpg（用户放入 APP 文件夹即生效；缺失时回退随机图，避免空白）
 var bgImgEl = document.getElementById('bgImage');
-bgImgEl.crossOrigin = 'anonymous';
-bgImgEl.src = 'https://picsum.photos/1280/960?random=' + Date.now();
+function setDefaultBg() {
+  bgImgEl.crossOrigin = '';
+  bgImgEl.onload = null;
+  bgImgEl.src = './bg.jpg';
+  bgImgEl.onerror = function() {
+    // bg.jpg 缺失 → 回退随机图（crossOrigin=anonymous 保证可被 canvas 捕获保存）
+    bgImgEl.crossOrigin = 'anonymous';
+    bgImgEl.onerror = null;
+    bgImgEl.src = 'https://picsum.photos/1280/960?random=' + Date.now();
+  };
+}
+setDefaultBg();
 
-// 点击探索换图
+// 探索：与诗词/今日同形式的开关切换——选中显示 picsum 随机图，再次点击关闭并恢复默认背景（bg.jpg）
 document.querySelector('.welcome').addEventListener('click', function() {
   if ((GAME._autoMode || GAME._oneKeyMode) && !GAME._autoPanelOpen) return; // 修炼中屏蔽（自动模式主动打开除外）
+  var w = this;
+  var bg = document.getElementById('bgImage');
   cancelAllRequests();
-  var area = document.getElementById('contentArea');
-  var img = document.getElementById('bgImage');
-  // 关闭所有背景覆盖层（诗词/星象），确保探索图片不被遮挡
+  // 已开启探索 → 关闭：恢复默认背景图
+  if (w.classList.contains('active')) {
+    w.classList.remove('active');
+    setDefaultBg();
+    return;
+  }
+  // 开启探索：收起其他面板/覆盖层，切换为 picsum 随机图
   closeAllOverlays();
-  // 收起所有展开面板（通过 class 控制）
+  var area = document.getElementById('contentArea');
   area.classList.remove('show');
-  area.innerHTML = '<div class="loading-spinner"></div><div class="loading-hint">正在探索...</div>';
-  area.classList.add('show');
-  area.style.left = '';
-  area.style.width = '';
-  area.style.transform = 'translateY(-50%)';
-  area.style.textAlign = 'center';
-  area.style.overflowY = '';   // 恢复滚动（星象面板会锁定）
   area._activeBtn = null;
   document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
-  // 生成唯一标记，防止异步回调覆盖其他面板
-  var _expReqId = Date.now() + '_' + Math.random();
-  area._exploreReqId = _expReqId;
-  // 加载新图片（crossOrigin 保持匿名，供 canvas 保存）
-  img.crossOrigin = 'anonymous';
-  img.src = 'https://picsum.photos/1280/960?random=' + Date.now();
-  img.onload = function() {
-    if (area._exploreReqId !== _expReqId) return;
-    area.classList.remove('show');
+  w.classList.add('active');
+  bg.crossOrigin = 'anonymous';
+  bg.onerror = null;
+  bg.src = 'https://picsum.photos/1280/960?random=' + Date.now();
+  bg.onload = function() {
     // 内容加载完成→记录修炼（自动模式下通知自动流程，不直接修炼）
     if (GAME._autoMode) { GAME._autoPanelLoaded('explore', true); }
     else { GAME.doAction('explore'); }
   };
-  img.onerror = function() {
-    if (area._exploreReqId !== _expReqId) return;
+  bg.onerror = function() {
+    w.classList.remove('active');
+    setDefaultBg();
     if (GAME._autoMode) GAME._autoPanelLoaded('explore', false);
   };
 });
