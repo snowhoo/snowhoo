@@ -175,8 +175,9 @@ body{display:flex;flex-direction:column}
 .content-area .history-item .hyear{flex-shrink:0;width:auto;margin-right:0.6em;color:rgba(255,255,255,.6);font-size:.7rem;font-family:sans-serif}
 .content-area .history-item .htext{text-align:left}
 /* 探索圆形图片（中央内容区显示，与诗词/今日同位置） */
-.explore-circle{width:240px;height:240px;border-radius:50%;overflow:hidden;margin:10px auto;border:3px solid rgba(255,255,255,.65);box-shadow:0 8px 32px rgba(0,0,0,.5);background:#101c30}
-.explore-circle img{width:100%;height:100%;object-fit:cover;display:block}
+.explore-circle{position:relative;width:240px;height:240px;border-radius:50%;overflow:hidden;margin:10px auto;border:3px solid rgba(255,255,255,.65);box-shadow:0 8px 32px rgba(0,0,0,.5);background:#101c30}
+.explore-circle img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .8s ease}
+.explore-circle .ec-status{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.85rem;letter-spacing:2px;text-shadow:0 1px 4px rgba(0,0,0,.6);background:rgba(10,15,30,.5);z-index:2}
 
 /* 星象转盘样式（三层同心：内圈 三垣/二十八宿；中圈 三垣三宫+四象；外圈 31 天区） */
 .zodiac-wheel{position:relative;width:360px;height:360px;margin:8px auto 0;cursor:pointer;touch-action:none}
@@ -590,14 +591,21 @@ document.querySelector('.welcome').addEventListener('click', function() {
   area.style.textAlign = 'center';
   area.style.overflowY = '';   // 恢复滚动（星象面板会锁定）
   var picsum = 'https://picsum.photos/480/480?random=' + Date.now();
-  area.innerHTML = '<div class="explore-circle"><img src="' + picsum + '" alt="探索" crossorigin="anonymous"></div>';
+  area.innerHTML = '<div class="explore-circle"><div class="ec-status">正在破开虚空……</div><img src="' + picsum + '" alt="探索" crossorigin="anonymous"></div>';
   area.classList.add('show');
   area._activeBtn = 'exploreBtn';
   var img = area.querySelector('.explore-circle img');
+  var status = area.querySelector('.ec-status');
   img.onload = function() {
-    // 内容加载完成→记录修炼（自动模式下通知自动流程，不直接修炼）
-    if (GAME._autoMode) { GAME._autoPanelLoaded('explore', true); }
-    else { GAME.doAction('explore'); }
+    // 缓存完毕 → 显示"发现异世界！" 1 秒 → 图片隐现（淡入）
+    status.textContent = '发现异世界！';
+    setTimeout(function(){
+      status.style.display = 'none';
+      img.style.opacity = '1';
+      // 内容加载完成→记录修炼（自动模式下通知自动流程，不直接修炼）
+      if (GAME._autoMode) { GAME._autoPanelLoaded('explore', true); }
+      else { GAME.doAction('explore'); }
+    }, 1000);
   };
   img.onerror = function() {
     w.classList.remove('active');
