@@ -240,8 +240,9 @@ body{display:flex;flex-direction:column}
 .top-left-badges .badge.locked .lock-overlay{display:flex}
 .top-left-badges .badge .lock-overlay svg{width:14px;height:14px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .top-left-badges .badge.locked{color:rgba(255,255,255,.55)}
-/* 阴模式：上半部分背景图拓展成全屏（背景不分段，盖住底部面板）；30% 黑遮罩由 .yin-mask 叠加 */
+/* 阴模式：上半部分背景图拓展成全屏（背景不分段，覆盖到底部区域）；底部功能控件保留在背景之上 */
 .image-area.yin{position:fixed;top:0;left:0;right:0;bottom:0;z-index:5}
+.image-area.yin ~ .bottom-panel{background:transparent;z-index:6}
 
 /* 今日修炼任务菜单 */
 .task-menu{position:absolute;bottom:15px;z-index:10001;display:flex;flex-direction:column;align-items:center;gap:4px}
