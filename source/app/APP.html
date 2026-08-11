@@ -232,6 +232,10 @@ body{display:flex;flex-direction:column}
 /* 任务红点 */
 .task-dot{position:absolute;top:-8px;right:-8px;background:#e94560;color:#fff;font-size:.42rem;min-width:13px;height:13px;border-radius:7px;display:none;align-items:center;justify-content:center;padding:0 3px;font-weight:300;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.3);z-index:2}
 
+/* 阴阳（明暗模式）全屏遮罩：阴=30% 黑色遮罩覆盖全屏；不拦截点击 */
+.yin-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:4000;pointer-events:none;display:none}
+.yin-mask.show{display:block}
+
 /* 今日修炼任务菜单 */
 .task-menu{position:absolute;bottom:15px;z-index:10001;display:flex;flex-direction:column;align-items:center;gap:4px}
 /* 自动修炼提示：显示在修炼按钮上方，单独元素不占用按钮（z-index 高于修炼遮罩） */
@@ -385,6 +389,7 @@ body{display:flex;flex-direction:column}
     <span class="badge" id="historyBtn"><span class="badge-icon">◎</span>今日<span class="task-dot" id="historyDot"></span></span>
     <span class="badge" id="constellationBtn"><span class="badge-icon">✦</span>星象<span class="task-dot" id="constellationDot"></span></span>
     <span class="badge" id="planBtn"><span class="badge-icon">▤</span>日程</span>
+    <span class="badge" id="yinBtn" title="明暗模式"><span class="badge-icon">☯</span>阳</span>
   </div>
   <div class="content-area" id="contentArea"></div>
   <!-- 日程计划：与诗词/今日/星象同位置（中央内容区）互斥切换 -->
@@ -433,6 +438,9 @@ body{display:flex;flex-direction:column}
   </div>
   <div class="almanac-mini" id="almanacMini"><svg viewBox="0 0 24 24"><path d="M15 4L7 12l8 8"/></svg></div>
 </div>
+
+<!-- 阴阳（明暗模式）全屏遮罩：阴=背景图加 30% 黑色遮罩并扩展到全屏，pointer-events:none 不影响操作 -->
+<div class="yin-mask" id="yinMask"></div>
 
 <div class="bottom-panel">
   <div class="year-bar"><div class="year-bar-fill" id="yearFill"></div><div class="runner-float locked" id="runnerFloat"><img src="../images/run.png" alt="奔跑"><span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div></div>
@@ -3927,6 +3935,18 @@ function togglePlan() {
   if (PlanSvc.getWalineUser()) PlanSvc.syncNow();
 }
 document.getElementById('planBtn').addEventListener('click', togglePlan);
+
+// 阴阳（明暗模式）：默认"阳"；点击切换"阴"——背景图加 30% 黑色遮罩并扩展到全屏
+(function(){
+  var btn = document.getElementById('yinBtn');
+  var mask = document.getElementById('yinMask');
+  if (!btn || !mask) return;
+  btn.addEventListener('click', function(){
+    var isYin = mask.classList.toggle('show');
+    btn.classList.toggle('selected', isYin);
+    btn.innerHTML = '<span class="badge-icon">☯</span>' + (isYin ? '阴' : '阳');
+  });
+})();
 
 // ===== Waline 评论 =====
 var walineInstance = null;
