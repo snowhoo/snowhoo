@@ -236,7 +236,7 @@ body{display:flex;flex-direction:column}
 .yin-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:4000;pointer-events:none;display:none}
 .yin-mask.show{display:block}
 /* 阴阳按钮锁定态（阴阳镜未解锁）：右上角锁图标 + 灰化 */
-.top-left-badges .badge .lock-overlay{position:absolute;top:-10px;right:-10px;z-index:2;display:none;align-items:center;justify-content:center;width:24px;height:24px;pointer-events:auto;background:transparent;border-radius:0;padding:0;margin:0}
+.top-left-badges .badge .lock-overlay{position:absolute;top:-4px;right:-22px;z-index:2;display:none;align-items:center;justify-content:center;width:24px;height:24px;pointer-events:auto;background:transparent;border-radius:0;padding:0;margin:0}
 .top-left-badges .badge.locked .lock-overlay{display:flex}
 .top-left-badges .badge .lock-overlay svg{width:14px;height:14px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .top-left-badges .badge.locked{color:rgba(255,255,255,.55)}
@@ -2567,6 +2567,7 @@ var GAME = {
           var baseAlmanac = res.data ? (res.data.almanacUnlocked ? 1 : 0) : 0;
           var baseLogo = res.data ? (res.data.logoUnlocked ? 1 : 0) : 0;
           var baseRunner = res.data ? (res.data.runnerUnlocked ? 1 : 0) : 0;
+          var baseYin = res.data ? (res.data.yinUnlocked ? 1 : 0) : 0;
           var baseCats = {};
           for (var ci = 0; ci < catKeys.length; ci++) {
             baseCats[catKeys[ci]] = res.data ? (res.data[catKeys[ci] + 'Unlocked'] ? 1 : 0) : 0;
