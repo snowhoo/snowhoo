@@ -174,6 +174,9 @@ body{display:flex;flex-direction:column}
 .content-area .history-item{font-size:.78rem;line-height:1.6;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);font-family:"KaiTi","STKaiti","楷体",serif;display:flex}
 .content-area .history-item .hyear{flex-shrink:0;width:auto;margin-right:0.6em;color:rgba(255,255,255,.6);font-size:.7rem;font-family:sans-serif}
 .content-area .history-item .htext{text-align:left}
+/* 探索圆形图片（中央内容区显示，与诗词/今日同位置） */
+.explore-circle{width:240px;height:240px;border-radius:50%;overflow:hidden;margin:10px auto;border:3px solid rgba(255,255,255,.65);box-shadow:0 8px 32px rgba(0,0,0,.5);background:#101c30}
+.explore-circle img{width:100%;height:100%;object-fit:cover;display:block}
 
 /* 星象转盘样式（三层同心：内圈 三垣/二十八宿；中圈 三垣三宫+四象；外圈 31 天区） */
 .zodiac-wheel{position:relative;width:360px;height:360px;margin:8px auto 0;cursor:pointer;touch-action:none}
@@ -562,36 +565,44 @@ function setDefaultBg() {
 }
 setDefaultBg();
 
-// 探索：与诗词/今日同形式的开关切换——选中显示 picsum 随机图，再次点击关闭并恢复默认背景（bg.jpg）
+// 探索：与诗词/今日同面板形式——点击在中央内容区以圆形显示 picsum 随机图，再次点击关闭；不覆盖背景
 document.querySelector('.welcome').addEventListener('click', function() {
   if ((GAME._autoMode || GAME._oneKeyMode) && !GAME._autoPanelOpen) return; // 修炼中屏蔽（自动模式主动打开除外）
   var w = this;
-  var bg = document.getElementById('bgImage');
+  var area = document.getElementById('contentArea');
   cancelAllRequests();
-  // 已开启探索 → 关闭：恢复默认背景图
-  if (w.classList.contains('active')) {
+  // 探索面板正开着 → 点击关闭
+  if (w.classList.contains('active') && area._activeBtn === 'exploreBtn') {
     w.classList.remove('active');
-    setDefaultBg();
+    area.classList.remove('show');
+    area._activeBtn = null;
     return;
   }
-  // 开启探索：收起其他面板/覆盖层，切换为 picsum 随机图
+  // 开启探索：收起其他面板/覆盖层，在中央内容区显示圆形 picsum 图（背景保持默认 bg.jpg 不变）
   closeAllOverlays();
-  var area = document.getElementById('contentArea');
   area.classList.remove('show');
   area._activeBtn = null;
   document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
   w.classList.add('active');
-  bg.crossOrigin = 'anonymous';
-  bg.onerror = null;
-  bg.src = 'https://picsum.photos/1280/960?random=' + Date.now();
-  bg.onload = function() {
+  area.style.left = '';
+  area.style.width = '';
+  area.style.transform = 'translateY(-50%)';
+  area.style.textAlign = 'center';
+  area.style.overflowY = '';   // 恢复滚动（星象面板会锁定）
+  var picsum = 'https://picsum.photos/480/480?random=' + Date.now();
+  area.innerHTML = '<div class="explore-circle"><img src="' + picsum + '" alt="探索" crossorigin="anonymous"></div>';
+  area.classList.add('show');
+  area._activeBtn = 'exploreBtn';
+  var img = area.querySelector('.explore-circle img');
+  img.onload = function() {
     // 内容加载完成→记录修炼（自动模式下通知自动流程，不直接修炼）
     if (GAME._autoMode) { GAME._autoPanelLoaded('explore', true); }
     else { GAME.doAction('explore'); }
   };
-  bg.onerror = function() {
+  img.onerror = function() {
     w.classList.remove('active');
-    setDefaultBg();
+    area.classList.remove('show');
+    area._activeBtn = null;
     if (GAME._autoMode) GAME._autoPanelLoaded('explore', false);
   };
 });
