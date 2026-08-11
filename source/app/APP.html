@@ -127,7 +127,7 @@ body{display:flex;flex-direction:column}
 @keyframes float{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-4px)}}
 
 /* 年度进度条 */
-.year-bar{position:absolute;top:0;left:0;right:0;height:5px;background:#f0f0f0;overflow:visible}
+.year-bar{position:absolute;top:0;left:0;right:0;height:5px;background:#f0f0f0;overflow:visible;opacity:.5}
 .year-bar-fill{height:100%;background:linear-gradient(90deg,#e94560,#ff8c00);transition:width .6s ease;border-radius:0 2px 2px 0;position:relative}
 .year-bar-text{position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:.65rem;color:#bbb;white-space:nowrap;letter-spacing:.5px;display:flex;align-items:center;gap:4px}
 .year-bar-text .runner{width:14px;height:14px;flex-shrink:0;animation:run .6s steps(2) infinite}
@@ -4017,11 +4017,10 @@ document.getElementById('planBtn').addEventListener('click', togglePlan);
       GAME.unlockFeature('yin');
       return;
     }
-    // 已解锁 → 切换明暗：阴=背景图拓展全屏（不分段）+ 30% 黑色遮罩
+    // 已解锁 → 切换明暗：阴=背景图拓展全屏（不分段）+ 30% 黑色遮罩；无选中态
     var ia = document.querySelector('.image-area');
     var isYin = mask.classList.toggle('show');
     if (ia) ia.classList.toggle('yin', isYin);
-    btn.classList.toggle('selected', isYin);
     btn.innerHTML = '<span class="badge-icon">☯</span>' + (isYin ? '阴' : '阳');
   });
 })();
