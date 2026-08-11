@@ -2238,6 +2238,7 @@ var GAME = {
   },
 
   // 更新"阴阳"按钮锁状态：已登录+数据就绪+已解锁（阴阳镜）→ 可切换明暗；否则加锁
+  // 注意：只管理锁定态，不重置阴/阳切换状态（避免数据刷新/登录变化时阴模式被强制退出）
   _updateYinLock: function() {
     var btn = document.getElementById('yinBtn');
     if (!btn) return;
@@ -2245,15 +2246,6 @@ var GAME = {
     var locked = !(this.loaded && user && this.yinUnlocked);
     if (this._noDbData) locked = true;
     btn.classList.toggle('locked', locked);
-    if (!locked) {
-      // 解锁后：恢复默认"阳"（未启用阴模式）
-      btn.innerHTML = '<span class="badge-icon">☯</span>阳';
-      var m = document.getElementById('yinMask');
-      if (m) m.classList.remove('show');
-      btn.classList.remove('selected');
-      var ia = document.querySelector('.image-area');
-      if (ia) ia.classList.remove('yin');
-    }
   },
 
   // 更新奔跑的人锁状态：已登录+数据就绪+已解锁 → 解锁（此时显示日程徽章入口）；否则加锁
