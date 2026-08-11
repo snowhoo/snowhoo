@@ -174,8 +174,8 @@ body{display:flex;flex-direction:column}
 .content-area .history-item{font-size:.78rem;line-height:1.6;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);font-family:"KaiTi","STKaiti","楷体",serif;display:flex}
 .content-area .history-item .hyear{flex-shrink:0;width:auto;margin-right:0.6em;color:rgba(255,255,255,.6);font-size:.7rem;font-family:sans-serif}
 .content-area .history-item .htext{text-align:left}
-/* 探索圆形图片（中央内容区显示，与诗词/今日同位置） */
-.explore-circle{position:relative;width:240px;height:240px;border-radius:50%;overflow:hidden;margin:10px auto;border:3px solid rgba(255,255,255,.65);box-shadow:0 8px 32px rgba(0,0,0,.5);background:#101c30}
+/* 探索圆形图片（中央内容区显示，与诗词/今日同位置；直径与星象圆盘一致 360px） */
+.explore-circle{position:relative;width:360px;height:360px;border-radius:50%;overflow:hidden;margin:10px auto;border:3px solid rgba(255,255,255,.65);box-shadow:0 8px 32px rgba(0,0,0,.5);background:#101c30}
 .explore-circle img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .8s ease}
 .explore-circle .ec-status{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.85rem;letter-spacing:2px;text-shadow:0 1px 4px rgba(0,0,0,.6);background:rgba(10,15,30,.5);z-index:2}
 
@@ -3251,7 +3251,8 @@ var GAME = {
   // 浏览器：优先 Web Share API（移动端可直接存相册），否则 a[download] + blob 直接下载（不跳转浏览器）
   // App WebView：禁用 a[download]（会退出 App）→ 优先系统分享，否则全屏预览 + 长按保存到相册
   saveBgImage: function() {
-    var img = document.getElementById('bgImage');
+    // 优先保存探索圆形中的 picsum 图；未开启探索时回退保存背景图（bg.jpg/随机图）
+    var img = document.querySelector('.explore-circle img') || document.getElementById('bgImage');
     if (!img || !img.src) return;
     var self = this;
     var name = 'bg-' + Date.now() + '.jpg';
@@ -4214,12 +4215,14 @@ commentOverlay.addEventListener('click', function(e) {
   });
 })();
 
-// 双击背景图：发现隐藏结界 → 破除结界（扣 5-10 随机真气）→ 保存图片到相册
+// 双击探索圆形中的 picsum 图片：发现隐藏结界 → 破除结界（扣随机真气）→ 保存该图片到相册
 (function(){
-  var bg = document.getElementById('bgImage');
-  if (!bg) return;
+  var area = document.getElementById('contentArea');
+  if (!area) return;
   var lastClick = 0;
-  bg.addEventListener('click', function(){
+  area.addEventListener('click', function(e){
+    // 仅在探索圆形图片上触发
+    if (!e.target || !e.target.closest || !e.target.closest('.explore-circle img')) return;
     if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
     var now = Date.now();
     if (lastClick && now - lastClick < 400) {

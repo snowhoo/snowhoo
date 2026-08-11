@@ -142,8 +142,8 @@ var FEATURE_CONFIG = {
     ]},
     { cat: '法器', items: [
       { key:'background', name:'乾坤镜', noRelock:true,
-        lockedTip:'乾坤镜沉于隐藏结界之中，首次双击背景图破除结界并成功保存图片，即可得见此镜。',
-        unlockedTip:'乾坤镜·照见天地万物之镜。首次破除背景结界并保存图片后所得，不可回收。' },
+        lockedTip:'乾坤镜沉于隐藏结界之中，首次双击探索的圆形异世界图片破除结界并成功保存图片，即可得见此镜。',
+        unlockedTip:'乾坤镜·照见天地万物之镜。首次破除结界并保存图片后所得，不可回收。' },
       { key:'yin', name:'阴阳镜', unlockMsg:'破除封印！获得【阴阳镜】', relockMsg:'收镜封灵重修',
         lockedTip:'阴阳镜藏于明暗之间，点击首页"阴阳"按钮破除封印即可获得。',
         unlockedTip:'阴阳镜·明暗轮转之镜。解锁后点击"阴阳"可切换明暗模式。' }
