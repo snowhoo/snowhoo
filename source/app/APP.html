@@ -232,9 +232,16 @@ body{display:flex;flex-direction:column}
 /* 任务红点 */
 .task-dot{position:absolute;top:-8px;right:-8px;background:#e94560;color:#fff;font-size:.42rem;min-width:13px;height:13px;border-radius:7px;display:none;align-items:center;justify-content:center;padding:0 3px;font-weight:300;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.3);z-index:2}
 
-/* 阴阳（明暗模式）全屏遮罩：阴=30% 黑色遮罩覆盖全屏；不拦截点击 */
+/* 阴阳（明暗模式）全屏遮罩：阴=背景图拓展全屏 + 30% 黑色遮罩；不拦截点击 */
 .yin-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:4000;pointer-events:none;display:none}
 .yin-mask.show{display:block}
+/* 阴阳按钮锁定态（阴阳镜未解锁）：右上角锁图标 + 灰化 */
+.top-left-badges .badge .lock-overlay{position:absolute;top:-10px;right:-10px;z-index:2;display:none;align-items:center;justify-content:center;width:24px;height:24px;pointer-events:auto;background:transparent;border-radius:0;padding:0;margin:0}
+.top-left-badges .badge.locked .lock-overlay{display:flex}
+.top-left-badges .badge .lock-overlay svg{width:14px;height:14px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.top-left-badges .badge.locked{color:rgba(255,255,255,.55)}
+/* 阴模式：上半部分背景图拓展成全屏（背景不分段，盖住底部面板）；30% 黑遮罩由 .yin-mask 叠加 */
+.image-area.yin{position:fixed;top:0;left:0;right:0;bottom:0;z-index:5}
 
 /* 今日修炼任务菜单 */
 .task-menu{position:absolute;bottom:15px;z-index:10001;display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -389,7 +396,7 @@ body{display:flex;flex-direction:column}
     <span class="badge" id="historyBtn"><span class="badge-icon">◎</span>今日<span class="task-dot" id="historyDot"></span></span>
     <span class="badge" id="constellationBtn"><span class="badge-icon">✦</span>星象<span class="task-dot" id="constellationDot"></span></span>
     <span class="badge" id="planBtn"><span class="badge-icon">▤</span>日程</span>
-    <span class="badge" id="yinBtn" title="明暗模式"><span class="badge-icon">☯</span>阳</span>
+    <span class="badge locked" id="yinBtn" title="明暗模式"><span class="badge-icon">☯</span>阳<span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></span>
   </div>
   <div class="content-area" id="contentArea"></div>
   <!-- 日程计划：与诗词/今日/星象同位置（中央内容区）互斥切换 -->
@@ -1228,6 +1235,7 @@ var GAME = {
   newsUnlocked: 0,        // 栏目"新闻"是否解锁（0锁止 1可用）
   tvUnlocked: 0,          // 栏目"播霸"是否解锁（0锁止 1可用）
   backgroundUnlocked: 0,  // 法器"乾坤镜"是否已获得（首次双击背景图破除结界并保存图片后=1；不可回收）
+  yinUnlocked: 0,         // 法器"阴阳镜"是否已获得（真气 800 解锁，解锁后可切换明暗模式）
 
   // 当前 level 的境界配置（null fallback）
   getLevelCfg: function() {
@@ -1295,6 +1303,8 @@ var GAME = {
       this.updateLevelDisplay();
       this._updateAlmanacLock();
       this._updateLogoLock();
+    this._updateYinLock();
+      this._updateYinLock();
       this._updateCategoryLocks();
       this._updateRunnerLock();
       this.loadFromServer(user);
@@ -1309,6 +1319,8 @@ var GAME = {
       this.updateTaskMenuBtn();
       this._updateAlmanacLock();
       this._updateLogoLock();
+    this._updateYinLock();
+      this._updateYinLock();
       this._updateCategoryLocks();
       this._updateRunnerLock();
     }
@@ -1399,6 +1411,7 @@ var GAME = {
         this.newsUnlocked = 0;
         this.tvUnlocked = 0;
         this.backgroundUnlocked = 0;
+        this.yinUnlocked = 0;
         this.updateBadge();
         this.updateTaskDots();
         this.updateLevelDisplay();
@@ -1406,6 +1419,9 @@ var GAME = {
         this._updateQuickBtns(false);
         this._updateAlmanacLock();
         this._updateLogoLock();
+    this._updateYinLock();
+        this._updateYinLock();
+      this._updateYinLock();
         this._updateCategoryLocks();
         this._updateRunnerLock();
       } else if (user && !wasLoggedIn) {
@@ -1425,10 +1441,14 @@ var GAME = {
         this.newsUnlocked = 0;
         this.tvUnlocked = 0;
         this.backgroundUnlocked = 0;
+        this.yinUnlocked = 0;
         this.updateBadge();
         this.updateTaskDots();
         this._updateAlmanacLock();
         this._updateLogoLock();
+    this._updateYinLock();
+        this._updateYinLock();
+      this._updateYinLock();
         this._updateCategoryLocks();
         this._updateRunnerLock();
         this.loadFromServer(user);
@@ -1584,7 +1604,8 @@ var GAME = {
       zjszUnlocked: 0,
       newsUnlocked: 0,
       tvUnlocked: 0,
-      backgroundUnlocked: 0
+      backgroundUnlocked: 0,
+      yinUnlocked: 0
     }, '已初始化修炼记录').then(function(ok) {
       if (!ok) {
         // 重建失败（网络等）→ 保持空状态，不伪造次数
@@ -1623,7 +1644,8 @@ var GAME = {
         zjszUnlocked: lv('zjsz'),
         newsUnlocked: lv('news'),
         tvUnlocked: lv('tv'),
-        backgroundUnlocked: lv('background')
+        backgroundUnlocked: lv('background'),
+        yinUnlocked: lv('yin')
       }, '今日修炼次数已刷新').then(function(ok) {
         if (!ok) {
           self.setSyncState('idle');
@@ -1722,6 +1744,7 @@ var GAME = {
       this.newsUnlocked = foundData.newsUnlocked ? 1 : 0;
       this.tvUnlocked = foundData.tvUnlocked ? 1 : 0;
       this.backgroundUnlocked = foundData.backgroundUnlocked ? 1 : 0;
+      this.yinUnlocked = foundData.yinUnlocked ? 1 : 0;
       if (foundData.date === today) {
         // 当天 → 直接用数据库里的剩余次数
         this.todayCounts = foundData.todayRemaining || {};
@@ -1753,6 +1776,7 @@ var GAME = {
       this.newsUnlocked = 0;
       this.tvUnlocked = 0;
       this.backgroundUnlocked = 0;
+      this.yinUnlocked = 0;
     }
     this.loaded = true;
     this.clearTaskMenuError();
@@ -1760,6 +1784,7 @@ var GAME = {
     this._updateQuickBtns(true);
     this._updateAlmanacLock();
     this._updateLogoLock();
+    this._updateYinLock();
     this._updateCategoryLocks();
     this._updateRunnerLock();
     var gain = this._beforePoints !== undefined ? this.totalPoints - this._beforePoints : 0;
@@ -2197,6 +2222,25 @@ var GAME = {
     }
   },
 
+  // 更新"阴阳"按钮锁状态：已登录+数据就绪+已解锁（阴阳镜）→ 可切换明暗；否则加锁
+  _updateYinLock: function() {
+    var btn = document.getElementById('yinBtn');
+    if (!btn) return;
+    var user = this.getWalineUser();
+    var locked = !(this.loaded && user && this.yinUnlocked);
+    if (this._noDbData) locked = true;
+    btn.classList.toggle('locked', locked);
+    if (!locked) {
+      // 解锁后：恢复默认"阳"（未启用阴模式）
+      btn.innerHTML = '<span class="badge-icon">☯</span>阳';
+      var m = document.getElementById('yinMask');
+      if (m) m.classList.remove('show');
+      btn.classList.remove('selected');
+      var ia = document.querySelector('.image-area');
+      if (ia) ia.classList.remove('yin');
+    }
+  },
+
   // 更新奔跑的人锁状态：已登录+数据就绪+已解锁 → 解锁（此时显示日程徽章入口）；否则加锁
   _updateRunnerLock: function() {
     var rf = document.getElementById('runnerFloat');
@@ -2410,6 +2454,7 @@ var GAME = {
       var baseOneKey = res.data ? (res.data.oneKeyUnlocked ? 1 : 0) : 0;
       var baseAlmanac = res.data ? (res.data.almanacUnlocked ? 1 : 0) : 0;
       var baseLogo = res.data ? (res.data.logoUnlocked ? 1 : 0) : 0;
+      var baseYin = res.data ? (res.data.yinUnlocked ? 1 : 0) : 0;
       // 找到真实记录 → 用其 objectId，确保 PUT 更新同一条（不产生新记录）
       if (res.foundId) self._gameObjectId = res.foundId;
       // ② 剩余次数以数据库为准（手动任务检查；自动/一键模式由外层流程管理，跳过）
@@ -2460,7 +2505,8 @@ var GAME = {
         zjszUnlocked: lvC('zjsz'),
         newsUnlocked: lvC('news'),
         tvUnlocked: lvC('tv'),
-        backgroundUnlocked: lvC('background')
+        backgroundUnlocked: lvC('background'),
+        yinUnlocked: lvC('yin')
       }, '真气值已同步到 Waline: ' + key + ' +' + points);
     }).catch(function(e) {
       // 写入前读取真实数据失败 → 无法保证写入正确性，阻止写入
@@ -2563,7 +2609,17 @@ var GAME = {
             self.updateTaskMenuBtn();
             self.showXp('', '"LOGO" 已解锁');
             self._updateLogoLock();
+            self._updateYinLock();
             setStatus('无需破除封印', '"LOGO" 功能已解锁');
+            return;
+          }
+          if (feature === 'yin' && baseYin) {
+            self.yinUnlocked = 1;
+            self.setSyncState('idle');
+            self.updateTaskMenuBtn();
+            self.showXp('', '"阴阳镜" 已解锁');
+            self._updateYinLock();
+            setStatus('无需破除封印', '"阴阳镜" 已解锁');
             return;
           }
           if (feature === 'runner' && baseRunner) {
@@ -2614,6 +2670,7 @@ var GAME = {
           var newAlmanac = (feature === 'almanac') ? 1 : baseAlmanac;
           var newLogo = (feature === 'logo') ? 1 : baseLogo;
           var newRunner = (feature === 'runner') ? 1 : baseRunner;
+          var newYin = (feature === 'yin') ? 1 : baseYin;
           var newCats = {};
           for (var ci3 = 0; ci3 < catKeys.length; ci3++) {
             newCats[catKeys[ci3]] = (feature === catKeys[ci3]) ? 1 : baseCats[catKeys[ci3]];
@@ -2639,7 +2696,8 @@ var GAME = {
             zjszUnlocked: newCats.zjsz,
             newsUnlocked: newCats.news,
             tvUnlocked: newCats.tv,
-            backgroundUnlocked: (res.data && res.data.backgroundUnlocked) ? 1 : 0
+            backgroundUnlocked: (res.data && res.data.backgroundUnlocked) ? 1 : 0,
+            yinUnlocked: newYin
           }, '已解锁"' + name + '"功能').then(function(ok) {
             // 结果直接在窗口内显示（页面成功提示照旧由 processRecords 驱动）
             setStatus(ok ? '✓ 封印已破' : '心魔困扰', ok ? ('解锁成功！-' + cost + ' 真气，封印已破！') : '正遭受心魔困扰，点击恢复心神!');
@@ -2694,7 +2752,7 @@ var GAME = {
 
   // 该秘藏是否已解锁（key 与 FEATURE_CONFIG.unlockCost 完全一致）
   _isUnlocked: function(key) {
-    var map = { auto:'autoUnlocked', oneKey:'oneKeyUnlocked', almanac:'almanacUnlocked', logo:'logoUnlocked', runner:'runnerUnlocked', story:'storyUnlocked', yedu:'yeduUnlocked', zjsz:'zjszUnlocked', news:'newsUnlocked', tv:'tvUnlocked', background:'backgroundUnlocked' };
+    var map = { auto:'autoUnlocked', oneKey:'oneKeyUnlocked', almanac:'almanacUnlocked', logo:'logoUnlocked', runner:'runnerUnlocked', story:'storyUnlocked', yedu:'yeduUnlocked', zjsz:'zjszUnlocked', news:'newsUnlocked', tv:'tvUnlocked', background:'backgroundUnlocked', yin:'yinUnlocked' };
     return !!this[map[key]];
   },
 
@@ -2842,7 +2900,8 @@ var GAME = {
             zjszUnlocked: (feature === 'zjsz') ? 0 : lv('zjsz'),
             newsUnlocked: (feature === 'news') ? 0 : lv('news'),
             tvUnlocked: (feature === 'tv') ? 0 : lv('tv'),
-            backgroundUnlocked: lv('background')
+            backgroundUnlocked: lv('background'),
+            yinUnlocked: (feature === 'yin') ? 0 : lv('yin')
           };
           // 2. 写库阶段（真气融合中）；_writeState 内部成功后自动回读数据库
           setStatus('🔓 回撤破印', '正在融合真气..');
@@ -3010,7 +3069,8 @@ var GAME = {
             zjszUnlocked: lvU('zjsz'),
             newsUnlocked: lvU('news'),
             tvUnlocked: lvU('tv'),
-            backgroundUnlocked: lvU('background')
+            backgroundUnlocked: lvU('background'),
+            yinUnlocked: lvU('yin')
           }, '境界提升至【' + nextName + '】').then(function(ok) {
             // 不前置显示升级提示，由 processRecords 读回确认后展示（与修炼+真气同一时序）
             self._pendingUpgradeMsg = { name: nextName, cost: realCost };
@@ -3440,7 +3500,8 @@ var GAME = {
         zjszUnlocked: lvK('zjsz'),
         newsUnlocked: lvK('news'),
         tvUnlocked: lvK('tv'),
-        backgroundUnlocked: lvK('background')
+        backgroundUnlocked: lvK('background'),
+        yinUnlocked: lvK('yin')
       }, '一键修炼完成 +' + totalGain + ' 真气').then(function(ok) {
         self._oneKeyMode = false;
         self.hideModeMask();
@@ -3936,13 +3997,22 @@ function togglePlan() {
 }
 document.getElementById('planBtn').addEventListener('click', togglePlan);
 
-// 阴阳（明暗模式）：默认"阳"；点击切换"阴"——背景图加 30% 黑色遮罩并扩展到全屏
+// 阴阳（明暗模式）：默认锁止（阴阳镜，真气 800 解锁）；解锁后点击切换 阳/阴
 (function(){
   var btn = document.getElementById('yinBtn');
   var mask = document.getElementById('yinMask');
   if (!btn || !mask) return;
   btn.addEventListener('click', function(){
+    if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
+    // 未解锁（阴阳镜）→ 走解锁流程（登录/加载校验在确认后统一处理）
+    if (!GAME.yinUnlocked) {
+      GAME.unlockFeature('yin');
+      return;
+    }
+    // 已解锁 → 切换明暗：阴=背景图拓展全屏（不分段）+ 30% 黑色遮罩
+    var ia = document.querySelector('.image-area');
     var isYin = mask.classList.toggle('show');
+    if (ia) ia.classList.toggle('yin', isYin);
     btn.classList.toggle('selected', isYin);
     btn.innerHTML = '<span class="badge-icon">☯</span>' + (isYin ? '阴' : '阳');
   });
