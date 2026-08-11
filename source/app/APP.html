@@ -248,10 +248,16 @@ body{display:flex;flex-direction:column}
 .image-area.yin .content-area{top:calc((100vh - 220px)/2 + 20px)}
 .image-area.yin .plan-panel{top:calc((100vh - 220px)/2 + 10px)}
 /* 阴模式：下半部分文字提亮，提高在暗背景上的可读性 */
-.image-area.yin ~ .bottom-panel .label{color:#d8d8d8}
+.image-area.yin ~ .bottom-panel .label{color:#f2f2f2;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .image-area.yin ~ .bottom-panel .category-item.active .label{color:#ffffff}
 .image-area.yin ~ .bottom-panel .year-bar-text{color:#f0f0f0}
 .image-area.yin ~ .bottom-panel .year-bar-text .runner{stroke:#f0f0f0}
+.image-area.yin ~ .bottom-panel .xz-level{color:#ffffff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.image-area.yin ~ .bottom-panel .points-badge{color:#f5f5f5;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.image-area.yin ~ .bottom-panel .xz-man{filter:brightness(1.35) drop-shadow(0 0 6px rgba(255,255,255,.35))}
+.image-area.yin ~ .bottom-panel .comment-name{color:#f0f0f0;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.image-area.yin ~ .bottom-panel .comment-avatar{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.35)}
+.image-area.yin ~ .bottom-panel .comment-avatar svg{stroke:#ffffff}
 
 /* 今日修炼任务菜单 */
 .task-menu{position:absolute;bottom:15px;z-index:10001;display:flex;flex-direction:column;align-items:center;gap:4px}
