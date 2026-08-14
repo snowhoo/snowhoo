@@ -137,12 +137,12 @@ body{display:flex;flex-direction:column}
 /* 分类圆形按钮 */
 .category-list{display:flex;gap:0;align-items:center;margin-top:-40px;width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;justify-content:flex-start;padding:0 4px}
 .category-list::-webkit-scrollbar{display:none}
-.category-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;padding:0;flex:0 0 25%;min-width:0;position:relative;opacity:.9;background:url('./ann.png') center/cover no-repeat;border-radius:10px;overflow:hidden}
-.category-item::before{content:'';position:absolute;top:50%;left:50%;width:100%;aspect-ratio:1/1;transform:translate(-50%,-50%);border-radius:50%;background:var(--cat-color,#999);opacity:.3;pointer-events:none;z-index:0}
+.category-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;flex:0 0 25%;min-width:0;position:relative;opacity:.9}
 .category-item *{position:relative;z-index:1}
 .category-item:first-child .circle{width:64px;height:64px;font-size:1rem}
 .category-item:active{transform:scale(.88)}
-.category-item .circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;font-weight:400;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:transform .25s,box-shadow .25s}
+.category-item .circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;font-weight:400;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:transform .25s,box-shadow .25s;background:url('./ann.png') center/cover no-repeat;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.category-item .circle::before{content:'';position:absolute;inset:0;border-radius:50%;background:var(--cat-color,#999);opacity:.3;z-index:-1;pointer-events:none}
 .category-item.active .circle{transform:scale(1.0);box-shadow:0 6px 20px rgba(0,0,0,.25)}
 .category-item .label{font-size:.75rem;color:#888;font-weight:300}
 .category-item.active .label{color:#333;font-weight:400}
@@ -480,27 +480,27 @@ body{display:flex;flex-direction:column}
   <div class="year-bar-text"><svg class="runner" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M8 21l3-6 3 3 4-8"/><path d="M14 10l3-3 3 2"/><path d="M5 18l3-6 3 3"/></svg><span id="yearText"></span></div>
   <div class="category-list" id="categoryList">
     <button class="category-item active locked" id="storyBtn" data-unlock="story" data-url="https://snowhoo.net/app/reader.html" title="小红故事" style="--cat-color:#e94560">
-      <span class="circle" style="background:#e94560">小红<br>故事</span>
+      <span class="circle">小红<br>故事</span>
 	  <span class="label">&nbsp;</span>
       <svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
     </button>
     <button class="category-item locked" id="yeduBtn" data-unlock="yedu" data-url="https://snowhoo.net/app/yedu_p.html" title="夜读" style="--cat-color:#764ba2">
-      <span class="circle" style="background:#764ba2">夜</span>
+      <span class="circle">夜</span>
       <span class="label">夜&nbsp;&nbsp;&nbsp;&nbsp;读</span>
       <svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
     </button>
     <button class="category-item locked" id="zjszBtn" data-unlock="zjsz" data-url="https://snowhoo.net/app/zjsz_p.html" title="照见苏州" style="--cat-color:#3b82f6">
-      <span class="circle" style="background:#3b82f6">照</span>
+      <span class="circle">照</span>
       <span class="label">照见苏州</span>
       <svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
     </button>
     <button class="category-item locked" id="newsBtn" data-unlock="news" data-url="https://snowhoo.net/app/DaliyNews_p.html" title="新闻" style="--cat-color:#ff8c00">
-      <span class="circle" style="background:#ff8c00">新</span>
+      <span class="circle">新</span>
       <span class="label">新&nbsp;&nbsp;&nbsp;&nbsp;闻</span>
       <svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
     </button>
     <button class="category-item locked" id="tvBtn" data-unlock="tv" data-url="https://snowhoo.net/app/tv_p.html" title="播霸" style="--cat-color:#22c55e">
-      <span class="circle" style="background:#22c55e">播</span>
+      <span class="circle">播</span>
       <span class="label">播&nbsp;&nbsp;&nbsp;&nbsp;霸</span>
       <svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
     </button>
