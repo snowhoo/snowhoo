@@ -144,9 +144,10 @@ body{display:flex;flex-direction:column}
 /* 栏目锁定：参照自动修炼（灰白滤镜 + 右上角红色小锁） */
 .category-item .lock-icon{position:absolute;top:0;right:2px;width:12px;height:12px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:none}
 .category-item.locked{cursor:not-allowed;filter:saturate(.35) brightness(.85)}
-/* 解锁状态：栏目按钮圆形发绿光（呼吸，低饱和） */
-.category-item:not(.locked) .circle{box-shadow:0 0 12px rgba(34,197,94,.5),0 0 26px rgba(34,197,94,.25);animation:catGreenGlow 2.2s ease-in-out infinite}
-@keyframes catGreenGlow{0%,100%{box-shadow:0 0 8px rgba(34,197,94,.3),0 0 18px rgba(34,197,94,.15)}50%{box-shadow:0 0 16px rgba(34,197,94,.6),0 0 34px rgba(34,197,94,.35)}}
+/* 解锁状态：栏目按钮按各自栏目色发光（红光秘境=红/心灵秘境=紫/视界秘境=蓝/正能光量=橙/光怪陆离=绿，用 --cat-color 配色，呼吸） */
+.category-item:not(.locked) .circle{position:relative;z-index:0}
+.category-item:not(.locked) .circle::after{content:'';position:absolute;inset:-6px;border-radius:50%;background:var(--cat-color,#22c55e);filter:blur(9px);opacity:.35;z-index:-1;pointer-events:none;animation:catGlowPulse 2.2s ease-in-out infinite}
+@keyframes catGlowPulse{0%,100%{opacity:.18;transform:scale(.9)}50%{opacity:.5;transform:scale(1.06)}}
 .xz-group{position:absolute;bottom:5px;left:25px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
 .xz-man{height:45px;width:auto;animation:xzFloat 3s ease-in-out infinite}
 .xz-level{font-size:.62rem;color:#000;font-weight:300;letter-spacing:1px;white-space:nowrap}
