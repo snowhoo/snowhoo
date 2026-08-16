@@ -125,6 +125,7 @@ body{display:flex;flex-direction:column}
 /* 分类圆形按钮 */
 /* 栏目按钮：钉在背景图容器上散落分布（image-area 内，阳=上半屏 / 阴=全屏自动跟随） */
 .category-list{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:3}
+.category-list.hide{display:none}
 .category-item{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;min-width:0;pointer-events:auto;opacity:.9}
 .category-item:active{transform:scale(.88)}
 .category-item .circle{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:transform .25s,box-shadow .25s;background:url('./ann.png') center/cover no-repeat}
@@ -573,10 +574,10 @@ setDefaultBg();
   // dx/dy：额外像素偏移（相对容器/屏幕，正值=右移/下移）
   var ANCH = {
     storyBtn: {x:12, y:16, dx:60, dy:40},
-    yeduBtn:  {x:68, y:18, dy:100},
-    zjszBtn:  {x:44, y:44, dx:-60, dy:30},
-    newsBtn:  {x:14, y:58, dx:100, dy:90},
-    tvBtn:    {x:70, y:60}
+    yeduBtn:  {x:68, y:18, dy:125},
+    zjszBtn:  {x:44, y:44, dx:-70, dy:30},
+    newsBtn:  {x:14, y:58, dx:95, dy:110},
+    tvBtn:    {x:70, y:60, dx:-5}
   };
   function place() {
     var iw = img.naturalWidth, ih = img.naturalHeight;
@@ -600,6 +601,35 @@ setDefaultBg();
   if (window.ResizeObserver) new ResizeObserver(place).observe(area); // 阴阳切换等容器尺寸变化
   if (img.complete) place();
   setTimeout(place, 300);                        // 兜底（图片缓存未触发 load）
+})();
+
+// 打开诗词/今日/星象/日程/探索时隐藏五个栏目按钮（MutationObserver 监听面板状态 class 自动切换）
+(function(){
+  var list = document.getElementById('categoryList');
+  if (!list) return;
+  function update() {
+    var cb = document.getElementById('constellationBtn');
+    var open = !!(document.querySelector('.plan-panel.show')
+      || document.querySelector('.welcome.active')
+      || document.querySelector('.poetry-overlay.show')
+      || document.querySelector('.history-overlay.show')
+      || (cb && cb.classList.contains('selected')));
+    list.classList.toggle('hide', open);
+  }
+  var ids = ['planPanel', 'poetryOverlay', 'historyOverlay', 'constellationBtn'];
+  var obs = window.MutationObserver ? new MutationObserver(update) : null;
+  if (obs) {
+    ids.forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) obs.observe(el, {attributes:true, attributeFilter:['class']});
+    });
+    var wl = document.querySelector('.welcome');
+    if (wl) obs.observe(wl, {attributes:true, attributeFilter:['class']});
+    update();
+  } else {
+    // 兜底：MutationObserver 不可用时轮询
+    setInterval(update, 500);
+  }
 })();
 
 // 探索：与诗词/今日同面板形式——点击在中央内容区以圆形显示 picsum 随机图，再次点击关闭；不覆盖背景
