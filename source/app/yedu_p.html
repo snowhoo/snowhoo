@@ -333,9 +333,16 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
           if (path.startsWith('/') || path.startsWith('http')) return m;
           return '"' + basePath + path.replace(/^\.\//, '') + '"';
         });
-        var m = text.match(/var\s+(__yedu_\w+)\s*=/);
+        // 文章文件格式：window.__yedu_xxx = {...}（无 var 前缀），两种写法都兼容
+        var m = text.match(/var\s+(__yedu_\w+)\s*=|window\.(__yedu_\w+)\s*=/);
         try { eval(text); } catch(e) {}
-        if (m && window[m[1]]) articles[i] = window[m[1]];
+        var name = m ? (m[1] || m[2]) : null;
+        // 兜底：正则未命中时从 window 上取本次 eval 新增的 __yedu_ key
+        if (!name || !window[name]) {
+          var keys = Object.keys(window).filter(function(k) { return k.indexOf('__yedu_') === 0; });
+          if (keys.length) name = keys[keys.length - 1];
+        }
+        if (name && window[name]) articles[i] = window[name];
         return articles[i] || null;
       });
   }
