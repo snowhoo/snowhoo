@@ -135,17 +135,19 @@ body{display:flex;flex-direction:column}
 @keyframes run{0%{transform:translateY(0)}50%{transform:translateY(-2px)}100%{transform:translateY(0)}}
 
 /* 分类圆形按钮 */
-.category-list{display:flex;gap:0;align-items:center;margin-top:-40px;width:100%;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;justify-content:flex-start;padding:0 4px}
-.category-list::-webkit-scrollbar{display:none}
-.category-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;flex:0 0 25%;min-width:0;position:relative;opacity:.9}
-.category-item *{position:relative;z-index:1}
-.category-item:first-child .circle{width:64px;height:64px;font-size:1rem}
+/* 栏目按钮：散落分布在上半背景图上（固定覆盖背景区，按钮各自绝对定位） */
+.category-list{position:fixed;top:0;left:0;right:0;height:calc(100vh - 220px);pointer-events:none;z-index:3}
+.category-item{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;min-width:0;pointer-events:auto;opacity:.9}
 .category-item:active{transform:scale(.88)}
-.category-item .circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;font-weight:400;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:transform .25s,box-shadow .25s;background:url('./ann.png') center/cover no-repeat;text-shadow:0 1px 3px rgba(0,0,0,.5)}
-.category-item .circle::before{content:'';position:absolute;inset:0;border-radius:50%;background:var(--cat-color,#999);opacity:.55;mix-blend-mode:color;z-index:-1;pointer-events:none}
-.category-item.active .circle{transform:scale(1.0);box-shadow:0 6px 20px rgba(0,0,0,.25)}
-.category-item .label{font-size:.75rem;color:#888;font-weight:300}
-.category-item.active .label{color:#333;font-weight:400}
+.category-item .circle{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:transform .25s,box-shadow .25s;background:url('./ann.png') center/cover no-repeat}
+.category-item.active .circle{box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.category-item .label{font-size:.7rem;color:#fff;font-weight:400;text-shadow:0 1px 4px rgba(0,0,0,.6);white-space:nowrap}
+/* 五个按钮散落位置（避开左上徽章/右上LOGO/左下探索/右下日历） */
+#storyBtn{left:12%;top:16%}
+#yeduBtn{left:68%;top:18%}
+#zjszBtn{left:44%;top:44%}
+#newsBtn{left:14%;top:58%}
+#tvBtn{left:70%;top:60%}
 /* 栏目锁定：参照自动修炼（灰白滤镜 + 右上角红色小锁） */
 .category-item .lock-icon{position:absolute;top:0;right:2px;width:12px;height:12px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:none}
 .category-item.locked{cursor:not-allowed;filter:saturate(.35) brightness(.85)}
