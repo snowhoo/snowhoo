@@ -576,7 +576,7 @@ setDefaultBg();
     storyBtn: {x:12, y:16, dx:60, dy:40},
     yeduBtn:  {x:68, y:18, dy:155},
     zjszBtn:  {x:44, y:44, dx:-75, dy:30},
-    newsBtn:  {x:14, y:58, dx:95, dy:110},
+    newsBtn:  {x:14, y:58, dx:90, dy:110},
     tvBtn:    {x:70, y:60, dx:-5}
   };
   function place() {
@@ -643,6 +643,8 @@ document.querySelector('.welcome').addEventListener('click', function() {
     w.classList.remove('active');
     area.classList.remove('show');
     area._activeBtn = null;
+    area.style.overflowY = '';    // 恢复滚动（其他面板）
+    area.style.maxHeight = '';    // 恢复原高度限制
     return;
   }
   // 开启探索：收起其他面板/覆盖层，在中央内容区显示圆形 picsum 图（背景保持默认 bg.jpg 不变）
@@ -655,7 +657,8 @@ document.querySelector('.welcome').addEventListener('click', function() {
   area.style.width = '';
   area.style.transform = 'translateY(-50%)';
   area.style.textAlign = 'center';
-  area.style.overflowY = '';   // 恢复滚动（星象面板会锁定）
+  area.style.overflowY = 'visible';  // 探索圆形：允许发光外溢，不被裁剪
+  area.style.maxHeight = '100%';     // 容器高度 100%，发光完整显示
   var picsum = 'https://picsum.photos/480/480?random=' + Date.now();
   area.innerHTML = '<div class="explore-circle"><div class="ec-status">正在破开虚空……</div><img src="' + picsum + '" alt="探索" crossorigin="anonymous"></div>';
   area.classList.add('show');
@@ -677,6 +680,8 @@ document.querySelector('.welcome').addEventListener('click', function() {
     w.classList.remove('active');
     area.classList.remove('show');
     area._activeBtn = null;
+    area.style.overflowY = '';
+    area.style.maxHeight = '';
     if (GAME._autoMode) GAME._autoPanelLoaded('explore', false);
   };
 });
