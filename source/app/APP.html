@@ -582,12 +582,13 @@ setDefaultBg();
   var img  = document.getElementById('bgImage');
   var list = document.getElementById('categoryList');
   if (!area || !img || !list) return;
-  // 锚点：相对图片原始尺寸的百分比（x=左起, y=上起），即按钮左上角钉住图片上的点
+  // 锚点：相对图片原始尺寸的百分比（x=左起, y=上起），即按钮左上角钉住图片上的点；
+  // dx/dy：额外像素偏移（相对容器/屏幕，正值=右移/下移）
   var ANCH = {
-    storyBtn: {x:12, y:16},
-    yeduBtn:  {x:68, y:18},
+    storyBtn: {x:12, y:16, dx:40, dy:40},
+    yeduBtn:  {x:68, y:18, dy:50},
     zjszBtn:  {x:44, y:44},
-    newsBtn:  {x:14, y:58},
+    newsBtn:  {x:14, y:58, dx:50, dy:40},
     tvBtn:    {x:70, y:60}
   };
   function place() {
@@ -603,8 +604,8 @@ setDefaultBg();
       var el = document.getElementById(id);
       if (!el) continue;
       var a = ANCH[id];
-      el.style.left = (offX + (a.x / 100) * iw * scale) + 'px';
-      el.style.top  = (offY + (a.y / 100) * ih * scale) + 'px';
+      el.style.left = (offX + (a.x / 100) * iw * scale + (a.dx || 0)) + 'px';
+      el.style.top  = (offY + (a.y / 100) * ih * scale + (a.dy || 0)) + 'px';
     }
   }
   img.addEventListener('load', place);          // 换图（bg.jpg / 探索随机图）完成后
