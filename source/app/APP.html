@@ -52,10 +52,10 @@ body{display:flex;flex-direction:column}
 .top-right-logo .lock-overlay svg{width:14px;height:14px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* 黄历面板 - 竖版 */
-.almanac{position:fixed;bottom:100px;right:16px;z-index:7;display:flex;flex-direction:column;align-items:center;gap:10px;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;border:none;border-radius:16px;padding:0;color:#333;min-width:90px;text-shadow:none;cursor:pointer;transition:all .35s ease}
+.almanac{position:fixed;bottom:80px;right:16px;z-index:7;display:flex;flex-direction:column;align-items:center;gap:10px;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;border:none;border-radius:16px;padding:0;color:#333;min-width:90px;text-shadow:none;cursor:pointer;transition:all .35s ease}
 .almanac.hidden{opacity:0;pointer-events:none;transform:scale(.8)}
 /* 日历折叠边条：收起后贴右侧边缘，同高、宽5、透明度90，内含 < 箭头 */
-.almanac-mini{position:fixed;right:0;bottom:100px;z-index:7;display:none;align-items:center;justify-content:center;width:5px;background:#fff;opacity:.5;border-radius:6px 0 0 6px;cursor:pointer;transition:all .35s ease;box-shadow:-2px 0 8px rgba(0,0,0,.15)}
+.almanac-mini{position:fixed;right:0;bottom:80px;z-index:7;display:none;align-items:center;justify-content:center;width:5px;background:#fff;opacity:.5;border-radius:6px 0 0 6px;cursor:pointer;transition:all .35s ease;box-shadow:-2px 0 8px rgba(0,0,0,.15)}
 .almanac-mini.show{display:flex}
 .almanac-mini:active{transform:scale(.88)}
 .almanac-mini svg{width:8px;height:auto;stroke:#333;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
@@ -134,7 +134,7 @@ body{display:flex;flex-direction:column}
 .category-item:active{transform:scale(.88)}
 .category-item .circle{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:transform .25s,box-shadow .25s;background:url('./ann.png') center/cover no-repeat}
 .category-item.active .circle{box-shadow:0 6px 20px rgba(0,0,0,.25)}
-.category-item .label{font-size:.7rem;color:#fff;font-weight:400;text-shadow:0 1px 4px rgba(0,0,0,.6);white-space:nowrap}
+.category-item .label{font-size:.7rem;color:#fff;font-weight:400;text-shadow:0 1px 4px rgba(0,0,0,.6);white-space:nowrap;opacity:.7}
 /* 五个按钮散落位置（避开左上徽章/右上LOGO/左下探索/右下日历） */
 #storyBtn{left:12%;top:16%}
 #yeduBtn{left:68%;top:18%}
@@ -144,14 +144,14 @@ body{display:flex;flex-direction:column}
 /* 栏目锁定：参照自动修炼（灰白滤镜 + 右上角红色小锁） */
 .category-item .lock-icon{position:absolute;top:0;right:2px;width:12px;height:12px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:none}
 .category-item.locked{cursor:not-allowed;filter:saturate(.35) brightness(.85)}
-.xz-group{position:absolute;bottom:35px;left:25px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
+.xz-group{position:absolute;bottom:5px;left:25px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
 .xz-man{height:45px;width:auto;animation:xzFloat 3s ease-in-out infinite}
 .xz-level{font-size:.62rem;color:#000;font-weight:300;letter-spacing:1px;white-space:nowrap}
 @keyframes xzFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 
 /* 评论登录头像 */
 /* 评论登录用户区域 */
-.comment-user{position:fixed;bottom:40px;right:16px;z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px}
+.comment-user{position:fixed;bottom:10px;right:16px;z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px}
 .comment-user .comment-avatar{width:36px;height:36px;border-radius:50%;cursor:pointer;border:1.5px solid rgba(0,0,0,.15);box-shadow:0 2px 8px rgba(0,0,0,.1);transition:border-color .3s;background:rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;overflow:hidden}
 .comment-user .comment-avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .comment-user .comment-avatar svg{width:20px;height:20px;fill:none;stroke:#888;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -575,7 +575,7 @@ setDefaultBg();
   // dx/dy：额外像素偏移（相对容器/屏幕，正值=右移/下移）
   var ANCH = {
     storyBtn: {x:12, y:16, dx:60, dy:40},
-    yeduBtn:  {x:68, y:18, dy:155},
+    yeduBtn:  {x:68, y:18, dy:145},
     zjszBtn:  {x:44, y:44, dx:-75, dy:30},
     newsBtn:  {x:14, y:58, dx:90, dy:110},
     tvBtn:    {x:70, y:60, dx:-5}
@@ -2341,7 +2341,7 @@ var GAME = {
   },
 
   // 更新奔跑的人锁状态：已登录+数据就绪+已解锁 → 解锁（此时显示日程徽章入口）；否则加锁
-  // 注：奔跑小人已取消（改为点击年度进度文字打开日程），此处仅维护日程徽章显隐
+  // 注：奔跑小人已取消（改为点击年度进度文字解锁日程徽章），此处仅维护日程徽章显隐
   _updateRunnerLock: function() {
     var user = this.getWalineUser();
     var locked = !(this.loaded && user && this.runnerUnlocked);
@@ -4274,13 +4274,15 @@ commentOverlay.addEventListener('click', function(e) {
   });
 })();
 
-// 年度进度文字：点击打开计划日程（原奔跑小人入口已取消）
+// 年度进度文字：点击解锁"日程"徽章（原奔跑小人入口改到此处；已解锁则无操作，用徽章打开日程）
 (function(){
   var wt = document.getElementById('yearBarText');
   if (!wt) return;
   wt.addEventListener('click', function(){
     if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
-    togglePlan();
+    if (!GAME.runnerUnlocked) {
+      GAME.unlockFeature('runner');   // 破除封印（固魂大法）→ 日程徽章显示
+    }
   });
 })();
 
