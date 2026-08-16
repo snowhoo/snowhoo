@@ -254,9 +254,10 @@ body{display:flex;flex-direction:column}
 /* 阴模式：上半部分背景图拓展成全屏（背景不分段，覆盖到底部区域）；底部功能控件固定在底部保留在背景之上 */
 .image-area.yin{position:fixed;top:0;left:0;right:0;bottom:0;z-index:5}
 .image-area.yin ~ .bottom-panel{position:fixed;bottom:0;left:0;right:0;height:220px;background:transparent;z-index:6}
-/* 阴模式：探索/日历保持原视口位置（背景图原底部上方，不被底部控件区遮挡） */
+/* 阴模式：探索/日历/收起边条保持原视口位置（背景图原底部上方，不被底部控件区遮挡） */
 .image-area.yin .welcome,
-.image-area.yin .almanac{bottom:236px}
+.image-area.yin .almanac,
+.image-area.yin .almanac-mini{bottom:236px}
 /* 阴模式：诗词/今日/星象内容面板与日程面板保持原视口位置（背景全屏后 50% 基准变化，用视口高度修正） */
 .image-area.yin .content-area{top:calc((100vh - 220px)/2 + 20px)}
 .image-area.yin .plan-panel{top:calc((100vh - 220px)/2 + 10px)}
@@ -573,6 +574,45 @@ function setDefaultBg() {
   };
 }
 setDefaultBg();
+
+// 栏目按钮精确贴背景图：按钮锚点固定在【图片原始内容】的百分比位置，
+// 按 cover 裁切偏移换算回容器坐标（随换图/缩放/阴阳切换自动重算）
+(function(){
+  var area = document.querySelector('.image-area');
+  var img  = document.getElementById('bgImage');
+  var list = document.getElementById('categoryList');
+  if (!area || !img || !list) return;
+  // 锚点：相对图片原始尺寸的百分比（x=左起, y=上起），即按钮左上角钉住图片上的点
+  var ANCH = {
+    storyBtn: {x:12, y:16},
+    yeduBtn:  {x:68, y:18},
+    zjszBtn:  {x:44, y:44},
+    newsBtn:  {x:14, y:58},
+    tvBtn:    {x:70, y:60}
+  };
+  function place() {
+    var iw = img.naturalWidth, ih = img.naturalHeight;
+    if (!iw || !ih) return;
+    var cw = area.clientWidth, ch = area.clientHeight;
+    if (!cw || !ch) return;
+    // cover 等比缩放：scale 取较大者，多余部分两侧裁切（居中）
+    var scale = Math.max(cw / iw, ch / ih);
+    var dispW = iw * scale, dispH = ih * scale;
+    var offX = (cw - dispW) / 2, offY = (ch - dispH) / 2;
+    for (var id in ANCH) {
+      var el = document.getElementById(id);
+      if (!el) continue;
+      var a = ANCH[id];
+      el.style.left = (offX + (a.x / 100) * iw * scale) + 'px';
+      el.style.top  = (offY + (a.y / 100) * ih * scale) + 'px';
+    }
+  }
+  img.addEventListener('load', place);          // 换图（bg.jpg / 探索随机图）完成后
+  window.addEventListener('resize', place);     // 窗口尺寸变化
+  if (window.ResizeObserver) new ResizeObserver(place).observe(area); // 阴阳切换等容器尺寸变化
+  if (img.complete) place();
+  setTimeout(place, 300);                        // 兜底（图片缓存未触发 load）
+})();
 
 // 探索：与诗词/今日同面板形式——点击在中央内容区以圆形显示 picsum 随机图，再次点击关闭；不覆盖背景
 document.querySelector('.welcome').addEventListener('click', function() {
