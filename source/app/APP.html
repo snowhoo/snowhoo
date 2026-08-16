@@ -135,8 +135,8 @@ body{display:flex;flex-direction:column}
 @keyframes run{0%{transform:translateY(0)}50%{transform:translateY(-2px)}100%{transform:translateY(0)}}
 
 /* 分类圆形按钮 */
-/* 栏目按钮：散落分布在上半背景图上（固定覆盖背景区，按钮各自绝对定位） */
-.category-list{position:fixed;top:0;left:0;right:0;height:calc(100vh - 220px);pointer-events:none;z-index:3}
+/* 栏目按钮：钉在背景图容器上散落分布（image-area 内，阳=上半屏 / 阴=全屏自动跟随） */
+.category-list{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:3}
 .category-item{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;min-width:0;pointer-events:auto;opacity:.9}
 .category-item:active{transform:scale(.88)}
 .category-item .circle{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:transform .25s,box-shadow .25s;background:url('./ann.png') center/cover no-repeat}
@@ -472,14 +472,6 @@ body{display:flex;flex-direction:column}
     <span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
   </div>
   <div class="almanac-mini" id="almanacMini"><svg viewBox="0 0 24 24"><path d="M15 4L7 12l8 8"/></svg></div>
-</div>
-
-<!-- 阴阳（明暗模式）全屏遮罩：阴=背景图加 30% 黑色遮罩并扩展到全屏，pointer-events:none 不影响操作 -->
-<div class="yin-mask" id="yinMask"></div>
-
-<div class="bottom-panel">
-  <div class="year-bar"><div class="year-bar-fill" id="yearFill"></div><div class="runner-float locked" id="runnerFloat"><img src="../images/run.png" alt="奔跑"><span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div></div>
-  <div class="year-bar-text"><svg class="runner" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M8 21l3-6 3 3 4-8"/><path d="M14 10l3-3 3 2"/><path d="M5 18l3-6 3 3"/></svg><span id="yearText"></span></div>
   <div class="category-list" id="categoryList">
     <button class="category-item active locked" id="storyBtn" data-unlock="story" data-url="https://snowhoo.net/app/reader.html" title="小红故事" style="--cat-color:#e94560">
       <span class="circle"></span>
@@ -507,6 +499,14 @@ body{display:flex;flex-direction:column}
       <svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
     </button>
   </div>
+</div>
+
+<!-- 阴阳（明暗模式）全屏遮罩：阴=背景图加 30% 黑色遮罩并扩展到全屏，pointer-events:none 不影响操作 -->
+<div class="yin-mask" id="yinMask"></div>
+
+<div class="bottom-panel">
+  <div class="year-bar"><div class="year-bar-fill" id="yearFill"></div><div class="runner-float locked" id="runnerFloat"><img src="../images/run.png" alt="奔跑"><span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div></div>
+  <div class="year-bar-text"><svg class="runner" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M8 21l3-6 3 3 4-8"/><path d="M14 10l3-3 3 2"/><path d="M5 18l3-6 3 3"/></svg><span id="yearText"></span></div>
   <div class="xz-group">
     <div class="xz-level" id="xzLevel"></div>
     <img class="xz-man" src="xzman.png" alt="">
