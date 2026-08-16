@@ -596,8 +596,11 @@ setDefaultBg();
       var el = document.getElementById(id);
       if (!el) continue;
       var a = ANCH[id];
-      el.style.left = (offX + (a.x / 100) * iw * scale + (a.dx || 0) + (isYin ? (a.yinDx || 0) : 0)) + 'px';
-      el.style.top  = (offY + (a.y / 100) * ih * scale + (a.dy || 0) + (isYin ? (a.yinDy || 0) : 0)) + 'px';
+      // 锚点为按钮中心：宽度随文字自适应，但中心位置恒定不跳
+      var cx = offX + (a.x / 100) * iw * scale + (a.dx || 0) + (isYin ? (a.yinDx || 0) : 0);
+      var cy = offY + (a.y / 100) * ih * scale + (a.dy || 0) + (isYin ? (a.yinDy || 0) : 0);
+      el.style.left = (cx - (el.offsetWidth || 0) / 2) + 'px';
+      el.style.top  = (cy - (el.offsetHeight || 0) / 2) + 'px';
     }
   }
   img.addEventListener('load', place);          // 换图（bg.jpg / 探索随机图）完成后
@@ -606,6 +609,7 @@ setDefaultBg();
   if (window.MutationObserver) new MutationObserver(place).observe(area, {attributes:true, attributeFilter:['class']}); // 阴模式偏移切换
   if (img.complete) place();
   setTimeout(place, 300);                        // 兜底（图片缓存未触发 load）
+  window.__placeCats = place;                    // 供文字切换（???/原名）后重新居中定位
 })();
 
 // 打开诗词/今日/星象/日程/探索时隐藏五个栏目按钮（MutationObserver 监听面板状态 class 自动切换）
@@ -2383,6 +2387,8 @@ var GAME = {
         if (label) label.textContent = '？？？';
       }
     }
+    // 文字变化后重新按中心定位（宽度自适应但中心不跳）
+    if (window.__placeCats) window.__placeCats();
   },
 
   // 根据等级数值返回对应显示文字
