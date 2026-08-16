@@ -20,14 +20,14 @@ body{display:flex;flex-direction:column}
 .image-area img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .6s ease}
 .image-area .gradient{position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(transparent,rgba(0,0,0,.45));pointer-events:none}
 .image-area .gradient-top{position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(rgba(0,0,0,.45),transparent);pointer-events:none}
-.image-area .welcome{position:fixed;bottom:150px;left:15px;color:#333;font-size:1.6rem;font-weight:300;letter-spacing:2px;text-shadow:none;cursor:pointer;animation:welcomePulse 2.5s ease-in-out infinite;z-index:7;transition:all .35s ease}
-.image-area .welcome.active{color:#ff8c00;animation:none;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.welcome{position:fixed;bottom:150px;left:15px;color:#333;font-size:1.6rem;font-weight:300;letter-spacing:2px;text-shadow:none;cursor:pointer;animation:welcomePulse 2.5s ease-in-out infinite;z-index:7;transition:all .35s ease}
+.welcome.active{color:#ff8c00;animation:none;text-shadow:0 2px 8px rgba(0,0,0,.5)}
 @keyframes welcomePulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.image-area .welcome small{display:block;font-size:.75rem;font-weight:400;opacity:.7;margin-top:6px;letter-spacing:1px}
-/* 阴模式：探索/日历文字白色（阳模式黑色为默认） */
-.image-area.yin .welcome{color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5)}
-.image-area.yin .welcome.active{color:#ff8c00}
-.image-area.yin .almanac{color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.welcome small{display:block;font-size:.75rem;font-weight:400;opacity:.7;margin-top:6px;letter-spacing:1px}
+/* 阴模式：探索/日历文字白色（阳模式黑色为默认；元素已在 body 层，用兄弟选择器） */
+.image-area.yin ~ .welcome{color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.image-area.yin ~ .welcome.active{color:#ff8c00}
+.image-area.yin ~ .almanac{color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5)}
 
 /* 左上角圈字 */
 .top-left-badges{position:absolute;top:46px;left:16px;z-index:5;display:flex;gap:14px}
@@ -447,22 +447,6 @@ body{display:flex;flex-direction:column}
   </div>
   <div class="top-right-logo locked" id="topRightLogo"><img src="logo.png" alt="logo"><span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></div>
   <div class="logo-mini" id="logoMini"><svg viewBox="0 0 24 24"><path d="M15 4L7 12l8 8"/></svg></div>
-  <div class="welcome">
-    探索
-    <small>choose your journey</small>
-    <span class="task-dot" id="exploreDot"></span>
-  </div>
-  <div class="almanac locked" id="almanac">
-    <div class="al-day" id="alDay"></div>
-    <div class="al-body">
-      <div class="al-month" id="alMonth"></div>
-      <div class="al-weekday" id="alWeekday"></div>
-      <div class="al-lunar" id="alLunar"></div>
-      <div class="al-zodiac" id="alZodiac"></div>
-    </div>
-    <span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
-  </div>
-  <div class="almanac-mini" id="almanacMini"><svg viewBox="0 0 24 24"><path d="M15 4L7 12l8 8"/></svg></div>
   <div class="category-list" id="categoryList">
     <button class="category-item active locked" id="storyBtn" data-unlock="story" data-url="https://snowhoo.net/app/reader.html" title="红光秘境" style="--cat-color:#e94560">
       <span class="circle"></span>
@@ -491,6 +475,24 @@ body{display:flex;flex-direction:column}
     </button>
   </div>
 </div>
+
+<!-- 探索 / 日历 / 收起边条：body 层直接子级（fixed 视口定位），避免被 image-area 层叠上下文困在 z5 之下 -->
+<div class="welcome">
+  探索
+  <small>choose your journey</small>
+  <span class="task-dot" id="exploreDot"></span>
+</div>
+<div class="almanac locked" id="almanac">
+  <div class="al-day" id="alDay"></div>
+  <div class="al-body">
+    <div class="al-month" id="alMonth"></div>
+    <div class="al-weekday" id="alWeekday"></div>
+    <div class="al-lunar" id="alLunar"></div>
+    <div class="al-zodiac" id="alZodiac"></div>
+  </div>
+  <span class="lock-overlay"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+</div>
+<div class="almanac-mini" id="almanacMini"><svg viewBox="0 0 24 24"><path d="M15 4L7 12l8 8"/></svg></div>
 
 <!-- 阴阳（明暗模式）全屏遮罩：阴=背景图加 30% 黑色遮罩并扩展到全屏，pointer-events:none 不影响操作 -->
 <div class="yin-mask" id="yinMask"></div>
