@@ -139,14 +139,14 @@ body{display:flex;flex-direction:column}
 /* 栏目锁定：参照自动修炼（灰白滤镜 + 右上角红色小锁） */
 .category-item .lock-icon{position:absolute;top:0;right:2px;width:12px;height:12px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:none}
 .category-item.locked{cursor:not-allowed;filter:saturate(.35) brightness(.85)}
-.xz-group{position:absolute;bottom:5px;left:25px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
+.xz-group{position:absolute;bottom:35px;left:25px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
 .xz-man{height:45px;width:auto;animation:xzFloat 3s ease-in-out infinite}
 .xz-level{font-size:.62rem;color:#000;font-weight:300;letter-spacing:1px;white-space:nowrap}
 @keyframes xzFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 
 /* 评论登录头像 */
 /* 评论登录用户区域 */
-.comment-user{position:fixed;bottom:10px;right:16px;z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px}
+.comment-user{position:fixed;bottom:40px;right:16px;z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px}
 .comment-user .comment-avatar{width:36px;height:36px;border-radius:50%;cursor:pointer;border:1.5px solid rgba(0,0,0,.15);box-shadow:0 2px 8px rgba(0,0,0,.1);transition:border-color .3s;background:rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;overflow:hidden}
 .comment-user .comment-avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .comment-user .comment-avatar svg{width:20px;height:20px;fill:none;stroke:#888;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -262,7 +262,7 @@ body{display:flex;flex-direction:column}
 .image-area.yin ~ .bottom-panel .comment-avatar svg{stroke:#ffffff}
 
 /* 今日修炼任务菜单 */
-.task-menu{position:absolute;bottom:15px;z-index:10001;display:flex;flex-direction:column;align-items:center;gap:4px}
+.task-menu{position:absolute;bottom:45px;z-index:10001;display:flex;flex-direction:column;align-items:center;gap:4px}
 /* 自动修炼提示：显示在修炼按钮上方，单独元素不占用按钮（z-index 高于修炼遮罩） */
 .auto-hint{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);font-size:.58rem;color:#22c55e;background:#fff;border:1px solid rgba(34,197,94,.35);border-radius:10px;padding:3px 10px;white-space:nowrap;display:none;z-index:9997;box-shadow:0 2px 8px rgba(0,0,0,.08);letter-spacing:.3px}
 /* 修炼模式全屏透明遮罩：覆盖所有页面功能（含评论弹窗 9999），杜绝任何点击 */
