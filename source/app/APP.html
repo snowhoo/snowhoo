@@ -477,9 +477,9 @@ body{display:flex;flex-direction:column}
       <span class="label">视界秘境</span>
       <svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
     </button>
-    <button class="category-item locked" id="newsBtn" data-unlock="news" data-url="https://snowhoo.net/app/DaliyNews_p.html" title="正能光亮小世界" style="--cat-color:#ff8c00">
+    <button class="category-item locked" id="newsBtn" data-unlock="news" data-url="https://snowhoo.net/app/DaliyNews_p.html" title="正能光量小世界" style="--cat-color:#ff8c00">
       <span class="circle"></span>
-      <span class="label">正能光亮小世界</span>
+      <span class="label">正能光量小世界</span>
       <svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
     </button>
     <button class="category-item locked" id="tvBtn" data-unlock="tv" data-url="https://snowhoo.net/app/tv_p.html" title="光怪陆离小世界" style="--cat-color:#22c55e">
@@ -572,11 +572,11 @@ setDefaultBg();
   // 锚点：相对图片原始尺寸的百分比（x=左起, y=上起），即按钮左上角钉住图片上的点；
   // dx/dy：额外像素偏移（相对容器/屏幕，正值=右移/下移）
   var ANCH = {
-    storyBtn: {x:12, y:16, dx:50, dy:40},
-    yeduBtn:  {x:68, y:18, dy:50},
-    zjszBtn:  {x:44, y:44, dx:-50, dy:50},
+    storyBtn: {x:12, y:16, dx:60, dy:40},
+    yeduBtn:  {x:68, y:18, dy:100},
+    zjszBtn:  {x:44, y:44, dx:-60, dy:30},
     newsBtn:  {x:14, y:58, dx:100, dy:90},
-    tvBtn:    {x:70, y:60, dx:20}
+    tvBtn:    {x:70, y:60}
   };
   function place() {
     var iw = img.naturalWidth, ih = img.naturalHeight;
