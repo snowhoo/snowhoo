@@ -269,7 +269,7 @@ body{display:flex;flex-direction:column}
 .auto-hint{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);font-size:.58rem;color:#22c55e;background:#fff;border:1px solid rgba(34,197,94,.35);border-radius:10px;padding:3px 10px;white-space:nowrap;display:none;z-index:9997;box-shadow:0 2px 8px rgba(0,0,0,.08);letter-spacing:.3px}
 /* 修炼模式全屏透明遮罩：覆盖所有页面功能（含评论弹窗 9999），杜绝任何点击 */
 #modeMask{position:fixed;top:0;left:0;right:0;bottom:0;z-index:10000;display:none;background:transparent}
-.task-menu-btn{font-size:.58rem;color:#ff8c00;cursor:pointer;padding:3px 8px;border:1px solid rgba(255,140,0,.3);border-radius:10px;background:rgba(255,255,255,.88);white-space:nowrap;transition:all .3s;font-weight:400;letter-spacing:.3px;line-height:1.4;user-select:none;-webkit-user-select:none}
+.task-menu-btn{font-size:.58rem;color:#ff8c00;cursor:pointer;padding:3px 8px;border:1px solid rgba(255,140,0,.3);border-radius:10px;background:rgba(255,255,255,.88);white-space:nowrap;transition:all .3s;font-weight:400;letter-spacing:.3px;line-height:1.4;user-select:none;-webkit-user-select:none;transform:translateY(-10px)}
 /* 初始隐藏（!important 防止任何 JS/CSS 提前显示）*/
 .task-menu-btn.init-hidden{display:none!important}
 .task-menu-btn.error{color:#e94560!important;border-color:rgba(233,69,96,.35)!important}
@@ -2364,15 +2364,24 @@ var GAME = {
     }
   },
 
-  // 更新 5 个栏目按钮锁状态（story小红故事/yedu夜读/zjsz照见苏州/news新闻/tv播霸）
+  // 更新 5 个栏目按钮锁状态（story红光秘境/yedu心灵秘境/zjsz视界秘境/news正能光量/tv光怪陆离）
+  // 未解锁 → 文字显示"？？？"（隐藏真实名称）；解锁 → 恢复原名（原名保存在 label data-name）
   _updateCategoryLocks: function() {
     var map = { story: 'storyBtn', yedu: 'yeduBtn', zjsz: 'zjszBtn', news: 'newsBtn', tv: 'tvBtn' };
     for (var k in map) {
       var el = document.getElementById(map[k]);
       if (!el) continue;
+      var label = el.querySelector('.label');
+      if (label && !label.dataset.name) label.dataset.name = label.textContent.trim();
       var unlocked = this.loaded && this.getWalineUser() && this[k + 'Unlocked'];
-      if (unlocked) el.classList.remove('locked');
-      else el.classList.add('locked');
+      if (unlocked) {
+        el.classList.remove('locked');
+        if (label && label.dataset.name) label.textContent = label.dataset.name;
+      }
+      else {
+        el.classList.add('locked');
+        if (label) label.textContent = '？？？';
+      }
     }
   },
 
