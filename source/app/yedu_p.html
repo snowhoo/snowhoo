@@ -224,7 +224,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 (function() {
   var basePath = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '/js/sevencolor/1/');
   
-  let articles = [];
+  let articles = [];          // 已加载的文章（按索引稀疏填充）
+  let fileList = [];          // index.json 的文件列表（总篇数/顺序依据）
   let currentIndex = 0;
   const STORAGE_KEY = 'yedu_page_idx';
   let startX = 0, startY = 0, moveX = 0, moveY = 0;
@@ -317,7 +318,29 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     e.stopPropagation();
   });
 
-  // 数据加载
+  // ===== 按需加载：首屏只拉当前文章（+相邻预取），翻页时再加载对应文件 =====
+  // 拉取并解析第 i 篇文章（已加载直接返回；越界返回 null）
+  function ensureArticle(i) {
+    if (articles[i]) return Promise.resolve(articles[i]);
+    if (i < 0 || i >= fileList.length) return Promise.resolve(null);
+    return fetch(basePath + 'yedu_data/' + fileList[i])
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      })
+      .then(function(text) {
+        text = text.replace(/"(\.[^"]+)"/g, function(m, path) {
+          if (path.startsWith('/') || path.startsWith('http')) return m;
+          return '"' + basePath + path.replace(/^\.\//, '') + '"';
+        });
+        var m = text.match(/var\s+(__yedu_\w+)\s*=/);
+        try { eval(text); } catch(e) {}
+        if (m && window[m[1]]) articles[i] = window[m[1]];
+        return articles[i] || null;
+      });
+  }
+
+  // 数据加载：只取索引 → 建卡 → 加载首屏文章
   function loadData() {
     fetch(basePath + 'yedu_data/index.json')
       .then(function(r) {
@@ -325,46 +348,17 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         return r.json();
       })
       .then(function(files) {
-        // 分批并发拉取（每批 6 个，防一次性 80+ 请求挤爆同域连接池）
-        var BATCH = 6;
-        var results = [];
-        function fetchBatch(start) {
-          if (start >= files.length) return Promise.resolve(results);
-          return Promise.all(files.slice(start, start + BATCH).map(function(f) {
-            return fetch(basePath + 'yedu_data/' + f).then(function(r) {
-              if (!r.ok) throw new Error('HTTP ' + r.status);
-              return r.text();
-            });
-          })).then(function(arr) {
-            results = results.concat(arr);
-            return fetchBatch(start + BATCH);
-          });
-        }
-        return fetchBatch(0);
-      })
-      .then(function(texts) {
-        texts.forEach(function(text) {
-          text = text.replace(/"(\.[^"]+)"/g, function(m, path) {
-            if (path.startsWith('/') || path.startsWith('http')) return m;
-            return '"' + basePath + path.replace(/^\.\//, '') + '"';
-          });
-          var vn = text.match(/^var\s+(\w+)\s*=/);
-          if (vn) text = text.replace(/__([a-zA-Z])/g, '_$1');
-          try { eval(text); } catch(e) {}
-        });
-
-        var allKeys = Object.keys(window).filter(function(k) { return k.indexOf('__yedu_') === 0; }).sort().reverse();
-        articles = allKeys.map(function(k) { return window[k]; });
+        fileList = files;
 
         // 恢复保存的页码
         var savedIdx = localStorage.getItem(STORAGE_KEY);
         if (savedIdx !== null) {
           var n = parseInt(savedIdx, 10);
-          if (n >= 0 && n < articles.length) currentIndex = n;
+          if (n >= 0 && n < fileList.length) currentIndex = n;
         }
         // 从系统媒体卡片进入（?resume=1）：优先恢复到播放中的文章
         var resume = (location.search.indexOf('resume=1') >= 0) ? getResume() : null;
-        if (resume && resume.index >= 0 && resume.index < articles.length) {
+        if (resume && resume.index >= 0 && resume.index < fileList.length) {
           currentIndex = resume.index;
         }
 
@@ -373,16 +367,28 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         bindEvents();
         updateCards();
 
-        // 续播：恢复到播放中的文章后自动开始播放（被自动播放策略拦截时用户点 ▶ 继续）
-        if (resume && resume.playing && articles[currentIndex] && articles[currentIndex].audioSrc) {
-          setTimeout(function() {
-            if (playBtn.dataset.src) toggleAudio(currentIndex, playBtn);
-          }, 400);
-        }
-        
-        loadingEl.classList.add('hide');
-        setTimeout(() => loadingEl.remove(), 500);
-        setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 5000);
+        // 首屏文章就绪后再隐藏 loading
+        ensureArticle(currentIndex).then(function() {
+          var card = app.querySelector('.card[data-index="' + currentIndex + '"]');
+          if (card) { fillCard(currentIndex); renderBody(card); }
+          updateAudioButtons();
+          loadingEl.classList.add('hide');
+          setTimeout(() => loadingEl.remove(), 500);
+          setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 5000);
+          // 预取相邻两篇（翻页即时，不阻塞首屏）
+          ensureArticle(currentIndex - 1);
+          ensureArticle(currentIndex + 1);
+          // 续播：恢复到播放中的文章后自动开始播放（被自动播放策略拦截时用户点 ▶ 继续）
+          if (resume && resume.playing && articles[currentIndex] && articles[currentIndex].audioSrc) {
+            setTimeout(function() {
+              if (playBtn.dataset.src) toggleAudio(currentIndex, playBtn);
+            }, 400);
+          }
+        }).catch(function(e) {
+          var loadingText = loadingEl.querySelector('.loading-text');
+          if (loadingText) loadingText.textContent = '加载失败：' + e.message;
+          console.error(e);
+        });
       })
       .catch(function(e) {
         var loadingText = loadingEl.querySelector('.loading-text');
@@ -391,8 +397,26 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       });
   }
 
+  // 用已加载的文章数据填充卡片（封面/标题/日期；幂等）
+  function fillCard(i) {
+    var post = articles[i];
+    if (!post) return;
+    var card = app.querySelector('.card[data-index="' + i + '"]');
+    if (!card || card.dataset.filled) return;
+    card.dataset.filled = '1';
+    var img = card.querySelector('.yedu-cover img');
+    if (img && post.coverSrc) {
+      img.dataset.src = post.coverSrc;
+      img.onerror = function() { if (this.src !== this.dataset.picsum) this.src = this.dataset.picsum; };
+    }
+    var h1 = card.querySelector('.card-title h1');
+    if (h1) h1.textContent = post.title;
+    var meta = card.querySelector('.card-title .meta');
+    if (meta && post.pubDate) meta.textContent = post.pubDate;
+  }
+
   function createCards() {
-    articles.forEach(function(post, i) {
+    for (var i = 0; i < fileList.length; i++) {
       const card = document.createElement('div');
       card.className = 'card';
       card.dataset.index = i;
@@ -400,27 +424,20 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       if (i === currentIndex) card.classList.add('center');
       if (i > currentIndex) card.classList.add('right');
 
-      // Cover image
+      // Cover image（占位：封面/标题数据随文章按需加载后填充）
       const coverDiv = document.createElement('div');
       coverDiv.className = 'yedu-cover';
       
       const coverInner = document.createElement('div');
       coverInner.className = 'yedu-cover-inner';
       
-      const imgSrc = post.coverSrc || '';
       const picsumUrl = 'https://picsum.photos/seed/yedu_' + i + '/800/400';
       const img = document.createElement('img');
-      // 懒加载：不立即设置 src（避免首屏并发加载全部占位图，85 篇会拉满连接池），
-      // 仅记录占位图/真图地址，由 loadNearbyImages 在邻近当前页时再加载
-      img.alt = post.title;
+      img.alt = '';
       img.draggable = false;
       img.loading = 'lazy';
       img.style.cursor = 'zoom-in';
       img.dataset.picsum = picsumUrl;
-      if (imgSrc) {
-        img.dataset.src = imgSrc;
-        img.onerror = function() { if (this.src !== picsumUrl) this.src = picsumUrl; };
-      }
       coverInner.appendChild(img);
 
       // Corner label
@@ -431,14 +448,12 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
       coverDiv.appendChild(coverInner);
 
-      // Title
+      // Title（数据到达后由 fillCard 填充）
       const titleDiv = document.createElement('div');
       titleDiv.className = 'card-title';
-      const dateHtml = post.pubDate ? '<div class="meta">' + escapeHtml(post.pubDate) + '</div>' : '';
-      titleDiv.innerHTML = '<h1>' + escapeHtml(post.title) + '</h1>' + dateHtml;
+      titleDiv.innerHTML = '<h1></h1><div class="meta"></div>';
 
-      // Content（正文懒渲染：建卡时为空，翻到该篇时由 updateCards 填充，
-      // 避免一次性渲染 80+ 篇正文 DOM 拖慢首屏）
+      // Content（正文懒渲染：翻到该篇时由 updateCards 填充）
       const contentDiv = document.createElement('div');
       contentDiv.className = 'card-content';
       contentDiv.innerHTML = '<div class="body"></div>';
@@ -447,7 +462,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       card.appendChild(titleDiv);
       card.appendChild(contentDiv);
       app.appendChild(card);
-    });
+    }
   }
 
   // 渲染当前卡片正文（幂等：已渲染跳过；无正文用占位文案）
@@ -468,14 +483,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   }
 
   function createPageNav() {
-    pageBtn.textContent = '1 / ' + articles.length;
+    pageBtn.textContent = '1 / ' + fileList.length;
   }
   
   pageBtn.addEventListener('click', function() {
-    var input = prompt('输入页码 (1 - ' + articles.length + ')', (currentIndex + 1) + '');
+    var input = prompt('输入页码 (1 - ' + fileList.length + ')', (currentIndex + 1) + '');
     if (input !== null) {
       var num = parseInt(input, 10);
-      if (num >= 1 && num <= articles.length) {
+      if (num >= 1 && num <= fileList.length) {
         currentIndex = num - 1;
         updateCards();
       }
@@ -488,7 +503,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   });
   document.getElementById('lastBtn').addEventListener('click', function(e) {
     e.stopPropagation();
-    if (currentIndex < articles.length - 1) { currentIndex = articles.length - 1; updateCards(); }
+    if (currentIndex < fileList.length - 1) { currentIndex = fileList.length - 1; updateCards(); }
   });
 
   function updateCards() {
@@ -499,22 +514,24 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       if (i === currentIndex) card.classList.add('center');
       if (i > currentIndex) card.classList.add('right');
     });
-    pageBtn.textContent = (currentIndex + 1) + ' / ' + articles.length;
+    pageBtn.textContent = (currentIndex + 1) + ' / ' + fileList.length;
     localStorage.setItem(STORAGE_KEY, currentIndex);
     if (hintVisible) {
       hintEl.classList.remove('hidden');
       setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);
     }
-    
-    // 懒渲染当前卡片正文（翻到哪篇渲染哪篇）
-    if (cards[currentIndex]) renderBody(cards[currentIndex]);
-    // 更新音频按钮事件
-    updateAudioButtons();
-    // 懒加载图片（当前页及相邻卡片）
-    loadNearbyImages();
-    // 更新图片点击事件
-    updateImageClick();
-    if (articles[currentIndex]) document.title = '小红故事|夜读 – ' + escapeHtml(articles[currentIndex].title);
+
+    // 按需加载当前文章 → 填充卡片/正文/音频，并预取相邻
+    ensureArticle(currentIndex).then(function() {
+      var card = app.querySelector('.card[data-index="' + currentIndex + '"]');
+      if (card) { fillCard(currentIndex); renderBody(card); }
+      updateAudioButtons();
+      loadNearbyImages();
+      updateImageClick();
+      if (articles[currentIndex]) document.title = '小红故事|夜读 – ' + escapeHtml(articles[currentIndex].title);
+      ensureArticle(currentIndex - 1);
+      ensureArticle(currentIndex + 1);
+    });
   }
 
   // 懒加载当前及相邻卡片图片（±1 范围：真图优先，无真图用占位图；其余不加载）
@@ -554,7 +571,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     if (!isDragging) return;
     isDragging = false;
     const threshold = 60;
-    if (moveX < -threshold && currentIndex < articles.length - 1) { currentIndex++; updateCards(); }
+    if (moveX < -threshold && currentIndex < fileList.length - 1) { currentIndex++; updateCards(); }
     else if (moveX > threshold && currentIndex > 0) { currentIndex--; updateCards(); }
     moveX = 0; moveY = 0;
   }
@@ -570,12 +587,12 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     isDragging = false;
     app.style.cursor = '';
     const threshold = 60;
-    if (moveX < -threshold && currentIndex < articles.length - 1) { currentIndex++; updateCards(); }
+    if (moveX < -threshold && currentIndex < fileList.length - 1) { currentIndex++; updateCards(); }
     else if (moveX > threshold && currentIndex > 0) { currentIndex--; updateCards(); }
     moveX = 0; moveY = 0;
   }
   function onKeyDown(e) {
-    if (e.key === 'ArrowRight' && currentIndex < articles.length - 1) { currentIndex++; updateCards(); }
+    if (e.key === 'ArrowRight' && currentIndex < fileList.length - 1) { currentIndex++; updateCards(); }
     else if (e.key === 'ArrowLeft' && currentIndex > 0) { currentIndex--; updateCards(); }
   }
 

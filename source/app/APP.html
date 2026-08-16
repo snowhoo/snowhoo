@@ -575,7 +575,7 @@ setDefaultBg();
   // dx/dy：额外像素偏移（相对容器/屏幕，正值=右移/下移）
   var ANCH = {
     storyBtn: {x:12, y:16, dx:60, dy:40},
-    yeduBtn:  {x:68, y:18, dy:145},
+    yeduBtn:  {x:68, y:18, dx:-5, dy:145},
     zjszBtn:  {x:44, y:44, dx:-75, dy:30},
     newsBtn:  {x:14, y:58, dx:90, dy:110},
     tvBtn:    {x:70, y:60, dx:-5}
@@ -4101,8 +4101,7 @@ document.getElementById('planBtn').addEventListener('click', togglePlan);
 // 阴阳（明暗模式）：默认锁止（阴阳镜，真气 800 解锁）；解锁后点击切换 阳/阴
 (function(){
   var btn = document.getElementById('yinBtn');
-  var mask = document.getElementById('yinMask');
-  if (!btn || !mask) return;
+  if (!btn) return;
   btn.addEventListener('click', function(){
     if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
     // 未解锁（阴阳镜）→ 走解锁流程（登录/加载校验在确认后统一处理）
@@ -4110,10 +4109,9 @@ document.getElementById('planBtn').addEventListener('click', togglePlan);
       GAME.unlockFeature('yin');
       return;
     }
-    // 已解锁 → 切换明暗：阴=背景图拓展全屏（不分段）+ 30% 黑色遮罩；无选中态
+    // 已解锁 → 切换明暗：阴=背景图拓展全屏（不分段），不再叠加灰色遮罩；无选中态
     var ia = document.querySelector('.image-area');
-    var isYin = mask.classList.toggle('show');
-    if (ia) ia.classList.toggle('yin', isYin);
+    var isYin = ia ? ia.classList.toggle('yin') : false;
     btn.innerHTML = '<span class="badge-icon">☯</span>' + (isYin ? '阴' : '阳');
   });
 })();
