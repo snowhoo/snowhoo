@@ -572,12 +572,12 @@ setDefaultBg();
   var list = document.getElementById('categoryList');
   if (!area || !img || !list) return;
   // 锚点：相对图片原始尺寸的百分比（x=左起, y=上起），即按钮左上角钉住图片上的点；
-  // dx/dy：额外像素偏移（相对容器/屏幕，正值=右移/下移）
+  // dx/dy：额外像素偏移（相对容器/屏幕，正值=右移/下移）；yinDx/yinDy：阴模式额外偏移
   var ANCH = {
-    storyBtn: {x:12, y:16, dx:60, dy:40},
-    yeduBtn:  {x:68, y:18, dx:-5, dy:145},
-    zjszBtn:  {x:44, y:44, dx:-75, dy:30},
-    newsBtn:  {x:14, y:58, dx:90, dy:110},
+    storyBtn: {x:12, y:16, dx:60, dy:40, yinDx:20, yinDy:10},
+    yeduBtn:  {x:68, y:18, dx:-5, dy:145, yinDy:40},
+    zjszBtn:  {x:44, y:44, dx:-75, dy:30, yinDx:-20, yinDy:10},
+    newsBtn:  {x:14, y:58, dx:90, dy:110, yinDx:30},
     tvBtn:    {x:70, y:60, dx:-5}
   };
   function place() {
@@ -589,17 +589,19 @@ setDefaultBg();
     var scale = Math.max(cw / iw, ch / ih);
     var dispW = iw * scale, dispH = ih * scale;
     var offX = (cw - dispW) / 2, offY = (ch - dispH) / 2;
+    var isYin = area.classList.contains('yin');
     for (var id in ANCH) {
       var el = document.getElementById(id);
       if (!el) continue;
       var a = ANCH[id];
-      el.style.left = (offX + (a.x / 100) * iw * scale + (a.dx || 0)) + 'px';
-      el.style.top  = (offY + (a.y / 100) * ih * scale + (a.dy || 0)) + 'px';
+      el.style.left = (offX + (a.x / 100) * iw * scale + (a.dx || 0) + (isYin ? (a.yinDx || 0) : 0)) + 'px';
+      el.style.top  = (offY + (a.y / 100) * ih * scale + (a.dy || 0) + (isYin ? (a.yinDy || 0) : 0)) + 'px';
     }
   }
   img.addEventListener('load', place);          // 换图（bg.jpg / 探索随机图）完成后
   window.addEventListener('resize', place);     // 窗口尺寸变化
   if (window.ResizeObserver) new ResizeObserver(place).observe(area); // 阴阳切换等容器尺寸变化
+  if (window.MutationObserver) new MutationObserver(place).observe(area, {attributes:true, attributeFilter:['class']}); // 阴模式偏移切换
   if (img.complete) place();
   setTimeout(place, 300);                        // 兜底（图片缓存未触发 load）
 })();
