@@ -144,9 +144,9 @@ body{display:flex;flex-direction:column}
 /* 栏目锁定：参照自动修炼（灰白滤镜 + 右上角红色小锁） */
 .category-item .lock-icon{position:absolute;top:0;right:2px;width:12px;height:12px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:none}
 .category-item.locked{cursor:not-allowed;filter:saturate(.35) brightness(.85)}
-/* 解锁状态：栏目按钮圆形发绿光（呼吸） */
-.category-item:not(.locked) .circle{box-shadow:0 0 12px rgba(34,197,94,.8),0 0 26px rgba(34,197,94,.4);animation:catGreenGlow 2.2s ease-in-out infinite}
-@keyframes catGreenGlow{0%,100%{box-shadow:0 0 8px rgba(34,197,94,.5),0 0 18px rgba(34,197,94,.25)}50%{box-shadow:0 0 16px rgba(34,197,94,.95),0 0 34px rgba(34,197,94,.55)}}
+/* 解锁状态：栏目按钮圆形发绿光（呼吸，低饱和） */
+.category-item:not(.locked) .circle{box-shadow:0 0 12px rgba(34,197,94,.5),0 0 26px rgba(34,197,94,.25);animation:catGreenGlow 2.2s ease-in-out infinite}
+@keyframes catGreenGlow{0%,100%{box-shadow:0 0 8px rgba(34,197,94,.3),0 0 18px rgba(34,197,94,.15)}50%{box-shadow:0 0 16px rgba(34,197,94,.6),0 0 34px rgba(34,197,94,.35)}}
 .xz-group{position:absolute;bottom:5px;left:25px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
 .xz-man{height:45px;width:auto;animation:xzFloat 3s ease-in-out infinite}
 .xz-level{font-size:.62rem;color:#000;font-weight:300;letter-spacing:1px;white-space:nowrap}
@@ -174,11 +174,11 @@ body{display:flex;flex-direction:column}
 .content-area .history-item{font-size:.78rem;line-height:1.6;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.4);font-family:"KaiTi","STKaiti","楷体",serif;display:flex}
 .content-area .history-item .hyear{flex-shrink:0;width:auto;margin-right:0.6em;color:rgba(255,255,255,.6);font-size:.7rem;font-family:sans-serif}
 .content-area .history-item .htext{text-align:left}
-/* 探索圆形图片（中央内容区显示，与诗词/今日同位置；直径 260px；外围绿色发光呼吸） */
-.explore-circle{position:relative;width:260px;height:260px;border-radius:50%;overflow:hidden;margin:10px auto;border:3px solid rgba(255,255,255,.65);box-shadow:0 0 16px rgba(34,197,94,.4),0 0 40px rgba(34,197,94,.25),0 8px 32px rgba(0,0,0,.5);background:#101c30;animation:exploreGlow 2.8s ease-in-out infinite}
+/* 探索圆形图片（中央内容区显示，与诗词/今日同位置；直径 260px；外围绿色发光呼吸，低饱和） */
+.explore-circle{position:relative;width:260px;height:260px;border-radius:50%;overflow:hidden;margin:10px auto;border:3px solid rgba(255,255,255,.65);box-shadow:0 0 16px rgba(34,197,94,.25),0 0 40px rgba(34,197,94,.15),0 8px 32px rgba(0,0,0,.5);background:#101c30;animation:exploreGlow 2.8s ease-in-out infinite}
 @keyframes exploreGlow{
-  0%,100%{box-shadow:0 0 12px rgba(34,197,94,.3),0 0 30px rgba(34,197,94,.18),0 8px 32px rgba(0,0,0,.5)}
-  50%{box-shadow:0 0 22px rgba(34,197,94,.65),0 0 60px rgba(34,197,94,.42),0 8px 32px rgba(0,0,0,.5)}
+  0%,100%{box-shadow:0 0 12px rgba(34,197,94,.2),0 0 30px rgba(34,197,94,.1),0 8px 32px rgba(0,0,0,.5)}
+  50%{box-shadow:0 0 22px rgba(34,197,94,.4),0 0 60px rgba(34,197,94,.25),0 8px 32px rgba(0,0,0,.5)}
 }
 .explore-circle img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .8s ease}
 .explore-circle .ec-status{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.85rem;letter-spacing:2px;text-shadow:0 1px 4px rgba(0,0,0,.6);background:rgba(10,15,30,.5);z-index:2}
