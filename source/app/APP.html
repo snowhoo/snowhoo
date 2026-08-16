@@ -298,7 +298,7 @@ body{display:flex;flex-direction:column}
 /* 锁遮罩：未解锁时半透明灰白遮罩 + 锁图标，禁用点击 */
 .task-quick-btn .lock-icon{width:10px;height:10px;flex-shrink:0;margin-left:3px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:none}
 .task-quick-btn.locked{cursor:not-allowed;filter:saturate(.35) brightness(.85);pointer-events:auto}
-.task-menu-dropdown{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:170px;padding:6px 0;display:none;z-index:10}
+.task-menu-dropdown{position:fixed;bottom:212px;left:15px;transform:none;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:170px;padding:6px 0;display:none;z-index:10002}
 .task-menu-dropdown.show{display:block}
 .task-item{display:flex;align-items:center;padding:7px 12px;font-size:.7rem;color:#333;line-height:1.4;gap:4px;white-space:nowrap}
 .task-item .task-dot{display:inline-block;width:5px;height:5px;min-width:0;border-radius:10px;flex-shrink:0;position:static;vertical-align:middle}
