@@ -28,6 +28,10 @@ body{display:flex;flex-direction:column}
 .image-area.yin ~ .welcome{color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5)}
 .image-area.yin ~ .welcome.active{color:#ff8c00}
 .image-area.yin ~ .almanac{color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+/* 发现按钮：探索下方靠左（fixed 视口），打开秘藏发现列表 */
+.discover-btn{position:fixed;bottom:98px;left:15px;z-index:7;font-size:.72rem;color:#3b82f6;background:rgba(255,255,255,.85);border:1px solid rgba(59,130,246,.4);border-radius:12px;padding:3px 12px;cursor:pointer;letter-spacing:2px;user-select:none;-webkit-user-select:none;line-height:1.4;transition:all .25s}
+.discover-btn:active{transform:scale(.94);opacity:.7}
+.image-area.yin ~ .discover-btn{background:rgba(20,34,60,.5);color:#93b4e8;border-color:rgba(59,130,246,.5)}
 
 /* 左上角圈字 */
 .top-left-badges{position:absolute;top:46px;left:16px;z-index:5;display:flex;gap:14px}
@@ -111,7 +115,7 @@ body{display:flex;flex-direction:column}
 .disc-item .relock-act{color:#93b4e8}
 .disc-item .relock-act:active{opacity:.6}
 .discover-foot{padding:10px 16px 14px;border-top:1px solid rgba(59,130,246,.3);font-size:.62rem;color:#8fa6c8;text-align:center;line-height:1.6;flex-shrink:0}
-.xz-man{cursor:pointer;pointer-events:auto}
+.xz-man{cursor:default;pointer-events:auto}
 
 /* ===== 底部面板：固定高度 ===== */
 .bottom-panel{position:relative;height:220px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;background:#fff url('xzbg.png') center/cover no-repeat;z-index:2}
@@ -290,16 +294,25 @@ body{display:flex;flex-direction:column}
 .task-quick-btn{display:none;height:22px;border-radius:11px;padding:0 7px;align-items:center;justify-content:center;font-size:.58rem;font-weight:400;cursor:pointer;transition:all .3s;vertical-align:middle;user-select:none;-webkit-user-select:none;line-height:1;flex-shrink:0;white-space:nowrap;position:relative}
 .task-quick-btn.auto{background:#22c55e;color:#fff;border:1px solid #fff}
 .task-quick-btn.onekey{background:#3b82f6;color:#fff;border:1px solid #fff}
-.task-quick-btn.upgrade{background:#22c55e;color:#fff;border:1px solid #fff;animation:xzUpgradeJump 1s ease-in-out infinite}
-/* 最高境界：金色静态，不再跳动 */
-.task-quick-btn.upgrade.max-level{background:#f59e0b;animation:none}
+/* 突破按钮：移到打坐人形丹田处，只显示无背景绿色箭头（文字隐藏，箭头由 ::after 绘制） */
+.task-quick-btn.upgrade{position:absolute;left:50%;margin-left:-11px;top:52%;width:22px;height:22px;background:none;border:none;box-shadow:none;padding:0;font-size:0;color:#22c55e;animation:xzUpgradeJump 1s ease-in-out infinite;z-index:2;pointer-events:auto}
+.task-quick-btn.upgrade::after{content:'↑';font-size:1.15rem;color:#22c55e;line-height:1;font-weight:700}
+/* 最高境界：金色箭头，不再跳动 */
+.task-quick-btn.upgrade.max-level{background:none;animation:none}
+.task-quick-btn.upgrade.max-level::after{color:#f59e0b}
 /* 境界提升按钮跳动动画 */
 @keyframes xzUpgradeJump{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 /* 锁遮罩：未解锁时半透明灰白遮罩 + 锁图标，禁用点击 */
 .task-quick-btn .lock-icon{width:10px;height:10px;flex-shrink:0;margin-left:3px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:none}
 .task-quick-btn.locked{cursor:not-allowed;filter:saturate(.35) brightness(.85);pointer-events:auto}
-.task-menu-dropdown{position:fixed;bottom:212px;left:15px;transform:none;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:170px;padding:6px 0;display:none;z-index:10002}
+.task-menu-dropdown{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:170px;padding:6px 0;display:none;z-index:10002}
 .task-menu-dropdown.show{display:block}
+/* 菜单底部：自动/一键勾选行（□ 选中形式；未解锁不选中，解锁后默认选中，点击即执行） */
+.task-menu-quick{display:flex;gap:8px;justify-content:center;padding:8px 12px 4px;border-top:1px solid #f0f0f0;margin-top:4px}
+.tq-item{display:inline-flex;align-items:center;gap:3px;font-size:.72rem;color:#999;cursor:pointer;user-select:none;-webkit-user-select:none;padding:3px 10px;border-radius:9px;background:#f5f5f5;transition:all .2s;line-height:1.3}
+.tq-item.on{color:#22c55e;background:rgba(34,197,94,.12)}
+.tq-item.busy{opacity:.6;pointer-events:none}
+.tq-item:active{transform:scale(.94)}
 .task-item{display:flex;align-items:center;padding:7px 12px;font-size:.7rem;color:#333;line-height:1.4;gap:4px;white-space:nowrap}
 .task-item .task-dot{display:inline-block;width:5px;height:5px;min-width:0;border-radius:10px;flex-shrink:0;position:static;vertical-align:middle}
 .task-item .task-check{color:#22c55e;flex-shrink:0;width:14px;text-align:center;font-size:.65rem;font-weight:700}
@@ -493,6 +506,8 @@ body{display:flex;flex-direction:column}
   <small>choose your journey</small>
   <span class="task-dot" id="exploreDot"></span>
 </div>
+<!-- 发现按钮：探索下方靠左，替换原"点击打坐人形打开发现" -->
+<div class="discover-btn" id="discoverBtn">发现</div>
 <div class="almanac locked" id="almanac">
   <div class="al-day" id="alDay"></div>
   <div class="al-body">
@@ -514,6 +529,7 @@ body{display:flex;flex-direction:column}
   <div class="xz-group">
     <div class="xz-level" id="xzLevel"></div>
     <img class="xz-man" src="xzman.png" alt="">
+    <span class="task-quick-btn upgrade" id="upgradeBtn" title="境界提升（消耗真气破境）">境界提升↑</span>
     <div class="points-badge" id="pointsBadge">✦ 0</div>
   </div>
   <div class="comment-user" id="commentUser">
@@ -525,11 +541,6 @@ body{display:flex;flex-direction:column}
   <div class="task-menu">
     <div class="auto-hint" id="autoHint"></div>
     <div class="task-menu-btn init-hidden" id="taskMenuBtn"></div>
-    <div class="task-quick-row">
-      <span class="task-quick-btn auto locked" id="autoBtn" title="自动">自动<svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
-      <span class="task-quick-btn onekey locked" id="oneKeyBtn" title="一键">一键<svg class="lock-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
-      <span class="task-quick-btn upgrade" id="upgradeBtn" title="境界提升（消耗真气破境）">境界提升↑</span>
-    </div>
     <div class="task-menu-dropdown" id="taskMenuDropdown"></div>
   </div>
 </div>
@@ -1451,6 +1462,7 @@ var GAME = {
       this._updateRunnerLock();
     }
     // 任务菜单点击切换（错误状态刷新，加载/保存中无操作）
+    // 弹出菜单时判断修炼：一键已解锁 → 按一键执行；仅自动已解锁 → 按自动执行（最初需求）
     document.getElementById('taskMenuBtn').addEventListener('click',function(e){
       if (GAME._autoMode || GAME._oneKeyMode) return; // 自动/一键修炼中屏蔽
       if (this.classList.contains('error') && !this.classList.contains('no-reload')) {
@@ -1460,33 +1472,36 @@ var GAME = {
       if (GAME.syncState !== 'idle') return; // 加载/保存中不响应
       if (this.classList.contains('no-reload')) return; // 未登录状态不响应菜单
       e.stopPropagation();
-      document.getElementById('taskMenuDropdown').classList.toggle('show');
+      var dd = document.getElementById('taskMenuDropdown');
+      var opening = !dd.classList.contains('show');
+      dd.classList.toggle('show');
+      if (opening) {
+        // 弹出菜单即执行：一键解锁按一键，否则自动解锁按自动；均未解锁仅弹菜单（勾选点击提示解锁）
+        if (GAME.oneKeyUnlocked) GAME.oneKeyCultivate();
+        else if (GAME.autoUnlocked) GAME.autoCultivate();
+      }
     });
     // 点击其他地方关闭任务菜单
     document.addEventListener('click',function(){
       document.getElementById('taskMenuDropdown').classList.remove('show');
     });
-    // 快捷修炼按钮：未解锁 → 尝试解锁；已解锁 → 自动/一键修炼
-    var bindQuick = function(id, feature) {
-      var el = document.getElementById(id);
-      if (!el) return;
-      el.addEventListener('click', function(e) {
+    // 菜单内自动/一键勾选：点击激活解锁/回收提示——未解锁 → 提示是否解锁；已解锁 → 提示是否回收（修炼执行由"弹出菜单时"判断）
+    var dropdown = document.getElementById('taskMenuDropdown');
+    if (dropdown) {
+      dropdown.addEventListener('click', function(e) {
+        var t = e.target;
+        if (!t || !t.closest || !t.closest('.tq-item')) return;
         e.stopPropagation();
         if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
         if (GAME.syncState !== 'idle') return;
+        var feature = t.closest('.tq-item').id === 'tqOneKey' ? 'oneKey' : 'auto';
         if (!GAME[feature === 'auto' ? 'autoUnlocked' : 'oneKeyUnlocked']) {
-          GAME.unlockFeature(feature);
+          GAME.unlockFeature(feature);   // 未解锁 → 提示是否解锁
           return;
         }
-        if (feature === 'auto') {
-          GAME.autoCultivate();
-        } else {
-          GAME.oneKeyCultivate();
-        }
+        GAME.relockFeature(feature);     // 已解锁 → 提示是否回收
       });
-    };
-    bindQuick('autoBtn', 'auto');
-    bindQuick('oneKeyBtn', 'oneKey');
+    }
     // 升级按钮：无锁遮罩，点击直接调用 upgradeLevel（内部判断真气是否足够）
     var upgradeBtn = document.getElementById('upgradeBtn');
     if (upgradeBtn) {
@@ -2040,7 +2055,12 @@ var GAME = {
         + '<span class="task-count">' + (max - remaining) + '/' + max + '</span>'
         + '</div>';
     }
-    dropdown.innerHTML = html;
+    dropdown.innerHTML = html
+      // 底部：自动/一键勾选行（未解锁 ☐、解锁后 ☑；解锁点击即执行对应修炼；修炼中显示进行中）
+      + '<div class="task-menu-quick">'
+      + '<span class="tq-item' + (this.autoUnlocked ? ' on' : '') + (this._autoMode ? ' busy' : '') + '" id="tqAuto">' + (this.autoUnlocked ? '☑' : '☐') + ' 自动' + (this._autoMode ? '（修炼中）' : '') + '</span>'
+      + '<span class="tq-item' + (this.oneKeyUnlocked ? ' on' : '') + (this._oneKeyMode ? ' busy' : '') + '" id="tqOneKey">' + (this.oneKeyUnlocked ? '☑' : '☐') + ' 一键' + (this._oneKeyMode ? '（修炼中）' : '') + '</span>'
+      + '</div>';
     btn.textContent = allDone ? '今日修炼已毕' : '今日修炼任务';
     btn.classList.toggle('completed', allDone);
   },
@@ -3495,6 +3515,7 @@ var GAME = {
         self.hideModeMask();
         self.setSyncState('idle');
         self.updateTaskMenuBtn();
+        self.updateTaskMenu();   // 刷新菜单内勾选行与任务进度
         var h2 = document.getElementById('autoHint');
         if (h2) {
           h2.textContent = '自动修炼完成！';
@@ -3527,12 +3548,14 @@ var GAME = {
             self._autoPanelKey = null;
             self.hideModeMask();
             self.setSyncState('idle');
+            self.updateTaskMenu();
             var h3 = document.getElementById('autoHint');
             if (h3) h3.style.display = 'none';
             self.updateBadge();
             self.updateTaskDots();
             return;
           }
+          self.updateTaskMenu();   // 自动修炼每步完成：刷新菜单内任务进度与勾选状态
           setTimeout(step, 120);
         });
       };
@@ -3604,6 +3627,7 @@ var GAME = {
         self.hideModeMask();
         self.setSyncState('idle');
         self.updateTaskMenuBtn();
+        self.updateTaskMenu();
         var h0 = document.getElementById('autoHint');
         if (h0) {
           h0.textContent = '今日已无可修炼任务';
@@ -3639,6 +3663,7 @@ var GAME = {
         if (ok) {
           self.setSyncState('idle');
           self.updateTaskMenuBtn();
+          self.updateTaskMenu();   // 一键完成后刷新菜单内勾选行与任务进度
           var h1 = document.getElementById('autoHint');
           if (h1) {
             h1.textContent = '+' + totalGain + ' 真气，一键修炼完成！';
@@ -4285,12 +4310,12 @@ commentOverlay.addEventListener('click', function(e) {
   applyTitles();
 })();
 
-// 打坐人形：点击打开发现列表（已解锁显示名称可回收重锁，未解锁显示？？可破除封印）
+// 发现按钮：点击打开发现列表（替换原"点击打坐人形打开发现"；人形不再承担该功能）
 // 关闭用 document 事件委托（弹层 HTML 位于本脚本之后，直接绑定会取到 null）
 (function(){
-  var man = document.querySelector('.xz-man');
-  if (man) {
-    man.addEventListener('click', function(){
+  var btn = document.getElementById('discoverBtn');
+  if (btn) {
+    btn.addEventListener('click', function(){
       if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
       GAME.openDiscover();
     });
