@@ -28,10 +28,10 @@ body{display:flex;flex-direction:column}
 .image-area.yin ~ .welcome{color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5)}
 .image-area.yin ~ .welcome.active{color:#ff8c00}
 .image-area.yin ~ .almanac{color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5)}
-/* 发现按钮：底边 = 发现.png 底边 - 30（图片 375×1531，显示宽 50 → 高≈204；按钮底边距视口顶=204-30=174 → bottom=100vh-174）；置于发现.png 前方（z9）并随其同步摆动 */
-.discover-btn{position:fixed;bottom:calc(100vh - 174px);left:44px;z-index:9;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;color:#3b82f6;background:transparent;border:1px solid rgba(59,130,246,.4);padding:0;cursor:pointer;letter-spacing:1px;user-select:none;-webkit-user-select:none;line-height:1.2;transition:all .25s;transform-origin:top center;animation:faxianSwing 5s ease-in-out infinite}
+/* 发现按钮：底边 = 发现.png 底边 - 30（图片 375×1531，显示宽 50 → 高≈204；按钮底边距视口顶=204-30=174 → bottom=100vh-174）；完全不可见（无文字/边框/背景），点击事件保留，随 png 同步摆动 */
+.discover-btn{position:fixed;bottom:calc(100vh - 174px);left:44px;z-index:9;width:38px;height:38px;border-radius:50%;font-size:0;color:transparent;background:transparent;border:none;padding:0;cursor:pointer;user-select:none;-webkit-user-select:none;transform-origin:top center;animation:faxianSwing 5s ease-in-out infinite}
 .discover-btn:active{transform:scale(.94);opacity:.7}
-.image-area.yin ~ .discover-btn{background:transparent;color:#93b4e8;border-color:rgba(59,130,246,.5)}
+.image-area.yin ~ .discover-btn{background:transparent;color:transparent;border:none}
 
 /* 左上角圈字 */
 .top-left-badges{position:absolute;top:46px;left:16px;z-index:5;display:flex;gap:14px}
