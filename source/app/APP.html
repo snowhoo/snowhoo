@@ -131,6 +131,8 @@ body{display:flex;flex-direction:column}
 .year-bar-text:active{opacity:.6}
 
 /* 分类圆形按钮 */
+/* 左上角"发现"装饰图：left 50px / top 0 / 宽 50px / 高按比例缩放（不挡点击） */
+.faxian-float{position:fixed;top:0;left:50px;width:50px;height:auto;z-index:8;pointer-events:none}
 /* 栏目按钮：钉在背景图容器上散落分布（image-area 内，阳=上半屏 / 阴=全屏自动跟随） */
 .category-list{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:3}
 .category-list.hide{display:none}
@@ -546,6 +548,9 @@ body{display:flex;flex-direction:column}
 </div>
 <!-- 修炼模式全屏透明遮罩（自动/一键修炼期间显示，覆盖所有页面功能） -->
 <div id="modeMask"></div>
+
+<!-- 左上角"发现"装饰图：left 50px / top 0 / 宽 50px / 高按比例 -->
+<img class="faxian-float" src="发现.png" alt="发现">
 
 <!-- 评论弹窗 -->
 <div class="comment-overlay" id="commentOverlay">
