@@ -67,15 +67,6 @@ layout: false
         .player-container { background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9; box-shadow: var(--shadow-md); border: 1px solid var(--border); position: sticky; top: 0; z-index: 40; }
         /* 未播放时的占位（播放器常驻显示）：中间 ▶️ 按钮，先选集再点击播放 */
         .player-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: #000; color: #8a8a8a; font-size: 14px; letter-spacing: 1px; z-index: 2; }
-        /* 自定义全屏（App 锁竖屏：全屏时按视频尺寸旋转适配，横视频旋转90°铺满） */
-        .player-fs-btn{position:absolute;top:8px;right:8px;z-index:3;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.35);color:#fff;font-size:.78rem;padding:4px 10px;border-radius:8px;cursor:pointer;display:none}
-        .player-fs-btn.show{display:block}
-        #detailPlayer::-webkit-media-controls-fullscreen-button{display:none!important}
-        .fs-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:9999;display:none;align-items:center;justify-content:center}
-        .fs-mask.show{display:flex}
-        .fs-mask .fs-close{position:absolute;top:10px;right:12px;z-index:3;background:rgba(255,255,255,.18);border:none;color:#fff;font-size:.85rem;padding:8px 14px;border-radius:9px;cursor:pointer}
-        .fs-mask video{max-width:100%;max-height:100%;object-fit:contain}
-        .fs-mask video.rotate90{transform:rotate(90deg)}
         .big-play-btn { pointer-events: auto; width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.14); border: 2px solid rgba(255,255,255,.55); color: #fff; font-size: 20px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0 0 0 4px; transition: all .15s; }
         .big-play-btn:active { transform: scale(.92); }
         .big-play-btn:disabled { opacity: .35; cursor: not-allowed; }
@@ -218,7 +209,6 @@ layout: false
             <div class="player-layout">
                 <div class="player-container">
                     <video id="detailPlayer" style="width:100%;height:100%;display:block" controls playsinline></video>
-                    <button type="button" id="playerFsBtn" class="player-fs-btn" aria-label="全屏">⛶ 全屏</button>
                     <div class="player-placeholder" id="playerPlaceholder">
                         <button type="button" class="big-play-btn" id="bigPlayBtn" aria-label="播放当前选集" disabled>▶</button>
                         <div class="player-placeholder-tip">先选集，再点击播放</div>
@@ -280,9 +270,6 @@ layout: false
   </div>
 </div>
 
-<!-- 自定义全屏层（App 锁竖屏：全屏按视频尺寸旋转适配，横视频旋转90°铺满） -->
-<div class="fs-mask" id="fsMask"><button type="button" class="fs-close" id="fsClose">✕ 退出全屏</button></div>
-
 <script>
 (function(){
     // 设置数据文件基路径（指向 sevencolor/3 目录）
@@ -319,66 +306,6 @@ layout: false
     const homeContent = document.getElementById('homeContent');
     const homePagination = document.getElementById('homePagination');
     const detailPlayer = document.getElementById('detailPlayer');
-    // ===== 自定义全屏（App 锁竖屏：全屏时按视频尺寸旋转适配，横视频旋转90°铺满；竖视频正常） =====
-    const playerFsBtn = document.getElementById('playerFsBtn');
-    const fsMask = document.getElementById('fsMask');
-    const fsClose = document.getElementById('fsClose');
-    let fsOn = false;
-    function enterFs(){
-        fsOn = true;
-        fsMask.classList.add('show');
-        fsMask.appendChild(detailPlayer);       // 移入全屏层（播放不中断）
-        fitFsVideo();
-    }
-    function exitFs(){
-        if (!fsOn) return;
-        fsOn = false;
-        const pc = document.querySelector('.player-container');
-        if (pc && detailPlayer.parentNode !== pc) pc.insertBefore(detailPlayer, pc.firstChild); // 移回原位置
-        detailPlayer.style.width = '100%';
-        detailPlayer.style.height = '100%';
-        detailPlayer.style.transform = '';
-        fsMask.classList.remove('show');
-    }
-    function fitFsVideo(){
-        if (!fsOn) return;
-        const W = window.innerWidth, H = window.innerHeight;
-        const vw = detailPlayer.videoWidth, vh = detailPlayer.videoHeight;
-        // 视频尺寸未就绪（部分源 loadedmetadata 时仍为 0）：暂不旋转，避免误把竖屏内容横着显示
-        if (!vw || !vh) {
-            detailPlayer.style.width = '100%';
-            detailPlayer.style.height = '100%';
-            detailPlayer.style.transform = '';
-            return;
-        }
-        if (vw > vh) { // 真横视频 → 旋转90°适配竖屏窗口（完整显示，等比内衬居中）
-            const scale = Math.min(H / vh, W / vw);
-            detailPlayer.style.width = (vh * scale) + 'px';
-            detailPlayer.style.height = (vw * scale) + 'px';
-            detailPlayer.style.transform = 'rotate(90deg)';
-        } else { // 竖视频 → 竖着铺满
-            detailPlayer.style.width = '100%';
-            detailPlayer.style.height = 'auto';
-            detailPlayer.style.transform = '';
-        }
-    }
-    if (playerFsBtn) playerFsBtn.addEventListener('click', function(e){ e.stopPropagation(); enterFs(); });
-    if (fsClose) fsClose.addEventListener('click', exitFs);
-    if (fsMask) fsMask.addEventListener('click', function(e){ if (e.target === fsMask) exitFs(); });
-    window.addEventListener('resize', function(){ if (fsOn) fitFsVideo(); });
-    detailPlayer.addEventListener('loadedmetadata', function(){ if (fsOn) fitFsVideo(); });
-    detailPlayer.addEventListener('loadeddata', function(){ if (fsOn) fitFsVideo(); });
-    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') exitFs(); });
-    // 播放中显示全屏按钮（全屏按钮本身在全屏层之外，仅播放时可见）
-    function updateFsBtn(){
-        if (playerFsBtn) playerFsBtn.classList.toggle('show', !!(detailPlayer.src && !detailPlayer.paused));
-    }
-    detailPlayer.addEventListener('play', updateFsBtn);
-    detailPlayer.addEventListener('pause', updateFsBtn);
-    detailPlayer.addEventListener('ended', function(){ if (playerFsBtn) playerFsBtn.classList.remove('show'); });
-    // 退出播放器时若在全屏则一并退出（不中断原退出逻辑；用 DOM 查询避免 const 顺序问题）
-    const _epBtn = document.getElementById('exitPlayerBtn');
-    if (_epBtn) _epBtn.addEventListener('click', function(){ exitFs(); });
     const currentEpTitle = document.getElementById('currentEpTitle');
     const epMenuBtn = document.getElementById('epMenuBtn');
     const epMenu = document.getElementById('epMenu');
