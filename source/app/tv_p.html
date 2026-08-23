@@ -343,8 +343,15 @@ layout: false
     function fitFsVideo(){
         if (!fsOn) return;
         const W = window.innerWidth, H = window.innerHeight;
-        const vw = detailPlayer.videoWidth || 16, vh = detailPlayer.videoHeight || 9;
-        if (vw > vh) { // 横视频 → 旋转90°适配竖屏窗口（宽=屏高、高=屏宽，等比缩放居中）
+        const vw = detailPlayer.videoWidth, vh = detailPlayer.videoHeight;
+        // 视频尺寸未就绪（部分源 loadedmetadata 时仍为 0）：暂不旋转，避免误把竖屏内容横着显示
+        if (!vw || !vh) {
+            detailPlayer.style.width = '100%';
+            detailPlayer.style.height = '100%';
+            detailPlayer.style.transform = '';
+            return;
+        }
+        if (vw > vh) { // 真横视频 → 旋转90°适配竖屏窗口（完整显示，等比内衬居中）
             const scale = Math.min(H / vh, W / vw);
             detailPlayer.style.width = (vh * scale) + 'px';
             detailPlayer.style.height = (vw * scale) + 'px';
@@ -360,6 +367,7 @@ layout: false
     if (fsMask) fsMask.addEventListener('click', function(e){ if (e.target === fsMask) exitFs(); });
     window.addEventListener('resize', function(){ if (fsOn) fitFsVideo(); });
     detailPlayer.addEventListener('loadedmetadata', function(){ if (fsOn) fitFsVideo(); });
+    detailPlayer.addEventListener('loadeddata', function(){ if (fsOn) fitFsVideo(); });
     document.addEventListener('keydown', function(e){ if (e.key === 'Escape') exitFs(); });
     // 播放中显示全屏按钮（全屏按钮本身在全屏层之外，仅播放时可见）
     function updateFsBtn(){
