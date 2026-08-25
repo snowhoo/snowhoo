@@ -134,20 +134,14 @@ body{display:flex;flex-direction:column}
 /* 左上角"发现"装饰图：left 40px / top 0 / 宽 50px / 高按比例缩放（不挡点击）；以顶部中间为圆心钟摆式轻微摆动 */
 .faxian-float{position:fixed;top:0;left:40px;width:50px;height:auto;z-index:8;pointer-events:none;transform-origin:top center;animation:faxianSwing 5s ease-in-out infinite}
 @keyframes faxianSwing{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
-/* 栏目按钮：钉在背景图容器上散落分布（image-area 内，阳=上半屏 / 阴=全屏自动跟随） */
-.category-list{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:3}
+/* 栏目按钮：底部弹性容器（手机 APP 图标栏样式，均匀分布） */
+.category-list{position:absolute;left:0;right:0;bottom:104px;display:flex;justify-content:space-around;align-items:center;padding:10px 6px;pointer-events:none;z-index:5}
 .category-list.hide{display:none}
-.category-item{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;min-width:0;pointer-events:auto;opacity:.9}
+.category-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;min-width:0;pointer-events:auto;opacity:.95}
 .category-item:active{transform:scale(.88)}
-.category-item .circle{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.15);transition:transform .25s,box-shadow .25s;background:rgba(255,255,255,.5) url('./ann.png') center/cover no-repeat}
-.category-item.active .circle{box-shadow:0 6px 20px rgba(0,0,0,.25)}
-.category-item .label{font-size:.6rem;color:#fff;font-weight:400;text-shadow:0 1px 4px rgba(0,0,0,.6);white-space:nowrap;opacity:.55}
-/* 五个按钮散落位置（避开左上徽章/右上LOGO/左下探索/右下日历） */
-#storyBtn{left:12%;top:16%}
-#yeduBtn{left:68%;top:18%}
-#zjszBtn{left:44%;top:44%}
-#newsBtn{left:14%;top:58%}
-#tvBtn{left:70%;top:60%}
+.category-item .circle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.18);transition:transform .25s,box-shadow .25s;background:rgba(255,255,255,.5) url('./ann.png') center/cover no-repeat;border:1px solid rgba(255,255,255,.35)}
+.category-item.active .circle{box-shadow:0 6px 20px rgba(0,0,0,.28)}
+.category-item .label{font-size:.62rem;color:#fff;font-weight:500;text-shadow:0 1px 4px rgba(0,0,0,.7);white-space:nowrap;opacity:.88}
 /* 栏目锁定：参照自动修炼（灰白滤镜 + 右上角红色小锁） */
 .category-item .lock-icon{position:absolute;top:0;right:2px;width:12px;height:12px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:none}
 .category-item.locked{cursor:not-allowed;filter:saturate(.35) brightness(.85)}
@@ -475,33 +469,30 @@ body{display:flex;flex-direction:column}
   </div>
   <div class="top-right-logo" id="topRightLogo"><img src="logo.png" alt="logo"></div>
   <div class="logo-mini" id="logoMini"><svg viewBox="0 0 24 24"><path d="M15 4L7 12l8 8"/></svg></div>
-  <div class="category-list" id="categoryList">
-    <button class="category-item active" id="storyBtn" data-url="https://snowhoo.net/app_n/reader.html" title="红光秘境" style="--cat-color:#e94560">
-      <span class="circle"></span>
-	  <span class="label">红光秘境</span>
-      </svg>
-    </button>
-    <button class="category-item" id="yeduBtn" data-url="https://snowhoo.net/app_n/yedu_p.html" title="心灵秘境" style="--cat-color:#764ba2">
-      <span class="circle"></span>
-      <span class="label">心灵秘境</span>
-      </svg>
-    </button>
-    <button class="category-item" id="zjszBtn" data-url="https://snowhoo.net/app_n/zjsz_p.html" title="视界秘境" style="--cat-color:#3b82f6">
-      <span class="circle"></span>
-      <span class="label">视界秘境</span>
-      </svg>
-    </button>
-    <button class="category-item" id="newsBtn" data-url="https://snowhoo.net/app_n/DaliyNews_p.html" title="正能光量小世界" style="--cat-color:#ff8c00">
-      <span class="circle"></span>
-      <span class="label">正能光量小世界</span>
-      </svg>
-    </button>
-    <button class="category-item" id="tvBtn" data-url="https://snowhoo.net/app_n/tv_p.html" title="光怪陆离小世界" style="--cat-color:#22c55e">
-      <span class="circle"></span>
-      <span class="label">光怪陆离小世界</span>
-      </svg>
-    </button>
-  </div>
+</div>
+
+<!-- 五个栏目按钮：body 层底部弹性容器（手机 APP 图标栏样式，fixed 视口定位，不随背景/阴阳变化） -->
+<div class="category-list" id="categoryList">
+  <button class="category-item active" id="storyBtn" data-url="https://snowhoo.net/app_n/reader.html" title="红光秘境" style="--cat-color:#e94560">
+    <span class="circle"></span>
+    <span class="label">红光秘境</span>
+  </button>
+  <button class="category-item" id="yeduBtn" data-url="https://snowhoo.net/app_n/yedu_p.html" title="心灵秘境" style="--cat-color:#764ba2">
+    <span class="circle"></span>
+    <span class="label">心灵秘境</span>
+  </button>
+  <button class="category-item" id="zjszBtn" data-url="https://snowhoo.net/app_n/zjsz_p.html" title="视界秘境" style="--cat-color:#3b82f6">
+    <span class="circle"></span>
+    <span class="label">视界秘境</span>
+  </button>
+  <button class="category-item" id="newsBtn" data-url="https://snowhoo.net/app_n/DaliyNews_p.html" title="正能光量小世界" style="--cat-color:#ff8c00">
+    <span class="circle"></span>
+    <span class="label">正能光量小世界</span>
+  </button>
+  <button class="category-item" id="tvBtn" data-url="https://snowhoo.net/app_n/tv_p.html" title="光怪陆离小世界" style="--cat-color:#22c55e">
+    <span class="circle"></span>
+    <span class="label">光怪陆离小世界</span>
+  </button>
 </div>
 
 <!-- 探索 / 日历 / 收起边条：body 层直接子级（fixed 视口定位），避免被 image-area 层叠上下文困在 z5 之下 -->
@@ -561,66 +552,14 @@ body{display:flex;flex-direction:column}
   document.getElementById('yearText').textContent = '把梦想写进日程 [ ' + yr + '已过' + Math.round(pct * 100) + '% ]';
 })();
 
-// 背景图：默认 bg.jpg（用户放入 APP 文件夹即生效；缺失时回退随机图，避免空白）
+// 背景图：初始直接使用 picsum 随机图（crossOrigin=anonymous 保证可被 canvas 捕获保存）
 var bgImgEl = document.getElementById('bgImage');
 function setDefaultBg() {
-  bgImgEl.crossOrigin = '';
-  bgImgEl.onload = null;
-  bgImgEl.src = './bg.jpg';
-  bgImgEl.onerror = function() {
-    // bg.jpg 缺失 → 回退随机图（crossOrigin=anonymous 保证可被 canvas 捕获保存）
-    bgImgEl.crossOrigin = 'anonymous';
-    bgImgEl.onerror = null;
-    bgImgEl.src = 'https://picsum.photos/1280/960?random=' + Date.now();
-  };
+  bgImgEl.crossOrigin = 'anonymous';
+  bgImgEl.onerror = null;
+  bgImgEl.src = 'https://picsum.photos/1280/960?random=' + Date.now();
 }
 setDefaultBg();
-
-// 栏目按钮精确贴背景图：按钮锚点固定在【图片原始内容】的百分比位置，
-// 按 cover 裁切偏移换算回容器坐标（随换图/缩放/阴阳切换自动重算）
-(function(){
-  var area = document.querySelector('.image-area');
-  var img  = document.getElementById('bgImage');
-  var list = document.getElementById('categoryList');
-  if (!area || !img || !list) return;
-  // 锚点：相对图片原始尺寸的百分比（x=左起, y=上起），即按钮左上角钉住图片上的点；
-  // dx/dy：额外像素偏移（相对容器/屏幕，正值=右移/下移）；yinDx/yinDy：阴模式额外偏移
-  var ANCH = {
-    storyBtn: {x:12, y:16, dx:85, dy:65, yinDx:20, yinDy:10},
-    yeduBtn:  {x:68, y:18, dx:20, dy:170, yinDy:40},
-    zjszBtn:  {x:44, y:44, dx:-50, dy:55, yinDx:-15, yinDy:10},
-    newsBtn:  {x:14, y:58, dx:130, dy:135, yinDx:30, yinDy:-30},
-    tvBtn:    {x:70, y:60, dx:35, dy:25}
-  };
-  function place() {
-    var iw = img.naturalWidth, ih = img.naturalHeight;
-    if (!iw || !ih) return;
-    var cw = area.clientWidth, ch = area.clientHeight;
-    if (!cw || !ch) return;
-    // cover 等比缩放：scale 取较大者，多余部分两侧裁切（居中）
-    var scale = Math.max(cw / iw, ch / ih);
-    var dispW = iw * scale, dispH = ih * scale;
-    var offX = (cw - dispW) / 2, offY = (ch - dispH) / 2;
-    var isYin = area.classList.contains('yin');
-    for (var id in ANCH) {
-      var el = document.getElementById(id);
-      if (!el) continue;
-      var a = ANCH[id];
-      // 锚点为按钮中心：宽度随文字自适应，但中心位置恒定不跳
-      var cx = offX + (a.x / 100) * iw * scale + (a.dx || 0) + (isYin ? (a.yinDx || 0) : 0);
-      var cy = offY + (a.y / 100) * ih * scale + (a.dy || 0) + (isYin ? (a.yinDy || 0) : 0);
-      el.style.left = (cx - (el.offsetWidth || 0) / 2) + 'px';
-      el.style.top  = (cy - (el.offsetHeight || 0) / 2) + 'px';
-    }
-  }
-  img.addEventListener('load', place);          // 换图（bg.jpg / 探索随机图）完成后
-  window.addEventListener('resize', place);     // 窗口尺寸变化
-  if (window.ResizeObserver) new ResizeObserver(place).observe(area); // 阴阳切换等容器尺寸变化
-  if (window.MutationObserver) new MutationObserver(place).observe(area, {attributes:true, attributeFilter:['class']}); // 阴模式偏移切换
-  if (img.complete) place();
-  setTimeout(place, 300);                        // 兜底（图片缓存未触发 load）
-  window.__placeCats = place;                    // 供文字切换（???/原名）后重新居中定位
-})();
 
 // 打开诗词/今日/星象/日程/探索时隐藏五个栏目按钮（MutationObserver 监听面板状态 class 自动切换）
 (function(){
