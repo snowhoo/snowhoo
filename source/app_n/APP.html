@@ -135,7 +135,7 @@ body{display:flex;flex-direction:column}
 .faxian-float{position:fixed;top:0;left:40px;width:50px;height:auto;z-index:8;pointer-events:none;transform-origin:top center;animation:faxianSwing 5s ease-in-out infinite}
 @keyframes faxianSwing{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
 /* 栏目按钮：底部弹性容器（手机 APP 图标栏样式，均匀分布） */
-.category-list{position:absolute;left:0;right:0;bottom:104px;display:flex;justify-content:space-around;align-items:center;padding:10px 6px;pointer-events:none;z-index:5}
+.category-list{position:absolute;left:0;right:0;bottom:904px;display:flex;justify-content:space-around;align-items:center;padding:10px 6px;pointer-events:none;z-index:5}
 .category-list.hide{display:none}
 .category-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;min-width:0;pointer-events:auto;opacity:.95}
 .category-item:active{transform:scale(.88)}
@@ -473,25 +473,25 @@ body{display:flex;flex-direction:column}
 
 <!-- 五个栏目按钮：body 层底部弹性容器（手机 APP 图标栏样式，fixed 视口定位，不随背景/阴阳变化） -->
 <div class="category-list" id="categoryList">
-  <button class="category-item active" id="storyBtn" data-url="https://snowhoo.net/app_n/reader.html" title="红光秘境" style="--cat-color:#e94560">
+  <button class="category-item active" id="storyBtn" data-url="https://snowhoo.net/app_n/reader.html" title="小红故事" style="--cat-color:#e94560">
     <span class="circle"></span>
-    <span class="label">红光秘境</span>
+    <span class="label">小红故事</span>
   </button>
-  <button class="category-item" id="yeduBtn" data-url="https://snowhoo.net/app_n/yedu_p.html" title="心灵秘境" style="--cat-color:#764ba2">
+  <button class="category-item" id="yeduBtn" data-url="https://snowhoo.net/app_n/yedu_p.html" title="夜读" style="--cat-color:#764ba2">
     <span class="circle"></span>
-    <span class="label">心灵秘境</span>
+    <span class="label">夜读</span>
   </button>
-  <button class="category-item" id="zjszBtn" data-url="https://snowhoo.net/app_n/zjsz_p.html" title="视界秘境" style="--cat-color:#3b82f6">
+  <button class="category-item" id="zjszBtn" data-url="https://snowhoo.net/app_n/zjsz_p.html" title="照见苏州" style="--cat-color:#3b82f6">
     <span class="circle"></span>
-    <span class="label">视界秘境</span>
+    <span class="label">照见苏州</span>
   </button>
-  <button class="category-item" id="newsBtn" data-url="https://snowhoo.net/app_n/DaliyNews_p.html" title="正能光量小世界" style="--cat-color:#ff8c00">
+  <button class="category-item" id="newsBtn" data-url="https://snowhoo.net/app_n/DaliyNews_p.html" title="新闻" style="--cat-color:#ff8c00">
     <span class="circle"></span>
-    <span class="label">正能光量小世界</span>
+    <span class="label">新闻</span>
   </button>
-  <button class="category-item" id="tvBtn" data-url="https://snowhoo.net/app_n/tv_p.html" title="光怪陆离小世界" style="--cat-color:#22c55e">
+  <button class="category-item" id="tvBtn" data-url="https://snowhoo.net/app_n/tv_p.html" title="播霸" style="--cat-color:#22c55e">
     <span class="circle"></span>
-    <span class="label">光怪陆离小世界</span>
+    <span class="label">播霸</span>
   </button>
 </div>
 
