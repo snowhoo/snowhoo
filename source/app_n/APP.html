@@ -136,8 +136,8 @@ body{display:flex;flex-direction:column}
 /* 左上角"发现"装饰图：left 40px / top 0 / 宽 50px / 高按比例缩放（不挡点击）；以顶部中间为圆心钟摆式轻微摆动 */
 .faxian-float{position:fixed;top:0;left:40px;width:50px;height:auto;z-index:8;pointer-events:none;transform-origin:top center;animation:faxianSwing 5s ease-in-out infinite}
 @keyframes faxianSwing{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
-/* 栏目按钮：底部弹性容器（一排 4 个，多出自动换行） */
-.category-list{position:absolute;left:0;right:0;bottom:444px;display:flex;flex-wrap:wrap;justify-content:space-around;align-items:center;padding:10px 6px;pointer-events:none;z-index:5}
+/* 栏目按钮：顶部定位（原 bottom:444 位置整体下移 30：顶=100vh-414-按钮高84≈100vh-498），一排 4 个，换行与上行同列对齐 */
+.category-list{position:absolute;left:0;right:0;top:calc(100vh - 498px);display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:center;padding:10px 6px;pointer-events:none;z-index:5}
 .category-list.hide{display:none}
 .category-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;min-width:0;pointer-events:auto;opacity:.95;flex:0 0 25%}
 .category-item:active{transform:scale(.88)}
@@ -155,7 +155,7 @@ body{display:flex;flex-direction:column}
 
 /* 评论登录头像 */
 /* 评论登录用户区域 */
-.comment-user{position:fixed;bottom:67px;left:15px;z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px}
+.comment-user{position:fixed;bottom:57px;left:15px;z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px}
 .comment-user .comment-avatar{width:36px;height:36px;border-radius:50%;cursor:pointer;border:1.5px solid rgba(0,0,0,.15);box-shadow:0 2px 8px rgba(0,0,0,.1);transition:border-color .3s;background:rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;overflow:hidden}
 .comment-user .comment-avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .comment-user .comment-avatar svg{width:20px;height:20px;fill:none;stroke:#888;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
