@@ -17,7 +17,9 @@ body{display:flex;flex-direction:column}
 
 /* ===== 图片区域：自适应填充剩余空间 ===== */
 .image-area{position:relative;flex:1;min-height:0;overflow:hidden;background:#1a1a1a}
-.image-area img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .6s ease;filter:blur(6px) saturate(1.05);opacity:.9}
+.image-area img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .6s ease}
+/* 磨砂半透明：仅面板（诗词/今日/星象/日程）打开时生效（只作用于背景图，不影响 logo 等） */
+.image-area.frost #bgImage{filter:blur(6px) saturate(1.05);opacity:.9}
 .image-area .gradient{position:absolute;bottom:0;left:0;right:0;height:50%;background:linear-gradient(transparent,rgba(0,0,0,.45));pointer-events:none}
 .image-area .gradient-top{position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(rgba(0,0,0,.45),transparent);pointer-events:none}
 .welcome{position:fixed;bottom:150px;left:15px;color:#333;font-size:1.6rem;font-weight:300;letter-spacing:2px;text-shadow:none;cursor:pointer;animation:welcomePulse 2.5s ease-in-out infinite;z-index:7;transition:all .35s ease}
@@ -135,7 +137,7 @@ body{display:flex;flex-direction:column}
 .faxian-float{position:fixed;top:0;left:40px;width:50px;height:auto;z-index:8;pointer-events:none;transform-origin:top center;animation:faxianSwing 5s ease-in-out infinite}
 @keyframes faxianSwing{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
 /* 栏目按钮：底部弹性容器（手机 APP 图标栏样式，均匀分布） */
-.category-list{position:absolute;left:0;right:0;bottom:404px;display:flex;justify-content:space-around;align-items:center;padding:10px 6px;pointer-events:none;z-index:5}
+.category-list{position:absolute;left:0;right:0;bottom:444px;display:flex;justify-content:space-around;align-items:center;padding:10px 6px;pointer-events:none;z-index:5}
 .category-list.hide{display:none}
 .category-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;min-width:0;pointer-events:auto;opacity:.95}
 .category-item:active{transform:scale(.88)}
@@ -145,17 +147,7 @@ body{display:flex;flex-direction:column}
 /* 栏目锁定：参照自动修炼（灰白滤镜 + 右上角红色小锁） */
 .category-item .lock-icon{position:absolute;top:0;right:2px;width:12px;height:12px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:none}
 .category-item.locked{cursor:not-allowed;filter:saturate(.35) brightness(.85)}
-/* 解锁状态：按栏目色 box-shadow 呼吸发光（原发光方式；红/紫/蓝/橙/绿） */
-.category-item:not(.locked) .circle{animation:catGlowRed 2.2s ease-in-out infinite}
-#yeduBtn:not(.locked) .circle{animation:catGlowPurple 2.2s ease-in-out infinite}
-#zjszBtn:not(.locked) .circle{animation:catGlowBlue 2.2s ease-in-out infinite}
-#newsBtn:not(.locked) .circle{animation:catGlowOrange 2.2s ease-in-out infinite}
-#tvBtn:not(.locked) .circle{animation:catGlowGreen 2.2s ease-in-out infinite}
-@keyframes catGlowRed{0%,100%{box-shadow:0 0 8px rgba(233,69,96,.4),0 0 18px rgba(233,69,96,.2)}50%{box-shadow:0 0 16px rgba(233,69,96,.75),0 0 34px rgba(233,69,96,.4)}}
-@keyframes catGlowPurple{0%,100%{box-shadow:0 0 8px rgba(118,75,162,.4),0 0 18px rgba(118,75,162,.2)}50%{box-shadow:0 0 16px rgba(118,75,162,.75),0 0 34px rgba(118,75,162,.4)}}
-@keyframes catGlowBlue{0%,100%{box-shadow:0 0 8px rgba(59,130,246,.4),0 0 18px rgba(59,130,246,.2)}50%{box-shadow:0 0 16px rgba(59,130,246,.75),0 0 34px rgba(59,130,246,.4)}}
-@keyframes catGlowOrange{0%,100%{box-shadow:0 0 8px rgba(255,140,0,.4),0 0 18px rgba(255,140,0,.2)}50%{box-shadow:0 0 16px rgba(255,140,0,.75),0 0 34px rgba(255,140,0,.4)}}
-@keyframes catGlowGreen{0%,100%{box-shadow:0 0 8px rgba(34,197,94,.4),0 0 18px rgba(34,197,94,.2)}50%{box-shadow:0 0 16px rgba(34,197,94,.75),0 0 34px rgba(34,197,94,.4)}}
+/* 栏目图标：不再发光 */
 .xz-group{position:absolute;bottom:5px;left:25px;z-index:3;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
 .xz-man{height:45px;width:auto;animation:xzFloat 3s ease-in-out infinite}
 .xz-level{font-size:.62rem;color:#000;font-weight:300;letter-spacing:1px;white-space:nowrap}
@@ -163,7 +155,7 @@ body{display:flex;flex-direction:column}
 
 /* 评论登录头像 */
 /* 评论登录用户区域 */
-.comment-user{position:fixed;bottom:10px;right:16px;z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px}
+.comment-user{position:fixed;bottom:92px;left:15px;z-index:10;display:flex;flex-direction:column;align-items:center;gap:6px}
 .comment-user .comment-avatar{width:36px;height:36px;border-radius:50%;cursor:pointer;border:1.5px solid rgba(0,0,0,.15);box-shadow:0 2px 8px rgba(0,0,0,.1);transition:border-color .3s;background:rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;overflow:hidden}
 .comment-user .comment-avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .comment-user .comment-avatar svg{width:20px;height:20px;fill:none;stroke:#888;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -271,9 +263,9 @@ body{display:flex;flex-direction:column}
 .image-area.yin ~ .bottom-panel .xz-level{color:#ffffff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
 .image-area.yin ~ .bottom-panel .points-badge{color:#f5f5f5;text-shadow:0 1px 3px rgba(0,0,0,.5)}
 .image-area.yin ~ .bottom-panel .xz-man{filter:brightness(1.35) drop-shadow(0 0 6px rgba(255,255,255,.35))}
-.image-area.yin ~ .bottom-panel .comment-name{color:#f0f0f0;text-shadow:0 1px 3px rgba(0,0,0,.5)}
-.image-area.yin ~ .bottom-panel .comment-avatar{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.35)}
-.image-area.yin ~ .bottom-panel .comment-avatar svg{stroke:#ffffff}
+.image-area.yin ~ .comment-user .comment-name{color:#f0f0f0;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.image-area.yin ~ .comment-user .comment-avatar{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.35)}
+.image-area.yin ~ .comment-user .comment-avatar svg{stroke:#ffffff}
 
 /* 今日修炼任务菜单 */
 .task-menu{position:absolute;bottom:45px;z-index:10001;display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -510,18 +502,20 @@ body{display:flex;flex-direction:column}
 </div>
 <div class="almanac-mini" id="almanacMini"><svg viewBox="0 0 24 24"><path d="M15 4L7 12l8 8"/></svg></div>
 
+<!-- 登录头像+昵称：探索下方位置 -->
+<div class="comment-user" id="commentUser">
+  <div class="comment-avatar" id="commentAvatar">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  </div>
+  <div class="comment-name" id="commentName">隐匿者</div>
+</div>
+
 <!-- 阴阳（明暗模式）全屏遮罩：阴=背景图加 30% 黑色遮罩并扩展到全屏，pointer-events:none 不影响操作 -->
 <div class="yin-mask" id="yinMask"></div>
 
 <div class="bottom-panel">
   <div class="year-bar"><div class="year-bar-fill" id="yearFill"></div></div>
   <div class="year-bar-text" id="yearBarText"><span id="yearText"></span></div>
-  <div class="comment-user" id="commentUser">
-    <div class="comment-avatar" id="commentAvatar">
-      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    </div>
-    <div class="comment-name" id="commentName">隐匿者</div>
-  </div>
 </div>
 
 <!-- 评论弹窗 -->
@@ -559,20 +553,25 @@ function setDefaultBg() {
 }
 setDefaultBg();
 
-// 打开诗词/今日/星象/日程/探索时隐藏五个栏目按钮（MutationObserver 监听面板状态 class 自动切换）
+// 面板状态观察：诗词/今日/星象/日程打开时隐藏五个栏目按钮 + 背景切换磨砂半透明（平时背景清晰）
 (function(){
   var list = document.getElementById('categoryList');
   if (!list) return;
   function update() {
+    var pb = document.getElementById('poetryBtn');
+    var hb = document.getElementById('historyBtn');
     var cb = document.getElementById('constellationBtn');
     var open = !!(document.querySelector('.plan-panel.show')
       || document.querySelector('.welcome.active')
-      || document.querySelector('.poetry-overlay.show')
-      || document.querySelector('.history-overlay.show')
+      || (pb && pb.classList.contains('selected'))
+      || (hb && hb.classList.contains('selected'))
       || (cb && cb.classList.contains('selected')));
     list.classList.toggle('hide', open);
+    // 磨砂半透明背景：仅面板打开时生效
+    var ia = document.querySelector('.image-area');
+    if (ia) ia.classList.toggle('frost', open);
   }
-  var ids = ['planPanel', 'poetryOverlay', 'historyOverlay', 'constellationBtn'];
+  var ids = ['planPanel', 'poetryBtn', 'historyBtn', 'constellationBtn'];
   var obs = window.MutationObserver ? new MutationObserver(update) : null;
   if (obs) {
     ids.forEach(function(id){
