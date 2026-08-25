@@ -175,9 +175,10 @@ body{display:flex;flex-direction:column}
 .comment-user .comment-avatar svg{width:20px;height:20px;fill:none;stroke:#888;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .comment-user .comment-name{font-size:.58rem;color:#666;white-space:nowrap;max-width:72px;overflow:hidden;text-overflow:ellipsis;text-align:center;line-height:1}
  
- /* 诗/今 内容展示区 - 圈字下方 */
-.content-area{position:absolute;top:calc(50% + 20px);left:15px;right:15px;z-index:5;width:auto;max-width:600px;max-height:calc(100% - 180px);overflow-y:auto;text-align:center;transform:translateY(-50%);transition:opacity .5s ease;opacity:0;visibility:hidden}
+ /* 诗/今/星象 内容展示区 - 磨砂透明（背景只由探索按钮刷新，容器半透明+毛玻璃） */
+.content-area{position:absolute;top:calc(50% + 20px);left:15px;right:15px;z-index:5;width:auto;max-width:600px;max-height:calc(100% - 180px);overflow-y:auto;text-align:center;transform:translateY(-50%);transition:opacity .5s ease;opacity:0;visibility:hidden;border-radius:14px;background:rgba(255,255,255,.3);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 6px 24px rgba(0,0,0,.12)}
 .content-area.show{opacity:1;visibility:visible}
+.image-area.yin .content-area{background:rgba(20,28,48,.32)}
 .content-area::-webkit-scrollbar{width:0}
 .content-area .content-line{font-size:.88rem;line-height:1.5;color:#fff;font-weight:400;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5)}
 .content-area .content-title{font-size:1.05rem;font-weight:400;color:#fff;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5);margin-bottom:2px}
@@ -475,27 +476,27 @@ body{display:flex;flex-direction:column}
   <div class="top-right-logo" id="topRightLogo"><img src="logo.png" alt="logo"></div>
   <div class="logo-mini" id="logoMini"><svg viewBox="0 0 24 24"><path d="M15 4L7 12l8 8"/></svg></div>
   <div class="category-list" id="categoryList">
-    <button class="category-item active" id="storyBtn" data-url="https://snowhoo.net/app/reader.html" title="红光秘境" style="--cat-color:#e94560">
+    <button class="category-item active" id="storyBtn" data-url="https://snowhoo.net/app_n/reader.html" title="红光秘境" style="--cat-color:#e94560">
       <span class="circle"></span>
 	  <span class="label">红光秘境</span>
       </svg>
     </button>
-    <button class="category-item" id="yeduBtn" data-url="https://snowhoo.net/app/yedu_p.html" title="心灵秘境" style="--cat-color:#764ba2">
+    <button class="category-item" id="yeduBtn" data-url="https://snowhoo.net/app_n/yedu_p.html" title="心灵秘境" style="--cat-color:#764ba2">
       <span class="circle"></span>
       <span class="label">心灵秘境</span>
       </svg>
     </button>
-    <button class="category-item" id="zjszBtn" data-url="https://snowhoo.net/app/zjsz_p.html" title="视界秘境" style="--cat-color:#3b82f6">
+    <button class="category-item" id="zjszBtn" data-url="https://snowhoo.net/app_n/zjsz_p.html" title="视界秘境" style="--cat-color:#3b82f6">
       <span class="circle"></span>
       <span class="label">视界秘境</span>
       </svg>
     </button>
-    <button class="category-item" id="newsBtn" data-url="https://snowhoo.net/app/DaliyNews_p.html" title="正能光量小世界" style="--cat-color:#ff8c00">
+    <button class="category-item" id="newsBtn" data-url="https://snowhoo.net/app_n/DaliyNews_p.html" title="正能光量小世界" style="--cat-color:#ff8c00">
       <span class="circle"></span>
       <span class="label">正能光量小世界</span>
       </svg>
     </button>
-    <button class="category-item" id="tvBtn" data-url="https://snowhoo.net/app/tv_p.html" title="光怪陆离小世界" style="--cat-color:#22c55e">
+    <button class="category-item" id="tvBtn" data-url="https://snowhoo.net/app_n/tv_p.html" title="光怪陆离小世界" style="--cat-color:#22c55e">
       <span class="circle"></span>
       <span class="label">光怪陆离小世界</span>
       </svg>
@@ -650,58 +651,28 @@ setDefaultBg();
   }
 })();
 
-// 探索：与诗词/今日同面板形式——点击在中央内容区以圆形显示 picsum 随机图，再次点击关闭；不覆盖背景
+// 探索：点击刷新背景图（picsum 随机图），不打开面板、不选中（背景只由探索控制）
 document.querySelector('.welcome').addEventListener('click', function() {
   if ((GAME._autoMode || GAME._oneKeyMode) && !GAME._autoPanelOpen) return; // 修炼中屏蔽（自动模式主动打开除外）
   var w = this;
-  var area = document.getElementById('contentArea');
   cancelAllRequests();
-  // 探索面板正开着 → 点击关闭
-  if (w.classList.contains('active') && area._activeBtn === 'exploreBtn') {
-    w.classList.remove('active');
-    area.classList.remove('show');
-    area._activeBtn = null;
-    area.style.overflowY = '';    // 恢复滚动（其他面板）
-    area.style.maxHeight = '';    // 恢复原高度限制
-    return;
-  }
-  // 开启探索：收起其他面板/覆盖层，在中央内容区显示圆形 picsum 图（背景保持默认 bg.jpg 不变）
+  // 关闭当前打开的诗词/今日/星象面板（背景不随之切换）
   closeAllOverlays();
-  area.classList.remove('show');
-  area._activeBtn = null;
-  document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
-  w.classList.add('active');
-  area.style.left = '';
-  area.style.width = '';
-  area.style.transform = 'translateY(-50%)';
-  area.style.textAlign = 'center';
-  area.style.overflowY = 'visible';  // 探索圆形：允许发光外溢，不被裁剪
-  area.style.maxHeight = '100%';     // 容器高度 100%，发光完整显示
-  var picsum = 'https://picsum.photos/480/480?random=' + Date.now();
-  area.innerHTML = '<div class="explore-circle"><div class="ec-status">正在破开虚空……</div><img src="' + picsum + '" alt="探索" crossorigin="anonymous"></div>';
-  area.classList.add('show');
-  area._activeBtn = 'exploreBtn';
-  var img = area.querySelector('.explore-circle img');
-  var status = area.querySelector('.ec-status');
-  img.onload = function() {
-    // 缓存完毕 → 显示"发现异世界！" 1 秒 → 图片隐现（淡入）
-    status.textContent = '发现异世界！';
-    setTimeout(function(){
-      status.style.display = 'none';
-      img.style.opacity = '1';
-      // 内容加载完成→记录修炼（自动模式下通知自动流程，不直接修炼）
-      if (GAME._autoMode) { GAME._autoPanelLoaded('explore', true); }
-      else { GAME.doAction('explore'); }
-    }, 1000);
-  };
-  img.onerror = function() {
-    w.classList.remove('active');
+  var area = document.getElementById('contentArea');
+  if (area) {
     area.classList.remove('show');
     area._activeBtn = null;
-    area.style.overflowY = '';
-    area.style.maxHeight = '';
-    if (GAME._autoMode) GAME._autoPanelLoaded('explore', false);
-  };
+  }
+  document.querySelectorAll('.badge').forEach(function(b){b.classList.remove('selected')});
+  w.classList.remove('active');   // 取消选中效果
+  // 刷新背景图：picsum 随机图（crossOrigin=anonymous 保证可被捕获保存；load 后栏目按钮自动重新定位）
+  var bgImgEl = document.getElementById('bgImage');
+  if (bgImgEl) {
+    bgImgEl.crossOrigin = 'anonymous';
+    bgImgEl.onerror = null;
+    bgImgEl.src = 'https://picsum.photos/1280/960?random=' + Date.now();
+  }
+  if (GAME._autoMode) GAME._autoPanelLoaded('explore', true);
 });
 
 // ===== 黄历 =====
@@ -903,14 +874,13 @@ function togglePoetry() {
   area.style.textAlign = 'center';
   area.style.overflowY = '';   // 恢复滚动（星象面板会锁定）
 
-  // 显示诗词背景（淡入 0.8s 与 CSS transition 一致）
-  overlay.classList.add('show');
+  // 背景不再由诗词控制（背景只由探索按钮刷新）
 
   // 生成唯一标记，防止异步回调覆盖其他面板
   var _reqId = Date.now() + '_' + Math.random();
   area._toggleReqId = _reqId;
 
-  // 第二步：背景渐入后，加载诗词内容
+  // 第二步：加载诗词内容
   setTimeout(function() {
     if (area._toggleReqId !== _reqId) return;  // 用户已切走
     fetch('../js/DailyPoetry.json').then(function(r){return r.json()}).then(function(data){
@@ -969,14 +939,13 @@ function toggleHistory() {
   area.style.transform = 'translateY(-50%)';
   area.style.textAlign = 'center';
 
-  // 显示今日背景（淡入 0.8s 与 CSS transition 一致）
-  overlay.classList.add('show');
+  // 背景不再由今日控制（背景只由探索按钮刷新）
 
   // 生成唯一标记，防止异步回调覆盖其他面板
   var _reqId = Date.now() + '_' + Math.random();
   area._toggleReqId = _reqId;
 
-  // 第二步：背景渐入后，加载今日内容
+  // 第二步：加载今日内容
   setTimeout(function() {
     if (area._toggleReqId !== _reqId) return;  // 用户已切走
     fetch('../js/HistoryToday.json').then(function(r){return r.json()}).then(function(data){
@@ -1035,9 +1004,8 @@ document.getElementById('constellationBtn').addEventListener('click', function()
   area.style.width = '360px';
   area.style.textAlign = 'center';
   area.style.overflowY = 'hidden';   // 星象转盘固定：锁定区域内滚动，防止滑动时转盘位移
-  // 切换背景（使用星空覆盖层，不修改原始背景图）
-  document.getElementById('starsOverlay').classList.add('show');
-  // 第二步：背景渐入后，再加载星象数据
+  // 背景不再由星象控制（背景只由探索按钮刷新）
+  // 第二步：加载星象数据
   setTimeout(function(){
     // 如果已切换到其他面板，放弃
     if (area._constellationReqId !== _reqId) return;
