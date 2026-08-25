@@ -141,7 +141,7 @@ body{display:flex;flex-direction:column}
 .category-list.hide{display:none}
 .category-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;min-width:0;pointer-events:auto;opacity:.95;flex:0 0 25%}
 .category-item:active{transform:scale(.88)}
-.category-item .circle{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.18);transition:transform .25s,box-shadow .25s;background:rgba(255,255,255,.5) url('./ann.png') center/cover no-repeat;border:1px solid rgba(255,255,255,.35)}
+.category-item .circle{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.18);transition:transform .25s,box-shadow .25s;background:var(--cat-color);color:#fff;font-size:1.1rem;font-weight:600;border:1.5px solid rgba(255,255,255,.45);text-shadow:0 1px 3px rgba(0,0,0,.3)}
 .category-item.active .circle{box-shadow:0 6px 20px rgba(0,0,0,.28)}
 .category-item .label{font-size:.62rem;color:#fff;font-weight:500;text-shadow:0 1px 4px rgba(0,0,0,.7);white-space:nowrap;opacity:.88}
 /* 栏目锁定：参照自动修炼（灰白滤镜 + 右上角红色小锁） */
@@ -464,23 +464,23 @@ body{display:flex;flex-direction:column}
 <!-- 五个栏目按钮：body 层底部弹性容器（手机 APP 图标栏样式，fixed 视口定位，不随背景/阴阳变化） -->
 <div class="category-list" id="categoryList">
   <button class="category-item active" id="storyBtn" data-url="https://snowhoo.net/app_n/reader.html" title="小红故事" style="--cat-color:#e94560">
-    <span class="circle"></span>
+    <span class="circle">小</span>
     <span class="label">小红故事</span>
   </button>
   <button class="category-item" id="yeduBtn" data-url="https://snowhoo.net/app_n/yedu_p.html" title="夜读" style="--cat-color:#764ba2">
-    <span class="circle"></span>
+    <span class="circle">夜</span>
     <span class="label">夜读</span>
   </button>
   <button class="category-item" id="zjszBtn" data-url="https://snowhoo.net/app_n/zjsz_p.html" title="照见苏州" style="--cat-color:#3b82f6">
-    <span class="circle"></span>
+    <span class="circle">照</span>
     <span class="label">照见苏州</span>
   </button>
   <button class="category-item" id="newsBtn" data-url="https://snowhoo.net/app_n/DaliyNews_p.html" title="新闻" style="--cat-color:#ff8c00">
-    <span class="circle"></span>
+    <span class="circle">新</span>
     <span class="label">新闻</span>
   </button>
   <button class="category-item" id="tvBtn" data-url="https://snowhoo.net/app_n/tv_p.html" title="播霸" style="--cat-color:#22c55e">
-    <span class="circle"></span>
+    <span class="circle">播</span>
     <span class="label">播霸</span>
   </button>
 </div>
