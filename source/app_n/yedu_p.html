@@ -1,0 +1,1057 @@
+---
+layout: false
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>小红故事|夜读</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;background:#000;color:#1a1a1a;-webkit-tap-highlight-color:transparent}
+
+#app{position:relative;width:100%;height:100%;overflow:hidden}
+
+.card{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;transition:transform .38s cubic-bezier(.25,.46,.45,.94),opacity .38s}
+.card.left{transform:translateX(-100%);opacity:0;pointer-events:none}
+.card.center{transform:translateX(0);opacity:1;z-index:2}
+.card.right{transform:translateX(100%);opacity:0;pointer-events:none}
+
+.yedu-cover{position:relative;width:100%;flex-shrink:0;overflow:hidden;background:#000}
+.yedu-cover-inner{height:calc(100vh / 4 + 50px);width:100%;position:relative}
+.yedu-cover img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
+
+.yedu-audio-btn{width:32px;height:32px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.yedu-audio-btn:active{transform:scale(.92)}
+.yedu-audio-btn svg{width:16px;height:16px;fill:#e94560}
+
+.yedu-corner-label{position:absolute;top:48px;left:8px;color:rgba(255,255,255,.95);font-size:.75rem;background:rgba(0,0,0,.15);padding:4px 12px;border-radius:18px;text-shadow:0 1px 2px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap}
+
+.card-title{flex-shrink:0;padding:14px 18px 10px;background:#fff;border-bottom:1px solid #f0f0f0}
+.card-title h1{font-size:1.2rem;font-weight:500;line-height:1.35;color:#222;margin-bottom:4px}
+.card-title .meta{font-size:.78rem;color:#999}
+
+.card-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 18px 108px;background:#fafafa}
+.card-content::-webkit-scrollbar{width:0}
+.card-content .body p{line-height:1.5;margin-bottom:10px;font-size:1.1rem;font-weight:300;color:#333}
+.card-content .body .no-content{text-align:center;color:#999;padding:40px 0;font-size:.9rem}
+.card-content .body strong,.card-content .body b{color:#222}
+
+/* 底部导航（两行：第一行朗读播放条 / 第二行功能导航） */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;border-top:1px solid #eee;display:flex;flex-direction:column;padding:0;font-size:.8rem;user-select:none;-webkit-user-select:none}
+.bottom-nav .bn-row{display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:44px;width:100%;flex-shrink:0;min-width:0}
+.bottom-nav .bn-row:not(:first-child){border-top:1px solid #eee}
+.bottom-nav .bn-tts-row{height:42px;padding:0 4px 0 0;justify-content:stretch}
+/* 第二行：文章自带音频播放条（▶/⏸ ⏹ 标题+进度） */
+.yedu-play-bar{display:flex;align-items:center;gap:2px;height:42px;width:100%;min-width:0;padding:0 8px;font-size:12px;color:#555;user-select:none;-webkit-user-select:none;box-sizing:border-box}
+.yedu-play-bar button{background:none;border:none;cursor:pointer;color:inherit;padding:0;margin:0;font-family:inherit}
+.yedu-play-bar .yp-btn{display:flex;align-items:center;justify-content:center;height:30px;border-radius:6px;flex-shrink:0;line-height:1}
+.yedu-play-bar .yp-btn:active{background:rgba(128,128,128,.18)}
+.yedu-play-bar .yp-play{width:34px;font-size:16px}
+.yedu-play-bar .yp-stop{width:28px;font-size:13px}
+.yedu-play-bar .yp-info{flex:1;min-width:0;padding:0 6px;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.yedu-play-bar .yp-title{font-size:12px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.yedu-play-bar .yp-prog{height:3px;background:rgba(128,128,128,.18);border-radius:2px;overflow:hidden}
+.yedu-play-bar .yp-prog i{display:block;height:100%;width:0%;background:#764ba2;border-radius:2px;transition:width .3s}
+.yedu-play-bar.disabled .yp-title{color:#999}
+.yedu-play-bar.disabled button{opacity:.3;pointer-events:none}
+[data-theme="dark"] .yedu-play-bar{color:#aaa}
+[data-theme="dark"] .yedu-play-bar .yp-title{color:#ddd}
+@media(prefers-color-scheme:dark){.yedu-play-bar{color:#aaa}.yedu-play-bar .yp-title{color:#ddd}}
+.bottom-nav .page-btn{display:flex;align-items:center;gap:4px;padding:4px 16px;border-radius:4px;cursor:pointer;color:#666}
+.bottom-nav .page-btn:active{background:rgba(0,0,0,.05)}
+.page-nav-group{display:flex;align-items:center;gap:2px}
+.page-nav-btn{padding:4px 6px;cursor:pointer;color:#999;font-size:.72rem;user-select:none}
+.page-nav-btn:active{background:rgba(0,0,0,.05)}
+
+/* 底部导航右侧浮窗 */
+.yedu-float-wrap{position:relative;display:flex;align-items:center;gap:20px}
+.yedu-float-btn{width:36px;height:36px;border-radius:50%;background:#764ba2;color:#fff;font-size:.65rem;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s,background .2s}
+.yedu-float-btn:active{transform:scale(.92)}
+.yedu-float-btn:hover{background:#5a3d8a}
+.theme-btn{width:32px;height:32px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.theme-btn:active{transform:scale(.92)}
+.theme-btn svg{width:16px;height:16px}
+
+/* 弹出菜单 */
+.yedu-float-menu{position:absolute;bottom:40px;left:0;z-index:200;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;opacity:0;transform:translateY(8px) scale(.95);pointer-events:none;transition:opacity .2s ease,transform .2s ease;transform-origin:bottom left}
+.yedu-float-menu.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.yedu-float-menu a{display:flex;align-items:center;padding:10px 16px;color:#333;text-decoration:none;font-size:.82rem;font-weight:500;white-space:nowrap;transition:background .2s}
+.yedu-float-menu a:hover{background:#f5f5f5}
+.menu-indicator{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:6px;vertical-align:middle}
+.menu-indicator.dot{width:8px;height:8px;border-radius:50%}
+.menu-indicator.circulated{width:18px;height:18px;border-radius:50%;color:#fff;font-size:.6rem;font-weight:600;line-height:18px;text-align:center}
+/* 菜单锁定 + 传送回修真小世界（统一类名，跨页同名无冲突） */
+.menu-item.locked{opacity:.5;filter:grayscale(1)}
+.menu-lock-icon{margin-left:8px;font-size:.72rem}
+.menu-home{border-top:1px solid rgba(128,128,128,.35)}
+.menu-lock-tip{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:99999;background:rgba(40,32,20,.9);color:#fff;font-size:.75rem;padding:8px 16px;border-radius:16px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.menu-lock-tip.show{opacity:1}
+
+@media(prefers-color-scheme:dark){
+  .yedu-float-menu{background:#1e1e1e}
+  .yedu-float-menu a{color:#ddd}
+  .yedu-float-menu a:hover{background:#2a2a2a}
+}
+
+.swipe-hint{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100;background:rgba(0,0,0,.55);color:#fff;padding:6px 16px;border-radius:20px;font-size:.75rem;opacity:1;transition:opacity .5s;pointer-events:none;white-space:nowrap}
+.swipe-hint.hidden{opacity:0}
+
+.loading-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
+.loading-overlay.hide{opacity:0;pointer-events:none}
+.spinner{width:40px;height:40px;border:3px solid #eee;border-top-color:#e94560;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{margin-top:16px;font-size:.9rem;color:#999}
+
+/* Lightbox 图片放大 */
+.lightbox{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;cursor:zoom-out;opacity:0;transition:opacity .3s ease}
+.lightbox.show{display:flex;opacity:1}
+.lightbox img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:4px;box-shadow:0 8px 40px rgba(0,0,0,.6);transform:scale(.9);transition:transform .3s ease}
+.lightbox.show img{transform:scale(1)}
+.lightbox .close-btn{position:absolute;top:20px;right:20px;width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:50%;border:none;color:#fff;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.lightbox .close-btn:hover{background:rgba(255,255,255,.3)}
+
+@media(min-width:769px){
+  #app{max-width:480px;margin:0 auto;border-left:1px solid #eee;border-right:1px solid #eee}
+}
+
+@media(prefers-color-scheme:dark){
+  .card-title{background:#1a1a1a;border-color:#333}
+  .card-title h1{color:#eee}
+  .card-title .meta{color:#666}
+  .card-content{background:#121212}
+  .card-content .body p{color:#ccc}
+  .card-content .body strong,.card-content .body b{color:#eee}
+  .bottom-nav{background:#1a1a1a;border-color:#333}
+  .bottom-nav .bn-row:not(:first-child){border-top-color:#333}
+  .bottom-nav .page-btn{color:#999}
+  .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
+  .page-nav-btn{color:#666}
+  .page-nav-btn:active{background:rgba(255,255,255,.08)}
+  }
+[data-theme="dark"]{
+  .card-title{background:#1a1a1a;border-color:#333}
+  .card-title h1{color:#eee}
+  .card-title .meta{color:#666}
+  .card-content{background:#121212}
+  .card-content .body p{color:#ccc}
+  .card-content .body strong,.card-content .body b{color:#eee}
+  .bottom-nav{background:#1a1a1a;border-color:#333}
+  .bottom-nav .bn-row:not(:first-child){border-top-color:#333}
+  .bottom-nav .page-btn{color:#999}
+  .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
+  .page-nav-btn{color:#666}
+  .page-nav-btn:active{background:rgba(255,255,255,.08)}
+}
+
+/* 登录区（底部右侧头像，点击弹留言窗） */
+.user-area{display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;padding:2px 0;-webkit-tap-highlight-color:transparent}
+.user-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;background:rgba(128,128,128,.2);border:1px solid rgba(128,128,128,.3);flex-shrink:0}
+
+/* 登录留言弹窗（与修真小世界一致） */
+.comment-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,.5);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;display:flex;align-items:flex-end}
+.comment-overlay.active{opacity:1;visibility:visible}
+.comment-panel{background:#fff;width:100%;max-height:85vh;border-radius:16px 16px 0 0;overflow:hidden;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .35s ease-out}
+.comment-overlay.active .comment-panel{transform:translateY(0)}
+.comment-panel-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;border-bottom:1px solid #eee;flex-shrink:0}
+.comment-panel-header .cp-title{font-size:.9rem;font-weight:600;color:#333}
+.comment-panel-header .cp-close{font-size:1.2rem;color:#999;cursor:pointer;padding:4px;line-height:1;border:none;background:none}
+.comment-panel-body{flex:1;overflow-y:auto;padding:8px 16px;min-height:200px;max-height:calc(85vh - 50px);-webkit-overflow-scrolling:touch}
+@media(prefers-color-scheme:dark){.comment-panel{background:#1e1e1e}.comment-panel-header{border-color:#333}.comment-panel-header .cp-title{color:#ddd}}
+
+        /* ===== 启动画面：仅旋转加载图标 ===== */
+        .boot-splash{position:fixed;inset:0;z-index:30000;background:radial-gradient(circle at 50% 40%,rgba(60,45,25,.05),rgba(20,15,8,.05));display:flex;align-items:center;justify-content:center;transition:opacity .45s ease;opacity:1}
+        .boot-splash.hide{opacity:0;pointer-events:none}
+        .boot-spinner{width:38px;height:38px;border:3px solid rgba(128,128,128,.22);border-top-color:#764ba2;border-radius:50%;animation:bootSpin .8s linear infinite}
+        @keyframes bootSpin{to{transform:rotate(360deg)}}
+</style>
+    <link rel="stylesheet" href="./lib/waline.css">
+</head>
+<body>
+<div class="loading-overlay boot-splash" id="loading">
+  <div class="boot-spinner"></div>
+</div>
+
+<div class="swipe-hint" id="hint">← 左滑看下一篇 ······ 右滑看上一篇 →</div>
+
+<div id="app"></div>
+
+<!-- 图片放大 lightbox -->
+<div class="lightbox" id="lightbox"><button class="close-btn" id="lightboxClose">✕</button><img id="lightboxImg" src="" alt=""></div>
+
+<div class="bottom-nav" id="bottomNav">
+  <div class="bn-row bn-tts-row">
+    <div class="yedu-play-bar" id="yeduPlayBar">
+      <button class="yp-btn yp-play" id="yeduPlayBtn" title="播放/暂停"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M8 5v14l11-7z" fill="#764ba2"/></svg></button>
+      <button class="yp-btn yp-stop" id="yeduStopBtn" title="停止"><svg viewBox="0 0 24 24" width="14" height="14"><rect x="5" y="5" width="14" height="14" rx="2.5" fill="#764ba2"/></svg></button>
+      <div class="yp-info">
+        <div class="yp-title" id="yeduPlayTitle">语音播放</div>
+        <div class="yp-prog"><i id="yeduPlayProg"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="bn-row">
+    <div class="yedu-float-wrap">
+      <button class="yedu-float-btn" id="yeduFloatBtn">夜读</button>
+      <div class="yedu-float-menu" id="yeduFloatMenu">
+        <a class="menu-item" href="https://snowhoo.net/app/reader.html" target="_blank"><span class="menu-indicator circulated" style="background:#e94560">小</span>小红故事·Blog</a>
+        <span style="display:flex;align-items:center;padding:10px 16px;color:#764ba2;font-size:.82rem;font-weight:600;white-space:nowrap;cursor:default">
+          <span class="menu-indicator circulated" style="background:#764ba2">夜</span>夜读·每晚十点
+          <span style="margin-left:8px;color:#764ba2">&#x2713;</span>
+        </span>
+        <a class="menu-item" href="https://snowhoo.net/app/zjsz_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#3b82f6">照</span>照见苏州·摄影专辑</a>
+        <a class="menu-item" href="https://snowhoo.net/app/DaliyNews_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#ff8c00">新</span>新闻·每日速览</a>
+        <a class="menu-item" href="https://snowhoo.net/app/tv_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#22c55e">播</span>播霸·在线影视</a>
+        <a class="menu-item menu-home" href="https://snowhoo.net/app_n/APP.html" onclick="event.preventDefault();try{localStorage.removeItem('resume_play');}catch(e){}window.location.replace('https://snowhoo.net/app_n/APP.html')"><span class="menu-indicator circulated" style="background:#e8793a;width:24px;height:24px;line-height:24px;font-size:16px">界</span>传送回修真小世界</a>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:20px">
+      <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
+      <div class="page-nav-group">
+        <span class="page-nav-btn" id="firstBtn">‹‹</span>
+        <span class="page-btn" id="pageBtn">1</span>
+        <span class="page-nav-btn" id="lastBtn">››</span>
+      </div>
+    </div>
+    <div class="user-area" id="userArea">
+      <img class="user-avatar" id="userAvatar" alt="">
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var basePath = (typeof window.__SC_BASE_PATH !== 'undefined' ? window.__SC_BASE_PATH : '/js/sevencolor/1/');
+  
+  let articles = [];          // 已加载的文章（按索引稀疏填充）
+  let fileList = [];          // index.json 的文件列表（总篇数/顺序依据）
+  let currentIndex = 0;
+  const STORAGE_KEY = 'yedu_page_idx';
+  let startX = 0, startY = 0, moveX = 0, moveY = 0;
+  let isDragging = false;
+  let hintVisible = true;
+  let _scAudio, _scAudioBtn;
+  
+  const app = document.getElementById('app');
+  const pageBtn = document.getElementById('pageBtn');
+  const hintEl = document.getElementById('hint');
+  const loadingEl = document.getElementById('loading');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxClose = document.getElementById('lightboxClose');
+  // 第二行播放条（文章自带音频）：▶/⏸ · ⏹ · 标题+进度
+  const playBar = document.getElementById('yeduPlayBar');
+  const playBtn = document.getElementById('yeduPlayBtn');
+  const stopBtn = document.getElementById('yeduStopBtn');
+  const playTitle = document.getElementById('yeduPlayTitle');
+  const playProg = document.getElementById('yeduPlayProg');
+
+  // ===== 继续播放恢复点（系统媒体卡片点击 → 跳回本页并定位/续播） =====
+  var RESUME_KEY = 'resume_play';
+  function saveResume(playing){
+    try {
+      localStorage.setItem(RESUME_KEY, JSON.stringify({ page: 'yedu_p.html', index: currentIndex, playing: !!playing, ts: Date.now() }));
+    } catch(e){}
+  }
+  function clearResume(){ try { localStorage.removeItem(RESUME_KEY); } catch(e){} }
+  function getResume(){
+    try {
+      var r = JSON.parse(localStorage.getItem(RESUME_KEY) || 'null');
+      return (r && r.page === 'yedu_p.html') ? r : null;
+    } catch(e){ return null; }
+  }
+
+  // 主题检测
+  function detectTheme() {
+    var saved = localStorage.getItem('yedu_theme');
+    if (saved === 'dark' || saved === 'light') {
+      document.documentElement.setAttribute('data-theme', saved);
+      updateThemeBtn(saved);
+      return;
+    }
+    try {
+      var pt = window.parent.document.documentElement.getAttribute('data-theme');
+      if (pt === 'dark' || pt === 'light') {
+        document.documentElement.setAttribute('data-theme', pt);
+        updateThemeBtn(pt);
+        return;
+      }
+    } catch(e) {}
+    var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = isDark ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    updateThemeBtn(theme);
+  }
+  function updateThemeBtn(theme) {
+    var btn = document.getElementById('themeBtn');
+    if (theme === 'dark') {
+      btn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#f0a500"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#f0a500" stroke-width="2" fill="none"/></svg>';
+    } else {
+      btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg>';
+    }
+  }
+  detectTheme();
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+    var saved = localStorage.getItem('yedu_theme');
+    if (!saved) detectTheme();
+  });
+  document.getElementById('themeBtn').addEventListener('click', function() {
+    var current = document.documentElement.getAttribute('data-theme');
+    var next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('yedu_theme', next);
+    updateThemeBtn(next);
+  });
+
+  // 浮窗菜单
+  var floatBtn = document.getElementById('yeduFloatBtn');
+  var floatMenu = document.getElementById('yeduFloatMenu');
+  floatBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    floatMenu.classList.toggle('show');
+  });
+  document.addEventListener('click', function() {
+    floatMenu.classList.remove('show');
+  });
+  floatMenu.addEventListener('click', function(e) {
+    e.stopPropagation();
+  });
+
+  // ===== 按需加载：首屏只拉当前文章（+相邻预取），翻页时再加载对应文件 =====
+  // 拉取并解析第 i 篇文章（已加载直接返回；越界返回 null）
+  function ensureArticle(i) {
+    if (articles[i]) return Promise.resolve(articles[i]);
+    if (i < 0 || i >= fileList.length) return Promise.resolve(null);
+    return fetch(basePath + 'yedu_data/' + fileList[i])
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      })
+      .then(function(text) {
+        text = text.replace(/"(\.[^"]+)"/g, function(m, path) {
+          if (path.startsWith('/') || path.startsWith('http')) return m;
+          return '"' + basePath + path.replace(/^\.\//, '') + '"';
+        });
+        // 文章文件格式：window.__yedu_xxx = {...}（无 var 前缀），两种写法都兼容
+        var m = text.match(/var\s+(__yedu_\w+)\s*=|window\.(__yedu_\w+)\s*=/);
+        try { eval(text); } catch(e) {}
+        var name = m ? (m[1] || m[2]) : null;
+        // 兜底：正则未命中时从 window 上取本次 eval 新增的 __yedu_ key
+        if (!name || !window[name]) {
+          var keys = Object.keys(window).filter(function(k) { return k.indexOf('__yedu_') === 0; });
+          if (keys.length) name = keys[keys.length - 1];
+        }
+        if (name && window[name]) articles[i] = window[name];
+        return articles[i] || null;
+      });
+  }
+
+  // 数据加载：只取索引 → 建卡 → 加载首屏文章
+  function loadData() {
+    fetch(basePath + 'yedu_data/index.json')
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(files) {
+        fileList = files;
+
+        // 恢复保存的页码
+        var savedIdx = localStorage.getItem(STORAGE_KEY);
+        if (savedIdx !== null) {
+          var n = parseInt(savedIdx, 10);
+          if (n >= 0 && n < fileList.length) currentIndex = n;
+        }
+        // 从系统媒体卡片进入（?resume=1）：优先恢复到播放中的文章
+        var resume = (location.search.indexOf('resume=1') >= 0) ? getResume() : null;
+        if (resume && resume.index >= 0 && resume.index < fileList.length) {
+          currentIndex = resume.index;
+        }
+
+        createPageNav();
+        createCards();
+        bindEvents();
+        updateCards();
+
+        // 首屏文章就绪后再隐藏 loading
+        ensureArticle(currentIndex).then(function() {
+          var card = app.querySelector('.card[data-index="' + currentIndex + '"]');
+          if (card) { fillCard(currentIndex); renderBody(card); }
+          updateAudioButtons();
+          loadingEl.classList.add('hide');
+          setTimeout(() => loadingEl.remove(), 500);
+          setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 5000);
+          // 预取相邻两篇（翻页即时，不阻塞首屏）
+          ensureArticle(currentIndex - 1);
+          ensureArticle(currentIndex + 1);
+          // 续播：恢复到播放中的文章后自动开始播放（被自动播放策略拦截时用户点 ▶ 继续）
+          if (resume && resume.playing && articles[currentIndex] && articles[currentIndex].audioSrc) {
+            setTimeout(function() {
+              if (playBtn.dataset.src) toggleAudio(currentIndex, playBtn);
+            }, 400);
+          }
+        }).catch(function(e) {
+          var loadingText = loadingEl.querySelector('.loading-text');
+          if (loadingText) loadingText.textContent = '加载失败：' + e.message;
+          console.error(e);
+        });
+      })
+      .catch(function(e) {
+        var loadingText = loadingEl.querySelector('.loading-text');
+        if (loadingText) loadingText.textContent = '加载失败：' + e.message;
+        console.error(e);
+      });
+  }
+
+  // 用已加载的文章数据填充卡片（封面/标题/日期；幂等）
+  function fillCard(i) {
+    var post = articles[i];
+    if (!post) return;
+    var card = app.querySelector('.card[data-index="' + i + '"]');
+    if (!card || card.dataset.filled) return;
+    card.dataset.filled = '1';
+    var img = card.querySelector('.yedu-cover img');
+    if (img && post.coverSrc) {
+      img.dataset.src = post.coverSrc;
+      img.onerror = function() { if (this.src !== this.dataset.picsum) this.src = this.dataset.picsum; };
+    }
+    var h1 = card.querySelector('.card-title h1');
+    if (h1) h1.textContent = post.title;
+    var meta = card.querySelector('.card-title .meta');
+    if (meta && post.pubDate) meta.textContent = post.pubDate;
+  }
+
+  function createCards() {
+    for (var i = 0; i < fileList.length; i++) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.index = i;
+      if (i < currentIndex) card.classList.add('left');
+      if (i === currentIndex) card.classList.add('center');
+      if (i > currentIndex) card.classList.add('right');
+
+      // Cover image（占位：封面/标题数据随文章按需加载后填充）
+      const coverDiv = document.createElement('div');
+      coverDiv.className = 'yedu-cover';
+      
+      const coverInner = document.createElement('div');
+      coverInner.className = 'yedu-cover-inner';
+      
+      const picsumUrl = 'https://picsum.photos/seed/yedu_' + i + '/800/400';
+      const img = document.createElement('img');
+      img.alt = '';
+      img.draggable = false;
+      img.loading = 'lazy';
+      img.style.cursor = 'zoom-in';
+      img.dataset.picsum = picsumUrl;
+      coverInner.appendChild(img);
+
+      // Corner label
+      const cornerLabel = document.createElement('span');
+      cornerLabel.className = 'yedu-corner-label';
+      cornerLabel.textContent = '每晚十点 · 温暖相伴';
+      coverInner.appendChild(cornerLabel);
+
+      coverDiv.appendChild(coverInner);
+
+      // Title（数据到达后由 fillCard 填充）
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'card-title';
+      titleDiv.innerHTML = '<h1></h1><div class="meta"></div>';
+
+      // Content（正文懒渲染：翻到该篇时由 updateCards 填充）
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'card-content';
+      contentDiv.innerHTML = '<div class="body"></div>';
+
+      card.appendChild(coverDiv);
+      card.appendChild(titleDiv);
+      card.appendChild(contentDiv);
+      app.appendChild(card);
+    }
+  }
+
+  // 渲染当前卡片正文（幂等：已渲染跳过；无正文用占位文案）
+  function renderBody(card) {
+    var body = card.querySelector('.card-content .body');
+    if (!body || body.getAttribute('data-rendered')) return;
+    var post = articles[parseInt(card.dataset.index, 10)];
+    if (!post) return;
+    body.setAttribute('data-rendered', '1');
+    var paragraphsHtml = '';
+    if (post.paragraphs && post.paragraphs.length) {
+      for (var j = 0; j < post.paragraphs.length; j++) {
+        paragraphsHtml += '<p>' + post.paragraphs[j] + '</p>';
+      }
+    }
+    if (!paragraphsHtml) paragraphsHtml = '<p class="no-content">暂无正文<br><br>有时候<br>适当留白比文字<br>更具内涵<br>而沉默比呐喊<br>更彰显力量</p>';
+    body.innerHTML = paragraphsHtml;
+  }
+
+  function createPageNav() {
+    pageBtn.textContent = '1 / ' + fileList.length;
+  }
+  
+  pageBtn.addEventListener('click', function() {
+    var input = prompt('输入页码 (1 - ' + fileList.length + ')', (currentIndex + 1) + '');
+    if (input !== null) {
+      var num = parseInt(input, 10);
+      if (num >= 1 && num <= fileList.length) {
+        currentIndex = num - 1;
+        updateCards();
+      }
+    }
+  });
+
+  document.getElementById('firstBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (currentIndex > 0) { currentIndex = 0; updateCards(); }
+  });
+  document.getElementById('lastBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (currentIndex < fileList.length - 1) { currentIndex = fileList.length - 1; updateCards(); }
+  });
+
+  function updateCards() {
+    const cards = app.querySelectorAll('.card');
+    cards.forEach((card, i) => {
+      card.className = 'card';
+      if (i < currentIndex) card.classList.add('left');
+      if (i === currentIndex) card.classList.add('center');
+      if (i > currentIndex) card.classList.add('right');
+    });
+    pageBtn.textContent = (currentIndex + 1) + ' / ' + fileList.length;
+    localStorage.setItem(STORAGE_KEY, currentIndex);
+    if (hintVisible) {
+      hintEl.classList.remove('hidden');
+      setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);
+    }
+
+    // 按需加载当前文章 → 填充卡片/正文/音频，并预取相邻
+    ensureArticle(currentIndex).then(function() {
+      var card = app.querySelector('.card[data-index="' + currentIndex + '"]');
+      if (card) { fillCard(currentIndex); renderBody(card); }
+      updateAudioButtons();
+      loadNearbyImages();
+      updateImageClick();
+      if (articles[currentIndex]) document.title = '小红故事|夜读 – ' + escapeHtml(articles[currentIndex].title);
+      ensureArticle(currentIndex - 1);
+      ensureArticle(currentIndex + 1);
+    });
+  }
+
+  // 懒加载当前及相邻卡片图片（±1 范围：真图优先，无真图用占位图；其余不加载）
+  function loadNearbyImages() {
+    var imgs = app.querySelectorAll('.yedu-cover img');
+    imgs.forEach(function(img) {
+      var card = img.closest('.card');
+      if (!card) return;
+      var idx = parseInt(card.dataset.index, 10);
+      if (idx >= currentIndex - 1 && idx <= currentIndex + 1) {
+        var target = img.dataset.src || img.dataset.picsum || '';
+        if (target && img.src !== target) {
+          img.src = target;
+        }
+      }
+    });
+  }
+
+  function bindEvents() {
+    app.addEventListener('touchstart', onTouchStart, { passive: true });
+    app.addEventListener('touchmove', onTouchMove, { passive: false });
+    app.addEventListener('touchend', onTouchEnd);
+    app.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('keydown', onKeyDown);
+  }
+
+  function onTouchStart(e) { startX = e.touches[0].clientX; startY = e.touches[0].clientY; isDragging = true; }
+  function onTouchMove(e) {
+    if (!isDragging) return;
+    moveX = e.touches[0].clientX - startX;
+    moveY = e.touches[0].clientY - startY;
+    if (Math.abs(moveX) > Math.abs(moveY)) e.preventDefault();
+  }
+  function onTouchEnd(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    const threshold = 60;
+    if (moveX < -threshold && currentIndex < fileList.length - 1) { currentIndex++; updateCards(); }
+    else if (moveX > threshold && currentIndex > 0) { currentIndex--; updateCards(); }
+    moveX = 0; moveY = 0;
+  }
+  function onMouseDown(e) { startX = e.clientX; startY = e.clientY; isDragging = true; app.style.cursor = 'grabbing'; }
+  function onMouseMove(e) {
+    if (!isDragging) return;
+    moveX = e.clientX - startX;
+    moveY = e.clientY - startY;
+    if (Math.abs(moveX) > Math.abs(moveY)) e.preventDefault();
+  }
+  function onMouseUp(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    app.style.cursor = '';
+    const threshold = 60;
+    if (moveX < -threshold && currentIndex < fileList.length - 1) { currentIndex++; updateCards(); }
+    else if (moveX > threshold && currentIndex > 0) { currentIndex--; updateCards(); }
+    moveX = 0; moveY = 0;
+  }
+  function onKeyDown(e) {
+    if (e.key === 'ArrowRight' && currentIndex < fileList.length - 1) { currentIndex++; updateCards(); }
+    else if (e.key === 'ArrowLeft' && currentIndex > 0) { currentIndex--; updateCards(); }
+  }
+
+  // 通知封装 App 原生：音频播放状态 + 元数据（配合前台媒体服务实现后台/锁屏播放；
+  // App 未注入桥时自动忽略）。setMeta 更新 MediaSession（锁屏媒体卡片标题/封面/进度）
+  function notifyNative(playing, title, artist, artwork, duration, position, keepAlive) {
+    try {
+      if (window.AudioBridge) {
+        if (typeof window.AudioBridge.setPlaying === 'function') {
+          // 播放→启动前台服务；暂停(keepAlive=true)→保留服务可恢复；停止/结束→退出服务
+          if (playing) window.AudioBridge.setPlaying('1');
+          else if (!keepAlive) window.AudioBridge.setPlaying('0');
+        }
+        if (typeof window.AudioBridge.setMeta === 'function') {
+          window.AudioBridge.setMeta(
+            title || '夜读',
+            artist || '小红故事·夜读',
+            artwork || '',
+            String(Math.round(duration || 0)),
+            String(Math.round(position || 0)),
+            playing ? '1' : '0'
+          );
+        }
+      }
+    } catch (e) {}
+  }
+  // 同步系统媒体会话（锁屏/通知栏媒体卡片显示标题、封面与播放状态）
+  // artwork 始终显式设置：文章有封面用封面，无封面用站点 logo——避免系统 fallback
+  // 到 App 启动图标（launcher icon 更新/缓存问题会导致媒体卡片显示老图标）
+  function setMediaSession(playing, title, cover) {
+    try {
+      if (navigator.mediaSession && typeof MediaMetadata !== 'undefined') {
+        if (playing) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: title || '夜读',
+            artist: '小红故事·夜读',
+            album: '夜读',
+            artwork: [{ src: cover || './logo.png', sizes: '512x512' }]
+          });
+          navigator.mediaSession.playbackState = 'playing';
+        } else {
+          navigator.mediaSession.playbackState = title ? 'paused' : 'none';
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 播放条按钮 UI 同步（自绘 SVG：▶/⏸ 切换，fill 与页面原配色 #764ba2 完全一致）
+  var YP_PLAY_SVG = '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M8 5v14l11-7z" fill="#764ba2"/></svg>';
+  var YP_PAUSE_SVG = '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="#764ba2"/></svg>';
+  function setPlayBtnUI(playing) {
+    if (!playBtn) return;
+    playBtn.innerHTML = playing ? YP_PAUSE_SVG : YP_PLAY_SVG;
+    playBtn.classList.toggle('playing', !!playing);
+  }
+  // 播放条进度同步（无音频/未加载时归零）
+  function setPlayProg() {
+    if (!playProg) return;
+    if (_scAudio && _scAudio.duration) {
+      playProg.style.width = Math.min(100, _scAudio.currentTime / _scAudio.duration * 100) + '%';
+    } else {
+      playProg.style.width = '0%';
+    }
+  }
+
+  function toggleAudio(index, btn) {
+    var src = btn.dataset.src;
+
+    if (_scAudio && _scAudio._scSrc === src) {
+      if (_scAudio.paused) {
+        playCurrentAudio();
+      } else {
+        _scAudio.pause();
+        setPlayBtnUI(false);
+        notifyNative(false, (articles[index] || {}).title, '小红故事·夜读', (articles[index] || {}).coverSrc, _scAudio.duration, _scAudio.currentTime, true);
+        setMediaSession(false, (articles[index] || {}).title, (articles[index] || {}).coverSrc);
+        saveResume(false);   // 手动暂停：保留位置，标记非播放中
+      }
+      return;
+    }
+
+    if (_scAudio) {
+      _scAudio.pause();
+      setPlayBtnUI(false);
+      clearResume();   // 切到其他文章音频：旧会话结束
+    }
+
+    var audio = new Audio(src);
+    audio._scSrc = src;
+    _scAudio = audio;
+    _scAudioBtn = btn;
+
+    var lastPosSync = 0; // 进度同步节流（1s 一次，避免频繁 JS bridge 调用）
+    audio.addEventListener('timeupdate', function() {
+      setPlayProg();
+      var now = Date.now();
+      if (now - lastPosSync > 1000 && !audio.paused) { // 仅播放中同步（防停止/暂停后残留 timeupdate 把服务拉回）
+        lastPosSync = now;
+        var p = articles[index] || {};
+        notifyNative(true, p.title, '小红故事·夜读', p.coverSrc, audio.duration, audio.currentTime);
+      }
+    });
+    audio.addEventListener('ended', function() {
+      setPlayBtnUI(false);
+      setPlayProg();
+      notifyNative(false, '', '', '', 0, 0);
+      setMediaSession(false);
+      clearResume();
+    });
+    // 外部暂停（Chrome 因音频焦点被抢/来电/系统策略自动暂停等）→ 同步 UI 与原生
+    // （keepAlive 保留服务可恢复；非当前音频的 pause 忽略，避免切歌竞态）
+    audio.addEventListener('pause', function() {
+      if (!_scAudio || audio._scSrc !== _scAudio._scSrc) return; // 已切歌/旧 audio，忽略
+      setPlayBtnUI(false);
+      notifyNative(false, (articles[index] || {}).title, '小红故事·夜读',
+        (articles[index] || {}).coverSrc, audio.duration, audio.currentTime, true);
+      setMediaSession(false, (articles[index] || {}).title, (articles[index] || {}).coverSrc);
+      saveResume(false);   // 暂停：保留位置，标记非播放中
+    });
+    audio.addEventListener('error', function() {
+      setPlayBtnUI(false);
+      setPlayProg();
+      notifyNative(false, '', '', '', 0, 0);
+      setMediaSession(false);
+      clearResume();
+    });
+
+    setPlayBtnUI(true);
+    saveResume(true);   // 开始播放：记录恢复点
+    notifyNative(true, (articles[index] || {}).title, '小红故事·夜读', (articles[index] || {}).coverSrc, audio.duration, audio.currentTime);
+    setMediaSession(true, (articles[index] || {}).title, (articles[index] || {}).coverSrc);
+    // 系统媒体通知的控制按钮（播放/暂停）→ 控制页面音频
+    try {
+      if (navigator.mediaSession && typeof navigator.mediaSession.setActionHandler === 'function') {
+        navigator.mediaSession.setActionHandler('play', function() { audio.play(); });
+        navigator.mediaSession.setActionHandler('pause', function() { audio.pause(); });
+      }
+    } catch (e) {}
+    audio.play().catch(function() {
+      setPlayBtnUI(false);
+      notifyNative(false, '', '', '', 0, 0);
+      setMediaSession(false);
+      clearResume();
+    });
+  }
+
+  // 刷新播放条 UI（按钮图标 + 进度条），供原生媒体卡片控制后同步
+  function refreshAudioUI() {
+    var playing = _scAudio && !_scAudio.paused;
+    setPlayBtnUI(playing);
+    setPlayProg();
+  }
+
+  // 播放当前 _scAudio：play() 结果确认后再同步 UI 与原生（防"显示播放但无声"的假播放；
+  // play() 被拒时回滚按钮 + 通知原生停止）
+  function playCurrentAudio() {
+    if (!_scAudio) return;
+    var p = _scAudioBtn ? (articles[_scAudioBtn.dataset.index] || {}) : {};
+    var pp = _scAudio.play();
+    if (pp && typeof pp.catch === 'function') {
+      pp.catch(function() {
+        refreshAudioUI(); // 播放失败：按真实 paused 状态回滚按钮
+        notifyNative(false, p.title, '小红故事·夜读', p.coverSrc, _scAudio.duration, _scAudio.currentTime);
+        setMediaSession(false, p.title, p.coverSrc);
+        saveResume(false);
+      });
+    }
+    refreshAudioUI();
+    saveResume(true);
+    notifyNative(true, p.title, '小红故事·夜读', p.coverSrc, _scAudio.duration, _scAudio.currentTime);
+    setMediaSession(true, p.title, p.coverSrc);
+  }
+
+  // 原生媒体卡片（MediaSessionCompat/MediaStyle 通知/耳机线控）→ 控制页面音频
+  // cmd: play | pause | stop | seek:<positionMs>；页面状态变化后同步原生
+  window.__yeduControl = function(cmd) {
+    try {
+      var p = _scAudioBtn ? (articles[_scAudioBtn.dataset.index] || {}) : {};
+      if (cmd === 'play') {
+        if (_scAudio && _scAudio.paused) {
+          playCurrentAudio();
+        }
+      } else if (cmd === 'pause') {
+        if (_scAudio && !_scAudio.paused) {
+          _scAudio.pause();
+          notifyNative(false, p.title, '小红故事·夜读', p.coverSrc, _scAudio.duration, _scAudio.currentTime, true);
+          setMediaSession(false, p.title, p.coverSrc);
+          saveResume(false);
+        }
+      } else if (cmd === 'stop') {
+        if (_scAudio) {
+          _scAudio.pause();
+          _scAudio.currentTime = 0;
+          notifyNative(false, '', '', '', 0, 0);
+          setMediaSession(false);
+          clearResume();
+        }
+      } else if (cmd.indexOf('seek:') === 0) {
+        if (_scAudio) _scAudio.currentTime = (parseInt(cmd.slice(5), 10) || 0) / 1000;
+      }
+      refreshAudioUI();
+    } catch (e) {}
+  };
+
+  // 播放条事件：▶/⏸ 播放暂停 · ⏹ 停止（回到开头）
+  playBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (playBtn.dataset.src) toggleAudio(parseInt(playBtn.dataset.index, 10), playBtn);
+  });
+  stopBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (_scAudio) {
+      _scAudio.pause();
+      _scAudio.currentTime = 0;
+      refreshAudioUI();
+      notifyNative(false, '', '', '', 0, 0);
+      setMediaSession(false);
+      clearResume();
+    }
+  });
+
+  // 刷新第二行播放条：文章有音频 → 启用并显示标题；无音频 → 置灰占位
+  function updateAudioButtons() {
+    var post = articles[currentIndex];
+    // 切到新文章：若在播的是其他文章的音频 → 停止并复位（保持"看到的=听到的"）
+    if (_scAudio && !_scAudio.paused && (!post || _scAudio._scSrc !== post.audioSrc)) {
+      try { _scAudio.pause(); } catch(e){}
+      try { _scAudio.currentTime = 0; } catch(e){}
+      notifyNative(false, '', '', '', 0, 0);
+      setMediaSession(false);
+      clearResume();
+    }
+    if (post && post.audioSrc) {
+      playBar.classList.remove('disabled');
+      if (playTitle) playTitle.textContent = post.title;
+      playBtn.dataset.src = post.audioSrc;
+      playBtn.dataset.index = currentIndex;
+      setPlayBtnUI(!!(_scAudio && _scAudio._scSrc === post.audioSrc && !_scAudio.paused));
+      setPlayProg();
+    } else {
+      playBar.classList.add('disabled');
+      if (playTitle) playTitle.textContent = '暂无音频';
+      playBtn.dataset.src = '';
+      playBtn.dataset.index = '';
+      setPlayBtnUI(false);
+      setPlayProg();
+    }
+  }
+
+  // Lightbox 图片放大
+  function openLightbox(src) {
+    lightboxImg.src = src;
+    lightbox.classList.add('show');
+  }
+  function closeLightbox() {
+    lightbox.classList.remove('show');
+    setTimeout(function() { lightboxImg.src = ''; }, 300);
+  }
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
+  function updateImageClick() {
+    const imgs = app.querySelectorAll('.yedu-cover img');
+    imgs.forEach(function(img) {
+      img.onclick = function(e) {
+        e.stopPropagation();
+        var src = img.src || img.dataset.src || '';
+        if (src) openLightbox(src);
+      };
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // 分享功能（已移除）
+
+  loadData();
+})();
+</script>
+
+<script>
+// 边缘手势锁：排除左右边缘系统返回手势（防横滑翻页误触退出），离开页面恢复
+(function(){
+  function lockEdge(lock){ try{ if(window.AppBridge && window.AppBridge.setEdgeLock) window.AppBridge.setEdgeLock(lock ? '1' : '0'); }catch(e){} }
+  function guardBack(g){ try{ if(window.AppBridge && window.AppBridge.setBackGuard) window.AppBridge.setBackGuard(g ? '1' : '0'); }catch(e){} }
+  lockEdge(true);
+  guardBack(true);
+  window.addEventListener('pagehide', function(){ lockEdge(false); guardBack(false); });
+})();
+</script>
+<script>
+// 菜单解锁：按「登录 + 该栏目已真气解锁」判断（读云端 waline 游戏记录），未解锁置灰+提示；传送回修真小世界不锁定
+(function(){
+  // 仅以 APP 主登录 key WALINE_USER 判定（'@waline/user' 是 Waline 评论组件写入，登出残留会导致误判已登录）
+  function getWalineUser(){
+    try{
+      var v = localStorage.getItem('WALINE_USER') || sessionStorage.getItem('WALINE_USER');
+      if (v) { var u = JSON.parse(v); if (u && (u.display_name || u.nick || u.name)) return u; }
+    }catch(e){}
+    return null;
+  }
+  // 栏目文件 → 解锁标记 key（与 APP.html 游戏记录字段一致）
+  var KEY_BY_FILE = { 'reader.html':'story', 'yedu_p.html':'yedu', 'zjsz_p.html':'zjsz', 'DaliyNews_p.html':'news', 'tv_p.html':'tv' };
+  // 健壮解析（兼容 Waline markdown 渲染污染，同 APP.html parseGameRecord）
+  function parseGameRecord(raw){
+    if (!raw) return null;
+    var s = String(raw).replace(/<[^>]*>/g, '')
+      .replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+      .replace(/&quot;/g, '"').replace(/&#34;/g, '"')
+      .replace(/&amp;/g, '&').replace(/&#38;/g, '&')
+      .replace(/&lt;/g, '<').replace(/&#60;/g, '<')
+      .replace(/&gt;/g, '>').replace(/&#62;/g, '>');
+    var st = s.indexOf('{'); var en = s.lastIndexOf('}');
+    if (st >= 0 && en > st) s = s.slice(st, en + 1);
+    try { return JSON.parse(s); } catch(e){ return null; }
+  }
+  function tip(msg){
+    var t = document.getElementById('menuLockTip');
+    if (!t) { t = document.createElement('div'); t.id = 'menuLockTip'; t.className = 'menu-lock-tip'; document.body.appendChild(t); }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._tm);
+    t._tm = setTimeout(function(){ t.classList.remove('show'); }, 1800);
+  }
+  var menu = document.getElementById('yeduFloatMenu');
+  if (!menu) return;
+  var links = Array.prototype.slice.call(menu.querySelectorAll('a.menu-item:not(.menu-home)'));
+  function lockItem(a){
+    if (a.classList.contains('locked')) return;
+    a.classList.add('locked');
+    a.insertAdjacentHTML('beforeend', '<span class="menu-lock-icon">🔒</span>');
+    a.addEventListener('click', function(e){ if (!a.classList.contains('locked')) return; e.preventDefault(); tip('封印未破!请往修真小世界破除。'); }); // unlockItem 后已解锁，不拦截跳转
+  }
+  function unlockItem(a){
+    a.classList.remove('locked');
+    var ic = a.querySelector('.menu-lock-icon');
+    if (ic) ic.remove();
+  }
+  function fileOf(href){ try { var p = String(href).split('/'); return p[p.length - 1]; } catch(e){ return ''; } }
+  function lockAll(){ for (var i = 0; i < links.length; i++) lockItem(links[i]); }
+  function applyUnlocks(ul){
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      var key = KEY_BY_FILE[fileOf(a.getAttribute('href') || '')];
+      if (key && ul && ul[key]) unlockItem(a);
+    }
+  }
+  var user = getWalineUser();
+  // 登录区：头像（点击弹留言窗）
+  var ua = document.getElementById('userAvatar');
+  if (ua && user) {
+    if (user.avatar) ua.src = user.avatar;
+  }
+  if (!user) { applyUnlocks({story:1,yedu:1,zjsz:1,news:1,tv:1}); return; } // 已去除登录限制：未登录也全部解锁
+  // 已登录：直接全部解锁（已去除登录限制）
+  applyUnlocks({story:1,yedu:1,zjsz:1,news:1,tv:1}); return;
+  var token = user.token || '';
+  var url = 'https://waline.snowhoo.net/api/comment?path=/app-game/actions' + (token ? '&token=' + encodeURIComponent(token) : '');
+  fetch(url)
+    .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(resp){
+      var records = (resp.data && resp.data.data) || [];
+      var found = null, foundOid = 0;
+      for (var i = 0; i < records.length; i++) {
+        try {
+          var rec = records[i];
+          if ((rec.nick || '') !== user.display_name) continue;
+          var obj = parseGameRecord(rec.orig || rec.comment || '');
+          var oid = parseInt(rec.objectId, 10) || 0;
+          if (obj && typeof obj.points === 'number' && oid > foundOid) { found = obj; foundOid = oid; }
+        } catch(e){}
+      }
+      if (!found) return null;
+      return {
+        story: found.storyUnlocked ? 1 : 0,
+        yedu: found.yeduUnlocked ? 1 : 0,
+        zjsz: found.zjszUnlocked ? 1 : 0,
+        news: found.newsUnlocked ? 1 : 0,
+        tv: found.tvUnlocked ? 1 : 0
+      };
+    })
+    .then(function(ul){ if (ul) applyUnlocks(ul); })
+    .catch(function(e){ console.warn('[菜单解锁] 拉取解锁状态失败，保持锁定:', e); });
+})();
+</script>
+
+<!-- 登录留言弹窗（与修真小世界一致）：点头像打开，可留言/登录 -->
+<div class="comment-overlay" id="commentOverlay">
+  <div class="comment-panel">
+    <div class="comment-panel-header">
+      <span class="cp-title">留言</span>
+      <button class="cp-close" id="commentClose">&times;</button>
+    </div>
+    <div class="comment-panel-body" id="walineContainer"></div>
+  </div>
+</div>
+<script>
+// 登录留言弹窗（与修真小世界一致）：点头像打开；Waline 留言/登录
+(function(){
+  var overlay = document.getElementById('commentOverlay');
+  var userArea = document.getElementById('userArea');
+  var closeBtn = document.getElementById('commentClose');
+  if (userArea) userArea.addEventListener('click', function(){ if (overlay) overlay.classList.add('active'); });
+  if (closeBtn) closeBtn.addEventListener('click', function(){ if (overlay) overlay.classList.remove('active'); });
+  if (overlay) overlay.addEventListener('click', function(e){ if (e.target === overlay) overlay.classList.remove('active'); });
+  // 刷新底部登录区（头像+用户名）
+  function refreshUser(){
+    var ua = document.getElementById('userAvatar');
+    try {
+      var v = localStorage.getItem('WALINE_USER');
+      var u = v ? JSON.parse(v) : null;
+      if (u && (u.display_name || u.nick || u.name)) {
+        if (ua && u.avatar) ua.src = u.avatar;
+      } else {
+        if (ua) ua.removeAttribute('src');
+      }
+    } catch(e){}
+  }
+  refreshUser();
+  // Waline 初始化（动态 import，同修真小世界）
+  try {
+    import('./lib/waline.js').then(function(mod){
+      try {
+        mod.init({
+          el: '#walineContainer',
+          serverURL: 'https://waline.snowhoo.net',
+          lang: 'zh-CN',
+          avatar: 'mp',
+          pageview: false,
+          locale: { placeholder: '说点什么吧...', comment: '留言' },
+          onLogin: function(user){
+            try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e){}
+            refreshUser();
+          },
+          onLogout: function(){
+            try { localStorage.removeItem('WALINE_USER'); localStorage.removeItem('@waline/user'); } catch(e){}
+            refreshUser();
+          }
+        });
+      } catch(e){ console.warn('[留言] Waline init error:', e); }
+    }).catch(function(e){ console.warn('[留言] Waline import error:', e); });
+  } catch(e){ console.warn('[留言] Waline 初始化失败:', e); }
+})();
+</script>
+</body>
+</html>

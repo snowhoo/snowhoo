@@ -1,0 +1,910 @@
+---
+layout: false
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>小红故事|新闻</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;background:#fafafa;color:#1a1a1a;-webkit-tap-highlight-color:transparent}
+
+/* 加载动画 */
+.loading-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:999;background:#fafafa;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
+.loading-overlay.hide{opacity:0;pointer-events:none}
+.spinner{width:40px;height:40px;border:3px solid #eee;border-top-color:#ff8c00;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{margin-top:16px;font-size:.9rem;color:#999}
+
+#app{position:relative;width:100%;height:100%;overflow:hidden;display:flex;flex-direction:column;padding-top:40px}
+
+/* ===== 顶部栏目Tab栏 ===== */
+.column-tabs{flex-shrink:0;display:flex;overflow-x:auto;background:#fff;border-bottom:1px solid #f0f0f0;scrollbar-width:none;-webkit-overflow-scrolling:touch;z-index:10;padding:0 4px}
+.column-tabs::-webkit-scrollbar{display:none}
+.column-tab{flex-shrink:0;padding:10px 14px;font-size:.85rem;color:#666;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;user-select:none;-webkit-user-select:none}
+.column-tab:active{background:rgba(0,0,0,.04)}
+.column-tab.active{color:#ff8c00;border-bottom-color:#ff8c00;font-weight:500}
+
+/* 日期栏 */
+.date-bar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:6px 16px;background:#fafafa;font-size:.75rem;color:#999;border-bottom:1px solid #f0f0f0}
+.date-bar .count{font-size:.72rem}
+
+/* ===== 新闻列表 ===== */
+.news-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 12px 108px;background:#fafafa}
+.news-list::-webkit-scrollbar{width:0}
+
+.news-item{display:flex;gap:12px;padding:12px;margin-bottom:8px;background:#fff;border-radius:10px;transition:transform .15s;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.news-item:active{transform:scale(.98)}
+.news-item-img{flex-shrink:0;width:100px;height:70px;border-radius:6px;overflow:hidden;background:#f0f0f0}
+.news-item-img img{width:100%;height:100%;object-fit:cover;display:block}
+.news-item-img .no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#ddd}
+.news-item-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.news-item-title{font-size:.92rem;font-weight:500;line-height:1.35;color:#222;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.news-item-brief{font-size:.78rem;color:#888;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.news-item-meta{display:flex;align-items:center;gap:8px;font-size:.7rem;color:#bbb;margin-top:2px}
+.news-item-meta .source{color:#ff8c00}
+
+/* 展开全文 */
+.news-item.expanded .news-item-title{-webkit-line-clamp:unset;display:block;overflow:visible}
+.news-item.expanded .news-item-brief{-webkit-line-clamp:unset;display:block;overflow:visible}
+
+/* 日期下拉菜单 */
+.date-bar{cursor:pointer;position:relative}
+.date-dropdown{display:none;position:absolute;top:100%;left:10px;right:auto;z-index:50;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;white-space:nowrap}
+.date-dropdown.show{display:block}
+.date-dropdown-item{padding:10px 16px;font-size:.82rem;color:#333;cursor:pointer;transition:background .15s}
+.date-dropdown-item:active{background:#f5f5f5}
+.date-dropdown-item.active{color:#ff8c00;font-weight:500}
+.date-dropdown-item .check{float:right;color:#ff8c00;display:none;margin-left:12px}
+.date-dropdown-item.active .check{display:inline}
+
+/* 空状态 / 加载失败 */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:#bbb;font-size:.9rem;text-align:center;gap:8px}
+.empty-state .icon{font-size:2.5rem;margin-bottom:4px}
+
+/* ===== 底部导航（两行：第一行朗读播放条 / 第二行功能导航） ===== */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;border-top:1px solid #eee;display:flex;flex-direction:column;padding:0;font-size:.8rem;user-select:none;-webkit-user-select:none}
+.bottom-nav .bn-row{display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:44px;width:100%;flex-shrink:0;min-width:0}
+.bottom-nav .bn-row:not(:first-child){border-top:1px solid #eee}
+.bottom-nav .bn-tts-row{height:42px;padding:0 4px 0 0;justify-content:stretch}
+#ttsBarMount{width:100%;display:flex;min-width:0}
+/* 播放控件主题色：新闻橙色（:root 定义，播放条与弹出菜单共用） */
+:root{--tts-accent:#ff8c00}
+.bottom-nav .page-btn{display:flex;align-items:center;gap:4px;padding:4px 16px;border-radius:4px;cursor:pointer;color:#666}
+.bottom-nav .page-btn:active{background:rgba(0,0,0,.05)}
+.page-nav-group{display:flex;align-items:center;gap:2px}
+.page-nav-btn{padding:4px 6px;cursor:pointer;color:#999;font-size:.72rem;user-select:none}
+.page-nav-btn:active{background:rgba(0,0,0,.05)}
+
+.theme-btn{width:32px;height:32px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.theme-btn:active{transform:scale(.92)}
+.theme-btn svg{width:16px;height:16px}
+
+/* 浮窗菜单 */
+.dn-float-wrap{position:relative;display:flex;align-items:center}
+.dn-float-btn{width:36px;height:36px;border-radius:50%;background:#ff8c00;color:#fff;font-size:.65rem;font-weight:600;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2;transition:transform .2s,background .2s}
+.dn-float-btn:active{transform:scale(.92)}
+.dn-float-btn:hover{background:#e67e00}
+.dn-float-menu{position:absolute;bottom:40px;left:0;z-index:200;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;opacity:0;transform:translateY(8px) scale(.95);pointer-events:none;transition:opacity .2s ease,transform .2s ease;transform-origin:bottom left}
+.dn-float-menu.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.dn-float-menu a{display:flex;align-items:center;padding:10px 16px;color:#333;text-decoration:none;font-size:.82rem;font-weight:500;white-space:nowrap;transition:background .2s}
+.dn-float-menu a:hover{background:#f5f5f5}
+.menu-indicator{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:6px;vertical-align:middle}
+.menu-indicator.dot{width:8px;height:8px;border-radius:50%}
+.menu-indicator.circulated{width:18px;height:18px;border-radius:50%;color:#fff;font-size:.6rem;font-weight:600;line-height:18px;text-align:center}
+/* 菜单锁定 + 传送回修真小世界（统一类名，跨页同名无冲突） */
+.menu-item.locked{opacity:.5;filter:grayscale(1)}
+.menu-lock-icon{margin-left:8px;font-size:.72rem}
+.menu-home{border-top:1px solid rgba(128,128,128,.35)}
+.menu-lock-tip{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:99999;background:rgba(40,32,20,.9);color:#fff;font-size:.75rem;padding:8px 16px;border-radius:16px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.menu-lock-tip.show{opacity:1}
+
+/* ===== 响应式 ===== */
+@media(min-width:769px){
+  #app{max-width:480px;margin:0 auto;border-left:1px solid #eee;border-right:1px solid #eee}
+}
+
+/* ===== 暗色主题 ===== */
+@media(prefers-color-scheme:dark){
+  .column-tabs{background:#1a1a1a;border-color:#333}
+  .column-tab{color:#888}
+  .column-tab.active{color:#ff8c00}
+  .date-bar{background:#181818;border-color:#333;color:#666}
+  .news-list{background:#121212}
+  .news-item{background:#1a1a1a}
+  .news-item-title{color:#eee}
+  .news-item-brief{color:#888}
+  .news-item-meta{color:#555}
+  .bottom-nav{background:#1a1a1a;border-color:#333}
+  .bottom-nav .bn-row:not(:first-child){border-top-color:#333}
+  .bottom-nav .page-btn{color:#999}
+  .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
+  .page-nav-btn{color:#666}
+  .page-nav-btn:active{background:rgba(255,255,255,.08)}
+  .empty-state{color:#666}
+  .dn-float-menu{background:#1e1e1e}
+  .dn-float-menu a{color:#ddd}
+  .dn-float-menu a:hover{background:#2a2a2a}
+  .date-dropdown{background:#1e1e1e}
+  .date-dropdown-item{color:#ddd}
+  .date-dropdown-item:active{background:#2a2a2a}
+  .date-dropdown-item.active{color:#ff8c00}
+}
+[data-theme="dark"]{
+  .column-tabs{background:#1a1a1a;border-color:#333}
+  .column-tab{color:#888}
+  .column-tab.active{color:#ff8c00}
+  .date-bar{background:#181818;border-color:#333;color:#666}
+  .news-list{background:#121212}
+  .news-item{background:#1a1a1a}
+  .news-item-title{color:#eee}
+  .news-item-brief{color:#888}
+  .news-item-meta{color:#555}
+  .bottom-nav{background:#1a1a1a;border-color:#333}
+  .bottom-nav .bn-row:not(:first-child){border-top-color:#333}
+  .bottom-nav .page-btn{color:#999}
+  .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
+  .page-nav-btn{color:#666}
+  .page-nav-btn:active{background:rgba(255,255,255,.08)}
+  .empty-state{color:#666}
+  .dn-float-menu{background:#1e1e1e}
+  .dn-float-menu a{color:#ddd}
+  .dn-float-menu a:hover{background:#2a2a2a}
+  .date-dropdown{background:#1e1e1e}
+  .date-dropdown-item{color:#ddd}
+  .date-dropdown-item:active{background:#2a2a2a}
+  .date-dropdown-item.active{color:#ff8c00}
+}
+/* 图片查看器 */
+.img-viewer{display:none;position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:rgba(0,0,0,.85);cursor:pointer;align-items:center;justify-content:center}
+.img-viewer.show{display:flex}
+.img-viewer img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:4px}
+.img-viewer .close{position:fixed;top:16px;right:20px;color:#fff;font-size:1.5rem;cursor:pointer;z-index:1;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(0,0,0,.3)}
+
+/* 登录区（底部右侧头像，点击弹留言窗） */
+.user-area{display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;padding:2px 0;-webkit-tap-highlight-color:transparent}
+.user-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;background:rgba(128,128,128,.2);border:1px solid rgba(128,128,128,.3);flex-shrink:0}
+
+/* 登录留言弹窗（与修真小世界一致） */
+.comment-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,.5);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;display:flex;align-items:flex-end}
+.comment-overlay.active{opacity:1;visibility:visible}
+.comment-panel{background:#fff;width:100%;max-height:85vh;border-radius:16px 16px 0 0;overflow:hidden;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .35s ease-out}
+.comment-overlay.active .comment-panel{transform:translateY(0)}
+.comment-panel-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;border-bottom:1px solid #eee;flex-shrink:0}
+.comment-panel-header .cp-title{font-size:.9rem;font-weight:600;color:#333}
+.comment-panel-header .cp-close{font-size:1.2rem;color:#999;cursor:pointer;padding:4px;line-height:1;border:none;background:none}
+.comment-panel-body{flex:1;overflow-y:auto;padding:8px 16px;min-height:200px;max-height:calc(85vh - 50px);-webkit-overflow-scrolling:touch}
+@media(prefers-color-scheme:dark){.comment-panel{background:#1e1e1e}.comment-panel-header{border-color:#333}.comment-panel-header .cp-title{color:#ddd}}
+
+        /* ===== 启动画面：仅旋转加载图标 ===== */
+        .boot-splash{position:fixed;inset:0;z-index:30000;background:radial-gradient(circle at 50% 40%,rgba(60,45,25,.05),rgba(20,15,8,.05));display:flex;align-items:center;justify-content:center;transition:opacity .45s ease;opacity:1}
+        .boot-splash.hide{opacity:0;pointer-events:none}
+        .boot-spinner{width:38px;height:38px;border:3px solid rgba(128,128,128,.22);border-top-color:#ff8c00;border-radius:50%;animation:bootSpin .8s linear infinite}
+        @keyframes bootSpin{to{transform:rotate(360deg)}}
+</style>
+    <link rel="stylesheet" href="./lib/waline.css">
+</head>
+<body>
+<div class="loading-overlay boot-splash" id="loading">
+  <div class="boot-spinner"></div>
+</div>
+
+<div id="app">
+  <div class="column-tabs" id="columnTabs"></div>
+  <div class="date-bar" id="dateBar">
+    <span id="dateLabel"></span>
+    <span class="count" id="countLabel"></span>
+    <div class="date-dropdown" id="dateDropdown"></div>
+  </div>
+  <div class="news-list" id="newsList"></div>
+</div>
+
+<div class="bottom-nav" id="bottomNav">
+  <div class="bn-row bn-tts-row"><div id="ttsBarMount"></div></div>
+  <div class="bn-row">
+    <div class="dn-float-wrap">
+      <button class="dn-float-btn" id="dnFloatBtn">新闻</button>
+      <div class="dn-float-menu" id="dnFloatMenu">
+        <a class="menu-item" href="https://snowhoo.net/app/reader.html" target="_blank"><span class="menu-indicator circulated" style="background:#e94560">小</span>小红故事·Blog</a>
+        <a class="menu-item" href="https://snowhoo.net/app/yedu_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#764ba2">夜</span>夜读·每晚十点</a>
+        <a class="menu-item" href="https://snowhoo.net/app/zjsz_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#3b82f6">照</span>照见苏州·摄影专辑</a>
+        <span style="display:flex;align-items:center;padding:10px 16px;color:#ff8c00;font-size:.82rem;font-weight:600;white-space:nowrap;cursor:default">
+          <span class="menu-indicator circulated" style="background:#ff8c00">新</span>新闻·每日速览
+          <span style="margin-left:8px;color:#ff8c00">&#x2713;</span>
+        </span>
+        <a class="menu-item" href="https://snowhoo.net/app/tv_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#22c55e">播</span>播霸·在线影视</a>
+        <a class="menu-item menu-home" href="https://snowhoo.net/app/APP.html" onclick="event.preventDefault();try{localStorage.removeItem('resume_play');}catch(e){}window.location.replace('https://snowhoo.net/app/APP.html')"><span class="menu-indicator circulated" style="background:#e8793a;width:24px;height:24px;line-height:24px;font-size:16px">界</span>传送回修真小世界</a>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:20px">
+      <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
+    </div>
+    <div class="user-area" id="userArea">
+      <img class="user-avatar" id="userAvatar" alt="">
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var today = new Date();
+  function padNum(n) { return n < 10 ? '0' + n : '' + n; }
+  var dateStr = today.getFullYear() + '' + padNum(today.getMonth()+1) + '' + padNum(today.getDate());
+  var dataBase = 'news_CCTV/' + dateStr + '/';
+
+  // 栏目定义（按菜单栏顺序）
+  var COLUMNS = ['新闻','国内','国际','经济','社会','法治','文娱','科技','生活','军事'];
+  var DISPLAY = ['综合新闻','国内','国际','经济','社会','法治','文娱','科技','生活','军事'];
+  var currentColumn = 0;
+  var allData = {};       // columnName -> items[]
+  var loaded = false;
+  var loadingCount = 0;
+
+  var app = document.getElementById('app');
+  var loadingEl = document.getElementById('loading');
+  var columnTabsEl = document.getElementById('columnTabs');
+  var dateBar = document.getElementById('dateBar');
+  var dateLabel = document.getElementById('dateLabel');
+  var countLabel = document.getElementById('countLabel');
+  var newsList = document.getElementById('newsList');
+
+  // ===== 主题 =====
+  function detectTheme() {
+    var saved = localStorage.getItem('dalynews_theme');
+    if (saved === 'dark' || saved === 'light') {
+      document.documentElement.setAttribute('data-theme', saved);
+      updateThemeBtn(saved);
+      return;
+    }
+    try {
+      var pt = window.parent.document.documentElement.getAttribute('data-theme');
+      if (pt === 'dark' || pt === 'light') {
+        document.documentElement.setAttribute('data-theme', pt);
+        updateThemeBtn(pt);
+        return;
+      }
+    } catch(e) {}
+    var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = isDark ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    updateThemeBtn(theme);
+  }
+  function updateThemeBtn(theme) {
+    var btn = document.getElementById('themeBtn');
+    if (theme === 'dark') {
+      btn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#f0a500"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#f0a500" stroke-width="2" fill="none"/></svg>';
+    } else {
+      btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg>';
+    }
+  }
+  detectTheme();
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+    var saved = localStorage.getItem('dalynews_theme');
+    if (!saved) detectTheme();
+  });
+  document.getElementById('themeBtn').addEventListener('click', function() {
+    var current = document.documentElement.getAttribute('data-theme');
+    var next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('dalynews_theme', next);
+    updateThemeBtn(next);
+  });
+
+  // ===== 数据加载 =====
+  var firstShown = false;   // 首屏是否已提前渲染（不等全部栏目）
+  // 渲染首屏（综合新闻）+ 隐藏启动遮罩
+  function showFirstScreen() {
+    if (firstShown) return;
+    firstShown = true;
+    var d = new Date(parseInt(currentDateStr.slice(0,4)), parseInt(currentDateStr.slice(4,6))-1, parseInt(currentDateStr.slice(6,8)));
+    var dStr = d.getFullYear() + '\u5E74' + (d.getMonth()+1) + '\u6708' + d.getDate() + '\u65E5';
+    var weekdays = ['\u5468\u65E5','\u5468\u4E00','\u5468\u4E8C','\u5468\u4E09','\u5468\u56DB','\u5468\u4E94','\u5468\u516D'];
+    dateLabel.textContent = dStr + ' ' + weekdays[d.getDay()];
+    renderTabs();
+    renderList(0);
+    document.title = '小红故事|新闻 – ' + DISPLAY[0];
+    loadingEl.classList.add('hide');
+    setTimeout(function() { loadingEl.remove(); }, 500);
+  }
+
+  function loadAll() {
+    loadingCount = COLUMNS.length;
+    COLUMNS.forEach(function(col) {
+      fetch(dataBase + encodeURIComponent(col) + '.json')
+        .then(function(r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function(data) {
+          allData[col] = data.items || [];
+          checkLoaded();
+        })
+        .catch(function(e) {
+          console.warn('[' + col + '] ' + e.message);
+          allData[col] = [];
+          checkLoaded();
+        });
+    });
+  }
+
+  function checkLoaded() {
+    loadingCount--;
+    if (loadingCount > 0) {
+      // 综合新闻已就绪 → 不等其余栏目，立即渲染首屏（其余在后台补载）
+      if (!firstShown && allData[COLUMNS[0]]) showFirstScreen();
+      return;
+    }
+    loaded = true;
+    showFirstScreen();
+    // 后台补载完成：若用户已切到其他栏目且当时列表为空 → 刷新当前栏目
+    var cur = allData[COLUMNS[currentColumn]] || [];
+    if (!cur.length) renderList(currentColumn);
+  }
+
+  // ===== 标签栏 =====
+  function renderTabs() {
+    columnTabsEl.innerHTML = '';
+    COLUMNS.forEach(function(col, idx) {
+      var tab = document.createElement('span');
+      tab.className = 'column-tab' + (idx === 0 ? ' active' : '');
+      tab.textContent = DISPLAY[idx];
+      tab.dataset.idx = idx;
+      tab.addEventListener('click', function() {
+        switchColumn(parseInt(this.dataset.idx, 10));
+      });
+      columnTabsEl.appendChild(tab);
+    });
+  }
+
+  function switchColumn(idx) {
+    if (idx === currentColumn) return;
+    currentColumn = idx;
+    // 更新tab样式
+    var tabs = columnTabsEl.querySelectorAll('.column-tab');
+    tabs.forEach(function(t, i) {
+      t.className = 'column-tab' + (i === idx ? ' active' : '');
+    });
+    // 滚动tab到可视区域
+    if (tabs[idx]) tabs[idx].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    document.title = '小红故事|新闻 – ' + DISPLAY[idx];
+    renderList(idx);
+    newsList.scrollTop = 0;
+  }
+
+  // ===== 渲染列表 =====
+  function renderList(colIdx) {
+    var col = COLUMNS[colIdx];
+    var items = allData[col] || [];
+    countLabel.textContent = items.length + '\u6761\u65B0\u95FB';
+
+    if (!items.length) {
+      newsList.innerHTML = '<div class="empty-state"><div class="icon">&#x1F4F0;</div><div>\u6682\u65E0\u65B0\u95FB</div></div>';
+      return;
+    }
+
+    var html = '';
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var title = item.title || '';
+      var brief = item.brief || '';
+      var time = item.dateTime || '';
+      var imgUrl = item.image || '';
+      var link = item.url || '';
+      var timeStr = time.length >= 16 ? time.slice(11, 16) : (time.length >= 10 ? time.slice(5, 10) : '');
+      var safeLink = escapeHtml(link);
+      var safeTitle = escapeHtml(title);
+      var safeBrief = escapeHtml(brief);
+      var safeCol = escapeHtml(DISPLAY[colIdx]);
+      var safeTime = escapeHtml(timeStr);
+
+      html += '<div class="news-item" data-url="' + safeLink + '">';
+      if (imgUrl) {
+        html += '<div class="news-item-img"><img src="' + escapeHtml(imgUrl) + '" alt="" loading="lazy"></div>';
+      } else {
+        html += '<div class="news-item-img"><div class="no-img">&#x1F4F7;</div></div>';
+      }
+      html += '<div class="news-item-body">';
+      html += '<div class="news-item-title">' + safeTitle + '</div>';
+      if (brief) html += '<div class="news-item-brief">' + safeBrief + '</div>';
+      html += '<div class="news-item-meta">';
+      html += '<span class="source">' + safeCol + '</span>';
+      if (safeTime) html += '<span>' + safeTime + '</span>';
+      html += '</div></div></div>';
+    }
+    newsList.innerHTML = html;
+
+    // 图片加载失败时显示占位，点击放大
+    newsList.querySelectorAll('.news-item-img img').forEach(function(img) {
+      img.addEventListener('error', function() {
+        var p = this.parentElement;
+        if (p) p.innerHTML = '<div class="no-img">&#x1F4F7;</div>';
+      });
+      img.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var src = this.src;
+        if (src) {
+          document.getElementById('imgViewerSrc').src = src;
+          document.getElementById('imgViewer').classList.add('show');
+        }
+      });
+    });
+
+    // 绑定点击事件 - 展开全文
+    var items_el = newsList.querySelectorAll('.news-item');
+    for (var j = 0; j < items_el.length; j++) {
+      (function(el) {
+        el.addEventListener('click', function(e) {
+          // 点击图片区域不触发展开
+          if (e.target.closest('.news-item-img')) return;
+          this.classList.toggle('expanded');
+          var t = this.querySelector('.news-item-title');
+          document.title = '小红故事|新闻 – ' + (t ? t.textContent : '') + ' – ' + DISPLAY[currentColumn];
+        });
+      })(items_el[j]);
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ===== 浮窗菜单 =====
+  var dnFloatBtn = document.getElementById('dnFloatBtn');
+  var dnFloatMenu = document.getElementById('dnFloatMenu');
+  dnFloatBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    dnFloatMenu.classList.toggle('show');
+  });
+  document.addEventListener('click', function() {
+    dnFloatMenu.classList.remove('show');
+  });
+  dnFloatMenu.addEventListener('click', function(e) {
+    e.stopPropagation();
+  });
+
+  // ===== 分享功能（已移除） =====
+
+  // ===== 左右滑动切换分类 =====
+  var swipeStartX = 0, swipeStartY = 0;
+  newsList.addEventListener('touchstart', function(e) {
+    swipeStartX = e.changedTouches[0].screenX;
+    swipeStartY = e.changedTouches[0].screenY;
+  }, {passive: true});
+  newsList.addEventListener('touchmove', function(e) {
+    // 横向滑动时阻止浏览器默认（避免与系统边缘返回手势抢手指），纵向滚动不受影响
+    var dx = e.touches[0].screenX - swipeStartX;
+    var dy = e.touches[0].screenY - swipeStartY;
+    if (Math.abs(dx) > Math.abs(dy)) e.preventDefault();
+  }, {passive: false});
+  newsList.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].screenX - swipeStartX;
+    var dy = e.changedTouches[0].screenY - swipeStartY;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0 && currentColumn < COLUMNS.length - 1) {
+        switchColumn(currentColumn + 1);
+      } else if (dx > 0 && currentColumn > 0) {
+        switchColumn(currentColumn - 1);
+      }
+    }
+  }, {passive: true});
+
+  // ===== 日期选择 =====
+  var dateDropdown = document.getElementById('dateDropdown');
+  var availableDates = [];
+  var currentDateStr = dateStr;
+
+  // 生成最近7天日期列表（不依赖网络请求）
+  function scanAvailableDates() {
+    for (var i = 0; i < 7; i++) {
+      var d = new Date();
+      d.setDate(d.getDate() - i);
+      var ds = d.getFullYear() + padNum(d.getMonth()+1) + padNum(d.getDate());
+      availableDates.push(ds);
+    }
+    availableDates.sort().reverse();
+  }
+
+  function renderDateDropdown() {
+    dateDropdown.innerHTML = '';
+    for (var i = 0; i < availableDates.length; i++) {
+      var ds = availableDates[i];
+      var d = new Date(parseInt(ds.slice(0,4)), parseInt(ds.slice(4,6))-1, parseInt(ds.slice(6,8)));
+      var label = d.getFullYear() + '\u5E74' + (d.getMonth()+1) + '\u6708' + d.getDate() + '\u65E5';
+      var weekdays = ['\u5468\u65E5','\u5468\u4E00','\u5468\u4E8C','\u5468\u4E09','\u5468\u56DB','\u5468\u4E94','\u5468\u516D'];
+      label += ' ' + weekdays[d.getDay()];
+      var item = document.createElement('div');
+      item.className = 'date-dropdown-item' + (ds === currentDateStr ? ' active' : '');
+      item.innerHTML = label + '<span class="check">&#x2713;</span>';
+      item.dataset.ds = ds;
+      item.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var ds = this.dataset.ds;
+        if (ds === currentDateStr) { hideDateDropdown(); return; }
+        switchDate(ds);
+      });
+      dateDropdown.appendChild(item);
+    }
+  }
+
+  function switchDate(ds) {
+    currentDateStr = ds;
+    dataBase = 'news_CCTV/' + ds + '/';
+    allData = {};
+    currentColumn = 0;
+    firstShown = false;   // 重置首屏标记：切日期后允许重新渲染（否则永远停在"加载中"）
+    document.title = '小红故事|新闻 – ' + DISPLAY[0];
+    loaded = false;
+    hideDateDropdown();
+    // 更新日期栏
+    var d = new Date(parseInt(ds.slice(0,4)), parseInt(ds.slice(4,6))-1, parseInt(ds.slice(6,8)));
+    var dStr = d.getFullYear() + '\u5E74' + (d.getMonth()+1) + '\u6708' + d.getDate() + '\u65E5';
+    var weekdays = ['\u5468\u65E5','\u5468\u4E00','\u5468\u4E8C','\u5468\u4E09','\u5468\u56DB','\u5468\u4E94','\u5468\u516D'];
+    dateLabel.textContent = dStr + ' ' + weekdays[d.getDay()];
+    countLabel.textContent = '\u52A0\u8F7D\u4E2D...';
+    newsList.innerHTML = '<div class="empty-state"><div class="icon">&#x23F3;</div><div>\u52A0\u8F7D\u4E2D...</div></div>';
+    renderDateDropdown();
+    loadAll();
+  }
+
+  function showDateDropdown() {
+    renderDateDropdown();
+    dateDropdown.classList.add('show');
+  }
+
+  function hideDateDropdown() {
+    dateDropdown.classList.remove('show');
+  }
+
+  dateLabel.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (dateDropdown.classList.contains('show')) {
+      hideDateDropdown();
+    } else {
+      showDateDropdown();
+    }
+  });
+  document.addEventListener('click', function() {
+    hideDateDropdown();
+  });
+
+  // 扫描可用日期
+  scanAvailableDates();
+
+  // ===== 图片查看器 =====
+  var imgViewer = document.createElement('div');
+  imgViewer.className = 'img-viewer';
+  imgViewer.id = 'imgViewer';
+  imgViewer.innerHTML = '<span class="close" id="imgViewerClose">&times;</span><img id="imgViewerSrc" src="" alt="">';
+  document.body.appendChild(imgViewer);
+  imgViewer.onclick = function(e) {
+    if (e.target === imgViewer || e.target.id === 'imgViewerClose') {
+      this.classList.remove('show');
+    }
+  };
+
+  // ===== 启动 =====
+  loadAll();
+
+  // 供外部朗读按钮调用的数据接口（返回当前栏目待朗读列表）
+  window.__newsTTSRead = function() {
+    var col = COLUMNS[currentColumn];
+    var items = allData[col] || [];
+    if (!items.length) return null;
+    // 找到当前展开项索引；无展开项则从第一条开始
+    var start = 0;
+    var els = newsList.querySelectorAll('.news-item');
+    for (var i = 0; i < els.length; i++) {
+      if (els[i].classList.contains('expanded')) { start = i; break; }
+    }
+    var arr = [];
+    for (var j = start; j < items.length; j++) {
+      var it = items[j];
+      var t = it.title || '';
+      var b = it.brief || '';
+      if (!t && !b) continue;
+      arr.push({ title: t, text: t + (b ? '。' + b : '') });
+    }
+    return arr.length ? { items: arr, label: DISPLAY[currentColumn] + '新闻' } : null;
+  };
+  // 切换栏目时若正在朗读 → 停止
+  var _sw = switchColumn;
+  switchColumn = function(idx) {
+    var r = _sw.apply(this, arguments);
+    if (window.TTS && TTS.isSpeaking()) TTS.stop();
+    return r;
+  };
+
+})();
+</script>
+
+<script>
+// 边缘手势锁：排除左右边缘系统返回手势（防横滑翻页误触退出），离开页面恢复
+(function(){
+  function lockEdge(lock){ try{ if(window.AppBridge && window.AppBridge.setEdgeLock) window.AppBridge.setEdgeLock(lock ? '1' : '0'); }catch(e){} }
+  function guardBack(g){ try{ if(window.AppBridge && window.AppBridge.setBackGuard) window.AppBridge.setBackGuard(g ? '1' : '0'); }catch(e){} }
+  lockEdge(true);
+  guardBack(true);
+  window.addEventListener('pagehide', function(){ lockEdge(false); guardBack(false); });
+})();
+</script>
+<script>
+// 菜单解锁：按「登录 + 该栏目已真气解锁」判断（读云端 waline 游戏记录），未解锁置灰+提示；传送回修真小世界不锁定
+(function(){
+  // 仅以 APP 主登录 key WALINE_USER 判定（'@waline/user' 是 Waline 评论组件写入，登出残留会导致误判已登录）
+  function getWalineUser(){
+    try{
+      var v = localStorage.getItem('WALINE_USER') || sessionStorage.getItem('WALINE_USER');
+      if (v) { var u = JSON.parse(v); if (u && (u.display_name || u.nick || u.name)) return u; }
+    }catch(e){}
+    return null;
+  }
+  // 栏目文件 → 解锁标记 key（与 APP.html 游戏记录字段一致）
+  var KEY_BY_FILE = { 'reader.html':'story', 'yedu_p.html':'yedu', 'zjsz_p.html':'zjsz', 'DaliyNews_p.html':'news', 'tv_p.html':'tv' };
+  // 健壮解析（兼容 Waline markdown 渲染污染，同 APP.html parseGameRecord）
+  function parseGameRecord(raw){
+    if (!raw) return null;
+    var s = String(raw).replace(/<[^>]*>/g, '')
+      .replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+      .replace(/&quot;/g, '"').replace(/&#34;/g, '"')
+      .replace(/&amp;/g, '&').replace(/&#38;/g, '&')
+      .replace(/&lt;/g, '<').replace(/&#60;/g, '<')
+      .replace(/&gt;/g, '>').replace(/&#62;/g, '>');
+    var st = s.indexOf('{'); var en = s.lastIndexOf('}');
+    if (st >= 0 && en > st) s = s.slice(st, en + 1);
+    try { return JSON.parse(s); } catch(e){ return null; }
+  }
+  function tip(msg){
+    var t = document.getElementById('menuLockTip');
+    if (!t) { t = document.createElement('div'); t.id = 'menuLockTip'; t.className = 'menu-lock-tip'; document.body.appendChild(t); }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._tm);
+    t._tm = setTimeout(function(){ t.classList.remove('show'); }, 1800);
+  }
+  var menu = document.getElementById('dnFloatMenu');
+  if (!menu) return;
+  var links = Array.prototype.slice.call(menu.querySelectorAll('a.menu-item:not(.menu-home)'));
+  function lockItem(a){
+    if (a.classList.contains('locked')) return;
+    a.classList.add('locked');
+    a.insertAdjacentHTML('beforeend', '<span class="menu-lock-icon">🔒</span>');
+    a.addEventListener('click', function(e){ if (!a.classList.contains('locked')) return; e.preventDefault(); tip('封印未破!请往修真小世界破除。'); }); // unlockItem 后已解锁，不拦截跳转
+  }
+  function unlockItem(a){
+    a.classList.remove('locked');
+    var ic = a.querySelector('.menu-lock-icon');
+    if (ic) ic.remove();
+  }
+  function fileOf(href){ try { var p = String(href).split('/'); return p[p.length - 1]; } catch(e){ return ''; } }
+  function lockAll(){ for (var i = 0; i < links.length; i++) lockItem(links[i]); }
+  function applyUnlocks(ul){
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      var key = KEY_BY_FILE[fileOf(a.getAttribute('href') || '')];
+      if (key && ul && ul[key]) unlockItem(a);
+    }
+  }
+  var user = getWalineUser();
+  // 登录区：头像（点击弹留言窗）
+  var ua = document.getElementById('userAvatar');
+  if (ua && user) {
+    if (user.avatar) ua.src = user.avatar;
+  }
+  if (!user) { applyUnlocks({story:1,yedu:1,zjsz:1,news:1,tv:1}); return; } // 已去除登录限制：未登录也全部解锁
+  // 已登录：直接全部解锁（已去除登录限制）
+  applyUnlocks({story:1,yedu:1,zjsz:1,news:1,tv:1}); return;
+  var token = user.token || '';
+  var url = 'https://waline.snowhoo.net/api/comment?path=/app-game/actions' + (token ? '&token=' + encodeURIComponent(token) : '');
+  fetch(url)
+    .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(resp){
+      var records = (resp.data && resp.data.data) || [];
+      var found = null, foundOid = 0;
+      for (var i = 0; i < records.length; i++) {
+        try {
+          var rec = records[i];
+          if ((rec.nick || '') !== user.display_name) continue;
+          var obj = parseGameRecord(rec.orig || rec.comment || '');
+          var oid = parseInt(rec.objectId, 10) || 0;
+          if (obj && typeof obj.points === 'number' && oid > foundOid) { found = obj; foundOid = oid; }
+        } catch(e){}
+      }
+      if (!found) return null;
+      return {
+        story: found.storyUnlocked ? 1 : 0,
+        yedu: found.yeduUnlocked ? 1 : 0,
+        zjsz: found.zjszUnlocked ? 1 : 0,
+        news: found.newsUnlocked ? 1 : 0,
+        tv: found.tvUnlocked ? 1 : 0
+      };
+    })
+    .then(function(ul){ if (ul) applyUnlocks(ul); })
+    .catch(function(e){ console.warn('[菜单解锁] 拉取解锁状态失败，保持锁定:', e); });
+})();
+</script>
+
+<!-- 登录留言弹窗（与修真小世界一致）：点头像打开，可留言/登录 -->
+<div class="comment-overlay" id="commentOverlay">
+  <div class="comment-panel">
+    <div class="comment-panel-header">
+      <span class="cp-title">留言</span>
+      <button class="cp-close" id="commentClose">&times;</button>
+    </div>
+    <div class="comment-panel-body" id="walineContainer"></div>
+  </div>
+</div>
+<script>
+// 登录留言弹窗（与修真小世界一致）：点头像打开；Waline 留言/登录
+(function(){
+  var overlay = document.getElementById('commentOverlay');
+  var userArea = document.getElementById('userArea');
+  var closeBtn = document.getElementById('commentClose');
+  if (userArea) userArea.addEventListener('click', function(){ if (overlay) overlay.classList.add('active'); });
+  if (closeBtn) closeBtn.addEventListener('click', function(){ if (overlay) overlay.classList.remove('active'); });
+  if (overlay) overlay.addEventListener('click', function(e){ if (e.target === overlay) overlay.classList.remove('active'); });
+  // 刷新底部登录区（头像+用户名）
+  function refreshUser(){
+    var ua = document.getElementById('userAvatar');
+    try {
+      var v = localStorage.getItem('WALINE_USER');
+      var u = v ? JSON.parse(v) : null;
+      if (u && (u.display_name || u.nick || u.name)) {
+        if (ua && u.avatar) ua.src = u.avatar;
+      } else {
+        if (ua) ua.removeAttribute('src');
+      }
+    } catch(e){}
+  }
+  refreshUser();
+  // Waline 初始化（动态 import，同修真小世界）
+  try {
+    import('./lib/waline.js').then(function(mod){
+      try {
+        mod.init({
+          el: '#walineContainer',
+          serverURL: 'https://waline.snowhoo.net',
+          lang: 'zh-CN',
+          avatar: 'mp',
+          pageview: false,
+          locale: { placeholder: '说点什么吧...', comment: '留言' },
+          onLogin: function(user){
+            try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e){}
+            refreshUser();
+          },
+          onLogout: function(){
+            try { localStorage.removeItem('WALINE_USER'); localStorage.removeItem('@waline/user'); } catch(e){}
+            refreshUser();
+          }
+        });
+      } catch(e){ console.warn('[留言] Waline init error:', e); }
+    }).catch(function(e){ console.warn('[留言] Waline import error:', e); });
+  } catch(e){ console.warn('[留言] Waline 初始化失败:', e); }
+})();
+</script>
+
+<!-- 讯飞语音朗读：通用朗读器（时间戳强制最新版，彻底绕开 WebView 顽固缓存） -->
+<script>
+(function(){
+  function loadTTS(cb){
+    var s = document.createElement('script');
+    s.src = 'tts.js?ts=' + Date.now();
+    s.onload = function(){ cb && cb(); };
+    s.onerror = function(){ /* 加载失败静默：控制条为空自动隐藏 */ };
+    document.head.appendChild(s);
+  }
+  loadTTS(function(){
+    // 朗读控制条挂载到底部状态栏（常驻）：▶ 播放/暂停 · ⏹ 停止 · 语速 · 发音人
+    var mount = document.getElementById('ttsBarMount');
+    if (mount) { TTS.setAccent('#ff8c00'); TTS.mount(mount); }
+
+    // 朗读起始项索引（与 __newsTTSRead 一致：当前展开项或首条），朗读期间固定
+    var ttsStart = 0;
+    var RESUME_KEY = 'resume_play';
+
+    // ===== 继续播放恢复点：记录当前播放位置（栏目+条目） =====
+    function resumePos(){
+      var col = 0;
+      var tabs = document.querySelectorAll('.column-tab');
+      for (var i = 0; i < tabs.length; i++) { if (tabs[i].classList.contains('active')) { col = i; break; } }
+      var item = 0;
+      var els = document.querySelectorAll('#newsList .news-item');
+      for (var j = 0; j < els.length; j++) { if (els[j].classList.contains('expanded')) { item = j; break; } }
+      return { col: col, item: item };
+    }
+    function saveResume(playing){
+      try {
+        var pos = resumePos();
+        localStorage.setItem(RESUME_KEY, JSON.stringify({ page: 'DaliyNews_p.html', col: pos.col, item: pos.item, playing: !!playing, ts: Date.now() }));
+      } catch(e){}
+    }
+    function clearResume(){ try { localStorage.removeItem(RESUME_KEY); } catch(e){} }
+    // 播放状态钩子：播放→记录；暂停→记录(标记非播放中)；停止→清除
+    TTS.onPlayState(function(s){
+      if (s.playing) saveResume(true);
+      else if (!s.paused) clearResume();
+      else saveResume(false);
+    });
+
+    function syncTtsStart(){
+      var nl = document.getElementById('newsList');
+      if (!nl) return;
+      var els = nl.querySelectorAll('.news-item');
+      ttsStart = 0;
+      for (var i = 0; i < els.length; i++) {
+        if (els[i].classList.contains('expanded')) { ttsStart = i; break; }
+      }
+    }
+
+    // 朗读内容提供函数：从当前展开项/首条开始连续朗读当前栏目
+    TTS.setProvider(function(){
+      syncTtsStart();
+      if (!window.__newsTTSRead) return [];
+      var data = window.__newsTTSRead();
+      if (!data || !data.items) return [];
+      return { items: data.items, label: data.label };
+    });
+
+    // 朗读跨条时：自动滚动到对应条目 + 展开全文（保持"看到的=听到的"）
+    TTS.onItemChange(function(itemIdx){
+      var nl = document.getElementById('newsList');
+      if (!nl) return;
+      var els = nl.querySelectorAll('.news-item');
+      var el = els[ttsStart + itemIdx];
+      if (!el) return;
+      el.classList.add('expanded');
+      try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) { el.scrollIntoView(); }
+    });
+
+    // ===== 从系统媒体卡片进入（?resume=1）：定位到播放条目并自动续播 =====
+    function getResume(){
+      try {
+        var r = JSON.parse(localStorage.getItem(RESUME_KEY) || 'null');
+        return (r && r.page === 'DaliyNews_p.html') ? r : null;
+      } catch(e){ return null; }
+    }
+    function tryResume(){
+      if (location.search.indexOf('resume=1') < 0) return;
+      var r = getResume();
+      if (!r) return;
+      var tries = 0;
+      (function wait(){
+        var els = document.querySelectorAll('#newsList .news-item');
+        if (els.length || document.querySelector('#newsList .empty-state') || tries++ > 100) {
+          applyResume(r);
+        } else {
+          setTimeout(wait, 100);
+        }
+      })();
+    }
+    function applyResume(r){
+      // 切回播放时的栏目
+      var tabs = document.querySelectorAll('.column-tab');
+      if (tabs[r.col]) { try { tabs[r.col].click(); } catch(e){} }
+      setTimeout(function(){
+        var els = document.querySelectorAll('#newsList .news-item');
+        var el = els[r.item];
+        if (el) {
+          el.classList.add('expanded');
+          try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) { el.scrollIntoView(); }
+        }
+        // 自动续播（从当前展开项起）；被自动播放策略拦截时用户点 ▶ 继续
+        if (r.playing && window.__newsTTSRead) {
+          syncTtsStart();
+          var d = window.__newsTTSRead();
+          if (d && d.items && d.items.length) window.TTS.speak(d.items, { title: d.label });
+        }
+      }, 80);
+    }
+    tryResume();
+  });
+})();
+</script>
+</body>
+</html>

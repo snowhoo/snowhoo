@@ -1,0 +1,831 @@
+---
+layout: false
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>小红故事|照见苏州</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;background:#000;color:#1a1a1a;-webkit-tap-highlight-color:transparent}
+
+#app{position:relative;width:100%;height:100%;overflow:hidden}
+
+.card{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;transition:transform .38s cubic-bezier(.25,.46,.45,.94),opacity .38s}
+.card.left{transform:translateX(-100%);opacity:0;pointer-events:none}
+.card.center{transform:translateX(0);opacity:1;z-index:2}
+.card.right{transform:translateX(100%);opacity:0;pointer-events:none}
+
+.zjsz-cover{position:relative;width:100%;flex-shrink:0;overflow:hidden;background:#000}
+.zjsz-cover-inner{height:calc(100vh / 4 + 50px);width:100%;position:relative}
+.zjsz-cover img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in;background:#e8e4da}
+
+.zjsz-corner-label{position:absolute;top:48px;left:8px;color:rgba(255,255,255,.95);font-size:.75rem;background:rgba(0,0,0,.15);padding:4px 12px;border-radius:18px;text-shadow:0 1px 2px rgba(0,0,0,.4);pointer-events:none;white-space:nowrap}
+
+.card-title{flex-shrink:0;padding:14px 18px 10px;background:#fff;border-bottom:1px solid #f0f0f0}
+.card-title h1{font-size:1.2rem;font-weight:500;line-height:1.35;color:#222;margin-bottom:4px}
+.card-title .meta{font-size:.78rem;color:#999}
+
+.card-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 18px 108px;background:#fafafa}
+.card-content::-webkit-scrollbar{width:0}
+.card-content .body p{line-height:1.5;margin-bottom:10px;font-size:1.1rem;font-weight:300;color:#333}
+.card-content .body .no-content{text-align:center;color:#999;padding:40px 0;font-size:.9rem}
+.card-content .body strong,.card-content .body b{color:#222}
+
+/* 底部导航（两行：第一行朗读播放条 / 第二行功能导航） */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;border-top:1px solid #eee;display:flex;flex-direction:column;padding:0;font-size:.8rem;user-select:none;-webkit-user-select:none}
+.bottom-nav .bn-row{display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:44px;width:100%;flex-shrink:0;min-width:0}
+.bottom-nav .bn-row:not(:first-child){border-top:1px solid #eee}
+.bottom-nav .bn-tts-row{height:42px;padding:0 4px 0 0;justify-content:stretch}
+#ttsBarMount{width:100%;display:flex;min-width:0}
+/* 播放控件主题色：照见苏州蓝色（:root 定义，播放条与弹出菜单共用） */
+:root{--tts-accent:#3b82f6}
+.bottom-nav .page-btn{display:flex;align-items:center;gap:4px;padding:4px 16px;border-radius:4px;cursor:pointer;color:#666}
+.bottom-nav .page-btn:active{background:rgba(0,0,0,.05)}
+.page-nav-group{display:flex;align-items:center;gap:2px}
+.page-nav-btn{padding:4px 6px;cursor:pointer;color:#999;font-size:.72rem;user-select:none}
+.page-nav-btn:active{background:rgba(0,0,0,.05)}
+
+/* 底部导航右侧浮窗 */
+.zjsz-float-wrap{position:relative;display:flex;align-items:center}
+.zjsz-float-btn{width:36px;height:36px;border-radius:50%;background:#3b82f6;color:#fff;border:none;cursor:pointer;display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;place-content:center;gap:0;padding:0;transition:transform .2s,background .2s;overflow:hidden}
+.zjsz-float-btn:active{transform:scale(.92)}
+.zjsz-float-btn:hover{background:#2563eb}
+.zjsz-float-btn span{display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:600;line-height:1}
+.theme-btn{width:32px;height:32px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.theme-btn:active{transform:scale(.92)}
+.theme-btn svg{width:16px;height:16px}
+
+/* 弹出菜单 */
+.zjsz-float-menu{position:absolute;bottom:40px;left:0;z-index:200;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);overflow:hidden;opacity:0;transform:translateY(8px) scale(.95);pointer-events:none;transition:opacity .2s ease,transform .2s ease;transform-origin:bottom left}
+.zjsz-float-menu.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.zjsz-float-menu a{display:flex;align-items:center;padding:10px 16px;color:#333;text-decoration:none;font-size:.82rem;font-weight:500;white-space:nowrap;transition:background .2s}
+.zjsz-float-menu a:hover{background:#f5f5f5}
+.menu-indicator{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:6px;vertical-align:middle}
+.menu-indicator.dot{width:8px;height:8px;border-radius:50%}
+.menu-indicator.circulated{width:18px;height:18px;border-radius:50%;color:#fff;font-size:.6rem;font-weight:600;line-height:18px;text-align:center}
+/* 菜单锁定 + 传送回修真小世界（统一类名，跨页同名无冲突） */
+.menu-item.locked{opacity:.5;filter:grayscale(1)}
+.menu-lock-icon{margin-left:8px;font-size:.72rem}
+.menu-home{border-top:1px solid rgba(128,128,128,.35)}
+.menu-lock-tip{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);z-index:99999;background:rgba(40,32,20,.9);color:#fff;font-size:.75rem;padding:8px 16px;border-radius:16px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.menu-lock-tip.show{opacity:1}
+
+@media(prefers-color-scheme:dark){
+  .zjsz-float-menu{background:#1e1e1e}
+  .zjsz-float-menu a{color:#ddd}
+  .zjsz-float-menu a:hover{background:#2a2a2a}
+}
+
+.swipe-hint{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:100;background:rgba(0,0,0,.55);color:#fff;padding:6px 16px;border-radius:20px;font-size:.75rem;opacity:1;transition:opacity .5s;pointer-events:none;white-space:nowrap}
+.swipe-hint.hidden{opacity:0}
+
+.loading-overlay{position:fixed;top:0;right:0;bottom:0;left:0;z-index:999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
+.loading-overlay.hide{opacity:0;pointer-events:none}
+.spinner{width:40px;height:40px;border:3px solid #eee;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{margin-top:16px;font-size:.9rem;color:#999}
+
+/* Lightbox 图片放大 */
+.lightbox{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;cursor:zoom-out;opacity:0;transition:opacity .3s ease}
+.lightbox.show{display:flex;opacity:1}
+.lightbox img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:4px;box-shadow:0 8px 40px rgba(0,0,0,.6);transform:scale(.9);transition:transform .3s ease}
+.lightbox.show img{transform:scale(1)}
+.lightbox .close-btn{position:absolute;top:20px;right:20px;width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:50%;border:none;color:#fff;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.lightbox .close-btn:hover{background:rgba(255,255,255,.3)}
+
+@media(min-width:769px){
+  #app{max-width:480px;margin:0 auto;border-left:1px solid #eee;border-right:1px solid #eee}
+}
+
+@media(prefers-color-scheme:dark){
+  .card-title{background:#1a1a1a;border-color:#333}
+  .card-title h1{color:#eee}
+  .card-title .meta{color:#666}
+  .card-content{background:#121212}
+  .card-content .body p{color:#ccc}
+  .card-content .body strong,.card-content .body b{color:#eee}
+  .bottom-nav{background:#1a1a1a;border-color:#333}
+  .bottom-nav .bn-row:not(:first-child){border-top-color:#333}
+  .bottom-nav .page-btn{color:#999}
+  .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
+  .page-nav-btn{color:#666}
+  .page-nav-btn:active{background:rgba(255,255,255,.08)}
+}
+[data-theme="dark"]{
+  .card-title{background:#1a1a1a;border-color:#333}
+  .card-title h1{color:#eee}
+  .card-title .meta{color:#666}
+  .card-content{background:#121212}
+  .card-content .body p{color:#ccc}
+  .card-content .body strong,.card-content .body b{color:#eee}
+  .bottom-nav{background:#1a1a1a;border-color:#333}
+  .bottom-nav .bn-row:not(:first-child){border-top-color:#333}
+  .bottom-nav .page-btn{color:#999}
+  .bottom-nav .page-btn:active{background:rgba(255,255,255,.08)}
+  .page-nav-btn{color:#666}
+  .page-nav-btn:active{background:rgba(255,255,255,.08)}
+}
+
+/* 登录区（底部右侧头像，点击弹留言窗） */
+.user-area{display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;padding:2px 0;-webkit-tap-highlight-color:transparent}
+.user-avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;background:rgba(128,128,128,.2);border:1px solid rgba(128,128,128,.3);flex-shrink:0}
+
+/* 登录留言弹窗（与修真小世界一致） */
+.comment-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,.5);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;display:flex;align-items:flex-end}
+.comment-overlay.active{opacity:1;visibility:visible}
+.comment-panel{background:#fff;width:100%;max-height:85vh;border-radius:16px 16px 0 0;overflow:hidden;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .35s ease-out}
+.comment-overlay.active .comment-panel{transform:translateY(0)}
+.comment-panel-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;border-bottom:1px solid #eee;flex-shrink:0}
+.comment-panel-header .cp-title{font-size:.9rem;font-weight:600;color:#333}
+.comment-panel-header .cp-close{font-size:1.2rem;color:#999;cursor:pointer;padding:4px;line-height:1;border:none;background:none}
+.comment-panel-body{flex:1;overflow-y:auto;padding:8px 16px;min-height:200px;max-height:calc(85vh - 50px);-webkit-overflow-scrolling:touch}
+@media(prefers-color-scheme:dark){.comment-panel{background:#1e1e1e}.comment-panel-header{border-color:#333}.comment-panel-header .cp-title{color:#ddd}}
+
+        /* ===== 启动画面：仅旋转加载图标 ===== */
+        .boot-splash{position:fixed;inset:0;z-index:30000;background:radial-gradient(circle at 50% 40%,rgba(60,45,25,.05),rgba(20,15,8,.05));display:flex;align-items:center;justify-content:center;transition:opacity .45s ease;opacity:1}
+        .boot-splash.hide{opacity:0;pointer-events:none}
+        .boot-spinner{width:38px;height:38px;border:3px solid rgba(128,128,128,.22);border-top-color:#3b82f6;border-radius:50%;animation:bootSpin .8s linear infinite}
+        @keyframes bootSpin{to{transform:rotate(360deg)}}
+</style>
+    <link rel="stylesheet" href="./lib/waline.css">
+</head>
+<body>
+<div class="loading-overlay boot-splash" id="loading">
+  <div class="boot-spinner"></div>
+</div>
+
+<div class="swipe-hint" id="hint">← 左滑看下一篇 ······ 右滑看上一篇 →</div>
+
+<div id="app"></div>
+
+<!-- 图片放大 lightbox -->
+<div class="lightbox" id="lightbox"><button class="close-btn" id="lightboxClose">✕</button><img id="lightboxImg" src="" alt=""></div>
+
+<div class="bottom-nav" id="bottomNav">
+  <div class="bn-row bn-tts-row"><div id="ttsBarMount"></div></div>
+  <div class="bn-row">
+    <div class="zjsz-float-wrap">
+      <button class="zjsz-float-btn" id="zjszFloatBtn"><span>照</span><span>见</span><span>苏</span><span>州</span></button>
+      <div class="zjsz-float-menu" id="zjszFloatMenu">
+        <a class="menu-item" href="https://snowhoo.net/app/reader.html" target="_blank"><span class="menu-indicator circulated" style="background:#e94560">小</span>小红故事·Blog</a>
+        <a class="menu-item" href="https://snowhoo.net/app/yedu_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#764ba2">夜</span>夜读·每晚十点</a>
+        <span style="display:flex;align-items:center;padding:10px 16px;color:#3b82f6;font-size:.82rem;font-weight:600;white-space:nowrap;cursor:default">
+          <span class="menu-indicator circulated" style="background:#3b82f6">照</span>照见苏州·摄影专辑
+          <span style="margin-left:8px;color:#3b82f6">&#x2713;</span>
+        </span>
+        <a class="menu-item" href="https://snowhoo.net/app/DaliyNews_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#ff8c00">新</span>新闻·每日速览</a>
+        <a class="menu-item" href="https://snowhoo.net/app/tv_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#22c55e">播</span>播霸·在线影视</a>
+        <a class="menu-item menu-home" href="https://snowhoo.net/app/APP.html" onclick="event.preventDefault();try{localStorage.removeItem('resume_play');}catch(e){}window.location.replace('https://snowhoo.net/app/APP.html')"><span class="menu-indicator circulated" style="background:#e8793a;width:24px;height:24px;line-height:24px;font-size:16px">界</span>传送回修真小世界</a>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:20px">
+      <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
+      <div class="page-nav-group">
+        <span class="page-nav-btn" id="firstBtn">‹‹</span>
+        <span class="page-btn" id="pageBtn">1</span>
+        <span class="page-nav-btn" id="lastBtn">››</span>
+      </div>
+    </div>
+    <div class="user-area" id="userArea">
+      <img class="user-avatar" id="userAvatar" alt="">
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var BASE = (typeof window.__ZJSZ_BASE_PATH !== 'undefined' ? window.__ZJSZ_BASE_PATH : 
+             (location.protocol === 'file:' ? './' : '/js/sevencolor/1/'));
+  
+  let articles = [];
+  let currentIndex = 0;
+  const STORAGE_KEY = 'zjsz_page_idx';
+  let startX = 0, startY = 0, moveX = 0, moveY = 0;
+  let isDragging = false;
+  let hintVisible = true;
+  
+  const app = document.getElementById('app');
+  const pageBtn = document.getElementById('pageBtn');
+  const hintEl = document.getElementById('hint');
+  const loadingEl = document.getElementById('loading');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxClose = document.getElementById('lightboxClose');
+
+  // 主题检测
+  function detectTheme() {
+    var saved = localStorage.getItem('zjsz_theme');
+    if (saved === 'dark' || saved === 'light') {
+      document.documentElement.setAttribute('data-theme', saved);
+      updateThemeBtn(saved);
+      return;
+    }
+    try {
+      var pt = window.parent.document.documentElement.getAttribute('data-theme');
+      if (pt === 'dark' || pt === 'light') {
+        document.documentElement.setAttribute('data-theme', pt);
+        updateThemeBtn(pt);
+        return;
+      }
+    } catch(e) {}
+    var isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var theme = isDark ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    updateThemeBtn(theme);
+  }
+  function updateThemeBtn(theme) {
+    var btn = document.getElementById('themeBtn');
+    if (theme === 'dark') {
+      btn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="#f0a500"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#f0a500" stroke-width="2" fill="none"/></svg>';
+    } else {
+      btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg>';
+    }
+  }
+  detectTheme();
+  document.getElementById('themeBtn').addEventListener('click', function() {
+    var current = document.documentElement.getAttribute('data-theme');
+    var next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('zjsz_theme', next);
+    updateThemeBtn(next);
+  });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', detectTheme);
+
+  // 浮窗菜单
+  var floatBtn = document.getElementById('zjszFloatBtn');
+  var floatMenu = document.getElementById('zjszFloatMenu');
+  floatBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    floatMenu.classList.toggle('show');
+  });
+  document.addEventListener('click', function() {
+    floatMenu.classList.remove('show');
+  });
+  floatMenu.addEventListener('click', function(e) {
+    e.stopPropagation();
+  });
+
+  // 数据加载
+  function loadData() {
+    fetch(BASE + 'zjsz_data/data.js?_=' + Date.now())
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      })
+      .then(function(text) {
+        var match = text.match(/var ARTICLE_DATA\s*=\s*(\[.*?\])\s*;/);
+        if (!match) throw new Error('data.js \u683C\u5F0F\u9519\u8BEF');
+        eval('window.__ZJSZ_DATA = ' + match[1] + ';');
+        
+        var data = window.__ZJSZ_DATA;
+        if (!data || !Array.isArray(data) || data.length === 0) {
+          return;
+        }
+        articles = data;
+
+        // 恢复保存的页码
+        var savedIdx = localStorage.getItem(STORAGE_KEY);
+        if (savedIdx !== null) {
+          var n = parseInt(savedIdx, 10);
+          if (n >= 0 && n < articles.length) currentIndex = n;
+        }
+
+        createPageNav();
+        createCards();
+        bindEvents();
+        updateCards();
+        
+        loadingEl.classList.add('hide');
+        setTimeout(function() { loadingEl.remove(); }, 500);
+        setTimeout(function() { hintEl.classList.add('hidden'); hintVisible = false; }, 5000);
+      })
+      .catch(function(e) {
+        var lt = loadingEl.querySelector('.loading-text');
+        if (lt) lt.textContent = '\u52A0\u8F7D\u5931\u8D25\uFF1A' + e.message;
+        console.error(e);
+      });
+  }
+
+  function resolvePath(path) {
+    if (!path) return '';
+    if (path.indexOf('://') > 0 || path.startsWith('//') || path.startsWith('/') || path.startsWith('http')) return path;
+    return BASE + path.replace(/^\.\//, '');
+  }
+
+  function fmtDate(s) {
+    if (!s) return '';
+    if (/^\d{10}$/.test(s)) {
+      var d = new Date(parseInt(s) * 1000);
+      function padNum(n) { return n < 10 ? '0' + n : '' + n; }
+      return d.getFullYear() + '-' + padNum(d.getMonth()+1) + '-' + padNum(d.getDate());
+    }
+    return s;
+  }
+
+  function createCards() {
+    articles.forEach(function(art, i) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.index = i;
+      if (i < currentIndex) card.classList.add('left');
+      if (i === currentIndex) card.classList.add('center');
+      if (i > currentIndex) card.classList.add('right');
+
+      // Cover image
+      const coverDiv = document.createElement('div');
+      coverDiv.className = 'zjsz-cover';
+      
+      const coverInner = document.createElement('div');
+      coverInner.className = 'zjsz-cover-inner';
+      
+      const imgSrc = resolvePath(art.image_url || '');
+      const picsumUrl = 'https://picsum.photos/seed/zjsz_' + i + '/800/400';
+      const img = document.createElement('img');
+      img.alt = art.title || '';
+      img.draggable = false;
+      img.loading = 'lazy';
+      img.style.cursor = 'zoom-in';
+      // 占位图 URL 存入 data-picsum，不立即设置 src（避免首屏并发加载全部占位图）
+      img.dataset.picsum = picsumUrl;
+      if (imgSrc) {
+        img.dataset.src = imgSrc;
+        img.onerror = function() { if (this.src !== picsumUrl) this.src = picsumUrl; };
+      }
+      coverInner.appendChild(img);
+
+      // Corner label
+      const cornerLabel = document.createElement('span');
+      cornerLabel.className = 'zjsz-corner-label';
+      cornerLabel.textContent = '\u7167\u89C1\u82CF\u5DDE \u00B7 \u6444\u5F71\u4E13\u8F91';
+      coverInner.appendChild(cornerLabel);
+
+      coverDiv.appendChild(coverInner);
+
+      // Title
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'card-title';
+      const dateHtml = art.create_time ? '<div class="meta">' + escapeHtml(fmtDate(art.create_time)) + '</div>' : '';
+      titleDiv.innerHTML = '<h1>' + escapeHtml(art.title || '\u65E0\u6807\u9898') + '</h1>' + dateHtml;
+
+      // Content（正文懒渲染：翻到该篇才填充，避免全量渲染所有文章正文 DOM）
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'card-content';
+      contentDiv.innerHTML = '<div class="body"></div>';
+
+      card.appendChild(coverDiv);
+      card.appendChild(titleDiv);
+      card.appendChild(contentDiv);
+      app.appendChild(card);
+    });
+  }
+
+  // 渲染当前卡片正文（幂等；description 按行分段；无正文用占位文案）
+  function renderBody(card) {
+    var body = card.querySelector('.card-content .body');
+    if (!body || body.getAttribute('data-rendered')) return;
+    var art = articles[parseInt(card.dataset.index, 10)];
+    if (!art) return;
+    body.setAttribute('data-rendered', '1');
+    var desc = art.description || '';
+    var paragraphs = desc.split('\n');
+    var paragraphsHtml = '';
+    for (var j = 0; j < paragraphs.length; j++) {
+      if (paragraphs[j].trim()) {
+        paragraphsHtml += '<p>' + escapeHtml(paragraphs[j]) + '</p>';
+      }
+    }
+    if (!paragraphsHtml) paragraphsHtml = '<p class="no-content">\u6682\u65E0\u6B63\u6587<br><br>\u6709\u65F6\u5019<br>\u9002\u5F53\u7559\u767D\u6BD4\u6587\u5B57<br>\u66F4\u5177\u5185\u6DB5<br>\u800C\u6C89\u9ED8\u6BD4\u5450\u558A<br>\u66F4\u5F70\u663E\u529B\u91CF</p>';
+    body.innerHTML = paragraphsHtml;
+  }
+
+  function createPageNav() {
+    pageBtn.textContent = '1 / ' + articles.length;
+  }
+  
+  pageBtn.addEventListener('click', function() {
+    var input = prompt('\u8F93\u5165\u9875\u7801 (1 - ' + articles.length + ')', (currentIndex + 1) + '');
+    if (input !== null) {
+      var num = parseInt(input, 10);
+      if (num >= 1 && num <= articles.length) {
+        currentIndex = num - 1;
+        updateCards();
+      }
+    }
+  });
+
+  document.getElementById('firstBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (currentIndex > 0) { currentIndex = 0; updateCards(); }
+  });
+  document.getElementById('lastBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (currentIndex < articles.length - 1) { currentIndex = articles.length - 1; updateCards(); }
+  });
+
+  function updateCards() {
+    const cards = app.querySelectorAll('.card');
+    cards.forEach(function(card, i) {
+      card.className = 'card';
+      if (i < currentIndex) card.classList.add('left');
+      if (i === currentIndex) card.classList.add('center');
+      if (i > currentIndex) card.classList.add('right');
+    });
+    pageBtn.textContent = (currentIndex + 1) + ' / ' + articles.length;
+    localStorage.setItem(STORAGE_KEY, currentIndex);
+    if (hintVisible) {
+      hintEl.classList.remove('hidden');
+      setTimeout(function() { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);
+    }
+    // 懒渲染当前卡片正文 + 懒加载当前及相邻卡片图片
+    if (cards[currentIndex]) renderBody(cards[currentIndex]);
+    loadNearbyImages();
+    updateImageClick();
+    if (articles[currentIndex]) document.title = '小红故事|照见苏州 – ' + escapeHtml(articles[currentIndex].title || '无标题');
+  }
+
+  // 懒加载当前及相邻卡片图片（±1 范围内才设置 src，真实图缺失时用占位图）
+  function loadNearbyImages() {
+    var imgs = app.querySelectorAll('.zjsz-cover img');
+    imgs.forEach(function(img) {
+      var card = img.closest('.card');
+      if (!card) return;
+      var idx = parseInt(card.dataset.index, 10);
+      if (idx >= currentIndex - 1 && idx <= currentIndex + 1) {
+        var target = img.dataset.src || img.dataset.picsum;
+        if (target && img.src !== target) {
+          img.src = target;
+        }
+      }
+    });
+  }
+
+  function bindEvents() {
+    app.addEventListener('touchstart', onTouchStart, { passive: true });
+    app.addEventListener('touchmove', onTouchMove, { passive: false });
+    app.addEventListener('touchend', onTouchEnd);
+    app.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    document.addEventListener('keydown', onKeyDown);
+  }
+
+  function onTouchStart(e) { startX = e.touches[0].clientX; startY = e.touches[0].clientY; isDragging = true; }
+  function onTouchMove(e) {
+    if (!isDragging) return;
+    moveX = e.touches[0].clientX - startX;
+    moveY = e.touches[0].clientY - startY;
+    if (Math.abs(moveX) > Math.abs(moveY)) e.preventDefault();
+  }
+  function onTouchEnd(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    const threshold = 60;
+    if (moveX < -threshold && currentIndex < articles.length - 1) { currentIndex++; updateCards(); }
+    else if (moveX > threshold && currentIndex > 0) { currentIndex--; updateCards(); }
+    moveX = 0; moveY = 0;
+  }
+  function onMouseDown(e) { startX = e.clientX; startY = e.clientY; isDragging = true; app.style.cursor = 'grabbing'; }
+  function onMouseMove(e) {
+    if (!isDragging) return;
+    moveX = e.clientX - startX;
+    moveY = e.clientY - startY;
+    if (Math.abs(moveX) > Math.abs(moveY)) e.preventDefault();
+  }
+  function onMouseUp(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    app.style.cursor = '';
+    const threshold = 60;
+    if (moveX < -threshold && currentIndex < articles.length - 1) { currentIndex++; updateCards(); }
+    else if (moveX > threshold && currentIndex > 0) { currentIndex--; updateCards(); }
+    moveX = 0; moveY = 0;
+  }
+  function onKeyDown(e) {
+    if (e.key === 'ArrowRight' && currentIndex < articles.length - 1) { currentIndex++; updateCards(); }
+    else if (e.key === 'ArrowLeft' && currentIndex > 0) { currentIndex--; updateCards(); }
+  }
+
+  // Lightbox 图片放大
+  function openLightbox(src) {
+    lightboxImg.src = src;
+    lightbox.classList.add('show');
+  }
+  function closeLightbox() {
+    lightbox.classList.remove('show');
+    setTimeout(function() { lightboxImg.src = ''; }, 300);
+  }
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
+  function updateImageClick() {
+    const imgs = app.querySelectorAll('.zjsz-cover img');
+    imgs.forEach(function(img) {
+      img.onclick = function(e) {
+        e.stopPropagation();
+        var src = img.src || img.dataset.src || img.dataset.picsum || '';
+        if (src) openLightbox(src);
+      };
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // 分享功能（已移除）
+
+  // ===== TTS 语音朗读钩子（供页尾 tts.js 集成脚本调用） =====
+  // 原始翻页函数：TTS 自动翻页使用（不触发"手动翻页即停朗读"）；手动翻页走包装版
+  var _rawUpdateCards = updateCards;
+  window.__zjszRawUpdate = function(){ _rawUpdateCards(); };
+  // 手动翻页（手势/页码/首尾/键盘）→ 正在朗读则停止（朗读队列与当前页错位）
+  updateCards = function(){
+    var r = _rawUpdateCards.apply(this, arguments);
+    if (window.TTS && TTS.isSpeaking()) window.TTS.stop();
+    return r;
+  };
+  window.__zjszGetIndex = function(){ return currentIndex; };
+  window.__zjszCount = function(){ return articles.length; };
+  window.__zjszGoTo = function(n){
+    if (n >= 0 && n < articles.length) {
+      currentIndex = n;
+      _rawUpdateCards();   // 原始翻页：不中断朗读（保持"听到的=看到的"）
+    }
+  };
+  // 朗读队列构建：从当前文章起连续向后（标题+正文 description；无正文用占位文案）
+  window.__zjszProvider = function(){
+    if (!articles.length || !articles[currentIndex]) return null;
+    var items = [];
+    for (var i = currentIndex; i < articles.length; i++) {
+      var a = articles[i] || {};
+      var desc = (a.description || '').replace(/\r/g, '').trim();
+      if (!desc) desc = '暂无正文。有时候，适当留白比文字更具内涵，而沉默比呐喊更彰显力量。';
+      var title = a.title || '';
+      var t = (title ? title + '。' : '') + desc;
+      if (!t.trim()) continue;
+      items.push({ title: title, text: t });
+    }
+    return items.length ? { items: items, label: '照见苏州' } : null;
+  };
+
+  loadData();
+})();
+</script>
+
+<script>
+// 边缘手势锁：排除左右边缘系统返回手势（防横滑翻页误触退出），离开页面恢复
+(function(){
+  function lockEdge(lock){ try{ if(window.AppBridge && window.AppBridge.setEdgeLock) window.AppBridge.setEdgeLock(lock ? '1' : '0'); }catch(e){} }
+  function guardBack(g){ try{ if(window.AppBridge && window.AppBridge.setBackGuard) window.AppBridge.setBackGuard(g ? '1' : '0'); }catch(e){} }
+  lockEdge(true);
+  guardBack(true);
+  window.addEventListener('pagehide', function(){ lockEdge(false); guardBack(false); });
+})();
+</script>
+<script>
+// 菜单解锁：按「登录 + 该栏目已真气解锁」判断（读云端 waline 游戏记录），未解锁置灰+提示；传送回修真小世界不锁定
+(function(){
+  // 仅以 APP 主登录 key WALINE_USER 判定（'@waline/user' 是 Waline 评论组件写入，登出残留会导致误判已登录）
+  function getWalineUser(){
+    try{
+      var v = localStorage.getItem('WALINE_USER') || sessionStorage.getItem('WALINE_USER');
+      if (v) { var u = JSON.parse(v); if (u && (u.display_name || u.nick || u.name)) return u; }
+    }catch(e){}
+    return null;
+  }
+  // 栏目文件 → 解锁标记 key（与 APP.html 游戏记录字段一致）
+  var KEY_BY_FILE = { 'reader.html':'story', 'yedu_p.html':'yedu', 'zjsz_p.html':'zjsz', 'DaliyNews_p.html':'news', 'tv_p.html':'tv' };
+  // 健壮解析（兼容 Waline markdown 渲染污染，同 APP.html parseGameRecord）
+  function parseGameRecord(raw){
+    if (!raw) return null;
+    var s = String(raw).replace(/<[^>]*>/g, '')
+      .replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+      .replace(/&quot;/g, '"').replace(/&#34;/g, '"')
+      .replace(/&amp;/g, '&').replace(/&#38;/g, '&')
+      .replace(/&lt;/g, '<').replace(/&#60;/g, '<')
+      .replace(/&gt;/g, '>').replace(/&#62;/g, '>');
+    var st = s.indexOf('{'); var en = s.lastIndexOf('}');
+    if (st >= 0 && en > st) s = s.slice(st, en + 1);
+    try { return JSON.parse(s); } catch(e){ return null; }
+  }
+  function tip(msg){
+    var t = document.getElementById('menuLockTip');
+    if (!t) { t = document.createElement('div'); t.id = 'menuLockTip'; t.className = 'menu-lock-tip'; document.body.appendChild(t); }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._tm);
+    t._tm = setTimeout(function(){ t.classList.remove('show'); }, 1800);
+  }
+  var menu = document.getElementById('zjszFloatMenu');
+  if (!menu) return;
+  var links = Array.prototype.slice.call(menu.querySelectorAll('a.menu-item:not(.menu-home)'));
+  function lockItem(a){
+    if (a.classList.contains('locked')) return;
+    a.classList.add('locked');
+    a.insertAdjacentHTML('beforeend', '<span class="menu-lock-icon">🔒</span>');
+    a.addEventListener('click', function(e){ if (!a.classList.contains('locked')) return; e.preventDefault(); tip('封印未破!请往修真小世界破除。'); }); // unlockItem 后已解锁，不拦截跳转
+  }
+  function unlockItem(a){
+    a.classList.remove('locked');
+    var ic = a.querySelector('.menu-lock-icon');
+    if (ic) ic.remove();
+  }
+  function fileOf(href){ try { var p = String(href).split('/'); return p[p.length - 1]; } catch(e){ return ''; } }
+  function lockAll(){ for (var i = 0; i < links.length; i++) lockItem(links[i]); }
+  function applyUnlocks(ul){
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      var key = KEY_BY_FILE[fileOf(a.getAttribute('href') || '')];
+      if (key && ul && ul[key]) unlockItem(a);
+    }
+  }
+  var user = getWalineUser();
+  // 登录区：头像（点击弹留言窗）
+  var ua = document.getElementById('userAvatar');
+  if (ua && user) {
+    if (user.avatar) ua.src = user.avatar;
+  }
+  if (!user) { applyUnlocks({story:1,yedu:1,zjsz:1,news:1,tv:1}); return; } // 已去除登录限制：未登录也全部解锁
+  // 已登录：直接全部解锁（已去除登录限制）
+  applyUnlocks({story:1,yedu:1,zjsz:1,news:1,tv:1}); return;
+  var token = user.token || '';
+  var url = 'https://waline.snowhoo.net/api/comment?path=/app-game/actions' + (token ? '&token=' + encodeURIComponent(token) : '');
+  fetch(url)
+    .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(resp){
+      var records = (resp.data && resp.data.data) || [];
+      var found = null, foundOid = 0;
+      for (var i = 0; i < records.length; i++) {
+        try {
+          var rec = records[i];
+          if ((rec.nick || '') !== user.display_name) continue;
+          var obj = parseGameRecord(rec.orig || rec.comment || '');
+          var oid = parseInt(rec.objectId, 10) || 0;
+          if (obj && typeof obj.points === 'number' && oid > foundOid) { found = obj; foundOid = oid; }
+        } catch(e){}
+      }
+      if (!found) return null;
+      return {
+        story: found.storyUnlocked ? 1 : 0,
+        yedu: found.yeduUnlocked ? 1 : 0,
+        zjsz: found.zjszUnlocked ? 1 : 0,
+        news: found.newsUnlocked ? 1 : 0,
+        tv: found.tvUnlocked ? 1 : 0
+      };
+    })
+    .then(function(ul){ if (ul) applyUnlocks(ul); })
+    .catch(function(e){ console.warn('[菜单解锁] 拉取解锁状态失败，保持锁定:', e); });
+})();
+</script>
+
+<!-- 登录留言弹窗（与修真小世界一致）：点头像打开，可留言/登录 -->
+<div class="comment-overlay" id="commentOverlay">
+  <div class="comment-panel">
+    <div class="comment-panel-header">
+      <span class="cp-title">留言</span>
+      <button class="cp-close" id="commentClose">&times;</button>
+    </div>
+    <div class="comment-panel-body" id="walineContainer"></div>
+  </div>
+</div>
+<script>
+// 登录留言弹窗（与修真小世界一致）：点头像打开；Waline 留言/登录
+(function(){
+  var overlay = document.getElementById('commentOverlay');
+  var userArea = document.getElementById('userArea');
+  var closeBtn = document.getElementById('commentClose');
+  if (userArea) userArea.addEventListener('click', function(){ if (overlay) overlay.classList.add('active'); });
+  if (closeBtn) closeBtn.addEventListener('click', function(){ if (overlay) overlay.classList.remove('active'); });
+  if (overlay) overlay.addEventListener('click', function(e){ if (e.target === overlay) overlay.classList.remove('active'); });
+  // 刷新底部登录区（头像+用户名）
+  function refreshUser(){
+    var ua = document.getElementById('userAvatar');
+    try {
+      var v = localStorage.getItem('WALINE_USER');
+      var u = v ? JSON.parse(v) : null;
+      if (u && (u.display_name || u.nick || u.name)) {
+        if (ua && u.avatar) ua.src = u.avatar;
+      } else {
+        if (ua) ua.removeAttribute('src');
+      }
+    } catch(e){}
+  }
+  refreshUser();
+  // Waline 初始化（动态 import，同修真小世界）
+  try {
+    import('./lib/waline.js').then(function(mod){
+      try {
+        mod.init({
+          el: '#walineContainer',
+          serverURL: 'https://waline.snowhoo.net',
+          lang: 'zh-CN',
+          avatar: 'mp',
+          pageview: false,
+          locale: { placeholder: '说点什么吧...', comment: '留言' },
+          onLogin: function(user){
+            try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e){}
+            refreshUser();
+          },
+          onLogout: function(){
+            try { localStorage.removeItem('WALINE_USER'); localStorage.removeItem('@waline/user'); } catch(e){}
+            refreshUser();
+          }
+        });
+      } catch(e){ console.warn('[留言] Waline init error:', e); }
+    }).catch(function(e){ console.warn('[留言] Waline import error:', e); });
+  } catch(e){ console.warn('[留言] Waline 初始化失败:', e); }
+})();
+</script>
+<!-- 讯飞语音朗读：通用朗读器（时间戳强制最新版，彻底绕开 WebView 顽固缓存） -->
+<script>
+(function(){
+  function loadTTS(cb){
+    var s = document.createElement('script');
+    s.src = 'tts.js?ts=' + Date.now();
+    s.onload = function(){ cb && cb(); };
+    s.onerror = function(){ /* 加载失败静默：控制条为空自动隐藏 */ };
+    document.head.appendChild(s);
+  }
+  loadTTS(function(){
+    // 完整播放条挂载到底部固定栏第一行（常驻）：▶ ⏹ 标题+进度 音色 语速
+    var mount = document.getElementById('ttsBarMount');
+    if (mount) { TTS.setAccent('#3b82f6'); TTS.mount(mount); }
+
+    // 朗读内容提供：从当前文章起连续向后朗读
+    TTS.setProvider(function(){
+      if (window.__zjszProvider) return window.__zjszProvider();
+      return [];
+    });
+
+    // 朗读跨篇时自动翻页（保持"看到的=听到的"）：
+    // 队列从 currentIndex 开始构建，第 itemIdx 篇对应文章 currentIndex + itemIdx；
+    // 用原始 updateCards 翻页（不触发"手动翻页即停朗读"逻辑）
+    TTS.onItemChange(function(itemIdx){
+      if (!window.__zjszRawUpdate || !window.__zjszGoTo) return;
+      var start = (typeof window.__zjszGetIndex === 'function') ? window.__zjszGetIndex() : 0;
+      var total = (typeof window.__zjszCount === 'function') ? window.__zjszCount() : 0;
+      var target = start + itemIdx;
+      if (target >= 0 && target < total && target !== start) window.__zjszGoTo(target);
+    });
+
+    // ===== 继续播放恢复点：记录当前文章页码 =====
+    var RESUME_KEY = 'resume_play';
+    function saveResume(playing){
+      try {
+        var idx = (typeof window.__zjszGetIndex === 'function') ? window.__zjszGetIndex() : 0;
+        localStorage.setItem(RESUME_KEY, JSON.stringify({ page: 'zjsz_p.html', index: idx, playing: !!playing, ts: Date.now() }));
+      } catch(e){}
+    }
+    function clearResume(){ try { localStorage.removeItem(RESUME_KEY); } catch(e){} }
+    // 播放状态钩子：播放→记录；暂停→记录(标记非播放中)；停止→清除
+    TTS.onPlayState(function(s){
+      if (s.playing) saveResume(true);
+      else if (!s.paused) clearResume();
+      else saveResume(false);
+    });
+
+    // ===== 从系统媒体卡片进入（?resume=1）：恢复页码并自动续播 =====
+    (function(){
+      if (location.search.indexOf('resume=1') < 0) return;
+      var r = null;
+      try {
+        r = JSON.parse(localStorage.getItem(RESUME_KEY) || 'null');
+        if (!r || r.page !== 'zjsz_p.html') r = null;
+      } catch(e){ r = null; }
+      if (!r) return;
+      var tries = 0;
+      (function wait(){
+        if (document.querySelectorAll('#app .card').length || tries++ > 100) {
+          applyZjszResume(r);
+        } else {
+          setTimeout(wait, 100);
+        }
+      })();
+      function applyZjszResume(rr){
+        if (window.__zjszGoTo && window.__zjszCount) {
+          var total = window.__zjszCount();
+          var cur = (typeof window.__zjszGetIndex === 'function') ? window.__zjszGetIndex() : 0;
+          if (rr.index >= 0 && rr.index < total && rr.index !== cur) window.__zjszGoTo(rr.index);
+        }
+        // 自动续播（provider 从当前 index 起构建）；被自动播放策略拦截时用户点 ▶ 继续
+        if (rr.playing) {
+          var pb = document.querySelector('#ttsBar [data-act="play"]');
+          if (pb) { try { pb.click(); } catch(e){} }
+        }
+      }
+    })();
+  });
+})();
+</script>
+</body>
+</html>
