@@ -670,19 +670,13 @@ function closeAllOverlays() {
   var pv = document.getElementById('planPanel');
   var pb = document.getElementById('planBtn');
   var fb = document.getElementById('festivalBtn');
-  var pob = document.getElementById('poetryBtn');
-  var hob = document.getElementById('historyBtn');
-  var cob = document.getElementById('constellationBtn');
   if (so) so.classList.remove('show');
   if (po) po.classList.remove('show');
   if (ho) ho.classList.remove('show');
   if (pv) pv.classList.remove('show');
+  // 注意：不清诗词/今日/星象的 selected（它们的 toggle 是先 add selected 再调本函数，清了会被误删）
   if (pb) pb.classList.remove('selected');
   if (fb) fb.classList.remove('selected');
-  // 统一清理内容面板徽章选中态（诗词/今日/星象），确保关闭后桌面/磨砂恢复
-  if (pob) pob.classList.remove('selected');
-  if (hob) hob.classList.remove('selected');
-  if (cob) cob.classList.remove('selected');
 }
 
 // 点击非显示内容区域：直接关闭诗词/今日/星象/日程/文化面板（点击实际内容元素或徽章本身不关闭）
@@ -701,6 +695,8 @@ document.addEventListener('click', function(e) {
   if (t && t.closest && t.closest('.badge')) return;
   // 其他区域 → 关闭所有面板
   closeAllOverlays();
+  // 显式清空所有徽章选中态（诗词/今日/星象由本处统一清理，closeAllOverlays 不动它们）
+  document.querySelectorAll('.badge').forEach(function(b){ b.classList.remove('selected'); });
   if (area) {
     area.classList.remove('show');
     area._activeBtn = null;
