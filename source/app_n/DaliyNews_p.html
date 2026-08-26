@@ -234,7 +234,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   var today = new Date();
   function padNum(n) { return n < 10 ? '0' + n : '' + n; }
   var dateStr = today.getFullYear() + '' + padNum(today.getMonth()+1) + '' + padNum(today.getDate());
-  var dataBase = 'news_CCTV/' + dateStr + '/';
+  var dataBase = '/APP/news_CCTV/' + dateStr + '/';
 
   // 栏目定义（按菜单栏顺序）
   var COLUMNS = ['新闻','国内','国际','经济','社会','法治','文娱','科技','生活','军事'];
