@@ -670,23 +670,35 @@ function closeAllOverlays() {
   var pv = document.getElementById('planPanel');
   var pb = document.getElementById('planBtn');
   var fb = document.getElementById('festivalBtn');
+  var pob = document.getElementById('poetryBtn');
+  var hob = document.getElementById('historyBtn');
+  var cob = document.getElementById('constellationBtn');
   if (so) so.classList.remove('show');
   if (po) po.classList.remove('show');
   if (ho) ho.classList.remove('show');
   if (pv) pv.classList.remove('show');
   if (pb) pb.classList.remove('selected');
   if (fb) fb.classList.remove('selected');
+  // 统一清理内容面板徽章选中态（诗词/今日/星象），确保关闭后桌面/磨砂恢复
+  if (pob) pob.classList.remove('selected');
+  if (hob) hob.classList.remove('selected');
+  if (cob) cob.classList.remove('selected');
 }
 
-// 点击非显示内容区域：直接关闭诗词/今日/星象/日程/文化面板（点击面板内部或徽章本身不关闭）
+// 点击非显示内容区域：直接关闭诗词/今日/星象/日程/文化面板（点击实际内容元素或徽章本身不关闭）
 document.addEventListener('click', function(e) {
   var area = document.getElementById('contentArea');
   var panel = document.getElementById('planPanel');
-  // 点击面板/内容区内部 → 不关闭
-  if (area && area.classList.contains('show') && area.contains(e.target)) return;
-  if (panel && panel.classList.contains('show') && panel.contains(e.target)) return;
+  var t = e.target;
+  // 内容区：点击实际内容元素（文本/转盘/节日卡片）不关闭；点击内容区空白区域 → 关闭
+  if (area && area.classList.contains('show')) {
+    var isContent = area.contains(t) && t !== area && t.closest
+      && !!t.closest('.content-line, .content-title, .content-author, .content-source, .loading-hint, .zodiac-wheel, .festival-card, .fc-banner, .fc-title, .fc-desc, .fc-details, .fc-customs, .fc-item');
+    if (isContent) return;
+  }
+  if (panel && panel.classList.contains('show') && panel.contains(t)) return;
   // 点击徽章按钮本身 → 不关闭（各按钮有自己的开关逻辑）
-  if (e.target && e.target.closest && e.target.closest('.badge')) return;
+  if (t && t.closest && t.closest('.badge')) return;
   // 其他区域 → 关闭所有面板
   closeAllOverlays();
   if (area) {
