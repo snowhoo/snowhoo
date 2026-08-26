@@ -145,15 +145,6 @@ body{display:flex;flex-direction:column}
 .xz-detail-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 18px 16px;font-size:.9rem;line-height:1.8;color:#f6f2ff;text-align:left}
 .xz-detail-foot{padding:10px 16px 14px;border-top:1px solid rgba(139,92,246,.3);font-size:.62rem;color:#a49cc4;text-align:center;line-height:1.6;flex-shrink:0}
 
-/* 星象星空背景覆盖层 */
-.stars-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:url('bg-stars.jpg') center/cover no-repeat;opacity:0;transition:opacity .6s ease;pointer-events:none;z-index:1}
-.stars-overlay.show{opacity:1}
-.poetry-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:url('poetry-bg.jpg') center/cover no-repeat;opacity:0;transition:opacity .8s ease;pointer-events:none;z-index:1}
-.poetry-overlay.show{opacity:1}
-.poetry-overlay::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(transparent 40%,rgba(0,0,0,.35))}
-.history-overlay{position:absolute;top:0;left:0;right:0;bottom:0;background:url('history-bg.jpg') center/cover no-repeat;opacity:0;transition:opacity .8s ease;pointer-events:none;z-index:1}
-.history-overlay.show{opacity:1}
-.history-overlay::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(transparent 40%,rgba(0,0,0,.35))}
 
 /* 评论弹窗 */
 .comment-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:rgba(0,0,0,.5);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;display:flex;align-items:flex-end}
@@ -165,8 +156,6 @@ body{display:flex;flex-direction:column}
 .comment-panel-header .cp-close{font-size:1.2rem;color:#999;cursor:pointer;padding:4px;line-height:1;border:none;background:none}
 .comment-panel-body{flex:1;overflow-y:auto;padding:8px 16px;min-height:200px;max-height:calc(85vh - 50px);-webkit-overflow-scrolling:touch}
 
-/* 任务红点 */
-.task-dot{position:absolute;top:-8px;right:-8px;background:#e94560;color:#fff;font-size:.42rem;min-width:13px;height:13px;border-radius:7px;display:none;align-items:center;justify-content:center;padding:0 3px;font-weight:300;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.3);z-index:2}
 
 /* 阴阳（明暗模式）全屏遮罩：阴=背景图拓展全屏 + 30% 黑色遮罩；不拦截点击 */
 .yin-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:4000;pointer-events:none;display:block}
@@ -1111,23 +1100,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
     });
 });
 
-// ===== 已去除修炼系统（原积分系统 GAME 已整体注释，下方替换为空桩） =====
 
-// ===== GAME 空桩：已去除修炼系统，仅保留内容功能所需的接口（全部无操作/恒真） =====
-var GAME = {
-  _autoMode: false, _oneKeyMode: false, _autoPanelOpen: false,
-  loaded: true, syncState: 'idle',
-  storyUnlocked: 1, yeduUnlocked: 1, zjszUnlocked: 1, newsUnlocked: 1, tvUnlocked: 1,
-  almanacUnlocked: 1, logoUnlocked: 1, runnerUnlocked: 1, yinUnlocked: 1, backgroundUnlocked: 1,
-  buildActions: function(){}, init: function(){}, setSyncState: function(){},
-  getWalineUser: function(){ return null; }, parseGameRecord: function(){ return null; },
-  updateAvatar: function(){}, checkLogin: function(){}, updateTaskDots: function(){}, updateBadge: function(){},
-  doAction: function(){}, _autoPanelLoaded: function(){}, unlockFeature: function(){},
-  unlockBackground: function(){}, openDiscover: function(){}, closeDiscover: function(){},
-  showXp: function(){}, updateTaskMenuBtn: function(){}, updateLevelDisplay: function(){},
-  loadFromServer: function(){}
-};
-GAME.init();
 
 // ===== 日程计划面板（PlanSvc：严格云端优先，数据全部以 Waline 数据库为准） =====
 var PlanSvc = (function(){
