@@ -456,13 +456,25 @@ GAME.init();
   document.getElementById('yearText').textContent = '把梦想写进日程 [ ' + yr + '已过' + Math.round(pct * 100) + '% ]';
 })();
 
-// 背景图：初始直接使用 picsum 随机图（crossOrigin=anonymous 保证可被 canvas 捕获保存）
+// 背景图：启动优先读缓存（探索刷新过的图存 localStorage，下次启动复用同一 URL → 浏览器 HTTP 缓存命中，不再重新下载）
 var bgImgEl = document.getElementById('bgImage');
+var BG_KEY = 'appn_bg_cache';
 function setDefaultBg() {
   bgImgEl.crossOrigin = 'anonymous';
   bgImgEl.onerror = null;
-  bgImgEl.src = 'https://picsum.photos/1280/960?random=' + Date.now();
+  var cached = null;
+  try { cached = localStorage.getItem(BG_KEY); } catch(e){}
+  bgImgEl.src = cached || ('https://picsum.photos/1280/960?random=' + Date.now());
 }
+// 加载成功 → 写入缓存（下次启动直接读缓存图）；缓存失效（404）→ 换新随机图
+bgImgEl.addEventListener('load', function(){
+  try { if (bgImgEl.src.indexOf('picsum') >= 0) localStorage.setItem(BG_KEY, bgImgEl.src); } catch(e){}
+});
+bgImgEl.addEventListener('error', function(){
+  try { localStorage.removeItem(BG_KEY); } catch(e){}
+  bgImgEl.onerror = null;
+  bgImgEl.src = 'https://picsum.photos/1280/960?random=' + Date.now();
+});
 setDefaultBg();
 
 // 面板状态观察：诗词/今日/星象/日程打开时隐藏五个栏目按钮 + 背景切换磨砂半透明（平时背景清晰）
@@ -523,7 +535,11 @@ document.querySelector('.welcome').addEventListener('click', function() {
   if (bgImgEl) {
     bgImgEl.crossOrigin = 'anonymous';
     bgImgEl.onerror = null;
-    bgImgEl.onload = function(){ if (wt) { wt.textContent = '探索'; wt.classList.remove('loading'); } };
+    bgImgEl.onload = function(){
+      if (wt) { wt.textContent = '探索'; wt.classList.remove('loading'); }
+      // 探索刷新的图写入缓存：下次启动直接读缓存，不再重新下载
+      try { if (bgImgEl.src.indexOf('picsum') >= 0) localStorage.setItem(BG_KEY, bgImgEl.src); } catch(e){}
+    };
     bgImgEl.src = 'https://picsum.photos/1280/960?random=' + Date.now();
   } else if (wt) {
     wt.textContent = '探索';
