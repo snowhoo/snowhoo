@@ -1570,7 +1570,7 @@ layout: false
   var user = getWalineUser();
   // 登录区：头像（点击弹留言窗）——未登录也显示默认头像（与首页一致）
   var ua = document.getElementById('userAvatar');
-  var DEF_AV = '" + DEF + "';
+  var DEF_AV = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='12' fill='%23e6e6e6'/><g fill='none' stroke='%23888' stroke-width='1.5'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></g></svg>";
   if (ua) {
     if (user && user.avatar) ua.src = user.avatar;
     else ua.src = DEF_AV;
@@ -1636,7 +1636,7 @@ layout: false
       if (u && (u.display_name || u.nick || u.name)) {
         if (ua && u.avatar) ua.src = u.avatar;
       } else {
-        if (ua) ua.src = '" + DEF + "';
+        if (ua) ua.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='12' fill='%23e6e6e6'/><g fill='none' stroke='%23888' stroke-width='1.5'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></g></svg>";
       }
     } catch(e){}
   }
