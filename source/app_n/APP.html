@@ -1644,7 +1644,10 @@ document.getElementById('planBtn').addEventListener('click', togglePlan);
       var mm = String(now.getMonth()+1).padStart(2,'0');
       var dd = String(now.getDate()).padStart(2,'0');
       var today = mm + '-' + dd;
-      var list = (data && data.festivals) || [];
+      // 节日 + 节气两个数组都参与匹配（FestivalSolar.json 结构：festivals + solarTerms）
+      var list = [];
+      if (data && data.festivals) list = list.concat(data.festivals);
+      if (data && data.solarTerms) list = list.concat(data.solarTerms);
       for (var i = 0; i < list.length; i++) {
         if (list[i].date === today) { festival = list[i]; break; }
       }
