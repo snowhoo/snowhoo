@@ -664,6 +664,23 @@ function closeAllOverlays() {
   if (fb) fb.classList.remove('selected');
 }
 
+// 点击非显示内容区域：直接关闭诗词/今日/星象/日程/文化面板（点击面板内部或徽章本身不关闭）
+document.addEventListener('click', function(e) {
+  var area = document.getElementById('contentArea');
+  var panel = document.getElementById('planPanel');
+  // 点击面板/内容区内部 → 不关闭
+  if (area && area.classList.contains('show') && area.contains(e.target)) return;
+  if (panel && panel.classList.contains('show') && panel.contains(e.target)) return;
+  // 点击徽章按钮本身 → 不关闭（各按钮有自己的开关逻辑）
+  if (e.target && e.target.closest && e.target.closest('.badge')) return;
+  // 其他区域 → 关闭所有面板
+  closeAllOverlays();
+  if (area && area.classList.contains('show')) {
+    area.classList.remove('show');
+    area._activeBtn = null;
+  }
+});
+
 // 取消所有正在加载的请求，防止异步回调覆盖当前面板内容
 function cancelAllRequests() {
   var area = document.getElementById('contentArea');
