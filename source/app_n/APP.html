@@ -399,8 +399,48 @@ body{display:flex;flex-direction:column}
   </div>
 </div>
 
-<script src="game-config.js?v=20260731c"></script>
 <script>
+// ===== GAME 兼容桩：修炼系统已移除，保留内容功能所需接口；头像/登录状态真实刷新 =====
+var GAME = {
+  _autoMode: false, _oneKeyMode: false, _autoPanelOpen: false,
+  loaded: true, syncState: 'idle',
+  storyUnlocked: 1, yeduUnlocked: 1, zjszUnlocked: 1, newsUnlocked: 1, tvUnlocked: 1,
+  almanacUnlocked: 1, logoUnlocked: 1, runnerUnlocked: 1, yinUnlocked: 1, backgroundUnlocked: 1,
+  buildActions: function(){}, init: function(){ this.updateAvatar(); }, setSyncState: function(){},
+  parseGameRecord: function(){ return null; }, updateTaskDots: function(){}, updateBadge: function(){},
+  doAction: function(){}, _autoPanelLoaded: function(){}, unlockFeature: function(){},
+  unlockBackground: function(){}, openDiscover: function(){}, closeDiscover: function(){},
+  showXp: function(){}, updateTaskMenuBtn: function(){}, updateLevelDisplay: function(){},
+  loadFromServer: function(){},
+  getWalineUser: function(){
+    try {
+      var v = localStorage.getItem('WALINE_USER') || sessionStorage.getItem('WALINE_USER');
+      if (!v) return null;
+      var u = JSON.parse(v);
+      return (u && (u.display_name || u.nick || u.name)) ? u : null;
+    } catch(e){ return null; }
+  },
+  // 头像/昵称真实更新（探索下方登录区）
+  updateAvatar: function(optUser) {
+    try {
+      var user = optUser || this.getWalineUser();
+      var el = document.getElementById('commentAvatar');
+      var nameEl = document.getElementById('commentName');
+      if (!el || !nameEl) return;
+      if (user) {
+        if (user.avatar) el.innerHTML = '<img src="' + user.avatar + '" alt="avatar" onerror="this.style.display=\'none\'">';
+        else el.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+        nameEl.textContent = user.display_name || user.nick || user.name || '';
+      } else {
+        el.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+        nameEl.textContent = '隐匿者';
+      }
+    } catch(e){}
+  },
+  checkLogin: function(){ this.updateAvatar(); }
+};
+GAME.init();
+
 // 年度进度
 (function() {
   var now = new Date();
@@ -562,19 +602,10 @@ document.querySelector('.welcome').addEventListener('click', function() {
   }
 })();
 
-// 分类点击：未解锁栏目 → 走解锁流程（参照自动修炼）；已解锁 → 直接跳转
+// 分类点击：直接跳转栏目页（已去除解锁流程）
 var items = document.querySelectorAll('.category-item');
 items.forEach(function(el) {
   el.addEventListener('click', function() {
-    var key = el.dataset.unlock || '';
-    if (key) {
-      if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
-      // 未解锁 → 走解锁流程（登录/加载校验在确认后统一处理，未登录也先弹确认再提示）
-      if (!GAME[key + 'Unlocked']) {
-        GAME.unlockFeature(key);
-        return;
-      }
-    }
     // 用 replace 跳转：不在 WebView 历史栈留下本页，
     // 栏目页内系统返回手势误触时不会 goBack 跳回首页（配合原生返回守护）
     window.location.replace(el.dataset.url);
@@ -1639,13 +1670,7 @@ commentOverlay.addEventListener('click', function(e) {
   var almanac = document.getElementById('almanac');
   var mini = document.getElementById('almanacMini');
   almanac.addEventListener('click', function(){
-    if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
-    // 未解锁 → 走解锁流程（登录/加载校验在确认后统一处理，未登录也先弹确认再提示）
-    if (!GAME.almanacUnlocked) {
-      GAME.unlockFeature('almanac');
-      return;
-    }
-    // 已解锁 → 缩小：向右侧收起为同高边条（宽5、透明度90、内含 <）
+    // 缩小：向右侧收起为同高边条（宽5、透明度90、内含 <）
     mini.style.height = almanac.offsetHeight + 'px';
     almanac.classList.add('hidden');
     mini.classList.add('show');
@@ -1656,19 +1681,13 @@ commentOverlay.addEventListener('click', function(e) {
   });
 })();
 
-// LOGO 点击：未解锁 → 走解锁流程（消耗真气破除封印，成本见 FEATURE_CONFIG.unlockCost）；已解锁 → 向右侧收起为同高边条（与日期卡片一致）
+// LOGO 点击：向右侧收起为同高边条（与日期卡片一致；解锁流程已随修炼系统移除）
 (function(){
   var logo = document.getElementById('topRightLogo');
   if (!logo) return;
   var logoMini = document.getElementById('logoMini');
   logo.addEventListener('click', function(){
-    if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
-    // 未解锁 → 走解锁流程（登录/加载校验在确认后统一处理，未登录也先弹确认再提示）
-    if (!GAME.logoUnlocked) {
-      GAME.unlockFeature('logo');
-      return;
-    }
-    // 已解锁 → 向右侧收起为同高边条（宽5、透明度50、内含 <）
+    // 向右侧收起为同高边条（宽5、透明度50、内含 <）
     if (logoMini) logoMini.style.height = logo.offsetHeight + 'px';
     logo.classList.add('hidden');
     if (logoMini) logoMini.classList.add('show');
@@ -1682,56 +1701,13 @@ commentOverlay.addEventListener('click', function(e) {
   }
 })();
 
-// 解锁按钮 title 成本动态化：成本一律读 FEATURE_CONFIG.unlockCost（game-config.js），不在 HTML 硬编码
-(function(){
-  var cfg = (typeof FEATURE_CONFIG !== 'undefined' && FEATURE_CONFIG && FEATURE_CONFIG.unlockCost) ? FEATURE_CONFIG.unlockCost : {};
-  function applyTitles(){
-    document.querySelectorAll('[data-unlock]').forEach(function(el){
-      var cost = cfg[el.dataset.unlock];
-      if (!cost) return;
-      var base = el.getAttribute('title') || '';
-      el.setAttribute('title', base + '（解锁需 ' + cost + ' 真气）');
-    });
-    [['autoBtn','auto'],['oneKeyBtn','oneKey']].forEach(function(p){
-      var el = document.getElementById(p[0]);
-      var cost = cfg[p[1]];
-      if (el && cost) {
-        var base = el.getAttribute('title') || '';
-        el.setAttribute('title', base + '（解锁需 ' + cost + ' 真气）');
-      }
-    });
-  }
-  applyTitles();
-})();
-
-// 年度进度文字：点击解锁"日程"徽章（原奔跑小人入口改到此处；已解锁则无操作，用徽章打开日程）
+// 年度进度文字：点击打开日程面板（原解锁入口已随修炼系统移除）
 (function(){
   var wt = document.getElementById('yearBarText');
   if (!wt) return;
   wt.addEventListener('click', function(){
-    if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
-    if (!GAME.runnerUnlocked) {
-      GAME.unlockFeature('runner');   // 破除封印（固魂大法）→ 日程徽章显示
-    }
-  });
-})();
-
-// 双击探索圆形中的 picsum 图片：发现隐藏结界 → 破除结界（扣随机真气）→ 保存该图片到相册
-(function(){
-  var area = document.getElementById('contentArea');
-  if (!area) return;
-  var lastClick = 0;
-  area.addEventListener('click', function(e){
-    // 仅在探索圆形图片上触发
-    if (!e.target || !e.target.closest || !e.target.closest('.explore-circle img')) return;
-    if (GAME._autoMode || GAME._oneKeyMode) return; // 修炼中屏蔽
-    var now = Date.now();
-    if (lastClick && now - lastClick < 400) {
-      lastClick = 0; // 双击 → 破除结界
-      GAME.unlockBackground();
-    } else {
-      lastClick = now;
-    }
+    var pb = document.getElementById('planBtn');
+    if (pb) pb.click();
   });
 })();
 </script>
