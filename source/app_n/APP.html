@@ -107,6 +107,17 @@ body{display:flex;flex-direction:column}
 .content-area::-webkit-scrollbar{width:0}
 .content-area .content-line{font-size:.88rem;line-height:1.5;color:#fff;font-weight:400;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5)}
 .content-area .content-title{font-size:1.05rem;font-weight:400;color:#fff;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5);margin-bottom:2px}
+/* 节日卡片（content-area 内显示） */
+.festival-card{max-width:420px;margin:0 auto}
+.fc-banner{position:relative;border-radius:14px;overflow:hidden;margin-bottom:12px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.fc-banner img{width:100%;display:block;max-height:220px;object-fit:cover}
+.fc-title{position:absolute;left:0;right:0;bottom:0;padding:10px 14px;color:#fff;font-size:1.15rem;font-weight:600;letter-spacing:2px;text-shadow:0 1px 4px rgba(0,0,0,.5);text-align:left}
+.fc-title small{display:block;font-size:.7rem;font-weight:400;opacity:.85;margin-top:2px}
+.fc-title-only{position:static;text-align:center;border-radius:14px;margin-bottom:12px;padding:16px}
+.fc-desc{font-size:.95rem;color:#fff;font-weight:500;margin-bottom:8px;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.fc-details{font-size:.8rem;line-height:1.8;color:rgba(255,255,255,.88);text-align:left;text-shadow:0 1px 3px rgba(0,0,0,.4);margin-bottom:10px}
+.fc-customs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.fc-item{font-size:.72rem;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:12px;padding:4px 12px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .content-area .content-author{font-size:.75rem;color:rgba(255,255,255,.7);margin-bottom:10px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .content-area .content-source{font-size:.65rem;color:rgba(255,255,255,.7);margin-top:4px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .content-area .loading-spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;margin:0 auto 12px;animation:spin .8s linear infinite}
@@ -300,6 +311,7 @@ body{display:flex;flex-direction:column}
     <span class="badge" id="historyBtn"><span class="badge-icon">◎</span>今日<span class="task-dot" id="historyDot"></span></span>
     <span class="badge" id="constellationBtn"><span class="badge-icon">✦</span>星象<span class="task-dot" id="constellationDot"></span></span>
     <span class="badge" id="planBtn"><span class="badge-icon">▤</span>日程</span>
+    <span class="badge" id="festivalBtn" style="display:none" title="节日"><span class="badge-icon">🎉</span>节日</span>
   </div>
   <div class="content-area" id="contentArea"></div>
   <!-- 日程计划：与诗词/今日/星象同位置（中央内容区）互斥切换 -->
@@ -477,7 +489,7 @@ bgImgEl.addEventListener('error', function(){
 });
 setDefaultBg();
 
-// 面板状态观察：诗词/今日/星象/日程打开时隐藏五个栏目按钮 + 背景切换磨砂半透明（平时背景清晰）
+// 面板状态观察：诗词/今日/星象/日程/节日打开时隐藏五个栏目按钮 + 背景切换磨砂半透明（平时背景清晰）
 (function(){
   var list = document.getElementById('categoryList');
   if (!list) return;
@@ -485,17 +497,19 @@ setDefaultBg();
     var pb = document.getElementById('poetryBtn');
     var hb = document.getElementById('historyBtn');
     var cb = document.getElementById('constellationBtn');
+    var fb = document.getElementById('festivalBtn');
     var open = !!(document.querySelector('.plan-panel.show')
       || document.querySelector('.welcome.active')
       || (pb && pb.classList.contains('selected'))
       || (hb && hb.classList.contains('selected'))
-      || (cb && cb.classList.contains('selected')));
+      || (cb && cb.classList.contains('selected'))
+      || (fb && fb.classList.contains('selected')));
     list.classList.toggle('hide', open);
     // 磨砂半透明背景：仅面板打开时生效
     var ia = document.querySelector('.image-area');
     if (ia) ia.classList.toggle('frost', open);
   }
-  var ids = ['planPanel', 'poetryBtn', 'historyBtn', 'constellationBtn'];
+  var ids = ['planPanel', 'poetryBtn', 'historyBtn', 'constellationBtn', 'festivalBtn'];
   var obs = window.MutationObserver ? new MutationObserver(update) : null;
   if (obs) {
     ids.forEach(function(id){
@@ -641,11 +655,13 @@ function closeAllOverlays() {
   var ho = document.getElementById('historyOverlay');
   var pv = document.getElementById('planPanel');
   var pb = document.getElementById('planBtn');
+  var fb = document.getElementById('festivalBtn');
   if (so) so.classList.remove('show');
   if (po) po.classList.remove('show');
   if (ho) ho.classList.remove('show');
   if (pv) pv.classList.remove('show');
   if (pb) pb.classList.remove('selected');
+  if (fb) fb.classList.remove('selected');
 }
 
 // 取消所有正在加载的请求，防止异步回调覆盖当前面板内容
@@ -1615,6 +1631,69 @@ function togglePlan() {
   if (PlanSvc.getWalineUser()) PlanSvc.syncNow();
 }
 document.getElementById('planBtn').addEventListener('click', togglePlan);
+
+// ===== 节日（FestivalSolar.json）：遇节日显示按钮，点击在内容区展示节日信息 =====
+(function(){
+  var btn = document.getElementById('festivalBtn');
+  var area = document.getElementById('contentArea');
+  if (!btn || !area) return;
+  var festival = null;   // 今天匹配到的节日数据
+  fetch('../js/FestivalSolar/FestivalSolar.json').then(function(r){ return r.json(); })
+    .then(function(data){
+      var now = new Date();
+      var mm = String(now.getMonth()+1).padStart(2,'0');
+      var dd = String(now.getDate()).padStart(2,'0');
+      var today = mm + '-' + dd;
+      var list = (data && data.festivals) || [];
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].date === today) { festival = list[i]; break; }
+      }
+      if (festival) {
+        btn.style.display = 'inline-flex';
+        btn.title = festival.name + '（' + (festival.displayDate || today) + '）';
+      }
+    })
+    .catch(function(){ /* 数据缺失/网络失败：不显示节日按钮 */ });
+
+  btn.addEventListener('click', function(){
+    if (!festival) return;
+    if ((GAME._autoMode || GAME._oneKeyMode) && !GAME._autoPanelOpen) return;
+    cancelAllRequests();
+    // 已打开 → 关闭
+    if (area._activeBtn === 'festivalBtn' && area.classList.contains('show')) {
+      area.classList.remove('show');
+      btn.classList.remove('selected');
+      area._activeBtn = null;
+      closeAllOverlays();
+      return;
+    }
+    closeAllOverlays();
+    document.querySelectorAll('.badge').forEach(function(b){ b.classList.remove('selected'); });
+    btn.classList.add('selected');
+    area.innerHTML = buildFestivalHTML(festival);
+    area.style.left = '';
+    area.style.width = '';
+    area.style.transform = 'translateY(-50%)';
+    area.style.textAlign = 'center';
+    area.classList.add('show');
+    area._activeBtn = 'festivalBtn';
+  });
+
+  function buildFestivalHTML(f) {
+    var customs = (f.customs && f.customs.length)
+      ? f.customs.map(function(c){ return '<span class="fc-item">' + c + '</span>'; }).join('')
+      : '';
+    return '<div class="festival-card">'
+      + (f.banner
+          ? '<div class="fc-banner"><img src="' + f.banner + '" alt="' + f.name + '" onerror="this.style.display=\'none\'">'
+            + '<div class="fc-title" style="background:' + (f.color || 'rgba(0,0,0,.45)') + '">' + f.name + '<small>' + (f.displayDate || '') + '</small></div></div>'
+          : '<div class="fc-title fc-title-only" style="background:' + (f.color || '#e91e63') + '">' + f.name + '<small>' + (f.displayDate || '') + '</small></div>')
+      + (f.description ? '<div class="fc-desc">' + f.description + '</div>' : '')
+      + (f.details ? '<div class="fc-details">' + f.details + '</div>' : '')
+      + (customs ? '<div class="fc-customs">' + customs + '</div>' : '')
+      + '</div>';
+  }
+})();
 
 // 已取消阴阳切换（统一使用阴模式：背景全屏 + 黑色遮罩）
 
