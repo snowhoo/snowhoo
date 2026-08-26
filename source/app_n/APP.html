@@ -118,6 +118,9 @@ body{display:flex;flex-direction:column}
 .fc-details{font-size:.8rem;line-height:1.8;color:rgba(255,255,255,.88);text-align:left;text-shadow:0 1px 3px rgba(0,0,0,.4);margin-bottom:10px}
 .fc-customs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .fc-item{font-size:.72rem;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:12px;padding:4px 12px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+/* 朗读按钮 🎧（诗词/今日/星象歌诀标题旁） */
+.tts-btn{cursor:pointer;font-size:1rem;margin-left:6px;display:inline-block;vertical-align:middle;transition:transform .2s;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.tts-btn:active{transform:scale(.85)}
 .content-area .content-author{font-size:.75rem;color:rgba(255,255,255,.7);margin-bottom:10px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .content-area .content-source{font-size:.65rem;color:rgba(255,255,255,.7);margin-top:4px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .content-area .loading-spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;margin:0 auto 12px;animation:spin .8s linear infinite}
@@ -679,11 +682,33 @@ function closeAllOverlays() {
   if (fb) fb.classList.remove('selected');
 }
 
+// 朗读（tts.js 懒加载）：点击 🎧 朗读内容（诗词/今日/星象歌诀）
+function appSpeak(text, title) {
+  function doSpeak(){
+    try { if (window.TTS && TTS.speak) TTS.speak([{ title: title || '', text: text || '' }]); } catch(e){}
+  }
+  if (window.TTS && TTS.version) { doSpeak(); return; }
+  var s = document.createElement('script');
+  s.src = 'tts.js?ts=' + Date.now();
+  s.onload = doSpeak;
+  document.head.appendChild(s);
+}
+// 🎧 按钮点击委托（内容区 + 歌诀弹窗）：朗读对应文本，并阻止冒泡（避免触发面板关闭）
+document.addEventListener('click', function(e) {
+  var t = e.target;
+  if (t && t.classList && t.classList.contains('tts-btn')) {
+    e.stopPropagation();
+    appSpeak(t.getAttribute('data-text') || '', t.getAttribute('data-title') || '');
+  }
+});
+
 // 点击非显示内容区域：直接关闭诗词/今日/星象/日程/文化面板（点击实际内容元素或徽章本身不关闭）
 document.addEventListener('click', function(e) {
   var area = document.getElementById('contentArea');
   var panel = document.getElementById('planPanel');
   var t = e.target;
+  // 点击朗读按钮 → 不关闭
+  if (t && t.closest && t.closest('.tts-btn')) return;
   // 内容区：点击实际内容元素（文本/转盘/节日卡片）不关闭；点击内容区空白区域 → 关闭
   if (area && area.classList.contains('show')) {
     var isContent = area.contains(t) && t !== area && t.closest
@@ -816,7 +841,10 @@ function togglePoetry() {
     fetch('../js/DailyPoetry.json').then(function(r){return r.json()}).then(function(data){
       if (area._toggleReqId !== _reqId) return;
       var lines = data.detail && data.detail.content ? data.detail.content : [data.line];
-      var html = '<div class="content-title">' + data.title + '</div>'
+      function escAttr(s){ return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+      var poemText = lines.join('\n');
+      var html = '<div class="content-title">' + data.title
+               + ' <span class="tts-btn" data-title="' + escAttr(data.title) + '" data-text="' + escAttr(poemText) + '">🎧</span></div>'
                + '<div class="content-author">' + data.dynasty + ' · ' + data.author + '</div>';
       lines.forEach(function(l) {
         html += '<div class="content-line">' + l + '</div>';
@@ -880,7 +908,10 @@ function toggleHistory() {
     if (area._toggleReqId !== _reqId) return;  // 用户已切走
     fetch('../js/HistoryToday.json').then(function(r){return r.json()}).then(function(data){
       if (area._toggleReqId !== _reqId) return;
-      var html = '';
+      function escAttr(s){ return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+      var todayText = data.events.map(function(e){ return e.year + '年 ' + e.text; }).join('。');
+      var html = '<div class="content-title">历史上的今日'
+               + ' <span class="tts-btn" data-title="历史上的今日" data-text="' + escAttr(todayText) + '">🎧</span></div>';
       data.events.forEach(function(e) {
         html += '<div class="history-item"><span class="hyear">' + e.year + '年</span><span class="htext"> ' + e.text + '</span></div>';
       });
@@ -1104,7 +1135,9 @@ document.getElementById('constellationBtn').addEventListener('click', function()
         mask.id = 'xzDetailMask';
         mask.className = 'xz-detail-mask';
         mask.innerHTML = '<div class="xz-detail-panel">'
-          + '<div class="xz-detail-head"><span class="xz-detail-title"></span><button class="xz-detail-close">✕</button></div>'
+          + '<div class="xz-detail-head"><span class="xz-detail-title"></span>'
+          + '<span class="tts-btn" data-title="星象歌诀" data-text="">🎧</span>'
+          + '<button class="xz-detail-close">✕</button></div>'
           + '<div class="xz-detail-body"></div>'
           + '<div class="xz-detail-foot">✦ 三垣二十八宿 · 星象歌诀 ✦</div>'
           + '</div>';
@@ -1114,6 +1147,8 @@ document.getElementById('constellationBtn').addEventListener('click', function()
       }
       mask.querySelector('.xz-detail-title').textContent = d.group + ' · ' + dname;
       mask.querySelector('.xz-detail-body').textContent = d.poem;
+      var tb = mask.querySelector('.tts-btn');
+      if (tb) tb.setAttribute('data-text', d.poem || '');
       mask.classList.add('show');
     }
     // 点击中心信息区：先阻止 mousedown/touchstart 冒泡，避免触发转盘拖动→吸附旋转→选中被改写
