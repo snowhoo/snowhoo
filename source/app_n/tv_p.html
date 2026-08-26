@@ -1568,10 +1568,12 @@ layout: false
     }
   }
   var user = getWalineUser();
-  // 登录区：头像（点击弹留言窗）
+  // 登录区：头像（点击弹留言窗）——未登录也显示默认头像（与首页一致）
   var ua = document.getElementById('userAvatar');
-  if (ua && user) {
-    if (user.avatar) ua.src = user.avatar;
+  var DEF_AV = '" + DEF + "';
+  if (ua) {
+    if (user && user.avatar) ua.src = user.avatar;
+    else ua.src = DEF_AV;
   }
   if (!user) { applyUnlocks({story:1,yedu:1,zjsz:1,news:1,tv:1}); return; } // 已去除登录限制：未登录也全部解锁
   // 已登录：直接全部解锁（已去除登录限制）
@@ -1634,7 +1636,7 @@ layout: false
       if (u && (u.display_name || u.nick || u.name)) {
         if (ua && u.avatar) ua.src = u.avatar;
       } else {
-        if (ua) ua.removeAttribute('src');
+        if (ua) ua.src = '" + DEF + "';
       }
     } catch(e){}
   }

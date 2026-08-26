@@ -1050,10 +1050,12 @@ main();
     }
   }
   var user = getWalineUser();
-  // 登录区：头像（点击弹留言窗）
+  // 登录区：头像（点击弹留言窗）——未登录也显示默认头像（与首页一致）
   var ua = document.getElementById('userAvatar');
-  if (ua && user) {
-    if (user.avatar) ua.src = user.avatar;
+  var DEF_AV = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='12' fill='%23cfd4da'/><circle cx='12' cy='9.5' r='4' fill='%23fff'/><path d='M4.5 20a7.5 7.5 0 0 1 15 0' fill='%23fff'/></svg>";
+  if (ua) {
+    if (user && user.avatar) ua.src = user.avatar;
+    else ua.src = DEF_AV;
   }
   if (!user) { applyUnlocks({story:1,yedu:1,zjsz:1,news:1,tv:1}); return; } // 已去除登录限制：未登录也全部解锁
   // 已登录：直接全部解锁（已去除登录限制）
@@ -1116,7 +1118,7 @@ main();
       if (u && (u.display_name || u.nick || u.name)) {
         if (ua && u.avatar) ua.src = u.avatar;
       } else {
-        if (ua) ua.removeAttribute('src');
+        if (ua) ua.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='12' fill='%23cfd4da'/><circle cx='12' cy='9.5' r='4' fill='%23fff'/><path d='M4.5 20a7.5 7.5 0 0 1 15 0' fill='%23fff'/></svg>";
       }
     } catch(e){}
   }
