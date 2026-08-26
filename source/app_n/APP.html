@@ -107,6 +107,7 @@ body{display:flex;flex-direction:column}
 .content-area::-webkit-scrollbar{width:0}
 .content-area .content-line{font-size:.88rem;line-height:1.5;color:#fff;font-weight:400;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5)}
 .content-area .content-title{font-size:1.05rem;font-weight:400;color:#fff;font-family:"KaiTi","STKaiti","楷体",serif;text-shadow:0 1px 4px rgba(0,0,0,.5);margin-bottom:2px}
+.content-area .content-title.history-title{text-align:left}
 /* 节日卡片（content-area 内显示） */
 .festival-card{max-width:420px;margin:0 auto}
 .fc-banner{position:relative;border-radius:14px;overflow:hidden;margin-bottom:12px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
@@ -118,9 +119,10 @@ body{display:flex;flex-direction:column}
 .fc-details{font-size:.8rem;line-height:1.8;color:rgba(255,255,255,.88);text-align:left;text-shadow:0 1px 3px rgba(0,0,0,.4);margin-bottom:10px}
 .fc-customs{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
 .fc-item{font-size:.72rem;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:12px;padding:4px 12px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
-/* 朗读按钮 🎧（诗词/今日/星象歌诀标题旁） */
-.tts-btn{cursor:pointer;font-size:1rem;margin-left:6px;display:inline-block;vertical-align:middle;transition:transform .2s;text-shadow:0 1px 4px rgba(0,0,0,.5)}
-.tts-btn:active{transform:scale(.85)}
+/* 朗读按钮（精致简约喇叭图标，与文字同号自然相连） */
+.tts-btn{display:inline-block;vertical-align:middle;margin-left:5px;cursor:pointer;color:inherit;opacity:.85;transition:opacity .2s,transform .2s;line-height:1}
+.tts-btn svg{display:block;width:1em;height:1em}
+.tts-btn:active{transform:scale(.82);opacity:1}
 .content-area .content-author{font-size:.75rem;color:rgba(255,255,255,.7);margin-bottom:10px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .content-area .content-source{font-size:.65rem;color:rgba(255,255,255,.7);margin-top:4px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .content-area .loading-spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;margin:0 auto 12px;animation:spin .8s linear infinite}
@@ -682,7 +684,12 @@ function closeAllOverlays() {
   if (fb) fb.classList.remove('selected');
 }
 
-// 朗读（tts.js 懒加载）：点击 🎧 朗读内容（诗词/今日/星象歌诀）
+// 朗读（tts.js 懒加载）：点击喇叭图标朗读内容（诗词/今日/星象歌诀）
+// 精致简约喇叭图标（扬声器+声波，lucide 风格，1em 与文字同号）
+var TTS_BTN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>';
+function ttsBtnHtml(title, text) {
+  return '<span class="tts-btn" data-title="' + title + '" data-text="' + text + '">' + TTS_BTN_SVG + '</span>';
+}
 function appSpeak(text, title) {
   function doSpeak(){
     try { if (window.TTS && TTS.speak) TTS.speak([{ title: title || '', text: text || '' }]); } catch(e){}
@@ -844,7 +851,7 @@ function togglePoetry() {
       function escAttr(s){ return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
       var poemText = lines.join('\n');
       var html = '<div class="content-title">' + data.title
-               + ' <span class="tts-btn" data-title="' + escAttr(data.title) + '" data-text="' + escAttr(poemText) + '">🎧</span></div>'
+               + ' ' + ttsBtnHtml(escAttr(data.title), escAttr(poemText)) + '</div>'
                + '<div class="content-author">' + data.dynasty + ' · ' + data.author + '</div>';
       lines.forEach(function(l) {
         html += '<div class="content-line">' + l + '</div>';
@@ -910,8 +917,8 @@ function toggleHistory() {
       if (area._toggleReqId !== _reqId) return;
       function escAttr(s){ return String(s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
       var todayText = data.events.map(function(e){ return e.year + '年 ' + e.text; }).join('。');
-      var html = '<div class="content-title">历史上的今日'
-               + ' <span class="tts-btn" data-title="历史上的今日" data-text="' + escAttr(todayText) + '">🎧</span></div>';
+      var html = '<div class="content-title history-title">历史上的今日'
+               + ' ' + ttsBtnHtml('历史上的今日', escAttr(todayText)) + '</div>';
       data.events.forEach(function(e) {
         html += '<div class="history-item"><span class="hyear">' + e.year + '年</span><span class="htext"> ' + e.text + '</span></div>';
       });
@@ -1136,7 +1143,7 @@ document.getElementById('constellationBtn').addEventListener('click', function()
         mask.className = 'xz-detail-mask';
         mask.innerHTML = '<div class="xz-detail-panel">'
           + '<div class="xz-detail-head"><span class="xz-detail-title"></span>'
-          + '<span class="tts-btn" data-title="星象歌诀" data-text="">🎧</span>'
+          + ttsBtnHtml('星象歌诀', '')
           + '<button class="xz-detail-close">✕</button></div>'
           + '<div class="xz-detail-body"></div>'
           + '<div class="xz-detail-foot">✦ 三垣二十八宿 · 星象歌诀 ✦</div>'
