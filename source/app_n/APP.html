@@ -1693,11 +1693,19 @@ document.getElementById('planBtn').addEventListener('click', togglePlan);
     var customs = (f.customs && f.customs.length)
       ? f.customs.map(function(c){ return '<span class="fc-item">' + c + '</span>'; }).join('')
       : '';
+    // 标题背景 50% 透明（hex → rgba(…,0.5)），图片下方的标题条半透明显示
+    function rgba(c, a) {
+      if (!c || c.indexOf('#') !== 0) return 'rgba(0,0,0,' + a + ')';
+      var h = c.slice(1);
+      if (h.length === 3) h = h.replace(/./g, function(x){ return x + x; });
+      var n = parseInt(h, 16);
+      return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
+    }
     return '<div class="festival-card">'
       + (f.banner
           ? '<div class="fc-banner"><img src="' + f.banner + '" alt="' + f.name + '" onerror="this.style.display=\'none\'">'
-            + '<div class="fc-title" style="background:' + (f.color || 'rgba(0,0,0,.45)') + '">' + f.name + '<small>' + (f.displayDate || '') + '</small></div></div>'
-          : '<div class="fc-title fc-title-only" style="background:' + (f.color || '#e91e63') + '">' + f.name + '<small>' + (f.displayDate || '') + '</small></div>')
+            + '<div class="fc-title" style="background:' + rgba(f.color, 0.5) + '">' + f.name + '<small>' + (f.displayDate || '') + '</small></div></div>'
+          : '<div class="fc-title fc-title-only" style="background:' + rgba(f.color, 0.5) + '">' + f.name + '<small>' + (f.displayDate || '') + '</small></div>')
       + (f.description ? '<div class="fc-desc">' + f.description + '</div>' : '')
       + (f.details ? '<div class="fc-details">' + f.details + '</div>' : '')
       + (customs ? '<div class="fc-customs">' + customs + '</div>' : '')
