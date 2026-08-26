@@ -468,20 +468,35 @@ GAME.init();
   document.getElementById('yearText').textContent = '把梦想写进日程 [ ' + yr + '已过' + Math.round(pct * 100) + '% ]';
 })();
 
-// 背景图：启动优先读缓存（探索刷新过的图存 localStorage，下次启动复用同一 URL → 浏览器 HTTP 缓存命中，不再重新下载）
+// 背景图：启动优先读缓存（Canvas 转 dataURL 存 localStorage，本地直接显示，零网络下载）
 var bgImgEl = document.getElementById('bgImage');
 var BG_KEY = 'appn_bg_cache';
+// 将当前背景图转为 dataURL 写入缓存（crossOrigin=anonymous 保证 Canvas 不被污染）
+function saveBgCache() {
+  try {
+    if (!bgImgEl.src || bgImgEl.src.indexOf('picsum') < 0) return;   // 仅缓存 picsum 图
+    if (!bgImgEl.naturalWidth) return;
+    var c = document.createElement('canvas');
+    c.width = bgImgEl.naturalWidth;
+    c.height = bgImgEl.naturalHeight;
+    c.getContext('2d').drawImage(bgImgEl, 0, 0);
+    var url = c.toDataURL('image/jpeg', 0.72);
+    if (url && url.length > 1000) localStorage.setItem(BG_KEY, url);
+  } catch(e){}
+}
 function setDefaultBg() {
   bgImgEl.crossOrigin = 'anonymous';
   bgImgEl.onerror = null;
   var cached = null;
   try { cached = localStorage.getItem(BG_KEY); } catch(e){}
-  bgImgEl.src = cached || ('https://picsum.photos/1280/960?random=' + Date.now());
+  if (cached && cached.indexOf('data:image') === 0) {
+    bgImgEl.src = cached;   // 缓存 dataURL：直接本地显示，不发起网络请求
+  } else {
+    bgImgEl.src = 'https://picsum.photos/1280/960?random=' + Date.now();
+  }
 }
-// 加载成功 → 写入缓存（下次启动直接读缓存图）；缓存失效（404）→ 换新随机图
-bgImgEl.addEventListener('load', function(){
-  try { if (bgImgEl.src.indexOf('picsum') >= 0) localStorage.setItem(BG_KEY, bgImgEl.src); } catch(e){}
-});
+// 加载成功 → 写入缓存；缓存失效 → 换新随机图
+bgImgEl.addEventListener('load', saveBgCache);
 bgImgEl.addEventListener('error', function(){
   try { localStorage.removeItem(BG_KEY); } catch(e){}
   bgImgEl.onerror = null;
@@ -551,8 +566,7 @@ document.querySelector('.welcome').addEventListener('click', function() {
     bgImgEl.onerror = null;
     bgImgEl.onload = function(){
       if (wt) { wt.textContent = '探索'; wt.classList.remove('loading'); }
-      // 探索刷新的图写入缓存：下次启动直接读缓存，不再重新下载
-      try { if (bgImgEl.src.indexOf('picsum') >= 0) localStorage.setItem(BG_KEY, bgImgEl.src); } catch(e){}
+      saveBgCache();   // 探索刷新的图转 dataURL 写入缓存：下次启动零网络直接显示
     };
     bgImgEl.src = 'https://picsum.photos/1280/960?random=' + Date.now();
   } else if (wt) {
@@ -675,10 +689,21 @@ document.addEventListener('click', function(e) {
   if (e.target && e.target.closest && e.target.closest('.badge')) return;
   // 其他区域 → 关闭所有面板
   closeAllOverlays();
-  if (area && area.classList.contains('show')) {
+  if (area) {
     area.classList.remove('show');
     area._activeBtn = null;
+    // 恢复内容区内联样式（星象等设置过 left/width/transform/overflowY，避免残留影响下次打开）
+    area.style.left = '';
+    area.style.width = '';
+    area.style.transform = '';
+    area.style.textAlign = '';
+    area.style.overflowY = '';
   }
+  // 直接恢复桌面（栏目按钮显示 + 背景磨砂移除），不依赖 MutationObserver
+  var cl = document.getElementById('categoryList');
+  if (cl) cl.classList.remove('hide');
+  var ia = document.querySelector('.image-area');
+  if (ia) ia.classList.remove('frost');
 });
 
 // 取消所有正在加载的请求，防止异步回调覆盖当前面板内容
