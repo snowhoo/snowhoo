@@ -1632,12 +1632,27 @@ function togglePlan() {
 }
 document.getElementById('planBtn').addEventListener('click', togglePlan);
 
-// ===== 节日（FestivalSolar.json）：遇节日显示按钮，点击在内容区展示节日信息 =====
+// ===== 节日（FestivalSolar.json）：遇节日显示按钮 + 默认自动打开，点击在内容区展示节日信息 =====
 (function(){
   var btn = document.getElementById('festivalBtn');
   var area = document.getElementById('contentArea');
   if (!btn || !area) return;
   var festival = null;   // 今天匹配到的节日数据
+  function openFestival() {
+    if (!festival) return;
+    if ((GAME._autoMode || GAME._oneKeyMode) && !GAME._autoPanelOpen) return;
+    cancelAllRequests();
+    closeAllOverlays();
+    document.querySelectorAll('.badge').forEach(function(b){ b.classList.remove('selected'); });
+    btn.classList.add('selected');
+    area.innerHTML = buildFestivalHTML(festival);
+    area.style.left = '';
+    area.style.width = '';
+    area.style.transform = 'translateY(-50%)';
+    area.style.textAlign = 'center';
+    area.classList.add('show');
+    area._activeBtn = 'festivalBtn';
+  }
   fetch('../js/FestivalSolar/FestivalSolar.json').then(function(r){ return r.json(); })
     .then(function(data){
       var now = new Date();
@@ -1654,6 +1669,7 @@ document.getElementById('planBtn').addEventListener('click', togglePlan);
       if (festival) {
         btn.style.display = 'inline-flex';
         btn.title = festival.name + '（' + (festival.displayDate || today) + '）';
+        openFestival();   // 默认打开：遇节日自动展示节日信息
       }
     })
     .catch(function(){ /* 数据缺失/网络失败：不显示节日按钮 */ });
@@ -1670,16 +1686,7 @@ document.getElementById('planBtn').addEventListener('click', togglePlan);
       closeAllOverlays();
       return;
     }
-    closeAllOverlays();
-    document.querySelectorAll('.badge').forEach(function(b){ b.classList.remove('selected'); });
-    btn.classList.add('selected');
-    area.innerHTML = buildFestivalHTML(festival);
-    area.style.left = '';
-    area.style.width = '';
-    area.style.transform = 'translateY(-50%)';
-    area.style.textAlign = 'center';
-    area.classList.add('show');
-    area._activeBtn = 'festivalBtn';
+    openFestival();
   });
 
   function buildFestivalHTML(f) {
