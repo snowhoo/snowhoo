@@ -28,6 +28,8 @@ body{display:flex;flex-direction:column}
 .welcome small{display:block;font-size:.75rem;font-weight:400;opacity:.7;margin-top:6px;letter-spacing:1px}
 /* 阴模式：探索/日历文字白色（阳模式黑色为默认；元素已在 body 层，用兄弟选择器） */
 .image-area.yin ~ .welcome{color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+/* 探索加载中：文字橙色 */
+#welcomeText.loading{color:#ff8c00;text-shadow:0 0 10px rgba(255,140,0,.45)}
 .image-area.yin ~ .welcome.active{color:#ff8c00}
 .image-area.yin ~ .almanac{color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.5)}
 
@@ -35,8 +37,8 @@ body{display:flex;flex-direction:column}
 .top-left-badges{position:absolute;top:46px;left:16px;z-index:5;display:flex;gap:14px}
 .top-left-badges .badge{color:#fff;font-size:.68rem;font-weight:400;text-shadow:0 1px 4px rgba(0,0,0,.5);cursor:pointer;transition:all .3s;letter-spacing:1px;border:none;background:none;padding:0;line-height:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
 .top-left-badges .badge-icon{font-size:1rem;line-height:1;border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:3px 5px;margin-bottom:1px}
-.top-left-badges .badge.selected{color:#ffd700;font-weight:400;text-shadow:0 0 10px rgba(255,215,0,.4)}
-.top-left-badges .badge.selected .badge-icon{border-color:rgba(255,215,0,.5)}
+.top-left-badges .badge.selected{color:#ff8c00;font-weight:400;text-shadow:0 0 10px rgba(255,140,0,.45)}
+.top-left-badges .badge.selected .badge-icon{border-color:rgba(255,140,0,.55)}
 /* 日程徽章：默认隐藏，奔跑人解锁后才显示（唯一入口） */
 #planBtn{display:inline-flex}
 
@@ -513,15 +515,19 @@ document.querySelector('.welcome').addEventListener('click', function() {
   w.classList.remove('active');   // 取消选中效果
   // 刷新背景图：picsum 随机图（crossOrigin=anonymous 保证可被捕获保存；load 后栏目按钮自动重新定位）
   var wt = document.getElementById('welcomeText');
-  if (wt) wt.textContent = '探索中';   // 加载中显示"探索中"
+  if (wt) {
+    wt.textContent = '探索中…';   // 加载中显示"探索中…"
+    wt.classList.add('loading');  // 加载中橙色
+  }
   var bgImgEl = document.getElementById('bgImage');
   if (bgImgEl) {
     bgImgEl.crossOrigin = 'anonymous';
     bgImgEl.onerror = null;
-    bgImgEl.onload = function(){ if (wt) wt.textContent = '探索'; };
+    bgImgEl.onload = function(){ if (wt) { wt.textContent = '探索'; wt.classList.remove('loading'); } };
     bgImgEl.src = 'https://picsum.photos/1280/960?random=' + Date.now();
   } else if (wt) {
     wt.textContent = '探索';
+    wt.classList.remove('loading');
   }
   if (GAME._autoMode) GAME._autoPanelLoaded('explore', true);
 });
