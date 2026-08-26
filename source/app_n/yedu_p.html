@@ -746,6 +746,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     });
   }
 
+  // 后台自动暂停：WebView 切后台时音频持续下载流量，visibilitychange 隐藏即暂停（回前台可继续播放）
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden && _scAudio && !_scAudio.paused) _scAudio.pause();
+  });
+
   // 刷新播放条 UI（按钮图标 + 进度条），供原生媒体卡片控制后同步
   function refreshAudioUI() {
     var playing = _scAudio && !_scAudio.paused;

@@ -1210,6 +1210,11 @@ main();
       }
     });
 
+    // 后台自动暂停：WebView 切后台时朗读 WebSocket/音频持续下载流量，隐藏即停止（回前台重新播放）
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden && window.TTS && TTS.isSpeaking()) TTS.stop();
+    });
+
     // ===== 继续播放恢复点：记录当前文章页码 =====
     var RESUME_KEY = 'resume_play';
     function saveResume(playing){
