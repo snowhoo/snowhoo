@@ -535,7 +535,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
   function switchDate(ds) {
     currentDateStr = ds;
-    dataBase = 'news_CCTV/' + ds + '/';
+    dataBase = '/APP/news_CCTV/' + ds + '/';
     allData = {};
     currentColumn = 0;
     firstShown = false;   // 重置首屏标记：切日期后允许重新渲染（否则永远停在"加载中"）
