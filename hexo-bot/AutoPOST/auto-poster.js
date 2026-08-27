@@ -108,10 +108,14 @@ const ARTICLE_SOURCE_URL = {
   zjsz: 'https://snowhoo.net/js/sevencolor/1/zjsz_data/data.js'
 };
 
-// 文章 path 用 encodeURIComponent，与库里已存评论的编码形态、以及前端代码保持一致，
-// 这样历史评论才能正确挂接到对应文章（地址栏仍显示明文，仅存储 key 为编码，Waline 必需）
+// yedu/reader 文章路径用文件名（无中文），encodeURIComponent 即可
 function encKey(s) {
   return encodeURIComponent(String(s));
+}
+// zjsz 文章标题含中文，必须用明文（仅转义会破坏 URL 的 ?#&%），
+// 才能与浏览器地址栏的明文 ?a=中文 对上、把评论挂到对应文章
+function rawKey(s) {
+  return String(s).replace(/[?#&%]/g, c => ({ '#':'%23','?':'%3F','&':'%26','%':'%25' }[c]));
 }
 
 // 文章级来源对应的“整页”路径：页面级抽取时据此去重，避免对 reader/yedu/zjsz 整页重复发评论
@@ -154,7 +158,7 @@ async function fetchArticlePool(sources) {
         if (m) {
           const data = JSON.parse(m[1]);
           (data || []).forEach(a => {
-            if (a && a.title) out.push({ page: 'zjsz', title: a.title, url: '/app_n/zjsz_p.html?a=' + encKey(a.title) });
+            if (a && a.title) out.push({ page: 'zjsz', title: a.title, url: '/app_n/zjsz_p.html?a=' + rawKey(a.title) });
           });
         }
       }

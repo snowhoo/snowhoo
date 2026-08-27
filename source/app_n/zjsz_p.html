@@ -451,7 +451,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   function syncWalineZjsz() {
     if (!window.__wl) return;
     var a = articles[currentIndex];
-    if (a && a.title) window.__wl.update({ path: '/app_n/zjsz_p.html?a=' + encodeURIComponent(a.title) });
+    if (a && a.title) window.__wl.update({ path: '/app_n/zjsz_p.html?a=' + a.title.replace(/[?#&%]/g, c => ({ '#':'%23','?':'%3F','&':'%26','%':'%25' }[c])) });
   }
 
   // 懒加载当前及相邻卡片图片（±1 范围内才设置 src，真实图缺失时用占位图）
