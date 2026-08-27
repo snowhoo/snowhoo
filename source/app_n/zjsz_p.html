@@ -297,6 +297,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         createCards();
         bindEvents();
         updateCards();
+        initWalineZjsz(); // 文章数据已就绪，此时初始化 Waline，初始 path 即当前文章
         
         loadingEl.classList.add('hide');
         setTimeout(function() { loadingEl.remove(); }, 500);
@@ -731,13 +732,17 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     } catch(e){}
   }
   refreshUser();
-  // Waline 初始化（动态 import，同修真小世界）
-  try {
+  // Waline 初始化：必须在文章数据加载完成后再调用，
+  // 这样初始 path 直接就是当前文章 (/app_n/zjsz_p.html?a=<标题>)，
+  // 不必依赖「先挂裸页面、再靠 update 切换」（之前因异步时序一直停在裸页面）
+  function initWalineZjsz() {
+    if (window.__wl) return; // 防止重复初始化
+    var a = articles[currentIndex];
+    var _initPath = (a && a.title)
+      ? '/app_n/zjsz_p.html?a=' + a.title.replace(/[?#&%]/g, c => ({ '#':'%23','?':'%3F','&':'%26','%':'%25' }[c]))
+      : window.location.pathname;
     import('./lib/waline.js').then(function(mod){
       try {
-        // 初始 path 用页面自身：文章数据在主逻辑 IIFE 作用域内，本 init IIFE 不可见，
-        // 故不在此引用 articles/currentIndex；文章级切换由 syncWalineZjsz() 在文章加载后调 update 完成
-        var _initPath = window.location.pathname;
         window.__wl = mod.init({
           el: '#walineContainer',
           serverURL: 'https://waline.snowhoo.net',
@@ -755,10 +760,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
             refreshUser();
           }
         });
-        setTimeout(syncWalineZjsz, 800);
+        syncWalineZjsz(); // 兜底再同步一次（此时 articles 已就绪）
       } catch(e){ console.warn('[留言] Waline init error:', e); }
     }).catch(function(e){ console.warn('[留言] Waline import error:', e); });
-  } catch(e){ console.warn('[留言] Waline 初始化失败:', e); }
+  }
 })();
 </script>
 <!-- 讯飞语音朗读：通用朗读器（时间戳强制最新版，彻底绕开 WebView 顽固缓存） -->
