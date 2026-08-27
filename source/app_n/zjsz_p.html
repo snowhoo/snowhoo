@@ -735,9 +735,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   try {
     import('./lib/waline.js').then(function(mod){
       try {
-        var _initPath = (articles[currentIndex] && articles[currentIndex].title)
-          ? '/app_n/zjsz_p.html?a=' + encodeURIComponent(articles[currentIndex].title)
-          : window.location.pathname;
+        // 初始 path 用页面自身：文章数据在主逻辑 IIFE 作用域内，本 init IIFE 不可见，
+        // 故不在此引用 articles/currentIndex；文章级切换由 syncWalineZjsz() 在文章加载后调 update 完成
+        var _initPath = window.location.pathname;
         window.__wl = mod.init({
           el: '#walineContainer',
           serverURL: 'https://waline.snowhoo.net',
