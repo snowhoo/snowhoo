@@ -98,15 +98,21 @@ function filterByList(articles, list) {
 
 // ============== 文章级评论：从页面数据源拉取文章列表 ==============
 // 每篇文章的“线程 path”必须与前端保持一致：
-//   reader -> /app_n/reader.html?a=<encodeURIComponent(filename)>
-//   yedu   -> /app_n/yedu_p.html?a=<encodeURIComponent(fileList[i])>
-//   zjsz   -> /app_n/zjsz_p.html?a=<encodeURIComponent(title)>
+//   reader -> /app_n/reader.html?a=<filename 明文，仅转义 ?#&%>
+//   yedu   -> /app_n/yedu_p.html?a=<fileList[i] 明文，仅转义 ?#&%>
+//   zjsz   -> /app_n/zjsz_p.html?a=<title 明文，仅转义 ?#&%>
 // 该 path 即 Waline 的评论线程标识（页面端 path 选项 / 机器人端 url 字段共用同一值）。
 const ARTICLE_SOURCE_URL = {
   reader: 'https://snowhoo.net/posts.json',
   yedu: 'https://snowhoo.net/js/sevencolor/1/yedu_data/index.json',
   zjsz: 'https://snowhoo.net/js/sevencolor/1/zjsz_data/data.js'
 };
+
+// 文章 path 用 encodeURIComponent，与库里已存评论的编码形态、以及前端代码保持一致，
+// 这样历史评论才能正确挂接到对应文章（地址栏仍显示明文，仅存储 key 为编码，Waline 必需）
+function encKey(s) {
+  return encodeURIComponent(String(s));
+}
 
 // 文章级来源对应的“整页”路径：页面级抽取时据此去重，避免对 reader/yedu/zjsz 整页重复发评论
 const ARTICLE_SOURCE_PAGE = {
@@ -135,12 +141,12 @@ async function fetchArticlePool(sources) {
       if (s === 'reader') {
         const names = await fetchJSON(ARTICLE_SOURCE_URL.reader);
         (names || []).forEach(fn => {
-          if (/\.md$/i.test(fn)) out.push({ page: 'reader', title: fn, url: '/app_n/reader.html?a=' + encodeURIComponent(fn) });
+          if (/\.md$/i.test(fn)) out.push({ page: 'reader', title: fn, url: '/app_n/reader.html?a=' + encKey(fn) });
         });
       } else if (s === 'yedu') {
         const list = await fetchJSON(ARTICLE_SOURCE_URL.yedu);
         (list || []).forEach(fn => {
-          out.push({ page: 'yedu', title: fn, url: '/app_n/yedu_p.html?a=' + encodeURIComponent(fn) });
+          out.push({ page: 'yedu', title: fn, url: '/app_n/yedu_p.html?a=' + encKey(fn) });
         });
       } else if (s === 'zjsz') {
         const txt = await fetchText(ARTICLE_SOURCE_URL.zjsz);
@@ -148,7 +154,7 @@ async function fetchArticlePool(sources) {
         if (m) {
           const data = JSON.parse(m[1]);
           (data || []).forEach(a => {
-            if (a && a.title) out.push({ page: 'zjsz', title: a.title, url: '/app_n/zjsz_p.html?a=' + encodeURIComponent(a.title) });
+            if (a && a.title) out.push({ page: 'zjsz', title: a.title, url: '/app_n/zjsz_p.html?a=' + encKey(a.title) });
           });
         }
       }
