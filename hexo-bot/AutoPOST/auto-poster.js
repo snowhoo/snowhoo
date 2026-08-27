@@ -2,7 +2,8 @@
  * Hexo 自动评论发布器
  * 每天 02:00 执行：
  *   1. 从网络抓取 sitemap
- *   2. 从 sitemap 直接随机选取 3 篇已发布文章
+ *   2. 从 sitemap 仅保留 html 内容页（排除 json 等非 html 资源），随机选取 3 篇
+ *   3. 支持配置：randomRangeMode=1 全局 / =2 仅从 randomList 抽取（见 auto-poster.config.json）
  *   3. 生成评论内容（昵称 + 评论 + 完整 URL）
  *   4. 写入 daily-comment-schedule.json（包含全部所需数据）
  *   5. 创建 3 个一次性 Windows 计划任务，到点调用 comment-executor.js 发出预生成评论
@@ -21,6 +22,68 @@ const SCHEDULE_FILE = path.join(__dirname, 'daily-comment-schedule.json');
 const EXECUTOR_SCRIPT = path.join(__dirname, 'comment-executor.js');
 const TASK_FOLDER = 'Hexo-Bot';
 const SITEMAP_URL = 'https://snowhoo.net/sitemap.xml';
+const CONFIG_FILE = path.join(__dirname, 'auto-poster.config.json');
+
+// ============== 配置文件说明 ==============
+// auto-poster.config.json:
+//   randomRangeMode: 1 = 全局（所有 html 内容页随机）；2 = 仅从 randomList 抽取
+//   randomList: 模式2下列表的条目，可为
+//      · slug（如 20260622133140）
+//      · 相对路径（如 2026/06/22/20260622133140 或 js/sevencolor/4/4.html）
+//      · 完整 URL（如 https://snowhoo.net/2026/06/22/20260622133140/）
+//   dailyCount: 每天生成的评论条数（默认 3，不足候选数时按实际数量）
+
+// 显式非 html 资源扩展名（一律排除，不进入随机范围）
+const NON_HTML_EXT = ['.json', '.xml', '.txt', '.css', '.js', '.png', '.jpg', '.jpeg',
+  '.gif', '.ico', '.svg', '.woff', '.woff2', '.ttf', '.map', '.webp', '.mp3', '.mp4', '.pdf'];
+// 系统/聚合页路径片段（排除）
+const SYS_PATH_FRAGMENTS = ['/tags/', '/categories/', '/link/', '/guestbook/', '/about/',
+  '/archives/', '/hotnews/', '/robots.txt', '/index.html', '生成文章'];
+
+function loadConfig() {
+  const cfg = { randomRangeMode: 1, randomList: [], dailyCount: 3 };
+  try {
+    const parsed = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
+    if (typeof parsed.randomRangeMode === 'number') cfg.randomRangeMode = parsed.randomRangeMode;
+    if (Array.isArray(parsed.randomList)) {
+      cfg.randomList = parsed.randomList.map(s => String(s).trim()).filter(Boolean);
+    }
+    if (typeof parsed.dailyCount === 'number' && parsed.dailyCount >= 1) {
+      cfg.dailyCount = Math.floor(parsed.dailyCount);
+    }
+  } catch (e) {
+    console.log('[AutoPoster] 未读取到配置，使用默认（全局模式）');
+  }
+  return cfg;
+}
+
+// 判断一个 sitemap URL 是否为可评论的 html 内容页
+function isEligibleArticle(locDecoded) {
+  const lower = locDecoded.toLowerCase();
+  if (NON_HTML_EXT.some(ext => lower.endsWith(ext))) return false;          // json/xml/资源排除
+  if (SYS_PATH_FRAGMENTS.some(frag => lower.includes(frag))) return false;  // 系统/聚合页排除
+  if (lower.endsWith('.html') || lower.endsWith('.htm')) return true;       // 显式 html 页
+  if (/\/20\d{2}\/\d{2}\/\d{2}\/.+/.test(lower)) return true;              // 日期型文章目录（底层 index.html）
+  return false;
+}
+
+// 归一化匹配键：小写、去协议+域名、去首尾斜杠、去 .html 后缀
+function normalizeKey(s) {
+  return s.toLowerCase()
+    .replace(/^https?:\/\/[^/]+/, '')   // 去协议+域名（支持填完整 URL）
+    .replace(/^[\\/]+/, '')
+    .replace(/[\\/]+$/, '')
+    .replace(/\.html?$/i, '');
+}
+
+// 模式2：从全局文章池中筛选 randomList 命中的条目
+function filterByList(articles, list) {
+  const keys = list.map(normalizeKey);
+  return articles.filter(a => {
+    const cands = [normalizeKey(a.url), normalizeKey(a.slug)];
+    return cands.some(c => keys.includes(c));
+  });
+}
 
 // ============== 昵称生成 ==============
 function generateNickname() {
@@ -214,15 +277,9 @@ function fetchSitemapArticles() {
           if (!locMatch) return;
           const loc = locMatch[1].trim();
 
-          // 过滤非文章页面、标签/分类页、热搜/新闻、首页、静态页面
+          // 仅保留可发布评论的 html 内容页；排除 json 等非 html 资源及系统/聚合页
           const locDecoded = decodeURIComponent(loc);
-          if (locDecoded.includes('/index.html') || locDecoded.includes('生成文章') ||
-              locDecoded.includes('/tags/') || locDecoded.includes('/categories/') ||
-              locDecoded.includes('/link/') || locDecoded.includes('/guestbook/') ||
-              locDecoded.includes('/about/') || locDecoded.includes('/archives/') ||
-              locDecoded.includes('/robots.txt') || locDecoded.includes('/hotnews/') ||
-              locDecoded.includes('hotnews') ||
-              locDecoded.endsWith('.html') || locDecoded.endsWith('.htm')) {
+          if (!isEligibleArticle(locDecoded)) {
             return;
           }
 
@@ -234,10 +291,11 @@ function fetchSitemapArticles() {
             const slug = parts[parts.length - 1];
 
             if (slug) {
-              // 补回尾部斜杠（sitemap URL 末尾有 /，去掉后又需保留以准确匹配）
+              // html 文件不加尾斜杠；日期型文章目录（底层 index.html）补尾斜杠
+              const isHtmlFile = /\.html?$/i.test(cleanPath);
               articles.push({
                 slug: slug,
-                url: cleanPath + '/',
+                url: isHtmlFile ? cleanPath : cleanPath + '/',
                 title: slug
               });
             }
@@ -258,7 +316,7 @@ async function runAutoPoster() {
   console.log('[AutoPoster] ========== Hexo 自动评论发布器 ==========');
   console.log('[AutoPoster] 执行时间: ' + new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }));
 
-  // 1. 从网络抓取 sitemap，获取已发布文章列表
+  // 1. 从网络抓取 sitemap，获取已发布文章列表（已过滤 json 等非 html 资源）
   const sitemapArticles = await fetchSitemapArticles();
 
   if (sitemapArticles.length < 3) {
@@ -266,16 +324,31 @@ async function runAutoPoster() {
     return;
   }
 
-  // 2. 随机选 3 篇
-  const selectedArticles = pickRandom(sitemapArticles, 3);
-  console.log('[AutoPoster] 选中 ' + selectedArticles.length + ' 篇文章');
+  // 读取配置，确定随机范围
+  const config = loadConfig();
+  let pool = sitemapArticles;
+  if (config.randomRangeMode === 2) {
+    pool = filterByList(sitemapArticles, config.randomList);
+    console.log('[AutoPoster] 随机范围模式=2(列表)，命中 ' + pool.length + ' 篇');
+    if (pool.length === 0) {
+      console.log('[AutoPoster] 列表未命中任何文章，请检查 randomList 配置，跳过');
+      return;
+    }
+  } else {
+    console.log('[AutoPoster] 随机范围模式=1(全局)，候选 ' + pool.length + ' 篇');
+  }
 
-  // 3. 生成 3 个随机时间（06:00-23:00，精确到秒）
-  const randomTimes = generateRandomTimes(3);
+  // 2. 随机选文章（按 dailyCount，不足候选数时按实际数量）
+  const count = Math.min(config.dailyCount, pool.length);
+  const selectedArticles = pickRandom(pool, count);
+  console.log('[AutoPoster] 每日条数=' + config.dailyCount + '，选中 ' + selectedArticles.length + ' 篇文章');
+
+  // 3. 生成随机时间（06:00-23:00，精确到秒）
+  const randomTimes = generateRandomTimes(count);
 
   // 4. 构建 schedule，每条包含预生成的完整数据
   const schedule = [];
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < count; i++) {
     const article = selectedArticles[i];
     const time = randomTimes[i];
     const nickname = generateNickname();
@@ -313,7 +386,7 @@ async function runAutoPoster() {
 
   // 6. 清理旧任务，创建新任务
   console.log('[AutoPoster] --- 创建 Windows 计划任务 ---');
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < count; i++) {
     createWindowsTask(schedule[i].hour, schedule[i].minute, schedule[i].second, i + 1);
   }
 
@@ -330,4 +403,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { runAutoPoster, fetchSitemapArticles };
+module.exports = { runAutoPoster, fetchSitemapArticles, loadConfig, isEligibleArticle, filterByList, normalizeKey };
