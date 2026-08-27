@@ -536,9 +536,17 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       loadNearbyImages();
       updateImageClick();
       if (articles[currentIndex]) document.title = '小红故事|夜读 – ' + escapeHtml(articles[currentIndex].title);
+      syncWalineYedu();
       ensureArticle(currentIndex - 1);
       ensureArticle(currentIndex + 1);
     });
+  }
+
+  // 将 Waline 评论线程切换到当前文章（每篇文章独立 path）
+  function syncWalineYedu() {
+    if (!window.__wl) return;
+    var f = fileList[currentIndex];
+    if (f) window.__wl.update({ path: '/app_n/yedu_p.html?a=' + encodeURIComponent(f) });
   }
 
   // 懒加载当前及相邻卡片图片（±1 范围：真图优先，无真图用占位图；其余不加载）
@@ -1039,12 +1047,16 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   try {
     import('./lib/waline.js').then(function(mod){
       try {
-        mod.init({
+        var _initPath = fileList[currentIndex]
+          ? '/app_n/yedu_p.html?a=' + encodeURIComponent(fileList[currentIndex])
+          : window.location.pathname;
+        window.__wl = mod.init({
           el: '#walineContainer',
           serverURL: 'https://waline.snowhoo.net',
           lang: 'zh-CN',
           avatar: 'mp',
           pageview: false,
+          path: _initPath,
           locale: { placeholder: '说点什么吧...', comment: '留言' },
           onLogin: function(user){
             try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e){}
@@ -1055,6 +1067,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
             refreshUser();
           }
         });
+        setTimeout(syncWalineYedu, 800);
       } catch(e){ console.warn('[留言] Waline init error:', e); }
     }).catch(function(e){ console.warn('[留言] Waline import error:', e); });
   } catch(e){ console.warn('[留言] Waline 初始化失败:', e); }

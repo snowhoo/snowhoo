@@ -32,6 +32,13 @@ const CONFIG_FILE = path.join(__dirname, 'auto-poster.config.json');
 //      · 相对路径（如 2026/06/22/20260622133140 或 js/sevencolor/4/4.html）
 //      · 完整 URL（如 https://snowhoo.net/2026/06/22/20260622133140/）
 //   dailyCount: 每天生成的评论条数（默认 3，不足候选数时按实际数量）
+//   articleMode: true = 文章级模式（按文章独立评论）；false = 关闭
+//   articleSources: 文章级模式下的文章来源页，可选 reader / yedu / zjsz
+//       各页唯一 key：reader=posts.json 文件名 / yedu=index.json 文件名 / zjsz=data.js 标题
+//       机器人发的 url 字段值与页面端 Waline path 选项完全一致，线程自动对齐
+//   ★ 文章级 + 页面级合并进同一候选池：articleSources 提供多文页的文章级候选，
+//     randomList(模式2)/全局(模式1) 提供单页的页面级候选；页面级会自动排除已被
+//     文章级覆盖的来源页（reader/yedu/zjsz 整页），避免重复发评论。
 
 // 显式非 html 资源扩展名（一律排除，不进入随机范围）
 const NON_HTML_EXT = ['.json', '.xml', '.txt', '.css', '.js', '.png', '.jpg', '.jpeg',
@@ -41,7 +48,7 @@ const SYS_PATH_FRAGMENTS = ['/tags/', '/categories/', '/link/', '/guestbook/', '
   '/archives/', '/hotnews/', '/robots.txt', '/index.html', '生成文章'];
 
 function loadConfig() {
-  const cfg = { randomRangeMode: 1, randomList: [], dailyCount: 3 };
+  const cfg = { randomRangeMode: 1, randomList: [], dailyCount: 3, articleMode: false, articleSources: [] };
   try {
     const parsed = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
     if (typeof parsed.randomRangeMode === 'number') cfg.randomRangeMode = parsed.randomRangeMode;
@@ -50,6 +57,10 @@ function loadConfig() {
     }
     if (typeof parsed.dailyCount === 'number' && parsed.dailyCount >= 1) {
       cfg.dailyCount = Math.floor(parsed.dailyCount);
+    }
+    if (typeof parsed.articleMode === 'boolean') cfg.articleMode = parsed.articleMode;
+    if (Array.isArray(parsed.articleSources)) {
+      cfg.articleSources = parsed.articleSources.map(s => String(s).trim().toLowerCase()).filter(Boolean);
     }
   } catch (e) {
     console.log('[AutoPoster] 未读取到配置，使用默认（全局模式）');
@@ -83,6 +94,69 @@ function filterByList(articles, list) {
     const cands = [normalizeKey(a.url), normalizeKey(a.slug)];
     return cands.some(c => keys.includes(c));
   });
+}
+
+// ============== 文章级评论：从页面数据源拉取文章列表 ==============
+// 每篇文章的“线程 path”必须与前端保持一致：
+//   reader -> /app_n/reader.html?a=<encodeURIComponent(filename)>
+//   yedu   -> /app_n/yedu_p.html?a=<encodeURIComponent(fileList[i])>
+//   zjsz   -> /app_n/zjsz_p.html?a=<encodeURIComponent(title)>
+// 该 path 即 Waline 的评论线程标识（页面端 path 选项 / 机器人端 url 字段共用同一值）。
+const ARTICLE_SOURCE_URL = {
+  reader: 'https://snowhoo.net/posts.json',
+  yedu: 'https://snowhoo.net/js/sevencolor/1/yedu_data/index.json',
+  zjsz: 'https://snowhoo.net/js/sevencolor/1/zjsz_data/data.js'
+};
+
+// 文章级来源对应的“整页”路径：页面级抽取时据此去重，避免对 reader/yedu/zjsz 整页重复发评论
+const ARTICLE_SOURCE_PAGE = {
+  reader: '/app_n/reader.html',
+  yedu: '/app_n/yedu_p.html',
+  zjsz: '/app_n/zjsz_p.html'
+};
+
+function fetchText(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+      let d = '';
+      res.on('data', c => d += c);
+      res.on('end', () => resolve(d));
+    }).on('error', reject);
+  });
+}
+function fetchJSON(url) {
+  return fetchText(url).then(t => JSON.parse(t));
+}
+
+async function fetchArticlePool(sources) {
+  const out = [];
+  for (const s of sources) {
+    try {
+      if (s === 'reader') {
+        const names = await fetchJSON(ARTICLE_SOURCE_URL.reader);
+        (names || []).forEach(fn => {
+          if (/\.md$/i.test(fn)) out.push({ page: 'reader', title: fn, url: '/app_n/reader.html?a=' + encodeURIComponent(fn) });
+        });
+      } else if (s === 'yedu') {
+        const list = await fetchJSON(ARTICLE_SOURCE_URL.yedu);
+        (list || []).forEach(fn => {
+          out.push({ page: 'yedu', title: fn, url: '/app_n/yedu_p.html?a=' + encodeURIComponent(fn) });
+        });
+      } else if (s === 'zjsz') {
+        const txt = await fetchText(ARTICLE_SOURCE_URL.zjsz);
+        const m = txt.match(/var ARTICLE_DATA\s*=\s*(\[[\s\S]*?\])\s*;/);
+        if (m) {
+          const data = JSON.parse(m[1]);
+          (data || []).forEach(a => {
+            if (a && a.title) out.push({ page: 'zjsz', title: a.title, url: '/app_n/zjsz_p.html?a=' + encodeURIComponent(a.title) });
+          });
+        }
+      }
+    } catch (e) {
+      console.log('[AutoPoster] 拉取文章源 ' + s + ' 失败: ' + e.message);
+    }
+  }
+  return out;
 }
 
 // ============== 昵称生成 ==============
@@ -119,15 +193,25 @@ function generateNickname() {
   return styles[Math.floor(Math.random() * styles.length)]();
 }
 
-// ============== 根据 URL slug 类型生成评论 ==============
+// ============== 根据 URL 类型生成情境化评论 ==============
+// 说明：app_n 等应用页的 slug 是英文/拼音（tv / yedu / reader / zjsz / daliynews / app），
+// 无法靠中文关键词命中，因此先按英文 token 识别页面性质，再退化到博客文章的中文关键词匹配。
 function generateComment(articleUrl) {
   const url = articleUrl.toLowerCase();
 
+  // —— 应用页（app_n，slug 为英文/拼音，需用 token 识别）——
+  const isVideo = /(^|\/)tv(_p)?\.html|播霸|影视|视频|电影|剧|纪录片|综艺|短剧/.test(url);
+  const isAppMain = /(^|\/)app\.html|修真小世界|小世界|修炼/.test(url);
+  const isReader = /reader|小红故事|故事|小说|短篇/.test(url);
+  const isNightReadApp = /yedu|夜读|晚安|入睡|睡前|今夜|今晚|夜语/.test(url);
+  const isCity = /zjsz|照见苏州|苏州|城市|江南/.test(url);
+  const isNews = /daliynews|news|新闻|资讯|日报|早报/.test(url);
+
+  // —— 博客文章（slug 多为中文关键词）——
   const isPoetry = /[诗|词|曲|赋|颂|歌行|古风]/.test(url);
   const isQuote = /名言|语录|daily-quote|金句/.test(url) || /——/.test(url);
   const isTech = /技术|编程|代码|教程|前端|后端|系统|架构|算法|开源|框架/.test(url);
   const isEmotion = /情感|心情|随笔|感悟|温柔|感动|想念|爱|悲伤|难过|快乐|幸福|治愈|疗伤/.test(url);
-  const isNightRead = /夜读|晚安|入睡|睡前|今夜|今晚/.test(url);
   const isWork = /劳动|工作|职场|加班|上班|奋斗|拼搏/.test(url);
   const isHoliday = /节|假|日/.test(url) && !isTech && !isEmotion && !isWork;
   const isNature = /四季|春天|夏日|秋风|冬雪|山川|河流|草木|花开|叶落|风景/.test(url);
@@ -135,29 +219,56 @@ function generateComment(articleUrl) {
   const isBook = /书|读后|读《|·《|读书|阅读/.test(url);
 
   const REACTIONS = {
-    poetry: ['这句诗太美了', '意境真好', '好有诗意', '词穷了，只能说太美', '读来唇齿生香', '这意境让人沉醉', '古人的智慧，穿越千年依然打动人心', '这句要记下来', '越读越有味'],
-    quote: ['说得真好', '收藏了', '说到心坎里去了', '很有道理', '值得细细品味', '送给自己，也送给你', '这碗鸡汤我干了', '深有感触', '记下来了，共勉'],
-    tech: ['学到了', '收藏了', '干货满满', '已关注', '很实用', '感谢分享', '这个思路很棒', '正需要这个', '解决了我的问题'],
-    emotion: ['被戳中了', '好感人', '看哭了', '好温暖', '说得就是我', '感同身受', '想起很多事情', '文字有力量', '好共鸣', '我也经常这样想'],
+    // 影视/视频：绝对不能出现“写的真棒”之类阅读向措辞
+    video: ['这个片子不错', '看完很过瘾', '影视区常客了', '这片子有点东西', '已收藏，回头二刷', '氛围感拉满', '看完意犹未尽', '导演有点东西', '演技在线', '剧情挺抓人的'],
+    // 主应用（修真小世界）
+    app: ['这个小世界真有意思', '又来打卡了', '每天都会打开看看', '修炼一下', '界面越来越顺手了', '功能越来越丰富了', '默默支持', '路过冒个泡', '玩得停不下来', '已安利给朋友'],
+    // 故事/小说
+    reader: ['这个故事好看', '追更中', '看完心里暖暖的', '故事写得很动人', '主角太可爱了', '催更！', '一口气读完了', '意犹未尽', '期待下一篇', '文笔真好'],
+    // 夜读
     nightRead: ['夜读时光，最安静', '睡前读到，很治愈', '每晚必看这个栏目', '温暖的声音', '喜欢', '谢谢分享', '陪你入睡'],
-    work: ['劳动最光荣', '奋斗最幸福', '辛苦了', '加油', '致敬每一个努力的人', '写的真好'],
-    holiday: ['节日快乐', '同乐同乐', '祝福收到', '写得好', '涨知识了', '原来如此'],
+    // 城市/苏州
+    city: ['苏州真美', '想去走走', '江南韵味十足', '照片拍得真好', '人间烟火气', '小桥流水让人安心', '城市的故事真动人', '看完很治愈'],
+    // 新闻/资讯
+    news: ['关注了', '资讯很及时', '这个要转发', '得空细看', '谢谢播报', '最新动态不错', '已收藏', '信息量挺大'],
+    // 诗词
+    poetry: ['这句诗太美了', '意境真好', '好有诗意', '词穷了，只能说太美', '读来唇齿生香', '这意境让人沉醉', '古人的智慧，穿越千年依然打动人心', '这句要记下来', '越读越有味'],
+    // 名言/金句
+    quote: ['说得真好', '收藏了', '说到心坎里去了', '很有道理', '值得细细品味', '送给自己，也送给你', '这碗鸡汤我干了', '深有感触', '记下来了，共勉'],
+    // 技术
+    tech: ['学到了', '收藏了', '干货满满', '已关注', '很实用', '感谢分享', '这个思路很棒', '正需要这个', '解决了我的问题'],
+    // 情感
+    emotion: ['被戳中了', '好感人', '看哭了', '好温暖', '说得就是我', '感同身受', '想起很多事情', '文字有力量', '好共鸣', '我也经常这样想'],
+    // 劳动/工作
+    work: ['劳动最光荣', '奋斗最幸福', '辛苦了', '加油', '致敬每一个努力的人', '说得太对了'],
+    // 节日
+    holiday: ['节日快乐', '同乐同乐', '祝福收到', '涨知识了', '原来如此', '写得真好'],
+    // 自然
     nature: ['好美', '让人心旷神怡', '好想出去走走', '风景如画', '大自然的美好', '让人平静', '写得很美'],
+    // 历史
     history: ['时光匆匆', '岁月如梭', '怀念', '感慨万千', '读来很有感触', '时光一去不复返'],
+    // 读书
     book: ['这本书我也想读', '读后感写得真好', '被种草了', '收藏了', '谢谢推荐'],
-    generic: ['写得真好', '来看望一下', '打卡', '路过~冒个泡', '👍', '收藏了', '支持', '赞', '写得真棒']
+    // 兜底：仅用中性、不暗示“阅读/写作”的措辞，适配任意媒体
+    generic: ['来支持一下', '打卡', '路过~冒个泡', '👍', '收藏了', '赞', '常来看看', '顶一个', '很不错', '来看看了']
   };
 
   let pool;
-  if (isPoetry) pool = REACTIONS.poetry;
+  if (isVideo) pool = REACTIONS.video;
+  else if (isAppMain) pool = REACTIONS.app;
+  else if (isReader) pool = REACTIONS.reader;
+  else if (isNightReadApp) pool = REACTIONS.nightRead;
+  else if (isCity) pool = REACTIONS.city;
+  else if (isNews) pool = REACTIONS.news;
+  else if (isPoetry) pool = REACTIONS.poetry;
   else if (isQuote) pool = REACTIONS.quote;
   else if (isTech) pool = REACTIONS.tech;
   else if (isEmotion) pool = REACTIONS.emotion;
-  else if (isNightRead) pool = REACTIONS.nightRead;
   else if (isWork) pool = REACTIONS.work;
   else if (isHoliday) pool = REACTIONS.holiday;
   else if (isNature) pool = REACTIONS.nature;
   else if (isBook) pool = REACTIONS.book;
+  else if (isHistory) pool = REACTIONS.history;
   else pool = REACTIONS.generic;
 
   return pool[Math.floor(Math.random() * pool.length)];
@@ -319,23 +430,58 @@ async function runAutoPoster() {
   // 1. 从网络抓取 sitemap，获取已发布文章列表（已过滤 json 等非 html 资源）
   const sitemapArticles = await fetchSitemapArticles();
 
-  if (sitemapArticles.length < 3) {
+  // 文章级模式不依赖 sitemap 数量；仅全局/列表模式需要 sitemap 文章数充足
+  const config0 = loadConfig();
+  const isArticleMode = !!(config0.articleMode && config0.articleSources && config0.articleSources.length);
+  if (!isArticleMode && sitemapArticles.length < 3) {
     console.log('[AutoPoster] Sitemap 文章数量不足（' + sitemapArticles.length + '），跳过');
     return;
   }
 
   // 读取配置，确定随机范围
   const config = loadConfig();
-  let pool = sitemapArticles;
-  if (config.randomRangeMode === 2) {
-    pool = filterByList(sitemapArticles, config.randomList);
-    console.log('[AutoPoster] 随机范围模式=2(列表)，命中 ' + pool.length + ' 篇');
-    if (pool.length === 0) {
-      console.log('[AutoPoster] 列表未命中任何文章，请检查 randomList 配置，跳过');
-      return;
+
+  // 候选池组装：文章级（多文页，按文章独立评论）+ 页面级（单页，按整页评论）
+  // 两种来源合并进同一池子；页面级会排除已被文章级覆盖的来源页，避免对 reader/yedu/zjsz 整页重复发评论
+  let pool = [];
+
+  // 1) 文章级模式：从各页面数据源拉取文章
+  if (config.articleMode && config.articleSources && config.articleSources.length) {
+    const articlePool = await fetchArticlePool(config.articleSources);
+    if (articlePool.length >= 1) {
+      pool = pool.concat(articlePool);
+      console.log('[AutoPoster] 文章级模式，候选 ' + articlePool.length + ' 篇（来源: ' + config.articleSources.join(',') + '）');
+    } else {
+      console.log('[AutoPoster] 文章级候选为空');
     }
+  }
+
+  // 2) 页面级：列表模式(randomRangeMode=2) 从 randomList 抽取；全局模式(=1) 取全部 sitemap
+  //    排除已被文章级覆盖的来源页，避免把 reader/yedu/zjsz 整页又发一遍
+  const coveredPages = (config.articleSources || [])
+    .map(s => ARTICLE_SOURCE_PAGE[s])
+    .filter(Boolean)
+    .map(p => normalizeKey(p));
+  const isCoveredPage = (a) => coveredPages.includes(normalizeKey(a.url));
+
+  let pageLevel = [];
+  if (config.randomRangeMode === 2) {
+    pageLevel = filterByList(sitemapArticles, config.randomList);
+    console.log('[AutoPoster] 页面级(列表)初筛 ' + pageLevel.length + ' 篇');
   } else {
-    console.log('[AutoPoster] 随机范围模式=1(全局)，候选 ' + pool.length + ' 篇');
+    pageLevel = sitemapArticles.slice();
+    console.log('[AutoPoster] 页面级(全局)初筛 ' + pageLevel.length + ' 篇');
+  }
+  const pageLevelFiltered = pageLevel.filter(a => !isCoveredPage(a));
+  if (pageLevelFiltered.length !== pageLevel.length) {
+    console.log('[AutoPoster] 已排除文章级覆盖页 ' + (pageLevel.length - pageLevelFiltered.length) + ' 篇');
+  }
+  pool = pool.concat(pageLevelFiltered);
+  console.log('[AutoPoster] 页面级(去重后)候选 ' + pageLevelFiltered.length + ' 篇');
+
+  if (pool.length < 1) {
+    console.log('[AutoPoster] 候选池为空，跳过');
+    return;
   }
 
   // 2. 随机选文章（按 dailyCount，不足候选数时按实际数量）
@@ -403,4 +549,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { runAutoPoster, fetchSitemapArticles, loadConfig, isEligibleArticle, filterByList, normalizeKey };
+module.exports = { runAutoPoster, fetchSitemapArticles, loadConfig, isEligibleArticle, filterByList, normalizeKey, generateComment, fetchArticlePool, fetchText, fetchJSON };

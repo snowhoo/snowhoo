@@ -498,7 +498,8 @@ async function main() {
               cover: data.cover || '',
               images: images,
               categories: Array.isArray(data.categories) ? data.categories : (data.categories ? [data.categories] : []),
-              content: body
+              content: body,
+              filename: filename
             };
           }
         } catch (e) {
@@ -805,6 +806,17 @@ function updateCards() {
   loadNearbyImages();
   var posts = getFilteredPosts();
   if (posts[currentIndex]) document.title = '小红故事|Blog – ' + escapeHtml(posts[currentIndex].title);
+  syncWalineReader();
+}
+
+// 将 Waline 评论线程切换到当前文章（每篇文章独立 path，互不影响）
+function syncWalineReader() {
+  if (!window.__wl) return;
+  var ps = getFilteredPosts();
+  var p = ps && ps[currentIndex];
+  if (p && p.filename) {
+    window.__wl.update({ path: '/app_n/reader.html?a=' + encodeURIComponent(p.filename) });
+  }
 }
 
 function bindEvents() {
@@ -1127,12 +1139,19 @@ main();
   try {
     import('./lib/waline.js').then(function(mod){
       try {
-        mod.init({
+        // 初始 path：当前文章（首屏渲染可能晚于 init，下面 setTimeout 再校正一次）
+        var _initPath = (function(){
+          var ps = (typeof getFilteredPosts === 'function') ? getFilteredPosts() : [];
+          var p = ps && ps[currentIndex];
+          return (p && p.filename) ? '/app_n/reader.html?a=' + encodeURIComponent(p.filename) : window.location.pathname;
+        })();
+        window.__wl = mod.init({
           el: '#walineContainer',
           serverURL: 'https://waline.snowhoo.net',
           lang: 'zh-CN',
           avatar: 'mp',
           pageview: false,
+          path: _initPath,
           locale: { placeholder: '说点什么吧...', comment: '留言' },
           onLogin: function(user){
             try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e){}
@@ -1143,6 +1162,8 @@ main();
             refreshUser();
           }
         });
+        // 首屏渲染可能晚于 init：POSTS 加载完成后校正到当前文章线程
+        setTimeout(syncWalineReader, 800);
       } catch(e){ console.warn('[留言] Waline init error:', e); }
     }).catch(function(e){ console.warn('[留言] Waline import error:', e); });
       } catch(e){ console.warn('[留言] Waline 初始化失败:', e); }
