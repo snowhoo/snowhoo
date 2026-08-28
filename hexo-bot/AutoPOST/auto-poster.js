@@ -16,6 +16,8 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const https = require('https');
+// 评论内容改为「发评论那一刻」实时生成（混合模式：DeepSeek + 本地组合兜底）
+const { deriveCategory } = require('./comment-generator');
 
 // ============== 路径配置 ==============
 const SCHEDULE_FILE = path.join(__dirname, 'daily-comment-schedule.json');
@@ -162,121 +164,6 @@ async function fetchArticlePool(sources) {
     }
   }
   return out;
-}
-
-// ============== 昵称生成 ==============
-function generateNickname() {
-  const styles = [
-    () => {
-      const surnames = ['苏', '林', '江', '顾', '沈', '叶', '陆', '程', '方', '宋', '秦', '白', '夏', '周', '柳', '穆', '谢', '许', '何'];
-      const names = ['念瑾', '沐晴', '挽棠', '清欢', '锦书', '知意', '南栀', '北辰', '西洲', '东篱', '安然', '夏安', '冬蕴', '春晓', '秋白', '星河', '云深', '鹿鸣', '鹤归', '蝉噪', '晚舟', '归鸿', '落梅', '听雨', '临渊'];
-      const suffixes = ['', '呀', '呢', '的', '~', '…', '·'];
-      return surnames[Math.floor(Math.random() * surnames.length)] + names[Math.floor(Math.random() * names.length)] + suffixes[Math.floor(Math.random() * suffixes.length)];
-    },
-    () => {
-      const prefixes = ['一只', '可爱', '路过', '睡不醒', '馋嘴', '炸毛', '发呆', '流浪', '小', '迷你', '霸道', '软糯', '活泼', '迷糊', '贪玩'];
-      const animals = ['猫', '狗', '兔', '熊', '狐狸', '松鼠', '刺猬', '仓鼠', '龙猫', '水獭', '小鹿', '猪猪', '老虎', '狮子'];
-      const suffixes = ['', '子', '酱', '呀', '～', 'です', '~'];
-      return prefixes[Math.floor(Math.random() * prefixes.length)] + animals[Math.floor(Math.random() * animals.length)] + suffixes[Math.floor(Math.random() * suffixes.length)];
-    },
-    () => {
-      const adjs = ['孤独', '温暖', '明媚', '忧伤', '灿烂', '静谧', '缱绻', '清冽', '柔软', '澄澈', '薄凉', '热烈', '微醺', '薄荷', '清欢', '安然', '惆怅', '悠然', '寂寥', '烂漫'];
-      const nouns = ['旅人', '过客', '行者', '归人', '远山', '近水', '月光', '日光', '星子', '尘埃', '落叶', '飞花', '烟雨', '流云', '晚风', '晨曦', '孤鸿', '游鱼', '飞鸟', '落霞'];
-      return adjs[Math.floor(Math.random() * adjs.length)] + nouns[Math.floor(Math.random() * nouns.length)];
-    },
-    () => {
-      const fronts = ['今天', '明天', '昨天', '每天', '此刻', '此时', '蓦然', '忽然', '恍然', '欣然'];
-      const actions = ['想起', '念起', '记起', '遇见', '重温', '想起那年', '路过', '驻足', '发呆', '沉默'];
-      const suffixes = ['', '…', '~', '的'];
-      return fronts[Math.floor(Math.random() * fronts.length)] + actions[Math.floor(Math.random() * actions.length)] + suffixes[Math.floor(Math.random() * suffixes.length)];
-    },
-    () => {
-      const anonymous = ['匿名用户', '路人甲', '路过打酱油', '悄悄路过', '打个酱油~', '路过的', '云游至此', '偶然路过', '随便看看', '晃悠路过'];
-      return anonymous[Math.floor(Math.random() * anonymous.length)];
-    },
-  ];
-  return styles[Math.floor(Math.random() * styles.length)]();
-}
-
-// ============== 根据 URL 类型生成情境化评论 ==============
-// 说明：app_n 等应用页的 slug 是英文/拼音（tv / yedu / reader / zjsz / daliynews / app），
-// 无法靠中文关键词命中，因此先按英文 token 识别页面性质，再退化到博客文章的中文关键词匹配。
-function generateComment(articleUrl) {
-  const url = articleUrl.toLowerCase();
-
-  // —— 应用页（app_n，slug 为英文/拼音，需用 token 识别）——
-  const isVideo = /(^|\/)tv(_p)?\.html|播霸|影视|视频|电影|剧|纪录片|综艺|短剧/.test(url);
-  const isAppMain = /(^|\/)app\.html|修真小世界|小世界|修炼/.test(url);
-  const isReader = /reader|小红故事|故事|小说|短篇/.test(url);
-  const isNightReadApp = /yedu|夜读|晚安|入睡|睡前|今夜|今晚|夜语/.test(url);
-  const isCity = /zjsz|照见苏州|苏州|城市|江南/.test(url);
-  const isNews = /daliynews|news|新闻|资讯|日报|早报/.test(url);
-
-  // —— 博客文章（slug 多为中文关键词）——
-  const isPoetry = /[诗|词|曲|赋|颂|歌行|古风]/.test(url);
-  const isQuote = /名言|语录|daily-quote|金句/.test(url) || /——/.test(url);
-  const isTech = /技术|编程|代码|教程|前端|后端|系统|架构|算法|开源|框架/.test(url);
-  const isEmotion = /情感|心情|随笔|感悟|温柔|感动|想念|爱|悲伤|难过|快乐|幸福|治愈|疗伤/.test(url);
-  const isWork = /劳动|工作|职场|加班|上班|奋斗|拼搏/.test(url);
-  const isHoliday = /节|假|日/.test(url) && !isTech && !isEmotion && !isWork;
-  const isNature = /四季|春天|夏日|秋风|冬雪|山川|河流|草木|花开|叶落|风景/.test(url);
-  const isHistory = /年|历史|岁月|时光|年代|那些年|那年/.test(url);
-  const isBook = /书|读后|读《|·《|读书|阅读/.test(url);
-
-  const REACTIONS = {
-    // 影视/视频：绝对不能出现“写的真棒”之类阅读向措辞
-    video: ['这个片子不错', '看完很过瘾', '影视区常客了', '这片子有点东西', '已收藏，回头二刷', '氛围感拉满', '看完意犹未尽', '导演有点东西', '演技在线', '剧情挺抓人的'],
-    // 主应用（修真小世界）
-    app: ['这个小世界真有意思', '又来打卡了', '每天都会打开看看', '修炼一下', '界面越来越顺手了', '功能越来越丰富了', '默默支持', '路过冒个泡', '玩得停不下来', '已安利给朋友'],
-    // 故事/小说
-    reader: ['这个故事好看', '追更中', '看完心里暖暖的', '故事写得很动人', '主角太可爱了', '催更！', '一口气读完了', '意犹未尽', '期待下一篇', '文笔真好'],
-    // 夜读
-    nightRead: ['夜读时光，最安静', '睡前读到，很治愈', '每晚必看这个栏目', '温暖的声音', '喜欢', '谢谢分享', '陪你入睡'],
-    // 城市/苏州
-    city: ['苏州真美', '想去走走', '江南韵味十足', '照片拍得真好', '人间烟火气', '小桥流水让人安心', '城市的故事真动人', '看完很治愈'],
-    // 新闻/资讯
-    news: ['关注了', '资讯很及时', '这个要转发', '得空细看', '谢谢播报', '最新动态不错', '已收藏', '信息量挺大'],
-    // 诗词
-    poetry: ['这句诗太美了', '意境真好', '好有诗意', '词穷了，只能说太美', '读来唇齿生香', '这意境让人沉醉', '古人的智慧，穿越千年依然打动人心', '这句要记下来', '越读越有味'],
-    // 名言/金句
-    quote: ['说得真好', '收藏了', '说到心坎里去了', '很有道理', '值得细细品味', '送给自己，也送给你', '这碗鸡汤我干了', '深有感触', '记下来了，共勉'],
-    // 技术
-    tech: ['学到了', '收藏了', '干货满满', '已关注', '很实用', '感谢分享', '这个思路很棒', '正需要这个', '解决了我的问题'],
-    // 情感
-    emotion: ['被戳中了', '好感人', '看哭了', '好温暖', '说得就是我', '感同身受', '想起很多事情', '文字有力量', '好共鸣', '我也经常这样想'],
-    // 劳动/工作
-    work: ['劳动最光荣', '奋斗最幸福', '辛苦了', '加油', '致敬每一个努力的人', '说得太对了'],
-    // 节日
-    holiday: ['节日快乐', '同乐同乐', '祝福收到', '涨知识了', '原来如此', '写得真好'],
-    // 自然
-    nature: ['好美', '让人心旷神怡', '好想出去走走', '风景如画', '大自然的美好', '让人平静', '写得很美'],
-    // 历史
-    history: ['时光匆匆', '岁月如梭', '怀念', '感慨万千', '读来很有感触', '时光一去不复返'],
-    // 读书
-    book: ['这本书我也想读', '读后感写得真好', '被种草了', '收藏了', '谢谢推荐'],
-    // 兜底：仅用中性、不暗示“阅读/写作”的措辞，适配任意媒体
-    generic: ['来支持一下', '打卡', '路过~冒个泡', '👍', '收藏了', '赞', '常来看看', '顶一个', '很不错', '来看看了']
-  };
-
-  let pool;
-  if (isVideo) pool = REACTIONS.video;
-  else if (isAppMain) pool = REACTIONS.app;
-  else if (isReader) pool = REACTIONS.reader;
-  else if (isNightReadApp) pool = REACTIONS.nightRead;
-  else if (isCity) pool = REACTIONS.city;
-  else if (isNews) pool = REACTIONS.news;
-  else if (isPoetry) pool = REACTIONS.poetry;
-  else if (isQuote) pool = REACTIONS.quote;
-  else if (isTech) pool = REACTIONS.tech;
-  else if (isEmotion) pool = REACTIONS.emotion;
-  else if (isWork) pool = REACTIONS.work;
-  else if (isHoliday) pool = REACTIONS.holiday;
-  else if (isNature) pool = REACTIONS.nature;
-  else if (isBook) pool = REACTIONS.book;
-  else if (isHistory) pool = REACTIONS.history;
-  else pool = REACTIONS.generic;
-
-  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 // ============== Fisher-Yates 洗牌 ==============
@@ -502,28 +389,24 @@ async function runAutoPoster() {
   for (let i = 0; i < count; i++) {
     const article = selectedArticles[i];
     const time = randomTimes[i];
-    const nickname = generateNickname();
-    // 生成评论（用 URL 中的关键词判断类型）
-    const comment = generateComment(article.url);
-
-    // 存完整 URL（comment-executor 直接使用）
     const articleUrl = article.url;
+    // 分类在发评论时实时判定（供生成器选择话术/调大模型），这里一并存好备用
+    const category = deriveCategory(articleUrl);
 
+    // 仅存「定位信息」，评论内容由 comment-executor 在发评论那一刻实时生成
     schedule.push({
       index: i + 1,
       scheduledTime: time.label,
       hour: time.hour,
       minute: time.minute,
       second: time.second,
-      // 预生成数据，comment-executor 直接使用
       url: articleUrl,
-      nick: nickname,
-      comment: comment
+      title: article.title || '',
+      category: category,
+      page: article.page || ''
     });
 
-    console.log('[AutoPoster] 计划' + (i + 1) + ': ' + time.label + ' - ' + article.url);
-    console.log('[AutoPoster]   完整URL: ' + articleUrl);
-    console.log('[AutoPoster]   昵称: ' + nickname + ' | 评论: ' + comment);
+    console.log('[AutoPoster] 计划' + (i + 1) + ': ' + time.label + ' - ' + articleUrl + ' [' + category + ']');
   }
 
   // 5. 写入计划文件（包含全部所需数据，comment-executor 无需任何解析）
@@ -554,4 +437,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { runAutoPoster, fetchSitemapArticles, loadConfig, isEligibleArticle, filterByList, normalizeKey, generateComment, fetchArticlePool, fetchText, fetchJSON };
+module.exports = { runAutoPoster, fetchSitemapArticles, loadConfig, isEligibleArticle, filterByList, normalizeKey, fetchArticlePool, fetchText, fetchJSON, deriveCategory };

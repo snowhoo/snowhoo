@@ -10,6 +10,9 @@ const { execSync } = require('child_process');
 
 const SCHEDULE_FILE = path.join(__dirname, 'daily-comment-schedule.json');
 
+// 评论内容在「发评论的这一刻」实时生成（混合模式：DeepSeek + 本地组合兜底）
+const { generateComment } = require('./comment-generator');
+
 // ============== 评论发布 ==============
 function postComment(comment, nickname, url) {
   return new Promise((resolve, reject) => {
@@ -109,14 +112,25 @@ async function runExecutor() {
     return;
   }
 
-  // 执行每条预生成的评论
+  // 执行每条评论：实时生成内容后再发出
   for (const task of tasksToRun) {
     console.log('[CommentExecutor] [' + task.index + '/' + tasks.length + ']');
-    console.log('[CommentExecutor] URL: ' + task.url);
-    console.log('[CommentExecutor] 昵称: ' + task.nick + ' | 评论: ' + task.comment);
+    console.log('[CommentExecutor] URL: ' + task.url + ' [' + (task.category || '?') + ']');
+
+    // —— 实时生成昵称 + 评论（有 DeepSeek key 走大模型，否则本地组合）——
+    let nick, comment;
+    try {
+      const gen = await generateComment(task);
+      nick = gen.nick;
+      comment = gen.comment;
+    } catch (e) {
+      console.log('[CommentExecutor] 生成失败，跳过本条: ' + e.message);
+      continue;
+    }
+    console.log('[CommentExecutor] 昵称: ' + nick + ' | 评论: ' + comment);
 
     try {
-      const result = await postComment(task.comment, task.nick, task.url);
+      const result = await postComment(comment, nick, task.url);
       const commentId = result.data ? result.data.objectId : 'N/A';
       console.log('[CommentExecutor] 成功 (ID: ' + commentId + ')');
       deleteScheduledTask(task.index);

@@ -7,5 +7,14 @@
   ],
   "dailyCount": 3,
   "articleMode": true,
-  "articleSources": ["reader", "yedu", "zjsz"]
+  "articleSources": ["reader", "yedu", "zjsz"],
+  "llm": {
+    "enabled": true,
+    "provider": "deepseek",
+    "apiKey": "",
+    "baseURL": "https://api.deepseek.com/v1",
+    "model": "deepseek-chat",
+    "timeoutMs": 8000,
+    "fallbackToLocal": true
+  }
 }
