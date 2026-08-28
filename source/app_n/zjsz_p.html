@@ -444,6 +444,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     loadNearbyImages();
     updateImageClick();
     if (articles[currentIndex]) document.title = '小红故事|照见苏州 – ' + escapeHtml(articles[currentIndex].title || '无标题');
+    syncWalineZjsz();
+  }
+
+  // 将 Waline 评论线程切换到当前文章（每篇文章独立 path；用 data.js 的 msgid 作锚点，纯数字无中文编码问题）
+  function syncWalineZjsz() {
+    if (!window.__wl) return;
+    var a = articles[currentIndex];
+    if (a && a.msgid) window.__wl.update({ path: '/app_n/zjsz_p.html?a=' + encodeURIComponent(a.msgid) });
   }
 
   // 懒加载当前及相邻卡片图片（±1 范围内才设置 src，真实图缺失时用占位图）
@@ -727,7 +735,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   try {
     import('./lib/waline.js').then(function(mod){
       try {
-        mod.init({
+        window.__wl = mod.init({
           el: '#walineContainer',
           serverURL: 'https://waline.snowhoo.net',
           lang: 'zh-CN',
@@ -743,6 +751,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
             refreshUser();
           }
         });
+        setTimeout(syncWalineZjsz, 800);
       } catch(e){ console.warn('[留言] Waline init error:', e); }
     }).catch(function(e){ console.warn('[留言] Waline import error:', e); });
   } catch(e){ console.warn('[留言] Waline 初始化失败:', e); }
