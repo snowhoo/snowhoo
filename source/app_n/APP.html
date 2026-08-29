@@ -82,11 +82,16 @@ body{display:flex;flex-direction:column}
 /* 分类圆形按钮 */
 /* 栏目按钮：顶部定位，一排 4 个，换行与上行同列对齐，行间距 30px */
 /* ===== 4×5 宫格（首页应用图标，长按拖拽排序） ===== */
-.app-grid{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;grid-template-columns:repeat(4,72px);grid-template-rows:repeat(5,72px);gap:14px;z-index:6;pointer-events:auto;justify-content:center;align-content:center}
+.app-grid{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;grid-template-columns:repeat(4,var(--gcell,72px));grid-template-rows:repeat(5,var(--gcell,72px));gap:var(--ggap,14px);z-index:6;pointer-events:auto;justify-content:center;align-content:center}
 .app-grid.hide{display:none}
-.grid-cell{display:flex;align-items:center;justify-content:center;border-radius:16px;min-height:72px}
+/* 小屏（矮屏）收窄格子，避免宫格压到「探索」/日历区域 */
+@media (max-height:640px){.app-grid{--gcell:60px;--ggap:8px}}
+@media (max-height:560px){.app-grid{--gcell:54px;--ggap:6px}}
+.grid-cell{display:flex;align-items:center;justify-content:center;border-radius:16px;min-height:0;min-width:0}
 .grid-cell.drop-target{outline:2px dashed rgba(255,255,255,.7);background:rgba(255,255,255,.06)}
-.app-grid .category-item{flex:initial;width:64px;touch-action:none;-webkit-tap-highlight-color:transparent}
+.app-grid .category-item{flex:initial;width:var(--gcell,72px);max-width:100%;touch-action:none;-webkit-tap-highlight-color:transparent}
+@media (max-height:640px){.app-grid .category-item .circle{width:40px;height:40px;font-size:.95rem}}
+@media (max-height:560px){.app-grid .category-item .circle{width:36px;height:36px;font-size:.9rem}}
 .category-item.dragging-src{opacity:.3}
 .drag-clone{position:fixed;z-index:13000;pointer-events:none;opacity:.92;transform:scale(1.1)}
 .drag-clone .circle{box-shadow:0 10px 28px rgba(0,0,0,.45)}
@@ -690,6 +695,7 @@ var AppGrid = (function() {
   var CLOUD_BASE = 'https://waline.snowhoo.net';
   var CLOUD_PATH = '/app-layout/';
   var cells = new Array(TOTAL).fill(null); // 每格 = iconId 或 null
+  var btnRefs = {};                        // 图标按钮的持久引用（关键：render 清空容器不会丢按钮）
   var oid = 0;                              // 云端记录 objectId（仅运行时引用）
   var drag = null;                         // 拖拽态
   var lpTimer = null, lpFired = false, startX = 0, startY = 0, moved = false;
@@ -726,14 +732,43 @@ var AppGrid = (function() {
   function applyCells(arr) { for (var i = 0; i < TOTAL; i++) cells[i] = (arr && arr[i]) ? arr[i] : null; }
 
   // ---------- 渲染 ----------
+  // 首次运行时把 5 个按钮从容器里"摘"出来存进 btnRefs（removeChild 只脱离 DOM、引用仍在），
+  // 之后 render() 清空容器就不会再把按钮一起销毁。
+  function cacheBtns() {
+    ICONS.forEach(function (id) {
+      if (btnRefs[id]) return;
+      var el = document.getElementById(id);
+      if (el) { btnRefs[id] = el; if (el.parentNode) el.parentNode.removeChild(el); }
+    });
+  }
   function render() {
     var grid = $('appGrid'); if (!grid) return;
+    cacheBtns();
+    // 清空前先把已放入格子的按钮摘出，避免 innerHTML='' 连按钮一起销毁
+    ICONS.forEach(function (id) { var b = btnRefs[id]; if (b && b.parentNode) b.parentNode.removeChild(b); });
     grid.innerHTML = '';
     for (var i = 0; i < TOTAL; i++) {
       var cell = document.createElement('div');
       cell.className = 'grid-cell';
       cell.dataset.cell = i;
-      if (cells[i]) { var btn = $(cells[i]); if (btn) { btn.classList.add('in-grid'); cell.appendChild(btn); } }
+      if (cells[i]) { var btn = btnRefs[cells[i]]; if (btn) { btn.classList.add('in-grid'); cell.appendChild(btn); } }
+      grid.appendChild(cell);
+    }
+    // 兜底：若布局数据异常导致一个图标都没落格，强制回到默认布局
+    var placed = 0;
+    ICONS.forEach(function (id) { if (btnRefs[id] && btnRefs[id].parentNode) placed++; });
+    if (placed === 0) { applyCells(defaultCells()); renderRaw(); }
+  }
+  // 不带兜底的渲染（供兜底分支调用，避免递归）
+  function renderRaw() {
+    var grid = $('appGrid'); if (!grid) return;
+    ICONS.forEach(function (id) { var b = btnRefs[id]; if (b && b.parentNode) b.parentNode.removeChild(b); });
+    grid.innerHTML = '';
+    for (var i = 0; i < TOTAL; i++) {
+      var cell = document.createElement('div');
+      cell.className = 'grid-cell';
+      cell.dataset.cell = i;
+      if (cells[i]) { var btn = btnRefs[cells[i]]; if (btn) { btn.classList.add('in-grid'); cell.appendChild(btn); } }
       grid.appendChild(cell);
     }
   }
@@ -813,8 +848,9 @@ var AppGrid = (function() {
     drag = null;
   }
   function attachDrag() {
+    cacheBtns();
     ICONS.forEach(function (id) {
-      var btn = $(id); if (btn && !btn._gridBound) { btn._gridBound = true; btn.addEventListener('pointerdown', onDown); }
+      var btn = btnRefs[id]; if (btn && !btn._gridBound) { btn._gridBound = true; btn.addEventListener('pointerdown', onDown); }
     });
   }
 
@@ -890,7 +926,7 @@ var AppGrid = (function() {
     update();
   }
 
-  function init() { attachDrag(); loadLayout(); bindVisibility(); }
+  function init() { cacheBtns(); attachDrag(); loadLayout(); bindVisibility(); }
 
   return { init: init, syncCloud: syncCloud };
 })();
