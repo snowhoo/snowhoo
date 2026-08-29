@@ -55,7 +55,8 @@ body{display:flex;flex-direction:column}
 .almanac{position:fixed;bottom:55px;right:16px;z-index:7;display:flex;flex-direction:column;align-items:center;gap:10px;background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;border:none;border-radius:16px;padding:0;color:#333;min-width:90px;text-shadow:none;cursor:pointer;transition:all .35s ease}
 .almanac.hidden{opacity:0;pointer-events:none;transform:scale(.8)}
 /* 日历折叠边条：收起后贴右侧边缘，同高、宽5、透明度90，内含 < 箭头 */
-.almanac-mini{position:fixed;right:0;bottom:80px;z-index:7;display:none;align-items:center;justify-content:center;width:5px;background:#fff;opacity:.5;border-radius:6px 0 0 6px;cursor:pointer;transition:all .35s ease;box-shadow:-2px 0 8px rgba(0,0,0,.15)}
+/* bottom 必须与展开态 .almanac 一致(55px)，否则收起后的顶边与展开态顶边对不齐 */
+.almanac-mini{position:fixed;right:0;bottom:55px;z-index:7;display:none;align-items:center;justify-content:center;width:5px;background:#fff;opacity:.5;border-radius:6px 0 0 6px;cursor:pointer;transition:all .35s ease;box-shadow:-2px 0 8px rgba(0,0,0,.15)}
 .almanac-mini.show{display:flex}
 .almanac-mini:active{transform:scale(.88)}
 .almanac-mini svg{width:8px;height:auto;stroke:#333;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
@@ -710,6 +711,8 @@ var AppGrid = (function() {
   var cells = new Array(TOTAL).fill(null); // 每格 = iconId 或 null
   var btnRefs = {};                        // 图标按钮的持久引用（关键：render 清空容器不会丢按钮）
   var oid = 0;                              // 云端记录 objectId（仅运行时引用）
+  var calCollapsed = false;                 // 日历收起状态（持久化）
+  var logoCollapsed = false;                // LOGO 收起状态（持久化）
   var drag = null;                         // 拖拽态
   var lpTimer = null, lpFired = false, startX = 0, startY = 0, moved = false;
   var LONG_PRESS = 420, MOVE_TOL = 10;
@@ -739,9 +742,31 @@ var AppGrid = (function() {
     if (st >= 0 && en > st) s = s.slice(st, en + 1);
     try { var o = JSON.parse(s); return (o && o.v === 1 && o.cells && o.cells.length === TOTAL) ? o : null; } catch (e) { return null; }
   }
+  // 收起状态（日历/LOGO）随布局一起持久化；恢复时据此还原 DOM
+  function applyFold() {
+    var al = $('almanac'), am = $('almanacMini');
+    if (al && am) {
+      al.classList.toggle('hidden', calCollapsed);
+      am.classList.toggle('show', calCollapsed);
+      if (calCollapsed) am.style.height = al.offsetHeight + 'px';
+    }
+    var lo = $('topRightLogo'), lm = $('logoMini');
+    if (lo && lm) {
+      lo.classList.toggle('hidden', logoCollapsed);
+      lm.classList.toggle('show', logoCollapsed);
+      if (logoCollapsed) lm.style.height = lo.offsetHeight + 'px';
+    }
+  }
+  // 设置收起状态并落盘（cal/logo 传 null 表示该项不变）
+  function setFold(cal, logo, silent) {
+    if (cal !== null && cal !== undefined) calCollapsed = !!cal;
+    if (logo !== null && logo !== undefined) logoCollapsed = !!logo;
+    applyFold();
+    saveLayout(silent);
+  }
 
   function defaultCells() { var c = new Array(TOTAL).fill(null); ICONS.forEach(function (id, i) { if (i < TOTAL) c[i] = id; }); return c; }
-  function loadLocal() { try { var s = localStorage.getItem(LS_LAYOUT); if (s) { var o = parseLayout(s); if (o) return o.cells; } } catch (e) {} return null; }
+  function loadLocal() { try { var s = localStorage.getItem(LS_LAYOUT); if (s) { var o = parseLayout(s); if (o) { calCollapsed = !!o.calendarCollapsed; logoCollapsed = !!o.logoCollapsed; return o.cells; } } } catch (e) {} return null; }
   function applyCells(arr) { for (var i = 0; i < TOTAL; i++) cells[i] = (arr && arr[i]) ? arr[i] : null; }
 
   // ---------- 渲染 ----------
@@ -874,16 +899,16 @@ var AppGrid = (function() {
     clearTimeout(window.__gridToastT);
     window.__gridToastT = setTimeout(function () { t.classList.remove('show'); }, 2400);
   }
-  function saveLayout() {
-    var data = { v: 1, cells: cells.slice(), updatedAt: Date.now() };
+  function saveLayout(silent) {
+    var data = { v: 1, cells: cells.slice(), calendarCollapsed: calCollapsed, logoCollapsed: logoCollapsed, updatedAt: Date.now() };
     var u = getWalineUser();
-    if (u) { pushCloud(data); }
+    if (u) { pushCloud(data, silent); }
     else {
       try { localStorage.setItem(LS_LAYOUT, JSON.stringify(data)); } catch (e) {}
-      showToast('布局已缓存，若需永久保存，请先登录');
+      if (!silent) showToast('布局已缓存，若需永久保存，请先登录');
     }
   }
-  function pushCloud(data) {
+  function pushCloud(data, silent) {
     var u = getWalineUser(); if (!u) return;
     var token = u.token || ''; if (!token) { try { var s = JSON.parse(localStorage.getItem('WALINE_USER') || '{}'); if (s.token) token = s.token; } catch (e) {} }
     var payload = JSON.stringify({ comment: JSON.stringify(data), url: cloudPath(u), nick: u.display_name || '游客', mail: u.email || '' });
@@ -893,7 +918,7 @@ var AppGrid = (function() {
       : fetch(CLOUD_BASE + '/api/comment', { method: 'POST', headers: headers, body: payload }).then(function (r) {
           return r.json().then(function (j) { if (r.ok && j.data && j.data.objectId) oid = parseInt(j.data.objectId, 10); return r; });
         });
-    req.then(function (r) { showToast(r.ok ? '布局已同步云端' : '云端同步失败'); }).catch(function () { showToast('云端同步失败'); });
+    req.then(function (r) { if (!silent) showToast(r.ok ? '布局已同步云端' : '云端同步失败'); }).catch(function () { if (!silent) showToast('云端同步失败'); });
   }
   function fetchCloud() {
     var u = getWalineUser(); if (!u) return Promise.resolve(null);
@@ -903,7 +928,7 @@ var AppGrid = (function() {
         var records = (resp.data && resp.data.data) || [];
         var found = null;
         for (var i = 0; i < records.length; i++) {
-          try { var rec = records[i]; var obj = parseLayout(rec.orig || rec.comment || ''); if (obj) { var o2 = parseInt(rec.objectId, 10) || 0; if (!found || o2 > found.oid) found = { oid: o2, cells: obj.cells }; } } catch (e) {}
+          try { var rec = records[i]; var obj = parseLayout(rec.orig || rec.comment || ''); if (obj) { var o2 = parseInt(rec.objectId, 10) || 0; if (!found || o2 > found.oid) found = { oid: o2, cells: obj.cells, calendarCollapsed: !!obj.calendarCollapsed, logoCollapsed: !!obj.logoCollapsed }; } } catch (e) {}
         }
         return found;
       });
@@ -914,16 +939,17 @@ var AppGrid = (function() {
     var u = getWalineUser();
     if (u) {
       applyCells(loadLocal() || defaultCells()); // 先以本地/默认渲染，避免空白等待
+      applyFold();
       render();
-      fetchCloud().then(function (res) { if (res && res.cells) { applyCells(res.cells); render(); } });
+      fetchCloud().then(function (res) { if (res && res.cells) { applyCells(res.cells); calCollapsed = res.calendarCollapsed; logoCollapsed = res.logoCollapsed; applyFold(); render(); } });
     } else {
-      applyCells(loadLocal() || defaultCells()); render();
+      applyCells(loadLocal() || defaultCells()); applyFold(); render();
     }
   }
   // 登录后从云端拉取（若云端无记录则保留本地缓存）
   function syncCloud() {
     var u = getWalineUser(); if (!u) return;
-    fetchCloud().then(function (res) { if (res && res.cells) { applyCells(res.cells); render(); } });
+    fetchCloud().then(function (res) { if (res && res.cells) { applyCells(res.cells); calCollapsed = res.calendarCollapsed; logoCollapsed = res.logoCollapsed; applyFold(); render(); } });
   }
 
   // 面板（诗词/今日/星象/日程/文化）打开时隐藏宫格，关闭时恢复
@@ -941,7 +967,7 @@ var AppGrid = (function() {
 
   function init() { cacheBtns(); attachDrag(); loadLayout(); bindVisibility(); }
 
-  return { init: init, syncCloud: syncCloud };
+  return { init: init, syncCloud: syncCloud, setFold: setFold };
 })();
 AppGrid.init();
 
@@ -2173,10 +2199,12 @@ commentOverlay.addEventListener('click', function(e) {
     mini.style.height = almanac.offsetHeight + 'px';
     almanac.classList.add('hidden');
     mini.classList.add('show');
+    if (window.AppGrid) AppGrid.setFold(true, null, true); // 记录收起状态到布局（静默保存）
   });
   mini.addEventListener('click', function(){
     mini.classList.remove('show');
     almanac.classList.remove('hidden');
+    if (window.AppGrid) AppGrid.setFold(false, null, true); // 记录展开状态到布局（静默保存）
   });
 })();
 
@@ -2190,12 +2218,14 @@ commentOverlay.addEventListener('click', function(e) {
     if (logoMini) logoMini.style.height = logo.offsetHeight + 'px';
     logo.classList.add('hidden');
     if (logoMini) logoMini.classList.add('show');
+    if (window.AppGrid) AppGrid.setFold(null, true, true); // 记录收起状态到布局（静默保存）
   });
   // 点击边条 → 展开 LOGO
   if (logoMini) {
     logoMini.addEventListener('click', function(){
       logoMini.classList.remove('show');
       logo.classList.remove('hidden');
+      if (window.AppGrid) AppGrid.setFold(null, false, true); // 记录展开状态到布局（静默保存）
     });
   }
 })();
