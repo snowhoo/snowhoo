@@ -327,6 +327,8 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .force-hide{display:none !important}
 /* 图标形状：圆角矩形 */
 .icon-shape-rounded .category-item .circle{border-radius:14px}
+/* 图标形状：矩形（方角） */
+.icon-shape-rect .category-item .circle{border-radius:3px}
 /* 图标形状分段选择 */
 .lr-seg{display:flex;border:1px solid #e2e2e2;border-radius:8px;overflow:hidden;flex-shrink:0}
 .lr-seg button{border:0;background:#fff;padding:6px 11px;font-size:.78rem;color:#666;cursor:pointer;transition:background .15s,color .15s}
@@ -775,7 +777,7 @@ var AppGrid = (function() {
   var hidden = {};                          // 桌面图标显隐：{ iconId: true(隐藏) }
   var hideLogo = false;                     // Logo 整体显隐（true=隐藏）
   var hideCal = false;                      // 日历整体显隐（true=隐藏）
-  var iconShape = 'circle';                 // 图标形状：'circle' | 'rounded'
+  var iconShape = 'circle';                 // 图标形状：'circle' | 'rounded' | 'rect'
   var drag = null;                         // 拖拽态
   var lpTimer = null, lpFired = false, startX = 0, startY = 0, moved = false;
   var LONG_PRESS = 420, MOVE_TOL = 10;
@@ -850,13 +852,17 @@ var AppGrid = (function() {
   function isHideCal() { return !!hideCal; }
   function setHideLogo(v, silent) { hideLogo = !!v; applyVisibility(); saveLayout(silent); }
   function setHideCal(v, silent) { hideCal = !!v; applyVisibility(); saveLayout(silent); }
-  // 图标形状：'circle' | 'rounded'
-  function applyShape() { document.body.classList.toggle('icon-shape-rounded', iconShape === 'rounded'); }
+  // 图标形状：'circle' | 'rounded' | 'rect'
+  function applyShape() {
+    document.body.classList.remove('icon-shape-rounded', 'icon-shape-rect');
+    if (iconShape === 'rounded') document.body.classList.add('icon-shape-rounded');
+    else if (iconShape === 'rect') document.body.classList.add('icon-shape-rect');
+  }
   function getIconShape() { return iconShape; }
-  function setIconShape(v, silent) { iconShape = (v === 'rounded') ? 'rounded' : 'circle'; applyShape(); saveLayout(silent); }
+  function setIconShape(v, silent) { iconShape = (v === 'rounded' || v === 'rect') ? v : 'circle'; applyShape(); saveLayout(silent); }
 
   function defaultCells() { var c = new Array(TOTAL).fill(null); ICONS.forEach(function (id, i) { if (i < TOTAL) c[i] = id; }); return c; }
-  function loadLocal() { try { var s = localStorage.getItem(LS_LAYOUT); if (s) { var o = parseLayout(s); if (o) { calCollapsed = !!o.calendarCollapsed; logoCollapsed = !!o.logoCollapsed; hideLogo = !!o.hideLogo; hideCal = !!o.hideCal; iconShape = (o.iconShape === 'rounded') ? 'rounded' : 'circle'; if (o.hidden) applyHidden(o.hidden); return o.cells; } } } catch (e) {} return null; }
+  function loadLocal() { try { var s = localStorage.getItem(LS_LAYOUT); if (s) { var o = parseLayout(s); if (o) { calCollapsed = !!o.calendarCollapsed; logoCollapsed = !!o.logoCollapsed; hideLogo = !!o.hideLogo; hideCal = !!o.hideCal; iconShape = (o.iconShape === 'rounded' || o.iconShape === 'rect') ? o.iconShape : 'circle'; if (o.hidden) applyHidden(o.hidden); return o.cells; } } } catch (e) {} return null; }
   function applyCells(arr) { for (var i = 0; i < TOTAL; i++) cells[i] = (arr && arr[i]) ? arr[i] : null; }
 
   // ---------- 渲染 ----------
@@ -1022,7 +1028,7 @@ var AppGrid = (function() {
         var records = (resp.data && resp.data.data) || [];
         var found = null;
         for (var i = 0; i < records.length; i++) {
-          try { var rec = records[i]; var obj = parseLayout(rec.orig || rec.comment || ''); if (obj) { var o2 = parseInt(rec.objectId, 10) || 0; if (!found || o2 > found.oid) found = { oid: o2, cells: obj.cells, calendarCollapsed: !!obj.calendarCollapsed, logoCollapsed: !!obj.logoCollapsed, hideLogo: !!obj.hideLogo, hideCal: !!obj.hideCal, iconShape: (obj.iconShape === 'rounded') ? 'rounded' : 'circle', hidden: obj.hidden || {} }; } } catch (e) {}
+          try { var rec = records[i]; var obj = parseLayout(rec.orig || rec.comment || ''); if (obj) { var o2 = parseInt(rec.objectId, 10) || 0; if (!found || o2 > found.oid) found = { oid: o2, cells: obj.cells, calendarCollapsed: !!obj.calendarCollapsed, logoCollapsed: !!obj.logoCollapsed, hideLogo: !!obj.hideLogo, hideCal: !!obj.hideCal, iconShape: (obj.iconShape === 'rounded' || obj.iconShape === 'rect') ? obj.iconShape : 'circle', hidden: obj.hidden || {} }; } } catch (e) {}
         }
         return found;
       });
@@ -1120,7 +1126,8 @@ AppGrid.init();
     shapeWrap.innerHTML =
       '<span class="lr-seg">' +
         '<button type="button" data-shape="circle" class="' + (shape === 'circle' ? 'active' : '') + '">圆形</button>' +
-        '<button type="button" data-shape="rounded" class="' + (shape === 'rounded' ? 'active' : '') + '">圆角矩形</button>' +
+        '<button type="button" data-shape="rounded" class="' + (shape === 'rounded' ? 'active' : '') + '">圆矩</button>' +
+        '<button type="button" data-shape="rect" class="' + (shape === 'rect' ? 'active' : '') + '">矩形</button>' +
       '</span>';
     right.appendChild(shapeWrap);
 
