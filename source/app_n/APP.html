@@ -305,11 +305,11 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .launcher-head{text-align:center;font-size:.95rem;font-weight:600;color:#333;padding:12px 0 6px;position:relative}
 .launcher-head .lh-sub{display:block;font-size:.62rem;color:#999;font-weight:400;margin-top:3px}
 .launcher-head .lh-grip{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:36px;height:4px;border-radius:2px;background:#e2e2e2}
-.launcher-list{overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;padding:4px 0}
-.launcher-row{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid #f1f1f1;cursor:pointer}
+.launcher-list{overflow-y:auto;-webkit-overflow-scrolling:touch;display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;padding:4px 0}
+.launcher-row{display:flex;align-items:center;gap:8px;padding:9px 4px;cursor:pointer}
 .launcher-row:active{background:#f7f7f7}
-.launcher-row .lr-dot{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-.launcher-row .lr-name{flex:1;font-size:.92rem;color:#333;font-weight:500}
+.launcher-row .lr-dot{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.92rem;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.launcher-row .lr-name{flex:1;font-size:.86rem;color:#333;font-weight:500}
 .launcher-row .lr-state{font-size:.6rem;color:#bbb;flex-shrink:0;margin-right:2px}
 .launcher-close{margin-top:10px;text-align:center;padding:13px;background:#f4f4f6;border-radius:12px;color:#666;font-size:.92rem;cursor:pointer;flex-shrink:0}
 .launcher-close:active{background:#eaeaec}
@@ -317,14 +317,16 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .force-hide{display:none !important}
 /* 图标形状：圆角矩形 */
 .icon-shape-rounded .category-item .circle{border-radius:14px}
-/* 设置分组分隔 */
-.launcher-divider{display:flex;align-items:center;gap:8px;margin:8px 4px 2px;font-size:.66rem;color:#aaa;font-weight:600;letter-spacing:.5px}
+/* 设置分组分隔（跨两列） */
+.launcher-divider{grid-column:1 / -1;display:flex;align-items:center;gap:8px;margin:8px 4px 2px;font-size:.66rem;color:#aaa;font-weight:600;letter-spacing:.5px}
 .launcher-divider::before,.launcher-divider::after{content:"";flex:1;height:1px;background:#eee}
 /* 图标形状分段选择 */
 .lr-seg{display:flex;border:1px solid #e2e2e2;border-radius:8px;overflow:hidden;flex-shrink:0}
 .lr-seg button{border:0;background:#fff;padding:6px 11px;font-size:.78rem;color:#666;cursor:pointer;transition:background .15s,color .15s}
 .lr-seg button.active{background:#e8793a;color:#fff}
 .lr-seg button:not(.active):active{background:#f2f2f2}
+/* 图标形状行跨两列（分段控件需整宽） */
+.launcher-row[data-setting="iconShape"]{grid-column:1 / -1}
 </style>
 </head>
 <body>
