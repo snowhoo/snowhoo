@@ -692,7 +692,14 @@ function ttsBtnHtml(title, text) {
 }
 function appSpeak(text, title) {
   function doSpeak(){
-    try { if (window.TTS && TTS.speak) TTS.speak([{ title: title || '', text: text || '' }]); } catch(e){}
+    try {
+      if (window.TTS && TTS.speak) {
+        // 讯飞只朗读 items[].text，title 仅作媒体卡片标签；
+        // 为让标题也被朗读，把标题拼到朗读文本前（用句号分隔，自然停顿）。
+        var spoken = (title ? title + '。' : '') + (text || '');
+        TTS.speak([{ title: title || '', text: spoken }]);
+      }
+    } catch(e){}
   }
   if (window.TTS && TTS.version) { doSpeak(); return; }
   var s = document.createElement('script');
