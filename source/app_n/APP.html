@@ -836,7 +836,7 @@ var AppGrid = (function() {
       var cell = document.createElement('div');
       cell.className = 'grid-cell';
       cell.dataset.cell = i;
-      if (cells[i] && !hidden[cells[i]]) { var btn = btnRefs[cells[i]]; if (btn) { btn.classList.add('in-grid'); cell.appendChild(btn); } }
+      if (cells[i]) { var btn = btnRefs[cells[i]]; if (btn) { btn.classList.add('in-grid'); btn.style.display = hidden[cells[i]] ? 'none' : ''; cell.appendChild(btn); } }
       grid.appendChild(cell);
     }
     // 兜底：可见图标中一个都没落格（布局数据异常/损坏），强制回到默认布局
@@ -857,7 +857,7 @@ var AppGrid = (function() {
       var cell = document.createElement('div');
       cell.className = 'grid-cell';
       cell.dataset.cell = i;
-      if (cells[i] && !hidden[cells[i]]) { var btn = btnRefs[cells[i]]; if (btn) { btn.classList.add('in-grid'); cell.appendChild(btn); } }
+      if (cells[i]) { var btn = btnRefs[cells[i]]; if (btn) { btn.classList.add('in-grid'); btn.style.display = hidden[cells[i]] ? 'none' : ''; cell.appendChild(btn); } }
       grid.appendChild(cell);
     }
   }
