@@ -305,8 +305,10 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .launcher-head{text-align:center;font-size:.95rem;font-weight:600;color:#333;padding:12px 0 6px;position:relative}
 .launcher-head .lh-sub{display:block;font-size:.62rem;color:#999;font-weight:400;margin-top:3px}
 .launcher-head .lh-grip{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:36px;height:4px;border-radius:2px;background:#e2e2e2}
-.launcher-list{overflow-y:auto;-webkit-overflow-scrolling:touch;display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;padding:4px 0}
-.launcher-row{display:flex;align-items:center;gap:8px;padding:9px 4px;cursor:pointer}
+.launcher-list{overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;gap:14px;padding:6px 2px}
+.launcher-col{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.launcher-col-title{font-size:.66rem;color:#aaa;font-weight:600;letter-spacing:.5px;margin:0 0 4px 2px}
+.launcher-row{display:flex;align-items:center;gap:8px;padding:8px 6px;border-radius:8px;cursor:pointer}
 .launcher-row:active{background:#f7f7f7}
 .launcher-row .lr-dot{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.92rem;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .launcher-row .lr-name{flex:1;font-size:.86rem;color:#333;font-weight:500}
@@ -317,16 +319,11 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .force-hide{display:none !important}
 /* 图标形状：圆角矩形 */
 .icon-shape-rounded .category-item .circle{border-radius:14px}
-/* 设置分组分隔（跨两列） */
-.launcher-divider{grid-column:1 / -1;display:flex;align-items:center;gap:8px;margin:8px 4px 2px;font-size:.66rem;color:#aaa;font-weight:600;letter-spacing:.5px}
-.launcher-divider::before,.launcher-divider::after{content:"";flex:1;height:1px;background:#eee}
 /* 图标形状分段选择 */
 .lr-seg{display:flex;border:1px solid #e2e2e2;border-radius:8px;overflow:hidden;flex-shrink:0}
 .lr-seg button{border:0;background:#fff;padding:6px 11px;font-size:.78rem;color:#666;cursor:pointer;transition:background .15s,color .15s}
 .lr-seg button.active{background:#e8793a;color:#fff}
 .lr-seg button:not(.active):active{background:#f2f2f2}
-/* 图标形状行跨两列（分段控件需整宽） */
-.launcher-row[data-setting="iconShape"]{grid-column:1 / -1}
 </style>
 </head>
 <body>
@@ -1069,7 +1066,11 @@ AppGrid.init();
 
   function buildList() {
     list.innerHTML = '';
-    // 五个栏目：点击进入 / 右侧开关控制桌面图标显隐
+    // 两列布局：左列=桌面图标显隐（5 栏目），右列=Logo/日历显隐 + 图标形状
+    var left = document.createElement('div'); left.className = 'launcher-col';
+    var right = document.createElement('div'); right.className = 'launcher-col';
+
+    var lt = document.createElement('div'); lt.className = 'launcher-col-title'; lt.textContent = '桌面图标'; left.appendChild(lt);
     ICONS.forEach(function (id) {
       var btn = document.getElementById(id);
       if (!btn) return;
@@ -1087,22 +1088,15 @@ AppGrid.init();
       row.innerHTML =
         '<span class="lr-dot" style="background:' + color + '">' + ch + '</span>' +
         '<span class="lr-name">' + name + '</span>' +
-        '<span class="lr-state">' + (hd ? '已隐藏' : '桌面显示') + '</span>' +
         '<label class="plan-switch"><input type="checkbox" ' + (hd ? '' : 'checked') + '><span class="slider"></span></label>';
-      list.appendChild(row);
+      left.appendChild(row);
     });
-    // 分隔：显示设置
-    var d1 = document.createElement('div');
-    d1.className = 'launcher-divider'; d1.textContent = '显示设置';
-    list.appendChild(d1);
+
+    var rt = document.createElement('div'); rt.className = 'launcher-col-title'; rt.textContent = '显示与形状'; right.appendChild(rt);
     var logoShown = AppGrid.isHideLogo ? !AppGrid.isHideLogo() : true;
     var calShown = AppGrid.isHideCal ? !AppGrid.isHideCal() : true;
-    addToggleRow('hideLogo', 'Logo', logoShown, logoShown ? '显示' : '已隐藏');
-    addToggleRow('hideCal', '日历', calShown, calShown ? '显示' : '已隐藏');
-    // 分隔：图标形状
-    var d2 = document.createElement('div');
-    d2.className = 'launcher-divider'; d2.textContent = '图标形状';
-    list.appendChild(d2);
+    right.appendChild(addToggleRow('hideLogo', 'Logo', logoShown));
+    right.appendChild(addToggleRow('hideCal', '日历', calShown));
     var shape = (AppGrid.getIconShape && AppGrid.getIconShape()) || 'circle';
     var srow = document.createElement('div');
     srow.className = 'launcher-row';
@@ -1113,18 +1107,20 @@ AppGrid.init();
         '<button type="button" data-shape="circle" class="' + (shape === 'circle' ? 'active' : '') + '">圆形</button>' +
         '<button type="button" data-shape="rounded" class="' + (shape === 'rounded' ? 'active' : '') + '">圆角矩形</button>' +
       '</span>';
-    list.appendChild(srow);
+    right.appendChild(srow);
+
+    list.appendChild(left);
+    list.appendChild(right);
   }
-  function addToggleRow(key, name, checked, stateText) {
+  function addToggleRow(key, name, checked) {
     var row = document.createElement('div');
     row.className = 'launcher-row';
     row.dataset.setting = key;
     row.innerHTML =
       '<span class="lr-dot" style="background:#8a8a8a">⚙</span>' +
       '<span class="lr-name">' + name + '</span>' +
-      '<span class="lr-state">' + stateText + '</span>' +
       '<label class="plan-switch"><input type="checkbox" ' + (checked ? 'checked' : '') + '><span class="slider"></span></label>';
-    list.appendChild(row);
+    return row;
   }
   function openMenu() { buildList(); menu.classList.add('show'); }
   function closeMenu() { menu.classList.remove('show'); }
@@ -1150,6 +1146,14 @@ AppGrid.init();
     }
     var row = e.target.closest ? e.target.closest('.launcher-row') : null;
     if (!row) return;
+    // Logo/日历 设置行：点击整行（非开关）也切换显隐
+    if (row.dataset.setting === 'hideLogo' || row.dataset.setting === 'hideCal') {
+      if (!e.target.closest('.plan-switch')) {
+        var cb = row.querySelector('input[type="checkbox"]');
+        if (cb) { cb.checked = !cb.checked; if (cb.dispatchEvent) cb.dispatchEvent(new Event('change')); }
+      }
+      return;
+    }
     if (e.target.closest('.plan-switch')) return;
     var url = row.dataset.url;
     if (url) window.location.replace(url);
@@ -1163,18 +1167,14 @@ AppGrid.init();
     var setting = row.dataset.setting;
     if (setting === 'hideLogo') {
       var showLogo = input.checked;
-      if (AppGrid.setHideLogo) { AppGrid.setHideLogo(!showLogo, false); var st = row.querySelector('.lr-state'); if (st) st.textContent = showLogo ? '显示' : '已隐藏'; }
+      if (AppGrid.setHideLogo) AppGrid.setHideLogo(!showLogo, false);
     } else if (setting === 'hideCal') {
       var showCal = input.checked;
-      if (AppGrid.setHideCal) { AppGrid.setHideCal(!showCal, false); var st2 = row.querySelector('.lr-state'); if (st2) st2.textContent = showCal ? '显示' : '已隐藏'; }
+      if (AppGrid.setHideCal) AppGrid.setHideCal(!showCal, false);
     } else {
       var id = row.dataset.id;
       var show = input.checked; // 勾选=显示桌面按钮
-      if (AppGrid.setHidden) {
-        AppGrid.setHidden(id, !show, false);
-        var st3 = row.querySelector('.lr-state');
-        if (st3) st3.textContent = show ? '桌面显示' : '已隐藏';
-      }
+      if (AppGrid.setHidden) AppGrid.setHidden(id, !show, false);
     }
   });
 })();
