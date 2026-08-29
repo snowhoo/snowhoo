@@ -290,6 +290,29 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .boot-splash.hide{opacity:0;pointer-events:none}
 .boot-spinner{width:38px;height:38px;border:3px solid rgba(128,128,128,.22);border-top-color:#e8793a;border-radius:50%;animation:bootSpin .8s linear infinite}
 @keyframes bootSpin{to{transform:rotate(360deg)}}
+
+/* ===== 栏目启动器：页面中间圆点 → 弹出菜单（进入栏目 / 开关桌面按钮） ===== */
+/* 垂直高度与「探索」一致（bottom:125px），水平居中 */
+.launcher-circle{position:fixed;left:50%;bottom:125px;transform:translateX(-50%);z-index:7;width:54px;height:54px;border-radius:50%;color:#fff;background:rgba(30,30,42,.5);border:1.5px solid rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.28);transition:transform .25s,opacity .3s,box-shadow .25s;-webkit-tap-highlight-color:transparent}
+.launcher-circle:active{transform:translateX(-50%) scale(.9);box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.launcher-circle.hide{opacity:0;pointer-events:none}
+.launcher-circle svg{width:26px;height:26px;display:block}
+/* 弹出菜单：底部抽屉 */
+.launcher-menu{position:fixed;inset:0;z-index:12000;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;display:flex;align-items:flex-end;justify-content:center}
+.launcher-menu.show{opacity:1;visibility:visible}
+.launcher-sheet{width:100%;max-width:480px;background:#fff;color:#333;border-radius:18px 18px 0 0;padding:6px 16px calc(16px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .35s ease-out;max-height:74vh;display:flex;flex-direction:column;box-shadow:0 -8px 30px rgba(0,0,0,.25)}
+.launcher-menu.show .launcher-sheet{transform:translateY(0)}
+.launcher-head{text-align:center;font-size:.95rem;font-weight:600;color:#333;padding:12px 0 6px;position:relative}
+.launcher-head .lh-sub{display:block;font-size:.62rem;color:#999;font-weight:400;margin-top:3px}
+.launcher-head .lh-grip{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:36px;height:4px;border-radius:2px;background:#e2e2e2}
+.launcher-list{overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;padding:4px 0}
+.launcher-row{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid #f1f1f1;cursor:pointer}
+.launcher-row:active{background:#f7f7f7}
+.launcher-row .lr-dot{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.launcher-row .lr-name{flex:1;font-size:.92rem;color:#333;font-weight:500}
+.launcher-row .lr-state{font-size:.6rem;color:#bbb;flex-shrink:0;margin-right:2px}
+.launcher-close{margin-top:10px;text-align:center;padding:13px;background:#f4f4f6;border-radius:12px;color:#666;font-size:.92rem;cursor:pointer;flex-shrink:0}
+.launcher-close:active{background:#eaeaec}
 </style>
 </head>
 <body>
@@ -391,6 +414,22 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
     <span class="circle">播</span>
     <span class="label">播霸</span>
   </button>
+</div>
+
+<!-- 栏目启动器：页面中间圆点（高度与探索一致），点击弹出菜单（进入栏目 / 开关桌面按钮） -->
+<div class="launcher-circle" id="launcherCircle" title="栏目菜单">
+  <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <circle cx="5" cy="5" r="1.7"/><circle cx="12" cy="5" r="1.7"/><circle cx="19" cy="5" r="1.7"/>
+    <circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/>
+    <circle cx="5" cy="19" r="1.7"/><circle cx="12" cy="19" r="1.7"/><circle cx="19" cy="19" r="1.7"/>
+  </svg>
+</div>
+<div class="launcher-menu" id="launcherMenu">
+  <div class="launcher-sheet">
+    <div class="launcher-head"><span class="lh-grip"></span>栏目桌面<small class="lh-sub">点击进入栏目 · 右侧开关控制桌面图标显隐</small></div>
+    <div class="launcher-list" id="launcherList"></div>
+    <div class="launcher-close" id="launcherClose">完成</div>
+  </div>
 </div>
 
 <!-- 探索 / 日历 / 收起边条：body 层直接子级（fixed 视口定位），避免被 image-area 层叠上下文困在 z5 之下 -->
@@ -713,6 +752,7 @@ var AppGrid = (function() {
   var oid = 0;                              // 云端记录 objectId（仅运行时引用）
   var calCollapsed = false;                 // 日历收起状态（持久化）
   var logoCollapsed = false;                // LOGO 收起状态（持久化）
+  var hidden = {};                          // 桌面图标显隐：{ iconId: true(隐藏) }
   var drag = null;                         // 拖拽态
   var lpTimer = null, lpFired = false, startX = 0, startY = 0, moved = false;
   var LONG_PRESS = 420, MOVE_TOL = 10;
@@ -764,9 +804,16 @@ var AppGrid = (function() {
     applyFold();
     saveLayout(silent);
   }
+  // 合并桌面图标显隐配置（原地修改，保持 hidden 引用不变）
+  function applyHidden(h) {
+    for (var k in hidden) if (Object.prototype.hasOwnProperty.call(hidden, k)) delete hidden[k];
+    if (h) { for (var k2 in h) if (Object.prototype.hasOwnProperty.call(h, k2)) hidden[k2] = !!h[k2]; }
+  }
+  function isHidden(id) { return !!hidden[id]; }
+  function setHidden(id, val, silent) { hidden[id] = !!val; render(); saveLayout(silent); }
 
   function defaultCells() { var c = new Array(TOTAL).fill(null); ICONS.forEach(function (id, i) { if (i < TOTAL) c[i] = id; }); return c; }
-  function loadLocal() { try { var s = localStorage.getItem(LS_LAYOUT); if (s) { var o = parseLayout(s); if (o) { calCollapsed = !!o.calendarCollapsed; logoCollapsed = !!o.logoCollapsed; return o.cells; } } } catch (e) {} return null; }
+  function loadLocal() { try { var s = localStorage.getItem(LS_LAYOUT); if (s) { var o = parseLayout(s); if (o) { calCollapsed = !!o.calendarCollapsed; logoCollapsed = !!o.logoCollapsed; if (o.hidden) applyHidden(o.hidden); return o.cells; } } } catch (e) {} return null; }
   function applyCells(arr) { for (var i = 0; i < TOTAL; i++) cells[i] = (arr && arr[i]) ? arr[i] : null; }
 
   // ---------- 渲染 ----------
@@ -789,13 +836,17 @@ var AppGrid = (function() {
       var cell = document.createElement('div');
       cell.className = 'grid-cell';
       cell.dataset.cell = i;
-      if (cells[i]) { var btn = btnRefs[cells[i]]; if (btn) { btn.classList.add('in-grid'); cell.appendChild(btn); } }
+      if (cells[i] && !hidden[cells[i]]) { var btn = btnRefs[cells[i]]; if (btn) { btn.classList.add('in-grid'); cell.appendChild(btn); } }
       grid.appendChild(cell);
     }
-    // 兜底：若布局数据异常导致一个图标都没落格，强制回到默认布局
-    var placed = 0;
-    ICONS.forEach(function (id) { if (btnRefs[id] && btnRefs[id].parentNode) placed++; });
-    if (placed === 0) { applyCells(defaultCells()); renderRaw(); }
+    // 兜底：可见图标中一个都没落格（布局数据异常/损坏），强制回到默认布局
+    var visibleTotal = 0, visiblePlaced = 0;
+    ICONS.forEach(function (id) {
+      if (hidden[id]) return;
+      visibleTotal++;
+      if (btnRefs[id] && btnRefs[id].parentNode) visiblePlaced++;
+    });
+    if (visibleTotal > 0 && visiblePlaced === 0) { applyCells(defaultCells()); renderRaw(); }
   }
   // 不带兜底的渲染（供兜底分支调用，避免递归）
   function renderRaw() {
@@ -806,7 +857,7 @@ var AppGrid = (function() {
       var cell = document.createElement('div');
       cell.className = 'grid-cell';
       cell.dataset.cell = i;
-      if (cells[i]) { var btn = btnRefs[cells[i]]; if (btn) { btn.classList.add('in-grid'); cell.appendChild(btn); } }
+      if (cells[i] && !hidden[cells[i]]) { var btn = btnRefs[cells[i]]; if (btn) { btn.classList.add('in-grid'); cell.appendChild(btn); } }
       grid.appendChild(cell);
     }
   }
@@ -900,7 +951,7 @@ var AppGrid = (function() {
     window.__gridToastT = setTimeout(function () { t.classList.remove('show'); }, 2400);
   }
   function saveLayout(silent) {
-    var data = { v: 1, cells: cells.slice(), calendarCollapsed: calCollapsed, logoCollapsed: logoCollapsed, updatedAt: Date.now() };
+    var data = { v: 1, cells: cells.slice(), calendarCollapsed: calCollapsed, logoCollapsed: logoCollapsed, hidden: hidden, updatedAt: Date.now() };
     var u = getWalineUser();
     if (u) { pushCloud(data, silent); }
     else {
@@ -928,7 +979,7 @@ var AppGrid = (function() {
         var records = (resp.data && resp.data.data) || [];
         var found = null;
         for (var i = 0; i < records.length; i++) {
-          try { var rec = records[i]; var obj = parseLayout(rec.orig || rec.comment || ''); if (obj) { var o2 = parseInt(rec.objectId, 10) || 0; if (!found || o2 > found.oid) found = { oid: o2, cells: obj.cells, calendarCollapsed: !!obj.calendarCollapsed, logoCollapsed: !!obj.logoCollapsed }; } } catch (e) {}
+          try { var rec = records[i]; var obj = parseLayout(rec.orig || rec.comment || ''); if (obj) { var o2 = parseInt(rec.objectId, 10) || 0; if (!found || o2 > found.oid) found = { oid: o2, cells: obj.cells, calendarCollapsed: !!obj.calendarCollapsed, logoCollapsed: !!obj.logoCollapsed, hidden: obj.hidden || {} }; } } catch (e) {}
         }
         return found;
       });
@@ -941,7 +992,7 @@ var AppGrid = (function() {
       applyCells(loadLocal() || defaultCells()); // 先以本地/默认渲染，避免空白等待
       applyFold();
       render();
-      fetchCloud().then(function (res) { if (res && res.cells) { applyCells(res.cells); calCollapsed = res.calendarCollapsed; logoCollapsed = res.logoCollapsed; applyFold(); render(); } });
+      fetchCloud().then(function (res) { if (res && res.cells) { applyCells(res.cells); calCollapsed = res.calendarCollapsed; logoCollapsed = res.logoCollapsed; if (res.hidden) applyHidden(res.hidden); applyFold(); render(); } });
     } else {
       applyCells(loadLocal() || defaultCells()); applyFold(); render();
     }
@@ -949,7 +1000,7 @@ var AppGrid = (function() {
   // 登录后从云端拉取（若云端无记录则保留本地缓存）
   function syncCloud() {
     var u = getWalineUser(); if (!u) return;
-    fetchCloud().then(function (res) { if (res && res.cells) { applyCells(res.cells); calCollapsed = res.calendarCollapsed; logoCollapsed = res.logoCollapsed; applyFold(); render(); } });
+    fetchCloud().then(function (res) { if (res && res.cells) { applyCells(res.cells); calCollapsed = res.calendarCollapsed; logoCollapsed = res.logoCollapsed; if (res.hidden) applyHidden(res.hidden); applyFold(); render(); } });
   }
 
   // 面板（诗词/今日/星象/日程/文化）打开时隐藏宫格，关闭时恢复
@@ -958,6 +1009,7 @@ var AppGrid = (function() {
     function update() {
       var open = targets.some(function (id) { var el = $(id); return el && el.classList.contains('show'); });
       var g = $('appGrid'); if (g) g.classList.toggle('hide', !!open);
+      var c = document.getElementById('launcherCircle'); if (c) c.classList.toggle('hide', !!open);
     }
     targets.forEach(function (id) {
       var el = $(id); if (el && window.MutationObserver) new MutationObserver(update).observe(el, { attributes: true, attributeFilter: ['class'] });
@@ -967,9 +1019,77 @@ var AppGrid = (function() {
 
   function init() { cacheBtns(); attachDrag(); loadLayout(); bindVisibility(); }
 
-  return { init: init, syncCloud: syncCloud, setFold: setFold };
+  return { init: init, syncCloud: syncCloud, setFold: setFold, setHidden: setHidden, isHidden: isHidden };
 })();
 AppGrid.init();
+
+// ===== 栏目启动器：中间圆点 → 弹出菜单（进入栏目 / 开关桌面按钮） =====
+// 桌面按钮显隐配置与宫格布局共用同一份存储（登录写云 / 未登录写本地缓存）
+(function () {
+  var ICONS = ['storyBtn', 'yeduBtn', 'zjszBtn', 'newsBtn', 'tvBtn'];
+  var circle = document.getElementById('launcherCircle');
+  var menu = document.getElementById('launcherMenu');
+  var list = document.getElementById('launcherList');
+  var closeBtn = document.getElementById('launcherClose');
+  if (!circle || !menu || !list) return;
+
+  function buildList() {
+    list.innerHTML = '';
+    ICONS.forEach(function (id) {
+      var btn = document.getElementById(id);
+      if (!btn) return;
+      var labelEl = btn.querySelector('.label');
+      var name = (labelEl ? labelEl.textContent : '') || btn.getAttribute('title') || id;
+      var colorM = (btn.getAttribute('style') || '').match(/--cat-color:\s*([^;]+)/);
+      var color = colorM ? colorM[1].trim() : '#888';
+      var circ = btn.querySelector('.circle');
+      var ch = circ ? circ.textContent.trim().charAt(0) : '';
+      var hd = (AppGrid.isHidden && AppGrid.isHidden(id)) ? true : false;
+      var row = document.createElement('div');
+      row.className = 'launcher-row';
+      row.dataset.id = id;
+      row.dataset.url = btn.dataset.url || '';
+      row.innerHTML =
+        '<span class="lr-dot" style="background:' + color + '">' + ch + '</span>' +
+        '<span class="lr-name">' + name + '</span>' +
+        '<span class="lr-state">' + (hd ? '已隐藏' : '桌面显示') + '</span>' +
+        '<label class="plan-switch"><input type="checkbox" ' + (hd ? '' : 'checked') + '><span class="slider"></span></label>';
+      list.appendChild(row);
+    });
+  }
+  function openMenu() { buildList(); menu.classList.add('show'); }
+  function closeMenu() { menu.classList.remove('show'); }
+
+  circle.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (menu.classList.contains('show')) closeMenu(); else openMenu();
+  });
+  menu.addEventListener('click', function (e) { if (e.target === menu) closeMenu(); });
+  if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+
+  // 行点击：进入栏目（点开关不跳转，交给 change 处理）
+  list.addEventListener('click', function (e) {
+    var row = e.target.closest ? e.target.closest('.launcher-row') : null;
+    if (!row) return;
+    if (e.target.closest('.plan-switch')) return;
+    var url = row.dataset.url;
+    if (url) window.location.replace(url);
+  });
+  // 开关切换：控制桌面按钮显隐（checked=显示；不勾=隐藏）
+  list.addEventListener('change', function (e) {
+    var input = e.target;
+    if (!input || input.type !== 'checkbox') return;
+    var row = input.closest ? input.closest('.launcher-row') : null;
+    if (!row) return;
+    var id = row.dataset.id;
+    var show = input.checked; // 勾选=显示桌面按钮
+    if (AppGrid.setHidden) {
+      AppGrid.setHidden(id, !show, false);
+      var st = row.querySelector('.lr-state');
+      if (st) st.textContent = show ? '桌面显示' : '已隐藏';
+    }
+  });
+})();
 
 // 关闭所有背景覆盖层（诗词/星象），安全可重复调用
 function closeAllOverlays() {
