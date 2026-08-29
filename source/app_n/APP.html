@@ -1100,7 +1100,6 @@ AppGrid.init();
       var row = document.createElement('div');
       row.className = 'launcher-row';
       row.dataset.id = id;
-      row.dataset.url = btn.dataset.url || '';
       row.innerHTML =
         '<span class="lr-dot" style="background:' + color + '">' + ch + '</span>' +
         '<span class="lr-name">' + name + '</span>' +
@@ -1191,17 +1190,15 @@ AppGrid.init();
     }
     var row = e.target.closest ? e.target.closest('.launcher-row') : null;
     if (!row) return;
-    // Logo/日历 组件行：点击整行（非开关）切换“显示”开关
+    if (e.target.closest('.plan-switch')) return; // 点开关不触发整行切换
+    // 整行点击切换开关（不再跳转页面）：组件行切“显示”，桌面图标行切“显隐”
+    var cb;
     if (row.dataset.setting === 'logo' || row.dataset.setting === 'cal') {
-      if (!e.target.closest('.plan-switch')) {
-        var cb = row.querySelector('input[data-toggle="show"]');
-        if (cb) { cb.checked = !cb.checked; if (cb.dispatchEvent) cb.dispatchEvent(new Event('change')); }
-      }
-      return;
+      cb = row.querySelector('input[data-toggle="show"]');
+    } else {
+      cb = row.querySelector('input[type="checkbox"]');
     }
-    if (e.target.closest('.plan-switch')) return;
-    var url = row.dataset.url;
-    if (url) window.location.replace(url);
+    if (cb) { cb.checked = !cb.checked; if (cb.dispatchEvent) cb.dispatchEvent(new Event('change')); }
   });
   // 开关切换：桌面图标显隐 / Logo 显隐 / 日历显隐（checked=显示；不勾=隐藏）
   list.addEventListener('change', function (e) {
