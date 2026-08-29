@@ -175,9 +175,9 @@ body{display:flex;flex-direction:column}
 .comment-panel-body{flex:1;overflow-y:auto;padding:8px 16px;min-height:200px;max-height:calc(85vh - 50px);-webkit-overflow-scrolling:touch}
 
 
-/* 阴阳（明暗模式）全屏遮罩：阴=背景图拓展全屏 + 30% 黑色遮罩；不拦截点击 */
-.yin-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:4000;pointer-events:none;display:block}
-.yin-mask.show{display:block}
+/* 阴阳（明暗模式）全屏遮罩：已取消 30% 黑色遮罩，背景图原色显示；不拦截点击 */
+.yin-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:transparent;z-index:4000;pointer-events:none;display:none}
+.yin-mask.show{display:block;background:transparent}
 /* 阴阳按钮锁定态（阴阳镜未解锁）：右上角锁图标 + 灰化 */
 .top-left-badges .badge .lock-overlay{position:absolute;top:-4px;right:-22px;z-index:2;display:none;align-items:center;justify-content:center;width:24px;height:24px;pointer-events:auto;background:transparent;border-radius:0;padding:0;margin:0}
 .top-left-badges .badge .lock-overlay svg{width:14px;height:14px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -399,7 +399,7 @@ body{display:flex;flex-direction:column}
   <div class="comment-name" id="commentName">隐匿者</div>
 </div>
 
-<!-- 阴阳（明暗模式）全屏遮罩：阴=背景图加 30% 黑色遮罩并扩展到全屏，pointer-events:none 不影响操作 -->
+<!-- 阴阳（明暗模式）全屏遮罩：已取消 30% 黑色遮罩（保留空层备用），pointer-events:none 不影响操作 -->
 <div class="yin-mask" id="yinMask"></div>
 
 <div class="bottom-panel">
