@@ -280,6 +280,15 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .plan-switch input:checked + .slider{background:#e8793a}
 .plan-switch input:checked + .slider::before{transform:translateX(16px)}
 .plan-switch:active .slider{opacity:.85}
+/* 组件行双开关：显示 + 缩边 */
+.lr-toggles{display:flex;align-items:center;gap:14px;flex-shrink:0}
+.lr-tog{display:flex;flex-direction:column;align-items:center;gap:3px}
+.lr-cap{font-size:10px;color:#b3b0a8;line-height:1}
+.lr-tog.disabled .lr-cap{opacity:.38}
+/* 显示未开启时，缩边开关灰显禁用 */
+.plan-switch.disabled{cursor:not-allowed;opacity:.38}
+.plan-switch.disabled .slider{background:#e4e4e4 !important}
+.plan-switch.disabled:active .slider{opacity:1}
 .plan-toast{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:12000;background:rgba(40,32,20,.88);color:#fff;font-size:.72rem;padding:7px 16px;border-radius:16px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
 .plan-toast.show{opacity:1}
 /* ===== 计划行内编辑（双击条目区域激活） ===== */
@@ -305,16 +314,15 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .launcher-head{text-align:center;font-size:.95rem;font-weight:600;color:#333;padding:12px 0 6px;position:relative}
 .launcher-head .lh-sub{display:block;font-size:.62rem;color:#999;font-weight:400;margin-top:3px}
 .launcher-head .lh-grip{position:absolute;top:6px;left:50%;transform:translateX(-50%);width:36px;height:4px;border-radius:2px;background:#e2e2e2}
-.launcher-list{overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;gap:14px;padding:6px 2px}
-.launcher-col{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.launcher-list{overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;gap:0;padding:6px 2px}
+.launcher-col{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;padding:0 24px}
+.launcher-col:first-child{border-right:1px solid #ececec}
 .launcher-col-title{font-size:.66rem;color:#aaa;font-weight:600;letter-spacing:.5px;margin:0 0 4px 2px}
 .launcher-row{display:flex;align-items:center;gap:8px;padding:8px 6px;border-radius:8px;cursor:pointer}
 .launcher-row:active{background:#f7f7f7}
 .launcher-row .lr-dot{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.92rem;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .launcher-row .lr-name{flex:1;font-size:.86rem;color:#333;font-weight:500}
 .launcher-row .lr-state{font-size:.6rem;color:#bbb;flex-shrink:0;margin-right:2px}
-.launcher-close{margin-top:10px;text-align:center;padding:13px;background:#f4f4f6;border-radius:12px;color:#666;font-size:.92rem;cursor:pointer;flex-shrink:0}
-.launcher-close:active{background:#eaeaec}
 /* 强制隐藏（Logo/日历 显示开关用，优先级高于收起态） */
 .force-hide{display:none !important}
 /* 图标形状：圆角矩形 */
@@ -441,7 +449,6 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
   <div class="launcher-sheet">
     <div class="launcher-head"><span class="lh-grip"></span></div>
     <div class="launcher-list" id="launcherList"></div>
-    <div class="launcher-close" id="launcherClose">完成</div>
   </div>
 </div>
 
@@ -820,6 +827,8 @@ var AppGrid = (function() {
     applyFold();
     saveLayout(silent);
   }
+  function isLogoCollapsed() { return !!logoCollapsed; }
+  function isCalCollapsed() { return !!calCollapsed; }
   // 合并桌面图标显隐配置（原地修改，保持 hidden 引用不变）
   function applyHidden(h) {
     for (var k in hidden) if (Object.prototype.hasOwnProperty.call(hidden, k)) delete hidden[k];
@@ -1052,7 +1061,7 @@ var AppGrid = (function() {
 
   function init() { cacheBtns(); attachDrag(); loadLayout(); bindVisibility(); }
 
-  return { init: init, syncCloud: syncCloud, setFold: setFold, setHidden: setHidden, isHidden: isHidden, setHideLogo: setHideLogo, isHideLogo: isHideLogo, setHideCal: setHideCal, isHideCal: isHideCal, setIconShape: setIconShape, getIconShape: getIconShape };
+  return { init: init, syncCloud: syncCloud, setFold: setFold, isLogoCollapsed: isLogoCollapsed, isCalCollapsed: isCalCollapsed, setHidden: setHidden, isHidden: isHidden, setHideLogo: setHideLogo, isHideLogo: isHideLogo, setHideCal: setHideCal, isHideCal: isHideCal, setIconShape: setIconShape, getIconShape: getIconShape };
 })();
 AppGrid.init();
 
@@ -1063,7 +1072,6 @@ AppGrid.init();
   var circle = document.getElementById('launcherCircle');
   var menu = document.getElementById('launcherMenu');
   var list = document.getElementById('launcherList');
-  var closeBtn = document.getElementById('launcherClose');
   if (!circle || !menu || !list) return;
 
   function buildList() {
@@ -1097,8 +1105,11 @@ AppGrid.init();
     var rt = document.createElement('div'); rt.className = 'launcher-col-title'; rt.textContent = '桌面组件'; right.appendChild(rt);
     var logoShown = AppGrid.isHideLogo ? !AppGrid.isHideLogo() : true;
     var calShown = AppGrid.isHideCal ? !AppGrid.isHideCal() : true;
-    right.appendChild(addToggleRow('hideLogo', 'Logo', logoShown));
-    right.appendChild(addToggleRow('hideCal', '日历', calShown));
+    var logoFolded = AppGrid.isLogoCollapsed ? AppGrid.isLogoCollapsed() : false;
+    var calFolded = AppGrid.isCalCollapsed ? AppGrid.isCalCollapsed() : false;
+    // 每组件一行：显示开关 + 缩边开关（显示关闭时缩边灰显禁用）
+    right.appendChild(addComponentRow('logo', 'Logo', logoShown, logoFolded));
+    right.appendChild(addComponentRow('cal', '日历', calShown, calFolded));
     // 图标形状：以小标题（同列标题样式）呈现，分段控件单独一行
     var st2 = document.createElement('div');
     st2.className = 'launcher-col-title'; st2.textContent = '图标形状'; st2.style.marginTop = '8px';
@@ -1116,15 +1127,39 @@ AppGrid.init();
     list.appendChild(left);
     list.appendChild(right);
   }
-  function addToggleRow(key, name, checked) {
+  // 组件行：显示开关 + 缩边开关 同列；shown=是否显示，folded=是否已缩边
+  function addComponentRow(setting, name, shown, folded) {
     var row = document.createElement('div');
-    row.className = 'launcher-row';
-    row.dataset.setting = key;
+    row.className = 'launcher-row launcher-comp';
+    row.dataset.setting = setting;
     row.innerHTML =
       '<span class="lr-dot" style="background:#8a8a8a">⚙</span>' +
       '<span class="lr-name">' + name + '</span>' +
-      '<label class="plan-switch"><input type="checkbox" ' + (checked ? 'checked' : '') + '><span class="slider"></span></label>';
+      '<span class="lr-toggles">' +
+        '<span class="lr-tog lr-tog-show"><label class="plan-switch" title="显示"><input type="checkbox" data-toggle="show" ' + (shown ? 'checked' : '') + '><span class="slider"></span></label><span class="lr-cap">显示</span></span>' +
+        '<span class="lr-tog lr-tog-fold"><label class="plan-switch" title="缩边"><input type="checkbox" data-toggle="fold" ' + (folded ? '' : 'checked') + '><span class="slider"></span></label><span class="lr-cap">缩边</span></span>' +
+      '</span>';
+    // 显示未开启时，缩边开关灰显禁用
+    if (!shown) {
+      var tf = row.querySelector('.lr-tog-fold');
+      if (tf) {
+        var f = row.querySelector('input[data-toggle="fold"]');
+        if (f) f.disabled = true;
+        tf.classList.add('disabled');
+      }
+    }
     return row;
+  }
+  // 根据“显示”开关状态同步“缩边”开关的禁用/灰显
+  function syncFoldState(row) {
+    var showInput = row.querySelector('input[data-toggle="show"]');
+    var foldInput = row.querySelector('input[data-toggle="fold"]');
+    if (!showInput || !foldInput) return;
+    var on = showInput.checked;
+    foldInput.disabled = !on;
+    if (foldInput.parentNode) foldInput.parentNode.classList.toggle('disabled', !on);
+    var togFold = row.querySelector('.lr-tog-fold');
+    if (togFold) togFold.classList.toggle('disabled', !on);
   }
   function openMenu() { buildList(); menu.classList.add('show'); }
   function closeMenu() { menu.classList.remove('show'); }
@@ -1134,7 +1169,6 @@ AppGrid.init();
     if (menu.classList.contains('show')) closeMenu(); else openMenu();
   });
   menu.addEventListener('click', function (e) { if (e.target === menu) closeMenu(); });
-  if (closeBtn) closeBtn.addEventListener('click', closeMenu);
 
   // 行点击：图标形状分段切换 / 进入栏目（点开关不跳转）
   list.addEventListener('click', function (e) {
@@ -1150,10 +1184,10 @@ AppGrid.init();
     }
     var row = e.target.closest ? e.target.closest('.launcher-row') : null;
     if (!row) return;
-    // Logo/日历 设置行：点击整行（非开关）也切换显隐
-    if (row.dataset.setting === 'hideLogo' || row.dataset.setting === 'hideCal') {
+    // Logo/日历 组件行：点击整行（非开关）切换“显示”开关
+    if (row.dataset.setting === 'logo' || row.dataset.setting === 'cal') {
       if (!e.target.closest('.plan-switch')) {
-        var cb = row.querySelector('input[type="checkbox"]');
+        var cb = row.querySelector('input[data-toggle="show"]');
         if (cb) { cb.checked = !cb.checked; if (cb.dispatchEvent) cb.dispatchEvent(new Event('change')); }
       }
       return;
@@ -1169,12 +1203,18 @@ AppGrid.init();
     var row = input.closest ? input.closest('.launcher-row') : null;
     if (!row) return;
     var setting = row.dataset.setting;
-    if (setting === 'hideLogo') {
-      var showLogo = input.checked;
-      if (AppGrid.setHideLogo) AppGrid.setHideLogo(!showLogo, false);
-    } else if (setting === 'hideCal') {
-      var showCal = input.checked;
-      if (AppGrid.setHideCal) AppGrid.setHideCal(!showCal, false);
+    if (setting === 'logo' || setting === 'cal') {
+      var t = input.dataset.toggle;
+      if (t === 'show') {
+        var showOn = input.checked; // 勾选=显示
+        if (setting === 'logo') { if (AppGrid.setHideLogo) AppGrid.setHideLogo(!showOn, false); }
+        else { if (AppGrid.setHideCal) AppGrid.setHideCal(!showOn, false); }
+        syncFoldState(row); // 显示状态变化时同步缩边开关禁用态
+      } else if (t === 'fold') {
+        var expanded = input.checked; // 勾选=展开（不缩边）
+        if (setting === 'logo') { if (AppGrid.setFold) AppGrid.setFold(null, !expanded, false); }
+        else { if (AppGrid.setFold) AppGrid.setFold(!expanded, null, false); }
+      }
     } else {
       var id = row.dataset.id;
       var show = input.checked; // 勾选=显示桌面按钮
