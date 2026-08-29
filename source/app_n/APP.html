@@ -313,6 +313,18 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .launcher-row .lr-state{font-size:.6rem;color:#bbb;flex-shrink:0;margin-right:2px}
 .launcher-close{margin-top:10px;text-align:center;padding:13px;background:#f4f4f6;border-radius:12px;color:#666;font-size:.92rem;cursor:pointer;flex-shrink:0}
 .launcher-close:active{background:#eaeaec}
+/* 强制隐藏（Logo/日历 显示开关用，优先级高于收起态） */
+.force-hide{display:none !important}
+/* 图标形状：圆角矩形 */
+.icon-shape-rounded .category-item .circle{border-radius:14px}
+/* 设置分组分隔 */
+.launcher-divider{display:flex;align-items:center;gap:8px;margin:8px 4px 2px;font-size:.66rem;color:#aaa;font-weight:600;letter-spacing:.5px}
+.launcher-divider::before,.launcher-divider::after{content:"";flex:1;height:1px;background:#eee}
+/* 图标形状分段选择 */
+.lr-seg{display:flex;border:1px solid #e2e2e2;border-radius:8px;overflow:hidden;flex-shrink:0}
+.lr-seg button{border:0;background:#fff;padding:6px 11px;font-size:.78rem;color:#666;cursor:pointer;transition:background .15s,color .15s}
+.lr-seg button.active{background:#e8793a;color:#fff}
+.lr-seg button:not(.active):active{background:#f2f2f2}
 </style>
 </head>
 <body>
@@ -426,7 +438,7 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 </div>
 <div class="launcher-menu" id="launcherMenu">
   <div class="launcher-sheet">
-    <div class="launcher-head"><span class="lh-grip"></span>栏目桌面<small class="lh-sub">点击进入栏目 · 右侧开关控制桌面图标显隐</small></div>
+    <div class="launcher-head"><span class="lh-grip"></span>桌面设置<small class="lh-sub">点击栏目进入 · 下方开关控制桌面图标 / Logo / 日历显隐与图标形状</small></div>
     <div class="launcher-list" id="launcherList"></div>
     <div class="launcher-close" id="launcherClose">完成</div>
   </div>
@@ -753,6 +765,9 @@ var AppGrid = (function() {
   var calCollapsed = false;                 // 日历收起状态（持久化）
   var logoCollapsed = false;                // LOGO 收起状态（持久化）
   var hidden = {};                          // 桌面图标显隐：{ iconId: true(隐藏) }
+  var hideLogo = false;                     // Logo 整体显隐（true=隐藏）
+  var hideCal = false;                      // 日历整体显隐（true=隐藏）
+  var iconShape = 'circle';                 // 图标形状：'circle' | 'rounded'
   var drag = null;                         // 拖拽态
   var lpTimer = null, lpFired = false, startX = 0, startY = 0, moved = false;
   var LONG_PRESS = 420, MOVE_TOL = 10;
@@ -812,8 +827,26 @@ var AppGrid = (function() {
   function isHidden(id) { return !!hidden[id]; }
   function setHidden(id, val, silent) { hidden[id] = !!val; render(); saveLayout(silent); }
 
+  // Logo / 日历 整体显隐（true=隐藏，优先级高于收起态）
+  function applyVisibility() {
+    var lo = $('topRightLogo'), lm = $('logoMini');
+    if (lo) lo.classList.toggle('force-hide', hideLogo);
+    if (lm) lm.classList.toggle('force-hide', hideLogo);
+    var al = $('almanac'), am = $('almanacMini');
+    if (al) al.classList.toggle('force-hide', hideCal);
+    if (am) am.classList.toggle('force-hide', hideCal);
+  }
+  function isHideLogo() { return !!hideLogo; }
+  function isHideCal() { return !!hideCal; }
+  function setHideLogo(v, silent) { hideLogo = !!v; applyVisibility(); saveLayout(silent); }
+  function setHideCal(v, silent) { hideCal = !!v; applyVisibility(); saveLayout(silent); }
+  // 图标形状：'circle' | 'rounded'
+  function applyShape() { document.body.classList.toggle('icon-shape-rounded', iconShape === 'rounded'); }
+  function getIconShape() { return iconShape; }
+  function setIconShape(v, silent) { iconShape = (v === 'rounded') ? 'rounded' : 'circle'; applyShape(); saveLayout(silent); }
+
   function defaultCells() { var c = new Array(TOTAL).fill(null); ICONS.forEach(function (id, i) { if (i < TOTAL) c[i] = id; }); return c; }
-  function loadLocal() { try { var s = localStorage.getItem(LS_LAYOUT); if (s) { var o = parseLayout(s); if (o) { calCollapsed = !!o.calendarCollapsed; logoCollapsed = !!o.logoCollapsed; if (o.hidden) applyHidden(o.hidden); return o.cells; } } } catch (e) {} return null; }
+  function loadLocal() { try { var s = localStorage.getItem(LS_LAYOUT); if (s) { var o = parseLayout(s); if (o) { calCollapsed = !!o.calendarCollapsed; logoCollapsed = !!o.logoCollapsed; hideLogo = !!o.hideLogo; hideCal = !!o.hideCal; iconShape = (o.iconShape === 'rounded') ? 'rounded' : 'circle'; if (o.hidden) applyHidden(o.hidden); return o.cells; } } } catch (e) {} return null; }
   function applyCells(arr) { for (var i = 0; i < TOTAL; i++) cells[i] = (arr && arr[i]) ? arr[i] : null; }
 
   // ---------- 渲染 ----------
@@ -951,7 +984,7 @@ var AppGrid = (function() {
     window.__gridToastT = setTimeout(function () { t.classList.remove('show'); }, 2400);
   }
   function saveLayout(silent) {
-    var data = { v: 1, cells: cells.slice(), calendarCollapsed: calCollapsed, logoCollapsed: logoCollapsed, hidden: hidden, updatedAt: Date.now() };
+    var data = { v: 1, cells: cells.slice(), calendarCollapsed: calCollapsed, logoCollapsed: logoCollapsed, hideLogo: hideLogo, hideCal: hideCal, iconShape: iconShape, hidden: hidden, updatedAt: Date.now() };
     var u = getWalineUser();
     if (u) { pushCloud(data, silent); }
     else {
@@ -979,7 +1012,7 @@ var AppGrid = (function() {
         var records = (resp.data && resp.data.data) || [];
         var found = null;
         for (var i = 0; i < records.length; i++) {
-          try { var rec = records[i]; var obj = parseLayout(rec.orig || rec.comment || ''); if (obj) { var o2 = parseInt(rec.objectId, 10) || 0; if (!found || o2 > found.oid) found = { oid: o2, cells: obj.cells, calendarCollapsed: !!obj.calendarCollapsed, logoCollapsed: !!obj.logoCollapsed, hidden: obj.hidden || {} }; } } catch (e) {}
+          try { var rec = records[i]; var obj = parseLayout(rec.orig || rec.comment || ''); if (obj) { var o2 = parseInt(rec.objectId, 10) || 0; if (!found || o2 > found.oid) found = { oid: o2, cells: obj.cells, calendarCollapsed: !!obj.calendarCollapsed, logoCollapsed: !!obj.logoCollapsed, hideLogo: !!obj.hideLogo, hideCal: !!obj.hideCal, iconShape: (obj.iconShape === 'rounded') ? 'rounded' : 'circle', hidden: obj.hidden || {} }; } } catch (e) {}
         }
         return found;
       });
@@ -990,17 +1023,16 @@ var AppGrid = (function() {
     var u = getWalineUser();
     if (u) {
       applyCells(loadLocal() || defaultCells()); // 先以本地/默认渲染，避免空白等待
-      applyFold();
-      render();
-      fetchCloud().then(function (res) { if (res && res.cells) { applyCells(res.cells); calCollapsed = res.calendarCollapsed; logoCollapsed = res.logoCollapsed; if (res.hidden) applyHidden(res.hidden); applyFold(); render(); } });
+      applyFold(); applyVisibility(); applyShape(); render();
+      fetchCloud().then(function (res) { if (res && res.cells) { applyCells(res.cells); calCollapsed = res.calendarCollapsed; logoCollapsed = res.logoCollapsed; hideLogo = res.hideLogo; hideCal = res.hideCal; iconShape = res.iconShape; if (res.hidden) applyHidden(res.hidden); applyFold(); applyVisibility(); applyShape(); render(); } });
     } else {
-      applyCells(loadLocal() || defaultCells()); applyFold(); render();
+      applyCells(loadLocal() || defaultCells()); applyFold(); applyVisibility(); applyShape(); render();
     }
   }
   // 登录后从云端拉取（若云端无记录则保留本地缓存）
   function syncCloud() {
     var u = getWalineUser(); if (!u) return;
-    fetchCloud().then(function (res) { if (res && res.cells) { applyCells(res.cells); calCollapsed = res.calendarCollapsed; logoCollapsed = res.logoCollapsed; if (res.hidden) applyHidden(res.hidden); applyFold(); render(); } });
+    fetchCloud().then(function (res) { if (res && res.cells) { applyCells(res.cells); calCollapsed = res.calendarCollapsed; logoCollapsed = res.logoCollapsed; hideLogo = res.hideLogo; hideCal = res.hideCal; iconShape = res.iconShape; if (res.hidden) applyHidden(res.hidden); applyFold(); applyVisibility(); applyShape(); render(); } });
   }
 
   // 面板（诗词/今日/星象/日程/文化）打开时隐藏宫格，关闭时恢复
@@ -1019,7 +1051,7 @@ var AppGrid = (function() {
 
   function init() { cacheBtns(); attachDrag(); loadLayout(); bindVisibility(); }
 
-  return { init: init, syncCloud: syncCloud, setFold: setFold, setHidden: setHidden, isHidden: isHidden };
+  return { init: init, syncCloud: syncCloud, setFold: setFold, setHidden: setHidden, isHidden: isHidden, setHideLogo: setHideLogo, isHideLogo: isHideLogo, setHideCal: setHideCal, isHideCal: isHideCal, setIconShape: setIconShape, getIconShape: getIconShape };
 })();
 AppGrid.init();
 
@@ -1035,6 +1067,7 @@ AppGrid.init();
 
   function buildList() {
     list.innerHTML = '';
+    // 五个栏目：点击进入 / 右侧开关控制桌面图标显隐
     ICONS.forEach(function (id) {
       var btn = document.getElementById(id);
       if (!btn) return;
@@ -1056,6 +1089,40 @@ AppGrid.init();
         '<label class="plan-switch"><input type="checkbox" ' + (hd ? '' : 'checked') + '><span class="slider"></span></label>';
       list.appendChild(row);
     });
+    // 分隔：显示设置
+    var d1 = document.createElement('div');
+    d1.className = 'launcher-divider'; d1.textContent = '显示设置';
+    list.appendChild(d1);
+    var logoShown = AppGrid.isHideLogo ? !AppGrid.isHideLogo() : true;
+    var calShown = AppGrid.isHideCal ? !AppGrid.isHideCal() : true;
+    addToggleRow('hideLogo', 'Logo', logoShown, logoShown ? '显示' : '已隐藏');
+    addToggleRow('hideCal', '日历', calShown, calShown ? '显示' : '已隐藏');
+    // 分隔：图标形状
+    var d2 = document.createElement('div');
+    d2.className = 'launcher-divider'; d2.textContent = '图标形状';
+    list.appendChild(d2);
+    var shape = (AppGrid.getIconShape && AppGrid.getIconShape()) || 'circle';
+    var srow = document.createElement('div');
+    srow.className = 'launcher-row';
+    srow.dataset.setting = 'iconShape';
+    srow.innerHTML =
+      '<span class="lr-name" style="flex:1">图标形状</span>' +
+      '<span class="lr-seg">' +
+        '<button type="button" data-shape="circle" class="' + (shape === 'circle' ? 'active' : '') + '">圆形</button>' +
+        '<button type="button" data-shape="rounded" class="' + (shape === 'rounded' ? 'active' : '') + '">圆角矩形</button>' +
+      '</span>';
+    list.appendChild(srow);
+  }
+  function addToggleRow(key, name, checked, stateText) {
+    var row = document.createElement('div');
+    row.className = 'launcher-row';
+    row.dataset.setting = key;
+    row.innerHTML =
+      '<span class="lr-dot" style="background:#8a8a8a">⚙</span>' +
+      '<span class="lr-name">' + name + '</span>' +
+      '<span class="lr-state">' + stateText + '</span>' +
+      '<label class="plan-switch"><input type="checkbox" ' + (checked ? 'checked' : '') + '><span class="slider"></span></label>';
+    list.appendChild(row);
   }
   function openMenu() { buildList(); menu.classList.add('show'); }
   function closeMenu() { menu.classList.remove('show'); }
@@ -1067,26 +1134,45 @@ AppGrid.init();
   menu.addEventListener('click', function (e) { if (e.target === menu) closeMenu(); });
   if (closeBtn) closeBtn.addEventListener('click', closeMenu);
 
-  // 行点击：进入栏目（点开关不跳转，交给 change 处理）
+  // 行点击：图标形状分段切换 / 进入栏目（点开关不跳转）
   list.addEventListener('click', function (e) {
+    var segBtn = e.target.closest ? e.target.closest('.lr-seg button') : null;
+    if (segBtn) {
+      var shape = segBtn.dataset.shape;
+      if (AppGrid.setIconShape) {
+        AppGrid.setIconShape(shape, false);
+        var seg = segBtn.parentNode;
+        if (seg) { var btns = seg.querySelectorAll('button'); for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('active', btns[i] === segBtn); }
+      }
+      return;
+    }
     var row = e.target.closest ? e.target.closest('.launcher-row') : null;
     if (!row) return;
     if (e.target.closest('.plan-switch')) return;
     var url = row.dataset.url;
     if (url) window.location.replace(url);
   });
-  // 开关切换：控制桌面按钮显隐（checked=显示；不勾=隐藏）
+  // 开关切换：桌面图标显隐 / Logo 显隐 / 日历显隐（checked=显示；不勾=隐藏）
   list.addEventListener('change', function (e) {
     var input = e.target;
     if (!input || input.type !== 'checkbox') return;
     var row = input.closest ? input.closest('.launcher-row') : null;
     if (!row) return;
-    var id = row.dataset.id;
-    var show = input.checked; // 勾选=显示桌面按钮
-    if (AppGrid.setHidden) {
-      AppGrid.setHidden(id, !show, false);
-      var st = row.querySelector('.lr-state');
-      if (st) st.textContent = show ? '桌面显示' : '已隐藏';
+    var setting = row.dataset.setting;
+    if (setting === 'hideLogo') {
+      var showLogo = input.checked;
+      if (AppGrid.setHideLogo) { AppGrid.setHideLogo(!showLogo, false); var st = row.querySelector('.lr-state'); if (st) st.textContent = showLogo ? '显示' : '已隐藏'; }
+    } else if (setting === 'hideCal') {
+      var showCal = input.checked;
+      if (AppGrid.setHideCal) { AppGrid.setHideCal(!showCal, false); var st2 = row.querySelector('.lr-state'); if (st2) st2.textContent = showCal ? '显示' : '已隐藏'; }
+    } else {
+      var id = row.dataset.id;
+      var show = input.checked; // 勾选=显示桌面按钮
+      if (AppGrid.setHidden) {
+        AppGrid.setHidden(id, !show, false);
+        var st3 = row.querySelector('.lr-state');
+        if (st3) st3.textContent = show ? '桌面显示' : '已隐藏';
+      }
     }
   });
 })();
