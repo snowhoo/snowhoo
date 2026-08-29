@@ -82,7 +82,7 @@ body{display:flex;flex-direction:column}
 /* 分类圆形按钮 */
 /* 栏目按钮：顶部定位，一排 4 个，换行与上行同列对齐，行间距 30px */
 /* ===== 4×5 宫格（首页应用图标，长按拖拽排序） ===== */
-.app-grid{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;grid-template-columns:repeat(4,var(--gcell,72px));grid-template-rows:repeat(5,var(--gcell,72px));gap:var(--ggap,14px);z-index:6;pointer-events:auto;justify-content:center;align-content:center}
+.app-grid{position:fixed;left:50%;top:120px;transform:translateX(-50%);display:grid;grid-template-columns:repeat(4,var(--gcell,72px));grid-template-rows:repeat(5,var(--gcell,72px));gap:var(--ggap,14px);z-index:6;pointer-events:auto;justify-content:center;align-content:start}
 .app-grid.hide{display:none}
 /* 小屏（矮屏）收窄格子，避免宫格压到「探索」/日历区域 */
 @media (max-height:640px){.app-grid{--gcell:60px;--ggap:8px}}
@@ -193,6 +193,9 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 /* 阴阳（明暗模式）全屏遮罩：已取消 30% 黑色遮罩，背景图原色显示；不拦截点击 */
 .yin-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:transparent;z-index:4000;pointer-events:none;display:none}
 .yin-mask.show{display:block;background:transparent}
+/* 面板（诗词/今日/星象/任务计划/文化）打开时的 30% 黑色磨砂遮罩：盖在背景图之上、面板之下 */
+#panelMask{position:fixed;inset:0;z-index:4;background:rgba(0,0,0,.3);opacity:0;visibility:hidden;transition:opacity .4s ease,visibility .4s;pointer-events:none}
+#panelMask.show{opacity:1;visibility:visible}
 /* 阴阳按钮锁定态（阴阳镜未解锁）：右上角锁图标 + 灰化 */
 .top-left-badges .badge .lock-overlay{position:absolute;top:-4px;right:-22px;z-index:2;display:none;align-items:center;justify-content:center;width:24px;height:24px;pointer-events:auto;background:transparent;border-radius:0;padding:0;margin:0}
 .top-left-badges .badge .lock-overlay svg{width:14px;height:14px;stroke:#e94560;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -416,6 +419,8 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 
 <!-- 阴阳（明暗模式）全屏遮罩：已取消 30% 黑色遮罩（保留空层备用），pointer-events:none 不影响操作 -->
 <div class="yin-mask" id="yinMask"></div>
+<!-- 面板打开时的 30% 黑色磨砂遮罩（由面板状态观察器切换 .show） -->
+<div id="panelMask"></div>
 
 <div class="bottom-panel">
   <div class="year-bar"><div class="year-bar-fill" id="yearFill"></div></div>
@@ -529,7 +534,7 @@ setDefaultBg();
 
 // 面板状态观察：诗词/今日/星象/日程/节日打开时隐藏五个栏目按钮 + 背景切换磨砂半透明（平时背景清晰）
 (function(){
-  var list = document.getElementById('categoryList');
+  var list = document.getElementById('appGrid');
   if (!list) return;
   function update() {
     var pb = document.getElementById('poetryBtn');
@@ -546,6 +551,14 @@ setDefaultBg();
     // 磨砂半透明背景：仅面板打开时生效
     var ia = document.querySelector('.image-area');
     if (ia) ia.classList.toggle('frost', open);
+    // 30% 黑色磨砂遮罩：仅诗词/今日/星象/任务计划/文化 五个面板打开时生效（不含探索）
+    var panelOpen = !!(document.querySelector('.plan-panel.show')
+      || (pb && pb.classList.contains('selected'))
+      || (hb && hb.classList.contains('selected'))
+      || (cb && cb.classList.contains('selected'))
+      || (fb && fb.classList.contains('selected')));
+    var pm = document.getElementById('panelMask');
+    if (pm) pm.classList.toggle('show', panelOpen);
   }
   var ids = ['planPanel', 'poetryBtn', 'historyBtn', 'constellationBtn', 'festivalBtn'];
   var obs = window.MutationObserver ? new MutationObserver(update) : null;
@@ -1014,7 +1027,7 @@ document.addEventListener('click', function(e) {
     area.style.overflowY = '';
   }
   // 直接恢复桌面（栏目按钮显示 + 背景磨砂移除），不依赖 MutationObserver
-  var cl = document.getElementById('categoryList');
+  var cl = document.getElementById('appGrid');
   if (cl) cl.classList.remove('hide');
   var ia = document.querySelector('.image-area');
   if (ia) ia.classList.remove('frost');
