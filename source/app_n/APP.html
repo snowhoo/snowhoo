@@ -701,11 +701,13 @@ function appSpeak(text, title) {
   document.head.appendChild(s);
 }
 // 🎧 按钮点击委托（内容区 + 歌诀弹窗）：朗读对应文本，并阻止冒泡（避免触发面板关闭）
+// 注意：喇叭图标是 .tts-btn 内的 <svg>/<path>，点击时 e.target 是 svg/path 而非 span，
+// 必须用 closest('.tts-btn') 向上找到按钮节点，否则按钮点了没反应（历史 bug）。
 document.addEventListener('click', function(e) {
-  var t = e.target;
-  if (t && t.classList && t.classList.contains('tts-btn')) {
+  var btn = (e.target && e.target.closest) ? e.target.closest('.tts-btn') : null;
+  if (btn) {
     e.stopPropagation();
-    appSpeak(t.getAttribute('data-text') || '', t.getAttribute('data-title') || '');
+    appSpeak(btn.getAttribute('data-text') || '', btn.getAttribute('data-title') || '');
   }
 });
 
