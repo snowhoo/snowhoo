@@ -1144,7 +1144,7 @@ AppGrid.init();
       '<span class="lr-name">' + name + '</span>' +
       '<span class="lr-toggles">' +
         '<span class="lr-tog lr-tog-show"><label class="plan-switch" title="显示"><input type="checkbox" data-toggle="show" ' + (shown ? 'checked' : '') + '><span class="slider"></span></label><span class="lr-cap">显示</span></span>' +
-        '<span class="lr-tog lr-tog-fold"><label class="plan-switch" title="缩边"><input type="checkbox" data-toggle="fold" ' + (folded ? '' : 'checked') + '><span class="slider"></span></label><span class="lr-cap">缩边</span></span>' +
+        '<span class="lr-tog lr-tog-fold"><label class="plan-switch" title="缩边"><input type="checkbox" data-toggle="fold" ' + (folded ? 'checked' : '') + '><span class="slider"></span></label><span class="lr-cap">缩边</span></span>' +
       '</span>';
     // 显示未开启时，缩边开关灰显禁用
     if (!shown) {
@@ -1218,9 +1218,9 @@ AppGrid.init();
         else { if (AppGrid.setHideCal) AppGrid.setHideCal(!showOn, false); }
         syncFoldState(row); // 显示状态变化时同步缩边开关禁用态
       } else if (t === 'fold') {
-        var expanded = input.checked; // 勾选=展开（不缩边）
-        if (setting === 'logo') { if (AppGrid.setFold) AppGrid.setFold(null, !expanded, false); }
-        else { if (AppGrid.setFold) AppGrid.setFold(!expanded, null, false); }
+        var doFold = input.checked; // 勾选=缩边
+        if (setting === 'logo') { if (AppGrid.setFold) AppGrid.setFold(null, doFold, false); }
+        else { if (AppGrid.setFold) AppGrid.setFold(doFold, null, false); }
       }
     } else {
       var id = row.dataset.id;
