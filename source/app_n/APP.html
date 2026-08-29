@@ -81,8 +81,18 @@ body{display:flex;flex-direction:column}
 
 /* 分类圆形按钮 */
 /* 栏目按钮：顶部定位，一排 4 个，换行与上行同列对齐，行间距 30px */
-.category-list{position:absolute;left:0;right:0;top:120px;display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:center;padding:10px 6px;pointer-events:none;z-index:5;row-gap:30px}
-.category-list.hide{display:none}
+/* ===== 4×5 宫格（首页应用图标，长按拖拽排序） ===== */
+.app-grid{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;grid-template-columns:repeat(4,72px);grid-template-rows:repeat(5,72px);gap:14px;z-index:6;pointer-events:auto;justify-content:center;align-content:center}
+.app-grid.hide{display:none}
+.grid-cell{display:flex;align-items:center;justify-content:center;border-radius:16px;min-height:72px}
+.grid-cell.drop-target{outline:2px dashed rgba(255,255,255,.7);background:rgba(255,255,255,.06)}
+.app-grid .category-item{flex:initial;width:64px;touch-action:none;-webkit-tap-highlight-color:transparent}
+.category-item.dragging-src{opacity:.3}
+.drag-clone{position:fixed;z-index:13000;pointer-events:none;opacity:.92;transform:scale(1.1)}
+.drag-clone .circle{box-shadow:0 10px 28px rgba(0,0,0,.45)}
+body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
+.grid-toast{position:fixed;bottom:140px;left:50%;transform:translateX(-50%);z-index:13000;background:rgba(18,18,26,.92);color:#fff;font-size:.72rem;padding:8px 18px;border-radius:18px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
+.grid-toast.show{opacity:1}
 .category-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:transform .25s;user-select:none;-webkit-user-select:none;border:none;background:none;padding:0;min-width:0;pointer-events:auto;opacity:.95;flex:0 0 25%}
 .category-item:active{transform:scale(.88)}
 .category-item .circle{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.18);transition:transform .25s,box-shadow .25s;background:var(--cat-color);color:#fff;font-size:1.1rem;font-weight:600;border:1.5px solid rgba(255,255,255,.45);text-shadow:0 1px 3px rgba(0,0,0,.3)}
@@ -350,8 +360,8 @@ body{display:flex;flex-direction:column}
   <div class="logo-mini" id="logoMini"><svg viewBox="0 0 24 24"><path d="M15 4L7 12l8 8"/></svg></div>
 </div>
 
-<!-- 五个栏目按钮：body 层底部弹性容器（手机 APP 图标栏样式，fixed 视口定位，不随背景/阴阳变化） -->
-<div class="category-list" id="categoryList">
+<!-- 五个栏目按钮：4×5 宫格首页（手机 APP 图标样式，长按可拖拽排序） -->
+<div class="app-grid" id="appGrid">
   <button class="category-item active" id="storyBtn" data-url="https://snowhoo.net/app_n/reader.html" title="小红故事" style="--cat-color:#e94560">
     <span class="circle">小</span>
     <span class="label">小红故事</span>
@@ -406,6 +416,9 @@ body{display:flex;flex-direction:column}
   <div class="year-bar"><div class="year-bar-fill" id="yearFill"></div></div>
   <div class="year-bar-text" id="yearBarText"><span id="yearText"></span></div>
 </div>
+
+<!-- 宫格布局提示 toast -->
+<div class="grid-toast" id="gridToast"></div>
 
 <!-- 评论弹窗 -->
 <div class="comment-overlay" id="commentOverlay">
@@ -658,14 +671,230 @@ document.querySelector('.welcome').addEventListener('click', function() {
 })();
 
 // 分类点击：直接跳转栏目页（已去除解锁流程）
+// 注意：拖拽落点后可能合成一次 click，用 __gridDragged 标记拦截，避免误跳转
 var items = document.querySelectorAll('.category-item');
 items.forEach(function(el) {
-  el.addEventListener('click', function() {
+  el.addEventListener('click', function(e) {
+    if (window.__gridDragged) { window.__gridDragged = false; e.preventDefault(); e.stopPropagation(); return; }
     // 用 replace 跳转：不在 WebView 历史栈留下本页，
     // 栏目页内系统返回手势误触时不会 goBack 跳回首页（配合原生返回守护）
     window.location.replace(el.dataset.url);
   });
 });
+
+// ===== 首页 4×5 宫格：长按拖拽排序 + 布局持久化（登录写库/未登录写本地缓存） =====
+var AppGrid = (function() {
+  var COLS = 4, ROWS = 5, TOTAL = COLS * ROWS;
+  var ICONS = ['storyBtn', 'yeduBtn', 'zjszBtn', 'newsBtn', 'tvBtn']; // 5 个栏目图标
+  var LS_LAYOUT = 'snowhoo_appgrid_layout';
+  var CLOUD_BASE = 'https://waline.snowhoo.net';
+  var CLOUD_PATH = '/app-layout/';
+  var cells = new Array(TOTAL).fill(null); // 每格 = iconId 或 null
+  var oid = 0;                              // 云端记录 objectId（仅运行时引用）
+  var drag = null;                         // 拖拽态
+  var lpTimer = null, lpFired = false, startX = 0, startY = 0, moved = false;
+  var LONG_PRESS = 420, MOVE_TOL = 10;
+  function $(id) { return document.getElementById(id); }
+
+  // ---------- 登录态（与 PlanSvc/GAME 同套逻辑） ----------
+  function getWalineUser() {
+    try {
+      var keys = ['WALINE_USER', '@waline/user', 'waline_user'];
+      var user = null;
+      for (var i = 0; i < keys.length; i++) {
+        try { var v = localStorage.getItem(keys[i]); if (v) { user = JSON.parse(v); if (user && (user.display_name || user.nick || user.name)) break; } } catch (e) { user = null; }
+      }
+      if (!user) { try { var sv = sessionStorage.getItem('WALINE_USER') || sessionStorage.getItem('@waline/user'); if (sv) { user = JSON.parse(sv); if (!user || !(user.display_name || user.nick || user.name)) user = null; } } catch (e) { user = null; } }
+      if (!user) return null;
+      user.display_name = (user.display_name || user.nick || user.name || '').trim();
+      if (!user.display_name) return null;
+      user.email = user.email || user.mail || '';
+      return user;
+    } catch (e) { return null; }
+  }
+  function cloudPath(u) { var key = (u.email || u.display_name || 'guest').trim(); return CLOUD_PATH + encodeURIComponent(key); }
+  function parseLayout(raw) {
+    if (!raw) return null;
+    var s = String(raw).replace(/<[^>]*>/g, '').replace(/[\u201C\u201D]/g, '"').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+    var st = s.indexOf('{'), en = s.lastIndexOf('}');
+    if (st >= 0 && en > st) s = s.slice(st, en + 1);
+    try { var o = JSON.parse(s); return (o && o.v === 1 && o.cells && o.cells.length === TOTAL) ? o : null; } catch (e) { return null; }
+  }
+
+  function defaultCells() { var c = new Array(TOTAL).fill(null); ICONS.forEach(function (id, i) { if (i < TOTAL) c[i] = id; }); return c; }
+  function loadLocal() { try { var s = localStorage.getItem(LS_LAYOUT); if (s) { var o = parseLayout(s); if (o) return o.cells; } } catch (e) {} return null; }
+  function applyCells(arr) { for (var i = 0; i < TOTAL; i++) cells[i] = (arr && arr[i]) ? arr[i] : null; }
+
+  // ---------- 渲染 ----------
+  function render() {
+    var grid = $('appGrid'); if (!grid) return;
+    grid.innerHTML = '';
+    for (var i = 0; i < TOTAL; i++) {
+      var cell = document.createElement('div');
+      cell.className = 'grid-cell';
+      cell.dataset.cell = i;
+      if (cells[i]) { var btn = $(cells[i]); if (btn) { btn.classList.add('in-grid'); cell.appendChild(btn); } }
+      grid.appendChild(cell);
+    }
+  }
+
+  // ---------- 拖拽 ----------
+  function cellIndexUnder(x, y) {
+    if (drag && drag.clone) drag.clone.style.display = 'none';
+    var el = document.elementFromPoint(x, y);
+    if (drag && drag.clone) drag.clone.style.display = '';
+    if (!el) return null;
+    var cell = el.closest ? el.closest('.grid-cell') : null;
+    return cell ? parseInt(cell.dataset.cell, 10) : null;
+  }
+  function highlightCell(idx) {
+    var prev = document.querySelector('.grid-cell.drop-target'); if (prev) prev.classList.remove('drop-target');
+    if (idx != null) { var c = document.querySelector('.grid-cell[data-cell="' + idx + '"]'); if (c) c.classList.add('drop-target'); }
+  }
+  function startDrag(btn, iconId, fromCell) {
+    var r = btn.getBoundingClientRect();
+    var clone = btn.cloneNode(true);
+    clone.className = 'category-item drag-clone';
+    clone.style.width = r.width + 'px'; clone.style.height = r.height + 'px';
+    clone.style.left = (r.left + r.width / 2) + 'px'; clone.style.top = (r.top + r.height / 2) + 'px';
+    clone.style.margin = '0'; clone.style.transform = 'translate(-50%,-50%) scale(1.1)';
+    document.body.appendChild(clone);
+    drag = { iconId: iconId, fromCell: fromCell, clone: clone, btn: btn, w: r.width, h: r.height };
+    btn.classList.add('dragging-src');
+    document.body.classList.add('grid-dragging');
+    moveClone(startX, startY);
+  }
+  function moveClone(x, y) { if (!drag) return; drag.clone.style.left = x + 'px'; drag.clone.style.top = y + 'px'; }
+  function onDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    window.__gridDragged = false; // 清掉上一次可能残留的拦截标记
+    var btn = e.currentTarget;
+    startX = e.clientX; startY = e.clientY; moved = false; lpFired = false;
+    var fromCell = cells.indexOf(btn.id);
+    lpTimer = setTimeout(function () { lpFired = true; startDrag(btn, btn.id, fromCell); }, LONG_PRESS);
+    document.addEventListener('pointermove', onMove, { passive: false });
+    document.addEventListener('pointerup', onUp, { passive: false });
+    document.addEventListener('pointercancel', onUp, { passive: false });
+  }
+  function onMove(e) {
+    var dx = e.clientX - startX, dy = e.clientY - startY;
+    if (!drag) {
+      if (Math.hypot(dx, dy) > MOVE_TOL) { moved = true; clearTimeout(lpTimer); } // 长按前移动→取消拖拽意图（视为点击/滑动）
+      return;
+    }
+    e.preventDefault(); moved = true;
+    moveClone(e.clientX, e.clientY);
+    highlightCell(cellIndexUnder(e.clientX, e.clientY));
+  }
+  function onUp(e) {
+    clearTimeout(lpTimer);
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onUp);
+    if (drag) { drop(e); }
+  }
+  function drop(e) {
+    var target = cellIndexUnder(e.clientX, e.clientY);
+    document.body.classList.remove('grid-dragging');
+    highlightCell(null);
+    var src = drag.fromCell, icon = drag.iconId, btn = drag.btn;
+    if (drag.clone) drag.clone.remove();
+    btn.classList.remove('dragging-src');
+    if (target != null && target !== src) {
+      var occupant = cells[target];
+      cells[target] = icon;
+      cells[src] = occupant || null;
+      render();
+      saveLayout();
+    } else {
+      render(); // 落回原位
+    }
+    window.__gridDragged = true; // 拦截随后可能合成的 click 跳转
+    drag = null;
+  }
+  function attachDrag() {
+    ICONS.forEach(function (id) {
+      var btn = $(id); if (btn && !btn._gridBound) { btn._gridBound = true; btn.addEventListener('pointerdown', onDown); }
+    });
+  }
+
+  // ---------- 持久化 ----------
+  function showToast(msg) {
+    var t = $('gridToast'); if (!t) return;
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(window.__gridToastT);
+    window.__gridToastT = setTimeout(function () { t.classList.remove('show'); }, 2400);
+  }
+  function saveLayout() {
+    var data = { v: 1, cells: cells.slice(), updatedAt: Date.now() };
+    var u = getWalineUser();
+    if (u) { pushCloud(data); }
+    else {
+      try { localStorage.setItem(LS_LAYOUT, JSON.stringify(data)); } catch (e) {}
+      showToast('布局已缓存，若需永久保存，请先登录');
+    }
+  }
+  function pushCloud(data) {
+    var u = getWalineUser(); if (!u) return;
+    var token = u.token || ''; if (!token) { try { var s = JSON.parse(localStorage.getItem('WALINE_USER') || '{}'); if (s.token) token = s.token; } catch (e) {} }
+    var payload = JSON.stringify({ comment: JSON.stringify(data), url: cloudPath(u), nick: u.display_name || '游客', mail: u.email || '' });
+    var headers = { 'Content-Type': 'application/json' }; if (token) headers['Authorization'] = 'Bearer ' + token;
+    var req = oid
+      ? fetch(CLOUD_BASE + '/api/comment/' + oid, { method: 'PUT', headers: headers, body: payload })
+      : fetch(CLOUD_BASE + '/api/comment', { method: 'POST', headers: headers, body: payload }).then(function (r) {
+          return r.json().then(function (j) { if (r.ok && j.data && j.data.objectId) oid = parseInt(j.data.objectId, 10); return r; });
+        });
+    req.then(function (r) { showToast(r.ok ? '布局已同步云端' : '云端同步失败'); }).catch(function () { showToast('云端同步失败'); });
+  }
+  function fetchCloud() {
+    var u = getWalineUser(); if (!u) return Promise.resolve(null);
+    var p = fetch(CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(cloudPath(u)))
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (resp) {
+        var records = (resp.data && resp.data.data) || [];
+        var found = null;
+        for (var i = 0; i < records.length; i++) {
+          try { var rec = records[i]; var obj = parseLayout(rec.orig || rec.comment || ''); if (obj) { var o2 = parseInt(rec.objectId, 10) || 0; if (!found || o2 > found.oid) found = { oid: o2, cells: obj.cells }; } } catch (e) {}
+        }
+        return found;
+      });
+    var t = new Promise(function (res, rej) { setTimeout(function () { rej('timeout'); }, 8000); });
+    return Promise.race([p, t]).then(function (f) { if (f) oid = f.oid; return f; }).catch(function () { return null; });
+  }
+  function loadLayout() {
+    var u = getWalineUser();
+    if (u) {
+      applyCells(loadLocal() || defaultCells()); // 先以本地/默认渲染，避免空白等待
+      render();
+      fetchCloud().then(function (res) { if (res && res.cells) { applyCells(res.cells); render(); } });
+    } else {
+      applyCells(loadLocal() || defaultCells()); render();
+    }
+  }
+  // 登录后从云端拉取（若云端无记录则保留本地缓存）
+  function syncCloud() {
+    var u = getWalineUser(); if (!u) return;
+    fetchCloud().then(function (res) { if (res && res.cells) { applyCells(res.cells); render(); } });
+  }
+
+  // 面板（诗词/今日/星象/日程/文化）打开时隐藏宫格，关闭时恢复
+  function bindVisibility() {
+    var targets = ['contentArea', 'planPanel'];
+    function update() {
+      var open = targets.some(function (id) { var el = $(id); return el && el.classList.contains('show'); });
+      var g = $('appGrid'); if (g) g.classList.toggle('hide', !!open);
+    }
+    targets.forEach(function (id) {
+      var el = $(id); if (el && window.MutationObserver) new MutationObserver(update).observe(el, { attributes: true, attributeFilter: ['class'] });
+    });
+    update();
+  }
+
+  function init() { attachDrag(); loadLayout(); bindVisibility(); }
+
+  return { init: init, syncCloud: syncCloud };
+})();
+AppGrid.init();
 
 // 关闭所有背景覆盖层（诗词/星象），安全可重复调用
 function closeAllOverlays() {
@@ -1845,6 +2074,7 @@ var commentOverlay = document.getElementById('commentOverlay');
             // 不直接调 loadFromServer，走 checkLogin 统一路径
             // 避免与 init/定时器 双重调用导致 race condition
             GAME.checkLogin();
+            if (window.AppGrid) window.AppGrid.syncCloud(); // 登录后从云端拉取已保存的宫格布局
           }
         },
         onLogout: function() {
