@@ -327,7 +327,7 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 .launcher-row{display:flex;align-items:center;gap:8px;padding:4px 4px;border-radius:8px;cursor:pointer}
 .launcher-row:active{background:#f7f7f7}
 .launcher-row .lr-dot{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#555;font-size:.9rem;font-weight:600;background:transparent;border:1px solid #9a9690;box-shadow:none}
-.launcher-row .lr-dot-badge{background:#8a8a8a;color:#fff;border:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.launcher-row .lr-dot-icon{color:#fff;border:none;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .launcher-row .lr-name{flex:1;font-size:.86rem;color:#333;font-weight:500}
 .launcher-row .lr-state{font-size:.6rem;color:#bbb;flex-shrink:0;margin-right:2px}
 /* 强制隐藏（Logo/日历 显示开关用，优先级高于收起态） */
@@ -1193,7 +1193,7 @@ AppGrid.init();
       var row = document.createElement('div'); row.className = 'launcher-row';
       row.dataset.id = id;
       row.innerHTML =
-        '<span class="lr-dot" style="background:' + color + '">' + ch + '</span>' +
+        '<span class="lr-dot lr-dot-icon" style="background:' + color + '">' + ch + '</span>' +
         '<span class="lr-name">' + name + '</span>' +
         '<label class="plan-switch"><input type="checkbox" ' + (hd ? '' : 'checked') + '><span class="slider"></span></label>';
       rows.push(row);
@@ -1241,7 +1241,7 @@ AppGrid.init();
     var row = document.createElement('div'); row.className = 'launcher-row';
     row.dataset.badge = badgeId;
     row.innerHTML =
-      '<span class="lr-dot lr-dot-badge">' + (ch || '⚙') + '</span>' +
+      '<span class="lr-dot">' + (ch || '⚙') + '</span>' +
       '<span class="lr-name">' + name + '</span>' +
       '<label class="plan-switch"><input type="checkbox" ' + (hidden ? '' : 'checked') + '><span class="slider"></span></label>';
     return row;
