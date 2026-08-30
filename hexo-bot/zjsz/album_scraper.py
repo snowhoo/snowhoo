@@ -253,23 +253,41 @@ def extract_article(block: str, url: str) -> dict:
 
 
 def fetch_page(url: str):
-    """请求文章页面，返回 HTML 文本"""
-    resp = requests.get(url, headers=HEADERS, timeout=30)
-    resp.encoding = "utf-8"
-    return resp.text
+    """请求文章页面，返回 HTML 文本。
+    微信对首次/频繁请求常返回“挑战页”（体量小、无 cgiDataNew），
+    这里重试几次以拿到真实页面，避免被误判为“无数据”而降级成残缺记录。"""
+    text = ""
+    for attempt in range(3):
+        try:
+            resp = requests.get(url, headers=HEADERS, timeout=30)
+            resp.encoding = "utf-8"
+            text = resp.text
+        except Exception as e:
+            log(f"  请求异常(第{attempt+1}次): {e}")
+            text = ""
+        if "cgiDataNew" in text or attempt == 2:
+            return text
+        log(f"  页面返回挑战页，重试 ({attempt+1}/3)...")
+        time.sleep(2)
+    return text
 
 
 # ============================================================
 #  核心：从最新文章向前爬（增量模式）
 # ============================================================
 
-def crawl_forward_from(start_url: str, known_msgids: set) -> list:
+def crawl_forward_from(start_url: str, known_msgids: set, existing: dict = None):
     """
     从 start_url 出发，顺着 next_article_link 一篇篇向前爬。
-    遇到已知 msgid → 停止（数据完整）。
-    返回新爬取的文章列表（已按时间正序排列）。
+    遇到“已知且完整(有 create_time)”的 msgid → 停止（数据完整）。
+    遇到“已知但残缺(缺 create_time)”的 msgid → 重新抓取补全，不中断链条
+    （这是之前卡死的根因：残缺记录被当成“已存在”导致提前结束）。
+    返回 (new_articles, updated_articles)：
+      new_articles    —— 全新文章
+      updated_articles—— 已存在但被补全的文章
     """
     new_articles = []
+    updated_articles = []
     current_url = start_url
     known = set(known_msgids)  # 已知 msgid 集合
     step = 0
@@ -292,30 +310,41 @@ def crawl_forward_from(start_url: str, known_msgids: set) -> list:
         m = re.search(r"mid=(\d+)", next_url)
         next_msgid = m.group(1) if m else ""
 
-        # ★ 核心逻辑：遇到已存在的 → 说明数据已齐全，立即结束
-        if next_msgid in known:
-            log(f"  下一篇 [{next_title[:20] if next_title else ''}] 已存在 → 数据完整，结束")
+        # 已知记录是否残缺（缺 create_time）
+        rec = (existing or {}).get(next_msgid) if next_msgid in known else None
+        incomplete = bool(rec) and not rec.get("create_time")
+        # ★ 核心逻辑：已知且完整 → 数据已齐全，立即结束；残缺 → 继续补全
+        if next_msgid in known and not incomplete:
+            log(f"  下一篇 [{next_title[:20] if next_title else ''}] 已存在且完整 → 数据完整，结束")
             break
 
         step += 1
-        log(f"  [{step}] 发现新文章: {next_title[:25] if next_title else '未知'} (msgid={next_msgid})")
+        log(f"  [{step}] {'补全' if incomplete else '发现新'}文章: {next_title[:25] if next_title else '未知'} (msgid={next_msgid})")
         time.sleep(1.5)
 
-        # 爬取新文章
+        # 爬取文章
         try:
             new_html = fetch_page(next_url)
             new_block, _, _ = parse_cgi_block(new_html)
             if new_block:
                 article = extract_article(new_block, next_url)
                 if article.get("title"):
-                    new_articles.append(article)
                     known.add(next_msgid)
-                    log(f"    ✓ {article['title'][:30]} ({article.get('create_time', '')})")
+                    if incomplete:
+                        updated_articles.append(article)
+                        log(f"    ✓ 已补全 {article['title'][:30]} ({article.get('create_time', '')})")
+                    else:
+                        new_articles.append(article)
+                        log(f"    ✓ {article['title'][:30]} ({article.get('create_time', '')})")
                 else:
                     raise ValueError("title empty")
             else:
                 raise ValueError("no cgi block")
         except Exception:
+            if incomplete:
+                # 残缺记录连补全都失败 → 链条无法继续，到此为止
+                log(f"    ⚠ 残缺记录 {next_msgid} 补全失败，链条终止")
+                break
             # 保底：保留标题和封面
             fallback = {
                 "title": next_title or f"文章{next_msgid}",
@@ -332,7 +361,7 @@ def crawl_forward_from(start_url: str, known_msgids: set) -> list:
 
         current_url = next_url
 
-    return new_articles
+    return new_articles, updated_articles
 
 
 # ============================================================
@@ -504,17 +533,19 @@ def scrape_all(incremental: bool = False, force_content: bool = False, outdir: s
         log(f"最新已知: {newest_title[:25]} ({newest_time})")
 
         known_ids = set(existing.keys())
-        new_articles = crawl_forward_from(newest_url, known_ids)
+        new_articles, updated_articles = crawl_forward_from(newest_url, known_ids, existing)
 
-        if not new_articles:
+        if not new_articles and not updated_articles:
             log("没有新文章，数据已是最新")
             return
 
         # 合并
         for art in new_articles:
             existing[art["msgid"]] = art
+        for art in updated_articles:
+            existing[art["msgid"]] = art
         save_articles(list(existing.values()), outdir)
-        log(f"新增 {len(new_articles)} 篇，总计 {len(existing)} 篇 🎉")
+        log(f"新增 {len(new_articles)} 篇，补全 {len(updated_articles)} 篇，总计 {len(existing)} 篇 🎉")
 
     else:
         # ---- 全量模式：专辑 API + next_article 链 ----
@@ -525,8 +556,10 @@ def scrape_all(incremental: bool = False, force_content: bool = False, outdir: s
         if newest_from_api:
             log(f"开始 follow next_article 链获取更新文章...")
             known_ids = set(all_articles.keys())
-            new_articles = crawl_forward_from(newest_from_api, known_ids)
+            new_articles, updated_articles = crawl_forward_from(newest_from_api, known_ids, all_articles)
             for art in new_articles:
+                all_articles[art["msgid"]] = art
+            for art in updated_articles:
                 all_articles[art["msgid"]] = art
 
         save_articles(list(all_articles.values()), outdir)
