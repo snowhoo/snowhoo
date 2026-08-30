@@ -326,7 +326,7 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
 /* 行（桌面图标 / 徽章 / 组件） */
 .launcher-row{display:flex;align-items:center;gap:8px;padding:4px 4px;border-radius:8px;cursor:pointer}
 .launcher-row:active{background:#f7f7f7}
-.launcher-row .lr-dot{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.9rem;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.launcher-row .lr-dot{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#555;font-size:.9rem;font-weight:600;background:transparent;border:1px solid #9a9690;box-shadow:none}
 .launcher-row .lr-name{flex:1;font-size:.86rem;color:#333;font-weight:500}
 .launcher-row .lr-state{font-size:.6rem;color:#bbb;flex-shrink:0;margin-right:2px}
 /* 强制隐藏（Logo/日历 显示开关用，优先级高于收起态） */
@@ -1240,7 +1240,7 @@ AppGrid.init();
     var row = document.createElement('div'); row.className = 'launcher-row';
     row.dataset.badge = badgeId;
     row.innerHTML =
-      '<span class="lr-dot" style="background:#8a8a8a">' + (ch || '⚙') + '</span>' +
+      '<span class="lr-dot">' + (ch || '⚙') + '</span>' +
       '<span class="lr-name">' + name + '</span>' +
       '<label class="plan-switch"><input type="checkbox" ' + (hidden ? '' : 'checked') + '><span class="slider"></span></label>';
     return row;
@@ -1256,7 +1256,7 @@ AppGrid.init();
     var row = document.createElement('div'); row.className = 'launcher-row';
     row.dataset.comp = elId;
     row.innerHTML =
-      '<span class="lr-dot" style="background:#8a8a8a">' + ch + '</span>' +
+      '<span class="lr-dot">' + ch + '</span>' +
       '<span class="lr-name">' + name + '</span>' +
       '<label class="plan-switch"><input type="checkbox" ' + (hidden ? '' : 'checked') + '><span class="slider"></span></label>';
     return row;
@@ -1267,7 +1267,7 @@ AppGrid.init();
     row.className = 'launcher-row launcher-comp';
     row.dataset.setting = setting;
     row.innerHTML =
-      '<span class="lr-dot" style="background:#8a8a8a">⚙</span>' +
+      '<span class="lr-dot">⚙</span>' +
       '<span class="lr-name">' + name + '</span>' +
       '<span class="lr-toggles">' +
         '<span class="lr-tog lr-tog-show"><label class="plan-switch" title="显示"><input type="checkbox" data-toggle="show" ' + (shown ? 'checked' : '') + '><span class="slider"></span></label><span class="lr-cap">显示</span></span>' +
@@ -1415,8 +1415,15 @@ function closeAllOverlays() {
 // 朗读（tts.js 懒加载）：点击喇叭图标朗读内容（诗词/今日/星象歌诀）
 // 精致简约喇叭图标（扬声器+声波，lucide 风格，1em 与文字同号）
 var TTS_BTN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>';
+// 朗读中（或暂停中）喇叭图标切换为 ⏸（II）；点击即停止
+var TTS_II_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="5" width="3.6" height="14" rx="1.6"/><rect x="13.4" y="5" width="3.6" height="14" rx="1.6"/></svg>';
 function ttsBtnHtml(title, text) {
   return '<span class="tts-btn" data-title="' + title + '" data-text="' + text + '">' + TTS_BTN_SVG + '</span>';
+}
+// 所有喇叭图标随播放状态切换（朗读中=II，停止=喇叭）
+function setAllTtsIcons(active){
+  var btns = document.querySelectorAll('.tts-btn');
+  for (var i = 0; i < btns.length; i++) btns[i].innerHTML = active ? TTS_II_SVG : TTS_BTN_SVG;
 }
 function appSpeak(text, title) {
   function doSpeak(){
@@ -1429,15 +1436,29 @@ function appSpeak(text, title) {
       }
     } catch(e){}
   }
-  if (window.TTS && TTS.version) { doSpeak(); return; }
+  function bindState(){
+    // 注册播放状态钩子：播放/暂停→II，停止→喇叭
+    if (window.TTS && TTS.onPlayState) {
+      TTS.onPlayState(function(st){ setAllTtsIcons(!!(st && (st.playing || st.paused))); });
+    }
+  }
+  // 已在朗读/暂停中 → 点击喇叭即停止（不再重启同一段）；否则开始朗读
+  if (window.TTS && TTS.version) {
+    if (window.TTS.isActive && TTS.isActive()) { TTS.stop(); return; }
+    bindState();
+    doSpeak();
+    return;
+  }
   var s = document.createElement('script');
   s.src = 'tts.js?ts=' + Date.now();
-  s.onload = doSpeak;
+  s.onload = function(){ bindState(); doSpeak(); };
   document.head.appendChild(s);
 }
 // 🎧 按钮点击委托（内容区 + 歌诀弹窗）：朗读对应文本，并阻止冒泡（避免触发面板关闭）
 // 注意：喇叭图标是 .tts-btn 内的 <svg>/<path>，点击时 e.target 是 svg/path 而非 span，
 // 必须用 closest('.tts-btn') 向上找到按钮节点，否则按钮点了没反应（历史 bug）。
+// 关键修复：朗读中（isActive）再点喇叭 = 停止；未朗读 = 开始朗读（之前无论何时都重启同一段，
+// 导致"无法停止"——底部停止条在 APP.html 未挂载不可见，通知栏多数 WebView 也不支持 stop 动作）。
 document.addEventListener('click', function(e) {
   var btn = (e.target && e.target.closest) ? e.target.closest('.tts-btn') : null;
   if (btn) {

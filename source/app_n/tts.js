@@ -1080,6 +1080,8 @@
     },
     stop: stop,
     pause: pauseResume,
-    isSpeaking: function(){ return state.playing; }
+    isSpeaking: function(){ return state.playing; },
+    // 是否有"可停止"的活跃会话（播放中或暂停中均视为活跃；stop 后队列清空→false）
+    isActive: function(){ return state.queue.length > 0; }
   };
 })();
