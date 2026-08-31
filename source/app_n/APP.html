@@ -1201,7 +1201,7 @@ AppGrid.init();
     // 图标形状（移入本分类，无前置圈图、无"形状"文字，仅分段控件）
     var shape = (AppGrid.getIconShape && AppGrid.getIconShape()) || 'circle';
     var sRow = document.createElement('div'); sRow.className = 'launcher-row';
-    sRow.style.paddingLeft = '40px';
+    sRow.style.paddingLeft = '10px';
     sRow.innerHTML =
       '<span class="launcher-shape"><span class="lr-seg">' +
         '<button type="button" data-shape="circle" class="' + (shape === 'circle' ? 'active' : '') + '">圆形</button>' +
