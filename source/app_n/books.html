@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>书架 · 小说阅读</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f4f1ea; color: #2c2a26; display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  }
+  .topbar {
+    flex-shrink: 0; background: #2b2620; color: #f3efe6; padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18); z-index: 5;
+  }
+  .topbar .title { font-size: 1rem; font-weight: 600; letter-spacing: 1px; }
+  .topbar .spacer { flex: 1; }
+  .topbar button {
+    background: rgba(255,255,255,.12); border: none; color: #f3efe6; border-radius: 8px; padding: 6px 12px;
+    font-size: .82rem; cursor: pointer;
+  }
+  .topbar button:active { background: rgba(255,255,255,.25); }
+  .controls { flex-shrink: 0; background: #fff; padding: 10px 14px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid #e7e2d6; }
+  .controls input, .controls select {
+    border: 1px solid #ddd6c7; border-radius: 10px; padding: 8px 12px; font-size: .85rem; outline: none; background: #faf8f3; color: #333;
+  }
+  .controls input[type=text] { flex: 1; min-width: 140px; }
+  .controls select { max-width: 40vw; }
+  .meta { flex-shrink: 0; padding: 4px 14px; font-size: .72rem; color: #8a8475; background: #faf8f3; }
+
+  .view { flex: 1; min-height: 0; display: none; }
+  .view.active { display: flex; }
+
+  /* 书架 */
+  #shelf { flex-direction: column; }
+  #shelfList { overflow-y: auto; padding: 12px; -webkit-overflow-scrolling: touch;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; align-content: start; }
+  .card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.06); cursor: pointer; transition: transform .15s, box-shadow .15s; display: flex; flex-direction: column; }
+  .card:active { transform: translateY(1px); box-shadow: 0 1px 6px rgba(0,0,0,.1); }
+  .card .cover { width: 100%; aspect-ratio: 3/4; object-fit: cover; background: #ddd; }
+  .card .cover.ph { display: flex; align-items: center; justify-content: center; color: #b3ac9c; font-size: 2rem; }
+  .card .info { padding: 8px 10px; }
+  .card .name { font-size: .86rem; font-weight: 600; line-height: 1.3; max-height: 2.6em; overflow: hidden; }
+  .card .au { font-size: .72rem; color: #8a8475; margin-top: 3px; }
+  .card .tag { display: inline-block; font-size: .62rem; color: #b06a2c; background: #fbeede; border-radius: 6px; padding: 1px 6px; margin-top: 5px; }
+  .card .upd { font-size: .66rem; color: #a39c8c; margin-top: 4px; }
+
+  /* 阅读器 */
+  #reader { flex-direction: row; }
+  #chapterPanel { width: 38%; max-width: 360px; min-width: 200px; border-right: 1px solid #e7e2d6; display: flex; flex-direction: column; background: #fbf9f4; }
+  #bookHead { flex-shrink: 0; padding: 12px 14px; border-bottom: 1px solid #e7e2d6; }
+  #bookHead .bt { font-size: 1rem; font-weight: 700; }
+  #bookHead .ba { font-size: .76rem; color: #8a8475; margin-top: 3px; }
+  #bookHead .bi { font-size: .74rem; color: #6f6a5e; margin-top: 6px; line-height: 1.5; max-height: 4.5em; overflow: hidden; }
+  #bookHead .bc { font-size: .7rem; color: #a39c8c; margin-top: 6px; }
+  #chapFilter { flex-shrink: 0; padding: 8px 10px; border-bottom: 1px solid #e7e2d6; }
+  #chapFilter input { width: 100%; border: 1px solid #ddd6c7; border-radius: 8px; padding: 6px 10px; font-size: .8rem; outline: none; }
+  #chapterList { flex: 1; overflow-y: auto; padding: 6px 8px; -webkit-overflow-scrolling: touch; }
+  .chap { display: block; padding: 9px 10px; border-radius: 8px; font-size: .82rem; color: #3a362f; cursor: pointer; border-bottom: 1px solid #f0ece2; }
+  .chap:active, .chap:hover { background: #eee7d8; }
+  .chap.cur { background: #e9c9a3; color: #5a3a16; font-weight: 600; }
+
+  #contentPanel { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  #contentHead { flex-shrink: 0; padding: 12px 18px; border-bottom: 1px solid #e7e2d6; font-size: .95rem; font-weight: 600; background: #fff; display: flex; align-items: center; gap: 10px; }
+  #contentHead .online { margin-left: auto; font-size: .72rem; color: #b06a2c; background: #fbeede; border-radius: 8px; padding: 4px 10px; text-decoration: none; }
+  #content { flex: 1; overflow-y: auto; padding: 18px 20px; line-height: 1.9; font-size: 1.02rem;
+    font-family: "KaiTi", "STKaiti", "楷体", "Songti SC", serif; color: #2a2620; -webkit-overflow-scrolling: touch; max-width: 780px; margin: 0 auto; width: 100%; }
+  #content p { margin: 0 0 1.1em; text-indent: 2em; }
+  #content .empty { color: #8a8475; font-size: .9rem; text-indent: 0; text-align: center; margin-top: 30vh; font-family: sans-serif; }
+  #content .empty a { color: #b06a2c; }
+
+  .loading { padding: 30px; text-align: center; color: #8a8475; font-size: .85rem; }
+  @media (max-width: 640px) {
+    #reader { flex-direction: column; }
+    #chapterPanel { width: 100%; max-width: none; height: 42%; border-right: none; border-bottom: 1px solid #e7e2d6; }
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <button id="backBtn">‹ 返回</button>
+    <span class="title">书架</span>
+    <span class="spacer"></span>
+    <button id="homeBtn">书架</button>
+  </div>
+
+  <div class="controls" id="shelfControls">
+    <input type="text" id="searchInput" placeholder="搜索书名 / 作者 / 标签">
+    <select id="catSelect"><option value="">全部分类</option></select>
+  </div>
+  <div class="meta" id="shelfMeta"></div>
+
+  <!-- 书架 -->
+  <div class="view active" id="shelf">
+    <div id="shelfList"><div class="loading">加载中…</div></div>
+  </div>
+
+  <!-- 阅读器 -->
+  <div class="view" id="reader">
+    <div id="chapterPanel">
+      <div id="bookHead"></div>
+      <div id="chapFilter"><input type="text" id="chapSearch" placeholder="筛选章节（输入关键词）"></div>
+      <div id="chapterList"><div class="loading">加载中…</div></div>
+    </div>
+    <div id="contentPanel">
+      <div id="contentHead"><span id="contentTitle">请选择章节</span></div>
+      <div id="content"><p class="empty">从左侧选择一章开始阅读。<br>本站为离线书架，正文需在抓取时已下载；未下载的章节可点右上角“在线阅读”。</p></div>
+    </div>
+  </div>
+
+<script>
+// 数据源：Cloudflare R2 公开访问地址（桶开启 Public access 后获得，形如 https://pub-xxxxxxxx.r2.dev/）
+// 若使用自定义域名，改成你的域名即可。保留 REPLACE 占位时自动回退到本地 ./books_data/（便于本地预览）。
+// 索引为分类拆分结构：先读 index_meta.json（含分类清单/总数/更新时间），再按需懒加载各 index_cat_<N>.json。
+const R2_BASE = 'https://pub-d583e3093dc1438882b43509c1571302.r2.dev/';
+const DATA = (R2_BASE.indexOf('REPLACE') === -1) ? R2_BASE : './books_data/';
+let INDEX = null;          // 兼容保留（历史字段，当前未直接使用）
+let META = null;           // 索引元信息：{total, generated_at, categories:[{name,file,count}]}
+let catCache = {};         // 分类文件 -> book 数组 缓存（避免重复拉取）
+let currentBook = null;
+let curCid = null;
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtTime = (t) => t ? t.replace('T', ' ').replace('Z', '').slice(0, 16) : '';
+
+async function getJSON(u) {
+  const r = await fetch(u, { cache: 'no-cache' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+async function init() {
+  try {
+    META = await getJSON(DATA + 'index_meta.json');
+  } catch (e) {
+    $('#shelfList').innerHTML = '<div class="loading">索引加载失败：' + esc(e.message) + '<br>请先运行 lewx.cc.books.py 抓取数据。</div>';
+    return;
+  }
+  $('#shelfMeta').textContent = '共 ' + META.total + ' 本小说' + (META.generated_at ? '（更新于 ' + META.generated_at + '）' : '');
+  // 分类下拉：直接来自索引元信息（无需先拉全部书）
+  const sel = $('#catSelect');
+  (META.categories || []).forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.file;
+    o.textContent = c.name + ' (' + c.count + ')';
+    sel.appendChild(o);
+  });
+  await renderShelf();
+  $('#searchInput').addEventListener('input', renderShelf);
+  sel.addEventListener('change', renderShelf);
+  // 封面加载失败时替换为占位图
+  document.addEventListener('error', function (e) {
+    const t = e.target;
+    if (t && t.tagName === 'IMG' && t.dataset.fallback) {
+      const ph = document.createElement('div');
+      ph.className = 'cover ph';
+      ph.textContent = '📖';
+      t.replaceWith(ph);
+    }
+  }, true);
+  $('#backBtn').addEventListener('click', () => showView('shelf'));
+  $('#homeBtn').addEventListener('click', () => showView('shelf'));
+  $('#chapSearch').addEventListener('input', renderChapters);
+  window.addEventListener('hashchange', route);
+  route();
+}
+
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  $('#' + v).classList.add('active');
+  $('#shelfControls').style.display = (v === 'shelf') ? 'flex' : 'none';
+  $('#shelfMeta').style.display = (v === 'shelf') ? 'block' : 'none';
+}
+
+async function ensureCategory(file) {
+  // 懒加载某个分类索引文件，并缓存
+  if (catCache[file]) return catCache[file];
+  const arr = await getJSON(DATA + file);
+  catCache[file] = arr;
+  return arr;
+}
+
+async function getActiveBooks() {
+  // 选中具体分类 -> 只加载该分类文件；全部分类 -> 并行加载所有分类并合并
+  const cat = $('#catSelect').value;
+  if (!cat) {
+    const files = (META.categories || []).map(c => c.file);
+    const arrs = await Promise.all(files.map(ensureCategory));
+    return arrs.flat();
+  }
+  return await ensureCategory(cat);
+}
+
+async function renderShelf() {
+  const box = $('#shelfList');
+  box.innerHTML = '<div class="loading">加载中…</div>';
+  let list;
+  try {
+    list = await getActiveBooks();
+  } catch (e) {
+    box.innerHTML = '<div class="loading">加载失败：' + esc(e.message) + '</div>';
+    return;
+  }
+  const kw = $('#searchInput').value.trim().toLowerCase();
+  if (kw) {
+    list = list.filter(b => {
+      const hay = (b.title + ' ' + b.author + ' ' + (b.tags || []).join(' ')).toLowerCase();
+      return hay.includes(kw);
+    });
+  }
+  if (!list.length) { box.innerHTML = '<div class="loading">没有匹配的小说</div>'; return; }
+  box.innerHTML = '';
+  list.forEach(b => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const cover = b.cover ? '<img class="cover" src="' + esc(b.cover) + '" loading="lazy" data-fallback="1">' : '<div class="cover ph">📖</div>';
+    card.innerHTML = cover +
+      '<div class="info"><div class="name">' + esc(b.title) + '</div>' +
+      '<div class="au">' + esc(b.author || '') + '</div>' +
+      (b.category ? '<span class="tag">' + esc(b.category) + (b.status ? ' · ' + esc(b.status) : '') + '</span>' : '') +
+      (b.crawled_at ? '<div class="upd">更新于 ' + fmtTime(b.crawled_at) + '</div>' : '') + '</div>';
+    card.addEventListener('click', () => { location.hash = '#book/' + b.id; });
+    box.appendChild(card);
+  });
+}
+
+async function openBook(id) {
+  showView('reader');
+  $('#bookHead').innerHTML = '<div class="loading">加载中…</div>';
+  $('#chapterList').innerHTML = '<div class="loading">加载中…</div>';
+  $('#content').innerHTML = '<p class="empty">从左侧选择一章开始阅读。</p>';
+  $('#contentTitle').textContent = '请选择章节';
+  try {
+    currentBook = await getJSON(DATA + id + '.json');
+  } catch (e) {
+    $('#bookHead').innerHTML = '<div class="loading">书籍数据加载失败：' + esc(e.message) + '</div>';
+    return;
+  }
+  const b = currentBook;
+  $('#bookHead').innerHTML =
+    '<div class="bt">' + esc(b.title) + '</div>' +
+    '<div class="ba">' + esc(b.author || '') + (b.category ? ' · ' + esc(b.category) : '') + (b.status ? ' · ' + esc(b.status) : '') + '</div>' +
+    (b.intro ? '<div class="bi">' + esc(b.intro) + '</div>' : '') +
+    '<div class="bc">共 ' + (b.chapter_count || (b.chapters ? b.chapters.length : 0)) + ' 章' + (b.has_content ? '（已离线缓存全文）' : '（未缓存，可在线阅读）') + (b.crawled_at ? ' · 更新于 ' + fmtTime(b.crawled_at) : '') + '</div>';
+  renderChapters();
+}
+
+function renderChapters() {
+  const box = $('#chapterList');
+  if (!currentBook || !currentBook.chapters) { box.innerHTML = '<div class="loading">无章节</div>'; return; }
+  const kw = $('#chapSearch').value.trim().toLowerCase();
+  const chs = currentBook.chapters.filter(c => !kw || (c.title || '').toLowerCase().includes(kw));
+  if (!chs.length) { box.innerHTML = '<div class="loading">无匹配章节</div>'; return; }
+  box.innerHTML = '';
+  // 长列表分片渲染，避免卡顿
+  const frag = document.createDocumentFragment();
+  chs.forEach(c => {
+    const a = document.createElement('a');
+    a.className = 'chap' + (c.cid === curCid ? ' cur' : '');
+    a.textContent = c.title || ('第' + (c.idx || '?') + '章');
+    a.addEventListener('click', () => openChapter(c.cid));
+    frag.appendChild(a);
+  });
+  box.appendChild(frag);
+}
+
+function openChapter(cid) {
+  curCid = cid;
+  document.querySelectorAll('.chap').forEach(el => el.classList.remove('cur'));
+  // 高亮当前（在已渲染范围内）
+  const items = [...document.querySelectorAll('.chap')];
+  // 重新渲染以高亮
+  renderChapters();
+  const ch = (currentBook.chapters || []).find(c => c.cid === cid);
+  const title = ch ? (ch.title || '') : '章节';
+  $('#contentTitle').textContent = title;
+  const content = currentBook.content ? currentBook.content[cid] : null;
+  const cEl = $('#content');
+  if (content) {
+    const paras = content.split('\n').map(p => p.trim()).filter(Boolean);
+    cEl.innerHTML = paras.map(p => '<p>' + esc(p) + '</p>').join('') ||
+      '<p class="empty">（本章内容为空）</p>';
+    cEl.scrollTop = 0;
+  } else {
+    const url = ch ? ch.url : (currentBook.book_url || 'https://www.lewx.cc/');
+    cEl.innerHTML = '<p class="empty">本章正文未离线缓存。<br><a class="online" href="' + esc(url) + '" target="_blank" rel="noopener">点此在线阅读 ↗</a><br><br>如需离线阅读，请在爬虫端运行：<br>python lewx.cc.books.py --content ' + esc(currentBook.id) + '</p>';
+    cEl.scrollTop = 0;
+  }
+  // 移动端自动滚到正文
+  if (window.innerWidth <= 640) { /* 保持布局 */ }
+}
+
+function route() {
+  const h = location.hash;
+  const m = h.match(/^#book\/(.+)$/);
+  if (m) { openBook(m[1]); }
+  else { showView('shelf'); }
+}
+
+init();
+</script>
+</body>
+</html>

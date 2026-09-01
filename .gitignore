@@ -5,6 +5,14 @@ db.json
 /public/
 # 本地诗词数据库，仅用于每日随机选诗，不推送
 /hexo-bot/refresh-cache/poetry_data/
+
+# lewx.cc 小说书架：本地抓取数据已迁至 Cloudflare R2，勿入库
+/hexo-bot/books/data/
+/hexo-bot/books/r2_config.json
+/hexo-bot/books/crawl.log
+/hexo-bot/books/_preview/
+/hexo-bot/books/_dbg/
+/source/app_n/books_data/
 .source/
 *.orig
 _env*
