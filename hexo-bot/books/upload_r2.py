@@ -24,6 +24,8 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import xml.etree.ElementTree as ET
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(HERE, 'data')
@@ -61,7 +63,7 @@ def _sha256_hex(data):
 
 def _sign_v4(method, host, path, query, body, ak, sk, region='auto', service='s3', extra=None):
     """返回带 Authorization 的 headers 字典（含 host/x-amz-*/Authorization）。"""
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.timezone.utc)
     amzdate = now.strftime('%Y%m%dT%H%M%SZ')
     datestamp = now.strftime('%Y%m%d')
     payload_hash = _sha256_hex(body)
@@ -155,6 +157,28 @@ def put_object(cfg, key, data, content_type='application/json; charset=utf-8'):
              body=body, extra_headers={'Content-Type': content_type})
 
 
+def upload_worker(f, cfg, existing, opts, prefix):
+    """单文件上传工作单元。返回 (status, key, info)，status ∈ ok|skip|dry|fail。"""
+    local = os.path.join(DATA_DIR, f)
+    key = (prefix + '/' + f) if prefix else f
+    data = open(local, 'rb').read()
+    size = len(data)
+    md5 = hashlib.md5(data).hexdigest()
+    if not opts.force and key in existing:
+        e_tag, e_size = existing[key]
+        if e_tag == md5 and e_size == size:
+            return ('skip', key, size)
+    if opts.dry_run:
+        return ('dry', key, size)
+    try:
+        put_object(cfg, key, data)
+        return ('ok', key, size)
+    except urllib.error.HTTPError as e:
+        return ('fail', key, (e.code, e.read().decode('utf-8', 'ignore')[:200]))
+    except Exception as e:
+        return ('fail', key, str(e))
+
+
 # ----------------------------- 主流程 -----------------------------
 def main():
     import argparse
@@ -163,6 +187,7 @@ def main():
     ap.add_argument('--force', action='store_true', help='忽略比对，全量重传')
     ap.add_argument('--dry-run', action='store_true', help='只列出待传，不上传')
     ap.add_argument('--prefix', default='', help='对象 key 前缀，如 books')
+    ap.add_argument('--workers', type=int, default=10, help='并发上传线程数（默认 10，与爬虫一致）')
     opts = ap.parse_args()
 
     cfg = load_config()
@@ -175,9 +200,18 @@ def main():
         sys.exit(2)
 
     prefix = opts.prefix.strip('/')
-    files = [f for f in os.listdir(DATA_DIR) if f.endswith('.json')]
+    # 递归收集（含 data/<id>/cNN.json 正文分片），key 用相对路径
+    all_files = []
+    for root, dirs, fnames in os.walk(DATA_DIR):
+        for fn in fnames:
+            if fn.endswith('.json'):
+                full = os.path.join(root, fn)
+                rel = os.path.relpath(full, DATA_DIR).replace(os.sep, '/')
+                all_files.append(rel)
+    all_files.sort()
+    files = all_files
     if opts.index_only:
-        files = [f for f in files if f == 'index.json']
+        files = [f for f in files if f == 'index_meta.json' or f.startswith('index_cat_')]
     files.sort()
     print('[INFO] 待处理 %d 个文件 (dry=%s, force=%s)' % (len(files), opts.dry_run, opts.force))
 
@@ -188,34 +222,39 @@ def main():
 
     ok = skip = fail = 0
     total = len(files)
-    for i, f in enumerate(files, 1):
-        local = os.path.join(DATA_DIR, f)
-        key = (prefix + '/' + f) if prefix else f
-        data = open(local, 'rb').read()
-        size = len(data)
-        md5 = hashlib.md5(data).hexdigest()
-        if not opts.force and key in existing:
-            e_tag, e_size = existing[key]
-            if e_tag == md5 and e_size == size:
-                skip += 1
-                continue
-        if opts.dry_run:
-            print('  [DRY] 将上传 %s (%d bytes)' % (key, size))
+    done = 0
+
+    def tally(st, key, info):
+        nonlocal ok, skip, fail
+        if st == 'ok':
             ok += 1
-            continue
-        try:
-            put_object(cfg, key, data)
+        elif st == 'skip':
+            skip += 1
+        elif st == 'dry':
             ok += 1
-        except urllib.error.HTTPError as e:
-            print('  [FAIL] %s: %s %s' % (key, e.code, e.read().decode('utf-8', 'ignore')[:200]))
+        else:
             fail += 1
-        except Exception as e:
-            print('  [FAIL] %s: %s' % (key, e))
-            fail += 1
-        if i % 200 == 0 or i == total:
-            pct = i * 100.0 / total if total else 100
-            print('  [进度] %d/%d (%.1f%%)  OK:%d SKIP:%d FAIL:%d' % (i, total, pct, ok, skip, fail))
-        time.sleep(DELAY)
+            print('  [FAIL] %s: %s' % (key, info))
+
+    def progress():
+        nonlocal done
+        done += 1
+        if done % 200 == 0 or done == total:
+            pct = done * 100.0 / total if total else 100
+            print('  [进度] %d/%d (%.1f%%)  OK:%d SKIP:%d FAIL:%d' % (done, total, pct, ok, skip, fail), flush=True)
+
+    if opts.workers <= 1:
+        for f in files:
+            st, key, info = upload_worker(f, cfg, existing, opts, prefix)
+            tally(st, key, info)
+            progress()
+    else:
+        with ThreadPoolExecutor(max_workers=opts.workers) as ex:
+            futs = [ex.submit(upload_worker, f, cfg, existing, opts, prefix) for f in files]
+            for fut in as_completed(futs):
+                st, key, info = fut.result()
+                tally(st, key, info)
+                progress()
     print('[DONE] 上传成功 %d，跳过 %d，失败 %d' % (ok, skip, fail))
     if cfg.get('public_url'):
         print('[INFO] 公开访问基址: %s/' % cfg['public_url'].rstrip('/'))
