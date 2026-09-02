@@ -17,7 +17,7 @@ lewx.cc 小说增量爬虫（多线程 + 边爬边更新索引 + 分类拆分索
     与早期“先存章节列表再重读”相比，少一轮抓章节列表的冗余请求。
 
 反爬：站点首访返回 ckc.js 挑战页，脚本自动提取 data-param1 并以 cookie 形式带上（页面 gbk 编码）。
-多线程：目录收集 + 书页抓取 + 章节正文均并发（--workers 可调，默认 10），全局限速礼貌。
+多线程：目录收集 + 书页抓取 + 章节正文均并发（--workers 可调，默认 20），全局限速礼貌。
 边爬边更新索引：每 FLUSH_EVERY 本书 flush 一次，中断不丢索引。
 增量：已存在非连载中书跳过；连载中书自动复查章节数；--update 全体 diff；--force 全重抓。
 
@@ -55,12 +55,17 @@ MIRROR_DIR = os.path.normpath(
 
 BASE = "https://www.lewx.cc"
 SHUKU_URL = BASE + "/shuku.html"
+
+
+def book_url_of(bid):
+    """由书籍 ID 推导详情页地址（不再落盘 book_url 字段）。"""
+    return BASE + "/book/%s/" % bid
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")
 TIMEOUT = 30
 RETRY = 4               # 单 URL 失败重试次数
-WORKERS = 10            # 默认并发线程数
-MIN_INTERVAL = 0.08     # 全局最小请求间隔（秒）；章节正文量大，适度放宽
+WORKERS = 20            # 默认并发线程数
+MIN_INTERVAL = 0.1      # 全局最小请求间隔（秒）；全量重抓时调大以免触发 lewx.cc 风控限流（原 0.02 偏激进）
 SHARD_SIZE = 50         # 每个正文分片包含的章节数
 FLUSH_EVERY = 200       # 每处理多少本书 flush 一次索引（边爬边更新）
 
@@ -174,7 +179,54 @@ def parse_shuku_page(html):
     return books
 
 
+# 中文数字 → 整数（用于解析"第四千五百二十七章"这类章节名）
+_CN_NUM = {'零':0,'一':1,'壹':1,'二':2,'两':2,'贰':2,'三':3,'叁':3,'四':4,'肆':4,
+           '五':5,'伍':5,'六':6,'陆':6,'七':7,'柒':7,'八':8,'捌':8,'九':9,'玖':9,
+           '十':10,'拾':10,'百':100,'佰':100,'千':1000,'仟':1000,'万':10000,'萬':10000}
+
+def cn2num(s):
+    total = 0
+    cur = 0
+    num = 0
+    for ch in s:
+        v = _CN_NUM.get(ch)
+        if v is None:
+            return None
+        if v < 10:
+            num = v
+        elif v < 10000:
+            unit = v
+            if num == 0:
+                num = 1
+            cur += num * unit
+            num = 0
+        else:  # 万
+            if num == 0:
+                num = 1
+            cur += num
+            total += cur * 10000
+            cur = 0
+            num = 0
+    total += cur + num
+    return total
+
 # ----------------------------- 解析：书籍详情页 -----------------------------
+def _iter_chapter_links(html, bid):
+    """只遍历详情页 #list 中"非最新章节预览"的区块，按 DOM 顺序产出 (href, cid, title)。
+    详情页上半部分是"最新章节"倒序预览（应忽略），下半部分才是正序全本列表。"""
+    seg = html
+    m = re.search(r'<div id="list">(.*?)</article>', html, re.S)
+    if m:
+        seg = m.group(1)
+    for dl in re.findall(r'<dl\b.*?</dl>', seg, re.S):
+        dtm = re.search(r'<dt\b.*?>(.*?)</dt>', dl, re.S)
+        dt = _clean(dtm.group(1)) if dtm else ""
+        if "最新章节" in dt:        # 跳过"最新章节"倒序预览区
+            continue
+        for href, cid, t in re.findall(r'href="(/book/%s/(\d+)\.html)"[^>]*>([^<]+)</a>' % bid, dl):
+            yield href, cid, t
+
+
 def parse_book_detail(html, bid):
     info = {"category": "", "status": "", "intro": "", "tags": [], "chapters": []}
     mh = re.search(r"<h1>(.*?)</h1>", html, re.S)
@@ -189,10 +241,9 @@ def parse_book_detail(html, bid):
     mi = re.search(r'class="[^"]*intro[^"]*">(.*?)</div>', html, re.S)
     intro = _clean(mi.group(1)) if mi else ""
     tags = [_clean(t) for t in re.findall(r'<a href="/tag/[^"]+"[^>]*>([^<]+)</a>', html)]
-    raw = re.findall(r'href="(/book/%s/(\d+)\.html)"[^>]*>([^<]+)</a>' % bid, html)
     seen = set()
     chapters = []
-    for href, cid, t in raw:
+    for href, cid, t in _iter_chapter_links(html, bid):
         t = _clean(t)
         if not t or "全本" in t or "小说页" in t:
             continue
@@ -203,9 +254,13 @@ def parse_book_detail(html, bid):
         mxi = re.search(r"第\s*(\d+)\s*章", t)
         if mxi:
             idx = int(mxi.group(1))
+        else:
+            mxc = re.search(r"第\s*([零一二两三四五六七八九十百千万壹贰叁肆伍陆柒捌玖拾佰仟萬]+)\s*章", t)
+            if mxc:
+                idx = cn2num(mxc.group(1))
         chapters.append({"idx": idx, "title": t, "cid": cid, "url": BASE + href})
-    if chapters and chapters[0]["idx"] and chapters[-1]["idx"] and chapters[0]["idx"] > chapters[-1]["idx"]:
-        chapters.reverse()
+    # 注：页面下半部分"全本列表"本身即是正序，保持 DOM 顺序即可，不再按 idx 重排/反转。
+    # 上半部分"最新章节"倒序预览区已在 _iter_chapter_links 中跳过。
     return {
         "title": title, "author": author, "author_url": author_url,
         "category": category, "status": status, "intro": intro,
@@ -214,10 +269,9 @@ def parse_book_detail(html, bid):
 
 
 def count_chapters(html, bid):
-    raw = re.findall(r'href="(/book/%s/(\d+)\.html)"[^>]*>([^<]+)</a>' % bid, html)
     seen = set()
     n = 0
-    for href, cid, t in raw:
+    for href, cid, t in _iter_chapter_links(html, bid):
         t = _clean(t)
         if not t or "全本" in t or "小说页" in t:
             continue
@@ -227,6 +281,21 @@ def count_chapters(html, bid):
         n += 1
     return n
 
+
+# 正文尾部站点注入的广告/提示噪音：命中任一标记即从该处截断（按需在此追加新词）
+FOOTER_MARKERS = (
+    "下载本站免费小说阅读器",
+    "手机浏览器扫码下载本站小说阅读器",
+    "随时随地免费看小说",
+    "求收藏", "求推荐", "求月票", "求点赞", "求订阅", "求包养", "求鲜花", "求支持",
+    "请收藏本站", "请收藏本页", "记住本站", "收藏本站", "收藏本书",
+    "本站域名", "本书首发", "手机浏览器",
+    "扫码下载", "扫描二维码", "二维码", "下载阅读器", "阅读器下载",
+    "如果您觉得", "支持正版阅读", "支持正版",
+    "投推荐票", "投月票", "月票支持", "推荐票支持",
+    "本章未完", "未完待续", "请关注我们", "关注我们", "微信公众号", "公众号",
+    "多多支持", "麻烦大家",
+)
 
 # ----------------------------- 解析：章节正文 -----------------------------
 def parse_chapter_content(html):
@@ -238,6 +307,15 @@ def parse_chapter_content(html):
     txt = re.sub(r"<[^>]+>", "", txt)
     txt = re.sub(r"\.ntp\*?\{[^}]*\}", "", txt)   # 站点防爬注入的裸 CSS 噪音
     txt = re.sub(r"\.ntp;n;}", "", txt)
+    # 截断站点注入的尾部广告/提示（命中任一标记即从该处切断）
+    cut = len(txt)
+    for mk in FOOTER_MARKERS:
+        i = txt.find(mk)
+        if i != -1 and i < cut:
+            cut = i
+    if cut < len(txt):
+        txt = txt[:cut]
+    txt = re.sub(r"if\(isMobile\(\)\)\s*\{.*?\}\s*\"", "", txt, flags=re.S)
     txt = _clean(txt)
     return txt.strip()
 
@@ -267,26 +345,24 @@ def load_json(path):
         return None
 
 
-def book_path(bid):
-    return os.path.join(DATA_DIR, "%s.json" % bid)
-
-
 def build_meta(bid, b, detail):
+    cover = b.get("cover") or ""
+    if cover.startswith(BASE):                         # 去掉站点固定前缀，改存相对路径
+        cover = cover[len(BASE):]
+    elif cover.startswith("http://www.lewx.cc"):
+        cover = cover[len("http://www.lewx.cc"):]
     return {
         "id": bid,
         "t": detail["title"] or b["title"],
         "a": detail["author"] or b["author"],
-        "c": (detail["category"] or "").strip(),
+        "c": re.sub(r"^类别[：:]\s*", "", (detail["category"] or "").strip()),
         "s": detail["status"] or "",
-        "cv": b["cover"],
+        "cv": cover,
         "i": (detail["intro"] or b.get("desc") or "")[:300],
         "n": len(detail["chapters"]),
         "hc": False,
         "nc": 0,
-        "tg": detail["tags"][:6],
         "at": _now(),
-        "file": "%s.json" % bid,
-        "book_url": b["book_url"],
     }
 
 
@@ -298,14 +374,30 @@ def make_index_entry(b):
         "cover": b.get("cv"),
         "category": (b.get("c") or "").strip() or "未分类",
         "status": b.get("s"),
-        "intro": (b.get("i") or "")[:120],
-        "tags": b.get("tg", []),
+        "intro": (b.get("i") or "")[:300],
         "chapter_count": b.get("n"),
         "has_content": bool(b.get("hc")),
         "content_chapters": b.get("nc"),
-        "book_url": b.get("book_url"),
-        "file": b.get("file"),
         "crawled_at": b.get("at"),
+    }
+
+
+def entry_to_meta(e):
+    """把分类索引里的 verbose 条目还原成内部短键 meta dict，供增量比对复用（不再落盘单书文件）。"""
+    if not e:
+        return None
+    return {
+        "id": e.get("id"),
+        "t": e.get("title"),
+        "a": e.get("author"),
+        "c": e.get("category"),
+        "s": e.get("status"),
+        "cv": e.get("cover"),
+        "i": e.get("intro"),
+        "n": e.get("chapter_count"),
+        "hc": e.get("has_content"),
+        "nc": e.get("content_chapters"),
+        "at": e.get("crawled_at"),
     }
 
 
@@ -403,21 +495,12 @@ def _cleanup_stale_splits(books):
 
 
 def build_index(opts=None):
+    # --index-only：依据现有 index_cat_* / index_meta 重建分类索引（已不再有单书 book.json）
     opts = opts or argparse.Namespace(no_mirror=True)
-    os.makedirs(DATA_DIR, exist_ok=True)
-    files = sorted(
-        f for f in os.listdir(DATA_DIR)
-        if f.endswith(".json") and not f.startswith("index_cat_") and f != "index_meta.json"
-        and not os.path.isdir(os.path.join(DATA_DIR, f[:-5]))
-    )
-    books = []
-    for fn in files:
-        b = load_json(os.path.join(DATA_DIR, fn))
-        if b:
-            books.append(make_index_entry(b))
-    _write_splits(books, opts, dirty_only=False)
-    _cleanup_stale_splits(books)
-    print("[INFO] 索引已生成：%d 本书 -> index_meta.json + %d 个分类文件" % (len(books), len({_cat_of(b) for b in books})))
+    idx = IndexState(opts)
+    idx.seed_from_index()
+    idx.flush_final()
+    print("[INFO] 索引已重建：%d 本书 -> index_meta.json + 分类文件" % len(idx.books))
 
 
 # ----------------------------- 正文：分片写入 -----------------------------
@@ -449,6 +532,26 @@ def write_content_shards(bid, texts):
         arr = [(t + "\n" + (body or "")) for (t, body) in chunk]
         fn = os.path.join(base, "c%02d.json" % (i // SHARD_SIZE + 1))
         write_json(fn, arr)
+
+
+def read_existing_shards(bid):
+    """读取已有分片，按章节顺序恢复 [(title, body)] 列表（用于续抓时复用已抓章）。"""
+    base = os.path.join(DATA_DIR, bid)
+    if not os.path.isdir(base):
+        return []
+    out = []
+    for fn in sorted(os.listdir(base)):
+        if not (fn.startswith("c") and fn.endswith(".json")):
+            continue
+        arr = load_json(os.path.join(base, fn)) or []
+        for rec in arr:
+            if isinstance(rec, str):
+                if "\n" in rec:
+                    t, bd = rec.split("\n", 1)
+                else:
+                    t, bd = rec, ""
+                out.append((t, bd))
+    return out
 
 
 # ----------------------------- 主流程 -----------------------------
@@ -483,6 +586,9 @@ def crawl(opts):
                     seen_ids.add(b["id"])
                     catalog.append(b)
     print("[INFO] 书库列表共收集到 %d 本书" % len(catalog))
+    if not catalog:
+        print("[ERROR] 书库列表解析为 0 本，疑似被反爬限流或返回空壳页，终止本次抓取（不更新数据）。")
+        sys.exit(1)
     if opts.limit:
         catalog = catalog[:opts.limit]
 
@@ -494,8 +600,8 @@ def crawl(opts):
 
     def worker_book(b):
         bid = b["id"]
-        path = book_path(bid)
-        exist = load_json(path)
+        exist_entry = idx.books.get(str(bid))
+        exist = entry_to_meta(exist_entry)
         existing_hc = bool(exist.get("hc")) if exist else False
         existing_nc = int(exist.get("nc", 0) or 0) if exist else 0
         need_meta = False
@@ -516,7 +622,9 @@ def crawl(opts):
                 reuse_html = h
                 need_meta = True
         else:
-            if (exist.get("s") or "") == "连载中":
+            # 连载中 或 处于 --content 模式时，都重新核对线上章节数：
+            # 这样无论书被标成"完本"还是连载中翻完本，只要线上章数 > 已缓存 nc，都会重抓补齐
+            if (exist.get("s") or "") == "连载中" or opts.content:
                 h = fetch_html(b["book_url"], referer=SHUKU_URL)
                 if not h:
                     return
@@ -531,7 +639,7 @@ def crawl(opts):
 
         detail = None
         if need_meta:
-            html = reuse_html if reuse_html is not None else fetch_html(b["book_url"], referer=SHUKU_URL)
+            html = reuse_html if reuse_html is not None else fetch_html(book_url_of(bid), referer=SHUKU_URL)
             if not html:
                 return
             detail = parse_book_detail(html, bid)
@@ -542,34 +650,37 @@ def crawl(opts):
                 return
             meta = dict(exist)
             meta.setdefault("id", bid)
-            meta.setdefault("file", "%s.json" % bid)
-            meta.setdefault("book_url", b["book_url"])
 
-        hc = existing_hc if not need_meta else False
-        nc = existing_nc if not need_meta else 0
+        # hc/nc 以"已缓存状态"为准（need_meta 只更新书目元数据，不清除已抓正文进度）
+        # 例外：--force --content 时强制把正文进度归零，整本重抓正文（用于纠正历史上抓错的旧数据）
+        force_content = bool(opts.force) and bool(opts.content)
+        hc = False if force_content else existing_hc
+        nc = 0 if force_content else existing_nc
 
         if opts.content:
             total_n = int(meta.get("n", 0) or 0)
-            need_content = (not hc) or (nc < min(cap, total_n))
-            if need_content and total_n > 0:
+            target = min(cap, total_n)
+            # 分片级续抓：c01.json 存在=前50章已有，c02.json 存在=前100章已有……
+            # 只补抓 nc+1 ~ target 章；已存在的分片内容从旧分片读回，不重抓
+            if total_n > 0 and nc < target:
                 if detail is not None:
-                    chaps = detail["chapters"][:cap]
+                    chaps = detail["chapters"][nc:target]
                 else:
-                    h2 = fetch_html(b["book_url"], referer=SHUKU_URL)
+                    h2 = fetch_html(book_url_of(bid), referer=SHUKU_URL)
                     if not h2:
                         chaps = []
                     else:
-                        chaps = parse_book_detail(h2, bid)["chapters"][:cap]
+                        chaps = parse_book_detail(h2, bid)["chapters"][nc:target]
                 if chaps:
-                    texts = fetch_chapter_texts(chaps, b["book_url"], opts.workers)
-                    write_content_shards(bid, texts)
+                    existing_texts = read_existing_shards(bid)[:nc] if nc > 0 else []
+                    new_texts = fetch_chapter_texts(chaps, book_url_of(bid), opts.workers)
+                    all_texts = existing_texts + new_texts
+                    write_content_shards(bid, all_texts)
                     hc = True
-                    nc = len(texts)
-                    meta["content_crawled_at"] = _now()
+                    nc = len(all_texts)
 
         meta["hc"] = hc
         meta["nc"] = nc
-        write_json(path, meta)
         idx.update_entry(bid, meta, is_update=bool(exist))
 
     with ThreadPoolExecutor(max_workers=opts.workers) as ex:

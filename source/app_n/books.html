@@ -1,3 +1,6 @@
+---
+layout: false
+---
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -116,10 +119,21 @@
 // 索引为分类拆分结构：先读 index_meta.json（含分类清单/总数/更新时间），再按需懒加载各 index_cat_<N>.json。
 const R2_BASE = 'https://pub-d583e3093dc1438882b43509c1571302.r2.dev/';
 const DATA = (R2_BASE.indexOf('REPLACE') === -1) ? R2_BASE : './books_data/';
+const LEXU_BASE = 'https://www.lewx.cc';
+// 封面在 book.json / 索引里只存相对路径（/uploads/allimg/...），按需补全站点前缀
+function coverUrl(b) {
+  if (!b || !b.cover) return '';
+  return (b.cover.indexOf('http') === 0) ? b.cover : (LEXU_BASE + b.cover);
+}
+// 详情页地址由书籍 id 推导，book.json 不再落盘 book_url
+function bookUrlOf(b) {
+  return (b && b.id) ? (LEXU_BASE + '/book/' + b.id + '/') : LEXU_BASE + '/';
+}
 let INDEX = null;          // 兼容保留（历史字段，当前未直接使用）
 let META = null;           // 索引元信息：{total, generated_at, categories:[{name,file,count}]}
 let catCache = {};         // 分类文件 -> book 数组 缓存（避免重复拉取）
 let currentBook = null;
+let bookById = {};        // id -> 分类索引条目（不再有单书 book.json，详情页元数据直接来自索引）
 let currentShards = [];   // 数组，每元素 = "章节标题\n正文"
 let curIdx = null;
 
@@ -181,6 +195,7 @@ async function ensureCategory(file) {
   if (catCache[file]) return catCache[file];
   const arr = await getJSON(DATA + file);
   catCache[file] = arr;
+  arr.forEach(e => { if (e && e.id) bookById[e.id] = e; });  // 同步填充 id->条目 映射
   return arr;
 }
 
@@ -217,7 +232,7 @@ async function renderShelf() {
   list.forEach(b => {
     const card = document.createElement('div');
     card.className = 'card';
-    const cover = b.cover ? '<img class="cover" src="' + esc(b.cover) + '" loading="lazy" data-fallback="1">' : '<div class="cover ph">📖</div>';
+    const cover = coverUrl(b) ? '<img class="cover" src="' + esc(coverUrl(b)) + '" loading="lazy" data-fallback="1">' : '<div class="cover ph">📖</div>';
     card.innerHTML = cover +
       '<div class="info"><div class="name">' + esc(b.title) + '</div>' +
       '<div class="au">' + esc(b.author || '') + '</div>' +
@@ -228,30 +243,26 @@ async function renderShelf() {
   });
 }
 
-async function openBook(id) {
+async function openBook(b) {
+  if (!b || !b.id) return;
   showView('reader');
   $('#bookHead').innerHTML = '<div class="loading">加载中…</div>';
   $('#chapterList').innerHTML = '<div class="loading">加载中…</div>';
   $('#content').innerHTML = '<p class="empty">从左侧选择一章开始阅读。</p>';
   $('#contentTitle').textContent = '请选择章节';
   curIdx = null;
-  try {
-    currentBook = await getJSON(DATA + id + '.json');
-  } catch (e) {
-    $('#bookHead').innerHTML = '<div class="loading">书籍数据加载失败：' + esc(e.message) + '</div>';
-    return;
-  }
-  const b = currentBook;
-  const n = b.n || 0, nc = b.nc || 0;
-  const onlineUrl = b.book_url || 'https://www.lewx.cc/';
+  currentBook = b;
+  const id = b.id;
+  const n = b.chapter_count || 0, nc = b.content_chapters || 0;
+  const onlineUrl = bookUrlOf(b);
   $('#bookHead').innerHTML =
-    '<div class="bt">' + esc(b.t) + '</div>' +
-    '<div class="ba">' + esc(b.a || '') + (b.c ? ' · ' + esc(b.c) : '') + (b.s ? ' · ' + esc(b.s) : '') + '</div>' +
-    (b.i ? '<div class="bi">' + esc(b.i) + '</div>' : '') +
-    '<div class="bc">共 ' + n + ' 章' + (b.hc ? ('（已离线缓存前 ' + nc + ' 章）') : '（未缓存，可在线阅读）') + (b.at ? ' · 更新于 ' + fmtTime(b.at) : '') + '</div>';
+    '<div class="bt">' + esc(b.title) + '</div>' +
+    '<div class="ba">' + esc(b.author || '') + (b.category ? ' · ' + esc(b.category) : '') + (b.status ? ' · ' + esc(b.status) : '') + '</div>' +
+    (b.intro ? '<div class="bi">' + esc(b.intro) + '</div>' : '') +
+    '<div class="bc">共 ' + n + ' 章' + (b.has_content ? ('（已离线缓存前 ' + nc + ' 章）') : '（未缓存，可在线阅读）') + (b.crawled_at ? ' · 更新于 ' + fmtTime(b.crawled_at) : '') + '</div>';
   $('#contentHead').innerHTML = '<span id="contentTitle">请选择章节</span><a class="online" href="' + esc(onlineUrl) + '" target="_blank" rel="noopener">在线阅读 ↗</a>';
 
-  if (b.hc && nc > 0) {
+  if (b.has_content && nc > 0) {
     await loadShards(id, nc);
   } else {
     currentShards = [];
@@ -310,17 +321,29 @@ function openChapter(i) {
     cEl.innerHTML = paras.map(p => '<p>' + esc(p) + '</p>').join('') || '<p class="empty">（本章内容为空）</p>';
     cEl.scrollTop = 0;
   } else {
-    const url = currentBook.book_url || 'https://www.lewx.cc/';
+    const url = bookUrlOf(currentBook);
     cEl.innerHTML = '<p class="empty">本章正文为空或加载失败。<br><a class="online" href="' + esc(url) + '" target="_blank" rel="noopener">点此在线阅读 ↗</a></p>';
     cEl.scrollTop = 0;
   }
 }
 
-function route() {
+async function route() {
   const h = location.hash;
   const m = h.match(/^#book\/(.+)$/);
-  if (m) { openBook(m[1]); }
-  else { showView('shelf'); }
+  if (m) {
+    const id = m[1];
+    if (bookById[id]) { openBook(bookById[id]); return; }
+    await resolveBook(id);   // 直接通过链接/刷新进入：当前分类未加载，先载入全部分类定位本书
+  } else {
+    showView('shelf');
+  }
+}
+
+async function resolveBook(id) {
+  const files = (META.categories || []).map(c => c.file);
+  await Promise.all(files.map(ensureCategory));
+  if (bookById[id]) openBook(bookById[id]);
+  else { showView('shelf'); alert('未找到该书：' + id); }
 }
 
 init();
