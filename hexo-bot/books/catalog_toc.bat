@@ -50,12 +50,12 @@ echo.
 
 echo [%date% %time%] === step 1/2 incremental catalog + toc === >> "%LOG%"
 echo [step 1/2] incremental catalog + toc crawl ... (see %LOG% for live detail)
-"%PY%" "%SCRIPT%" --toc --no-mirror >> "%LOG%" 2>&1
+"%PY%" "%SCRIPT%" --toc --no-mirror 2>&1 | "%PY%" -u tee.py "%LOG%"
 set /a RC=%errorlevel%
 echo [%date% %time%] crawl exit=%RC% >> "%LOG%"
 if not %RC%==0 (
   echo [ERR] crawl phase exit=%RC%. Usually lewx.cc is rate-limiting this IP.
-  echo       Wait a few hours (or switch network) then run this bat again.
+  echo       Wait a few hours, or switch network, then run this bat again.
   goto FINISH
 )
 
@@ -65,21 +65,21 @@ echo.
 
 echo [%date% %time%] === step 2/2 upload index + toc to R2 === >> "%LOG%"
 echo [step 2/2] upload index + toc to R2 (skip content) ...
-"%PY%" "%UPLOAD%" --toc >> "%LOG%" 2>&1
+"%PY%" "%UPLOAD%" --toc 2>&1 | "%PY%" -u tee.py "%LOG%"
 set /a RC=%errorlevel%
 echo [%date% %time%] upload exit=%RC% >> "%LOG%"
 if not %RC%==0 (
-  echo [ERR] upload phase exit=%RC% (see %LOG%).
+  echo [ERR] upload phase exit=%RC% - see %LOG%.
   goto FINISH
 )
 
-echo [DONE] incremental catalog + chapter info crawled and uploaded (NO content).
+echo [DONE] incremental catalog + chapter info crawled and uploaded. No content.
 echo        Content is fetched on demand: open a chapter in the frontend ->
 echo        Waline queue -> books_poller.py crawls+uploads -> frontend shows it.
 echo        Manual full rebuild: python lewx.cc.books.py --force --toc --no-mirror
 
 :FINISH
-echo [%date% %time%] === catalog_toc.bat END (RC=%RC%) === >> "%LOG%"
+echo [%date% %time%] === catalog_toc.bat END, RC=%RC% === >> "%LOG%"
 echo.
 echo ===== DONE. Full log saved to: %LOG% =====
 echo ===== This window stays open -- close it manually when ready. =====

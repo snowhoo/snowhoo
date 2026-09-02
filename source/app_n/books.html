@@ -144,6 +144,10 @@ let currentShards = [];   // 稀疏数组，索引 = 全局章号(0-based)，每
 let chapterTitles = [];   // 来自 toc.json 的有序章节标题（导航用）
 let loadedShards = new Set();   // 已载入 currentShards 的分片号
 let curIdx = null;
+let shelfAll = [];        // 当前过滤后的全部书籍
+let shelfShown = 0;       // 书架已渲染数量（用于懒加载 / 无限滚动）
+let shelfObserver = null; // IntersectionObserver 实例
+const PAGE_SIZE = 36;     // 每批渲染数量（避免一次性渲染上万张卡片卡死）
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -172,7 +176,7 @@ async function init() {
     sel.appendChild(o);
   });
   await renderShelf();
-  $('#searchInput').addEventListener('input', renderShelf);
+  $('#searchInput').addEventListener('input', debounce(renderShelf, 300));
   sel.addEventListener('change', renderShelf);
   // 封面加载失败时替换为占位图
   document.addEventListener('error', function (e) {
@@ -220,6 +224,7 @@ async function getActiveBooks() {
 
 async function renderShelf() {
   const box = $('#shelfList');
+  if (shelfObserver) { shelfObserver.disconnect(); shelfObserver = null; }
   box.innerHTML = '<div class="loading">加载中…</div>';
   let list;
   try {
@@ -235,9 +240,44 @@ async function renderShelf() {
       return hay.includes(kw);
     });
   }
-  if (!list.length) { box.innerHTML = '<div class="loading">没有匹配的小说</div>'; return; }
+  shelfAll = list;
+  shelfShown = 0;
   box.innerHTML = '';
-  list.forEach(b => {
+  const total = META.total || 0;
+  if (!list.length) {
+    box.innerHTML = '<div class="loading">没有匹配的小说</div>';
+    $('#shelfMeta').textContent = '共 ' + total + ' 本小说';
+    return;
+  }
+  // 计数提示：搜索时显示匹配数，否则显示总数
+  $('#shelfMeta').textContent = kw
+    ? ('匹配 ' + list.length + ' 本（共 ' + total + ' 本）')
+    : ('共 ' + total + ' 本小说' + (META.generated_at ? '（更新于 ' + META.generated_at + '）' : ''));
+  appendShelf();
+  // 触底自动加载更多（懒加载）
+  const sentinel = document.createElement('div');
+  sentinel.id = 'shelfSentinel';
+  sentinel.className = 'loading';
+  sentinel.textContent = '加载更多…';
+  box.appendChild(sentinel);
+  shelfObserver = new IntersectionObserver((entries) => {
+    if (entries[0] && entries[0].isIntersecting) appendShelf();
+  }, { root: box, rootMargin: '400px' });
+  shelfObserver.observe(sentinel);
+}
+
+// 向书架追加一批卡片（无限滚动核心）
+function appendShelf() {
+  const box = $('#shelfList');
+  const sentinel = document.getElementById('shelfSentinel');
+  const next = shelfAll.slice(shelfShown, shelfShown + PAGE_SIZE);
+  if (!next.length) {
+    if (sentinel) sentinel.textContent = '— 已显示全部 ' + shelfAll.length + ' 本 —';
+    if (shelfObserver) { shelfObserver.disconnect(); shelfObserver = null; }
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  next.forEach(b => {
     const card = document.createElement('div');
     card.className = 'card';
     const cover = coverUrl(b) ? '<img class="cover" src="' + esc(coverUrl(b)) + '" loading="lazy" data-fallback="1">' : '<div class="cover ph">📖</div>';
@@ -247,8 +287,14 @@ async function renderShelf() {
       (b.category ? '<span class="tag">' + esc(b.category) + (b.status ? ' · ' + esc(b.status) : '') + '</span>' : '') +
       (b.crawled_at ? '<div class="upd">更新于 ' + fmtTime(b.crawled_at) + '</div>' : '') + '</div>';
     card.addEventListener('click', () => { location.hash = '#book/' + b.id; });
-    box.appendChild(card);
+    frag.appendChild(card);
   });
+  if (sentinel) box.insertBefore(frag, sentinel); else box.appendChild(frag);
+  shelfShown += next.length;
+  if (shelfShown >= shelfAll.length && sentinel) {
+    sentinel.textContent = '— 已显示全部 ' + shelfAll.length + ' 本 —';
+    if (shelfObserver) { shelfObserver.disconnect(); shelfObserver = null; }
+  }
 }
 
 async function openBook(b) {
@@ -299,18 +345,32 @@ async function ensureShard(id, S) {
 async function requestShard(id, S) {
   const cEl = $('#content');
   cEl.innerHTML = '<div class="loading">已接到资源请求，请稍后……<br><span class="spin">◌</span></div>';
+  // Waline 要求评论必须带 url 字段，且 url 须在其配置站点（WALINE_SITE_URL）之下，否则直接拒绝（errno 1001）
+  const queueUrl = (location.origin && location.origin.indexOf('http') === 0)
+    ? (location.origin + TASK_PATH)
+    : ('https://snowhoo.net' + TASK_PATH);
+  const onlineUrl = bookUrlOf(currentBook);
   // 提交任务到 Waline 专用 path（comment 内含 {b:book_id, s:shard}）
   try {
-    await fetch(WALINE_SERVER + '/api/comment', {
+    const resp = await fetch(WALINE_SERVER + '/api/comment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        url: queueUrl,
         path: TASK_PATH,
         comment: JSON.stringify({ b: id, s: S }),
-        nick: 'books-bot', mail: 'bot@local', link: ''
+        nick: 'books-bot', mail: 'bot@snowhoo.net', link: ''
       })
     });
-  } catch (e) { /* 忽略，轮询 R2 判定 */ }
+    if (!resp.ok) {
+      const txt = await resp.text().catch(() => '');
+      throw new Error('HTTP ' + resp.status + ' ' + txt.slice(0, 140));
+    }
+  } catch (e) {
+    cEl.innerHTML = '<p class="empty">提交抓取请求失败：' + esc(e.message) +
+      '<br>请确认网络可访问 waline.snowhoo.net，或<a class="online" href="' + esc(onlineUrl) + '" target="_blank" rel="noopener">点此在线阅读 ↗</a></p>';
+    return false;
+  }
   // 轮询 R2 直到分片就绪（poller 抓完即上传）
   const key = DATA + id + '/c' + String(S).padStart(2, '0') + '.json';
   for (let i = 0; i < 60; i++) {
@@ -320,7 +380,17 @@ async function requestShard(id, S) {
       placeShard(S, arr); loadedShards.add(S); return true;
     } catch (e) { /* 未就绪，继续等待 */ }
   }
+  cEl.innerHTML = '<p class="empty">抓取超时（可能服务端 poller 未运行，或该书被风控）。<br><a class="online" href="' + esc(onlineUrl) + '" target="_blank" rel="noopener">点此在线阅读 ↗</a></p>';
   return false;
+}
+
+function debounce(fn, ms) {
+  let t;
+  return function () {
+    clearTimeout(t);
+    const a = arguments, c = this;
+    t = setTimeout(() => fn.apply(c, a), ms);
+  };
 }
 
 function placeShard(S, arr) {

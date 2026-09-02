@@ -118,19 +118,26 @@ def run_upload():
 
 
 def fetch_pending():
+    # 注意：Waline 的「按 path 列表」接口会把 path 按 SITE_URL 拼成完整 url 再匹配，
+    # 而我们 POST 时填的是完整 url（https://snowhoo.net/books/task-queue），域名/映射对不上 → 返回 0。
+    # 正确做法是用管理员全量列表 `?type=list`（需 Bearer 鉴权，waline_req 已带），它返回全站评论，
+    # 再按 url 含 TASK_PATH 过滤出任务队列的评论即可。
     out = []
     page = 1
     while True:
         try:
             resp = waline_req("GET", "/api/comment", token=TOKEN,
-                              params={"path": TASK_PATH, "page": page, "pageSize": 100})
+                              params={"type": "list", "page": page, "pageSize": 100})
         except Exception as e:
             print("[WARN] 拉取任务失败:", e)
             break
         arr = (resp.get("data") or {}).get("data") or []
         if not arr:
             break
-        out.extend(arr)
+        for c in arr:
+            u = (c.get("url") or "")
+            if TASK_PATH in u:   # 只认任务队列路径下的评论
+                out.append(c)
         if len(arr) < 100:
             break
         page += 1
@@ -155,10 +162,14 @@ def mark_failed(cid, msg):
 
 
 def process_one(c):
-    cid = c.get("id")
-    raw = (c.get("comment") or "")
-    if raw.startswith("[failed"):
-        # 已失败过一次，二次碰到即清除，避免堆积
+    # Waline 评论列表返回的主键字段是 objectId（不是 id），务必用 objectId 才能正确删除/标记
+    cid = c.get("objectId") or c.get("id")
+    # 注意：Waline 的 comment 字段是 HTML 转义后的渲染版（如 <p>{"b":...}</p>），
+    # 原始 JSON 在 orig 字段。务必用 orig，否则 json.loads 必失败、任务会被误删而不处理。
+    raw = (c.get("orig") or c.get("comment") or "")
+    shown = (c.get("comment") or "")
+    if raw.startswith("[failed") or shown.startswith("[failed") or c.get("status") == 2:
+        # 已失败过一次（或被标记 status=2），二次碰到即清除，避免堆积
         delete_comment(cid)
         return
     try:
