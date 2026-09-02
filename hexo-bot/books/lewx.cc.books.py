@@ -65,7 +65,7 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
 TIMEOUT = 30
 RETRY = 4               # 单 URL 失败重试次数
 WORKERS = 20            # 默认并发线程数
-MIN_INTERVAL = 0.1      # 全局最小请求间隔（秒）；全量重抓时调大以免触发 lewx.cc 风控限流（原 0.02 偏激进）
+MIN_INTERVAL = 0.02     # 全局最小请求间隔（秒）；章节正文量大，适度放宽
 SHARD_SIZE = 50         # 每个正文分片包含的章节数
 FLUSH_EVERY = 200       # 每处理多少本书 flush 一次索引（边爬边更新）
 
@@ -141,6 +141,19 @@ def fetch_html(url, referer=None, _depth=0):
 
 def warm_up():
     return fetch_html(SHUKU_URL, referer=BASE + "/")
+
+
+def is_bot_page(html):
+    """判断页面是否为反爬挑战/跳转页（当前 IP 被限流时，fetch_html 跟随 __K 跳转后仍会拿回这类页）。"""
+    if not html:
+        return False
+    if "ckc.js" in html[:800]:
+        return True
+    if "<title>Loading</title>" in html:
+        return True
+    if "window.location" in html and "__K=" in html:
+        return True
+    return False
 
 
 # ----------------------------- 解析：书库列表页 -----------------------------
@@ -454,6 +467,7 @@ class IndexState:
         with self.lock:
             _write_splits(list(self.books.values()), self.opts, dirty_only=False)
             _cleanup_stale_splits(list(self.books.values()))
+            write_all_book_ids(list(self.books.values()))
 
 
 def _cat_of(e):
@@ -496,7 +510,7 @@ def _cleanup_stale_splits(books):
 
 def build_index(opts=None):
     # --index-only：依据现有 index_cat_* / index_meta 重建分类索引（已不再有单书 book.json）
-    opts = opts or argparse.Namespace(no_mirror=True)
+    opts = opts or argparse.Namespace(no_mirror=True, toc=False)
     idx = IndexState(opts)
     idx.seed_from_index()
     idx.flush_final()
@@ -554,14 +568,65 @@ def read_existing_shards(bid):
     return out
 
 
+# ----------------------------- 按需：单分片抓取 / TOC / id 清单 -----------------------------
+def scrape_shard(bid, shard, size=SHARD_SIZE, workers=WORKERS):
+    """抓取某书第 shard 个分片(50章)写入 data/<bid>/c{shard:02d}.json。
+    返回 (titles, total_chapters) 或 None（抓取失败/被风控）。
+    仅写这一个分片文件，不动该书其它分片（区别于 write_content_shards 整体重写）。"""
+    html = fetch_html(book_url_of(bid), referer=SHUKU_URL)
+    if not html:
+        return None
+    detail = parse_book_detail(html, bid)
+    chaps = detail["chapters"]
+    total = len(chaps)
+    if total == 0:
+        return None
+    start = (shard - 1) * size
+    window = chaps[start:start + size]
+    if not window:
+        return None
+    texts = fetch_chapter_texts(window, book_url_of(bid), workers)
+    base = os.path.join(DATA_DIR, bid)
+    os.makedirs(base, exist_ok=True)
+    # 同时写出有序标题清单（toc），供前端章节导航；零额外请求（detail 已抓）
+    write_json(os.path.join(base, "toc.json"), [c["title"] for c in chaps])
+    arr = [(t + "\n" + (body or "")) for (t, body) in texts]
+    write_json(os.path.join(base, "c%02d.json" % shard), arr)
+    return ([t for t, _ in texts], total)
+
+
+def build_toc(bid):
+    """抓取某书章节标题列表(按列表内部顺序)写入 data/<bid>/toc.json，返回标题数组或 None。"""
+    html = fetch_html(book_url_of(bid), referer=SHUKU_URL)
+    if not html:
+        return None
+    detail = parse_book_detail(html, bid)
+    titles = [c["title"] for c in detail["chapters"]]
+    base = os.path.join(DATA_DIR, bid)
+    os.makedirs(base, exist_ok=True)
+    write_json(os.path.join(base, "toc.json"), titles)
+    return titles
+
+
+def write_all_book_ids(books):
+    """导出全部 book id 列表(扁平数组)到 data/all_book_ids.json，供 Worker 网关校验请求合法性。"""
+    ids = sorted({str(e.get("id")) for e in books if e and e.get("id")})
+    write_json(os.path.join(DATA_DIR, "all_book_ids.json"), ids)
+
+
 # ----------------------------- 主流程 -----------------------------
 def crawl(opts):
     os.makedirs(DATA_DIR, exist_ok=True)
     print("[INFO] 预热并解析书库首页...")
     first = warm_up()
     if not first:
-        print("[ERROR] 无法抓取书库首页，退出。")
+        print("[ERROR] 无法抓取书库首页（请求失败或被网络拦截），退出。")
         return
+    if is_bot_page(first):
+        print("[ERROR] 书库首页返回反爬跳转页(__K/ckc.js)，当前 IP 疑似被 lewx.cc 限流。")
+        print("        限流期内无法抓取：请稍后（通常数小时）重试，或换网络/IP 后重试。")
+        print("        可先用 content_crawl.bat 验证是否同样 0 本，确认是否为限流。")
+        sys.exit(1)
     total = get_total_pages(first)
     print("[INFO] 书库总页数：%d" % total)
     p_start, p_end = (opts.pages[0], opts.pages[1]) if opts.pages else (1, total)
@@ -637,14 +702,42 @@ def crawl(opts):
             else:
                 need_meta = False
 
+        # 增量时若本地缺 toc.json，也抓一次详情补上章节列表（不抓正文）
+        if opts.toc and not need_meta and exist:
+            _tbase = os.path.join(DATA_DIR, str(bid))
+            if not os.path.exists(os.path.join(_tbase, "toc.json")):
+                need_meta = True
+
         detail = None
         if need_meta:
             html = reuse_html if reuse_html is not None else fetch_html(book_url_of(bid), referer=SHUKU_URL)
             if not html:
                 return
             detail = parse_book_detail(html, bid)
+            # 风控期 lewx.cc 可能返回"骨架页"（页面能开、但章节列表为空）。
+            # toc 模式对"0 章"重试一次，避免把瞬时空窗当成"抓不到"而静默漏抓。
+            _retries = 0
+            while opts.toc and detail is not None and len(detail["chapters"]) == 0 and _retries < 2:
+                time.sleep(MIN_INTERVAL * 3)
+                _h2 = fetch_html(book_url_of(bid), referer=SHUKU_URL)
+                if not _h2:
+                    break
+                _d2 = parse_book_detail(_h2, bid)
+                detail = _d2
+                _retries += 1
+                if len(_d2["chapters"]) > 0:
+                    break
             meta = build_meta(bid, b, detail)
             meta["at"] = _now()
+            if opts.toc:
+                # 章节列表（仅标题，不含正文）；详情页已抓，零额外请求
+                _titles = [c["title"] for c in detail["chapters"]]
+                _base = os.path.join(DATA_DIR, bid)
+                os.makedirs(_base, exist_ok=True)   # 无条件建目录，避免"静默什么都不写"
+                if _titles:
+                    write_json(os.path.join(_base, "toc.json"), _titles)
+                else:
+                    print("  [WARN] 书 %s 详情页解析到 0 章（疑似骨架页/风控），本趟未写 toc.json" % bid)
         else:
             if not exist:
                 return
@@ -710,6 +803,7 @@ def main():
     ap.add_argument("--content", action="store_true", help="单遍抓取每本书前 --cap 章正文（写入 <id>/cNN.json 分片）")
     ap.add_argument("--cap", type=int, default=SHARD_SIZE, help="--content 时每本书最多抓多少章（默认 %d）" % SHARD_SIZE)
     ap.add_argument("--no-mirror", action="store_true", help="不同步到站点静态目录（R2 方案推荐）")
+    ap.add_argument("--toc", action="store_true", help="抓书目同时写出每本书的 toc.json（章节标题列表，不含正文）")
     ap.add_argument("--index-only", action="store_true", help="仅依据现有数据重建分类索引")
     args = ap.parse_args()
 

@@ -14,6 +14,7 @@
       R2_PUBLIC_URL，或同目录 r2_config.json（已 gitignore，勿提交）。
 """
 import os
+import re
 import sys
 import json
 import time
@@ -184,6 +185,7 @@ def main():
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument('--index-only', action='store_true', help='只传 index.json')
+    ap.add_argument('--toc', action='store_true', help='传索引 + 全部 toc.json，跳过正文分片(cNN.json)')
     ap.add_argument('--force', action='store_true', help='忽略比对，全量重传')
     ap.add_argument('--dry-run', action='store_true', help='只列出待传，不上传')
     ap.add_argument('--prefix', default='', help='对象 key 前缀，如 books')
@@ -211,7 +213,10 @@ def main():
     all_files.sort()
     files = all_files
     if opts.index_only:
-        files = [f for f in files if f == 'index_meta.json' or f.startswith('index_cat_')]
+        files = [f for f in files if f == 'index_meta.json' or f == 'all_book_ids.json' or f.startswith('index_cat_')]
+    if opts.toc:
+        # 只传索引 + 各书 toc.json，排除正文分片 cNN.json（不含正文）
+        files = [f for f in files if not re.match(r'^c\d+\.json$', os.path.basename(f))]
     files.sort()
     print('[INFO] 待处理 %d 个文件 (dry=%s, force=%s)' % (len(files), opts.dry_run, opts.force))
 

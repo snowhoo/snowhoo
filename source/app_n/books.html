@@ -75,6 +75,8 @@ layout: false
   #content .empty a { color: #b06a2c; }
 
   .loading { padding: 30px; text-align: center; color: #8a8475; font-size: .85rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { display: inline-block; animation: spin 1s linear infinite; font-size: 1.2rem; }
   @media (max-width: 640px) {
     #reader { flex-direction: column; }
     #chapterPanel { width: 100%; max-width: none; height: 42%; border-right: none; border-bottom: 1px solid #e7e2d6; }
@@ -120,6 +122,10 @@ layout: false
 const R2_BASE = 'https://pub-d583e3093dc1438882b43509c1571302.r2.dev/';
 const DATA = (R2_BASE.indexOf('REPLACE') === -1) ? R2_BASE : './books_data/';
 const LEXU_BASE = 'https://www.lewx.cc';
+// 按需抓取调度：前端把"未缓存章节"作为一条匿名评论提交到 Waline 专用 path（当作任务队列），
+// 本地轮询服务（books_poller.py）认领后抓取并上传 R2，前端轮询 R2 分片就绪即加载。
+const WALINE_SERVER = 'https://waline.snowhoo.net';
+const TASK_PATH = '/books/task-queue';
 // 封面在 book.json / 索引里只存相对路径（/uploads/allimg/...），按需补全站点前缀
 function coverUrl(b) {
   if (!b || !b.cover) return '';
@@ -134,7 +140,9 @@ let META = null;           // 索引元信息：{total, generated_at, categories
 let catCache = {};         // 分类文件 -> book 数组 缓存（避免重复拉取）
 let currentBook = null;
 let bookById = {};        // id -> 分类索引条目（不再有单书 book.json，详情页元数据直接来自索引）
-let currentShards = [];   // 数组，每元素 = "章节标题\n正文"
+let currentShards = [];   // 稀疏数组，索引 = 全局章号(0-based)，每元素 = "章节标题\n正文"
+let chapterTitles = [];   // 来自 toc.json 的有序章节标题（导航用）
+let loadedShards = new Set();   // 已载入 currentShards 的分片号
 let curIdx = null;
 
 const $ = (s) => document.querySelector(s);
@@ -252,62 +260,104 @@ async function openBook(b) {
   $('#contentTitle').textContent = '请选择章节';
   curIdx = null;
   currentBook = b;
+  currentShards = [];
+  chapterTitles = [];
+  loadedShards = new Set();
   const id = b.id;
-  const n = b.chapter_count || 0, nc = b.content_chapters || 0;
+  const n = b.chapter_count || 0;
   const onlineUrl = bookUrlOf(b);
   $('#bookHead').innerHTML =
     '<div class="bt">' + esc(b.title) + '</div>' +
     '<div class="ba">' + esc(b.author || '') + (b.category ? ' · ' + esc(b.category) : '') + (b.status ? ' · ' + esc(b.status) : '') + '</div>' +
     (b.intro ? '<div class="bi">' + esc(b.intro) + '</div>' : '') +
-    '<div class="bc">共 ' + n + ' 章' + (b.has_content ? ('（已离线缓存前 ' + nc + ' 章）') : '（未缓存，可在线阅读）') + (b.crawled_at ? ' · 更新于 ' + fmtTime(b.crawled_at) : '') + '</div>';
+    '<div class="bc">共 ' + n + ' 章（按需加载，未缓存章节将自动请求抓取）</div>';
   $('#contentHead').innerHTML = '<span id="contentTitle">请选择章节</span><a class="online" href="' + esc(onlineUrl) + '" target="_blank" rel="noopener">在线阅读 ↗</a>';
 
-  if (b.has_content && nc > 0) {
-    await loadShards(id, nc);
-  } else {
-    currentShards = [];
-    $('#chapterList').innerHTML = '<div class="loading">未缓存正文，请使用右上角“在线阅读”。</div>';
-    $('#content').innerHTML = '<p class="empty">本书正文未离线缓存。<br><a class="online" href="' + esc(onlineUrl) + '" target="_blank" rel="noopener">点此在线阅读 ↗</a></p>';
-  }
+  // 加载章节目录（有序标题）；缺失也不影响，可用首分片标题兜底
+  try { chapterTitles = await getJSON(DATA + id + '/toc.json'); } catch (e) { chapterTitles = []; }
+  renderChapters();
+  // 预载第一分片，开卷即读
+  if (n > 0) await ensureShard(id, 1);
   renderChapters();
 }
 
-async function loadShards(id, nc) {
-  currentShards = [];
-  const total = Math.ceil(nc / 50);
-  $('#chapterList').innerHTML = '<div class="loading">加载正文分片（' + total + '）…</div>';
+// 确保某分片已在 currentShards 中；命中缓存直接返回，否则尝试从 R2 加载，缺失则触发按需抓取
+async function ensureShard(id, S) {
+  if (loadedShards.has(S)) return true;
   try {
-    for (let i = 1; i <= total; i++) {
-      const arr = await getJSON(DATA + id + '/c' + String(i).padStart(2, '0') + '.json');
-      currentShards = currentShards.concat(arr);
-    }
+    const arr = await getJSON(DATA + id + '/c' + String(S).padStart(2, '0') + '.json');
+    placeShard(S, arr);
+    loadedShards.add(S);
+    return true;
   } catch (e) {
-    // 个别分片失败不影响已加载部分
+    if (WALINE_SERVER.indexOf('REPLACE') === -1) return await requestShard(id, S);
+    return false;   // 未配置网关：交给在线阅读兜底
   }
-  renderChapters();
 }
+
+// 发起按需抓取：提交一条 Waline 评论（匿名）作为任务，然后轮询 R2 分片就绪即加载
+async function requestShard(id, S) {
+  const cEl = $('#content');
+  cEl.innerHTML = '<div class="loading">已接到资源请求，请稍后……<br><span class="spin">◌</span></div>';
+  // 提交任务到 Waline 专用 path（comment 内含 {b:book_id, s:shard}）
+  try {
+    await fetch(WALINE_SERVER + '/api/comment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        path: TASK_PATH,
+        comment: JSON.stringify({ b: id, s: S }),
+        nick: 'books-bot', mail: 'bot@local', link: ''
+      })
+    });
+  } catch (e) { /* 忽略，轮询 R2 判定 */ }
+  // 轮询 R2 直到分片就绪（poller 抓完即上传）
+  const key = DATA + id + '/c' + String(S).padStart(2, '0') + '.json';
+  for (let i = 0; i < 60; i++) {
+    await sleep(3000);
+    try {
+      const arr = await getJSON(key);
+      placeShard(S, arr); loadedShards.add(S); return true;
+    } catch (e) { /* 未就绪，继续等待 */ }
+  }
+  return false;
+}
+
+function placeShard(S, arr) {
+  const base = (S - 1) * 50;
+  for (let k = 0; k < arr.length; k++) currentShards[base + k] = arr[k];
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 function renderChapters() {
   const box = $('#chapterList');
-  if (!currentBook || !currentShards.length) { box.innerHTML = '<div class="loading">无章节</div>'; return; }
+  if (!currentBook) { box.innerHTML = '<div class="loading">无章节</div>'; return; }
+  const n = currentBook.chapter_count || 0;
   const kw = $('#chapSearch').value.trim().toLowerCase();
-  const list = currentShards
-    .map((s, i) => ({ i, title: s.split('\n')[0] }))
-    .filter(c => !kw || (c.title || '').toLowerCase().includes(kw));
+  const list = [];
+  for (let i = 0; i < n; i++) {
+    const title = chapterTitles[i] || (currentShards[i] ? currentShards[i].split('\n')[0] : ('第' + (i + 1) + '章'));
+    if (kw && !title.toLowerCase().includes(kw)) continue;
+    list.push({ i, title });
+  }
   if (!list.length) { box.innerHTML = '<div class="loading">无匹配章节</div>'; return; }
   box.innerHTML = '';
   const frag = document.createDocumentFragment();
   list.forEach(c => {
     const a = document.createElement('a');
     a.className = 'chap' + (c.i === curIdx ? ' cur' : '');
-    a.textContent = c.title || ('第' + (c.i + 1) + '章');
+    a.textContent = c.title;
     a.addEventListener('click', () => openChapter(c.i));
     frag.appendChild(a);
   });
   box.appendChild(frag);
 }
 
-function openChapter(i) {
+async function openChapter(i) {
+  const id = currentBook.id;
+  const S = Math.ceil((i + 1) / 50);     // 章号(1-based) -> 分片号
+  await ensureShard(id, S);
   curIdx = i;
   renderChapters();
   const raw = currentShards[i] || '';
@@ -322,7 +372,7 @@ function openChapter(i) {
     cEl.scrollTop = 0;
   } else {
     const url = bookUrlOf(currentBook);
-    cEl.innerHTML = '<p class="empty">本章正文为空或加载失败。<br><a class="online" href="' + esc(url) + '" target="_blank" rel="noopener">点此在线阅读 ↗</a></p>';
+    cEl.innerHTML = '<p class="empty">本章正文暂未缓存或加载失败，正在后台抓取；亦可<br><a class="online" href="' + esc(url) + '" target="_blank" rel="noopener">点此在线阅读 ↗</a></p>';
     cEl.scrollTop = 0;
   }
 }
