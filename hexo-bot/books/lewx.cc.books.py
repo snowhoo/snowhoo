@@ -625,7 +625,7 @@ def crawl(opts):
     if is_bot_page(first):
         print("[ERROR] 书库首页返回反爬跳转页(__K/ckc.js)，当前 IP 疑似被 lewx.cc 限流。")
         print("        限流期内无法抓取：请稍后（通常数小时）重试，或换网络/IP 后重试。")
-        print("        可先用 content_crawl.bat 验证是否同样 0 本，确认是否为限流。")
+        print("        可稍后用 catalog_toc.bat（增量模式，已去掉强制全量）重试验证，或等限流窗口过再跑。")
         sys.exit(1)
     total = get_total_pages(first)
     print("[INFO] 书库总页数：%d" % total)
