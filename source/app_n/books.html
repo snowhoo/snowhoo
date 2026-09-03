@@ -839,7 +839,7 @@ async function cloudPush() {
       body: JSON.stringify({
         url: origin + '/app_n/books.html',
         path: UD_PATH,
-        comment: JSON.stringify({ history: HIST, fav: FAV, ts: Date.now() }),
+        comment: JSON.stringify({ history: HIST, fav: FAV, readEnv: readEnv, ts: Date.now() }),
         nick: u.display_name || u.nick, mail: u.mail || '', link: ''
       })
     });
@@ -882,6 +882,7 @@ function applyReadEnv() {
 }
 function saveReadEnv() {
   try { localStorage.setItem(RE_KEY, JSON.stringify(readEnv)); } catch (e) {}
+  if (walineUser()) persistUserData();   // 登录则随历史/收藏一起上云（/app-books/userdata 同记录）
 }
 function initReadEnv() {
   try { const s = JSON.parse(localStorage.getItem(RE_KEY)); if (s) Object.assign(readEnv, RE_DEFAULT, s); } catch (e) {}
@@ -911,7 +912,14 @@ async function syncUserData() {   // 云端更新则以云端为准，本地更�
   const obj = await cloudPull();
   if (!obj) return;
   let changed = false;
-  if ((obj.ts || 0) > localUserTs()) { HIST = obj.history || {}; FAV = obj.fav || []; saveUserData(); changed = true; }
+  if ((obj.ts || 0) > localUserTs()) {
+    HIST = obj.history || {}; FAV = obj.fav || [];
+    if (obj.readEnv) Object.assign(readEnv, RE_DEFAULT, obj.readEnv);
+    saveUserData();
+    try { localStorage.setItem(RE_KEY, JSON.stringify(readEnv)); } catch (e) {}
+    applyReadEnv();
+    changed = true;
+  }
   else await cloudPush();
   if (currentBook) syncBookFavBtn(currentBook);
   if (!changed) return;
