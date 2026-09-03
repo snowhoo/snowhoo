@@ -315,10 +315,19 @@ layout: false
   body.hide-title #contentHead #tocToggle { display: none; }
   body.hide-title #contentHead { background: transparent; border-bottom: none; }
   body.reader-on.hide-tts #bottomNav .bn-tts-row { display: none; }
-  body.reader-on.hide-bottom #bottomNav { display: none; }
-  body.reader-on.hide-bottom #app { padding-bottom: 0; }
-  body.reader-on.hide-bottom #readEnvBtn { bottom: 16px; }
-  body.reader-on.hide-bottom #readEnvPanel { bottom: 68px; }
+  body.reader-on.hide-bottom #bottomNav .bn-nav-row { display: none; }   /* 仅隐藏底部导航，不影响朗读条 */
+  body.reader-on.hide-bottom.hide-tts #bottomNav { display: none; }       /* 全隐藏时彻底移除底栏(含 1px 边框) */
+  /* 底栏(含朗读)隐藏后回收正文留白：按"剩余可见条数"给不同底部内边距 */
+  body.reader-on.hide-bottom #app { padding-bottom: 44px; }               /* 仅剩 朗读条(42px) */
+  body.reader-on.hide-tts #app { padding-bottom: 56px; }                  /* 仅剩 导航条(44px) */
+  body.reader-on.hide-bottom.hide-tts #app { padding-bottom: 0; }         /* 全部隐藏 */
+  /* 悬浮设置钮 / 面板：跟随底部可见内容上移，避免与底栏重叠 */
+  body.reader-on.hide-bottom #readEnvBtn { bottom: 52px; }                /* 朗读条上方 */
+  body.reader-on.hide-tts #readEnvBtn { bottom: 66px; }                   /* 导航条上方 */
+  body.reader-on.hide-bottom.hide-tts #readEnvBtn { bottom: 16px; }      /* 无底栏贴底 */
+  body.reader-on.hide-bottom #readEnvPanel { bottom: 104px; }
+  body.reader-on.hide-tts #readEnvPanel { bottom: 118px; }
+  body.reader-on.hide-bottom.hide-tts #readEnvPanel { bottom: 68px; }
   @media (max-width: 768px) {
     #readEnvBtn { bottom: 126px; }
     #readEnvPanel { bottom: 178px; }
@@ -396,7 +405,7 @@ layout: false
   <!-- 底部导航 -->
   <div class="bottom-nav" id="bottomNav">
     <div class="bn-row bn-tts-row"><div id="ttsBarMount"></div></div>
-    <div class="bn-row">
+    <div class="bn-row bn-nav-row">
       <div class="float-wrap">
         <button class="float-btn" id="floatBtn">书架</button>
         <div class="float-menu" id="floatMenu">
