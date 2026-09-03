@@ -420,32 +420,8 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
   <div class="logo-mini" id="logoMini"><svg viewBox="0 0 24 24"><path d="M15 4L7 12l8 8"/></svg></div>
 </div>
 
-<!-- 五个栏目按钮：4×5 宫格首页（手机 APP 图标样式，长按可拖拽排序） -->
+<!-- 桌面宫格按钮由顶部 APP_ICONS 配置生成（4×5 手机图标样式，长按可拖拽排序） -->
 <div class="app-grid" id="appGrid">
-  <button class="category-item active" id="storyBtn" data-url="https://snowhoo.net/app_n/reader.html" title="小红故事" style="--cat-color:#e94560">
-    <span class="circle">小</span>
-    <span class="label">小红故事</span>
-  </button>
-  <button class="category-item" id="yeduBtn" data-url="https://snowhoo.net/app_n/yedu_p.html" title="夜读" style="--cat-color:#764ba2">
-    <span class="circle">夜</span>
-    <span class="label">夜读</span>
-  </button>
-  <button class="category-item" id="zjszBtn" data-url="https://snowhoo.net/app_n/zjsz_p.html" title="照见苏州" style="--cat-color:#3b82f6">
-    <span class="circle">照</span>
-    <span class="label">照见苏州</span>
-  </button>
-  <button class="category-item" id="newsBtn" data-url="https://snowhoo.net/app_n/DaliyNews_p.html" title="新闻" style="--cat-color:#ff8c00">
-    <span class="circle">新</span>
-    <span class="label">新闻</span>
-  </button>
-  <button class="category-item" id="tvBtn" data-url="https://snowhoo.net/app_n/tv_p.html" title="播霸" style="--cat-color:#22c55e">
-    <span class="circle">播</span>
-    <span class="label">播霸</span>
-  </button>
-  <button class="category-item" id="booksBtn" data-url="https://snowhoo.net/app_n/books.html" title="书架" style="--cat-color:#ec4899">
-    <span class="circle">书</span>
-    <span class="label">书架</span>
-  </button>
 </div>
 
 <!-- 栏目启动器：页面中间圆点（高度与探索一致），点击弹出菜单（进入栏目 / 开关桌面按钮） -->
@@ -761,20 +737,30 @@ document.querySelector('.welcome').addEventListener('click', function() {
 
 // 分类点击：直接跳转栏目页（已去除解锁流程）
 // 注意：拖拽落点后可能合成一次 click，用 __gridDragged 标记拦截，避免误跳转
-var items = document.querySelectorAll('.category-item');
-items.forEach(function(el) {
-  el.addEventListener('click', function(e) {
-    if (window.__gridDragged) { window.__gridDragged = false; e.preventDefault(); e.stopPropagation(); return; }
-    // 用 replace 跳转：不在 WebView 历史栈留下本页，
-    // 栏目页内系统返回手势误触时不会 goBack 跳回首页（配合原生返回守护）
-    window.location.replace(el.dataset.url);
-  });
+// 栏目图标点击跳转（事件委托：按钮由 APP_ICONS 配置动态生成，故用容器级监听）
+document.addEventListener('click', function(e) {
+  var el = e.target && e.target.closest ? e.target.closest('.category-item') : null;
+  if (!el) return;
+  if (window.__gridDragged) { window.__gridDragged = false; e.preventDefault(); e.stopPropagation(); return; }
+  // 用 replace 跳转：不在 WebView 历史栈留下本页，
+  // 栏目页内系统返回手势误触时不会 goBack 跳回首页（配合原生返回守护）
+  window.location.replace(el.getAttribute('data-url'));
 });
+
+// ===== 桌面栏目配置（唯一配置源：新增栏目只需在此数组加一项，图标/链接/设置开关自动生效）=====
+var APP_ICONS = [
+  { id: 'storyBtn', url: 'https://snowhoo.net/app_n/reader.html', title: '小红故事', char: '小', color: '#e94560' },
+  { id: 'yeduBtn', url: 'https://snowhoo.net/app_n/yedu_p.html', title: '夜读', char: '夜', color: '#764ba2' },
+  { id: 'zjszBtn', url: 'https://snowhoo.net/app_n/zjsz_p.html', title: '照见苏州', char: '照', color: '#3b82f6' },
+  { id: 'newsBtn', url: 'https://snowhoo.net/app_n/DaliyNews_p.html', title: '新闻', char: '新', color: '#ff8c00' },
+  { id: 'tvBtn', url: 'https://snowhoo.net/app_n/tv_p.html', title: '播霸', char: '播', color: '#22c55e' },
+  { id: 'booksBtn', url: 'https://snowhoo.net/app_n/books.html', title: '书架', char: '书', color: '#ec4899' }
+];
 
 // ===== 首页 4×5 宫格：长按拖拽排序 + 布局持久化（登录写库/未登录写本地缓存） =====
 var AppGrid = (function() {
   var COLS = 4, ROWS = 5, TOTAL = COLS * ROWS;
-  var ICONS = ['storyBtn', 'yeduBtn', 'zjszBtn', 'newsBtn', 'tvBtn', 'booksBtn']; // 6 个栏目图标
+  var ICONS = APP_ICONS.map(function (a) { return a.id; });   // 由 APP_ICONS 派生
   var LS_LAYOUT = 'snowhoo_appgrid_layout';
   var CLOUD_BASE = 'https://waline.snowhoo.net';
   var CLOUD_PATH = '/app-layout/';
@@ -909,10 +895,24 @@ var AppGrid = (function() {
   // 首次运行时把 5 个按钮从容器里"摘"出来存进 btnRefs（removeChild 只脱离 DOM、引用仍在），
   // 之后 render() 清空容器就不会再把按钮一起销毁。
   function cacheBtns() {
+    // 桌面图标按钮全部由顶部 APP_ICONS 配置生成（HTML 不再手写），缓存进 btnRefs 供渲染/拖拽
     ICONS.forEach(function (id) {
       if (btnRefs[id]) return;
-      var el = document.getElementById(id);
-      if (el) { btnRefs[id] = el; if (el.parentNode) el.parentNode.removeChild(el); }
+      var el = document.getElementById(id);   // 兼容：若仍有残留静态按钮则直接摘取
+      if (!el) {
+        var m = null, j;
+        for (j = 0; j < APP_ICONS.length; j++) { if (APP_ICONS[j].id === id) { m = APP_ICONS[j]; break; } }
+        if (!m) return;
+        el = document.createElement('button');
+        el.id = id;
+        el.className = 'category-item' + (j === 0 ? ' active' : '');
+        el.setAttribute('data-url', m.url);
+        el.title = m.title;
+        el.style.setProperty('--cat-color', m.color);
+        el.innerHTML = '<span class="circle">' + m.char + '</span><span class="label">' + m.title + '</span>';
+      }
+      btnRefs[id] = el;
+      if (el.parentNode) el.parentNode.removeChild(el);
     });
   }
   function render() {
@@ -1121,7 +1121,7 @@ AppGrid.init();
 // ===== 栏目启动器：中间圆点 → 弹出菜单（进入栏目 / 开关桌面按钮） =====
 // 桌面按钮显隐配置与宫格布局共用同一份存储（登录写云 / 未登录写本地缓存）
 (function () {
-  var ICONS = ['storyBtn', 'yeduBtn', 'zjszBtn', 'newsBtn', 'tvBtn', 'booksBtn'];
+  var ICONS = APP_ICONS.map(function (a) { return a.id; });   // 由 APP_ICONS 派生
   var circle = document.getElementById('launcherCircle');
   var menu = document.getElementById('launcherMenu');
   var list = document.getElementById('launcherList');
@@ -1194,13 +1194,12 @@ AppGrid.init();
   function iconRows() {
     var rows = [];
     ICONS.forEach(function (id) {
-      var btn = document.getElementById(id); if (!btn) return;
-      var labelEl = btn.querySelector('.label');
-      var name = (labelEl ? labelEl.textContent : '') || btn.getAttribute('title') || id;
-      var colorM = (btn.getAttribute('style') || '').match(/--cat-color:\s*([^;]+)/);
-      var color = colorM ? colorM[1].trim() : '#888';
-      var circ = btn.querySelector('.circle');
-      var ch = circ ? circ.textContent.trim().charAt(0) : '';
+      var m = null, j;
+      for (j = 0; j < APP_ICONS.length; j++) { if (APP_ICONS[j].id === id) { m = APP_ICONS[j]; break; } }
+      if (!m) return;
+      var name = m.title || id;
+      var color = m.color || '#888';
+      var ch = (m.char || '').trim().charAt(0) || '';
       var hd = (AppGrid.isHidden && AppGrid.isHidden(id)) ? true : false;
       var row = document.createElement('div'); row.className = 'launcher-row';
       row.dataset.id = id;
