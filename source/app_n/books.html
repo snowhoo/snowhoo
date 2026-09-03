@@ -195,7 +195,7 @@ layout: false
   .wish-row-main { min-width: 0; }
   .wish-row-title { font-size: .88rem; color: var(--text-primary); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .wish-row-chap { font-size: .72rem; color: var(--text-muted); margin-top: 3px; }
-  .wish-row-sub { font-size: .66rem; color: var(--accent); margin-top: 2px; }
+  .wish-row-sub { font-size: .66rem; color: var(--accent); }
   .wish-status { font-size: .7rem; padding: 3px 10px; border-radius: 20px; flex-shrink: 0; }
   .wish-status.done { background: rgba(34,197,94,.15); color: #22c55e; }
   .wish-status.pending { background: rgba(249,115,22,.15); color: var(--accent); }
@@ -335,6 +335,16 @@ layout: false
           <img class="user-avatar" id="userAvatar" alt="会员" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='12' fill='%23e6e6e6'/><g fill='none' stroke='%23888' stroke-width='1.5'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></g></svg>">
         </div>
       </div>
+    </div>
+  </div>
+  <!-- 会员登录 / 留言弹窗（放在 #app 内以继承主题 CSS 变量，避免背景透明） -->
+  <div class="comment-overlay" id="commentOverlay">
+    <div class="comment-panel">
+      <div class="comment-panel-header">
+        <span class="cp-title">会员登录 · 留言</span>
+        <button class="cp-close" id="commentClose">&times;</button>
+      </div>
+      <div class="comment-panel-body" id="walineContainer"></div>
     </div>
   </div>
 </div>
@@ -1070,9 +1080,15 @@ async function resolveBook(id) {
   else { showView('shelf'); alert('未找到该书：' + id); }
 }
 
-// ===== 心愿单面板 =====
-async function openWishList() {
-  await loadWishes(true);
+// ===== 心愿单面板（弹出即时响应，Waline 数据后台懒加载，不阻塞菜单） =====
+function openWishList() {
+  renderWishPanel();                       // 先用现有数据渲染（旧缓存/空态），面板立即弹出
+  $('#wishOverlay').classList.add('show');
+  loadWishes(true).then(() => {            // 后台刷新 Waline 心愿，完成后重渲染
+    if ($('#wishOverlay').classList.contains('show')) renderWishPanel();
+  }).catch(() => {});
+}
+function renderWishPanel() {
   const fulfilled = (wishStats && wishStats.fulfilled) || 0;
   $('#wishFulfilled').textContent = fulfilled;
   const list = $('#wishList');
@@ -1081,7 +1097,9 @@ async function openWishList() {
   const pend = all.filter(e => e.status !== 'done');
   const dones = all.filter(e => e.status === 'done').slice(0, 10);
   const show = pend.concat(dones);
-  if (!show.length) {
+  if (!wishCache) {
+    list.innerHTML = '<div class="loading">心愿单加载中…</div>';
+  } else if (!show.length) {
     list.innerHTML = '<div class="wish-empty">还没有心愿，去书架挑一本未收录的章节"许愿"吧～</div>';
   } else {
     let html = '';
@@ -1093,8 +1111,7 @@ async function openWishList() {
       html += '<div class="wish-row" data-bid="' + esc(String(e.bid)) + '">' +
         '<div class="wish-row-main">' +
         '<div class="wish-row-title">' + esc(e.title || '未知书目') + '</div>' +
-        '<div class="wish-row-chap">第 ' + chap + ' 章</div>' +
-        '<div class="wish-row-sub">你那么可爱，' + low + '-' + high + ' 章一起送你！</div>' +
+        '<div class="wish-row-chap">第 ' + chap + ' 章 <span class="wish-row-sub">你那么可爱，' + low + '-' + high + ' 章一起送你！</span></div>' +
         '</div>' +
         '<span class="wish-status ' + stCls + '">' + st + '</span>' +
         '</div>';
@@ -1107,7 +1124,6 @@ async function openWishList() {
       else resolveBook(bid);
     }));
   }
-  $('#wishOverlay').classList.add('show');
 }
 
 // ===== 主题切换（与 tv_p 联动，持久化到 localStorage） =====
@@ -1143,17 +1159,6 @@ async function openWishList() {
 
 init();
 </script>
-
-<!-- 会员登录 / 留言弹窗 -->
-<div class="comment-overlay" id="commentOverlay">
-  <div class="comment-panel">
-    <div class="comment-panel-header">
-      <span class="cp-title">会员登录 · 留言</span>
-      <button class="cp-close" id="commentClose">&times;</button>
-    </div>
-    <div class="comment-panel-body" id="walineContainer"></div>
-  </div>
-</div>
 
 <script>
 // ===== 会员登录（Waline 弹窗，与 reader.html 一致） =====
