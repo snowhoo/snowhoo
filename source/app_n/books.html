@@ -91,11 +91,18 @@ layout: false
     font-weight: 600; font-size: 13px; line-height: 1.4; color: var(--text-primary);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .book-author { font-size: .72rem; color: var(--text-muted); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .book-upd { font-size: .66rem; color: var(--text-muted); margin-top: 4px; }
-  /* 卡片底部：阅读进度 + 收藏键（参考 tv_p 的 fav-home-btn） */
-  .book-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 5px; }
-  .book-prog { font-size: .66rem; color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .book-author { flex: 1; min-width: 0; font-size: .72rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .book-author-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+  /* 日期/进度覆盖在封面底部（渐变底保证可读，pointer-events:none 不挡点击） */
+  .book-cover-foot {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    padding: 12px 6px 5px; font-size: .6rem; color: #fff;
+    background: linear-gradient(to top, rgba(0,0,0,.62), rgba(0,0,0,0));
+    pointer-events: none;
+  }
+  .book-cover-foot .cov-date { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .book-cover-foot .cov-prog { flex-shrink: 0; margin-left: auto; }
   .fav-home-btn { background: transparent; border: none; font-size: 15px; cursor: pointer; color: var(--text-secondary); flex-shrink: 0; padding: 0 2px; line-height: 1.2; }
   .fav-home-btn:active { transform: scale(.88); }
   /* 书籍信息栏的收藏 / 续读 */
@@ -620,13 +627,17 @@ function appendShelf() {
       : '<div class="book-cover book-cover-text">📖</div>';
     const prog = (HIST[b.id] && HIST[b.id].idx >= 0) ? (HIST[b.id].idx + 1) : 0;
     const coverBadge = (b.category ? '<span class="book-cover-badge">' + esc(b.category) + (b.status ? ' · ' + esc(b.status) : '') + '</span>' : '');
-    card.innerHTML = '<div class="book-cover-wrap">' + cover + coverBadge + '</div>' +
+    const coverFoot = (b.crawled_at || prog)
+      ? '<div class="book-cover-foot">' +
+        (b.crawled_at ? '<span class="cov-date">' + esc(fmtTime(b.crawled_at)) + '</span>' : '<span></span>') +
+        (prog ? '<span class="cov-prog">读到第 ' + prog + ' 章</span>' : '') +
+        '</div>'
+      : '';
+    card.innerHTML = '<div class="book-cover-wrap">' + cover + coverBadge + coverFoot + '</div>' +
       '<div class="book-info">' +
       '<div class="book-title" title="' + esc(b.title) + '">' + esc(b.title) + '</div>' +
+      '<div class="book-author-row">' +
       '<div class="book-author">' + esc(b.author || '') + '</div>' +
-      (b.crawled_at ? '<div class="book-upd">' + fmtTime(b.crawled_at) + '</div>' : '') +
-      '<div class="book-foot">' +
-      (prog ? '<span class="book-prog">读到第 ' + prog + ' 章</span>' : '<span></span>') +
       '<button class="fav-home-btn" data-favid="' + esc(b.id) + '">' + (isFav(b.id) ? '❤️' : '🤍') + '</button>' +
       '</div></div>';
     card.addEventListener('click', () => { location.hash = '#book/' + b.id; });
