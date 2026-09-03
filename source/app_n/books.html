@@ -116,13 +116,22 @@ layout: false
   .loading { padding: 30px; text-align: center; color: var(--text-muted); font-size: .85rem; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .spin { display: inline-block; animation: spin 1s linear infinite; font-size: 1.2rem; }
+  .wish-prompt { text-align: center; padding: 48px 20px; color: var(--text-primary); }
+  .wish-emoji { font-size: 2.6rem; }
+  .wish-prompt p { margin-top: 12px; font-size: 1rem; }
+  .wish-sub { color: var(--text-muted); font-size: .82rem !important; margin-top: 6px !important; }
+  .wish-btns { display: flex; gap: 12px; justify-content: center; margin-top: 22px; }
+  .wish-btn { border: none; border-radius: 40px; padding: 10px 30px; font-size: .9rem; font-weight: 600; cursor: pointer; transition: transform .1s; }
+  .wish-btn.yes { background: var(--accent); color: #fff; }
+  .wish-btn.no { background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border); }
+  .wish-btn:active { transform: scale(.96); }
 
   /* 底部导航 */
   .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; height: 44px; background: var(--bg-surface); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: .8rem; user-select: none; -webkit-user-select: none; }
-  .page-nav-group { display: flex; align-items: center; gap: 8px; }
-  .page-btn { display: flex; align-items: center; gap: 4px; padding: 4px 16px; border-radius: 40px; cursor: pointer; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); font-weight: 600; }
+  .page-nav-group { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
+  .page-btn { display: flex; align-items: center; gap: 4px; padding: 4px 14px; border-radius: 40px; cursor: pointer; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); font-weight: 600; flex-shrink: 0; }
   .page-btn:active { background: var(--bg-card-hover); }
-  .page-text { font-size: .72rem; color: var(--text-muted); white-space: nowrap; }
+  .page-text { font-size: .72rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .theme-btn { width: 32px; height: 32px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .theme-btn:active { transform: scale(.92); }
   .theme-btn svg { width: 18px; height: 18px; }
@@ -136,6 +145,28 @@ layout: false
   .float-menu a { display: flex; align-items: center; padding: 10px 16px; color: var(--text-primary); text-decoration: none; font-size: .82rem; font-weight: 500; white-space: nowrap; transition: background .2s; }
   .float-menu a:hover { background: var(--bg-card-hover); }
   .menu-indicator { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; margin-right: 6px; vertical-align: middle; width: 18px; height: 18px; border-radius: 50%; color: #fff; font-size: .6rem; font-weight: 600; line-height: 18px; text-align: center; }
+
+  /* 心愿单面板 */
+  .wish-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,.5); opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s; display: flex; align-items: flex-end; }
+  .wish-overlay.show { opacity: 1; visibility: visible; }
+  .wish-panel { background: var(--bg-surface); width: 100%; max-height: 80vh; border-radius: 16px 16px 0 0; display: flex; flex-direction: column; transform: translateY(100%); transition: transform .35s ease-out; }
+  .wish-overlay.show .wish-panel { transform: translateY(0); }
+  .wish-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 8px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .wish-cp-title { font-size: .95rem; font-weight: 600; color: var(--text-primary); }
+  .wish-count { font-size: .76rem; color: var(--text-secondary); }
+  .wish-count b { color: var(--accent); }
+  .wish-close { font-size: 1.2rem; color: var(--text-muted); border: none; background: none; cursor: pointer; padding: 4px; line-height: 1; }
+  .wish-panel-body { flex: 1; overflow-y: auto; padding: 4px 16px 16px; -webkit-overflow-scrolling: touch; }
+  .wish-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; border-bottom: 1px solid var(--border); cursor: pointer; gap: 10px; }
+  .wish-row:active { background: var(--bg-card-hover); }
+  .wish-row-main { min-width: 0; }
+  .wish-row-title { font-size: .88rem; color: var(--text-primary); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wish-row-chap { font-size: .72rem; color: var(--text-muted); margin-top: 3px; }
+  .wish-status { font-size: .7rem; padding: 3px 10px; border-radius: 20px; flex-shrink: 0; }
+  .wish-status.done { background: rgba(34,197,94,.15); color: #22c55e; }
+  .wish-status.pending { background: rgba(249,115,22,.15); color: var(--accent); }
+  .wish-status.failed { background: rgba(239,68,68,.15); color: #ef4444; }
+  .wish-empty { padding: 44px 20px; text-align: center; color: var(--text-muted); font-size: .85rem; }
 
   /* 启动加载动画 */
   .loading-overlay { position: fixed; inset: 0; z-index: 9999; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity .5s; }
@@ -185,10 +216,23 @@ layout: false
     </div>
   </div>
 
+  <!-- 心愿单面板 -->
+  <div class="wish-overlay" id="wishOverlay">
+    <div class="wish-panel">
+      <div class="wish-panel-header">
+        <span class="wish-cp-title">💝 心愿单</span>
+        <span class="wish-count">已达成 <b id="wishFulfilled">0</b> 个心愿</span>
+        <button class="wish-close" id="wishClose">✕</button>
+      </div>
+      <div class="wish-panel-body" id="wishList"></div>
+    </div>
+  </div>
+
   <!-- 底部导航 -->
   <div class="bottom-nav" id="bottomNav">
     <div class="page-nav-group">
       <span class="page-btn" id="backShelfBtn">‹ 书架</span>
+      <span class="page-btn" id="wishBtn">💝 心愿</span>
       <span class="page-text" id="botInfo"></span>
     </div>
     <div class="float-wrap">
@@ -215,14 +259,16 @@ layout: false
 <script>
 // 数据源：Cloudflare R2 公开访问地址（桶开启 Public access 后获得，形如 https://pub-xxxxxxxx.r2.dev/）
 // 若使用自定义域名，改成你的域名即可。保留 REPLACE 占位时自动回退到本地 ./books_data/（便于本地预览）。
-// 索引为分类拆分结构：先读 index_meta.json（含分类清单/总数/更新时间），再按需懒加载各 index_cat_<N>.json。
 const R2_BASE = 'https://pub-d583e3093dc1438882b43509c1571302.r2.dev/';
 const DATA = (R2_BASE.indexOf('REPLACE') === -1) ? R2_BASE : './books_data/';
 const LEXU_BASE = 'https://www.lewx.cc';
-// 按需抓取调度：前端把"未缓存章节"作为一条匿名评论提交到 Waline 专用 path（当作任务队列），
+// 按需抓取调度：前端把"未缓存章节"作为一条匿名评论提交到 Waline 专用 path（当作心愿任务队列），
 // 本地轮询服务（books_poller.py）认领后抓取并上传 R2，前端轮询 R2 分片就绪即加载。
 const WALINE_SERVER = 'https://waline.snowhoo.net';
 const TASK_PATH = '/books/task-queue';
+// 心愿单展示文件（由 poller 写入、随 R2 公开同步，前端匿名读取）
+const WISH_RECENT = DATA + 'wishes/recent.json';
+const WISH_STATS = DATA + 'wishes/stats.json';
 // 封面在 book.json / 索引里只存相对路径（/uploads/allimg/...），按需补全站点前缀
 function coverUrl(b) {
   if (!b || !b.cover) return '';
@@ -232,7 +278,7 @@ function coverUrl(b) {
 function bookUrlOf(b) {
   return (b && b.id) ? (LEXU_BASE + '/book/' + b.id + '/') : LEXU_BASE + '/';
 }
-let INDEX = null;          // 兼容保留（历史字段，当前未直接使用）
+let INDEX = null;           // 兼容保留（历史字段，当前未直接使用）
 let META = null;           // 索引元信息：{total, generated_at, categories:[{name,file,count}]}
 let catCache = {};         // 分类文件 -> book 数组 缓存（避免重复拉取）
 let currentCatFile = '';   // 当前选中的分类文件（'' = 全部分类）
@@ -246,6 +292,13 @@ let shelfAll = [];        // 当前过滤后的全部书籍
 let shelfShown = 0;       // 书架已渲染数量（用于懒加载 / 无限滚动）
 let shelfObserver = null; // IntersectionObserver 实例
 const PAGE_SIZE = 36;     // 每批渲染数量（避免一次性渲染上万张卡片卡死）
+
+// 心愿单本地缓存（会话内 + localStorage，用于"已在队列"即时判断，避免重复弹窗）
+let wishedSet = new Set(JSON.parse(localStorage.getItem('books_wished') || '[]'));
+function saveWishedSet() { localStorage.setItem('books_wished', JSON.stringify([...wishedSet])); }
+let wishCache = null;     // 最近十条心愿（来自 R2）
+let wishStats = null;     // {fulfilled:Number}
+let wishLoaded = false;
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => (s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -282,6 +335,9 @@ async function init() {
   }, true);
   $('#backShelfBtn').addEventListener('click', () => { if (location.hash) location.hash = ''; else showView('shelf'); });
   $('#chapSearch').addEventListener('input', renderChapters);
+  $('#wishBtn').addEventListener('click', openWishList);
+  $('#wishClose').addEventListener('click', () => $('#wishOverlay').classList.remove('show'));
+  $('#wishOverlay').addEventListener('click', (e) => { if (e.target === $('#wishOverlay')) $('#wishOverlay').classList.remove('show'); });
   window.addEventListener('hashchange', route);
   route();
   hideLoading();
@@ -444,7 +500,7 @@ async function openBook(b) {
     '<div class="bt">' + esc(b.title) + '</div>' +
     '<div class="ba">' + esc(b.author || '') + (b.category ? ' · ' + esc(b.category) : '') + (b.status ? ' · ' + esc(b.status) : '') + '</div>' +
     (b.intro ? '<div class="bi">' + esc(b.intro) + '</div>' : '') +
-    '<div class="bc">共 ' + n + ' 章（按需加载，未缓存章节将自动请求抓取）</div>';
+    '<div class="bc">共 ' + n + ' 章（按需加载，未缓存章节可"许愿"让后台抓取）</div>';
   $('#contentHead').innerHTML = '<span id="contentTitle">请选择章节</span><a class="online" href="' + esc(onlineUrl) + '" target="_blank" rel="noopener">在线阅读 ↗</a>';
 
   // 加载章节目录（有序标题）；缺失也不影响，可用首分片标题兜底
@@ -455,7 +511,7 @@ async function openBook(b) {
   renderChapters();
 }
 
-// 确保某分片已在 currentShards 中；命中缓存直接返回，否则尝试从 R2 加载，缺失则触发按需抓取
+// 确保某分片已在 currentShards 中；命中缓存直接返回，否则尝试从 R2 加载，缺失则返回 false（交由上层处理心愿流程）
 async function ensureShard(id, S) {
   if (loadedShards.has(S)) return true;
   try {
@@ -464,21 +520,86 @@ async function ensureShard(id, S) {
     loadedShards.add(S);
     return true;
   } catch (e) {
-    if (WALINE_SERVER.indexOf('REPLACE') === -1) return await requestShard(id, S);
-    return false;   // 未配置网关：交给在线阅读兜底
+    return false;   // R2 没有该分片
   }
 }
 
-// 发起按需抓取：提交一条 Waline 评论（匿名）作为任务，然后轮询 R2 分片就绪即加载
-async function requestShard(id, S) {
+// ===== 心愿单数据 =====
+async function loadWishes(force) {
+  if (wishLoaded && !force) return;
+  try { wishCache = await getJSON(WISH_RECENT); } catch (e) { wishCache = []; }
+  try { wishStats = await getJSON(WISH_STATS); } catch (e) { wishStats = { fulfilled: 0 }; }
+  wishLoaded = true;
+}
+function isWishedRemote(bid, shard) {
+  if (!wishCache) return false;
+  return wishCache.some(e => String(e.bid) === String(bid) && e.shard === shard && e.status === 'pending');
+}
+function isWished(bid, shard) {
+  return wishedSet.has(bid + ':' + shard) || isWishedRemote(bid, shard);
+}
+
+// ===== 章节点击：R2 直读 / 心愿流程 =====
+async function openChapter(i) {
+  const id = currentBook.id;
+  const S = Math.ceil((i + 1) / 50);     // 章号(1-based) -> 分片号
+  const ok = await ensureShard(id, S);
+  curIdx = i;
+  renderChapters();
+  if (ok) { renderContent(i); return; }
+  // R2 没有该分片 -> 心愿流程
+  await handleShardMiss(id, S, i);
+}
+
+async function handleShardMiss(id, S, i) {
+  await loadWishes();
+  if (isWished(id, S)) {
+    // 已在心愿单队列：提示"心愿已许，静待如愿！"并继续轮询 R2
+    showWishPending();
+    await pollShard(id, S, i);
+    return;
+  }
+  // 未许愿：弹出确认
+  showWishPrompt(id, S, i);
+}
+
+function showWishPrompt(id, S, i) {
   const cEl = $('#content');
-  cEl.innerHTML = '<div class="loading">已接到资源请求，请稍后……<br><span class="spin">◌</span></div>';
+  cEl.innerHTML =
+    '<div class="wish-prompt">' +
+    '<div class="wish-emoji">💝</div>' +
+    '<p>章节未收录，许下心愿？</p>' +
+    '<p class="wish-sub">10 分钟内就能如愿！</p>' +
+    '<div class="wish-btns">' +
+    '<button class="wish-btn yes" id="wishYes">许愿</button>' +
+    '<button class="wish-btn no" id="wishNo">不用了</button>' +
+    '</div></div>';
+  $('#wishYes').addEventListener('click', () => makeWish(id, S, i));
+  $('#wishNo').addEventListener('click', () => {
+    cEl.innerHTML = '<p class="empty">本章正文暂未缓存。<br>可<a class="online" href="' + esc(bookUrlOf(currentBook)) + '" target="_blank" rel="noopener">点此在线阅读 ↗</a></p>';
+  });
+}
+
+function showWishPending() {
+  $('#content').innerHTML = '<div class="loading">已接到资源请求，请稍后……<br><span class="spin">◌</span><br><span style="font-size:.82rem;display:block;margin-top:8px">心愿已许，静待如愿！</span></div>';
+}
+
+async function makeWish(id, S, i) {
+  const title = currentBook ? currentBook.title : '';
+  wishedSet.add(id + ':' + S);
+  saveWishedSet();
+  showWishPending();
+  const sent = await submitWish(id, S, i, title);
+  if (!sent) return;   // submitWish 内部已提示错误
+  await pollShard(id, S, i);
+}
+
+async function submitWish(id, S, i, title) {
   // Waline 要求评论必须带 url 字段，且 url 须在其配置站点（WALINE_SITE_URL）之下，否则直接拒绝（errno 1001）
   const queueUrl = (location.origin && location.origin.indexOf('http') === 0)
     ? (location.origin + TASK_PATH)
     : ('https://snowhoo.net' + TASK_PATH);
-  const onlineUrl = bookUrlOf(currentBook);
-  // 提交任务到 Waline 专用 path（comment 内含 {b:book_id, s:shard}）
+  const cEl = $('#content');
   try {
     const resp = await fetch(WALINE_SERVER + '/api/comment', {
       method: 'POST',
@@ -486,7 +607,7 @@ async function requestShard(id, S) {
       body: JSON.stringify({
         url: queueUrl,
         path: TASK_PATH,
-        comment: JSON.stringify({ b: id, s: S }),
+        comment: JSON.stringify({ b: id, s: S, i: i, t: title }),
         nick: 'books-bot', mail: 'bot@snowhoo.net', link: ''
       })
     });
@@ -495,20 +616,27 @@ async function requestShard(id, S) {
       throw new Error('HTTP ' + resp.status + ' ' + txt.slice(0, 140));
     }
   } catch (e) {
-    cEl.innerHTML = '<p class="empty">提交抓取请求失败：' + esc(e.message) +
-      '<br>请确认网络可访问 waline.snowhoo.net，或<a class="online" href="' + esc(onlineUrl) + '" target="_blank" rel="noopener">点此在线阅读 ↗</a></p>';
+    cEl.innerHTML = '<p class="empty">提交心愿失败：' + esc(e.message) +
+      '<br>请确认网络可访问 waline.snowhoo.net，或<a class="online" href="' + esc(bookUrlOf(currentBook)) + '" target="_blank" rel="noopener">点此在线阅读 ↗</a></p>';
     return false;
   }
-  // 轮询 R2 直到分片就绪（poller 抓完即上传）
+  return true;
+}
+
+// 轮询 R2 直到分片就绪（poller 抓完即上传）。仅当仍停留在当前章节时才渲染，避免串台
+async function pollShard(id, S, i) {
   const key = DATA + id + '/c' + String(S).padStart(2, '0') + '.json';
-  for (let i = 0; i < 60; i++) {
+  for (let k = 0; k < 60; k++) {
     await sleep(3000);
     try {
       const arr = await getJSON(key);
-      placeShard(S, arr); loadedShards.add(S); return true;
+      if (curIdx === i) { placeShard(S, arr); loadedShards.add(S); renderContent(i); }
+      return true;
     } catch (e) { /* 未就绪，继续等待 */ }
   }
-  cEl.innerHTML = '<p class="empty">抓取超时（可能服务端 poller 未运行，或该书被风控）。<br><a class="online" href="' + esc(onlineUrl) + '" target="_blank" rel="noopener">点此在线阅读 ↗</a></p>';
+  if (curIdx === i) {
+    $('#content').innerHTML = '<p class="empty">抓取超时（可能服务端 poller 未运行，或该书被风控）。<br><a class="online" href="' + esc(bookUrlOf(currentBook)) + '" target="_blank" rel="noopener">点此在线阅读 ↗</a></p>';
+  }
   return false;
 }
 
@@ -527,6 +655,24 @@ function placeShard(S, arr) {
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function renderContent(i) {
+  const raw = currentShards[i] || '';
+  const nl = raw.indexOf('\n');
+  const title = nl >= 0 ? raw.slice(0, nl) : raw;
+  const body = nl >= 0 ? raw.slice(nl + 1) : '';
+  $('#contentTitle').textContent = title || ('第' + (i + 1) + '章');
+  const cEl = $('#content');
+  if (body && body.trim()) {
+    const paras = body.split('\n').map(p => p.trim()).filter(Boolean);
+    cEl.innerHTML = paras.map(p => '<p>' + esc(p) + '</p>').join('') || '<p class="empty">（本章内容为空）</p>';
+    cEl.scrollTop = 0;
+  } else {
+    const url = bookUrlOf(currentBook);
+    cEl.innerHTML = '<p class="empty">本章正文暂未缓存或加载失败，正在后台抓取；亦可<br><a class="online" href="' + esc(url) + '" target="_blank" rel="noopener">点此在线阅读 ↗</a></p>';
+    cEl.scrollTop = 0;
+  }
+}
 
 function renderChapters() {
   const box = $('#chapterList');
@@ -552,29 +698,6 @@ function renderChapters() {
   box.appendChild(frag);
 }
 
-async function openChapter(i) {
-  const id = currentBook.id;
-  const S = Math.ceil((i + 1) / 50);     // 章号(1-based) -> 分片号
-  await ensureShard(id, S);
-  curIdx = i;
-  renderChapters();
-  const raw = currentShards[i] || '';
-  const nl = raw.indexOf('\n');
-  const title = nl >= 0 ? raw.slice(0, nl) : raw;
-  const body = nl >= 0 ? raw.slice(nl + 1) : '';
-  $('#contentTitle').textContent = title || ('第' + (i + 1) + '章');
-  const cEl = $('#content');
-  if (body && body.trim()) {
-    const paras = body.split('\n').map(p => p.trim()).filter(Boolean);
-    cEl.innerHTML = paras.map(p => '<p>' + esc(p) + '</p>').join('') || '<p class="empty">（本章内容为空）</p>';
-    cEl.scrollTop = 0;
-  } else {
-    const url = bookUrlOf(currentBook);
-    cEl.innerHTML = '<p class="empty">本章正文暂未缓存或加载失败，正在后台抓取；亦可<br><a class="online" href="' + esc(url) + '" target="_blank" rel="noopener">点此在线阅读 ↗</a></p>';
-    cEl.scrollTop = 0;
-  }
-}
-
 async function route() {
   const h = location.hash;
   const m = h.match(/^#book\/(.+)$/);
@@ -592,6 +715,39 @@ async function resolveBook(id) {
   await Promise.all(files.map(ensureCategory));
   if (bookById[id]) openBook(bookById[id]);
   else { showView('shelf'); alert('未找到该书：' + id); }
+}
+
+// ===== 心愿单面板 =====
+async function openWishList() {
+  await loadWishes(true);
+  const fulfilled = (wishStats && wishStats.fulfilled) || 0;
+  $('#wishFulfilled').textContent = fulfilled;
+  const list = $('#wishList');
+  if (!wishCache || !wishCache.length) {
+    list.innerHTML = '<div class="wish-empty">还没有心愿，去书架挑一本未收录的章节"许愿"吧～</div>';
+  } else {
+    let html = '';
+    wishCache.forEach(e => {
+      const st = e.status === 'done' ? '已达成' : (e.status === 'pending' ? '待' : '失败');
+      const stCls = e.status === 'done' ? 'done' : (e.status === 'pending' ? 'pending' : 'failed');
+      const chap = (e.chapter != null) ? e.chapter : ((e.shard - 1) * 50 + 1);
+      html += '<div class="wish-row" data-bid="' + esc(String(e.bid)) + '">' +
+        '<div class="wish-row-main">' +
+        '<div class="wish-row-title">' + esc(e.title || '未知书目') + '</div>' +
+        '<div class="wish-row-chap">第 ' + chap + ' 章 · 分片 ' + e.shard + '</div>' +
+        '</div>' +
+        '<span class="wish-status ' + stCls + '">' + st + '</span>' +
+        '</div>';
+    });
+    list.innerHTML = html;
+    list.querySelectorAll('.wish-row').forEach(r => r.addEventListener('click', () => {
+      const bid = r.dataset.bid;
+      $('#wishOverlay').classList.remove('show');
+      if (bookById[bid]) openBook(bookById[bid]);
+      else resolveBook(bid);
+    }));
+  }
+  $('#wishOverlay').classList.add('show');
 }
 
 // ===== 主题切换（与 tv_p 联动，持久化到 localStorage） =====
