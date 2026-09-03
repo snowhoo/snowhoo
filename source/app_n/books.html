@@ -900,9 +900,9 @@ function applyReadEnv() {
   document.body.classList.toggle('hide-title', !!readEnv.hideTitle);
   document.body.classList.toggle('hide-tts', !!readEnv.hideTts);
   document.body.classList.toggle('hide-bottom', !!readEnv.hideBottom);
-  const tgT = $('#tgTitle'); if (tgT) tgT.checked = !!readEnv.hideTitle;
-  const tgS = $('#tgTts'); if (tgS) tgS.checked = !!readEnv.hideTts;
-  const tgB = $('#tgBottom'); if (tgB) tgB.checked = !!readEnv.hideBottom;
+  const tgT = $('#tgTitle'); if (tgT) tgT.checked = !readEnv.hideTitle;
+  const tgS = $('#tgTts'); if (tgS) tgS.checked = !readEnv.hideTts;
+  const tgB = $('#tgBottom'); if (tgB) tgB.checked = !readEnv.hideBottom;
   syncEdgeTitleTop();   // 标题显隐会改变头部高度，需重算右缘标题顶边
 }
 function saveReadEnv() {
@@ -917,9 +917,9 @@ function initReadEnv() {
   const tb = $('#reTextBright'); if (tb) tb.addEventListener('input', () => { readEnv.fgBright = parseInt(tb.value); applyReadEnv(); saveReadEnv(); });
   const bg = $('#reBg'); if (bg) bg.addEventListener('input', () => { readEnv.bgHue = parseInt(bg.value); applyReadEnv(); saveReadEnv(); });
   const bb = $('#reBgBright'); if (bb) bb.addEventListener('input', () => { readEnv.bgBright = parseInt(bb.value); applyReadEnv(); saveReadEnv(); });
-  const tgT = $('#tgTitle'); if (tgT) tgT.addEventListener('change', () => { readEnv.hideTitle = tgT.checked; applyReadEnv(); saveReadEnv(); });
-  const tgS = $('#tgTts'); if (tgS) tgS.addEventListener('change', () => { readEnv.hideTts = tgS.checked; applyReadEnv(); saveReadEnv(); });
-  const tgB = $('#tgBottom'); if (tgB) tgB.addEventListener('change', () => { readEnv.hideBottom = tgB.checked; applyReadEnv(); saveReadEnv(); });
+  const tgT = $('#tgTitle'); if (tgT) tgT.addEventListener('change', () => { readEnv.hideTitle = !tgT.checked; applyReadEnv(); saveReadEnv(); });
+  const tgS = $('#tgTts'); if (tgS) tgS.addEventListener('change', () => { readEnv.hideTts = !tgS.checked; applyReadEnv(); saveReadEnv(); });
+  const tgB = $('#tgBottom'); if (tgB) tgB.addEventListener('change', () => { readEnv.hideBottom = !tgB.checked; applyReadEnv(); saveReadEnv(); });
   const rst = $('#reReset'); if (rst) rst.addEventListener('click', () => { readEnv = Object.assign({}, RE_DEFAULT); applyReadEnv(); saveReadEnv(); });
   const btn = $('#readEnvBtn'); if (btn) btn.addEventListener('click', (e) => { e.stopPropagation(); $('#readEnvPanel').classList.toggle('show'); });
   document.addEventListener('click', (e) => {
