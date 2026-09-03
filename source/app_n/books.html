@@ -75,16 +75,23 @@ layout: false
     display: flex; flex-direction: column;
   }
   .book-card:active { transform: translateY(1px); box-shadow: var(--shadow-md); }
-  .book-cover-wrap { width: 100%; aspect-ratio: 3/4; background: var(--bg-elevated); overflow: hidden; }
+  .book-cover-wrap { width: 100%; aspect-ratio: 3/4; background: var(--bg-elevated); overflow: hidden; position: relative; }
   .book-cover { width: 100%; height: 100%; object-fit: cover; display: block; }
   .book-cover-text { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--text-muted); }
+  .book-cover-badge {
+    position: absolute; top: 6px; left: 6px; z-index: 2;
+    font-size: .6rem; color: #fff; background: rgba(0,0,0,.5);
+    border-radius: 6px; padding: 2px 6px; line-height: 1.2;
+    -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+    pointer-events: none; max-width: calc(100% - 12px);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
   .book-info { padding: 6px 8px 8px; }
   .book-title {
     font-weight: 600; font-size: 13px; line-height: 1.4; color: var(--text-primary);
-    display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .book-author { font-size: .72rem; color: var(--text-muted); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .book-tag { display: inline-block; font-size: .62rem; color: #fff; background: var(--accent); border-radius: 6px; padding: 1px 6px; margin-top: 5px; }
   .book-upd { font-size: .66rem; color: var(--text-muted); margin-top: 4px; }
   /* 卡片底部：阅读进度 + 收藏键（参考 tv_p 的 fav-home-btn） */
   .book-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 5px; }
@@ -612,11 +619,11 @@ function appendShelf() {
       ? '<img class="book-cover" src="' + esc(coverUrl(b)) + '" loading="lazy" data-fallback="1" alt="">'
       : '<div class="book-cover book-cover-text">📖</div>';
     const prog = (HIST[b.id] && HIST[b.id].idx >= 0) ? (HIST[b.id].idx + 1) : 0;
-    card.innerHTML = '<div class="book-cover-wrap">' + cover + '</div>' +
+    const coverBadge = (b.category ? '<span class="book-cover-badge">' + esc(b.category) + (b.status ? ' · ' + esc(b.status) : '') + '</span>' : '');
+    card.innerHTML = '<div class="book-cover-wrap">' + cover + coverBadge + '</div>' +
       '<div class="book-info">' +
-      '<div class="book-title">' + esc(b.title) + '</div>' +
+      '<div class="book-title" title="' + esc(b.title) + '">' + esc(b.title) + '</div>' +
       '<div class="book-author">' + esc(b.author || '') + '</div>' +
-      (b.category ? '<span class="book-tag">' + esc(b.category) + (b.status ? ' · ' + esc(b.status) : '') + '</span>' : '') +
       (b.crawled_at ? '<div class="book-upd">' + fmtTime(b.crawled_at) + '</div>' : '') +
       '<div class="book-foot">' +
       (prog ? '<span class="book-prog">读到第 ' + prog + ' 章</span>' : '<span></span>') +
