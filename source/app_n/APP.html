@@ -442,6 +442,10 @@ body.grid-dragging{cursor:grabbing;user-select:none;-webkit-user-select:none}
     <span class="circle">播</span>
     <span class="label">播霸</span>
   </button>
+  <button class="category-item" id="booksBtn" data-url="https://snowhoo.net/app_n/books.html" title="书架" style="--cat-color:#ec4899">
+    <span class="circle">书</span>
+    <span class="label">书架</span>
+  </button>
 </div>
 
 <!-- 栏目启动器：页面中间圆点（高度与探索一致），点击弹出菜单（进入栏目 / 开关桌面按钮） -->
@@ -770,7 +774,7 @@ items.forEach(function(el) {
 // ===== 首页 4×5 宫格：长按拖拽排序 + 布局持久化（登录写库/未登录写本地缓存） =====
 var AppGrid = (function() {
   var COLS = 4, ROWS = 5, TOTAL = COLS * ROWS;
-  var ICONS = ['storyBtn', 'yeduBtn', 'zjszBtn', 'newsBtn', 'tvBtn']; // 5 个栏目图标
+  var ICONS = ['storyBtn', 'yeduBtn', 'zjszBtn', 'newsBtn', 'tvBtn', 'booksBtn']; // 6 个栏目图标
   var LS_LAYOUT = 'snowhoo_appgrid_layout';
   var CLOUD_BASE = 'https://waline.snowhoo.net';
   var CLOUD_PATH = '/app-layout/';
@@ -1109,7 +1113,7 @@ AppGrid.init();
 // ===== 栏目启动器：中间圆点 → 弹出菜单（进入栏目 / 开关桌面按钮） =====
 // 桌面按钮显隐配置与宫格布局共用同一份存储（登录写云 / 未登录写本地缓存）
 (function () {
-  var ICONS = ['storyBtn', 'yeduBtn', 'zjszBtn', 'newsBtn', 'tvBtn'];
+  var ICONS = ['storyBtn', 'yeduBtn', 'zjszBtn', 'newsBtn', 'tvBtn', 'booksBtn'];
   var circle = document.getElementById('launcherCircle');
   var menu = document.getElementById('launcherMenu');
   var list = document.getElementById('launcherList');

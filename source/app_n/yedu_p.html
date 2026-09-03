@@ -203,6 +203,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         <a class="menu-item" href="https://snowhoo.net/app_n/zjsz_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#3b82f6">照</span>照见苏州·摄影专辑</a>
         <a class="menu-item" href="https://snowhoo.net/app_n/DaliyNews_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#ff8c00">新</span>新闻·每日速览</a>
         <a class="menu-item" href="https://snowhoo.net/app_n/tv_p.html" target="_blank"><span class="menu-indicator circulated" style="background:#22c55e">播</span>播霸·在线影视</a>
+        <a class="menu-item" href="https://snowhoo.net/app_n/books.html" target="_blank"><span class="menu-indicator circulated" style="background:#ec4899">书</span>书架·小说阅读</a>
         <a class="menu-item menu-home" href="https://snowhoo.net/app_n/APP.html" onclick="event.preventDefault();try{localStorage.removeItem('resume_play');}catch(e){}window.location.replace('https://snowhoo.net/app_n/APP.html')"><span class="menu-indicator circulated" style="background:#e8793a;width:24px;height:24px;line-height:24px;font-size:16px">界</span>返回首页</a>
       </div>
     </div>
@@ -924,7 +925,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     return null;
   }
   // 栏目文件 → 解锁标记 key（与 APP.html 游戏记录字段一致）
-  var KEY_BY_FILE = { 'reader.html':'story', 'yedu_p.html':'yedu', 'zjsz_p.html':'zjsz', 'DaliyNews_p.html':'news', 'tv_p.html':'tv' };
+  var KEY_BY_FILE = { 'reader.html':'story', 'yedu_p.html':'yedu', 'zjsz_p.html':'zjsz', 'DaliyNews_p.html':'news', 'tv_p.html':'tv', 'books.html':'books' };
   // 健壮解析（兼容 Waline markdown 渲染污染，同 APP.html parseGameRecord）
   function parseGameRecord(raw){
     if (!raw) return null;
@@ -979,7 +980,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   }
   if (!user) { applyUnlocks({story:1,yedu:1,zjsz:1,news:1,tv:1}); return; } // 已去除登录限制：未登录也全部解锁
   // 已登录：直接全部解锁（已去除登录限制）
-  applyUnlocks({story:1,yedu:1,zjsz:1,news:1,tv:1}); return;
+  applyUnlocks({story:1,yedu:1,zjsz:1,news:1,tv:1,books:1}); return;
   var token = user.token || '';
   var url = 'https://waline.snowhoo.net/api/comment?path=/app-game/actions' + (token ? '&token=' + encodeURIComponent(token) : '');
   fetch(url)
