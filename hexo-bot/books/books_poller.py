@@ -18,26 +18,27 @@
   结论：匿名只管"谁发起心愿"，token 只管"后端读/处理任务"，二者分工明确、互不替代。
 
 ==========================================================================
-【心愿单展示（与"用完即焚"不同）】
+【心愿单（Waline 即唯一存储：无任何本地状态文件，本机只做读-抓-写）】
 ==========================================================================
-  用户要求：处理完的心愿【不要马上删除】，保留最近十条用于展示；并单独记录"已达成心愿数"。
-  因此本 poller 处理成功后【不再 DELETE 评论】，而是：
-    1) 把该评论 objectId 记入本地 data/wishes/processed.json（去重，避免重复抓取）；
-    2) 重写 data/wishes/recent.json（最近 10 条心愿，含 pending/done/failed 状态）；
-    3) 累加 data/wishes/stats.json 的 fulfilled 计数（累计已达成）。
-  这三个文件随 upload_r2.py 自动同步到 R2 公开桶，前端匿名读取即可展示心愿单，
-  全程无需把 admin token 暴露给访客。
-
-  去重不依赖 Waline 评论的 status 字段语义（不同 Waline 版本默认状态不同），
-  统一以本地 processed.json 的 objectId 集合为准；status==2（失败）的评论跳过不再重试。
+  许愿   = 前端匿名 POST Waline 一条评论（url 完整、内容 {b,s,i,t}），url/专用 path 即识别字段。
+  心愿单 = 前端打开时【匿名 GET Waline】按"完整 URL path"取 /books/task-queue 评论列表：
+          无 ok = 待（未达成）；带 ok = 已达成；其中一条无 b 的 {"cnt": N} 评论 = 累计已达成数。
+  本 poller（后台，仅本机）只负责消费队列抓取正文：
+    1) 成功：抓分片 -> 传 R2 -> 把 ok:1 写回该评论（PUT comment 内容），前端即见"已达成"；
+    2) 失败：评论不动（保持无 ok = pending）——用户口径：无需冷却，下次轮询自然再试；
+    3) 累计已达成：写为同 path 下一条 {"cnt": N} 计数评论（bump_counter，每次 +delta）；
+    4) prune：只清理"带 ok（已达成）"的旧心愿评论（保留最近 10 条达成记录供展示），
+       pending（无 ok）与计数评论永不删——控制 Waline 不无限增长。
+  注意：Waline 评论 status 字段在不同接口下语义不一（数字/枚举字符串），一律不作为心愿状态依据；
+  一切状态与计数都以 Waline 评论内容为准（评论即事实源）。
 
 【运行流程】
   周期性用管理员 token 拉取 Waline 专用 path 下待处理评论（每条 = 一个抓取心愿），
       并发≤N 处理每个心愿：
         1) scrape_shard(bid, shard) 抓取单分片 -> data/<id>/cSS.json (+ toc.json)
         2) 调 upload_r2.py 增量同步到 R2
-        3) 成功 -> 记入 processed + 重写 recent/stats（保留展示，不删除评论）
-           失败 -> 标记 status=2（跳过重试）
+        3) 成功 -> 把 ok:1 写回该 Waline 评论（不删除）+ bump_counter(1)（计数写回 Waline）
+           失败 -> 评论不动，下次轮询自然再试
   依赖：同目录 lewx.cc.books.py（import scrape_shard）、upload_r2.py。
   配置：同目录 poller_config.json
         { waline_server, waline_admin_token, task_path="/books/task-queue",
@@ -57,10 +58,8 @@ from concurrent.futures import ThreadPoolExecutor
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-WISH_DIR = os.path.join(HERE, "data", "wishes")
-PROCESSED_FILE = os.path.join(WISH_DIR, "processed.json")
-RECENT_FILE = os.path.join(WISH_DIR, "recent.json")
-STATS_FILE = os.path.join(WISH_DIR, "stats.json")
+# Waline 即唯一存储：心愿=评论（内容 {b,s,i,t}，poller 达成后写回 ok:1）；累计已达成数=同 path 下
+# 一条 {"cnt": N} 计数评论。本 poller 无任何本地状态文件，只做"读 Waline -> 抓取 -> 写回 Waline"。
 
 
 def load_crawler():
@@ -97,54 +96,58 @@ TOKEN = CFG["waline_admin_token"] or ""
 TASK_PATH = CFG["task_path"] or "/books/task-queue"
 UPLOAD_LOCK = threading.Lock()
 
-# 已处理心愿的 objectId 集合（去重，避免重复抓取；保留最近 50 条）
-PROCESSED_LIST = []
-PROCESSED_SET = set()
+# 抓取失败无需冷却：某条许愿未达成 -> 评论不带 ok、状态不变，下次轮询自然再把它加入处理。
+# 达成与否【写进评论内容】（ok:1 标识），Waline 评论即事实源。
+def req_is_done(req):
+    """心愿内容带 ok=1 => poller 已达成（分片已上传 R2），前端据此显示"已达成"。"""
+    return bool(req and req.get("ok") == 1)
 
 
-def _ensure_wish_dir():
-    os.makedirs(WISH_DIR, exist_ok=True)
-
-
-def load_processed():
-    global PROCESSED_LIST, PROCESSED_SET
+def stamp_ok(cid, req):
+    """达成后把 ok:1 写回该 Waline 评论（内容字段），前端匿名读取即可见。"""
+    req = dict(req)
+    req["ok"] = 1
     try:
-        arr = json.load(open(PROCESSED_FILE, encoding="utf-8"))
-        if isinstance(arr, list):
-            PROCESSED_LIST = [str(x) for x in arr][-50:]
-            PROCESSED_SET = set(PROCESSED_LIST)
-    except Exception:
-        PROCESSED_LIST, PROCESSED_SET = [], set()
+        waline_req("PUT", "/api/comment/%s" % cid, token=TOKEN,
+                   body={"comment": json.dumps(req, ensure_ascii=False)})
+        return True
+    except Exception as e:
+        print("[WARN] 写回达成标识 %s 失败: %s" % (cid, e))
+        return False
 
 
-def save_processed():
-    _ensure_wish_dir()
-    if len(PROCESSED_LIST) > 50:
-        PROCESSED_LIST[:] = PROCESSED_LIST[-50:]
-    json.dump(PROCESSED_LIST, open(PROCESSED_FILE, "w", encoding="utf-8"))
-
-
-def mark_processed(cid):
-    cid = str(cid)
-    if cid and cid not in PROCESSED_SET:
-        PROCESSED_SET.add(cid)
-        PROCESSED_LIST.append(cid)
-        save_processed()
-
-
-def load_stats():
+# ---- 累计已达成计数：存为 Waline 同 path 下一条 {"cnt": N} 评论（无 b/s 字段，天然与心愿区分） ----
+def parse_any(c):
     try:
-        s = json.load(open(STATS_FILE, encoding="utf-8"))
-        if isinstance(s, dict):
-            return {"fulfilled": int(s.get("fulfilled", 0) or 0)}
+        return json.loads(c.get("orig") or c.get("comment") or "")
     except Exception:
-        pass
-    return {"fulfilled": 0}
+        return None
 
 
-def save_stats(s):
-    _ensure_wish_dir()
-    json.dump(s, open(STATS_FILE, "w", encoding="utf-8"))
+def bump_counter(delta):
+    """累计已达成数 +delta，写回 Waline 计数评论（不存在则创建一条 {"cnt": N}）。"""
+    if delta <= 0:
+        return
+    cid, cur = None, 0
+    for c in fetch_all_task():
+        req = parse_any(c)
+        if req and isinstance(req, dict) and "cnt" in req and "b" not in req:
+            cid = c.get("objectId")
+            cur = int(req.get("cnt") or 0)
+            break
+    payload = json.dumps({"cnt": cur + delta}, ensure_ascii=False)
+    try:
+        if cid:
+            waline_req("PUT", "/api/comment/%s" % cid, token=TOKEN, body={"comment": payload})
+        else:
+            waline_req("POST", "/api/comment", token=TOKEN, body={
+                "url": "https://snowhoo.net" + TASK_PATH,
+                "path": TASK_PATH,
+                "comment": payload,
+                "nick": "books-bot", "mail": "", "link": "",
+            })
+    except Exception as e:
+        print("[WARN] 写回达成计数失败:", e)
 
 
 def waline_req(method, path, *, token=None, params=None, body=None):
@@ -198,14 +201,13 @@ def fetch_all_task():
 
 
 def fetch_pending():
-    # 跳過已处理（processed 集合）与已失败（status==2）的评论，避免重复抓取 / 死循环重试
+    """取待处理心愿：Waline 队列中未带 ok（未达成）的许愿评论。
+    未达成的下次轮询自然再被加入处理，无需冷却（用户口径）。"""
     out = []
     for c in fetch_all_task():
-        if c.get("status") == 2:
-            continue
-        cid = str(c.get("objectId") or c.get("id"))
-        if cid in PROCESSED_SET:
-            continue
+        req = parse_req(c)
+        if not req or req_is_done(req):
+            continue   # 非心愿（含计数评论），或已达成（带 ok 标识）
         out.append(c)
     return out
 
@@ -217,13 +219,6 @@ def delete_comment(cid):
     except Exception as e:
         print("[WARN] 删除评论 %s 失败: %s" % (cid, e))
         return False
-
-
-def set_comment_status(cid, status):
-    try:
-        waline_req("PUT", "/api/comment/%s" % cid, token=TOKEN, body={"status": status})
-    except Exception as e:
-        print("[WARN] 标记状态 %s 失败: %s" % (cid, e))
 
 
 def parse_req(c):
@@ -239,66 +234,30 @@ def parse_req(c):
     return req
 
 
-def rebuild_wish_files():
-    """重建心愿展示数据（写 recent.json）：
-      - pending（未达成）心愿【全部保留】，不受条数限制——用户要知道它还没结果；
-      - done/failed（已有结果）只取最近 10 条——结果看最近的就足够；
-      - 无 pending 时即为"最近 10 条"。
-      合并后按时间倒序输出。status 判定：本地 processed 集合 -> done；Waline status==2 -> failed；其余 pending。
-      处理成功【不删除评论】（仅记 processed 去重 + stats 累计），Waline 评论总量由 prune 单独控制。"""
+# （recent.json / processed.json 均已废弃：心愿单由前端【直接匿名读 Waline】展示，
+#   达成与否 = 评论内容是否带 ok:1（poller 抓成后写回），无需任何本地状态文件。）
+
+def prune_done_comments(keep=10):
+    """防 Waline 无限增长：只清理【已达成(评论带 ok)】的旧评论，保留最近 keep 条达成记录；
+    pending（无 ok，未达成）评论永不删除——那是用户尚未兑现的心愿。"""
     comments = fetch_all_task()
-    pending, finished = [], []
+    dones = []
     for c in comments:
         req = parse_req(c)
-        if not req:
-            continue
-        cid = str(c.get("objectId") or c.get("id"))
-        st = c.get("status")
-        if cid in PROCESSED_SET:
-            status = "done"
-        elif st == 2:
-            status = "failed"
-        else:
-            status = "pending"
-        i = req.get("i")
-        chapter = (int(i) + 1) if i is not None else None
-        ts = (c.get("time") or c.get("createdAt") or c.get("insertedAt") or "")
-        e = {
-            "bid": str(req["b"]),
-            "shard": int(req["s"]),
-            "chapter": chapter,
-            "title": req.get("t") or "",
-            "status": status,
-            "ts": ts,
-        }
-        (pending if status == "pending" else finished).append(e)
-    finished.sort(key=lambda e: str(e["ts"]), reverse=True)
-    recent = pending + finished[:10]
-    recent.sort(key=lambda e: str(e["ts"]), reverse=True)
-    _ensure_wish_dir()
-    json.dump(recent, open(RECENT_FILE, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-    return recent
-
-
-def prune_old_wishes(keep=30):
-    """控制 Waline 任务评论总量（防无限增长）：【只清理已有结果(done/failed)的旧评论】，
-    pending（未达成）永不删除——那是用户尚未兑现的心愿。keep = done/failed 保留条数。"""
-    comments = fetch_all_task()
-    finished = []
-    for c in comments:
-        cid = str(c.get("objectId") or c.get("id"))
-        if cid in PROCESSED_SET or c.get("status") == 2:
-            finished.append(c)
-    if len(finished) <= keep:
+        if req_is_done(req):
+            dones.append(c)
+    if len(dones) <= keep:
         return
-    finished.sort(key=lambda c: str(c.get("time") or ""))
-    for c in finished[:-keep]:
+    dones.sort(key=lambda c: str(c.get("time") or ""))
+    for c in dones[:-keep]:
         delete_comment(c.get("objectId") or c.get("id"))
 
 
 def process_one(c):
-    """处理单个心愿。返回 ('done'|'failed'|'skip', info)。成功后【保留评论】，仅记入 processed。"""
-    cid = c.get("objectId") or c.get("id")
+    """处理单个心愿。成功：抓分片→传 R2→把 ok:1 写回该评论（前端=已达成）；
+    失败：评论不动（保持无 ok = pending），下次轮询自然再试。
+    返回 ('done'|'failed'|'skip', cid)。"""
+    cid = str(c.get("objectId") or c.get("id"))
     req = parse_req(c)
     if not req:
         print("[WARN] 丢弃无法解析的任务评论 %s" % cid)
@@ -309,16 +268,15 @@ def process_one(c):
     try:
         res = bk.scrape_shard(bid, shard)
         if not res:
-            set_comment_status(cid, 2)
-            print("[FAIL] %s/%d 空壳页(被风控)" % (bid, shard))
+            print("[FAIL] %s/%d 空壳页(可能被风控，下次轮询再试)" % (bid, shard))
             return ("failed", cid)
         _titles, total = res
         run_upload()
-        mark_processed(cid)  # 记去重 + 触发 recent/stats 重建
+        if not stamp_ok(cid, req):   # 写回 ok 失败则下次轮询再试（分片已在 R2，幂等安全）
+            return ("failed", cid)
         print("[OK] %s shard %d (total=%d)" % (bid, shard, total))
-        return ("done", {"bid": bid, "shard": shard})
+        return ("done", cid)
     except Exception as e:
-        set_comment_status(cid, 2)
         print("[ERR] %s/%d: %s" % (bid, shard, e))
         return ("failed", cid)
 
@@ -326,8 +284,7 @@ def process_one(c):
 def loop_once():
     tasks = fetch_pending()
     if not tasks:
-        # 即使没有新任务，也重建一次心愿单（保证 recent/stats 与 Waline 实时一致）
-        rebuild_wish_files()
+        prune_done_comments()
         return 0
     print("[INFO] 处理 %d 个任务" % len(tasks))
     results = []
@@ -335,17 +292,13 @@ def loop_once():
         results = list(ex.map(process_one, tasks))
     done = sum(1 for r in results if r[0] == "done")
     if done:
-        s = load_stats()
-        s["fulfilled"] = s.get("fulfilled", 0) + done
-        save_stats(s)
-        print("[INFO] 已达成心愿累计 %d" % s["fulfilled"])
-    rebuild_wish_files()
-    prune_old_wishes()
+        bump_counter(done)   # 累计已达成计数写回 Waline（{"cnt": N} 一条评论）
+        print("[INFO] 本轮达成 %d 个心愿" % done)
+    prune_done_comments()
     return done
 
 
 def main():
-    load_processed()
     if not WALINE_SERVER or not TOKEN:
         print("[ERR] 缺少 waline_server / waline_admin_token（环境变量或 poller_config.json）。")
         sys.exit(2)

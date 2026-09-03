@@ -349,8 +349,7 @@ const LEXU_BASE = 'https://www.lewx.cc';
 const WALINE_SERVER = 'https://waline.snowhoo.net';
 const TASK_PATH = '/books/task-queue';
 // 心愿单展示文件（由 poller 写入、随 R2 公开同步，前端匿名读取）
-const WISH_RECENT = DATA + 'wishes/recent.json';
-const WISH_STATS = DATA + 'wishes/stats.json';
+// 心愿单本体与"已达成累计"全部直接读写 Waline（匿名 GET，path 必须用完整 URL 才命中）——无需任何 R2/本地文件
 // 封面在 book.json / 索引里只存相对路径（/uploads/allimg/...），按需补全站点前缀
 function coverUrl(b) {
   if (!b || !b.cover) return '';
@@ -792,16 +791,59 @@ function syncBookFavBtn(b) {   // 书籍信息栏收藏键状态
   el.classList.toggle('on', on);
 }
 
-// ===== 心愿单数据 =====
+// ===== 心愿单数据：许愿进 Waline，打开心愿单也直接读 Waline（简单直连，无中间缓存） =====
+// Waline 匿名读评论时 path 参数必须传"完整 URL"（origin + path），纯路径匹配不到
 async function loadWishes(force) {
   if (wishLoaded && !force) return;
-  try { wishCache = await getJSON(WISH_RECENT); } catch (e) { wishCache = []; }
-  try { wishStats = await getJSON(WISH_STATS); } catch (e) { wishStats = { fulfilled: 0 }; }
+  const origin = (location.origin && location.origin.indexOf('http') === 0) ? location.origin : 'https://snowhoo.net';
+  const fullPath = origin + TASK_PATH;
+  const raw = [];
+  try {
+    let page = 1, totalPages = 1;
+    do {
+      const j = await getJSON(WALINE_SERVER + '/api/comment?path=' + encodeURIComponent(fullPath) + '&page=' + page + '&pageSize=100');
+      const d = (j && j.data) || {};
+      (d.data || []).forEach(c => raw.push(c));
+      totalPages = d.totalPages || 1;
+      page++;
+    } while (page <= totalPages);
+  } catch (e) { /* Waline 不可达：视为空列表 */ }
+  const items = raw.map(c => {
+    const req = parseWishComment(c.comment || c.orig || '');
+    if (!req || req.b == null || req.s == null) return null;
+    return {
+      objectId: String(c.objectId || ''),
+      bid: String(req.b),
+      shard: parseInt(req.s, 10),
+      chapter: (req.i != null ? parseInt(req.i, 10) + 1 : null),
+      title: req.t || '',
+      ts: c.time || c.createdAt || '',
+      status: (req.ok === 1 || req.ok === '1' || req.ok === true) ? 'done' : 'pending'   // ok 由 poller 达成后写回评论
+    };
+  }).filter(Boolean);
+  items.sort((a, b) => String(b.ts).localeCompare(String(a.ts)));
+  // 累计已达成数 = Waline 同列表里一条无 b 的 {"cnt": N} 计数评论（poller 每次达成后 +N 写回）
+  let fulfilled = 0;
+  raw.forEach(c => {
+    const rc = parseWishComment(c.comment || c.orig || '');
+    if (rc && rc.cnt != null && rc.b == null) fulfilled = parseInt(rc.cnt, 10) || 0;
+  });
+  wishCache = items;
+  wishStats = { fulfilled: fulfilled };
   wishLoaded = true;
+}
+// 解析心愿评论内容（兼容 Waline HTML 转义包裹）：{b,s,i,t}
+function parseWishComment(s) {
+  if (!s) return null;
+  let t = String(s).replace(/<[^>]*>/g, '').replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+    .replace(/&quot;/g, '"').replace(/&#34;/g, '"').replace(/&amp;/g, '&').replace(/&#38;/g, '&');
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if (a >= 0 && b > a) t = t.slice(a, b + 1);
+  try { return JSON.parse(t); } catch (e) { return null; }
 }
 function isWishedRemote(bid, shard) {
   if (!wishCache) return false;
-  return wishCache.some(e => String(e.bid) === String(bid) && e.shard === shard && e.status === 'pending');
+  return wishCache.some(e => String(e.bid) === String(bid) && e.shard === shard);   // 已在 Waline 队列=许过愿
 }
 function isWished(bid, shard) {
   return wishedSet.has(bid + ':' + shard) || isWishedRemote(bid, shard);
@@ -1013,18 +1055,23 @@ async function openWishList() {
   const fulfilled = (wishStats && wishStats.fulfilled) || 0;
   $('#wishFulfilled').textContent = fulfilled;
   const list = $('#wishList');
-  if (!wishCache || !wishCache.length) {
+  const all = wishCache || [];
+  // 展示口径：未达成(pending)全部保留；已达成(done)只保留最近 10 条（wishCache 已按时间倒序）
+  const pend = all.filter(e => e.status !== 'done');
+  const dones = all.filter(e => e.status === 'done').slice(0, 10);
+  const show = pend.concat(dones);
+  if (!show.length) {
     list.innerHTML = '<div class="wish-empty">还没有心愿，去书架挑一本未收录的章节"许愿"吧～</div>';
   } else {
     let html = '';
-    wishCache.forEach(e => {
-      const st = e.status === 'done' ? '已达成' : (e.status === 'pending' ? '待' : '失败');
-      const stCls = e.status === 'done' ? 'done' : (e.status === 'pending' ? 'pending' : 'failed');
+    show.forEach(e => {
+      const st = e.status === 'done' ? '已达成' : '待';
+      const stCls = e.status === 'done' ? 'done' : 'pending';
       const chap = (e.chapter != null) ? e.chapter : ((e.shard - 1) * 50 + 1);
       html += '<div class="wish-row" data-bid="' + esc(String(e.bid)) + '">' +
         '<div class="wish-row-main">' +
         '<div class="wish-row-title">' + esc(e.title || '未知书目') + '</div>' +
-        '<div class="wish-row-chap">第 ' + chap + ' 章 · 分片 ' + e.shard + '</div>' +
+        '<div class="wish-row-chap">第 ' + chap + ' 章</div>' +
         '</div>' +
         '<span class="wish-status ' + stCls + '">' + st + '</span>' +
         '</div>';
