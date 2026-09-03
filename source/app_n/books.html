@@ -879,14 +879,17 @@ let readEnv = Object.assign({}, RE_DEFAULT);
 function hueFg(h) { return 'hsl(' + h + ', 70%, 42%)'; }     // 文字：较深可读
 function hueBg(h) { return 'hsl(' + h + ', 30%, 92%)'; }     // 背景：浅色柔和
 
-// 右边缘竖排章节标题：顶边对齐正文区域顶边 + 10px（随标题显隐/屏宽自适应）
+// 右边缘竖排章节标题：顶边对齐正文区域顶边 + 10px，书名·作者底对齐正文区域底边 - 10px
+// 直接用 #content 的渲染盒(getBoundingClientRect)换算到右缘容器坐标系，确保始终以『正文区域』为基准定位
 function syncEdgeTitleTop() {
-  const cp = $('#contentPanel'), c = $('#content'), e = $('#edgeNext');
-  if (!cp || !c || !e) return;
-  // 章节标题(顶)与书名·作者(底)关于正文区域对称：顶边=正文顶+10px，底边=正文底-10px
-  e.style.paddingTop = (c.offsetTop + 10) + 'px';
-  const bottom = (cp.clientHeight - (c.offsetTop + c.offsetHeight)) + 10;
-  e.style.paddingBottom = Math.max(bottom, 10) + 'px';
+  const c = $('#content'), e = $('#edgeNext');
+  if (!c || !e) return;
+  const er = e.getBoundingClientRect();
+  const cr = c.getBoundingClientRect();
+  const top = (cr.top - er.top) + 10;          // 标题顶边 = 正文顶 + 10px
+  const bottom = (er.bottom - cr.bottom) + 10;  // 书名·作者底边 = 正文底 - 10px
+  e.style.paddingTop = Math.max(top, 8) + 'px';
+  e.style.paddingBottom = Math.max(bottom, 8) + 'px';
 }
 function applyReadEnv() {
   const cp = $('#contentPanel'); if (!cp) return;
@@ -1214,6 +1217,7 @@ function renderContent(i) {
     cEl.innerHTML = '<p class="empty">本章内容还在准备中，可返回目录先读其它章节，或点「许愿」让它优先补上。</p>';
     cEl.scrollTop = 0;
   }
+  syncEdgeTitleTop();   // 正文/标题渲染后，按正文区域重新锚定右缘标题顶与书名·作者底
 }
 
 function renderChapters() {
