@@ -289,7 +289,7 @@ layout: false
     </div>
     <div id="contentPanel">
       <div id="contentHead"><button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span><span class="chap-nav"><button id="prevChap">‹ 上章</button><button id="nextChap">下章 ›</button></span></div>
-      <div id="content"><p class="empty">从左侧选择一章开始阅读。<br>正文按需离线缓存，未缓存章节点开即自动抓取。</p></div>
+      <div id="content"><p class="empty">从左侧选择一章开始阅读。</p></div>
     </div>
   </div>
 
@@ -394,7 +394,7 @@ async function init() {
   try {
     META = await getJSON(DATA + 'index_meta.json');
   } catch (e) {
-    $('#shelfList').innerHTML = '<div class="loading">索引加载失败：' + esc(e.message) + '<br>请先运行 lewx.cc.books.py 抓取数据。</div>';
+    $('#shelfList').innerHTML = '<div class="loading">书架数据尚未准备，请稍后再来。</div>';
     hideLoading();
     return;
   }
@@ -650,7 +650,7 @@ async function openBook(b) {
     '<div class="bt">' + esc(b.title) + '</div>' +
     '<div class="ba">' + esc(b.author || '') + (b.category ? ' · ' + esc(b.category) : '') + (b.status ? ' · ' + esc(b.status) : '') + '</div>' +
     (b.intro ? '<div class="bi">' + esc(b.intro) + '</div>' : '') +
-    '<div class="bc">共 ' + n + ' 章（按需加载，未缓存章节可"许愿"让后台抓取）</div>' +
+    '<div class="bc">共 ' + n + ' 章</div>' +
     '<div class="book-acts"><button class="fav-btn" id="bookFavBtn">🤍 收藏</button></div>';
   $('#contentHead').innerHTML = '<button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span><span class="chap-nav"><button id="prevChap">‹ 上章</button><button id="nextChap">下章 ›</button></span>';
 
@@ -905,7 +905,7 @@ function wishInPool(id, S, i) {
     '<div class="wish-prompt">' +
     '<div class="wish-emoji">💝</div>' +
     '<p>您的愿望，已在池中无需再许！</p>' +
-    '<p class="wish-sub">第 ' + low + '-' + high + ' 章后台正在抓取，静待如愿…</p>' +
+    '<p class="wish-sub">第 ' + low + '-' + high + ' 章正在为你准备，静待如愿…</p>' +
     '</div>';
 }
 
@@ -916,7 +916,7 @@ function showWishPrompt(id, S, i) {
     '<div class="wish-prompt">' +
     '<div class="wish-emoji">💝</div>' +
     '<p>章节未收录，许下心愿？</p>' +
-    '<p class="wish-sub">心愿按整片抓取：第 ' + low + '-' + high + ' 章会一起送上！</p>' +
+    '<p class="wish-sub">第 ' + low + '-' + high + ' 章会一起开放阅读哦～</p>' +
     '<p class="wish-sub">10 分钟内就能如愿！</p>' +
     '<div class="wish-btns">' +
     '<button class="wish-btn yes" id="wishYes">许愿</button>' +
@@ -971,7 +971,7 @@ async function submitWish(id, S, i, title) {
     }
   } catch (e) {
     cEl.innerHTML = '<p class="empty">提交心愿失败：' + esc(e.message) +
-      '<br>请确认网络可访问 waline.snowhoo.net，稍后重试。</p>';
+      '<br>网络好像不太通畅，稍后再试试吧。</p>';
     return false;
   }
   return true;
@@ -989,7 +989,7 @@ async function pollShard(id, S, i) {
     } catch (e) { /* 未就绪，继续等待 */ }
   }
   if (curIdx === i) {
-    $('#content').innerHTML = '<p class="empty">抓取超时（可能服务端 poller 未运行，或该书被风控）。<br>可返回目录选其它章节，或稍后再试。</p>';
+    $('#content').innerHTML = '<p class="empty">准备时间有点长，稍后再来看看，或先读其它章节吧。</p>';
   }
   return false;
 }
@@ -1022,7 +1022,7 @@ function renderContent(i) {
     cEl.innerHTML = paras.map(p => '<p>' + esc(p) + '</p>').join('') || '<p class="empty">（本章内容为空）</p>';
     cEl.scrollTop = 0;
   } else {
-    cEl.innerHTML = '<p class="empty">本章正文暂未缓存或加载失败，正在后台抓取；可返回目录选其它章节，或点「许愿」让后台抓取。</p>';
+    cEl.innerHTML = '<p class="empty">本章内容还在准备中，可返回目录先读其它章节，或点「许愿」让它优先补上。</p>';
     cEl.scrollTop = 0;
   }
 }
