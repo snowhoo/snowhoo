@@ -246,6 +246,12 @@ layout: false
     .reader-mask { display: none; position: absolute; inset: 0; z-index: 25; background: rgba(0,0,0,.45); opacity: 0; transition: opacity .28s ease; }
     #reader.active .reader-mask.show { display: block; opacity: 1; }
   }
+
+  /* ===== 朗读栏只在阅读页显示；书架等页面底栏单行、不占位 ===== */
+  #bottomNav .bn-tts-row { display: none; }
+  body.reader-on #bottomNav .bn-tts-row { display: flex; }
+  #app { padding-bottom: 56px; }
+  body.reader-on #app { padding-bottom: 100px; }
 </style>
 <link rel="stylesheet" href="./lib/waline.css">
 </head>
@@ -368,9 +374,8 @@ let shelfShown = 0;       // 书架已渲染数量（用于懒加载 / 无限滚
 let shelfObserver = null; // IntersectionObserver 实例
 const PAGE_SIZE = 36;     // 每批渲染数量（避免一次性渲染上万张卡片卡死）
 
-// 心愿单本地缓存（会话内 + localStorage，用于"已在队列"即时判断，避免重复弹窗）
-let wishedSet = new Set(JSON.parse(localStorage.getItem('books_wished') || '[]'));
-function saveWishedSet() { localStorage.setItem('books_wished', JSON.stringify([...wishedSet])); }
+// 会话内"已许愿"标记（仅内存防同会话重复弹窗；不写 localStorage——是否已在队列以 R2 recent.json 为准）
+let wishedSet = new Set();
 let wishCache = null;     // 最近十条心愿（来自 R2）
 let wishStats = null;     // {fulfilled:Number}
 let wishLoaded = false;
@@ -468,6 +473,7 @@ function hideLoading() {
 
 function showView(v) {
   closeToc();
+  document.body.classList.toggle('reader-on', v === 'reader');   // 控制底栏朗读行显示
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   $('#' + v).classList.add('active');
   $('#shelfMeta').style.display = (v === 'shelf') ? 'block' : 'none';
@@ -873,7 +879,6 @@ function showWishPending() {
 async function makeWish(id, S, i) {
   const title = currentBook ? currentBook.title : '';
   wishedSet.add(id + ':' + S);
-  saveWishedSet();
   showWishPending();
   const sent = await submitWish(id, S, i, title);
   if (!sent) return;   // submitWish 内部已提示错误
@@ -1124,7 +1129,7 @@ init();
     var s = document.createElement('script');
     s.src = 'tts.js?ts=' + Date.now();
     s.onload = function(){ cb && cb(); };
-    s.onerror = function(){ /* 加载失败静默：控制条为空自动隐藏 */ };
+    s.onerror = function(){ console.warn('[TTS] tts.js 加载失败，朗读条不可用'); };
     document.head.appendChild(s);
   }
   loadTTS(function(){

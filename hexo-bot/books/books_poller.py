@@ -111,7 +111,7 @@ def load_processed():
     try:
         arr = json.load(open(PROCESSED_FILE, encoding="utf-8"))
         if isinstance(arr, list):
-            PROCESSED_LIST = arr[-50:]
+            PROCESSED_LIST = [str(x) for x in arr][-50:]
             PROCESSED_SET = set(PROCESSED_LIST)
     except Exception:
         PROCESSED_LIST, PROCESSED_SET = [], set()
@@ -125,6 +125,7 @@ def save_processed():
 
 
 def mark_processed(cid):
+    cid = str(cid)
     if cid and cid not in PROCESSED_SET:
         PROCESSED_SET.add(cid)
         PROCESSED_LIST.append(cid)
@@ -202,7 +203,7 @@ def fetch_pending():
     for c in fetch_all_task():
         if c.get("status") == 2:
             continue
-        cid = c.get("objectId") or c.get("id")
+        cid = str(c.get("objectId") or c.get("id"))
         if cid in PROCESSED_SET:
             continue
         out.append(c)
@@ -239,15 +240,19 @@ def parse_req(c):
 
 
 def rebuild_wish_files():
-    """根据 Waline 任务评论重建 recent.json（最近 10 条）用于前端展示。
-    status 以本地 processed 集合为准（done），失败标记 status==2 为 failed，其余为 pending。"""
+    """重建心愿展示数据（写 recent.json）：
+      - pending（未达成）心愿【全部保留】，不受条数限制——用户要知道它还没结果；
+      - done/failed（已有结果）只取最近 10 条——结果看最近的就足够；
+      - 无 pending 时即为"最近 10 条"。
+      合并后按时间倒序输出。status 判定：本地 processed 集合 -> done；Waline status==2 -> failed；其余 pending。
+      处理成功【不删除评论】（仅记 processed 去重 + stats 累计），Waline 评论总量由 prune 单独控制。"""
     comments = fetch_all_task()
-    entries = []
+    pending, finished = [], []
     for c in comments:
         req = parse_req(c)
         if not req:
             continue
-        cid = c.get("objectId") or c.get("id")
+        cid = str(c.get("objectId") or c.get("id"))
         st = c.get("status")
         if cid in PROCESSED_SET:
             status = "done"
@@ -258,30 +263,36 @@ def rebuild_wish_files():
         i = req.get("i")
         chapter = (int(i) + 1) if i is not None else None
         ts = (c.get("time") or c.get("createdAt") or c.get("insertedAt") or "")
-        entries.append({
+        e = {
             "bid": str(req["b"]),
             "shard": int(req["s"]),
             "chapter": chapter,
             "title": req.get("t") or "",
             "status": status,
             "ts": ts,
-        })
-    entries.sort(key=lambda e: str(e["ts"]), reverse=True)
-    recent = entries[:10]
+        }
+        (pending if status == "pending" else finished).append(e)
+    finished.sort(key=lambda e: str(e["ts"]), reverse=True)
+    recent = pending + finished[:10]
+    recent.sort(key=lambda e: str(e["ts"]), reverse=True)
     _ensure_wish_dir()
     json.dump(recent, open(RECENT_FILE, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     return recent
 
 
 def prune_old_wishes(keep=30):
-    """控制 Waline 任务评论总量：仅保留最近 keep 条（按时间），删除更旧的。
-     pending 通常为最新提交的，故被保留；只清掉陈旧的历史 done/failed。"""
+    """控制 Waline 任务评论总量（防无限增长）：【只清理已有结果(done/failed)的旧评论】，
+    pending（未达成）永不删除——那是用户尚未兑现的心愿。keep = done/failed 保留条数。"""
     comments = fetch_all_task()
-    if len(comments) <= keep:
+    finished = []
+    for c in comments:
+        cid = str(c.get("objectId") or c.get("id"))
+        if cid in PROCESSED_SET or c.get("status") == 2:
+            finished.append(c)
+    if len(finished) <= keep:
         return
-    comments.sort(key=lambda c: str(c.get("time") or ""))
-    excess = comments[:-keep]
-    for c in excess:
+    finished.sort(key=lambda c: str(c.get("time") or ""))
+    for c in finished[:-keep]:
         delete_comment(c.get("objectId") or c.get("id"))
 
 
