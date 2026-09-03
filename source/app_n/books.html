@@ -304,12 +304,15 @@ layout: false
   .read-edge { position: absolute; top: 52%; transform: translateY(-50%); z-index: 20; display: flex; flex-direction: column; align-items: center; gap: 6px; color: rgba(130,130,130,.45); cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; padding: 10px 3px; }
   .read-edge.prev { left: 0; }
   .read-edge.next { right: 0; }
-  .read-edge .et { writing-mode: vertical-rl; text-orientation: upright; font-size: .62rem; letter-spacing: 1px; line-height: 1.3; }
-  .read-edge .ea { font-size: 13px; line-height: 1; }
+  .read-edge .et { writing-mode: vertical-rl; text-orientation: upright; font-size: .62rem; letter-spacing: 1px; line-height: 1.3; background: rgba(0,0,0,.5); color: rgba(255,255,255,.9); padding: 5px 2px; border-radius: 4px; }
+  .read-edge .et-title { font-weight: 600; max-height: 38vh; overflow: hidden; }
+  .read-edge .ea { font-size: 13px; line-height: 1; color: rgba(255,255,255,.9); }
+  .read-edge:active .et, .read-edge:active .ea { color: #fff; }
   .read-edge:active { color: var(--accent); }
   .read-edge.disabled { opacity: .22; pointer-events: none; }
   /* 三个开关各自生效 */
   body.hide-title #contentHead #contentTitle { display: none; }
+  body.hide-title #contentHead #tocToggle { display: none; }
   body.hide-title #contentHead { background: transparent; border-bottom: none; }
   body.reader-on.hide-tts #bottomNav .bn-tts-row { display: none; }
   body.reader-on.hide-bottom #bottomNav { display: none; }
@@ -359,7 +362,7 @@ layout: false
       <div id="contentHead"><button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span></div>
       <div id="content"><p class="empty">从左侧选择一章开始阅读。</p></div>
       <div class="read-edge prev" id="edgePrev"><span class="ea">▲</span><span class="et">上一章节</span></div>
-      <div class="read-edge next" id="edgeNext"><span class="ea">▼</span><span class="et">下一章节</span></div>
+      <div class="read-edge next" id="edgeNext"><span class="et et-title" id="edgeNextTitle"></span><span class="et">下一章节</span><span class="ea">▼</span></div>
       <button id="readEnvBtn" title="阅读环境"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       <div id="readEnvPanel">
         <h4>阅读环境</h4>
@@ -1172,7 +1175,9 @@ function renderContent(i) {
   const nl = raw.indexOf('\n');
   const title = nl >= 0 ? raw.slice(0, nl) : raw;
   const body = nl >= 0 ? raw.slice(nl + 1) : '';
-  $('#contentTitle').textContent = title || ('第' + (i + 1) + '章');
+  const dispTitle = title || ('第' + (i + 1) + '章');
+  $('#contentTitle').textContent = dispTitle;
+  const ent = $('#edgeNextTitle'); if (ent) ent.textContent = dispTitle;
   const cEl = $('#content');
   if (body && body.trim()) {
     const paras = body.split('\n').map(p => p.trim()).filter(Boolean);
