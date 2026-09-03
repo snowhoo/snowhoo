@@ -374,7 +374,7 @@ layout: false
     </div>
     <div id="contentPanel">
       <div class="read-bg-layer" id="readBgLayer"></div>
-      <div id="contentHead"><button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span></div>
+      <div id="contentHead"><span class="page-btn" id="backShelfBtn">‹ 书架</span><button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span></div>
       <div id="content"><p class="empty">从左侧选择一章开始阅读。</p></div>
       <div class="read-edge prev" id="edgePrev"><span class="et">上一章节</span></div>
       <div class="read-edge next" id="edgeNext"><span class="et et-title" id="edgeNextTitle"></span><div class="edge-mid"><span class="et">下一章节</span></div><span class="et et-book" id="edgeNextBook"></span></div>
@@ -428,7 +428,6 @@ layout: false
         </div>
       </div>
       <div class="page-nav-group">
-        <span class="page-btn" id="backShelfBtn">‹ 书架</span>
         <span class="page-btn" id="wishBtn">💝 心愿</span>
         <span class="page-text" id="botInfo"></span>
       </div>
@@ -536,7 +535,7 @@ async function init() {
       t.replaceWith(ph);
     }
   }, true);
-  $('#backShelfBtn').addEventListener('click', () => { if (location.hash) location.hash = ''; else showView('shelf'); });
+  document.addEventListener('click', (e) => { if (e.target.closest('#backShelfBtn')) { if (location.hash) location.hash = ''; else showView('shelf'); } });
   $('#chapSearch').addEventListener('input', renderChapters);
   $('#chapSortBtn').addEventListener('click', () => {
     chapOrder = (chapOrder === 'asc') ? 'desc' : 'asc';
@@ -772,7 +771,7 @@ async function openBook(b) {
     (b.intro ? '<div class="bi">' + esc(b.intro) + '</div>' : '') +
     '<div class="bc-row"><span class="bc">共 ' + n + ' 章</span>' +
     '<button class="fav-heart" id="bookFavBtn">' + (isFav(b.id) ? '❤️' : '🤍') + '</button></div>';
-  $('#contentHead').innerHTML = '<button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span>';
+  $('#contentHead').innerHTML = '<span class="page-btn" id="backShelfBtn">‹ 书架</span><button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span>';
   const eb = $('#edgeNextBook'); if (eb) eb.textContent = (b.title || '') + (b.author ? ' · ' + b.author : '');
 
   // 加载章节目录（有序标题）；缺失也不影响，可用首分片标题兜底
