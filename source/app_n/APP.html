@@ -918,6 +918,14 @@ var AppGrid = (function() {
   function render() {
     var grid = $('appGrid'); if (!grid) return;
     cacheBtns();
+    // 新栏目兼容：持久化布局若为旧版（缺新图标），把未落格且未隐藏的图标自动补进首个空位
+    ICONS.forEach(function (id) {
+      if (hidden[id]) return;
+      var placed = cells.some(function (v) { return v === id; });
+      if (!placed) {
+        for (var _k = 0; _k < TOTAL; _k++) { if (!cells[_k]) { cells[_k] = id; break; } }
+      }
+    });
     // 清空前先把已放入格子的按钮摘出，避免 innerHTML='' 连按钮一起销毁
     ICONS.forEach(function (id) { var b = btnRefs[id]; if (b && b.parentNode) b.parentNode.removeChild(b); });
     grid.innerHTML = '';
