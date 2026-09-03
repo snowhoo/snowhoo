@@ -11,7 +11,7 @@ layout: false
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; background: transparent; }
   #app {
-    max-width: 1400px; min-height: 100vh; margin: 0 auto; padding: 0 16px 56px;
+    max-width: 1400px; min-height: 100vh; margin: 0 auto; padding: 0 16px 96px;
     transition: background 0.2s, color 0.2s;
     --bg-body: #0a0a0f; --bg-surface: #14141e; --bg-card: #1c1c26; --bg-card-hover: #252532;
     --bg-elevated: #1e1e2a; --border: #2c2c3a; --text-primary: #f0f0f3; --text-secondary: #a0a0b0;
@@ -40,8 +40,7 @@ layout: false
   .view.hidden { display: none; }
 
   /* 吸顶头部：品牌 + 胶囊工具栏 + 分类徽章 */
-  #stickyHeader { position: sticky; top: 0; z-index: 100; background: var(--bg-body); padding-top: 12px; padding-bottom: 4px; }
-  .brand { font-size: 1.05rem; font-weight: 700; letter-spacing: 1px; color: var(--text-primary); margin-bottom: 8px; }
+  #stickyHeader { position: sticky; top: 0; z-index: 100; background: var(--bg-body); padding-top: 40px; padding-bottom: 4px; }
   .toolbar { display: flex; gap: 10px; align-items: center; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
   .toolbar::-webkit-scrollbar { display: none; }
   .toolbar input, .toolbar button {
@@ -87,6 +86,17 @@ layout: false
   .book-author { font-size: .72rem; color: var(--text-muted); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .book-tag { display: inline-block; font-size: .62rem; color: #fff; background: var(--accent); border-radius: 6px; padding: 1px 6px; margin-top: 5px; }
   .book-upd { font-size: .66rem; color: var(--text-muted); margin-top: 4px; }
+  /* 卡片底部：阅读进度 + 收藏键（参考 tv_p 的 fav-home-btn） */
+  .book-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 5px; }
+  .book-prog { font-size: .66rem; color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fav-home-btn { background: transparent; border: none; font-size: 15px; cursor: pointer; color: var(--text-secondary); flex-shrink: 0; padding: 0 2px; line-height: 1.2; }
+  .fav-home-btn:active { transform: scale(.88); }
+  /* 书籍信息栏的收藏 / 续读 */
+  .book-acts { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+  .fav-btn { border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); border-radius: 40px; padding: 5px 14px; font-size: .78rem; font-weight: 600; cursor: pointer; }
+  .fav-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .resume-btn { border: none; background: var(--accent); color: #fff; border-radius: 40px; padding: 9px 22px; font-size: .85rem; font-weight: 600; cursor: pointer; margin-top: 12px; }
+  .resume-btn:active { transform: scale(.96); }
 
   /* 阅读器 */
   #reader { display: none; }
@@ -104,7 +114,7 @@ layout: false
   .chap:active, .chap:hover { background: var(--bg-card-hover); }
   .chap.cur { background: var(--accent); color: #fff; font-weight: 600; }
 
-  #contentPanel { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg-surface); }
+  #contentPanel { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg-surface); }
   #contentHead { flex-shrink: 0; padding: 12px 18px; border-bottom: 1px solid var(--border); font-size: .95rem; font-weight: 600; background: var(--bg-elevated); color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
   /* 章节翻页（上/下章） */
   .chap-nav { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
@@ -127,7 +137,7 @@ layout: false
   /* 目录开关：桌面隐藏，移动端抽屉用 */
   .toc-toggle { display: none; align-items: center; gap: 4px; flex-shrink: 0; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); border-radius: 8px; padding: 4px 10px; font-size: .8rem; font-weight: 600; cursor: pointer; }
   .toc-toggle:active { background: var(--bg-card-hover); }
-  #content { flex: 1; overflow-y: auto; padding: 18px 20px; line-height: 1.9; font-size: 1.02rem;
+  #content { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 18px 20px; line-height: 1.9; font-size: 1.02rem;
     font-family: "KaiTi", "STKaiti", "楷体", "Songti SC", serif; color: var(--text-primary); max-width: 780px; margin: 0 auto; width: 100%; }
   #content p { margin: 0 0 1.1em; text-indent: 2em; }
   #content .empty { color: var(--text-muted); font-size: .9rem; text-indent: 0; text-align: center; margin-top: 30vh; font-family: sans-serif; }
@@ -147,7 +157,10 @@ layout: false
   .wish-btn:active { transform: scale(.96); }
 
   /* 底部导航 */
-  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 700; height: 44px; background: var(--bg-surface); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: .8rem; user-select: none; -webkit-user-select: none; }
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 700; background: var(--bg-surface); border-top: 1px solid var(--border); display: flex; flex-direction: column; padding: 0; font-size: .8rem; user-select: none; -webkit-user-select: none; }
+  .bottom-nav .bn-row { display: flex; align-items: center; justify-content: space-between; padding: 0 12px; height: 44px; width: 100%; flex-shrink: 0; min-width: 0; gap: 8px; }
+  .bottom-nav .bn-row:not(:first-child) { border-top: 1px solid var(--border); }
+  .bottom-nav .bn-tts-row { height: 42px; padding: 0 4px 0 0; justify-content: stretch; }
   .page-nav-group { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
   .page-btn { display: flex; align-items: center; gap: 4px; padding: 4px 14px; border-radius: 40px; cursor: pointer; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); font-weight: 600; flex-shrink: 0; }
   .page-btn:active { background: var(--bg-card-hover); }
@@ -196,12 +209,12 @@ layout: false
 
   /* ===== 移动端（手机 webview 优先）：阅读器全屏 + 目录抽屉 ===== */
   @media (max-width: 768px) {
-    #app { padding: 0 12px 44px; }
+    #app { padding: 0 12px 96px; }
     #botInfo { display: none; }
     .book-grid { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; }
     .toolbar { flex-wrap: nowrap; }
     .toolbar input { max-width: none; flex: 1; }
-    #stickyHeader { padding-top: 8px; }
+    .toolbar .btn-text { display: none; }
 
     /* 阅读器改为全屏固定层，脱离原文档流，正文为主视图 */
     #reader.active {
@@ -211,8 +224,10 @@ layout: false
       padding-bottom: env(safe-area-inset-bottom, 0);
     }
     #contentPanel { min-width: 0; }
-    #content { padding: 16px 18px 60px; font-size: 1.05rem; }
-    #contentHead { padding: max(10px, env(safe-area-inset-top, 0px)) 14px 10px; gap: 8px; }
+    #content { padding: 16px 18px 104px; font-size: 1.05rem; }
+    #contentHead { padding: 40px 14px 10px; gap: 8px; }
+    #bookHead { padding-top: 40px; }
+    #chapterList { padding-bottom: 96px; }
     #contentTitle { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .toc-toggle { display: inline-flex !important; }
 
@@ -242,10 +257,11 @@ layout: false
   </div>
 
   <div id="stickyHeader">
-    <div class="brand">📚 书架 · 小说阅读</div>
     <div class="toolbar">
       <input type="text" id="searchInput" placeholder="搜索书名 / 作者 / 标签">
       <button id="refreshBtn">↻ 刷新</button>
+      <button id="historyBtn">🕒 <span class="btn-text">最近</span></button>
+      <button id="favoritesBtn">❤️ <span class="btn-text">收藏</span></button>
     </div>
     <div id="catBar" class="cat-filters"></div>
   </div>
@@ -266,7 +282,6 @@ layout: false
     </div>
     <div id="contentPanel">
       <div id="contentHead"><button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span><span class="chap-nav"><button id="prevChap">‹ 上章</button><button id="nextChap">下章 ›</button></span></div>
-      <div id="ttsBarMount"></div>
       <div id="content"><p class="empty">从左侧选择一章开始阅读。<br>正文按需离线缓存，未缓存章节点开即自动抓取。</p></div>
     </div>
   </div>
@@ -285,31 +300,34 @@ layout: false
 
   <!-- 底部导航 -->
   <div class="bottom-nav" id="bottomNav">
-    <div class="page-nav-group">
-      <span class="page-btn" id="backShelfBtn">‹ 书架</span>
-      <span class="page-btn" id="wishBtn">💝 心愿</span>
-      <span class="page-text" id="botInfo"></span>
-    </div>
-    <div class="float-wrap">
-      <button class="float-btn" id="floatBtn">书</button>
-      <div class="float-menu" id="floatMenu">
-        <a class="menu-item" href="https://snowhoo.net/app_n/reader.html" target="_blank"><span class="menu-indicator" style="background:#e94560">小</span>小红故事·Blog</a>
-        <a class="menu-item" href="https://snowhoo.net/app_n/yedu_p.html" target="_blank"><span class="menu-indicator" style="background:#764ba2">夜</span>夜读·每晚十点</a>
-        <a class="menu-item" href="https://snowhoo.net/app_n/zjsz_p.html" target="_blank"><span class="menu-indicator" style="background:#3b82f6">照</span>照见苏州·摄影专辑</a>
-        <a class="menu-item" href="https://snowhoo.net/app_n/DaliyNews_p.html" target="_blank"><span class="menu-indicator" style="background:#ff8c00">新</span>新闻·每日速览</a>
-        <a class="menu-item" href="https://snowhoo.net/app_n/tv_p.html" target="_blank"><span class="menu-indicator" style="background:#22c55e">播</span>播霸·在线影视</a>
-        <span style="display:flex;align-items:center;padding:10px 16px;color:var(--accent);font-size:.82rem;font-weight:600;white-space:nowrap;cursor:default">
-          <span class="menu-indicator" style="background:var(--accent)">书</span>书架·小说阅读
-          <span style="margin-left:8px">✓</span>
-        </span>
-        <a class="menu-item" href="https://snowhoo.net/app_n/APP.html" onclick="event.preventDefault();window.location.replace('https://snowhoo.net/app_n/APP.html')"><span class="menu-indicator" style="background:#e8793a;width:24px;height:24px;line-height:24px;font-size:16px">界</span>返回首页</a>
+    <div class="bn-row bn-tts-row"><div id="ttsBarMount"></div></div>
+    <div class="bn-row">
+      <div class="float-wrap">
+        <button class="float-btn" id="floatBtn">书</button>
+        <div class="float-menu" id="floatMenu">
+          <a class="menu-item" href="https://snowhoo.net/app_n/reader.html" target="_blank"><span class="menu-indicator" style="background:#e94560">小</span>小红故事·Blog</a>
+          <a class="menu-item" href="https://snowhoo.net/app_n/yedu_p.html" target="_blank"><span class="menu-indicator" style="background:#764ba2">夜</span>夜读·每晚十点</a>
+          <a class="menu-item" href="https://snowhoo.net/app_n/zjsz_p.html" target="_blank"><span class="menu-indicator" style="background:#3b82f6">照</span>照见苏州·摄影专辑</a>
+          <a class="menu-item" href="https://snowhoo.net/app_n/DaliyNews_p.html" target="_blank"><span class="menu-indicator" style="background:#ff8c00">新</span>新闻·每日速览</a>
+          <a class="menu-item" href="https://snowhoo.net/app_n/tv_p.html" target="_blank"><span class="menu-indicator" style="background:#22c55e">播</span>播霸·在线影视</a>
+          <span style="display:flex;align-items:center;padding:10px 16px;color:var(--accent);font-size:.82rem;font-weight:600;white-space:nowrap;cursor:default">
+            <span class="menu-indicator" style="background:var(--accent)">书</span>书架·小说阅读
+            <span style="margin-left:8px">✓</span>
+          </span>
+          <a class="menu-item" href="https://snowhoo.net/app_n/APP.html" onclick="event.preventDefault();window.location.replace('https://snowhoo.net/app_n/APP.html')"><span class="menu-indicator" style="background:#e8793a;width:24px;height:24px;line-height:24px;font-size:16px">界</span>返回首页</a>
+        </div>
       </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <div class="user-area" id="userArea">
-        <img class="user-avatar" id="userAvatar" alt="会员" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='12' fill='%23e6e6e6'/><g fill='none' stroke='%23888' stroke-width='1.5'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></g></svg>">
+      <div class="page-nav-group">
+        <span class="page-btn" id="backShelfBtn">‹ 书架</span>
+        <span class="page-btn" id="wishBtn">💝 心愿</span>
+        <span class="page-text" id="botInfo"></span>
       </div>
-      <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="theme-btn" id="themeBtn"><svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#0f3460"/></svg></button>
+        <div class="user-area" id="userArea">
+          <img class="user-avatar" id="userAvatar" alt="会员" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='12' fill='%23e6e6e6'/><g fill='none' stroke='%23888' stroke-width='1.5'><path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='12' cy='7' r='4'/></g></svg>">
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -339,6 +357,9 @@ let currentCatFile = '';   // 当前选中的分类文件（'' = 全部分类）
 let currentBook = null;
 let bookById = {};        // id -> 分类索引条目（不再有单书 book.json，详情页元数据直接来自索引）
 let currentShards = [];   // 稀疏数组，索引 = 全局章号(0-based)，每元素 = "章节标题\n正文"
+let HIST = {};            // 阅读记录：{ [id]: {id,title,author,category,chapter_count,idx,ts} }
+let FAV = [];             // 收藏：[{id,title,author,category,chapter_count,ts}]
+let specialView = '';     // 书架特殊视图：'' | '__history__' | '__fav__'
 let chapterTitles = [];   // 来自 toc.json 的有序章节标题（导航用）
 let loadedShards = new Set();   // 已载入 currentShards 的分片号
 let curIdx = null;
@@ -374,9 +395,18 @@ async function init() {
   }
   $('#shelfMeta').textContent = '共 ' + META.total + ' 本小说' + (META.generated_at ? '（更新于 ' + META.generated_at + '）' : '');
   buildCatBadges();
+  loadUserData();      // 阅读记录 / 收藏：先读本地缓存
+  syncUserData();      // 已登录则与 Waline 库同步（异步，不阻塞首屏）
   await renderShelf();
   $('#searchInput').addEventListener('input', debounce(renderShelf, 300));
   $('#refreshBtn').addEventListener('click', refresh);
+  $('#historyBtn').addEventListener('click', () => setSpecialView(specialView === '__history__' ? '' : '__history__'));
+  $('#favoritesBtn').addEventListener('click', () => setSpecialView(specialView === '__fav__' ? '' : '__fav__'));
+  // 书籍页：收藏 / 续读（事件委托）
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('#bookFavBtn')) { toggleFav(currentBook); syncBookFavBtn(currentBook); return; }
+    if (e.target.closest('#resumeBtn')) { const h = HIST[currentBook && currentBook.id]; if (h && h.idx >= 0) openChapter(h.idx); }
+  });
   // 封面加载失败时替换为占位图
   document.addEventListener('error', function (e) {
     const t = e.target;
@@ -395,10 +425,12 @@ async function init() {
   // 移动端章节抽屉：☰ 目录开关 + 遮罩关闭
   document.addEventListener('click', (e) => { if (e.target.closest('#tocToggle')) toggleToc(); });
   $('#readerMask').addEventListener('click', closeToc);
-  // 章节翻页：上一章 / 下一章
+  // 章节翻页：上一章 / 下一章（未选章时"下章"= 第 1 章）
   document.addEventListener('click', (e) => {
-    if (e.target.closest('#prevChap') && typeof curIdx === 'number' && curIdx > 0) openChapter(curIdx - 1);
-    else if (e.target.closest('#nextChap') && currentBook && curIdx < (currentBook.chapter_count || 1) - 1) openChapter(curIdx + 1);
+    const cur = (typeof curIdx === 'number' && curIdx >= 0) ? curIdx : -1;
+    const n = (currentBook && currentBook.chapter_count) || 0;
+    if (e.target.closest('#prevChap') && cur > 0) openChapter(cur - 1);
+    else if (e.target.closest('#nextChap') && cur + 1 < n) openChapter(cur + 1);
   });
   window.addEventListener('hashchange', route);
   route();
@@ -416,6 +448,10 @@ function buildCatBadges() {
   bar.querySelectorAll('.cat-badge').forEach(el => {
     el.addEventListener('click', () => {
       currentCatFile = el.dataset.cat || '';
+      specialView = '';
+      const hb = $('#historyBtn'), fb = $('#favoritesBtn');
+      if (hb) hb.classList.remove('active');
+      if (fb) fb.classList.remove('active');
       bar.querySelectorAll('.cat-badge').forEach(x => x.classList.remove('active'));
       el.classList.add('active');
       renderShelf();
@@ -465,6 +501,7 @@ async function getActiveBooks() {
 }
 
 async function renderShelf() {
+  if (specialView) return renderSpecialView();
   const box = $('#shelfList');
   if (shelfObserver) { shelfObserver.disconnect(); shelfObserver = null; }
   box.innerHTML = '<div class="loading">加载中…</div>';
@@ -510,6 +547,36 @@ async function renderShelf() {
   shelfObserver.observe(sentinel);
 }
 
+// 特殊视图：最近阅读 / 我的收藏（参考 tv_p 的 renderSpecialView）
+async function renderSpecialView() {
+  const box = $('#shelfList');
+  if (shelfObserver) { shelfObserver.disconnect(); shelfObserver = null; }
+  let list = [];
+  if (specialView === '__history__') {
+    list = Object.keys(HIST).map(k => HIST[k])
+      .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+      .map(e => ({ id: e.id, title: e.title, author: e.author, category: e.category, chapter_count: e.chapter_count }));
+  } else {
+    list = FAV.slice();
+  }
+  shelfAll = list; shelfShown = 0;
+  box.innerHTML = '';
+  const title = (specialView === '__history__') ? '最近阅读' : '我的收藏';
+  $('#shelfMeta').textContent = title + ' · ' + list.length + ' 本';
+  $('#botInfo').textContent = list.length + ' 本';
+  if (!list.length) { box.innerHTML = '<div class="loading">暂无记录</div>'; return; }
+  appendShelf();
+}
+function setSpecialView(v) {
+  specialView = v;
+  const hb = $('#historyBtn'), fb = $('#favoritesBtn');
+  if (hb) hb.classList.toggle('active', v === '__history__');
+  if (fb) fb.classList.toggle('active', v === '__fav__');
+  if (!v) { renderShelf(); return; }
+  document.querySelectorAll('.cat-badge').forEach(x => x.classList.remove('active'));
+  renderSpecialView();
+}
+
 // 向书架追加一批卡片（无限滚动核心）
 function appendShelf() {
   const box = $('#shelfList');
@@ -527,13 +594,26 @@ function appendShelf() {
     const cover = coverUrl(b)
       ? '<img class="book-cover" src="' + esc(coverUrl(b)) + '" loading="lazy" data-fallback="1" alt="">'
       : '<div class="book-cover book-cover-text">📖</div>';
+    const prog = (HIST[b.id] && HIST[b.id].idx >= 0) ? (HIST[b.id].idx + 1) : 0;
     card.innerHTML = '<div class="book-cover-wrap">' + cover + '</div>' +
       '<div class="book-info">' +
       '<div class="book-title">' + esc(b.title) + '</div>' +
       '<div class="book-author">' + esc(b.author || '') + '</div>' +
       (b.category ? '<span class="book-tag">' + esc(b.category) + (b.status ? ' · ' + esc(b.status) : '') + '</span>' : '') +
-      (b.crawled_at ? '<div class="book-upd">' + fmtTime(b.crawled_at) + '</div>' : '') + '</div>';
+      (b.crawled_at ? '<div class="book-upd">' + fmtTime(b.crawled_at) + '</div>' : '') +
+      '<div class="book-foot">' +
+      (prog ? '<span class="book-prog">读到第 ' + prog + ' 章</span>' : '<span></span>') +
+      '<button class="fav-home-btn" data-favid="' + esc(b.id) + '">' + (isFav(b.id) ? '❤️' : '🤍') + '</button>' +
+      '</div></div>';
     card.addEventListener('click', () => { location.hash = '#book/' + b.id; });
+    const favBtn = card.querySelector('.fav-home-btn');
+    if (favBtn) favBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFav(b);
+      favBtn.textContent = isFav(b.id) ? '❤️' : '🤍';
+      if (specialView === '__fav__') renderSpecialView();
+      if (currentBook && String(currentBook.id) === String(b.id)) syncBookFavBtn(b);
+    });
     frag.appendChild(card);
   });
   if (sentinel) box.insertBefore(frag, sentinel); else box.appendChild(frag);
@@ -549,7 +629,9 @@ async function openBook(b) {
   showView('reader');
   $('#bookHead').innerHTML = '<div class="loading">加载中…</div>';
   $('#chapterList').innerHTML = '<div class="loading">加载中…</div>';
-  $('#content').innerHTML = '<p class="empty">从左侧选择一章开始阅读。</p>';
+  const _h = HIST[b.id];
+  $('#content').innerHTML = '<p class="empty">从左侧选择一章开始阅读。</p>' +
+    (_h && _h.idx >= 0 ? '<p class="empty" style="margin-top:6px"><button class="resume-btn" id="resumeBtn">▶ 继续阅读（上次第 ' + (_h.idx + 1) + ' 章）</button></p>' : '');
   $('#contentTitle').textContent = '请选择章节';
   curIdx = null;
   currentBook = b;
@@ -562,15 +644,18 @@ async function openBook(b) {
     '<div class="bt">' + esc(b.title) + '</div>' +
     '<div class="ba">' + esc(b.author || '') + (b.category ? ' · ' + esc(b.category) : '') + (b.status ? ' · ' + esc(b.status) : '') + '</div>' +
     (b.intro ? '<div class="bi">' + esc(b.intro) + '</div>' : '') +
-    '<div class="bc">共 ' + n + ' 章（按需加载，未缓存章节可"许愿"让后台抓取）</div>';
+    '<div class="bc">共 ' + n + ' 章（按需加载，未缓存章节可"许愿"让后台抓取）</div>' +
+    '<div class="book-acts"><button class="fav-btn" id="bookFavBtn">🤍 收藏</button></div>';
   $('#contentHead').innerHTML = '<button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span><span class="chap-nav"><button id="prevChap">‹ 上章</button><button id="nextChap">下章 ›</button></span>';
 
   // 加载章节目录（有序标题）；缺失也不影响，可用首分片标题兜底
   try { chapterTitles = await getJSON(DATA + id + '/toc.json'); } catch (e) { chapterTitles = []; }
   renderChapters();
-  // 预载第一分片，开卷即读
+  // 打开书停在提示页（心愿入口在此）；预载首分片仅做缓存预热，读不到也不发起任何请求
   if (n > 0) await ensureShard(id, 1);
   renderChapters();
+  touchHistory(b, null);     // 阅读记录：最近打开
+  syncBookFavBtn(b);         // 同步书籍信息栏的收藏按钮状态
 }
 
 // 确保某分片已在 currentShards 中；命中缓存直接返回，否则尝试从 R2 加载，缺失则返回 false（交由上层处理心愿流程）
@@ -584,6 +669,121 @@ async function ensureShard(id, S) {
   } catch (e) {
     return false;   // R2 没有该分片
   }
+}
+
+// ===== 阅读记录 / 收藏：未登录写 localStorage，已登录同步 Waline 库 =====
+const LS_HIST = 'books_history';
+const LS_FAV = 'books_fav';
+const UD_PATH = '/app-books/userdata';
+
+function loadUserData() {
+  try { HIST = JSON.parse(localStorage.getItem(LS_HIST)) || {}; } catch (e) { HIST = {}; }
+  try { FAV = JSON.parse(localStorage.getItem(LS_FAV)) || []; } catch (e) { FAV = []; }
+}
+function saveUserData() {
+  try { localStorage.setItem(LS_HIST, JSON.stringify(HIST)); } catch (e) {}
+  try { localStorage.setItem(LS_FAV, JSON.stringify(FAV)); } catch (e) {}
+}
+function walineUser() {
+  try {
+    const v = localStorage.getItem('WALINE_USER');
+    const u = v ? JSON.parse(v) : null;
+    return (u && (u.display_name || u.nick || u.name)) ? u : null;
+  } catch (e) { return null; }
+}
+function parseUserData(raw) {   // 兼容 Waline markdown 渲染污染（同 reader.html parseGameRecord）
+  if (!raw) return null;
+  let s = String(raw).replace(/<[^>]*>/g, '')
+    .replace(/[“”]/g, '"').replace(/[‘’]/g, "'")
+    .replace(/&quot;/g, '"').replace(/&#34;/g, '"')
+    .replace(/&amp;/g, '&').replace(/&#38;/g, '&')
+    .replace(/&lt;/g, '<').replace(/&#60;/g, '<')
+    .replace(/&gt;/g, '>').replace(/&#62;/g, '>');
+  const st = s.indexOf('{'), en = s.lastIndexOf('}');
+  if (st >= 0 && en > st) s = s.slice(st, en + 1);
+  try { return JSON.parse(s); } catch (e) { return null; }
+}
+async function cloudPull() {    // 取当前用户在 UD_PATH 下最新一条记录
+  const u = walineUser(); if (!u) return null;
+  try {
+    const token = u.token || '';
+    const r = await fetch(WALINE_SERVER + '/api/comment?path=' + encodeURIComponent(UD_PATH) + (token ? '&token=' + encodeURIComponent(token) : ''));
+    if (!r.ok) return null;
+    const j = await r.json();
+    const list = (j.data && j.data.data) || j.data || [];
+    let best = null, bestOid = 0;
+    for (const c of list) {
+      if ((c.nick || '') !== (u.display_name || u.nick)) continue;
+      const obj = parseUserData(c.orig || c.comment || '');
+      const oid = parseInt(c.objectId, 10) || 0;
+      if (obj && oid > bestOid) { best = obj; bestOid = oid; }
+    }
+    return best;
+  } catch (e) { return null; }
+}
+async function cloudPush() {
+  const u = walineUser(); if (!u) return;
+  try {
+    const origin = (location.origin && location.origin.indexOf('http') === 0) ? location.origin : 'https://snowhoo.net';
+    await fetch(WALINE_SERVER + '/api/comment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: origin + '/app_n/books.html',
+        path: UD_PATH,
+        comment: JSON.stringify({ history: HIST, fav: FAV, ts: Date.now() }),
+        nick: u.display_name || u.nick, mail: u.mail || '', link: ''
+      })
+    });
+  } catch (e) {}
+}
+function localUserTs() {
+  let m = 0;
+  for (const k in HIST) m = Math.max(m, HIST[k].ts || 0);
+  FAV.forEach(f => m = Math.max(m, f.ts || 0));
+  return m;
+}
+let _udPushT = null;
+function persistUserData() {
+  saveUserData();
+  clearTimeout(_udPushT);
+  _udPushT = setTimeout(cloudPush, 1500);   // 节流上云，避免频繁写评论
+}
+async function syncUserData() {   // 云端更新则以云端为准，本地更新则回推
+  const obj = await cloudPull();
+  if (!obj) return;
+  let changed = false;
+  if ((obj.ts || 0) > localUserTs()) { HIST = obj.history || {}; FAV = obj.fav || []; saveUserData(); changed = true; }
+  else await cloudPush();
+  if (currentBook) syncBookFavBtn(currentBook);
+  if (!changed) return;
+  // 云端数据有更新：阅读页只刷新收藏键，书架则整页重渲染
+  const readerOn = $('#reader') && $('#reader').classList.contains('active');
+  if (!readerOn) { if (specialView) renderSpecialView(); else renderShelf(); }
+}
+function touchHistory(b, idx) {
+  if (!b || !b.id) return;
+  const e = HIST[b.id] || { id: b.id, idx: -1, ts: 0 };
+  e.title = b.title; e.author = b.author; e.category = b.category; e.chapter_count = b.chapter_count;
+  if (typeof idx === 'number' && idx >= 0) e.idx = idx;
+  e.ts = Date.now();
+  HIST[b.id] = e;
+  persistUserData();
+}
+function isFav(id) { return FAV.some(f => String(f.id) === String(id)); }
+function toggleFav(b) {
+  if (!b || !b.id) return false;
+  const i = FAV.findIndex(f => String(f.id) === String(b.id));
+  if (i >= 0) FAV.splice(i, 1);
+  else FAV.unshift({ id: b.id, title: b.title, author: b.author, category: b.category, chapter_count: b.chapter_count, ts: Date.now() });
+  persistUserData();
+  return i < 0;
+}
+function syncBookFavBtn(b) {   // 书籍信息栏收藏键状态
+  const el = $('#bookFavBtn'); if (!el || !b) return;
+  const on = isFav(b.id);
+  el.textContent = on ? '❤️ 已收藏' : '🤍 收藏';
+  el.classList.toggle('on', on);
 }
 
 // ===== 心愿单数据 =====
@@ -611,7 +811,7 @@ async function openChapter(i) {
   updateChapNav();
   renderChapters();
   closeToc();                            // 移动端选章后收起目录抽屉
-  if (ok) { renderContent(i); return; }
+  if (ok) { renderContent(i); touchHistory(currentBook, i); return; }
   // R2 没有该分片 -> 心愿流程
   await handleShardMiss(id, S, i);
 }
@@ -910,7 +1110,7 @@ init();
           pageview: false,
           path: '/app_n/books.html',
           locale: { placeholder: '登录后留言…', comment: '留言' },
-          onLogin: function(user){ try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e){} refreshUser(); },
+          onLogin: function(user){ try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e){} refreshUser(); try { if (typeof syncUserData === 'function') syncUserData(); } catch(e){} },
           onLogout: function(){ try { localStorage.removeItem('WALINE_USER'); localStorage.removeItem('@waline/user'); } catch(e){} refreshUser(); }
         });
       } catch(e){ console.warn('[会员] Waline init error:', e); }
