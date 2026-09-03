@@ -310,8 +310,9 @@ layout: false
   .read-edge:active { color: var(--accent); }
   .read-edge.disabled { opacity: .22; pointer-events: none; }
   /* 右侧边缘：标题从顶部起竖排，『下一章节』固定在垂直中部 */
-  .read-edge.next { top: 0; bottom: 0; transform: none; justify-content: flex-start; padding-top: 56px; }
+  .read-edge.next { top: 0; bottom: 0; transform: none; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 56px 3px; }
   .read-edge.next .et-title { align-self: center; }
+  .read-edge.next .et-book { align-self: center; font-weight: 500; max-height: 72vh; overflow: hidden; }
   .read-edge.next .edge-mid { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 6px; }
   /* 三个开关各自生效 */
   body.hide-title #contentHead #contentTitle { display: none; }
@@ -376,7 +377,7 @@ layout: false
       <div id="contentHead"><button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span></div>
       <div id="content"><p class="empty">从左侧选择一章开始阅读。</p></div>
       <div class="read-edge prev" id="edgePrev"><span class="et">上一章节</span></div>
-      <div class="read-edge next" id="edgeNext"><span class="et et-title" id="edgeNextTitle"></span><div class="edge-mid"><span class="et">下一章节</span></div></div>
+      <div class="read-edge next" id="edgeNext"><span class="et et-title" id="edgeNextTitle"></span><div class="edge-mid"><span class="et">下一章节</span></div><span class="et et-book" id="edgeNextBook"></span></div>
       <button id="readEnvBtn" title="阅读环境"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       <div id="readEnvPanel">
         <h4>阅读环境</h4>
@@ -772,6 +773,7 @@ async function openBook(b) {
     '<div class="bc-row"><span class="bc">共 ' + n + ' 章</span>' +
     '<button class="fav-heart" id="bookFavBtn">' + (isFav(b.id) ? '❤️' : '🤍') + '</button></div>';
   $('#contentHead').innerHTML = '<button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span>';
+  const eb = $('#edgeNextBook'); if (eb) eb.textContent = (b.title || '') + (b.author ? ' · ' + b.author : '');
 
   // 加载章节目录（有序标题）；缺失也不影响，可用首分片标题兜底
   try { chapterTitles = await getJSON(DATA + id + '/toc.json'); } catch (e) { chapterTitles = []; }
@@ -880,9 +882,12 @@ function hueBg(h) { return 'hsl(' + h + ', 30%, 92%)'; }     // 背景：浅色�
 
 // 右边缘竖排章节标题：顶边对齐正文区域顶边 + 10px（随标题显隐/屏宽自适应）
 function syncEdgeTitleTop() {
-  const c = $('#content'), e = $('#edgeNext');
-  if (!c || !e) return;
+  const cp = $('#contentPanel'), c = $('#content'), e = $('#edgeNext');
+  if (!cp || !c || !e) return;
+  // 章节标题(顶)与书名·作者(底)关于正文区域对称：顶边=正文顶+10px，底边=正文底-10px
   e.style.paddingTop = (c.offsetTop + 10) + 'px';
+  const bottom = (cp.clientHeight - (c.offsetTop + c.offsetHeight)) + 10;
+  e.style.paddingBottom = Math.max(bottom, 10) + 'px';
 }
 function applyReadEnv() {
   const cp = $('#contentPanel'); if (!cp) return;
