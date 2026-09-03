@@ -317,6 +317,8 @@ layout: false
   /* 三个开关各自生效 */
   body.hide-title #contentHead #contentTitle { display: none; }
   body.hide-title #contentHead #tocToggle { display: none; }
+  /* 移动端媒体查询给 .toc-toggle 加了 !important，这里必须用同等优先级反压，否则隐藏标题后目录键仍残留 */
+  body.hide-title .toc-toggle { display: none !important; }
   body.hide-title #contentHead { background: transparent; border-bottom: none; }
   body.reader-on.hide-tts #bottomNav .bn-tts-row { display: none; }
   body.reader-on.hide-bottom #bottomNav .bn-nav-row { display: none; }   /* 仅隐藏底部导航，不影响朗读条 */
