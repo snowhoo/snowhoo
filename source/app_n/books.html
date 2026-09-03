@@ -135,10 +135,7 @@ layout: false
   #contentHead, #content { position: relative; z-index: 1; }
   #contentHead { flex-shrink: 0; padding: 12px 18px; border-bottom: 1px solid var(--border); font-size: .95rem; font-weight: 600; background: var(--bg-elevated); color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
   /* 章节翻页（上/下章） */
-  .chap-nav { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
-  .chap-nav button { border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); border-radius: 8px; padding: 4px 11px; font-size: .78rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
-  .chap-nav button:active { background: var(--bg-card-hover); }
-  .chap-nav button:disabled { opacity: .35; cursor: default; }
+  /* 章节切换按钮已取消，改由阅读区左右竖排边缘控件（.read-edge）切换 */
   #ttsBarMount { width: 100%; display: flex; min-width: 0; }
   /* 会员登录区（头像点击弹留言窗） */
   .user-area { display: flex; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
@@ -295,6 +292,30 @@ layout: false
   .read-row .val { font-size: .68rem; color: var(--text-muted); width: 40px; text-align: right; flex-shrink: 0; }
   .read-reset { margin-top: 6px; width: 100%; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); border-radius: 8px; padding: 7px; font-size: .76rem; font-weight: 600; cursor: pointer; }
   .read-reset:active { background: var(--bg-card-hover); }
+  /* 阅读环境菜单右上角三个开关（标题 / 朗读 / 底栏） */
+  .read-toggles { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; margin: 0 0 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .tg { display: inline-flex; align-items: center; gap: 5px; font-size: .7rem; color: var(--text-secondary); cursor: pointer; user-select: none; }
+  .tg input { display: none; }
+  .tg-sw { width: 30px; height: 16px; border-radius: 9px; background: rgba(128,128,128,.35); position: relative; transition: background .2s; flex-shrink: 0; }
+  .tg-sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: left .2s; }
+  .tg input:checked + .tg-sw { background: var(--accent); }
+  .tg input:checked + .tg-sw::after { left: 16px; }
+  /* 阅读区左右竖排边缘切换控件 */
+  .read-edge { position: absolute; top: 52%; transform: translateY(-50%); z-index: 20; display: flex; flex-direction: column; align-items: center; gap: 6px; color: rgba(130,130,130,.45); cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; padding: 10px 3px; }
+  .read-edge.prev { left: 0; }
+  .read-edge.next { right: 0; }
+  .read-edge .et { writing-mode: vertical-rl; text-orientation: upright; font-size: .62rem; letter-spacing: 1px; line-height: 1.3; }
+  .read-edge .ea { font-size: 13px; line-height: 1; }
+  .read-edge:active { color: var(--accent); }
+  .read-edge.disabled { opacity: .22; pointer-events: none; }
+  /* 三个开关各自生效 */
+  body.hide-title #contentHead #contentTitle { display: none; }
+  body.hide-title #contentHead { background: transparent; border-bottom: none; }
+  body.reader-on.hide-tts #bottomNav .bn-tts-row { display: none; }
+  body.reader-on.hide-bottom #bottomNav { display: none; }
+  body.reader-on.hide-bottom #app { padding-bottom: 0; }
+  body.reader-on.hide-bottom #readEnvBtn { bottom: 16px; }
+  body.reader-on.hide-bottom #readEnvPanel { bottom: 68px; }
   @media (max-width: 768px) {
     #readEnvBtn { bottom: 126px; }
     #readEnvPanel { bottom: 178px; }
@@ -335,11 +356,18 @@ layout: false
     </div>
     <div id="contentPanel">
       <div class="read-bg-layer" id="readBgLayer"></div>
-      <div id="contentHead"><button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span><span class="chap-nav"><button id="prevChap">‹ 上章</button><button id="nextChap">下章 ›</button></span></div>
+      <div id="contentHead"><button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span></div>
       <div id="content"><p class="empty">从左侧选择一章开始阅读。</p></div>
+      <div class="read-edge prev" id="edgePrev"><span class="ea">▲</span><span class="et">上一章节</span></div>
+      <div class="read-edge next" id="edgeNext"><span class="ea">▼</span><span class="et">下一章节</span></div>
       <button id="readEnvBtn" title="阅读环境"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       <div id="readEnvPanel">
         <h4>阅读环境</h4>
+        <div class="read-toggles">
+          <label class="tg"><span>标题</span><input type="checkbox" id="tgTitle"><span class="tg-sw"></span></label>
+          <label class="tg"><span>朗读</span><input type="checkbox" id="tgTts"><span class="tg-sw"></span></label>
+          <label class="tg"><span>底栏</span><input type="checkbox" id="tgBottom"><span class="tg-sw"></span></label>
+        </div>
         <div class="read-row"><label>文字大小</label><input type="range" id="reFont" min="14" max="32" step="1"><span class="val" id="reFontVal"></span></div>
         <div class="read-row"><label>文字颜色</label><input type="range" class="rng-rainbow" id="reFg" min="0" max="360" step="1"><span class="val" id="reFgVal"></span></div>
         <div class="read-row"><label>文字亮度</label><input type="range" id="reTextBright" min="50" max="160" step="5"><span class="val" id="reTextBrightVal"></span></div>
@@ -504,13 +532,9 @@ async function init() {
   // 移动端章节抽屉：☰ 目录开关 + 遮罩关闭
   document.addEventListener('click', (e) => { if (e.target.closest('#tocToggle')) toggleToc(); });
   $('#readerMask').addEventListener('click', closeToc);
-  // 章节翻页：上一章 / 下一章（未选章时"下章"= 第 1 章）
-  document.addEventListener('click', (e) => {
-    const cur = (typeof curIdx === 'number' && curIdx >= 0) ? curIdx : -1;
-    const n = (currentBook && currentBook.chapter_count) || 0;
-    if (e.target.closest('#prevChap') && cur > 0) openChapter(cur - 1);
-    else if (e.target.closest('#nextChap') && cur + 1 < n) openChapter(cur + 1);
-  });
+  // 章节翻页：阅读区左右竖排边缘控件（取消原上/下章按钮）
+  const ep = $('#edgePrev'); if (ep) ep.addEventListener('click', () => { const n = (currentBook && currentBook.chapter_count) || 0; const i = (typeof curIdx === 'number' && curIdx >= 0) ? curIdx : -1; if (i > 0) openChapter(i - 1); });
+  const en = $('#edgeNext'); if (en) en.addEventListener('click', () => { const n = (currentBook && currentBook.chapter_count) || 0; const i = (typeof curIdx === 'number' && curIdx >= 0) ? curIdx : -1; if (i + 1 < n) openChapter(i + 1); });
   window.addEventListener('hashchange', route);
   route();
   hideLoading();
@@ -730,7 +754,7 @@ async function openBook(b) {
     (b.intro ? '<div class="bi">' + esc(b.intro) + '</div>' : '') +
     '<div class="bc-row"><span class="bc">共 ' + n + ' 章</span>' +
     '<button class="fav-heart" id="bookFavBtn">' + (isFav(b.id) ? '❤️' : '🤍') + '</button></div>';
-  $('#contentHead').innerHTML = '<button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span><span class="chap-nav"><button id="prevChap">‹ 上章</button><button id="nextChap">下章 ›</button></span>';
+  $('#contentHead').innerHTML = '<button class="toc-toggle" id="tocToggle">☰ 目录</button><span id="contentTitle">请选择章节</span>';
 
   // 加载章节目录（有序标题）；缺失也不影响，可用首分片标题兜底
   try { chapterTitles = await getJSON(DATA + id + '/toc.json'); } catch (e) { chapterTitles = []; }
@@ -828,10 +852,10 @@ function localUserTs() {
   return m;
 }
 
-// ===== 阅读环境设置（文字大小 / 文字颜色 / 文字亮度 / 背景颜色 / 背景亮度） =====
+// ===== 阅读环境设置（文字大小 / 文字颜色 / 文字亮度 / 背景颜色 / 背景亮度 + 标题/朗读/底栏 三开关） =====
 // 颜色用色相(Hue)拉杆：0-360 取彩虹色；亮度用百分比 50%-160%
 const RE_KEY = 'books_read_env';
-const RE_DEFAULT = { fs: 17, fgHue: 215, bgHue: 215, fgBright: 100, bgBright: 100 };
+const RE_DEFAULT = { fs: 17, fgHue: 215, bgHue: 215, fgBright: 100, bgBright: 100, hideTitle: false, hideTts: false, hideBottom: false };
 let readEnv = Object.assign({}, RE_DEFAULT);
 function hueFg(h) { return 'hsl(' + h + ', 70%, 42%)'; }     // 文字：较深可读
 function hueBg(h) { return 'hsl(' + h + ', 30%, 92%)'; }     // 背景：浅色柔和
@@ -848,6 +872,13 @@ function applyReadEnv() {
   const tb = $('#reTextBright'); if (tb) { tb.value = readEnv.fgBright; const v = $('#reTextBrightVal'); if (v) v.textContent = readEnv.fgBright + '%'; }
   const bg = $('#reBg'); if (bg) { bg.value = readEnv.bgHue; const v = $('#reBgVal'); if (v) v.textContent = readEnv.bgHue + '°'; }
   const bb = $('#reBgBright'); if (bb) { bb.value = readEnv.bgBright; const v = $('#reBgBrightVal'); if (v) v.textContent = readEnv.bgBright + '%'; }
+  // 三开关：写 body class + 同步勾选框
+  document.body.classList.toggle('hide-title', !!readEnv.hideTitle);
+  document.body.classList.toggle('hide-tts', !!readEnv.hideTts);
+  document.body.classList.toggle('hide-bottom', !!readEnv.hideBottom);
+  const tgT = $('#tgTitle'); if (tgT) tgT.checked = !!readEnv.hideTitle;
+  const tgS = $('#tgTts'); if (tgS) tgS.checked = !!readEnv.hideTts;
+  const tgB = $('#tgBottom'); if (tgB) tgB.checked = !!readEnv.hideBottom;
 }
 function saveReadEnv() {
   try { localStorage.setItem(RE_KEY, JSON.stringify(readEnv)); } catch (e) {}
@@ -860,6 +891,9 @@ function initReadEnv() {
   const tb = $('#reTextBright'); if (tb) tb.addEventListener('input', () => { readEnv.fgBright = parseInt(tb.value); applyReadEnv(); saveReadEnv(); });
   const bg = $('#reBg'); if (bg) bg.addEventListener('input', () => { readEnv.bgHue = parseInt(bg.value); applyReadEnv(); saveReadEnv(); });
   const bb = $('#reBgBright'); if (bb) bb.addEventListener('input', () => { readEnv.bgBright = parseInt(bb.value); applyReadEnv(); saveReadEnv(); });
+  const tgT = $('#tgTitle'); if (tgT) tgT.addEventListener('change', () => { readEnv.hideTitle = tgT.checked; applyReadEnv(); saveReadEnv(); });
+  const tgS = $('#tgTts'); if (tgS) tgS.addEventListener('change', () => { readEnv.hideTts = tgS.checked; applyReadEnv(); saveReadEnv(); });
+  const tgB = $('#tgBottom'); if (tgB) tgB.addEventListener('change', () => { readEnv.hideBottom = tgB.checked; applyReadEnv(); saveReadEnv(); });
   const rst = $('#reReset'); if (rst) rst.addEventListener('click', () => { readEnv = Object.assign({}, RE_DEFAULT); applyReadEnv(); saveReadEnv(); });
   const btn = $('#readEnvBtn'); if (btn) btn.addEventListener('click', (e) => { e.stopPropagation(); $('#readEnvPanel').classList.toggle('show'); });
   document.addEventListener('click', (e) => {
@@ -992,14 +1026,13 @@ function toggleToc() {
   const m = $('#readerMask'); if (m) m.classList.toggle('show', open);
 }
 
-// 翻页按钮禁用态（首/末章边界）
+// 左右边缘翻章控件禁用态（首/末章边界）
 function updateChapNav() {
-  const p = $('#prevChap'), nx = $('#nextChap');
-  if (!p || !nx) return;
+  const ep = $('#edgePrev'), en = $('#edgeNext');
   const n = (currentBook && currentBook.chapter_count) || 0;
   const i = (typeof curIdx === 'number' && curIdx >= 0) ? curIdx : -1;
-  p.disabled = (i <= 0);
-  nx.disabled = (i < 0 || i >= n - 1);
+  if (ep) ep.classList.toggle('disabled', i <= 0);
+  if (en) en.classList.toggle('disabled', i < 0 || i >= n - 1);
 }
 
 async function handleShardMiss(id, S, i) {
