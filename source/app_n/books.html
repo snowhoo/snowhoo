@@ -310,7 +310,7 @@ layout: false
   .read-edge:active { color: var(--accent); }
   .read-edge.disabled { opacity: .22; pointer-events: none; }
   /* 右侧边缘：标题从顶部起竖排，『下一章节』固定在垂直中部 */
-  .read-edge.next { top: 0; bottom: 0; transform: none; justify-content: flex-start; padding-top: 48px; }
+  .read-edge.next { top: 0; bottom: 0; transform: none; justify-content: flex-start; padding-top: 56px; }
   .read-edge.next .et-title { align-self: center; }
   .read-edge.next .edge-mid { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 6px; }
   /* 三个开关各自生效 */
@@ -781,6 +781,7 @@ async function openBook(b) {
   renderChapters();
   touchHistory(b, null);     // 阅读记录：最近打开
   syncBookFavBtn(b);         // 同步书籍信息栏的收藏按钮状态
+  syncEdgeTitleTop();        // 右缘标题顶边对齐正文顶边 + 10px
 }
 
 // 确保某分片已在 currentShards 中；命中缓存直接返回，否则尝试从 R2 加载，缺失则返回 false（交由上层处理心愿流程）
@@ -877,6 +878,12 @@ let readEnv = Object.assign({}, RE_DEFAULT);
 function hueFg(h) { return 'hsl(' + h + ', 70%, 42%)'; }     // 文字：较深可读
 function hueBg(h) { return 'hsl(' + h + ', 30%, 92%)'; }     // 背景：浅色柔和
 
+// 右边缘竖排章节标题：顶边对齐正文区域顶边 + 10px（随标题显隐/屏宽自适应）
+function syncEdgeTitleTop() {
+  const c = $('#content'), e = $('#edgeNext');
+  if (!c || !e) return;
+  e.style.paddingTop = (c.offsetTop + 10) + 'px';
+}
 function applyReadEnv() {
   const cp = $('#contentPanel'); if (!cp) return;
   cp.style.setProperty('--read-fs', readEnv.fs + 'px');
@@ -896,6 +903,7 @@ function applyReadEnv() {
   const tgT = $('#tgTitle'); if (tgT) tgT.checked = !!readEnv.hideTitle;
   const tgS = $('#tgTts'); if (tgS) tgS.checked = !!readEnv.hideTts;
   const tgB = $('#tgBottom'); if (tgB) tgB.checked = !!readEnv.hideBottom;
+  syncEdgeTitleTop();   // 标题显隐会改变头部高度，需重算右缘标题顶边
 }
 function saveReadEnv() {
   try { localStorage.setItem(RE_KEY, JSON.stringify(readEnv)); } catch (e) {}
@@ -918,6 +926,7 @@ function initReadEnv() {
     const p = $('#readEnvPanel'); if (!p || !p.classList.contains('show')) return;
     if (!p.contains(e.target) && e.target.id !== 'readEnvBtn') p.classList.remove('show');
   });
+  window.addEventListener('resize', syncEdgeTitleTop);   // 横竖屏/字号变化后重算右缘标题顶边
 }
 let _udPushT = null;
 function persistUserData() {
