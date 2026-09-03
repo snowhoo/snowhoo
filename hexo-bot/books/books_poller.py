@@ -200,18 +200,6 @@ def fetch_all_task():
     return out
 
 
-def fetch_pending():
-    """取待处理心愿：Waline 队列中未带 ok（未达成）的许愿评论。
-    未达成的下次轮询自然再被加入处理，无需冷却（用户口径）。"""
-    out = []
-    for c in fetch_all_task():
-        req = parse_req(c)
-        if not req or req_is_done(req):
-            continue   # 非心愿（含计数评论），或已达成（带 ok 标识）
-        out.append(c)
-    return out
-
-
 def delete_comment(cid):
     try:
         waline_req("DELETE", "/api/comment/%s" % cid, token=TOKEN)
@@ -282,18 +270,35 @@ def process_one(c):
 
 
 def loop_once():
-    tasks = fetch_pending()
+    # 同一本书同一分片(50 章一批)只处理一次：许第 1 章与许第 2..50 章是同一个心愿
+    groups = {}      # (bid, shard) -> [评论...]（未达成）
+    for c in fetch_all_task():
+        req = parse_req(c)
+        if not req or req_is_done(req):
+            continue
+        groups.setdefault((str(req["b"]), int(req["s"])), []).append(c)
+    tasks = [g[0] for g in groups.values() if g]
     if not tasks:
         prune_done_comments()
         return 0
-    print("[INFO] 处理 %d 个任务" % len(tasks))
-    results = []
+    print("[INFO] 处理 %d 个分片心愿（同书同分片已去重）" % len(tasks))
     with ThreadPoolExecutor(max_workers=CFG["max_concurrent"]) as ex:
         results = list(ex.map(process_one, tasks))
-    done = sum(1 for r in results if r[0] == "done")
+    done = 0
+    for c, (status, _cid) in zip(tasks, results):
+        if status != "done":
+            continue
+        done += 1
+        req = parse_req(c)
+        key = (str(req["b"]), int(req["s"]))
+        # 同分片的其它心愿评论一并写 ok（同一批 50 章已到手，避免重复抓取 / 重复计数）
+        for other in groups[key][1:]:
+            other_req = parse_req(other)
+            if other_req and not req_is_done(other_req):
+                stamp_ok(str(other.get("objectId") or other.get("id")), other_req)
     if done:
         bump_counter(done)   # 累计已达成计数写回 Waline（{"cnt": N} 一条评论）
-        print("[INFO] 本轮达成 %d 个心愿" % done)
+        print("[INFO] 本轮达成 %d 个分片心愿" % done)
     prune_done_comments()
     return done
 
