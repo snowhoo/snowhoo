@@ -408,6 +408,8 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 </div>
 
 <script src="./lib/xlsx.full.min.js"></script>
+<!-- 读/写过程自定义弹窗提示：读=蓝「正在读取数据...」、写=绿「正在写入数据...」、失败=红「数据读取/写入失败!」（不使用右上角状态） -->
+<div id="cloudToast" class="cloud-toast" hidden></div>
 <script>
 /* =====================================================================
    考勤登记 —— 框架版（二稿）
@@ -1641,9 +1643,6 @@ document.addEventListener('keydown', function(e){
   initWalineEarly();         // 初始化 Waline 组件（严格参照 APP.html：挂载 #walineLoginMount，由 onLogin 回写登录态）
 })();
 </script>
-
-<!-- 读/写过程自定义弹窗提示：读=蓝「正在读取数据...」、写=绿「正在写入数据...」、失败=红「数据读取/写入失败!」（不使用右上角状态） -->
-<div id="cloudToast" class="cloud-toast" hidden></div>
 
 <!-- 自定义弹窗（替代原生 prompt/alert） -->
 <div class="modal-mask" id="modalMask" hidden>
