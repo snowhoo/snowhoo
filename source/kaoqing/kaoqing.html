@@ -93,12 +93,10 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .modal-actions .btn-ok:hover{filter:brightness(.95)}
 .modal-actions .btn-cancel{background:transparent;border:1px solid var(--border);color:var(--text)}
 .modal-actions .btn-cancel:hover{background:var(--bg)}
-/* 登录浮层（参照 APP.html：挂载 Waline 组件，由库原生登录按钮触发 onLogin） */
-#loginOverlay .login-panel{width:min(520px,94vw);max-height:88vh;overflow:auto;padding:0}
-#loginOverlay .login-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);font-weight:600}
-#loginOverlay .login-close{background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--text);opacity:.55}
-#loginOverlay .login-close:hover{opacity:1}
-#loginOverlay .login-body{padding:12px 18px 20px}
+/* 云端同步状态标记（一眼看清是否读到了 Waline） */
+.cloud-stat{font-size:.7rem;color:var(--text-muted);margin-right:6px;white-space:nowrap}
+.cloud-stat.ok{color:#2e9e5b}
+.cloud-stat.err{color:#e0533d}
 .people-modal{width:min(680px,94vw);padding:18px}
 .people-table-wrap{max-height:52vh;overflow:auto;margin:6px 0;border:1px solid var(--border);border-radius:10px}
 .people-table{width:100%;border-collapse:collapse;font-size:.78rem}
@@ -264,6 +262,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
     </div>
     <div class="tb-center">考勤登记管理系统</div>
     <div class="tb-right">
+      <span id="cloudStat" class="cloud-stat" title="Waline 云端同步状态"></span>
       <div class="top-actions">
         <button id="setBtn" class="icon-btn" disabled title="设置（登录后可用）" aria-label="设置">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -279,18 +278,8 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
     </div>
   </header>
 
-  <!-- Waline 登录浮层（严格参照 APP.html：挂载 Waline 组件，由库原生登录按钮触发 onLogin） -->
-  <div class="modal-mask" id="loginOverlay" hidden>
-    <div class="modal login-panel" role="dialog" aria-modal="true">
-      <div class="login-head">
-        <span>登录 Waline</span>
-        <button type="button" class="login-close" id="loginClose" aria-label="关闭">×</button>
-      </div>
-      <div class="login-body">
-        <div id="walineLoginMount"></div>
-      </div>
-    </div>
-  </div>
+  <!-- Waline 登录挂载点（隐藏，仅用于接收登录回调 onLogin；登录由头像按钮直接弹 ui/login 完成） -->
+  <div id="walineLoginMount" style="display:none"></div>
 
   <div class="wrap">
 
@@ -1065,10 +1054,17 @@ function onWalineLogin(user){
   applyUser(user);
   // 数据已匿名预读，登录后再拉一次保证最新（参照 APP.html 登录后同步云端）
   loadPeople(); loadHolidays(); loadRecordsFromWaline();
-  closeLoginOverlay();
+  // 登录成功：自动关闭登录弹窗（避免遗留空白窗口）
+  if (loginWin && !loginWin.closed){ try { loginWin.close(); } catch(e){} }
+  loginWin = null;
 }
-/* 触发登录：打开挂载了 Waline 组件的登录浮层，由库原生「登录」按钮驱动 onLogin（严格参照 APP.html 的 init + onLogin 机制） */
-function doLogin(){ openLoginOverlay(); }
+/* 触发登录：直接弹 Waline 登录页（ui/login）；登录成功后该页向本页实例回传 onLogin，本页再自动关弹窗 */
+function doLogin(){
+  if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
+  var url = CLOUD_BASE.replace(/\/$/, '') + '/ui/login?lng=zh-CN&redirect=' + encodeURIComponent(location.href.split('#')[0]);
+  try { loginWin = window.open(url, '_blank', 'width=1024,height=640,scrollbars=no,resizable=no'); }
+  catch(e){ location.href = url; }
+}
 
 function getWalineUser(){
   try {
@@ -1100,24 +1096,40 @@ function robustParse(raw){
   try { return JSON.parse(s); } catch(e){ return null; }
 }
 /* 拉取某 path 下最新一条有效记录（带 8s 超时），返回 { oid, obj } 或 null */
-function fetchCloudRecord(path){
-  var p = fetch(CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(path))
-    .then(function(r){ if (!r.ok) throw 0; return r.json(); })
-    .then(function(resp){
-      var records = (resp.data && resp.data.data) || [];
-      var best = null;
-      for (var i = 0; i < records.length; i++){
-        var rec = records[i];
-        var obj = robustParse(rec.orig || rec.comment || '');
-        if (obj && obj.v === 1){
-          var oid = parseInt(rec.objectId, 10) || 0;
-          if (!best || oid > best.oid) best = { oid: oid, obj: obj };
-        }
-      }
-      return best;
-    });
-  var timer = new Promise(function(res, rej){ setTimeout(function(){ rej('timeout'); }, 8000); });
-  return Promise.race([p, timer]).then(function(b){ return b; }).catch(function(){ return null; });
+/* 拉取某 path 下最新一条有效记录。Waline 部署在 Vercel serverless，冷启动可能 3~10s，
+   故：单次超时放宽到 15s，并在失败（含超时）后自动重试 2 次（间隔递增），避免打开页面时冷启动误判为"读不到"。
+   返回 { oid, obj }；网络彻底失败则抛出异常，由上层 load* 捕获并展示真实错误。 */
+async function fetchCloudRecord(path, attempt){
+  attempt = attempt || 1;
+  var url = CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(path);
+  try {
+    var ctrl = ('AbortController' in window) ? new AbortController() : null;
+    var tid = ctrl ? setTimeout(function(){ try { ctrl.abort(); } catch(e){} }, 15000) : null;
+    var opts = ctrl ? { signal: ctrl.signal } : {};
+    var r = await fetch(url, opts);
+    if (tid) clearTimeout(tid);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var resp = await r.json();
+    var records = (resp.data && resp.data.data) || [];
+    var best = null, bad = 0;
+    for (var i = 0; i < records.length; i++){
+      var rec = records[i];
+      var obj = robustParse(rec.orig || rec.comment || '');
+      if (obj && obj.v === 1){
+        var oid = parseInt(rec.objectId, 10) || 0;
+        if (!best || oid > best.oid) best = { oid: oid, obj: obj };
+      } else { bad++; }
+    }
+    if (!best && bad) console.warn('[kaoqing] path=' + path + ' 读到 ' + bad + ' 条记录但均非有效 v=1 数据');
+    return best;
+  } catch (e){
+    if (attempt < 3){
+      await new Promise(function(r){ setTimeout(r, 500 * attempt); });
+      return fetchCloudRecord(path, attempt + 1);
+    }
+    console.error('[kaoqing] 读取 Waline 失败 path=' + path + ' :', e && e.message ? e.message : e);
+    throw e;
+  }
 }
 /* 匿名写入：Waline 开放匿名评论，数据写库无需登录（登录仅管控设置入口）。
    匿名评论需 nick+mail，使用固定匿名身份；每次均以 POST 新建一条（匿名无法持 token 做 PUT 更新），
@@ -1135,15 +1147,19 @@ function pushCloudRecord(path, obj, oidRef){
 
 /* 节假日：从 Waline 读取（公开接口，匿名）覆盖兜底表，供加班类别计算 */
 async function loadHolidays(){
-  var best = await fetchCloudRecord(HOLIDAY_PATH);
-  if (best && best.obj && best.obj.holidays){
-    HOLIDAYS = {
-      year: best.obj.year || HOLIDAYS.year,
-      holidays: (best.obj.holidays || []).map(function(h){ return h.date || h; }),
-      makeup:   (best.obj.makeup   || []).map(function(m){ return m.date || m; })
-    };
-  }
+  try {
+    var best = await fetchCloudRecord(HOLIDAY_PATH);
+    if (best && best.obj && best.obj.holidays){
+      HOLIDAYS = {
+        year: best.obj.year || HOLIDAYS.year,
+        holidays: (best.obj.holidays || []).map(function(h){ return h.date || h; }),
+        makeup:   (best.obj.makeup   || []).map(function(m){ return m.date || m; })
+      };
+    }
+  } catch(e){ console.error('[kaoqing] loadHolidays 失败', e && e.message ? e.message : e); }
 }
+/* 云端同步状态标记：一眼看清是否读到了 Waline（读失败多为 file:// 直接打开导致跨域被拦） */
+function setCloud(cls, txt){ var e = $('#cloudStat'); if (!e) return; e.className = 'cloud-stat' + (cls ? (' ' + cls) : ''); e.textContent = txt; }
 /* 考勤记录：整体作为一条 JSON 匿名写入 Waline（RECORDS_PATH），每次新建一条，读取取最新 */
 var RECORDS_PATH = '/kaoqing/records';
 var recordsOid = { oid: 0 };
@@ -1155,14 +1171,16 @@ async function syncRecordsToWaline(){
 }
 /* 读取后：云端有记录则以云为准；本地有记录且云端空则上传 */
 async function loadRecordsFromWaline(){
-  var best = await fetchCloudRecord(RECORDS_PATH);
-  if (best && best.obj && best.obj.records && best.obj.records.length){
-    recordsOid.oid = best.oid;
-    records = best.obj.records;
-    saveRecords(); renderRecords();
-  } else if (records.length){
-    await syncRecordsToWaline();
-  }
+  try {
+    var best = await fetchCloudRecord(RECORDS_PATH);
+    if (best && best.obj && best.obj.records && best.obj.records.length){
+      recordsOid.oid = best.oid;
+      records = best.obj.records;
+      saveRecords(); renderRecords();
+    } else if (records.length){
+      await syncRecordsToWaline();
+    }
+  } catch(e){ console.error('[kaoqing] loadRecordsFromWaline 失败', e && e.message ? e.message : e); }
 }
 
 /* 头像 / 设置态 */
@@ -1209,6 +1227,7 @@ async function logout(){
 
 /* ---------- Waline 登录组件初始化（严格参照 APP.html 的 initWalineEarly + onLogin/onLogout） ---------- */
 var walineInstance = null;
+var loginWin = null;   // 登录弹窗句柄（登录成功后自动关闭，避免遗留空白窗口）
 /* 注销回调：库原生「退出」触发，清理本页登录态并锁回设置入口 */
 function onWalineLogout(){
   try { localStorage.removeItem('WALINE_USER'); } catch(e){}
@@ -1218,9 +1237,7 @@ function onWalineLogout(){
   try { sessionStorage.removeItem('@waline/user'); } catch(e){}
   setLoggedOut();
 }
-function openLoginOverlay(){ var o = $('#loginOverlay'); if (o) o.hidden = false; }
-function closeLoginOverlay(){ var o = $('#loginOverlay'); if (o) o.hidden = true; }
-/* 页面加载即初始化 Waline（非延迟），这样库原生登录按钮能立刻驱动 onLogin（参照 APP.html initWalineEarly） */
+/* 页面加载即初始化 Waline（非延迟），让本页实例能接收登录弹窗回传的 onLogin（参照 APP.html initWalineEarly） */
 function initWalineEarly(){
   if (!CLOUD_BASE) return;
   import('./lib/waline.js').then(function(mod){
@@ -1252,10 +1269,6 @@ document.addEventListener('click', function(e){
 $('#avatarBtn').addEventListener('click', function(){
   if (getWalineUser()) logout(); else doLogin();
 });
-/* 登录浮层关闭：点 × 或点浮层空白处关闭（登录成功后 onLogin 内也会关闭） */
-$('#loginClose').addEventListener('click', closeLoginOverlay);
-$('#loginOverlay').addEventListener('click', function(e){ if (e.target === $('#loginOverlay')) closeLoginOverlay(); });
-document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !$('#loginOverlay').hidden) closeLoginOverlay(); });
 
 /* 从 timor.tech 获取当年（可改）节假日，整理后写入 Waline（更新优先，避免重复） */
 var holidayOid = { oid: 0 };
@@ -1306,12 +1319,21 @@ function rebuildGroups(){
 }
 /* 读取 Waline 中的人员，成功则替换前端 PEOPLE；无 Waline / 未登录 / 失败则保留种子 */
 async function loadPeople(){
-  var best = await fetchCloudRecord(PEOPLE_PATH);
-  if (best && best.obj && best.obj.people && best.obj.people.length){
-    peopleOid.oid = best.oid;
-    PEOPLE_FULL = best.obj.people;
-    PEOPLE = PEOPLE_FULL.map(function(p){ return { n:p.name, g:p.group }; });
-    rebuildGroups(); renderGroups(); renderPeople(); applyView();
+  try {
+    var best = await fetchCloudRecord(PEOPLE_PATH);
+    if (best && best.obj && best.obj.people && best.obj.people.length){
+      peopleOid.oid = best.oid;
+      PEOPLE_FULL = best.obj.people;
+      PEOPLE = PEOPLE_FULL.map(function(p){ return { n:p.name, g:p.group }; });
+      rebuildGroups(); renderGroups(); renderPeople(); applyView();
+      setCloud('ok', 'Waline 已同步 ' + PEOPLE_FULL.length + ' 人');
+    } else if (best === null || best === undefined){
+      setCloud('err', 'Waline 读取失败（冷启动超时/网络/CORS）');
+    } else {
+      setCloud('', '本地种子 ' + PEOPLE_FULL.length + ' 人');
+    }
+  } catch(e){
+    setCloud('err', 'Waline 读取异常：' + (e && e.message ? e.message : e));
   }
 }
 /* 把内置 13 人（含 8 字段）写入 Waline（更新优先），并立即以该数据刷新前端 */
@@ -1360,7 +1382,7 @@ document.addEventListener('keydown', function(e){
 });
 
 /* ---------- 初始化 ---------- */
-(function init(){
+(async function init(){
   $('#fDate').value = todayStr();
   buildTimeSlots($('#fStart'));
   buildTimeSlots($('#fEnd'));
@@ -1373,9 +1395,10 @@ document.addEventListener('keydown', function(e){
   refreshSaveBtn();          // 初始：新增模式「添加」(绿)
   $('#companyName').textContent = COMPANY_NAME;
   // 打开页面即直接读取 Waline 同步人员 / 节假日 / 考勤记录（读为公开接口，无需登录）
-  loadPeople();
-  loadHolidays();
-  loadRecordsFromWaline();
+  // 改为 await，确保打开瞬间完成读取（含重试），不登录也一定读到
+  await loadPeople();
+  await loadHolidays();
+  await loadRecordsFromWaline();
   checkLogin();              // 检测本地 Waline 登录态（已登录则解锁设置入口）
   initWalineEarly();         // 初始化 Waline 组件（严格参照 APP.html：挂载 #walineLoginMount，由 onLogin 回写登录态）
 })();
