@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""kaoqing 归档 poller（参照 books_poller.py 范式）。
+"""kaoqing 归档脚本（后端主动发起，无需前端参与）。
 
 把 kaoqing 本月之前的考勤记录按月归档到 Cloudflare R2（复用 books 同桶、kaoqing-archive/ 前缀），
-归档完成后从 Waline 清除已归档数据，并在 R2 维护 index.json 供前端下拉框读取。
+归档完成后将「清洗后的数据」（仅保留本月及以后）直接复写回 Waline，即在 Waline 中清除已归档的历史数据，
+并在 R2 维护 index.json 供日后查阅。
 
 ==========================================================================
-【安全模型（与 books_poller 一致）】
+【运行方式】
 ==========================================================================
-  ① 前端访客（浏览器）：匿名 POST 一条评论到 WALINE_ARCHIVE_JOB_PATH 即"入队一个归档任务"
-     （内容 {type:'archive', reqAt, count}）。token 永不出现在前端。
-  ② 本脚本（仅本机/服务器）：用 WALINE_ADMIN_TOKEN 读取任务、复写 /kaoqing/records、
-     把 ok:1 写回任务评论、上传 R2（R2 凭证在 books 目录的 r2_config.json，绝不进前端）。
-==========================================================================
+  后端主动发起归档，前端不再有任何归档按钮 / 任务队列 / 轮询握手。
+  由 cron / 计划任务定时拉起本脚本即可（建议每月初跑一次，或常驻 --loop 每小时自检）：
 
-【运行】
-  py -3 kaoqing_archiver.py            # 单次检查，跑完即退出（由计划任务每分钟唤醒）
-  py -3 kaoqing_archiver.py --loop     # 常驻轮询（间隔 POLL_INTERVAL 秒）
+  py -3 kaoqing_archiver.py            # 单次：读 Waline → 归档历史 → 复写清洗数据回 Waline
+  py -3 kaoqing_archiver.py --loop     # 常驻：每 POLL_INTERVAL 秒自检一次（无历史则空转）
+
 配置：poller_config.json（同目录）或环境变量 WALINE_SERVER / WALINE_ADMIN_TOKEN /
-      WALINE_ARCHIVE_JOB_PATH / POLL_INTERVAL；R2 凭证复用 ../books/r2_config.json。
+      POLL_INTERVAL；R2 凭证复用 ../books/r2_config.json（绝不进前端）。
 """
 import os
 import sys
@@ -38,8 +36,7 @@ def load_cfg():
     cfg = {
         "waline_server": os.environ.get("WALINE_SERVER", "https://waline.snowhoo.net"),
         "waline_admin_token": os.environ.get("WALINE_ADMIN_TOKEN", ""),
-        "job_path": os.environ.get("WALINE_ARCHIVE_JOB_PATH", "/kaoqing/archive-jobs"),
-        "poll_interval": float(os.environ.get("POLL_INTERVAL", "5")),
+        "poll_interval": float(os.environ.get("POLL_INTERVAL", "3600")),
     }
     p = os.path.join(HERE, "poller_config.json")
     if os.path.exists(p):
@@ -53,7 +50,6 @@ def load_cfg():
 CFG = load_cfg()
 WALINE_SERVER = (CFG["waline_server"] or "https://waline.snowhoo.net").rstrip("/")
 TOKEN = CFG["waline_admin_token"] or ""
-ARCHIVE_JOB_PATH = CFG["job_path"] or "/kaoqing/archive-jobs"
 RECORDS_PATH = "/kaoqing/records"
 ARCHIVE_PREFIX = "kaoqing-archive/"
 R2_CFG = upload_r2.load_config()
@@ -78,48 +74,6 @@ def waline_req(method, path, *, token=None, params=None, body=None):
     req = urllib.request.Request(url, data=data, method=method, headers=headers)
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.loads(r.read().decode("utf-8"))
-
-
-def fetch_all_task():
-    """拉取 Waline 全站评论（管理员列表），过滤出归档任务路径下的任务。"""
-    out = []
-    page = 1
-    while True:
-        try:
-            resp = waline_req("GET", "/api/comment", token=TOKEN,
-                              params={"type": "list", "page": page, "pageSize": 100})
-        except Exception as e:
-            print("[WARN] 拉取任务失败:", e)
-            break
-        arr = (resp.get("data") or {}).get("data") or []
-        if not arr:
-            break
-        for c in arr:
-            if ARCHIVE_JOB_PATH in (c.get("url") or ""):
-                out.append(c)
-        if len(arr) < 100:
-            break
-        page += 1
-    return out
-
-
-def parse_any(c):
-    try:
-        return json.loads(c.get("orig") or c.get("comment") or "")
-    except Exception:
-        return None
-
-
-def stamp_ok(cid, obj):
-    obj = dict(obj)
-    obj["ok"] = 1
-    try:
-        waline_req("PUT", "/api/comment/%s" % cid, token=TOKEN,
-                   body={"comment": json.dumps(obj, ensure_ascii=False)})
-        return True
-    except Exception as e:
-        print("[WARN] 写回 ok 失败 %s:" % cid, e)
-        return False
 
 
 def first_of_this_month():
@@ -174,74 +128,47 @@ def build_index():
     return months
 
 
-# ----------------------------- 核心处理 -----------------------------
-def process_one(c):
-    cid = str(c.get("objectId") or c.get("id"))
-    req = parse_any(c)
-    if not req or req.get("type") != "archive":
-        return ("skip", cid)
+# ----------------------------- 主动归档 -----------------------------
+def archive_once():
+    """读 Waline → 归档本月之前的数据到 R2 → 将清洗后（仅本月）的数据复写回 Waline。返回归档条数。"""
     cutoff = first_of_this_month()
-    try:
-        oid, recs = read_records()
-        if not recs:
-            stamp_ok(cid, dict(req, ok=1, months=[], count=0, msg="无记录"))
-            return ("done", cid)
-        history = [r for r in recs if (r.get("date") or "") < cutoff]
-        current = [r for r in recs if (r.get("date") or "") >= cutoff]
-        if not history:
-            stamp_ok(cid, dict(req, ok=1, months=[], count=0, msg="无历史可归档"))
-            return ("done", cid)
-        # 按月分组写 R2（每月一个文件）
-        by = {}
-        for r in history:
-            ym = (r.get("date") or "")[:7]
-            by.setdefault(ym, []).append(r)
-        months = []
-        for ym in sorted(by.keys()):
-            put_r2(ARCHIVE_PREFIX + ym + ".json",
-                   {"month": ym, "count": len(by[ym]), "records": by[ym]})
-            months.append(ym)
-        # 复写 current 回 Waline（即清除已归档的历史数据；records 是整包一条评论）
-        payload = {"v": 1, "type": "records", "updatedAt": int(time.time() * 1000), "records": current}
+    oid, recs = read_records()
+    if not recs:
+        print("[INFO] Waline 中无考勤记录，跳过。")
+        return 0
+    history = [r for r in recs if (r.get("date") or "") < cutoff]
+    current = [r for r in recs if (r.get("date") or "") >= cutoff]
+    if not history:
+        print("[INFO] 无本月之前的记录（cutoff=%s），无需归档。" % cutoff)
+        return 0
+    # 按月分组写 R2（每月一个文件）
+    by = {}
+    for r in history:
+        ym = (r.get("date") or "")[:7]
+        by.setdefault(ym, []).append(r)
+    months = []
+    for ym in sorted(by.keys()):
+        put_r2(ARCHIVE_PREFIX + ym + ".json",
+               {"month": ym, "count": len(by[ym]), "records": by[ym]})
+        months.append(ym)
+    # 将清洗后的当前数据复写回 Waline（即清除已归档历史；records 是整包一条评论）
+    payload = {"v": 1, "type": "records", "updatedAt": int(time.time() * 1000), "records": current}
+    if oid:
         waline_req("PUT", "/api/comment/%s" % oid, token=TOKEN,
                    body={"comment": json.dumps(payload, ensure_ascii=False)})
-        # 重建 index.json
-        build_index()
-        stamp_ok(cid, dict(req, ok=1, months=months, count=len(history)))
-        print("[OK] 归档 %d 个自然月（%s），共 %d 条；Waline 保留当月 %d 条"
-              % (len(months), ",".join(months), len(history), len(current)))
-        return ("done", cid)
-    except Exception as e:
-        print("[ERR] 处理任务 %s 失败: %s" % (cid, e))
-        try:
-            waline_req("PUT", "/api/comment/%s" % cid, token=TOKEN,
-                       body={"comment": json.dumps(dict(req, error=str(e)), ensure_ascii=False)})
-        except Exception:
-            pass
-        return ("failed", cid)
-
-
-def loop_once():
-    tasks = []
-    for c in fetch_all_task():
-        req = parse_any(c)
-        if req and req.get("type") == "archive" and req.get("ok") != 1:
-            tasks.append(c)
-    if not tasks:
-        return 0
-    print("[INFO] 发现 %d 个待归档任务" % len(tasks))
-    done = 0
-    for c in tasks:
-        st, _ = process_one(c)
-        if st == "done":
-            done += 1
-    return done
+    else:
+        print("[WARN] 未取到 records 的 objectId，跳过 Waline 复写（历史数据已写入 R2，但 Waline 未清理）。")
+    # 重建 index.json
+    build_index()
+    print("[OK] 归档 %d 个自然月（%s），共 %d 条；Waline 保留当月 %d 条"
+          % (len(months), ",".join(months), len(history), len(current)))
+    return len(history)
 
 
 def main():
     import argparse
     ap = argparse.ArgumentParser()
-    ap.add_argument("--loop", action="store_true", help="常驻轮询（间隔 POLL_INTERVAL 秒）")
+    ap.add_argument("--loop", action="store_true", help="常驻自检（间隔 POLL_INTERVAL 秒）")
     args = ap.parse_args()
     if not WALINE_SERVER or not TOKEN:
         print("[ERR] 缺少 waline_server / waline_admin_token（环境变量或 poller_config.json）。")
@@ -250,11 +177,11 @@ def main():
     if miss:
         print("[ERR] 缺少 R2 配置: %s（请配 ../books/r2_config.json 或环境变量 R2_*）" % ",".join(miss))
         sys.exit(2)
-    print("[archiver] 启动 waline=%s job_path=%s" % (WALINE_SERVER, ARCHIVE_JOB_PATH))
+    print("[archiver] 启动 waline=%s 模式=%s" % (WALINE_SERVER, "loop" if args.loop else "once"))
     while True:
-        n = loop_once()
+        n = archive_once()
         if n:
-            print("[archiver] 本轮完成 %d 个任务" % n)
+            print("[archiver] 本轮归档 %d 条" % n)
         if not args.loop:
             break
         time.sleep(CFG["poll_interval"])
