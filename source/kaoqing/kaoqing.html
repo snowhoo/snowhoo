@@ -65,6 +65,15 @@ body{
   border-radius:8px;cursor:pointer;font-size:.85rem;color:var(--text);font-family:inherit;white-space:nowrap;
 }
 .settings-item:hover{background:var(--accent-soft);color:var(--accent)}
+.settings-sep{height:1px;background:var(--border);margin:6px 4px}
+.settings-info{padding:8px 10px;font-size:.8rem;color:var(--text-secondary);line-height:1.55}
+.settings-info h4{margin:0 0 5px;font-size:.82rem;color:var(--accent)}
+.settings-info .hl-count{font-weight:600;color:var(--text)}
+.settings-info .hl-count .num{color:var(--accent)}
+.settings-info .hl-list{margin:6px 0 0;max-height:150px;overflow:auto;font-size:.74rem;color:var(--text-muted);white-space:normal;word-break:break-all}
+.settings-info .hl-list span{display:inline-block;margin:2px 4px 2px 0;padding:1px 6px;background:var(--accent-soft);border-radius:6px;color:var(--accent)}
+.settings-info.warn{color:var(--warn)}
+.settings-info.warn .hl-count{color:var(--warn)}
 
 /* ============ 区域卡片 ============ */
 .wrap{max-width:760px;margin:0 auto;padding:5px 5px;display:flex;flex-direction:column;gap:5px}
@@ -80,7 +89,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 /* ---------- 自定义弹窗（替代原生 prompt/alert） ---------- */
 .modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000}
 .modal-mask[hidden]{display:none}
-.modal{background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.25);width:min(360px,90vw);padding:20px;animation:modalIn .15s ease}
+.modal{background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.25);width:min(360px,90vw);max-height:90vh;overflow-y:auto;padding:20px;animation:modalIn .15s ease}
 @keyframes modalIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .modal-title{font-size:1rem;font-weight:600;margin-bottom:10px}
 .modal-msg{font-size:.9rem;color:var(--text-muted);margin-bottom:14px;white-space:pre-wrap;word-break:break-word}
@@ -99,6 +108,10 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .cloud-toast.read{background:#2e9e5b}    /* 读/写/删除过程（统一绿） */
 .cloud-toast.write{background:#2e9e5b}   /* 读/写/删除过程（统一绿） */
 .cloud-toast.error{background:#e0533d}   /* 失败（红） */
+/* 并发提示栈：多个读写操作可各自独立显示一条提示，互不覆盖（按 key 区分） */
+#cloudToastStack{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:2000;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+#cloudToastStack .cloud-toast{position:static;transform:none;max-width:84vw;pointer-events:auto;cursor:default}
+#cloudToastStack .cloud-toast.error{cursor:pointer}
 
 .people-modal{width:min(680px,94vw);padding:18px}
 .people-table-wrap{max-height:52vh;overflow:auto;margin:6px 0;border:1px solid var(--border);border-radius:10px}
@@ -302,6 +315,8 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
         <div class="settings-menu" id="settingsMenu" hidden>
           <button class="settings-item" id="syncHolidayBtn">从 timor.tech API 获取节假日 写进 Waline</button>
           <button class="settings-item" id="peopleConfigBtn">人员配置（管理 Waline 中的人员）</button>
+          <div class="settings-sep"></div>
+          <div id="holidayInfo" class="settings-info" hidden></div>
         </div>
       </div>
     </div>
@@ -515,11 +530,13 @@ function todayStr(){
 }
 function toMin(t){ var p = t.split(':'); return parseInt(p[0],10) * 60 + parseInt(p[1],10); }
 /* 节假日：同样以 Waline（/kaoqing/holidays）为唯一来源，前端不再内置写死的兜底表。
-   页面打开时由 loadHolidays() 拉取；读到之前为空，加班类别会一律算成「平时」，
-   右上角状态标记会提示「节假日未读取」，便于一眼看出是不是没读成功。 */
+   页面打开时由 loadHolidays() 拉取；读取失败（未配置/异常）时加班类别一律显示「未知」，
+   并弹「节假日读取失败」提示，便于一眼看出是不是没读成功。绝不默认算成「平时」以免掩盖问题。 */
 var HOLIDAYS = { year: new Date().getFullYear(), holidays: [], makeup: [] };
-/* 加班类别：国假（法定假日）/ 双休（正常周末）/ 平时（工作日，含调休补班上班） */
+var HOLIDAYS_OK = false;   // 节假日是否成功读取；未读取/读取失败→false，calcOtType 返回「未知」以暴露问题
+/* 加班类别：国假（法定假日）/ 双休（正常周末）/ 平时（工作日，含调休补班上班）/ 未知（节假日未读取，不臆测） */
 function calcOtType(date){
+  if (!HOLIDAYS_OK) return '未知';          // 节假日未成功读取：显示未知，避免默认「平时」掩盖问题
   if (!date) return '平时';
   if (HOLIDAYS.holidays.indexOf(date) >= 0) return '国假';
   if (HOLIDAYS.makeup.indexOf(date) >= 0) return '平时';   // 调休补班=工作日
@@ -1167,8 +1184,11 @@ function robustParse(raw){
 /* 拉取某 path 下最新一条有效记录。Waline 部署在 Vercel serverless，冷启动可能 3~10s，
    故：单次超时放宽到 15s，并在失败（含超时）后自动重试 2 次（间隔递增），避免打开页面时冷启动误判为"读不到"。
    返回 { oid, obj }；网络彻底失败则抛出异常，由上层 load* 捕获并展示真实错误。 */
-/* 取某 path 下最新一条 v=1 记录（节假日/人员兜底表）。复用 fetchAllComments（管理员接口，含 spam）以保证即使被标 spam 也能读到。 */
-async function fetchCloudRecord(path, attempt){
+/* 取某 path 下最新一条 v=1 记录（节假日/人员兜底表）。复用 fetchAllComments（管理员接口，含 spam）以保证即使被标 spam 也能读到。
+   关键：同一 path 下可能被误写入其它 type 的数据（如 /kaoqing/people 里混进了节假日/考勤记录），
+   故用 type 参数精确过滤——只认 obj.type === type 的记录（默认不过滤，保持向后兼容）。
+   选最高 oid；同 type 内再按"数据条目最多"兜底，避免被空壳记录覆盖。 */
+async function fetchCloudRecord(path, type, attempt){
   attempt = attempt || 1;
   try {
     var all = await fetchAllComments(path);
@@ -1176,17 +1196,21 @@ async function fetchCloudRecord(path, attempt){
     for (var i = 0; i < all.length; i++){
       var rec = all[i];
       var obj = robustParse(rec.orig || rec.comment || '');
-      if (obj && obj.v === 1){
+      if (obj && obj.v === 1 && (!type || obj.type === type)){
         var oid = parseInt(rec.objectId, 10) || 0;
-        if (!best || oid > best.oid) best = { oid: oid, obj: obj };
+        var score = (Array.isArray(obj.people) ? obj.people.length : 0)
+                  + (Array.isArray(obj.holidays) ? obj.holidays.length : 0)
+                  + (Array.isArray(obj.makeup) ? obj.makeup.length : 0);
+        if (!best || score > best.score || (score === best.score && oid > best.oid))
+          best = { oid: oid, obj: obj, score: score };
       } else { bad++; }
     }
-    if (!best && bad) console.warn('[kaoqing] path=' + path + ' 读到 ' + bad + ' 条记录但均非有效 v=1 数据');
+    if (!best && bad) console.warn('[kaoqing] path=' + path + ' 读到 ' + bad + ' 条记录但均无匹配的 type=' + (type || '任意') + ' 数据');
     return best;
   } catch (e){
     if (attempt < 3){
       await new Promise(function(r){ setTimeout(r, 500 * attempt); });
-      return fetchCloudRecord(path, attempt + 1);
+      return fetchCloudRecord(path, type, attempt + 1);
     }
     console.error('[kaoqing] 读取 Waline 失败 path=' + path + ' :', e && e.message ? e.message : e);
     throw e;
@@ -1223,25 +1247,64 @@ async function anonPostCloud(path, obj){
 
 /* 节假日：从 Waline 读取（公开接口，匿名）覆盖兜底表，供加班类别计算 */
 async function loadHolidays(){
+  HOLIDAYS_OK = false;   // 先置未知，读取成功才置 true
+  cloudToast('read', '处理中：读取节假日...', 'loadHolidays');
   try {
-    var best = await fetchCloudRecord(HOLIDAY_PATH);
+    var best = await fetchCloudRecord(HOLIDAY_PATH, 'holiday');
     if (best && best.obj && best.obj.holidays && best.obj.holidays.length){
       HOLIDAYS = {
         year: best.obj.year || HOLIDAYS.year,
         holidays: (best.obj.holidays || []).map(function(h){ return h.date || h; }),
         makeup:   (best.obj.makeup   || []).map(function(m){ return m.date || m; })
       };
+      HOLIDAYS_OK = true;
+      renderHolidayInfo();   // 读取成功：刷新设置菜单里的节假日配置展示
+      cloudToastHide('loadHolidays');
     } else {
-      cloudToastError('数据读取失败!');
+      // 未配置节假日数据（best 为空）→ 读不到，明确提示，并标记未知，绝不臆测为「平时」
+      cloudToastError('节假日读取失败!', 'loadHolidays');
+      console.warn('[kaoqing] 未读取到节假日数据（未配置或读取异常），加班类别将显示「未知」');
+      renderHolidayInfo();
     }
   } catch(e){
-    cloudToastError('数据读取失败!');
+    cloudToastError('节假日读取失败!', 'loadHolidays');
     console.error('[kaoqing] loadHolidays 失败', e && e.message ? e.message : e);
+    renderHolidayInfo();
   }
 }
-/* 读/写/删除过程统一弹窗提示：一律绿「处理中...」，失败=红「数据读取/写入失败!」。不使用右上角状态标记。 */
+/* 读/写/删除过程统一提示：绿「处理中...」，失败=红「读取/写入失败!」。不使用右上角状态标记。
+   支持多任务并发：每个操作传 key，互不影响、各自独立显示/消失；不传 key 则复用全局单例 #cloudToast（兼容旧调用）。
+   原则：只要读写，就要有提示——操作开始即显示处理中，结束(成功或失败)才移除/转错。 */
 var _ctTimer = null, _ctErrorActive = false;
-function cloudToast(kind, text){
+var _ctMap = {};        // key -> {el, timer}
+var _ctStack = null;
+function _ctStackEl(){
+  if (!_ctStack){
+    _ctStack = document.createElement('div');
+    _ctStack.id = 'cloudToastStack';
+    document.body.appendChild(_ctStack);
+  }
+  return _ctStack;
+}
+function cloudToast(kind, text, key){
+  if (key){
+    var m = _ctMap[key] || (_ctMap[key] = { el: null, timer: null });
+    if (!m.el){ m.el = document.createElement('div'); _ctStackEl().appendChild(m.el); }
+    if (m.timer){ clearTimeout(m.timer); m.timer = null; }
+    m.el.className = 'cloud-toast ' + kind;
+    m.el.textContent = text;
+    m.el.hidden = false;
+    if (kind === 'error'){
+      m.el.title = '点击关闭';
+      m.el.onclick = function(){ cloudToastHide(key); };
+      m.timer = setTimeout(function(){ cloudToastHide(key); }, 6000);  // 失败提示停留 6 秒，可点击关闭
+    } else {
+      m.el.title = '';
+      m.el.onclick = null;
+    }
+    return m;
+  }
+  // 无 key：沿用旧单例逻辑
   var box = $('#cloudToast'); if (!box) return;
   if (kind !== 'error'){ _ctErrorActive = false; }
   clearTimeout(_ctTimer);
@@ -1249,11 +1312,17 @@ function cloudToast(kind, text){
   box.textContent = text;
   box.hidden = false;
 }
-function cloudToastHide(){
+function cloudToastHide(key){
+  if (key){
+    var m = _ctMap[key];
+    if (m){ if (m.timer) clearTimeout(m.timer); if (m.el) m.el.hidden = true; }
+    return;
+  }
   var box = $('#cloudToast'); if (!box) return;
   box.hidden = true; clearTimeout(_ctTimer); _ctErrorActive = false;
 }
-function cloudToastError(text){
+function cloudToastError(text, key){
+  if (key){ cloudToast('error', text, key); return; }
   _ctErrorActive = true;
   cloudToast('error', text);
   clearTimeout(_ctTimer);
@@ -1354,17 +1423,20 @@ async function postRecordOp(op, rec){
 
 /* 读取：以 Waline 为唯一来源（无 localStorage 兜底）。拉取全量评论 → 回放成当前二维表。 */
 async function loadRecordsFromWaline(){
+  cloudToast('read', '处理中：读取考勤记录...', 'loadRecords');
   try {
     var all = await fetchAllComments(RECORDS_PATH);
     var events = [];
     for (var i = 0; i < all.length; i++){ events = events.concat(parseCommentToEvents(all[i])); }
     records = replayEvents(events);
     renderRecords();
-  } catch(e){ cloudToastError('数据读取失败!'); console.error('[kaoqing] loadRecordsFromWaline 失败', e && e.message ? e.message : e); }
+    cloudToastHide('loadRecords');
+  } catch(e){ cloudToastError('考勤记录读取失败!', 'loadRecords'); console.error('[kaoqing] loadRecordsFromWaline 失败', e && e.message ? e.message : e); }
 }
 
 /* 归档下拉（合并原区域五卡片）：从 R2 index.json 填充「归档记录」选项；「最新未归档记录」固定为第一项(value=waline)。归档写入由后端 kaoqing_archiver.py 定时任务完成，前端不发起。 */
 async function loadArchiveMonths(){
+  cloudToast('read', '处理中：读取归档列表...', 'loadArchive');
   try {
     var resp = await fetch(ARCHIVE_R2_BASE + ARCHIVE_PREFIX + 'index.json?t=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) throw new Error('index ' + resp.status);
@@ -1384,7 +1456,9 @@ async function loadArchiveMonths(){
       });
       sel.appendChild(og);
     });
+    cloudToastHide('loadArchive');
   } catch(e){
+    cloudToastError('归档列表读取失败!', 'loadArchive');
     console.warn('[kaoqing] loadArchiveMonths 失败', e && e.message ? e.message : e);
   }
 }
@@ -1493,8 +1567,36 @@ function initWalineEarly(){
   }).catch(function(e){ console.error('[kaoqing] Waline import error:', e); });
 }
 
+/* 在设置菜单展示当前节假日配置：已成功读取则显示年份/天数/日期清单；
+   未配置或读取失败则红色提示「未配置 / 读取失败」，便于一眼发现问题（不掩盖）。 */
+function renderHolidayInfo(){
+  var box = $('#holidayInfo');
+  if (!box) return;
+  if (HOLIDAYS_OK && HOLIDAYS.holidays && (HOLIDAYS.holidays.length || HOLIDAYS.makeup.length)){
+    var hl = HOLIDAYS.holidays || [], mk = HOLIDAYS.makeup || [];
+    var html = '<h4>当前节假日配置（' + (HOLIDAYS.year || '') + ' 年）</h4>'
+             + '<div class="hl-count">国假/休息 <span class="num">' + hl.length + '</span> 天　调休补班 <span class="num">' + mk.length + '</span> 天</div>';
+    var all = hl.concat(mk);
+    if (all.length){
+      html += '<div class="hl-list">';
+      all.forEach(function(d){
+        var s = (d && typeof d === 'object' && d.date) ? d.date : d;   // 兼容 {date,...} 与 纯字符串
+        if (s) html += '<span>' + s + '</span>';
+      });
+      html += '</div>';
+    }
+    box.innerHTML = html;
+    box.classList.remove('warn');
+    box.hidden = false;
+  } else {
+    box.innerHTML = '<div class="hl-count">节假日：未配置 / 读取失败（加班类别显示「未知」）</div>';
+    box.classList.add('warn');
+    box.hidden = false;
+  }
+}
+
 /* 设置菜单：未登录不展开；点击空白处关闭 */
-function openSettings(){ if ($('#setBtn').disabled) return; $('#settingsMenu').hidden = false; }
+function openSettings(){ if ($('#setBtn').disabled) return; renderHolidayInfo(); $('#settingsMenu').hidden = false; }
 function closeSettings(){ $('#settingsMenu').hidden = true; }
 $('#setBtn').addEventListener('click', function(e){
   e.stopPropagation();
@@ -1577,18 +1679,22 @@ function rebuildGroups(){
 }
 /* 读取 Waline 中的人员，成功则替换前端 PEOPLE；无 Waline / 未登录 / 失败则保留种子 */
 async function loadPeople(){
+  cloudToast('read', '处理中：读取人员...', 'loadPeople');
   try {
-    var best = await fetchCloudRecord(PEOPLE_PATH);
+    var best = await fetchCloudRecord(PEOPLE_PATH, 'people');
     if (best && best.obj && best.obj.people && best.obj.people.length){
       peopleOid.oid = best.oid;
       PEOPLE_FULL = best.obj.people;
       PEOPLE = PEOPLE_FULL.map(function(p){ return { n:p.name, g:p.group }; });
       rebuildGroups(); renderGroups(); renderPeople(); applyView();
+      cloudToastHide('loadPeople');
     } else {
-      cloudToastError('数据读取失败!');
+      // 未配置人员数据（best 为空）→ 读不到，明确提示读取什么失败
+      cloudToastError('人员读取失败!', 'loadPeople');
+      console.warn('[kaoqing] 未读取到人员数据（未配置或读取异常）');
     }
   } catch(e){
-    cloudToastError('数据读取失败!');
+    cloudToastError('人员读取失败!', 'loadPeople');
     console.error('[kaoqing] loadPeople 失败', e && e.message ? e.message : e);
   }
 }
@@ -1752,10 +1858,14 @@ async function savePeopleToWaline(){
   if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
   var list = readPeopleTable();
   if (!list.length){ showAlert('表格里没有人员（至少「姓名」列要有值）'); return; }
+  /* 人员记录是匿名写入的（无归属用户），普通登录用户的 token 无权 PUT/DELETE 它，
+     会导致每次保存都新建一条、旧记录删不掉、Waline 里越攒越多（脏数据甚至反客为主）。
+     故优先用管理员令牌（WALINE_ADMIN_TOKEN）来改/删，保证「原地复写、始终只有 1 条」；
+     无管理员令牌时再退回登录用户 token。 */
   var user = getWalineUser();
-  var token = walineToken(user);
+  var token = WALINE_ADMIN_TOKEN || walineToken(user);
   if (!token){
-    showAlert('未登录，无法保存。\n请先点右上角「登录」，登录后再保存——这样记录归你账号所有，之后每次保存都是原地复写，不会多出条目。');
+    showAlert('未配置管理员令牌且未登录，无法保存。\n请先点右上角「登录」，或在脚本中配置 WALINE_ADMIN_TOKEN。');
     return;
   }
   var payload = { v: 1, type: 'people', updatedAt: Date.now(), people: list };
@@ -1766,14 +1876,14 @@ async function savePeopleToWaline(){
     link: '', ua: navigator.userAgent
   };
   var oldOid = peopleOid.oid;
-  cloudToast('write','处理中...');
+  cloudToast('write','处理中：保存人员...','savePeople');
   try {
     var res = await walineSaveRecord(oldOid, body, token);
     peopleOid.oid = res.oid;
     PEOPLE_FULL = list;
     PEOPLE = PEOPLE_FULL.map(function(p){ return { n: p.name, g: p.group }; });
     rebuildGroups(); renderGroups(); renderPeople(); applyView();
-    cloudToastHide();
+    cloudToastHide('savePeople');
     var msg;
     if (res.mode === 'update'){
       msg = '已保存：原地复写了原记录（#' + res.oid + '），Waline 里仍然只有 1 条。\n共 ' + list.length + ' 人。';
@@ -1785,7 +1895,7 @@ async function savePeopleToWaline(){
     }
     showAlert(msg);
   } catch(err){
-    cloudToastError('数据写入失败!');
+    cloudToastError('数据写入失败!','savePeople');
     showAlert('保存到 Waline 失败：' + (err && err.message ? err.message : err));
   }
 }
@@ -1793,13 +1903,17 @@ async function openPeopleConfig(){
   closeSettings();
   if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
   var list = PEOPLE_FULL;
+  cloudToast('read', '处理中：读取人员配置...', 'peopleOpen');
   try {
-    var best = await fetchCloudRecord(PEOPLE_PATH);
+    var best = await fetchCloudRecord(PEOPLE_PATH, 'people');
     if (best && best.obj && best.obj.people && best.obj.people.length){
       peopleOid.oid = best.oid;
       list = best.obj.people;
     }
-  } catch(e){ /* 读取失败就用当前内存里的数据 */ }
+    cloudToastHide('peopleOpen');
+  } catch(e){
+    cloudToastError('人员配置读取失败!', 'peopleOpen');  // 读取失败也提示，不静默
+  }
   renderPeopleTable(list);
   $('#peopleMask').hidden = false;
 }
@@ -1837,15 +1951,13 @@ document.addEventListener('keydown', function(e){
   refreshSaveBtn();          // 初始：新增模式「添加」(绿)
   $('#companyName').textContent = COMPANY_NAME;
   // 打开页面即直接读取 Waline 同步人员 / 节假日 / 考勤记录（读为公开接口，无需登录）
-  // 改为 await，确保打开瞬间完成读取（含重试），不登录也一定读到
-  cloudToast('write','处理中...');
+  // 各读取函数各自显示「处理中」并自行在成功/失败时收尾，互不覆盖
   try {
     await loadPeople();
     await loadHolidays();
     await loadRecordsFromWaline();
   } catch(e){ /* 子函数已各自以弹窗提示错误 */ }
   loadArchiveMonths();          // 区域五：填充归档月份下拉（读 R2 index.json，失败仅打 warn 不阻断页面）
-  if (!_ctErrorActive) cloudToastHide();
   checkLogin();              // 检测本地 Waline 登录态（已登录则解锁设置入口）
   initWalineEarly();         // 初始化 Waline 组件（严格参照 APP.html：挂载 #walineLoginMount，由 onLogin 回写登录态）
 })();
