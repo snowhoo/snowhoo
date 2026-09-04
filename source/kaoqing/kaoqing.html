@@ -272,6 +272,9 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
     </div>
   </header>
 
+  <!-- Waline 登录挂载点（隐藏，仅用于驱动登录态，不显示评论界面） -->
+  <div id="walineLoginMount" style="position:absolute;left:-99999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none"></div>
+
   <div class="wrap">
 
     <!-- ============ 区域一：选择人员 ============ -->
@@ -1038,6 +1041,44 @@ $('#records').addEventListener('click', async function(e){
 /* ---------- Waline 读写（参照 APP.html：getWalineUser + Bearer token + /api/comment 读写 + 8s 超时 + 健壮解析） ---------- */
 
 /* 读取登录用户：与 Waline 客户端同套存储键（WALINE_USER / @waline/user / waline_user），兼容 OAuth 重定向后写入 */
+/* Waline 登录组件：用官方库驱动登录态，避免手写 OAuth 导致回调后登录态无法回写 localStorage */
+var walineInstance = null;
+function initWaline(){
+  if (!CLOUD_BASE) return;
+  import('./lib/waline.js').then(function(mod){
+    try {
+      walineInstance = mod.init({
+        el: '#walineLoginMount',
+        serverURL: WALINE_SERVER,
+        lang: 'zh-CN',
+        login: 'enable',
+        onLogin: onWalineLogin,
+        onLogout: onWalineLogout
+      });
+    } catch(e){ console.warn('[Waline] init 失败', e); }
+  }).catch(function(e){ console.warn('[Waline] 库加载失败（请通过 http 访问本页，file:// 下 ES module 受限）', e); });
+}
+function onWalineLogin(user){
+  try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e){}
+  applyUser(user);
+  loadPeople(); loadHolidays(); loadRecordsFromWaline();
+}
+function onWalineLogout(){
+  try { localStorage.removeItem('WALINE_USER'); } catch(e){}
+  try { localStorage.removeItem('@waline/user'); } catch(e){}
+  try { localStorage.removeItem('waline_user'); } catch(e){}
+  try { sessionStorage.removeItem('WALINE_USER'); } catch(e){}
+  try { sessionStorage.removeItem('@waline/user'); } catch(e){}
+  setLoggedOut();
+}
+/* 触发登录：优先用库的 login()（若有），否则走定制登录页跳转（与库内部一致：/ui/login?lng=&redirect=） */
+function doLogin(){
+  if (walineInstance && typeof walineInstance.login === 'function'){ walineInstance.login(); return; }
+  if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
+  var back = location.href.split('#')[0];
+  location.href = CLOUD_BASE.replace(/\/$/, '') + '/ui/login?lng=zh-CN&redirect=' + encodeURIComponent(back);
+}
+
 function getWalineUser(){
   try {
     var keys = ['WALINE_USER', '@waline/user', 'waline_user'];
@@ -1177,9 +1218,7 @@ function checkLogin(){
     .catch(function(){ setLoggedOut(); });
 }
 function loginOAuth(){
-  if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
-  var back = location.href.split('#')[0];
-  location.href = CLOUD_BASE.replace(/\/$/, '') + '/api/oauth?type=' + encodeURIComponent(WALINE_OAUTH) + '&redirect=' + encodeURIComponent(back);
+  doLogin();
 }
 async function logout(){
   if (CLOUD_BASE){ try { await fetch(CLOUD_BASE + '/api/token', { method: 'DELETE', credentials: 'include' }); } catch(e){} }
@@ -1198,7 +1237,7 @@ document.addEventListener('click', function(e){
   if (!$('#settingsMenu').hidden && !e.target.closest('#settingsMenu') && !e.target.closest('#setBtn')) closeSettings();
 });
 $('#avatarBtn').addEventListener('click', function(){
-  if (getWalineUser()) logout(); else loginOAuth();
+  if (getWalineUser()) logout(); else doLogin();
 });
 
 /* 从 timor.tech 获取当年（可改）节假日，整理后写入 Waline（更新优先，避免重复） */
@@ -1322,6 +1361,7 @@ document.addEventListener('keydown', function(e){
   loadPeople();
   loadHolidays();
   loadRecordsFromWaline();
+  initWaline();             // 初始化 Waline 登录组件（驱动 onLogin 回写登录态）
   checkLogin();              // 检测 Waline 登录态（登录后进一步用云端对齐 + 激活设置）
 })();
 </script>
