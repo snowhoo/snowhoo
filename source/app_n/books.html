@@ -802,6 +802,25 @@ async function ensureShard(id, S) {
 const LS_HIST = 'books_history';
 const LS_FAV = 'books_fav';
 const UD_PATH = '/app-books/userdata';
+const HIST_LIMIT = 10;          // 阅读记录最多保留最近 10 条
+const UD_CREATE_GAP = 10 * 60 * 1000;   // 新建云端记录的最小间隔（防评论数暴涨）
+let _udOid = 0;                 // 云端用户数据评论 objectId（有则原地更新，不再每次新建）
+let _udOidNick = '';
+let _udLastCreate = 0;
+
+// Waline 以 url 归档评论：GET 必须传完整 URL 才读得到（传纯路径查不到任何记录）
+function udQueryPath() {
+  const origin = (location.origin && location.origin.indexOf('http') === 0) ? location.origin : 'https://snowhoo.net';
+  return origin + '/app_n/books.html';
+}
+// 阅读记录只保留最近 limit 条（按 ts 倒序）
+function topHistory(limit) {
+  const arr = Object.keys(HIST).map(function (k) { return HIST[k]; });
+  arr.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+  const out = {};
+  arr.slice(0, limit).forEach(function (e) { out[e.id] = e; });
+  return out;
+}
 
 function loadUserData() {
   try { HIST = JSON.parse(localStorage.getItem(LS_HIST)) || {}; } catch (e) { HIST = {}; }
@@ -834,7 +853,7 @@ async function cloudPull() {    // 取当前用户在 UD_PATH 下最新一条记
   const u = walineUser(); if (!u) return null;
   try {
     const token = u.token || '';
-    const r = await fetch(WALINE_SERVER + '/api/comment?path=' + encodeURIComponent(UD_PATH) + (token ? '&token=' + encodeURIComponent(token) : ''));
+    const r = await fetch(WALINE_SERVER + '/api/comment?path=' + encodeURIComponent(udQueryPath()) + (token ? '&token=' + encodeURIComponent(token) : ''));
     if (!r.ok) return null;
     const j = await r.json();
     const list = (j.data && j.data.data) || j.data || [];
@@ -842,26 +861,46 @@ async function cloudPull() {    // 取当前用户在 UD_PATH 下最新一条记
     for (const c of list) {
       if ((c.nick || '') !== (u.display_name || u.nick)) continue;
       const obj = parseUserData(c.orig || c.comment || '');
+      if (!obj) continue;                       // 跳过普通留言
       const oid = parseInt(c.objectId, 10) || 0;
-      if (obj && oid > bestOid) { best = obj; bestOid = oid; }
+      if (oid > bestOid) { best = obj; bestOid = oid; }
     }
+    if (best) { _udOid = bestOid; _udOidNick = (u.display_name || u.nick); }
     return best;
   } catch (e) { return null; }
 }
 async function cloudPush() {
   const u = walineUser(); if (!u) return;
+  const nick = u.display_name || u.nick;
   try {
-    const origin = (location.origin && location.origin.indexOf('http') === 0) ? location.origin : 'https://snowhoo.net';
-    await fetch(WALINE_SERVER + '/api/comment', {
+    const payload = JSON.stringify({ history: topHistory(HIST_LIMIT), fav: FAV, readEnv: readEnv, ts: Date.now() });
+    // 已有云端记录 → 原地更新(PUT)，不再每次同步都新建一条评论
+    let oid = (_udOid && _udOidNick === nick) ? _udOid : 0;
+    if (!oid) { await cloudPull(); oid = (_udOidNick === nick) ? _udOid : 0; }
+    if (oid) {
+      const r = await fetch(WALINE_SERVER + '/api/comment/' + oid, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (u.token || '') },
+        body: JSON.stringify({ comment: payload })
+      });
+      if (r.ok) return;                       // 更新成功，评论数不再增长
+    }
+    // 没有记录或更新失败 → 新建，但限流，避免短时间堆积大量评论
+    if (Date.now() - _udLastCreate < UD_CREATE_GAP) return;
+    _udLastCreate = Date.now();
+    const r2 = await fetch(WALINE_SERVER + '/api/comment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        url: origin + '/app_n/books.html',
+        url: udQueryPath(),
         path: UD_PATH,
-        comment: JSON.stringify({ history: HIST, fav: FAV, readEnv: readEnv, ts: Date.now() }),
-        nick: u.display_name || u.nick, mail: u.mail || '', link: ''
+        comment: payload,
+        nick: nick, mail: u.mail || '', link: ''
       })
     });
+    const j = await r2.json().catch(() => null);
+    const nid = j && j.data && (j.data.objectId || j.data.id);
+    if (nid) { _udOid = parseInt(nid, 10) || 0; _udOidNick = nick; }
   } catch (e) {}
 }
 function localUserTs() {
@@ -947,6 +986,7 @@ async function syncUserData() {   // 云端更新则以云端为准，本地更�
   let changed = false;
   if ((obj.ts || 0) > localUserTs()) {
     HIST = obj.history || {}; FAV = obj.fav || [];
+    HIST = topHistory(HIST_LIMIT);      // 云端历史可能有旧数据，拉回后同样只留最近 10 条
     if (obj.readEnv) Object.assign(readEnv, RE_DEFAULT, obj.readEnv);
     saveUserData();
     try { localStorage.setItem(RE_KEY, JSON.stringify(readEnv)); } catch (e) {}
@@ -962,11 +1002,13 @@ async function syncUserData() {   // 云端更新则以云端为准，本地更�
 }
 function touchHistory(b, idx) {
   if (!b || !b.id) return;
+  if (!walineUser()) return;        // 未登录不记录阅读历史
   const e = HIST[b.id] || { id: b.id, idx: -1, ts: 0 };
   e.title = b.title; e.author = b.author; e.category = b.category; e.chapter_count = b.chapter_count;
   if (typeof idx === 'number' && idx >= 0) e.idx = idx;
   e.ts = Date.now();
   HIST[b.id] = e;
+  HIST = topHistory(HIST_LIMIT);    // 只保留最近 HIST_LIMIT 条
   persistUserData();
 }
 function isFav(id) { return FAV.some(f => String(f.id) === String(id)); }
