@@ -377,6 +377,20 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   </div>
 </div>
 
+<!-- 人员配置弹窗（管理 Waline 中的人员） -->
+<div class="modal-mask" id="peopleMask" hidden>
+  <div class="modal people-modal" role="dialog" aria-modal="true">
+    <div class="modal-title">人员配置（Waline）</div>
+    <div class="modal-msg">管理 Waline 中配置的所有人员。下表为当前 Waline 人员（读取失败则显示本地种子）。
+点击「写入/同步 13 人」会把内置 13 人（含 id/姓名/性别/手机号/一级部门/二级部门/考勤组/权限）写入 Waline。</div>
+    <div class="people-table-wrap"><table class="people-table" id="peopleTable"></table></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" id="peopleClose">关闭</button>
+      <button type="button" class="btn-ok" id="peopleSync">写入/同步 13 人到 Waline</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* =====================================================================
    考勤登记 —— 框架版（二稿）
@@ -1419,18 +1433,5 @@ document.addEventListener('keydown', function(e){
   </div>
 </div>
 
-<!-- 人员配置弹窗（管理 Waline 中的人员） -->
-<div class="modal-mask" id="peopleMask" hidden>
-  <div class="modal people-modal" role="dialog" aria-modal="true">
-    <div class="modal-title">人员配置（Waline）</div>
-    <div class="modal-msg">管理 Waline 中配置的所有人员。下表为当前 Waline 人员（读取失败则显示本地种子）。
-点击「写入/同步 13 人」会把内置 13 人（含 id/姓名/性别/手机号/一级部门/二级部门/考勤组/权限）写入 Waline。</div>
-    <div class="people-table-wrap"><table class="people-table" id="peopleTable"></table></div>
-    <div class="modal-actions">
-      <button type="button" class="btn-cancel" id="peopleClose">关闭</button>
-      <button type="button" class="btn-ok" id="peopleSync">写入/同步 13 人到 Waline</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
