@@ -260,8 +260,9 @@ def build_index(r2_keys=None):
 
 # ----------------------------- 主动归档 + 清洗 -----------------------------
 def archive_once(dry_run=False):
-    """读 Waline → 回放 → 历史(本月之前)按月写R2并删Waline评论 → 本月(含未来)数据清洗(压实)。
-    返回归档条数（无历史则 0，但仍清洗当月）。"""
+    """读 Waline → 回放 → 仅把「日期<本月 且 状态=='完成'」的记录按月写R2并删Waline评论；
+    其余（本月/未来、或历史但未完成）留在 Waline 做清洗压实（即未完成的记录不归档、保留）。
+    返回归档条数（无符合归档条件的记录则 0，但仍清洗当月）。"""
     cutoff_ym = datetime.date.today().replace(day=1).strftime("%Y-%m")
     all_c = list_comments(RECORDS_PATH)
     events = []
@@ -269,12 +270,15 @@ def archive_once(dry_run=False):
         events.extend(parse_comment(c))
     final = replay_events(events)
 
-    # 分区：< 本月 = 历史（归档）；>= 本月（含未来）或 无日期 = 当月（清洗保留）
+    # 分区：
+    #   - 历史归档 = 日期 < 本月 且 状态=='完成'  → 写 R2 并删 Waline 评论
+    #   - 保留(不归档) = 其余（本月/未来、或历史但状态未完成的）→ 留在 Waline，仅做清洗压实
+    #     即：状态未完成的记录不归档，长期保留在「最新未归档记录」，直到其变为完成且跨月后才归档
     history_by_month = {}
     current = []
     for r in final:
         ym = month_of(r)
-        if ym and ym < cutoff_ym:
+        if ym and ym < cutoff_ym and (r.get('status') or '待提交') == '完成':
             history_by_month.setdefault(ym, []).append(r)
         else:
             current.append(r)

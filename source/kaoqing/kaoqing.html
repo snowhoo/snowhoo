@@ -96,8 +96,8 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 /* 读/写过程自定义弹窗提示：读=蓝、写=绿、失败=红（已弃用右上角状态） */
 .cloud-toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:2000;max-width:80vw;padding:10px 18px;border-radius:10px;font-size:.86rem;color:#fff;background:#444;box-shadow:0 6px 20px rgba(0,0,0,.22);opacity:1;transition:opacity .25s}
 .cloud-toast[hidden]{display:none}
-.cloud-toast.read{background:#2f7ed8}    /* 读取中（蓝） */
-.cloud-toast.write{background:#2e9e5b}   /* 写入中（绿） */
+.cloud-toast.read{background:#2e9e5b}    /* 读/写/删除过程（统一绿） */
+.cloud-toast.write{background:#2e9e5b}   /* 读/写/删除过程（统一绿） */
 .cloud-toast.error{background:#e0533d}   /* 失败（红） */
 
 .people-modal{width:min(680px,94vw);padding:18px}
@@ -234,6 +234,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .records{display:block;overflow-x:auto}
 .rec-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:10px}
 .rec-count{margin-right:auto;font-size:.78rem;color:var(--text-muted)}
+.rec-source{padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text);max-width:240px}
 .btn-rec-submit{
   padding:8px 18px;border:none;border-radius:10px;cursor:pointer;
   background:var(--accent);color:#fff;font-size:.85rem;font-weight:600;
@@ -390,7 +391,8 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
     <section class="card" id="secAction">
       <div class="card-body">
         <div class="rec-toolbar">
-          <span class="rec-count" id="recCount">本月考勤记录 共 0 条</span>
+          <span class="rec-count" id="recCount">最新未归档记录 共 0 条</span>
+          <select id="recSource" class="rec-source"><option value="waline">最新未归档记录</option></select>
           <button id="submitRecordsBtn" class="btn-rec-submit" disabled>提交</button>
           <button id="reviewBtn" class="btn-rec-action" disabled>审核</button>
           <button id="approveBtn" class="btn-rec-action" disabled>批准</button>
@@ -402,21 +404,6 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       </div>
     </section>
 
-    <!-- ============ 区域五：历史归档（从 R2 公开桶只读查看；归档由后端定时任务发起，前端不发起） ============ -->
-    <section class="card" id="secArchive">
-      <div class="card-head">
-        <span class="idx">5</span>
-        <h2>历史归档</h2>
-      </div>
-      <div class="card-body">
-        <div class="archive-bar">
-          <label for="archiveMonth">选择归档：</label>
-          <select id="archiveMonth"><option value="">— 请选择 —</option></select>
-          <button id="archiveRefresh" class="link">刷新</button>
-        </div>
-        <div class="archive-view" id="archiveView"><p class="empty">选择归档文件后查看该月记录</p></div>
-      </div>
-    </section>
 
   </div>
 </div>
@@ -441,7 +428,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 </div>
 
 <script src="./lib/xlsx.full.min.js"></script>
-<!-- 读/写过程自定义弹窗提示：读=蓝「正在读取数据...」、写=绿「正在写入数据...」、失败=红「数据读取/写入失败!」（不使用右上角状态） -->
+<!-- 读/写/删除过程统一弹窗提示：绿「处理中...」，失败=红「数据读取/写入失败!」（不使用右上角状态） -->
 <div id="cloudToast" class="cloud-toast" hidden></div>
 <script>
 /* =====================================================================
@@ -517,6 +504,8 @@ var curGroup  = GROUPS[0];
 var curCat    = null;
 var records   = [];
 var editIndex = null;   // 修改模式：正在编辑的记录下标（null=新增模式）
+var viewMode   = 'edit';   // 'edit'=最新未归档(Waline 可改删)；'view'=归档(R2 只读，不能修改/删除)
+var archiveLabel = '';     // 当前归档文件名（标题展示用）
 
 function $(s){ return document.querySelector(s); }
 function todayStr(){
@@ -745,25 +734,22 @@ var STATUS_CLASS = { '待提交':'st-tj', '待审核':'st-sh', '待批准':'st-s
 
 function renderRecords(){
   var box = $('#records');
-  $('#recCount').textContent = '本月考勤记录 共 ' + records.length + ' 条';
+  if (viewMode === 'view'){
+    $('#recCount').textContent = '归档记录（' + (archiveLabel || '') + '） 共 ' + records.length + ' 条';
+  } else {
+    $('#recCount').textContent = '最新未归档记录 共 ' + records.length + ' 条';
+  }
   updateRecButtons();   // 重新渲染后勾选清空，记录相关按钮全禁用
   if (!records.length){
     box.innerHTML = '<p class="empty">暂无记录</p>';
     return;
   }
-  var html = '<table class="rec-table"><thead><tr>' +
-      '<th class="c-check"></th>' +
-      '<th>#</th>' +
-      '<th>人员</th>' +
-      '<th>类别</th>' +
-      '<th>加班类别</th>' +
-      '<th>日期</th>' +
-      '<th>时段</th>' +
-      '<th>小时</th>' +
-      '<th>状态</th>' +
-      '<th>说明</th>' +
-      '<th class="c-del"></th>' +
-    '</tr></thead><tbody>';
+  var editable = (viewMode === 'edit');   // 归档(R2)只读：不渲染勾选框与改删按钮
+  var html = '<table class="rec-table"><thead><tr>';
+  if (editable) html += '<th class="c-check"></th>';
+  html += '<th>#</th><th>人员</th><th>类别</th><th>加班类别</th><th>日期</th><th>时段</th><th>小时</th><th>状态</th><th>说明</th>';
+  if (editable) html += '<th class="c-del"></th>';
+  html += '</tr></thead><tbody>';
   records.forEach(function(r, i){
     var st = r.status || '待提交';
     var isOt = r.catId === 'overtime';        // 加班类别仅「加班」需要，其它请假类不需要
@@ -779,9 +765,9 @@ function renderRecords(){
     var note = r.note
       ? '<span title="' + esc(r.note) + '">' + esc(r.note) + '</span>'
       : '<span class="muted">—</span>';
-    html += '<tr>' +
-      '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>' +
-      '<td class="c-idx">' + (i + 1) + '</td>' +
+    html += '<tr>';
+    if (editable) html += '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>';
+    html += '<td class="c-idx">' + (i + 1) + '</td>' +
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
       '<td class="c-cat ' + (r.catId === 'overtime' ? 'c-green' : 'c-orange') + '">' + esc(r.catName) + '</td>' +
       '<td class="c-ottype' + (isOt ? (' ot-' + otCls) : '') + '">' + (isOt ? ot : '<span class="muted">—</span>') + '</td>' +
@@ -789,9 +775,9 @@ function renderRecords(){
       '<td class="c-time">' + esc(span) + '</td>' +
       '<td class="c-hours">' + esc(hoursTxt) + '</td>' +
       '<td class="c-status"><span class="rec-status ' + (STATUS_CLASS[st] || 'st-tj') + '">' + st + '</span></td>' +
-      '<td class="c-note">' + note + '</td>' +
-      '<td class="c-del"><span class="rec-actions"><button class="rec-edit" data-i="' + i + '" title="修改" aria-label="修改"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><button class="rec-del" data-i="' + i + '" title="删除">✕</button></span></td>' +
-    '</tr>';
+      '<td class="c-note">' + note + '</td>';
+    if (editable) html += '<td class="c-del"><span class="rec-actions"><button class="rec-edit" data-i="' + i + '" title="修改" aria-label="修改"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><button class="rec-del" data-i="' + i + '" title="删除">✕</button></span></td>';
+    html += '</tr>';
   });
   html += '</tbody></table>';
   box.innerHTML = html;
@@ -812,7 +798,7 @@ function refreshSaveBtn(){
   }
   document.body.classList.toggle('edit-mode', edit);   // 步骤圈字：添加=绿 / 修改=橙
 }
-function submit(){
+async function submit(){
   if (!selPeople.size || !curCat || !rangeOK()) return;
 
   var date   = $('#fDate').value || todayStr();
@@ -820,7 +806,8 @@ function submit(){
   var hours  = curCat.mode === 'range' ? Math.round((rangeMinutes() / 60) * 100) / 100 : null;
   var note   = $('#fNote').value.trim();
 
-  /* 修改模式：原地更新该条记录，人员/状态/时间戳保持不变，仅改 日期/时段/类别/说明；发 edit 事件 */
+  /* 修改模式：直接走库——把更新作为 edit 事件 POST 到 Waline，成功后再复读 Waline 重渲染；
+     绝不直接改本地 records 缓存（避免与库不一致）。 */
   if (editIndex !== null){
     var old = records[editIndex];
     var updated = {
@@ -838,13 +825,16 @@ function submit(){
       status: old.status,
       ts: old.ts
     };
-    records[editIndex] = updated;
     editIndex = null;
     refreshSaveBtn();
-    renderRecords();
-    postRecordOp('edit', updated);
     selPeople.clear(); renderPeople();
-    curCat = null; applyView();        // 同新增：保存后整体归位
+    curCat = null; applyView();        // 保存后整体归位（UI 状态，与数据无关）
+    cloudToast('write', '处理中...');
+    try {
+      var ok = await postRecordOp('edit', updated);
+      if (ok){ await loadRecordsFromWaline(); if (!_ctErrorActive) cloudToastHide(); }
+      else { cloudToastError('数据写入失败!'); }
+    } catch(e){ cloudToastError('数据写入失败!'); console.error('[kaoqing] edit 失败', e && e.message ? e.message : e); }
     return;
   }
 
@@ -867,12 +857,18 @@ function submit(){
     };
   });
 
-  /* 已并入内存 records，逐条匿名 POST 单条「add」事件到 Waline（每条考勤=一条独立评论） */
-  records = newRecs.concat(records);   // 新记录置顶，保持选择顺序
-  renderRecords();
-  newRecs.forEach(function(r){ postRecordOp('add', r); });
-
-  // 保存后整体归位：人员 / 类别 / 考勤内容 全部恢复初始状态（仅显示 选择人员）
+  /* 直接走库：逐条 await 匿名 POST 单条「add」事件到 Waline，全部成功后复读 Waline 重渲染；
+     绝不直接改本地 records 缓存（避免与库不一致）。 */
+  cloudToast('write', '处理中...');
+  try {
+    var allOk = true;
+    for (var k = 0; k < newRecs.length; k++){
+      if (!await postRecordOp('add', newRecs[k])) allOk = false;
+    }
+    if (allOk){ await loadRecordsFromWaline(); if (!_ctErrorActive) cloudToastHide(); }
+    else { cloudToastError('部分数据写入失败!'); }
+  } catch(e){ cloudToastError('数据写入失败!'); console.error('[kaoqing] add 失败', e && e.message ? e.message : e); }
+  // 保存后整体归位：人员 / 类别 / 考勤内容 全部恢复初始状态（UI 状态，与数据无关）
   selPeople.clear();
   renderPeople();
   curCat = null;
@@ -922,6 +918,13 @@ $('#fDate').addEventListener('change', refresh);
 $('#submitBtn').addEventListener('click', submit);
 /* ---------- 记录批量操作辅助 ---------- */
 function updateRecButtons(){
+  if (viewMode === 'view'){                   // 归档(R2 只读)：状态变更/打印全禁用，仅展示
+    $('#submitRecordsBtn').disabled = true;
+    $('#reviewBtn').disabled   = true;
+    $('#approveBtn').disabled  = true;
+    $('#printBtn').disabled    = true;
+    return;
+  }
   var box = $('#records');
   var checked = box.querySelectorAll('.rec-check:checked');
   if (!checked.length){                       // 未勾选任何记录 → 全禁用
@@ -1007,32 +1010,43 @@ function canDelete(status, pwd){
   if (status === '待批准') return pwd === PWD_APPROVE;                  // 审核密码无权删待批准
   return false;                                                        // 完成 仅管理员可删
 }
-function eachChecked(fn){
+/* 直接走库：先收集符合条件的记录，复制后改状态 POST 到 Waline，全部成功后再复读 Waline 重渲染。
+   不改动本地 records（避免乐观更新与库不一致）；失败则保留库原状、由复读还原。 */
+async function eachChecked(condStatus, nextStatus){
+  var targets = [];
   $('#records').querySelectorAll('.rec-check:checked').forEach(function(cb){
     var i = parseInt(cb.dataset.i, 10);
-    if (records[i]){ if (fn(records[i])) postRecordOp('edit', records[i]); }
+    if (records[i] && records[i].status === condStatus) targets.push(records[i]);
   });
+  if (!targets.length) return;
+  cloudToast('write', '处理中...');
+  try {
+    var tasks = targets.map(function(r){
+      var copy = Object.assign({}, r);
+      copy.status = nextStatus;
+      return postRecordOp('edit', copy);
+    });
+    var results = await Promise.all(tasks);
+    if (results.every(function(b){ return b; })){
+      await loadRecordsFromWaline();
+      if (!_ctErrorActive) cloudToastHide();
+    } else {
+      cloudToastError('部分数据写入失败!');
+    }
+  } catch(e){ cloudToastError('数据写入失败!'); console.error('[kaoqing] 状态变更失败', e && e.message ? e.message : e); }
 }
 
 // 勾选记录 → 仅「待提交」提交至「待审核」
-$('#submitRecordsBtn').addEventListener('click', function(){
-  var hit = false;
-  eachChecked(function(r){ if (r.status === '待提交'){ r.status = '待审核'; hit = true; return true; } return false; });
-  if (hit) renderRecords();
-});
+$('#submitRecordsBtn').addEventListener('click', function(){ eachChecked('待提交', '待审核'); });
 // 审核 → 仅「待审核」转「待批准」（需审核密码）
 $('#reviewBtn').addEventListener('click', async function(){
   if (!await confirmRole('review')) return;
-  var hit = false;
-  eachChecked(function(r){ if (r.status === '待审核'){ r.status = '待批准'; hit = true; return true; } return false; });
-  if (hit) renderRecords();
+  eachChecked('待审核', '待批准');
 });
 // 批准 → 仅「待批准」转「完成」（需批准密码）
 $('#approveBtn').addEventListener('click', async function(){
   if (!await confirmRole('approve')) return;
-  var hit = false;
-  eachChecked(function(r){ if (r.status === '待批准'){ r.status = '完成'; hit = true; return true; } return false; });
-  if (hit) renderRecords();
+  eachChecked('待批准', '完成');
 });
 // 打印（待提交记录不能打印）
 $('#printBtn').addEventListener('click', async function(){
@@ -1083,10 +1097,16 @@ $('#records').addEventListener('click', async function(e){
     if (pwd === null) return;                                  // 取消
     if (!canDelete(r.status, pwd)){ await showAlert('密码错误或无删除权限'); return; }
   }
-  var ok = await postRecordOp('del', { id: r.id });
-  if (!ok){ cloudToastError('数据写入失败!'); return; }
-  records.splice(i, 1);
-  renderRecords();
+  cloudToast('write', '处理中...');
+  try {
+    var ok = await postRecordOp('del', { id: r.id });   // 先写删除标识记录到 Waline（按 id 标记 del 事件）
+    if (!ok){ cloudToastError('数据写入失败!'); return; }
+    await loadRecordsFromWaline();                      // 再复读 Waline（事件回放）→ 重新渲染，绝不直接改本地缓存（不秒删）
+    if (!_ctErrorActive) cloudToastHide();
+  } catch(e){
+    cloudToastError('数据读取失败!');
+    console.error('[kaoqing] 删除后复读失败', e && e.message ? e.message : e);
+  }
 });
 
 /* ---------- Waline 读写：读取为匿名公开 GET（8s 超时 + 健壮解析）。
@@ -1225,7 +1245,7 @@ async function loadHolidays(){
     console.error('[kaoqing] loadHolidays 失败', e && e.message ? e.message : e);
   }
 }
-/* 读/写过程自定义弹窗提示：读取=蓝「正在读取数据...」、写入=绿「正在写入数据...」、失败=红「数据读取/写入失败!」。不再使用右上角状态标记。 */
+/* 读/写/删除过程统一弹窗提示：一律绿「处理中...」，失败=红「数据读取/写入失败!」。不使用右上角状态标记。 */
 var _ctTimer = null, _ctErrorActive = false;
 function cloudToast(kind, text){
   var box = $('#cloudToast'); if (!box) return;
@@ -1344,16 +1364,15 @@ async function loadRecordsFromWaline(){
   } catch(e){ cloudToastError('数据读取失败!'); console.error('[kaoqing] loadRecordsFromWaline 失败', e && e.message ? e.message : e); }
 }
 
-/* 历史归档（区域五）：只读地从 R2 公开桶读取，前端不发起归档。后端 kaoqing_archiver.py 按月归档并维护 index.json。 */
+/* 归档下拉（合并原区域五卡片）：从 R2 index.json 填充「归档记录」选项；「最新未归档记录」固定为第一项(value=waline)。归档写入由后端 kaoqing_archiver.py 定时任务完成，前端不发起。 */
 async function loadArchiveMonths(){
   try {
     var resp = await fetch(ARCHIVE_R2_BASE + ARCHIVE_PREFIX + 'index.json?t=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) throw new Error('index ' + resp.status);
     var data = await resp.json();
     var months = (data && data.months) || [];
-    var sel = $('#archiveMonth');
-    var cur = sel.value;
-    sel.innerHTML = '<option value="">— 请选择 —</option>';
+    var sel = $('#recSource');
+    sel.innerHTML = '<option value="waline">最新未归档记录</option>';
     months.forEach(function(m){
       if (!m.files || !m.files.length) return;
       var og = document.createElement('optgroup');
@@ -1366,41 +1385,39 @@ async function loadArchiveMonths(){
       });
       sel.appendChild(og);
     });
-    if (cur) sel.value = cur;
   } catch(e){
     console.warn('[kaoqing] loadArchiveMonths 失败', e && e.message ? e.message : e);
   }
 }
-async function showArchive(key){
-  var view = $('#archiveView');
-  if (!key){ view.innerHTML = '<p class="empty">选择归档文件后查看该月记录</p>'; return; }
-  view.innerHTML = '<p class="empty">加载中…</p>';
+/* 视图切换：edit=最新未归档(Waline 可改删)；view=归档(R2 只读，不能修改/删除) */
+function setViewMode(mode){
+  viewMode = mode;
+  $('#records').classList.toggle('readonly', mode === 'view');
+  updateRecButtons();
+}
+async function switchToWaline(){
+  setViewMode('edit');
+  await loadRecordsFromWaline();
+}
+async function switchToArchive(key){
+  setViewMode('view');
+  await loadArchive(key);
+}
+/* 载入 R2 归档文件到 records 并只读渲染（不写库、不能改删） */
+async function loadArchive(key){
+  archiveLabel = (key || '').replace(ARCHIVE_PREFIX, '');
   try {
+    cloudToast('write', '处理中...');
     var resp = await fetch(ARCHIVE_R2_BASE + key + '?t=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) throw new Error('file ' + resp.status);
     var data = await resp.json();
     var recs = data.records || [];
-    if (!recs.length){ view.innerHTML = '<p class="empty">该归档文件无记录</p>'; return; }
-    var meta = '<div class="arc-meta">月份 ' + esc(data.month || '') + ' · 共 ' + recs.length + ' 条'
-             + (data.supplement ? ' · <span class="sup">后补归档</span>' : '') + '</div>';
-    var html = meta + '<div class="archive-table-wrap"><table class="archive-table"><thead><tr>'
-      + '<th>#</th><th>人员</th><th>类别</th><th>日期</th><th>时段</th><th>状态</th><th>说明</th>'
-      + '</tr></thead><tbody>';
-    recs.forEach(function(r, i){
-      html += '<tr>'
-        + '<td>' + (i + 1) + '</td>'
-        + '<td>' + (r.people ? r.people.map(esc).join('、') : '') + '</td>'
-        + '<td class="' + (r.catId === 'overtime' ? 'c-green' : 'c-orange') + '">' + esc(r.catName || '') + '</td>'
-        + '<td>' + esc(r.date || '') + '</td>'
-        + '<td>' + esc(r.detail || '') + '</td>'
-        + '<td>' + esc(r.status || '') + '</td>'
-        + '<td>' + (r.note ? esc(r.note) : '—') + '</td>'
-        + '</tr>';
-    });
-    html += '</tbody></table></div>';
-    view.innerHTML = html;
+    records = recs.slice();     // 只读副本，不写库
+    renderRecords();
+    if (!_ctErrorActive) cloudToastHide();
   } catch(e){
-    view.innerHTML = '<p class="empty">读取归档失败：' + esc(e && e.message ? e.message : e) + '</p>';
+    cloudToastError('归档读取失败!');
+    console.error('[kaoqing] loadArchive 失败', e && e.message ? e.message : e);
   }
 }
 
@@ -1534,12 +1551,12 @@ async function syncHolidays(){
   });
 
   var payload = { v: 1, type: 'holiday', year: year, updatedAt: Date.now(), holidays: holidays, makeup: makeup };
-  HOLIDAYS = { year: year, holidays: holidays.map(function(h){ return h.date; }), makeup: makeup.map(function(m){ return m.date; }) };
-  cloudToast('write','正在写入数据...');
+  cloudToast('write','处理中...');
   try {
     var ok = await anonPostCloud(HOLIDAY_PATH, payload);
     if (ok){
-      cloudToastHide();
+      await loadHolidays();   // 写库成功后以库为准刷新本地 HOLIDAYS（不提前缓存）
+      if (!_ctErrorActive) cloudToastHide();
       showAlert('已写入 Waline\n路径：' + HOLIDAY_PATH + '\n' + year + ' 年：国假/休息 ' + holidays.length + ' 天，调休补班 ' + makeup.length + ' 天。');
     } else {
       cloudToastError('数据写入失败!');
@@ -1750,7 +1767,7 @@ async function savePeopleToWaline(){
     link: '', ua: navigator.userAgent
   };
   var oldOid = peopleOid.oid;
-  cloudToast('write','正在写入数据...');
+  cloudToast('write','处理中...');
   try {
     var res = await walineSaveRecord(oldOid, body, token);
     peopleOid.oid = res.oid;
@@ -1788,9 +1805,11 @@ async function openPeopleConfig(){
   $('#peopleMask').hidden = false;
 }
 $('#peopleConfigBtn').addEventListener('click', openPeopleConfig);
-/* 历史归档（区域五）：前端只读查看，不发起归档 */
-$('#archiveRefresh').addEventListener('click', loadArchiveMonths);
-$('#archiveMonth').addEventListener('change', function(){ showArchive(this.value); });
+/* 归档下拉：切换 最新未归档记录(Waline) / 归档记录(R2 只读) */
+$('#recSource').addEventListener('change', function(){
+  if (this.value === 'waline'){ switchToWaline(); }
+  else { switchToArchive(this.value); }
+});
 $('#peopleSync').addEventListener('click', savePeopleToWaline);
 $('#peopleAddRow').addEventListener('click', addPeopleRow);
 $('#peopleExport').addEventListener('click', exportPeopleXlsx);
@@ -1820,7 +1839,7 @@ document.addEventListener('keydown', function(e){
   $('#companyName').textContent = COMPANY_NAME;
   // 打开页面即直接读取 Waline 同步人员 / 节假日 / 考勤记录（读为公开接口，无需登录）
   // 改为 await，确保打开瞬间完成读取（含重试），不登录也一定读到
-  cloudToast('read','正在读取数据...');
+  cloudToast('write','处理中...');
   try {
     await loadPeople();
     await loadHolidays();
