@@ -765,7 +765,7 @@ function renderRecords(){
   box.innerHTML = html;
 }
 
-/* 记录不再落地 localStorage：读写全部走 Waline（见 syncRecordsToWaline / loadRecordsFromWaline） */
+/* 记录不再落地 localStorage：读写全部走 Waline（见 loadRecordsFromWaline / postRecordOp） */
 
 /* 保存按钮随模式切换：新增=「添加」(绿) / 修改=「修改」(橙)；并同步步骤圈字(1/2/3)配色 */
 function refreshSaveBtn(){
@@ -788,10 +788,11 @@ function submit(){
   var hours  = curCat.mode === 'range' ? Math.round((rangeMinutes() / 60) * 100) / 100 : null;
   var note   = $('#fNote').value.trim();
 
-  /* 修改模式：原地更新该条记录，人员/状态/时间戳保持不变，仅改 日期/时段/类别/说明 */
+  /* 修改模式：原地更新该条记录，人员/状态/时间戳保持不变，仅改 日期/时段/类别/说明；发 edit 事件 */
   if (editIndex !== null){
     var old = records[editIndex];
-    records[editIndex] = {
+    var updated = {
+      id: (old && old.id) || genRecId(),
       date: date,
       otType: curCat.id === 'overtime' ? calcOtType(date) : '',
       catId: curCat.id,
@@ -805,18 +806,20 @@ function submit(){
       status: old.status,
       ts: old.ts
     };
+    records[editIndex] = updated;
     editIndex = null;
     refreshSaveBtn();
     renderRecords();
-    syncRecordsToWaline();
+    postRecordOp('edit', updated);
     selPeople.clear(); renderPeople();
     curCat = null; applyView();        // 同新增：保存后整体归位
     return;
   }
 
-  /* 一人一条记录：任意列内容不同即分行，便于后续导入二维数据库 */
+  /* 一人一条记录：任意列内容不同即分行，便于后续导入二维数据库；每条独立 id，发 add 事件 */
   var newRecs = Array.from(selPeople).map(function(name){
     return {
+      id:      genRecId(),
       date:    date,
       otType:  curCat.id === 'overtime' ? calcOtType(date) : '',
       catId:   curCat.id,
@@ -832,10 +835,10 @@ function submit(){
     };
   });
 
-  /* 已并入内存 records，下方 syncRecordsToWaline() 立即写 Waline（不再落地 localStorage） */
+  /* 已并入内存 records，逐条匿名 POST 单条「add」事件到 Waline（每条考勤=一条独立评论） */
   records = newRecs.concat(records);   // 新记录置顶，保持选择顺序
   renderRecords();
-  syncRecordsToWaline();
+  newRecs.forEach(function(r){ postRecordOp('add', r); });
 
   // 保存后整体归位：人员 / 类别 / 考勤内容 全部恢复初始状态（仅显示 选择人员）
   selPeople.clear();
@@ -975,29 +978,29 @@ function canDelete(status, pwd){
 function eachChecked(fn){
   $('#records').querySelectorAll('.rec-check:checked').forEach(function(cb){
     var i = parseInt(cb.dataset.i, 10);
-    if (records[i]) fn(records[i]);
+    if (records[i]){ if (fn(records[i])) postRecordOp('edit', records[i]); }
   });
 }
 
 // 勾选记录 → 仅「待提交」提交至「待审核」
 $('#submitRecordsBtn').addEventListener('click', function(){
   var hit = false;
-  eachChecked(function(r){ if (r.status === '待提交'){ r.status = '待审核'; hit = true; } });
-  if (hit){ renderRecords(); syncRecordsToWaline(); }
+  eachChecked(function(r){ if (r.status === '待提交'){ r.status = '待审核'; hit = true; return true; } return false; });
+  if (hit) renderRecords();
 });
 // 审核 → 仅「待审核」转「待批准」（需审核密码）
 $('#reviewBtn').addEventListener('click', async function(){
   if (!await confirmRole('review')) return;
   var hit = false;
-  eachChecked(function(r){ if (r.status === '待审核'){ r.status = '待批准'; hit = true; } });
-  if (hit){ renderRecords(); syncRecordsToWaline(); }
+  eachChecked(function(r){ if (r.status === '待审核'){ r.status = '待批准'; hit = true; return true; } return false; });
+  if (hit) renderRecords();
 });
 // 批准 → 仅「待批准」转「完成」（需批准密码）
 $('#approveBtn').addEventListener('click', async function(){
   if (!await confirmRole('approve')) return;
   var hit = false;
-  eachChecked(function(r){ if (r.status === '待批准'){ r.status = '完成'; hit = true; } });
-  if (hit){ renderRecords(); syncRecordsToWaline(); }
+  eachChecked(function(r){ if (r.status === '待批准'){ r.status = '完成'; hit = true; return true; } return false; });
+  if (hit) renderRecords();
 });
 // 打印（待提交记录不能打印）
 $('#printBtn').addEventListener('click', async function(){
@@ -1048,15 +1051,18 @@ $('#records').addEventListener('click', async function(e){
     if (pwd === null) return;                                  // 取消
     if (!canDelete(r.status, pwd)){ await showAlert('密码错误或无删除权限'); return; }
   }
+  var ok = await postRecordOp('del', { id: r.id });
+  if (!ok){ cloudToastError('数据写入失败!'); return; }
   records.splice(i, 1);
   renderRecords();
-  syncRecordsToWaline();
 });
 
-/* ---------- Waline 读写（匿名模式：数据读写均匿名、无需登录；登录仅用于管控「设置」入口。读取=公开 GET + 8s 超时 + 健壮解析） ---------- */
+/* ---------- Waline 读写：读取为匿名公开 GET（8s 超时 + 健壮解析）。
+   写入分两类：人员(people) 需登录、用 walineSaveRecord() 带 token 做 PUT 原地复写（Waline 始终只留 1 条）；
+   考勤记录 / 节假日 走匿名 POST（免登录）。考勤记录为「每条考勤=一条独立评论 + 事件回放」，由后端 --cleanup 压实。 ---------- */
 
-/* 登录仅用于管控「设置」入口；数据读写均匿名（见 fetchCloudRecord / pushCloudRecord）。
-   登录态存储键与 Waline 客户端一致（WALINE_USER），由下方弹窗登录回传的 userInfo 写入。 */
+/* 登录用于管控「设置 / 人员管理」入口，并为 people 写入提供 PUT 所需 token。
+   登录态存储键与 Waline 客户端一致（WALINE_USER），由登录弹窗回传的 userInfo 写入。 */
 /* 读取登录用户：从 WALINE_USER / @waline/user / waline_user 读取，兼容 Waline 登录后写入 */
 function onWalineLogin(user){
   try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e){}
@@ -1140,18 +1146,33 @@ async function fetchCloudRecord(path, attempt){
     throw e;
   }
 }
-/* 匿名写入：Waline 开放匿名评论，数据写库无需登录（登录仅管控设置入口）。
-   匿名评论需 nick+mail，使用固定匿名身份；每次均以 POST 新建一条（匿名无法持 token 做 PUT 更新），
-   读取端 fetchCloudRecord 按 objectId 取最新一条，重复条目不影响读取。 */
+/* 考勤/节假日写入：采用免登录的匿名 POST（用户无需登录、不带 token），每条考勤 = 一条独立评论。
+   匿名无法改/删旧评论，故"修改/删除"是追加一条新事件；前端读取拉取全部评论并回放（同 id 取最后），
+   旧评论/中间过程由后端 kaoqing_archiver.py 的 --cleanup（每月计划任务自动跑）压实清理，不会无限膨胀。
+   ANON_NICK/ANON_MAIL 为固定匿名身份。人员(people)写入仍走带 token 的 PUT（在 savePeopleToWaline）。 */
 var ANON_NICK = '考勤系统';
 var ANON_MAIL = 'noreply@waline.snowhoo.net';
-function pushCloudRecord(path, obj, oidRef){
-  if (!CLOUD_BASE) return Promise.resolve(null);
-  var payload = JSON.stringify({ comment: JSON.stringify(obj), url: path, nick: ANON_NICK, mail: ANON_MAIL, link: '', ua: navigator.userAgent });
-  return fetch(CLOUD_BASE + '/api/comment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload })
-    .then(function(r){ return r.json().then(function(j){ if (r.ok && j && j.data && j.data.objectId && oidRef) oidRef.oid = parseInt(j.data.objectId, 10); return r; }); })
-    .then(function(r){ return r.ok ? (oidRef || {}) : null; })
-    .catch(function(){ return null; });
+/* 匿名写入（免登录方案）：无需 token，固定匿名身份 POST 新建一条评论。
+   匿名无法 PUT 原地更新，故每次保存都会新建一条 → Waline 随保存次数累积评论；
+   前端读取只取最新一条（fetchCloudRecord 保证显示正确），旧评论由后端 --cleanup 清空。 */
+async function anonPostCloud(path, obj){
+  if (!CLOUD_BASE) return false;
+  var payload = {
+    comment: JSON.stringify(obj),
+    url: path,
+    nick: ANON_NICK,
+    mail: ANON_MAIL,
+    link: '',
+    ua: navigator.userAgent
+  };
+  try {
+    var r = await fetch(CLOUD_BASE + '/api/comment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    return r.ok;
+  } catch(e){ return false; }
 }
 
 /* 节假日：从 Waline 读取（公开接口，匿名）覆盖兜底表，供加班类别计算 */
@@ -1192,33 +1213,98 @@ function cloudToastError(text){
   clearTimeout(_ctTimer);
   _ctTimer = setTimeout(function(){ cloudToastHide(); }, 3000);
 }
-/* 考勤记录：整体作为一条 JSON 匿名写入 Waline（RECORDS_PATH），每次新建一条，读取取最新 */
+/* 考勤记录：每条考勤 = 一条独立 Waline 评论（匿名 POST 单条事件，op∈{add,edit,del}，id 唯一）。
+   读取时拉取该 path 全部评论 → 解析为事件 → 按 id 回放成当前二维表；旧整包格式(type=='records')按 leg_<oid>_<i> 兼容迁移。
+   匿名无法改/删旧评论，故"修改/删除"都追加一条新事件，由回放(同 id 取最后)与后端 --cleanup 压实处理。 */
 var RECORDS_PATH = '/kaoqing/records';
-var recordsOid = { oid: 0 };
-async function syncRecordsToWaline(){
-  if (!CLOUD_BASE){ cloudToastError('数据写入失败!'); return; }
-  cloudToast('write','正在写入数据...');
+
+/* 生成稳定唯一 id（新记录用） */
+function genRecId(){
+  return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+/* 带超时+重试的 JSON GET（Vercel 冷启动友好），返回解析后的对象 */
+async function fetchJsonWithRetry(url, attempt){
+  attempt = attempt || 1;
   try {
-    var cur = await fetchCloudRecord(RECORDS_PATH);
-    if (cur) recordsOid.oid = cur.oid;
-    var payload = { v: 1, type: 'records', updatedAt: Date.now(), records: records };
-    var res = await pushCloudRecord(RECORDS_PATH, payload, recordsOid);
-    if (res){ cloudToastHide(); }
-    else { cloudToastError('数据写入失败!'); }
+    var ctrl = ('AbortController' in window) ? new AbortController() : null;
+    var tid = ctrl ? setTimeout(function(){ try { ctrl.abort(); } catch(e){} }, 15000) : null;
+    var opts = ctrl ? { signal: ctrl.signal } : {};
+    var r = await fetch(url, opts);
+    if (tid) clearTimeout(tid);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
   } catch(e){
-    cloudToastError('数据写入失败!');
-    console.error('[kaoqing] syncRecordsToWaline 失败', e && e.message ? e.message : e);
+    if (attempt < 3){ await new Promise(function(r){ setTimeout(r, 500 * attempt); }); return fetchJsonWithRetry(url, attempt + 1); }
+    throw e;
   }
 }
-/* 读取：以 Waline 为唯一来源（无 localStorage 兜底）。云端有记录则以云为准，否则本页记录保持空。 */
+
+/* 分页拉取某 path 下全部 Waline 评论 */
+async function fetchAllComments(path){
+  var out = []; var page = 1;
+  while (true){
+    var url = CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(path) + '&page=' + page + '&pageSize=100';
+    var resp = await fetchJsonWithRetry(url);
+    var arr = (resp.data && resp.data.data) || [];
+    if (!arr.length) break;
+    out = out.concat(arr);
+    var total = (resp.data && resp.data.total) || 0;
+    if (total && out.length >= total) break;
+    if (arr.length < 100) break;
+    page++;
+  }
+  return out;
+}
+
+/* 单条 Waline 评论 → 事件列表（兼容旧整包格式 type=='records'） */
+function parseCommentToEvents(c){
+  var oid = parseInt(c.objectId, 10) || 0;
+  var obj = robustParse(c.orig || c.comment || '');
+  if (!obj) return [];
+  if (obj.op === 'add' || obj.op === 'edit' || obj.op === 'del'){
+    return [{ oid: oid, op: obj.op, id: obj.id, rec: obj.rec }];
+  }
+  if (obj.type === 'records' && obj.records && obj.records.length){
+    var evs = [];
+    for (var i = 0; i < obj.records.length; i++){
+      evs.push({ oid: oid, op: 'add', id: 'leg_' + oid + '_' + i, rec: obj.records[i] });
+    }
+    return evs;
+  }
+  return [];
+}
+
+/* 按 id 回放：同 id 取最后一条事件；op=='del' 标记为删除（置 null） */
+function replayEvents(events){
+  events.sort(function(a, b){ return a.oid - b.oid; });
+  var state = {};
+  for (var i = 0; i < events.length; i++){
+    var e = events[i];
+    if (!e.id) continue;
+    if (e.op === 'del'){ state[e.id] = null; }
+    else { var r = (e.rec && typeof e.rec === 'object') ? e.rec : {}; r.id = e.id; state[e.id] = r; }
+  }
+  var final = [];
+  for (var k in state){ if (state[k]) final.push(state[k]); }
+  return final;
+}
+
+/* 新增/修改/删除：单条事件匿名 POST（每条考勤 = 一条独立评论，无需登录） */
+async function postRecordOp(op, rec){
+  if (!CLOUD_BASE) return false;
+  var obj = { op: op, id: rec.id, rec: (op === 'del' ? null : rec) };
+  return anonPostCloud(RECORDS_PATH, obj);
+}
+
+/* 读取：以 Waline 为唯一来源（无 localStorage 兜底）。拉取全量评论 → 回放成当前二维表。 */
 async function loadRecordsFromWaline(){
   try {
-    var best = await fetchCloudRecord(RECORDS_PATH);
-    if (best && best.obj && best.obj.records && best.obj.records.length){
-      recordsOid.oid = best.oid;
-      records = best.obj.records;
-      renderRecords();
-    }
+    var all = await fetchAllComments(RECORDS_PATH);
+    var events = [];
+    for (var i = 0; i < all.length; i++){ events = events.concat(parseCommentToEvents(all[i])); }
+    records = replayEvents(events);
+    renderRecords();
   } catch(e){ cloudToastError('数据读取失败!'); console.error('[kaoqing] loadRecordsFromWaline 失败', e && e.message ? e.message : e); }
 }
 
@@ -1351,19 +1437,21 @@ async function syncHolidays(){
     else makeup.push(item);                          // 调休补班（holiday:false）
   });
 
-  var cur = await fetchCloudRecord(HOLIDAY_PATH);
-  var isUpdate = !!(cur && cur.oid);
-  if (cur) holidayOid.oid = cur.oid;
   var payload = { v: 1, type: 'holiday', year: year, updatedAt: Date.now(), holidays: holidays, makeup: makeup };
   HOLIDAYS = { year: year, holidays: holidays.map(function(h){ return h.date; }), makeup: makeup.map(function(m){ return m.date; }) };
   cloudToast('write','正在写入数据...');
-  var res2 = await pushCloudRecord(HOLIDAY_PATH, payload, holidayOid);
-  if (res2){
-    cloudToastHide();
-    showAlert('已写入 Waline\n路径：' + HOLIDAY_PATH + '\n' + year + ' 年：国假/休息 ' + holidays.length + ' 天，调休补班 ' + makeup.length + ' 天。' + (isUpdate ? '\n（已覆盖更新既有记录）' : '\n（已新建记录）'));
-  } else {
+  try {
+    var ok = await anonPostCloud(HOLIDAY_PATH, payload);
+    if (ok){
+      cloudToastHide();
+      showAlert('已写入 Waline\n路径：' + HOLIDAY_PATH + '\n' + year + ' 年：国假/休息 ' + holidays.length + ' 天，调休补班 ' + makeup.length + ' 天。');
+    } else {
+      cloudToastError('数据写入失败!');
+      showAlert('写入 Waline 失败，请检查网络或权限');
+    }
+  } catch(e){
     cloudToastError('数据写入失败!');
-    showAlert('写入 Waline 失败，请检查网络或权限');
+    showAlert('写入 Waline 失败：' + (e && e.message ? e.message : e));
   }
 }
 $('#syncHolidayBtn').addEventListener('click', syncHolidays);
