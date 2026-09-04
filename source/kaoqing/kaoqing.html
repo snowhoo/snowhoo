@@ -117,6 +117,22 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .people-table td[contenteditable="true"]:focus{background:rgba(59,130,246,.14);box-shadow:inset 0 0 0 1px var(--accent)}
 .people-table .c-del{width:28px;text-align:center}
 .row-del{border:none;background:transparent;color:#e24b4a;font-size:15px;line-height:1;cursor:pointer;padding:0 4px}
+
+/* 历史归档（区域五，只读查看；归档由后端定时任务发起，前端不发起） */
+.archive-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.archive-bar select{padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text);max-width:300px}
+.archive-view{min-height:64px}
+.archive-view .empty{color:var(--text-muted);font-size:.82rem;padding:8px 0}
+.archive-view .arc-meta{font-size:.8rem;color:var(--text-secondary);margin-bottom:8px}
+.archive-view .arc-meta .sup{color:var(--accent);margin-left:8px}
+.archive-table-wrap{max-height:52vh;overflow:auto;margin:6px 0;border:1px solid var(--border);border-radius:10px}
+.archive-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.archive-table th,.archive-table td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:5px 8px;text-align:left;white-space:nowrap}
+.archive-table th{background:var(--bg-surface);color:var(--text-secondary);font-weight:600;position:sticky;top:0}
+.archive-table tr:last-child td{border-bottom:none}
+.archive-table td:last-child,.archive-table th:last-child{border-right:none}
+.archive-table .c-green{color:var(--accent)}
+.archive-table .c-orange{color:#e08600}
 .row-del:hover{color:#a32d2d}
 #secAction .card-head{background:#e9ecf1}
 .card-head .hint{margin-left:auto;font-size:.78rem;color:var(--text-muted)}
@@ -383,6 +399,22 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
         <div class="records" id="records">
           <p class="empty">暂无记录</p>
         </div>
+      </div>
+    </section>
+
+    <!-- ============ 区域五：历史归档（从 R2 公开桶只读查看；归档由后端定时任务发起，前端不发起） ============ -->
+    <section class="card" id="secArchive">
+      <div class="card-head">
+        <span class="idx">5</span>
+        <h2>历史归档</h2>
+      </div>
+      <div class="card-body">
+        <div class="archive-bar">
+          <label for="archiveMonth">选择归档：</label>
+          <select id="archiveMonth"><option value="">— 请选择 —</option></select>
+          <button id="archiveRefresh" class="link">刷新</button>
+        </div>
+        <div class="archive-view" id="archiveView"><p class="empty">选择归档文件后查看该月记录</p></div>
       </div>
     </section>
 
@@ -1218,6 +1250,10 @@ function cloudToastError(text){
    匿名无法改/删旧评论，故"修改/删除"都追加一条新事件，由回放(同 id 取最后)与后端 --cleanup 压实处理。 */
 var RECORDS_PATH = '/kaoqing/records';
 
+/* 历史归档只读查看：从 R2 公开桶读取（复用 books 同桶，暴露只读地址，无害）。归档写入由后端 kaoqing_archiver.py 定时任务完成，前端不发起归档请求。 */
+var ARCHIVE_R2_BASE = 'https://pub-d583e3093dc1438882b43509c1571302.r2.dev/';
+var ARCHIVE_PREFIX  = 'kaoqing-archive/';
+
 /* 生成稳定唯一 id（新记录用） */
 function genRecId(){
   return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -1306,6 +1342,66 @@ async function loadRecordsFromWaline(){
     records = replayEvents(events);
     renderRecords();
   } catch(e){ cloudToastError('数据读取失败!'); console.error('[kaoqing] loadRecordsFromWaline 失败', e && e.message ? e.message : e); }
+}
+
+/* 历史归档（区域五）：只读地从 R2 公开桶读取，前端不发起归档。后端 kaoqing_archiver.py 按月归档并维护 index.json。 */
+async function loadArchiveMonths(){
+  try {
+    var resp = await fetch(ARCHIVE_R2_BASE + ARCHIVE_PREFIX + 'index.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!resp.ok) throw new Error('index ' + resp.status);
+    var data = await resp.json();
+    var months = (data && data.months) || [];
+    var sel = $('#archiveMonth');
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">— 请选择 —</option>';
+    months.forEach(function(m){
+      if (!m.files || !m.files.length) return;
+      var og = document.createElement('optgroup');
+      og.label = m.ym + '（' + m.files.length + ' 个文件）';
+      m.files.forEach(function(f){
+        var o = document.createElement('option');
+        o.value = f.key;
+        o.textContent = (f.type === 'supplement' ? '↳ 补录 ' : '') + f.name + '（' + f.count + ' 条）';
+        og.appendChild(o);
+      });
+      sel.appendChild(og);
+    });
+    if (cur) sel.value = cur;
+  } catch(e){
+    console.warn('[kaoqing] loadArchiveMonths 失败', e && e.message ? e.message : e);
+  }
+}
+async function showArchive(key){
+  var view = $('#archiveView');
+  if (!key){ view.innerHTML = '<p class="empty">选择归档文件后查看该月记录</p>'; return; }
+  view.innerHTML = '<p class="empty">加载中…</p>';
+  try {
+    var resp = await fetch(ARCHIVE_R2_BASE + key + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!resp.ok) throw new Error('file ' + resp.status);
+    var data = await resp.json();
+    var recs = data.records || [];
+    if (!recs.length){ view.innerHTML = '<p class="empty">该归档文件无记录</p>'; return; }
+    var meta = '<div class="arc-meta">月份 ' + esc(data.month || '') + ' · 共 ' + recs.length + ' 条'
+             + (data.supplement ? ' · <span class="sup">后补归档</span>' : '') + '</div>';
+    var html = meta + '<div class="archive-table-wrap"><table class="archive-table"><thead><tr>'
+      + '<th>#</th><th>人员</th><th>类别</th><th>日期</th><th>时段</th><th>状态</th><th>说明</th>'
+      + '</tr></thead><tbody>';
+    recs.forEach(function(r, i){
+      html += '<tr>'
+        + '<td>' + (i + 1) + '</td>'
+        + '<td>' + (r.people ? r.people.map(esc).join('、') : '') + '</td>'
+        + '<td class="' + (r.catId === 'overtime' ? 'c-green' : 'c-orange') + '">' + esc(r.catName || '') + '</td>'
+        + '<td>' + esc(r.date || '') + '</td>'
+        + '<td>' + esc(r.detail || '') + '</td>'
+        + '<td>' + esc(r.status || '') + '</td>'
+        + '<td>' + (r.note ? esc(r.note) : '—') + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div>';
+    view.innerHTML = html;
+  } catch(e){
+    view.innerHTML = '<p class="empty">读取归档失败：' + esc(e && e.message ? e.message : e) + '</p>';
+  }
 }
 
 /* 头像 / 设置态 */
@@ -1692,6 +1788,9 @@ async function openPeopleConfig(){
   $('#peopleMask').hidden = false;
 }
 $('#peopleConfigBtn').addEventListener('click', openPeopleConfig);
+/* 历史归档（区域五）：前端只读查看，不发起归档 */
+$('#archiveRefresh').addEventListener('click', loadArchiveMonths);
+$('#archiveMonth').addEventListener('change', function(){ showArchive(this.value); });
 $('#peopleSync').addEventListener('click', savePeopleToWaline);
 $('#peopleAddRow').addEventListener('click', addPeopleRow);
 $('#peopleExport').addEventListener('click', exportPeopleXlsx);
@@ -1727,6 +1826,7 @@ document.addEventListener('keydown', function(e){
     await loadHolidays();
     await loadRecordsFromWaline();
   } catch(e){ /* 子函数已各自以弹窗提示错误 */ }
+  loadArchiveMonths();          // 区域五：填充归档月份下拉（读 R2 index.json，失败仅打 warn 不阻断页面）
   if (!_ctErrorActive) cloudToastHide();
   checkLogin();              // 检测本地 Waline 登录态（已登录则解锁设置入口）
   initWalineEarly();         // 初始化 Waline 组件（严格参照 APP.html：挂载 #walineLoginMount，由 onLogin 回写登录态）

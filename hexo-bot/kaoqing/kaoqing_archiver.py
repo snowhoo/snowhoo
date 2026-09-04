@@ -207,25 +207,54 @@ def put_r2(key, obj):
     upload_r2.put_object(R2_CFG, key, data)
 
 
-def build_index():
-    existing = upload_r2.list_objects(R2_CFG, prefix=ARCHIVE_PREFIX)
-    months = {}
-    for key in existing:
+def determine_archive_key(r2_keys, ym):
+    """某月归档目标 key：首次 <ym>.json；已存在则另存 <ym>-NN.json 递增（原主文件不变）。"""
+    primary = ARCHIVE_PREFIX + ym + ".json"
+    if primary not in r2_keys:
+        return primary
+    max_n = 0
+    pref = ARCHIVE_PREFIX + ym + "-"
+    for k in r2_keys:
+        if k.startswith(pref) and k.endswith(".json"):
+            suf = k[len(pref):-len(".json")]
+            if suf.isdigit():
+                max_n = max(max_n, int(suf))
+    return "%s%02d.json" % (pref, max_n + 1)
+
+
+def build_index(r2_keys=None):
+    """重建 index.json：按月份聚合主文件(<ym>.json)与后补文件(<ym>-NN.json)，供前端下拉查看。"""
+    if r2_keys is None:
+        r2_keys = upload_r2.list_objects(R2_CFG, prefix=ARCHIVE_PREFIX)
+    groups = {}  # ym -> [(key, is_primary, seq)]
+    for key in r2_keys:
         if key == ARCHIVE_PREFIX + "index.json":
             continue
         if not key.endswith(".json"):
             continue
-        ym = key[len(ARCHIVE_PREFIX):-len(".json")]
-        if len(ym) == 7 and ym[4] == "-":
-            months[ym] = 0
-    for ym in list(months.keys()):
-        try:
-            with urllib.request.urlopen(R2_PUBLIC + "/" + ARCHIVE_PREFIX + ym + ".json", timeout=20) as r:
-                d = json.loads(r.read().decode("utf-8"))
-            months[ym] = len(d.get("records") or [])
-        except Exception:
-            months[ym] = 0
-    put_r2(ARCHIVE_PREFIX + "index.json", {"months": sorted(months.keys()), "count": months})
+        base = key[len(ARCHIVE_PREFIX):-len(".json")]
+        if len(base) == 7 and base[4] == "-":
+            groups.setdefault(base, []).append((key, True, 0))
+        elif len(base) > 8 and base[4] == "-" and base[7] == "-" and base[8:].isdigit():
+            groups.setdefault(base[:7], []).append((key, False, int(base[8:])))
+    months = []
+    for ym in sorted(groups.keys()):
+        files = []
+        for key, is_primary, seq in sorted(groups[ym], key=lambda x: (not x[1], x[2])):
+            try:
+                with urllib.request.urlopen(R2_PUBLIC + "/" + key, timeout=20) as r:
+                    d = json.loads(r.read().decode("utf-8"))
+                cnt = len((d or {}).get("records") or [])
+            except Exception:
+                cnt = 0
+            files.append({
+                "key": key,
+                "name": key[len(ARCHIVE_PREFIX):],
+                "count": cnt,
+                "type": "primary" if is_primary else "supplement",
+            })
+        months.append({"ym": ym, "files": files})
+    put_r2(ARCHIVE_PREFIX + "index.json", {"updated_at": int(time.time()), "months": months})
     return months
 
 
@@ -257,14 +286,19 @@ def archive_once(dry_run=False):
         print("[DRY-RUN] 未写 R2、未改动 Waline。")
         return total_hist
 
-    # 1) 历史写 R2
+    # 1) 历史写 R2：已存在同月主文件则另存「后补」文件（<ym>-NN.json），原主文件不变
+    r2_keys = upload_r2.list_objects(R2_CFG, prefix=ARCHIVE_PREFIX)
+    written_keys = []
     months = []
     if history_by_month:
         for ym in sorted(history_by_month.keys()):
-            put_r2(ARCHIVE_PREFIX + ym + ".json",
-                   {"month": ym, "count": len(history_by_month[ym]), "records": history_by_month[ym]})
+            key = determine_archive_key(r2_keys, ym)
+            is_sup = key != (ARCHIVE_PREFIX + ym + ".json")
+            put_r2(key, {"month": ym, "count": len(history_by_month[ym]),
+                         "records": history_by_month[ym], "supplement": is_sup})
+            written_keys.append(key)
             months.append(ym)
-            print("[PUT] R2 %s.json (%d 条)" % (ym, len(history_by_month[ym])))
+            print("[PUT] R2 %s (%s, %d 条)" % (key, "后补" if is_sup else "主", len(history_by_month[ym])))
 
     # 2) 清洗当月：先把当前记录作为干净 add 评论重发，全部成功后再删除旧评论
     posts_ok = True
@@ -284,8 +318,8 @@ def archive_once(dry_run=False):
                 print("[WARN] 删除评论 #%d 失败: %s" % (oid, e))
         print("[OK] 清洗当月：重发 %d 条干净评论，删除旧评论 %d 条" % (len(current), removed))
 
-    # 3) 重建 index
-    build_index()
+    # 3) 重建 index（把本次新写的补充文件也纳入）
+    build_index(set(r2_keys) | set(written_keys))
     print("[OK] 归档 %d 条(%s)；当月清洗 %d 条。" % (total_hist, ",".join(months), len(current)))
     return total_hist
 
