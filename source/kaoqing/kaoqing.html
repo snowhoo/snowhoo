@@ -24,7 +24,7 @@ body{
 }
 #app{min-height:100vh;background:var(--bg);color:var(--text);padding-bottom:24px}
 
-/* ============ 顶栏（顶部 40px 留白给 webview 系统栏） ============ */
+/* ============ 顶栏 ============ */
 #topbar{
   position:sticky;top:0;z-index:50;
   display:flex;align-items:center;justify-content:space-between;
@@ -88,6 +88,14 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .modal-actions .btn-ok:hover{filter:brightness(.95)}
 .modal-actions .btn-cancel{background:transparent;border:1px solid var(--border);color:var(--text)}
 .modal-actions .btn-cancel:hover{background:var(--bg)}
+.people-modal{width:min(680px,94vw);padding:18px}
+.people-table-wrap{max-height:52vh;overflow:auto;margin:6px 0;border:1px solid var(--border);border-radius:10px}
+.people-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.people-table th,.people-table td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:5px 8px;text-align:left;white-space:nowrap}
+.people-table th{background:var(--bg-surface);color:var(--text-secondary);font-weight:600;position:sticky;top:0}
+.people-table tr:last-child td{border-bottom:none}
+.people-table td:last-child,.people-table th:last-child{border-right:none}
+.people-table .muted{color:var(--text-muted)}
 #secAction .card-head{background:#e9ecf1}
 .card-head .hint{margin-left:auto;font-size:.78rem;color:var(--text-muted)}
 .card-body{padding:10px}
@@ -245,6 +253,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       </button>
       <div class="settings-menu" id="settingsMenu" hidden>
         <button class="settings-item" id="syncHolidayBtn">从 timor.tech API 获取节假日 写进 Waline</button>
+        <button class="settings-item" id="peopleConfigBtn">人员配置（管理 Waline 中的人员）</button>
       </div>
     </div>
   </header>
@@ -355,14 +364,29 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
    ===================================================================== */
 
 /* ---------- 数据源（TODO: 换成接口 / R2 拉取） ---------- */
-/* 人员：n=姓名，g=所属考勤组别 */
-var PEOPLE = [
-  { n:'马道旭', g:'生产一组' }, { n:'顾桢鸿', g:'生产一组' }, { n:'顾晓维', g:'生产一组' }, { n:'吴丽娟', g:'生产一组' }, { n:'夏莉萍', g:'生产一组' },
-  { n:'徐启双', g:'生产二组' }, { n:'张静', g:'生产二组' }, { n:'尤文娟', g:'生产二组' }, { n:'夏卉', g:'生产二组' },
-  { n:'惠雅', g:'行政组' }, { n:'张永妹', g:'行政组' }, { n:'亢亦宁', g:'行政组' }, { n:'赵婷', g:'行政组' }
+/* 人员数据源（统一以 Waline 为权威，前端不再写死展示用人员）：
+   - SEED_PEOPLE_FULL：内置 13 人种子，用于「写入 Waline」；性别/手机号先留空，后续在 Waline 后台补
+   - PEOPLE_FULL：人员完整档案（含 id/姓名/性别/手机号/一级部门/二级部门/考勤组/权限），来自 Waline 或种子
+   - PEOPLE：前端渲染用精简形态（n=姓名，g=考勤组），由 PEOPLE_FULL 派生 */
+var SEED_PEOPLE_FULL = [
+  { id:'P001', name:'马道旭', gender:'', phone:'', dept1:'生产部', dept2:'生产一组', group:'生产一组', permission:'' },
+  { id:'P002', name:'顾桢鸿', gender:'', phone:'', dept1:'生产部', dept2:'生产一组', group:'生产一组', permission:'' },
+  { id:'P003', name:'顾晓维', gender:'', phone:'', dept1:'生产部', dept2:'生产一组', group:'生产一组', permission:'' },
+  { id:'P004', name:'吴丽娟', gender:'', phone:'', dept1:'生产部', dept2:'生产一组', group:'生产一组', permission:'' },
+  { id:'P005', name:'夏莉萍', gender:'', phone:'', dept1:'生产部', dept2:'生产一组', group:'生产一组', permission:'' },
+  { id:'P006', name:'徐启双', gender:'', phone:'', dept1:'生产部', dept2:'生产二组', group:'生产二组', permission:'' },
+  { id:'P007', name:'张静',   gender:'', phone:'', dept1:'生产部', dept2:'生产二组', group:'生产二组', permission:'' },
+  { id:'P008', name:'尤文娟', gender:'', phone:'', dept1:'生产部', dept2:'生产二组', group:'生产二组', permission:'' },
+  { id:'P009', name:'夏卉',   gender:'', phone:'', dept1:'生产部', dept2:'生产二组', group:'生产二组', permission:'' },
+  { id:'P010', name:'惠雅',   gender:'', phone:'', dept1:'行政部', dept2:'行政组', group:'行政组', permission:'' },
+  { id:'P011', name:'张永妹', gender:'', phone:'', dept1:'行政部', dept2:'行政组', group:'行政组', permission:'' },
+  { id:'P012', name:'亢亦宁', gender:'', phone:'', dept1:'行政部', dept2:'行政组', group:'行政组', permission:'' },
+  { id:'P013', name:'赵婷',   gender:'', phone:'', dept1:'行政部', dept2:'行政组', group:'行政组', permission:'' }
 ];
+var PEOPLE_FULL = SEED_PEOPLE_FULL.slice();
+var PEOPLE = SEED_PEOPLE_FULL.map(function(p){ return { n:p.name, g:p.group }; });
 
-/* 考勤组别：第一项固定为「全部」 */
+/* 考勤组别：第一项固定为「全部」，其余由 PEOPLE_FULL.group 动态派生（见 rebuildGroups） */
 var GROUPS = ['全部', '生产一组', '生产二组', '行政组'];
 
 /* 类别：统一走时间段（≥0.5 小时），小时数自动计算 */
@@ -392,10 +416,12 @@ var PWD_REVIEW  = '1';     // 审核密码：可删除 待审核、待提交
 var PWD_APPROVE = '12';    // 批准密码：可删除 待批准、待审核、待提交
 var PWD_ADMIN   = '123';   // 管理员密码：可删除任意状态（含完成）
 
-/* ---------- Waline 登录 / 节假日写入（按需配置） ---------- */
-var WALINE_SERVER = '';        // ← 填你的 Waline 服务端地址，如 https://waline.example.com
+/* ---------- Waline 读写（参照 APP.html：同一 Waline 服务端、getWalineUser + Bearer token + /api/comment GET/PUT/POST） ---------- */
+var WALINE_SERVER = 'https://waline.snowhoo.net'; // ← 与 APP.html 同一 Waline 服务端（如需更换改这里）
+var CLOUD_BASE    = WALINE_SERVER;                // 兼容 APP.html 的命名
 var WALINE_OAUTH  = 'github'; // 登录方式：github / google / qq / weibo（取决于服务端开启的 OAuth 提供方）
 var HOLIDAY_PATH  = '/kaoqing/holidays'; // 节假日数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
+var PEOPLE_PATH   = '/kaoqing/people';   // 人员数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 // 注：跨域请求需 Waline 服务端 CORS_ALLOW_ORIGIN 允许本页域名（本地 file:// 预览会被浏览器拦截）。
 
 /* ---------- 状态 ---------- */
@@ -956,19 +982,78 @@ $('#records').addEventListener('click', async function(e){
   saveRecords(); renderRecords();
 });
 
-/* ---------- Waline 登录 / 节假日写入 ---------- */
-var walineUser = null;   // 当前登录用户
+/* ---------- Waline 读写（参照 APP.html：getWalineUser + Bearer token + /api/comment 读写 + 8s 超时 + 健壮解析） ---------- */
 
-function walineReq(path, opts){
-  opts = opts || {};
-  return fetch(WALINE_SERVER.replace(/\/$/, '') + path, Object.assign({
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' }
-  }, opts));
+/* 读取登录用户：与 Waline 客户端同套存储键（WALINE_USER / @waline/user / waline_user），兼容 OAuth 重定向后写入 */
+function getWalineUser(){
+  try {
+    var keys = ['WALINE_USER', '@waline/user', 'waline_user'];
+    var user = null;
+    for (var i = 0; i < keys.length; i++){
+      try { var v = localStorage.getItem(keys[i]); if (v){ user = JSON.parse(v); if (user && (user.display_name || user.nick || user.name)) break; } } catch(e){ user = null; }
+    }
+    if (!user){ try { var sv = sessionStorage.getItem('WALINE_USER') || sessionStorage.getItem('@waline/user'); if (sv){ user = JSON.parse(sv); if (!user || !(user.display_name || user.nick || user.name)) user = null; } } catch(e){ user = null; } }
+    if (!user) return null;
+    user.display_name = (user.display_name || user.nick || user.name || '').trim();
+    if (!user.display_name) return null;
+    user.email = user.email || user.mail || '';
+    user.token = user.token || '';
+    return user;
+  } catch(e){ return null; }
+}
+function walineToken(u){
+  var t = (u && u.token) || '';
+  if (!t){ try { var s = JSON.parse(localStorage.getItem('WALINE_USER') || '{}'); if (s.token) t = s.token; } catch(e){} }
+  return t;
+}
+/* 健壮解析：去除 Waline 管理后台可能的 HTML/markdown 污染，定位 JSON 大括号并解析 */
+function robustParse(raw){
+  if (!raw) return null;
+  var s = String(raw).replace(/<[^>]*>/g, '').replace(/[\u201C\u201D]/g, '"').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  var st = s.indexOf('{'), en = s.lastIndexOf('}');
+  if (st >= 0 && en > st) s = s.slice(st, en + 1);
+  try { return JSON.parse(s); } catch(e){ return null; }
+}
+/* 拉取某 path 下最新一条有效记录（带 8s 超时），返回 { oid, obj } 或 null */
+function fetchCloudRecord(path){
+  var u = getWalineUser(); if (!u) return Promise.resolve(null);
+  var p = fetch(CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(path), { credentials: 'include' })
+    .then(function(r){ if (!r.ok) throw 0; return r.json(); })
+    .then(function(resp){
+      var records = (resp.data && resp.data.data) || [];
+      var best = null;
+      for (var i = 0; i < records.length; i++){
+        var rec = records[i];
+        var obj = robustParse(rec.orig || rec.comment || '');
+        if (obj && obj.v === 1){
+          var oid = parseInt(rec.objectId, 10) || 0;
+          if (!best || oid > best.oid) best = { oid: oid, obj: obj };
+        }
+      }
+      return best;
+    });
+  var timer = new Promise(function(res, rej){ setTimeout(function(){ rej('timeout'); }, 8000); });
+  return Promise.race([p, timer]).then(function(b){ return b; }).catch(function(){ return null; });
+}
+/* 写入/更新某 path：有 oid 走 PUT（更新），无 oid 走 POST（创建），返回 oidRef（含新 oid）或 null */
+function pushCloudRecord(path, obj, oidRef){
+  var u = getWalineUser(); if (!u) return Promise.resolve(null);
+  var token = walineToken(u);
+  var payload = JSON.stringify({ comment: JSON.stringify(obj), url: path, nick: u.display_name || '游客', mail: u.email || '' });
+  var headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  var req;
+  if (oidRef && oidRef.oid){
+    req = fetch(CLOUD_BASE + '/api/comment/' + oidRef.oid, { method: 'PUT', headers: headers, body: payload });
+  } else {
+    req = fetch(CLOUD_BASE + '/api/comment', { method: 'POST', headers: headers, body: payload })
+      .then(function(r){ return r.json().then(function(j){ if (r.ok && j.data && j.data.objectId) oidRef.oid = parseInt(j.data.objectId, 10); return r; }); });
+  }
+  return req.then(function(r){ return r.ok ? oidRef : null; }).catch(function(){ return null; });
 }
 
+/* 头像 / 设置态 */
 function applyUser(u){
-  walineUser = u;
   var av = $('#avatarBtn');
   av.classList.add('on');
   if (u.avatar){
@@ -982,7 +1067,11 @@ function applyUser(u){
   sb.classList.remove('disabled');
 }
 function setLoggedOut(){
-  walineUser = null;
+  try { localStorage.removeItem('WALINE_USER'); } catch(e){}
+  try { localStorage.removeItem('@waline/user'); } catch(e){}
+  try { localStorage.removeItem('waline_user'); } catch(e){}
+  try { sessionStorage.removeItem('WALINE_USER'); } catch(e){}
+  try { sessionStorage.removeItem('@waline/user'); } catch(e){}
   var av = $('#avatarBtn');
   av.classList.remove('on');
   av.innerHTML = '<span class="avatar-fallback">登录</span>';
@@ -992,23 +1081,23 @@ function setLoggedOut(){
   sb.classList.add('disabled');
   closeSettings();
 }
-async function checkLogin(){
-  if (!WALINE_SERVER){ setLoggedOut(); return; }
-  try {
-    var r = await walineReq('/api/token');
-    var j = await r.json();
-    if (j && j.data && j.data.objectId) applyUser(j.data);
-    else setLoggedOut();
-  } catch(e){ setLoggedOut(); }
+/* 页面加载：优先用本地存储的登录态；无则尝试用 cookie 校验（OAuth 重定向回来时 cookie 已写入但 storage 未写） */
+function checkLogin(){
+  var u = getWalineUser();
+  if (u){ applyUser(u); loadPeople(); return; }
+  if (!CLOUD_BASE){ setLoggedOut(); return; }
+  fetch(CLOUD_BASE + '/api/token', { credentials: 'include' })
+    .then(function(r){ return r.json(); })
+    .then(function(j){ if (j && j.data && j.data.objectId){ try { localStorage.setItem('WALINE_USER', JSON.stringify(j.data)); } catch(e){} applyUser(j.data); loadPeople(); } else setLoggedOut(); })
+    .catch(function(){ setLoggedOut(); });
 }
 function loginOAuth(){
-  if (!WALINE_SERVER){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
+  if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
   var back = location.href.split('#')[0];
-  location.href = WALINE_SERVER.replace(/\/$/, '') + '/api/oauth?type=' + encodeURIComponent(WALINE_OAUTH) + '&redirect=' + encodeURIComponent(back);
+  location.href = CLOUD_BASE.replace(/\/$/, '') + '/api/oauth?type=' + encodeURIComponent(WALINE_OAUTH) + '&redirect=' + encodeURIComponent(back);
 }
 async function logout(){
-  if (!WALINE_SERVER){ setLoggedOut(); return; }
-  try { await walineReq('/api/token', { method: 'DELETE' }); } catch(e){}
+  if (CLOUD_BASE){ try { await fetch(CLOUD_BASE + '/api/token', { method: 'DELETE', credentials: 'include' }); } catch(e){} }
   setLoggedOut();
   showAlert('已退出登录');
 }
@@ -1024,14 +1113,15 @@ document.addEventListener('click', function(e){
   if (!$('#settingsMenu').hidden && !e.target.closest('#settingsMenu') && !e.target.closest('#setBtn')) closeSettings();
 });
 $('#avatarBtn').addEventListener('click', function(){
-  if (walineUser) logout(); else loginOAuth();
+  if (getWalineUser()) logout(); else loginOAuth();
 });
 
-/* 从 timor.tech 获取当年（可改）节假日，整理后写入 Waline */
+/* 从 timor.tech 获取当年（可改）节假日，整理后写入 Waline（更新优先，避免重复） */
+var holidayOid = { oid: 0 };
 async function syncHolidays(){
   closeSettings();
-  if (!WALINE_SERVER){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
-  if (!walineUser){ showAlert('请先点击右上角头像登录 Waline'); return; }
+  if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
+  if (!getWalineUser()){ showAlert('请先点击右上角头像登录 Waline'); return; }
   var year = new Date().getFullYear();
   var txt = await askText('获取节假日年份', '默认 ' + year + '，可修改');
   if (txt === null) return;
@@ -1053,25 +1143,82 @@ async function syncHolidays(){
     else makeup.push(item);                          // 调休补班（holiday:false）
   });
 
-  var payload = { year: year, fetchedAt: new Date().toISOString(), holidays: holidays, makeup: makeup };
-  try {
-    var pr = await walineReq('/api/comment', {
-      method: 'POST',
-      body: JSON.stringify({
-        url: HOLIDAY_PATH, path: HOLIDAY_PATH,
-        nick: (walineUser.display_name || walineUser.email || 'kaoqing'),
-        comment: 'HOLIDAY_DATA:' + JSON.stringify(payload)
-      })
-    });
-    var pj = await pr.json().catch(function(){ return {}; });
-    if (pj && (pj.errno === 0 || pj.data)) {
-      showAlert('已写入 Waline\n路径：' + HOLIDAY_PATH + '\n' + year + ' 年：国假/休息 ' + holidays.length + ' 天，调休补班 ' + makeup.length + ' 天。\n（重复同步会生成多条，可在 Waline 后台清理旧数据）');
-    } else {
-      showAlert('写入失败：' + (pj && pj.errmsg ? pj.errmsg : '未知错误'));
-    }
-  } catch(e){ showAlert('写入 Waline 失败：' + e.message); }
+  // 若已存在旧记录，取出其 oid 走 PUT 更新而非重复 POST
+  var cur = await fetchCloudRecord(HOLIDAY_PATH);
+  if (cur) holidayOid.oid = cur.oid;
+  var payload = { v: 1, type: 'holiday', year: year, updatedAt: Date.now(), holidays: holidays, makeup: makeup };
+  var res2 = await pushCloudRecord(HOLIDAY_PATH, payload, holidayOid);
+  if (res2){
+    showAlert('已写入 Waline\n路径：' + HOLIDAY_PATH + '\n' + year + ' 年：国假/休息 ' + holidays.length + ' 天，调休补班 ' + makeup.length + ' 天。' + (holidayOid.oid ? '\n（已更新既有记录）' : '\n（已新建记录）'));
+  } else {
+    showAlert('写入 Waline 失败，请检查网络或权限');
+  }
 }
 $('#syncHolidayBtn').addEventListener('click', syncHolidays);
+
+/* ---------- 人员配置：从 Waline 读取替换前端人员；写入 13 人 → Waline ---------- */
+var peopleOid = { oid: 0 };
+function rebuildGroups(){
+  var seen = {}; var gs = [];
+  PEOPLE_FULL.forEach(function(p){ if (p.group && !seen[p.group]){ seen[p.group] = true; gs.push(p.group); } });
+  GROUPS = ['全部'].concat(gs);
+}
+/* 读取 Waline 中的人员，成功则替换前端 PEOPLE；无 Waline / 未登录 / 失败则保留种子 */
+async function loadPeople(){
+  var u = getWalineUser(); if (!u) return;
+  var best = await fetchCloudRecord(PEOPLE_PATH);
+  if (best && best.obj && best.obj.people && best.obj.people.length){
+    peopleOid.oid = best.oid;
+    PEOPLE_FULL = best.obj.people;
+    PEOPLE = PEOPLE_FULL.map(function(p){ return { n:p.name, g:p.group }; });
+    rebuildGroups(); renderGroups(); renderPeople(); applyView();
+  }
+}
+/* 把内置 13 人（含 8 字段）写入 Waline（更新优先），并立即以该数据刷新前端 */
+async function syncPeople(){
+  closeSettings();
+  if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
+  if (!getWalineUser()){ showAlert('请先点击右上角头像登录 Waline'); return; }
+  var cur = await fetchCloudRecord(PEOPLE_PATH);
+  if (cur) peopleOid.oid = cur.oid;
+  var payload = { v: 1, type: 'people', updatedAt: Date.now(), people: SEED_PEOPLE_FULL };
+  var res = await pushCloudRecord(PEOPLE_PATH, payload, peopleOid);
+  if (res){
+    PEOPLE_FULL = SEED_PEOPLE_FULL.slice();
+    PEOPLE = PEOPLE_FULL.map(function(p){ return { n:p.name, g:p.group }; });
+    rebuildGroups(); renderGroups(); renderPeople(); applyView();
+    showAlert('已写入 Waline\n路径：' + PEOPLE_PATH + '\n共 ' + SEED_PEOPLE_FULL.length + ' 人（含 id/姓名/性别/手机号/一级部门/二级部门/考勤组/权限）。\n性别、手机号留空，可在 Waline 后台补充。' + (peopleOid.oid ? '\n（已更新既有记录）' : '\n（已新建记录）'));
+  } else {
+    showAlert('写入 Waline 失败，请检查网络或权限');
+  }
+}
+function renderPeopleTable(list){
+  var cols = ['ID','姓名','性别','手机号','一级部门','二级部门','考勤组','权限'];
+  var html = '<thead><tr>' + cols.map(function(c){ return '<th>' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
+  list.forEach(function(p){
+    html += '<tr>' + [p.id,p.name,p.gender,p.phone,p.dept1,p.dept2,p.group,p.permission]
+      .map(function(v){ return '<td>' + (v === '' || v == null ? '<span class="muted">—</span>' : String(v)) + '</td>'; }).join('') + '</tr>';
+  });
+  html += '</tbody>';
+  $('#peopleTable').innerHTML = html;
+}
+async function openPeopleConfig(){
+  closeSettings();
+  if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
+  if (!getWalineUser()){ showAlert('请先点击右上角头像登录 Waline'); return; }
+  var best = null;
+  try { best = await fetchCloudRecord(PEOPLE_PATH); } catch(e){ best = null; }
+  var list = (best && best.obj && best.obj.people && best.obj.people.length) ? best.obj.people : PEOPLE_FULL;
+  renderPeopleTable(list);
+  $('#peopleMask').hidden = false;
+}
+$('#peopleConfigBtn').addEventListener('click', openPeopleConfig);
+$('#peopleSync').addEventListener('click', syncPeople);
+$('#peopleClose').addEventListener('click', function(){ $('#peopleMask').hidden = true; });
+$('#peopleMask').addEventListener('click', function(e){ if (e.target === $('#peopleMask')) $('#peopleMask').hidden = true; });
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && !$('#peopleMask').hidden) $('#peopleMask').hidden = true;
+});
 
 /* ---------- 初始化 ---------- */
 (function init(){
@@ -1100,6 +1247,20 @@ $('#syncHolidayBtn').addEventListener('click', syncHolidays);
     <div class="modal-actions">
       <button type="button" class="btn-cancel" id="modalCancel">取消</button>
       <button type="button" class="btn-ok" id="modalOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 人员配置弹窗（管理 Waline 中的人员） -->
+<div class="modal-mask" id="peopleMask" hidden>
+  <div class="modal people-modal" role="dialog" aria-modal="true">
+    <div class="modal-title">人员配置（Waline）</div>
+    <div class="modal-msg">管理 Waline 中配置的所有人员。下表为当前 Waline 人员（读取失败则显示本地种子）。
+点击「写入/同步 13 人」会把内置 13 人（含 id/姓名/性别/手机号/一级部门/二级部门/考勤组/权限）写入 Waline。</div>
+    <div class="people-table-wrap"><table class="people-table" id="peopleTable"></table></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" id="peopleClose">关闭</button>
+      <button type="button" class="btn-ok" id="peopleSync">写入/同步 13 人到 Waline</button>
     </div>
   </div>
 </div>
