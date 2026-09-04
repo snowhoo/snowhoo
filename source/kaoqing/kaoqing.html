@@ -70,8 +70,6 @@ body{
 .settings-info h4{margin:0 0 5px;font-size:.82rem;color:var(--accent)}
 .settings-info .hl-count{font-weight:600;color:var(--text)}
 .settings-info .hl-count .num{color:var(--accent)}
-.settings-info .hl-list{margin:6px 0 0;max-height:150px;overflow:auto;font-size:.74rem;color:var(--text-muted);white-space:normal;word-break:break-all}
-.settings-info .hl-list span{display:inline-block;margin:2px 4px 2px 0;padding:1px 6px;background:var(--accent-soft);border-radius:6px;color:var(--accent)}
 .settings-info.warn{color:var(--warn)}
 .settings-info.warn .hl-count{color:var(--warn)}
 
@@ -532,13 +530,14 @@ function toMin(t){ var p = t.split(':'); return parseInt(p[0],10) * 60 + parseIn
 /* 节假日：同样以 Waline（/kaoqing/holidays）为唯一来源，前端不再内置写死的兜底表。
    页面打开时由 loadHolidays() 拉取；读取失败（未配置/异常）时加班类别一律显示「未知」，
    并弹「节假日读取失败」提示，便于一眼看出是不是没读成功。绝不默认算成「平时」以免掩盖问题。 */
-var HOLIDAYS = { year: new Date().getFullYear(), holidays: [], makeup: [] };
+var HOLIDAYS = { year: new Date().getFullYear(), holidays: [], rest: [], makeup: [] };
 var HOLIDAYS_OK = false;   // 节假日是否成功读取；未读取/读取失败→false，calcOtType 返回「未知」以暴露问题
 /* 加班类别：国假（法定假日）/ 双休（正常周末）/ 平时（工作日，含调休补班上班）/ 未知（节假日未读取，不臆测） */
 function calcOtType(date){
   if (!HOLIDAYS_OK) return '未知';          // 节假日未成功读取：显示未知，避免默认「平时」掩盖问题
   if (!date) return '平时';
-  if (HOLIDAYS.holidays.indexOf(date) >= 0) return '国假';
+  if (HOLIDAYS.holidays.indexOf(date) >= 0) return '国假';   // 法定假日（wage=3）
+  if (HOLIDAYS.rest.indexOf(date) >= 0) return '双休';        // 调休放假（wage=2，休息日待遇）
   if (HOLIDAYS.makeup.indexOf(date) >= 0) return '平时';   // 调休补班=工作日
   var w = new Date(date + 'T00:00:00').getDay();
   return (w === 0 || w === 6) ? '双休' : '平时';
@@ -1252,10 +1251,21 @@ async function loadHolidays(){
   try {
     var best = await fetchCloudRecord(HOLIDAY_PATH, 'holiday');
     if (best && best.obj && best.obj.holidays && best.obj.holidays.length){
+      // 按 timor.tech 的 wage 字段把放假区间拆成「法定国假(wage=3)」与「调休放假/休息日(wage=2)」两类；
+      // 调休放假日本质是休息日（双休待遇），不归为「国假」。补班日归 makeup（平时）。
+      var gj = [], rest = [];
+      (best.obj.holidays || []).forEach(function(h){
+        var w = (h && typeof h === 'object') ? h.wage : undefined;
+        var d = (h && typeof h === 'object') ? (h.date || h) : h;
+        if (w === 3) gj.push(d);
+        else if (w === 2) rest.push(d);   // 调休放假 = 休息日 → 双休
+        else gj.push(d);                  // 无 wage 兜底当国假，避免漏判
+      });
       HOLIDAYS = {
         year: best.obj.year || HOLIDAYS.year,
-        holidays: (best.obj.holidays || []).map(function(h){ return h.date || h; }),
-        makeup:   (best.obj.makeup   || []).map(function(m){ return m.date || m; })
+        holidays: gj,
+        rest: rest,
+        makeup: (best.obj.makeup || []).map(function(m){ return (m && typeof m === 'object') ? (m.date || m) : m; })
       };
       HOLIDAYS_OK = true;
       renderHolidayInfo();   // 读取成功：刷新设置菜单里的节假日配置展示
@@ -1567,24 +1577,15 @@ function initWalineEarly(){
   }).catch(function(e){ console.error('[kaoqing] Waline import error:', e); });
 }
 
-/* 在设置菜单展示当前节假日配置：已成功读取则显示年份/天数/日期清单；
+/* 在设置菜单展示当前节假日配置：已成功读取则显示年份/天数统计（不列详细日期）；
    未配置或读取失败则红色提示「未配置 / 读取失败」，便于一眼发现问题（不掩盖）。 */
 function renderHolidayInfo(){
   var box = $('#holidayInfo');
   if (!box) return;
-  if (HOLIDAYS_OK && HOLIDAYS.holidays && (HOLIDAYS.holidays.length || HOLIDAYS.makeup.length)){
-    var hl = HOLIDAYS.holidays || [], mk = HOLIDAYS.makeup || [];
+  if (HOLIDAYS_OK && HOLIDAYS.holidays && (HOLIDAYS.holidays.length || (HOLIDAYS.rest||[]).length || HOLIDAYS.makeup.length)){
+    var hl = HOLIDAYS.holidays || [], rs = HOLIDAYS.rest || [], mk = HOLIDAYS.makeup || [];
     var html = '<h4>当前节假日配置（' + (HOLIDAYS.year || '') + ' 年）</h4>'
-             + '<div class="hl-count">国假/休息 <span class="num">' + hl.length + '</span> 天　调休补班 <span class="num">' + mk.length + '</span> 天</div>';
-    var all = hl.concat(mk);
-    if (all.length){
-      html += '<div class="hl-list">';
-      all.forEach(function(d){
-        var s = (d && typeof d === 'object' && d.date) ? d.date : d;   // 兼容 {date,...} 与 纯字符串
-        if (s) html += '<span>' + s + '</span>';
-      });
-      html += '</div>';
-    }
+             + '<div class="hl-count">国假 <span class="num">' + hl.length + '</span> 天　调休休息 <span class="num">' + rs.length + '</span> 天　补班 <span class="num">' + mk.length + '</span> 天</div>';
     box.innerHTML = html;
     box.classList.remove('warn');
     box.hidden = false;
@@ -1643,22 +1644,26 @@ async function syncHolidays(){
   } catch(e){ showAlert('获取 timor.tech 失败：' + e.message); return; }
   if (!res || res.code !== 0){ showAlert('timor.tech 返回异常，可能该年数据尚未发布'); return; }
 
-  var holidays = [], makeup = [];
+  var holidays = [], rest = [], makeup = [];
   if (res.holiday) Object.keys(res.holiday).forEach(function(k){
     var it = res.holiday[k];
     var item = { date: it.date || (year + '-' + k), name: it.name, wage: it.wage };
-    if (it.holiday === true) holidays.push(item);   // 国假/休息日
-    else makeup.push(item);                          // 调休补班（holiday:false）
+    if (it.holiday === true){
+      if (it.wage === 3) holidays.push(item);   // 法定国假（三倍工资）
+      else rest.push(item);                     // 调休放假（休息日，两倍）→ 按双休
+    } else {
+      makeup.push(item);                        // 补班（holiday:false）
+    }
   });
 
-  var payload = { v: 1, type: 'holiday', year: year, updatedAt: Date.now(), holidays: holidays, makeup: makeup };
+  var payload = { v: 1, type: 'holiday', year: year, updatedAt: Date.now(), holidays: holidays, rest: rest, makeup: makeup };
   cloudToast('write','处理中...');
   try {
     var ok = await anonPostCloud(HOLIDAY_PATH, payload);
     if (ok){
       await loadHolidays();   // 写库成功后以库为准刷新本地 HOLIDAYS（不提前缓存）
       if (!_ctErrorActive) cloudToastHide();
-      showAlert('已写入 Waline\n路径：' + HOLIDAY_PATH + '\n' + year + ' 年：国假/休息 ' + holidays.length + ' 天，调休补班 ' + makeup.length + ' 天。');
+      showAlert('已写入 Waline\n路径：' + HOLIDAY_PATH + '\n' + year + ' 年：国假 ' + holidays.length + ' 天，调休休息 ' + rest.length + ' 天，补班 ' + makeup.length + ' 天。');
     } else {
       cloudToastError('数据写入失败!');
       showAlert('写入 Waline 失败，请检查网络或权限');
