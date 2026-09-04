@@ -814,12 +814,28 @@ function udQueryPath() {
   return origin + '/app_n/books.html';
 }
 // 阅读记录只保留最近 limit 条（按 ts 倒序）
-function topHistory(limit) {
-  const arr = Object.keys(HIST).map(function (k) { return HIST[k]; });
+function topHistoryOf(map, limit) {
+  const arr = Object.keys(map || {}).map(function (k) { return map[k]; });
   arr.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
   const out = {};
   arr.slice(0, limit).forEach(function (e) { out[e.id] = e; });
   return out;
+}
+function topHistory(limit) { return topHistoryOf(HIST, limit); }
+// 两份历史合并去重：同一本保留时间较新的一条（缺字段互相补全），再只留最近 limit 条
+function mergeHistory(local, cloud) {
+  const out = {};
+  Object.keys(local || {}).forEach(function (k) { out[k] = local[k]; });
+  Object.keys(cloud || {}).forEach(function (k) {
+    const l = out[k], c = cloud[k];
+    if (!l) { out[k] = c; return; }
+    out[k] = ((c.ts || 0) > (l.ts || 0)) ? Object.assign({}, l, c) : Object.assign({}, c, l);
+  });
+  return topHistoryOf(out, HIST_LIMIT);
+}
+// 历史指纹：用于判断合并后是否真的有变化（避免每次登录都整页重渲染）
+function histSig(m) {
+  return Object.keys(m || {}).sort().map(function (k) { return k + ':' + (m[k].ts || 0) + ':' + (m[k].idx || 0); }).join('|');
 }
 
 function loadUserData() {
@@ -980,36 +996,38 @@ function persistUserData() {
   clearTimeout(_udPushT);
   _udPushT = setTimeout(cloudPush, 1500);   // 节流上云，避免频繁写评论
 }
-async function syncUserData() {   // 云端更新则以云端为准，本地更新则回推
+async function syncUserData() {   // 登录/启动时：历史两边合并去重；收藏与阅读环境"新者胜"
   const obj = await cloudPull();
-  if (!obj) return;
+  if (!obj) { await cloudPush(); return; }   // 云端还没有记录 → 把本地写上去
   let changed = false;
-  if ((obj.ts || 0) > localUserTs()) {
-    HIST = obj.history || {}; FAV = obj.fav || [];
-    HIST = topHistory(HIST_LIMIT);      // 云端历史可能有旧数据，拉回后同样只留最近 10 条
+  if ((obj.ts || 0) > localUserTs()) {       // 收藏 / 阅读环境：新者胜
+    FAV = obj.fav || [];
     if (obj.readEnv) Object.assign(readEnv, RE_DEFAULT, obj.readEnv);
-    saveUserData();
     try { localStorage.setItem(RE_KEY, JSON.stringify(readEnv)); } catch (e) {}
     applyReadEnv();
     changed = true;
   }
-  else await cloudPush();
+  // 历史：本地缓存 + 云端 合并去重 → 只留最近 HIST_LIMIT 条 → 同时写缓存与 Waline
+  const merged = mergeHistory(HIST, obj.history || {});
+  if (histSig(merged) !== histSig(HIST)) changed = true;
+  HIST = merged;
+  saveUserData();
+  await cloudPush();                         // 合并结果回写云端（原地更新，不新增评论）
   if (currentBook) syncBookFavBtn(currentBook);
   if (!changed) return;
-  // 云端数据有更新：阅读页只刷新收藏键，书架则整页重渲染
+  // 有更新：阅读页只刷新收藏键，书架则整页重渲染
   const readerOn = $('#reader') && $('#reader').classList.contains('active');
   if (!readerOn) { if (specialView) renderSpecialView(); else renderShelf(); }
 }
 function touchHistory(b, idx) {
   if (!b || !b.id) return;
-  if (!walineUser()) return;        // 未登录不记录阅读历史
   const e = HIST[b.id] || { id: b.id, idx: -1, ts: 0 };
   e.title = b.title; e.author = b.author; e.category = b.category; e.chapter_count = b.chapter_count;
   if (typeof idx === 'number' && idx >= 0) e.idx = idx;
   e.ts = Date.now();
   HIST[b.id] = e;
-  HIST = topHistory(HIST_LIMIT);    // 只保留最近 HIST_LIMIT 条
-  persistUserData();
+  HIST = topHistory(HIST_LIMIT);    // 缓存也只保留最近 HIST_LIMIT 条
+  persistUserData();                // 未登录只写缓存；已登录额外同步 Waline
 }
 function isFav(id) { return FAV.some(f => String(f.id) === String(id)); }
 function toggleFav(b) {
