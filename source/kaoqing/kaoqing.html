@@ -1040,43 +1040,22 @@ $('#records').addEventListener('click', async function(e){
 
 /* ---------- Waline 读写（匿名模式：数据读写均匿名、无需登录；登录仅用于管控「设置」入口。读取=公开 GET + 8s 超时 + 健壮解析） ---------- */
 
-/* 读取登录用户：与 Waline 客户端同套存储键（WALINE_USER / @waline/user / waline_user），兼容 OAuth 重定向后写入 */
-/* Waline 登录组件：用官方库驱动登录态，避免手写 OAuth 导致回调后登录态无法回写 localStorage */
-var walineInstance = null;
-function initWaline(){
-  if (!CLOUD_BASE) return;
-  import('./lib/waline.js').then(function(mod){
-    try {
-      walineInstance = mod.init({
-        el: '#walineLoginMount',
-        serverURL: WALINE_SERVER,
-        lang: 'zh-CN',
-        login: 'enable',
-        onLogin: onWalineLogin,
-        onLogout: onWalineLogout
-      });
-    } catch(e){ console.warn('[Waline] init 失败', e); }
-  }).catch(function(e){ console.warn('[Waline] 库加载失败（请通过 http 访问本页，file:// 下 ES module 受限）', e); });
-}
+/* 登录仅用于管控「设置」入口；数据读写均匿名（见 fetchCloudRecord / pushCloudRecord）。
+   登录态存储键与 Waline 客户端一致（WALINE_USER），由下方弹窗登录回传的 userInfo 写入。 */
+/* 读取登录用户：从 WALINE_USER / @waline/user / waline_user 读取，兼容 Waline 登录后写入 */
 function onWalineLogin(user){
   try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e){}
   applyUser(user);
   loadPeople(); loadHolidays(); loadRecordsFromWaline();
 }
-function onWalineLogout(){
-  try { localStorage.removeItem('WALINE_USER'); } catch(e){}
-  try { localStorage.removeItem('@waline/user'); } catch(e){}
-  try { localStorage.removeItem('waline_user'); } catch(e){}
-  try { sessionStorage.removeItem('WALINE_USER'); } catch(e){}
-  try { sessionStorage.removeItem('@waline/user'); } catch(e){}
-  setLoggedOut();
-}
-/* 触发登录：优先用库的 login()（若有），否则走定制登录页跳转（与库内部一致：/ui/login?lng=&redirect=） */
+/* 触发登录：自托管弹窗打开 waline 登录页；登录成功后该页向 opener 回传 {type:'userInfo'}
+   由 window message 监听接收（写 WALINE_USER + 解锁设置）。不依赖定制库实例（其 init 不暴露 login 方法）。 */
 function doLogin(){
-  if (walineInstance && typeof walineInstance.login === 'function'){ walineInstance.login(); return; }
   if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
   var back = location.href.split('#')[0];
-  location.href = CLOUD_BASE.replace(/\/$/, '') + '/ui/login?lng=zh-CN&redirect=' + encodeURIComponent(back);
+  var url = CLOUD_BASE.replace(/\/$/, '') + '/ui/login?lng=zh-CN&redirect=' + encodeURIComponent(back);
+  try { window.open(url, '_blank', 'width=1024,height=600,scrollbars=no,resizable=no'); }
+  catch(e){ location.href = url; }
 }
 
 function getWalineUser(){
@@ -1110,7 +1089,7 @@ function robustParse(raw){
 }
 /* 拉取某 path 下最新一条有效记录（带 8s 超时），返回 { oid, obj } 或 null */
 function fetchCloudRecord(path){
-  var p = fetch(CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(path), { credentials: 'include' })
+  var p = fetch(CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(path))
     .then(function(r){ if (!r.ok) throw 0; return r.json(); })
     .then(function(resp){
       var records = (resp.data && resp.data.data) || [];
@@ -1136,7 +1115,7 @@ var ANON_MAIL = 'noreply@waline.snowhoo.net';
 function pushCloudRecord(path, obj, oidRef){
   if (!CLOUD_BASE) return Promise.resolve(null);
   var payload = JSON.stringify({ comment: JSON.stringify(obj), url: path, nick: ANON_NICK, mail: ANON_MAIL, link: '', ua: navigator.userAgent });
-  return fetch(CLOUD_BASE + '/api/comment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, credentials: 'include' })
+  return fetch(CLOUD_BASE + '/api/comment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload })
     .then(function(r){ return r.json().then(function(j){ if (r.ok && j && j.data && j.data.objectId && oidRef) oidRef.oid = parseInt(j.data.objectId, 10); return r; }); })
     .then(function(r){ return r.ok ? (oidRef || {}) : null; })
     .catch(function(){ return null; });
@@ -1203,37 +1182,31 @@ function setLoggedOut(){
   sb.classList.add('disabled');
   closeSettings();
 }
-/* 页面加载：优先用本地存储的登录态（再次访问已登录用户直接生效）；无则尝试用 cookie 校验（/api/token） */
+/* 页面加载：仅依据本地登录态判断（Waline 无 /api/token 接口，原检测逻辑无效，已移除） */
 function checkLogin(){
   var u = getWalineUser();
-  if (u){ applyUser(u); return; }
-  if (!CLOUD_BASE){ setLoggedOut(); return; }
-  fetch(CLOUD_BASE + '/api/token', { credentials: 'include' })
-    .then(function(r){ return r.json(); })
-    .then(function(j){ if (j && j.data && j.data.objectId){ try { localStorage.setItem('WALINE_USER', JSON.stringify(j.data)); } catch(e){} applyUser(j.data); } else setLoggedOut(); })
-    .catch(function(){ setLoggedOut(); });
+  if (u){ applyUser(u); } else { setLoggedOut(); }
 }
 function loginOAuth(){
   doLogin();
 }
 async function logout(){
-  if (CLOUD_BASE){ try { await fetch(CLOUD_BASE + '/api/token', { method: 'DELETE', credentials: 'include' }); } catch(e){} }
   setLoggedOut();
   showAlert('已退出登录');
 }
 
-/* 登录态感知：本库（v3.15.2）不回调 onLogin，登录态只写 localStorage.WALINE_USER。
-   弹窗登录在同域 popup 通过 postMessage({type:'userInfo'}) 回传主页面 → 直接刷新 UI；
-   另加 focus / visibilitychange / storage 监听作为兜底，确保登录后主页面立即反映已登录。 */
+/* 登录态感知：弹窗登录成功后，waline 登录页向 opener 回传 {type:'userInfo', data:user}；
+   收到后写 WALINE_USER 并解锁设置。focus / visibilitychange / storage 作为兜底。 */
 function refreshLoginState(){
   var u = getWalineUser();
   if (u) applyUser(u); else setLoggedOut();
 }
+function walineOrigin(){ try { return new URL(CLOUD_BASE).origin; } catch(_){ return ''; } }
 window.addEventListener('message', function(e){
+  if (e.origin && walineOrigin() && e.origin !== walineOrigin()) return; // 仅接受 Waline 服务端回传
   var d = e.data;
   if (d && typeof d === 'object' && d.type === 'userInfo' && d.data && (d.data.display_name || d.data.nick || d.data.name)){
-    try { localStorage.setItem('WALINE_USER', JSON.stringify(d.data)); } catch(_){}
-    applyUser(d.data);
+    onWalineLogin(d.data);
   }
 });
 window.addEventListener('storage', function(e){
@@ -1378,8 +1351,7 @@ document.addEventListener('keydown', function(e){
   loadPeople();
   loadHolidays();
   loadRecordsFromWaline();
-  initWaline();             // 初始化 Waline 登录组件（驱动 onLogin 回写登录态）
-  checkLogin();              // 检测 Waline 登录态（登录后进一步用云端对齐 + 激活设置）
+  checkLogin();              // 检测本地 Waline 登录态（已登录则解锁设置入口）
 })();
 </script>
 
