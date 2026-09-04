@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>考勤登记</title>
+<style>
+/* ============ 主题变量（与 app 家族一致，改 --accent 即可换主色） ============ */
+:root{
+  --accent:#4f46e5;
+  --accent-soft:rgba(79,70,229,.12);
+  --bg:#f4f5f9;
+  --bg-surface:#fff;
+  --text:#1f2233;
+  --text-secondary:#4b5162;
+  --text-muted:#8b90a0;
+  --border:rgba(0,0,0,.09);
+  --shadow:0 2px 10px rgba(0,0,0,.06);
+  --warn:#ef4444;
+}
+#app[data-theme="dark"]{
+  --bg:#14161c;
+  --bg-surface:#1d2027;
+  --text:#e8eaf0;
+  --text-secondary:#b3b8c6;
+  --text-muted:#7d8494;
+  --border:rgba(255,255,255,.1);
+  --shadow:0 2px 10px rgba(0,0,0,.35);
+  --warn:#f87171;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif;
+  background:var(--bg);color:var(--text);
+}
+#app{min-height:100vh;background:var(--bg);color:var(--text);padding-bottom:24px}
+
+/* ============ 顶栏（顶部 40px 留白给 webview 系统栏） ============ */
+#topbar{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:40px 16px 12px;
+  background:var(--bg-surface);border-bottom:1px solid var(--border);
+}
+#topbar h1{margin:0;font-size:1.05rem;font-weight:600;letter-spacing:.5px}
+#themeBtn{
+  border:1px solid var(--border);background:transparent;color:var(--text-secondary);
+  width:34px;height:34px;border-radius:50%;font-size:1rem;cursor:pointer;
+}
+
+/* ============ 区域卡片 ============ */
+.wrap{max-width:760px;margin:0 auto;padding:14px 12px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.card-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.card-head .idx{
+  width:22px;height:22px;flex:0 0 22px;border-radius:50%;
+  background:var(--accent);color:#fff;font-size:.75rem;font-weight:600;
+  display:flex;align-items:center;justify-content:center;
+}
+.card-head h2{margin:0;font-size:.95rem;font-weight:600}
+.card-head .hint{margin-left:auto;font-size:.78rem;color:var(--text-muted)}
+.card-body{padding:14px}
+
+/* ---- 区域一：人员（考勤组别 + 大号姓名卡） ---- */
+.group-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.group-row label{font-size:.8rem;color:var(--text-secondary);flex:0 0 auto}
+.group-row select{
+  padding:8px 10px;border-radius:10px;font-size:.85rem;
+  border:1px solid var(--border);background:var(--bg-surface);color:var(--text);outline:none;
+  font-family:inherit;min-width:120px;
+}
+.group-row select:focus{border-color:var(--accent)}
+.group-row .count{margin-left:auto;font-size:.8rem;color:var(--text-muted)}
+
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{
+  min-width:88px;padding:14px 16px;border-radius:12px;cursor:pointer;
+  border:1.5px solid var(--border);background:transparent;color:var(--text-secondary);
+  font-size:1rem;font-weight:500;text-align:center;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.row-actions{display:flex;gap:16px;margin-top:14px}
+.link{border:none;background:transparent;color:var(--accent);font-size:.82rem;cursor:pointer;padding:0}
+.people-empty{color:var(--text-muted);font-size:.82rem;margin:0}
+
+/* ---- 区域二：类别 ---- */
+.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cat{
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  padding:12px 4px;border-radius:12px;cursor:pointer;
+  border:1.5px solid var(--border);background:transparent;color:var(--text-secondary);
+  transition:border-color .15s,background .15s;
+}
+.cat .cat-ico{
+  width:34px;height:34px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;font-weight:600;color:#fff;background:var(--c,var(--text-muted));
+}
+.cat .cat-name{font-size:.85rem}
+.cat.on{border-color:var(--c,var(--accent));background:var(--accent-soft);color:var(--text)}
+.cat.disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+.cat.disabled .cat-name::after{content:"（未开放）";font-size:.68rem}
+@media(max-width:520px){.cat-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* ---- 区域三：内容 ---- */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:6px}
+.field input,.field textarea,.field select{
+  width:100%;padding:9px 12px;border-radius:10px;font-size:.88rem;
+  border:1px solid var(--border);background:transparent;color:var(--text);outline:none;
+  font-family:inherit;
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
+.field textarea{min-height:76px;resize:vertical}
+.time-row{display:flex;align-items:center;gap:8px}
+.time-row input{flex:1;min-width:0}
+.time-row .sep{color:var(--text-muted);font-size:.85rem;flex:0 0 auto}
+#fHours{background:var(--accent-soft);font-weight:600;color:var(--accent);cursor:default}
+#fHours.bad{background:transparent;color:var(--warn);font-weight:500}
+.tip{font-size:.78rem;color:var(--text-muted);margin:0}
+
+/* ---- 区域四：操作与记录 ---- */
+.summary{
+  font-size:.85rem;color:var(--text-secondary);line-height:1.7;
+  background:var(--accent-soft);border-radius:10px;padding:10px 12px;margin-bottom:12px;
+}
+.summary b{color:var(--accent)}
+#submitBtn{
+  width:100%;padding:12px;border:none;border-radius:12px;cursor:pointer;
+  background:var(--accent);color:#fff;font-size:.95rem;font-weight:600;
+}
+#submitBtn:disabled{opacity:.45;cursor:not-allowed}
+.records{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.rec{display:flex;align-items:center;gap:10px;font-size:.83rem;padding:9px 12px;border:1px solid var(--border);border-radius:10px}
+.rec .rec-dot{width:8px;height:8px;border-radius:50%;background:var(--c,var(--accent));flex:0 0 8px}
+.rec .rec-main{flex:1;min-width:0}
+.rec .rec-who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec .rec-sub{font-size:.75rem;color:var(--text-muted);margin-top:2px}
+.rec .rec-del{border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:.9rem}
+.empty{color:var(--text-muted);font-size:.82rem;text-align:center;margin:6px 0}
+</style>
+</head>
+<body>
+<div id="app" data-theme="light">
+
+  <header id="topbar">
+    <h1>考勤登记</h1>
+    <button id="themeBtn" title="切换主题">🌙</button>
+  </header>
+
+  <div class="wrap">
+
+    <!-- ============ 区域一：选择人员 ============ -->
+    <section class="card" id="secPeople">
+      <div class="card-head">
+        <span class="idx">1</span>
+        <h2>选择人员</h2>
+      </div>
+      <div class="card-body">
+        <div class="group-row">
+          <label for="groupSel">考勤组别</label>
+          <select id="groupSel"></select>
+          <span class="count" id="peopleCount">已选 0 人</span>
+        </div>
+        <div class="chips" id="peopleList"></div>
+        <div class="row-actions">
+          <button class="link" id="selAll">全选</button>
+          <button class="link" id="selNone">清空</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 区域二：选择类别 ============ -->
+    <section class="card" id="secCat">
+      <div class="card-head">
+        <span class="idx">2</span>
+        <h2>选择类别</h2>
+        <span class="hint" id="catHint">未选类别</span>
+      </div>
+      <div class="card-body">
+        <div class="cat-grid" id="catGrid"></div>
+      </div>
+    </section>
+
+    <!-- ============ 区域三：考勤内容 ============ -->
+    <section class="card" id="secContent">
+      <div class="card-head">
+        <span class="idx">3</span>
+        <h2>考勤内容</h2>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label for="fDate">日期</label>
+          <input type="date" id="fDate">
+        </div>
+
+        <!-- 加班 / 请假：时间段 + 小时数自动计算 -->
+        <div id="rangeBlock" hidden>
+          <div class="field">
+            <label>时间段（至少 0.5 小时）</label>
+            <div class="time-row">
+              <input type="time" id="fStart" step="1800">
+              <span class="sep">至</span>
+              <input type="time" id="fEnd" step="1800">
+            </div>
+          </div>
+          <div class="field">
+            <label>小时数（自动计算）</label>
+            <input type="text" id="fHours" readonly placeholder="请先选择时间段">
+          </div>
+        </div>
+
+        <!-- 迟到 / 早退：数量（暂未开放） -->
+        <div id="amountBlock" hidden>
+          <div class="field">
+            <label for="fAmount" id="fAmountLabel">数量</label>
+            <input type="number" id="fAmount" min="0" step="0.5">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="fNote">说明</label>
+          <textarea id="fNote" placeholder="备注事由…"></textarea>
+        </div>
+        <p class="tip" id="catTip">请先选择类别。</p>
+      </div>
+    </section>
+
+    <!-- ============ 区域四：提交与记录 ============ -->
+    <section class="card" id="secAction">
+      <div class="card-head">
+        <span class="idx">4</span>
+        <h2>提交与记录</h2>
+      </div>
+      <div class="card-body">
+        <div class="summary" id="summary">尚未选择人员与类别</div>
+        <button id="submitBtn" disabled>提交</button>
+        <div class="records" id="records">
+          <p class="empty">暂无记录</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   考勤登记 —— 框架版（二稿）
+   四区域：1 选择人员  2 选择类别  3 考勤内容  4 提交与记录
+   - PEOPLE / GROUPS / CATS 为占位数据源，接后端时替换即可。
+   - 加班/请假 = 选择时间段（≥0.5 小时），小时数自动计算；迟到/早退暂禁用。
+   - 记录暂存在 localStorage，submit() 内留 TODO 未接后端。
+   ===================================================================== */
+
+/* ---------- 数据源（TODO: 换成接口 / R2 拉取） ---------- */
+/* 人员：n=姓名，g=所属考勤组别 */
+var PEOPLE = [
+  { n:'张三', g:'生产一组' }, { n:'李四', g:'生产一组' }, { n:'王五', g:'生产一组' },
+  { n:'赵六', g:'生产二组' }, { n:'钱七', g:'生产二组' }, { n:'孙八', g:'生产二组' },
+  { n:'周九', g:'行政组'   }, { n:'吴十', g:'行政组'   }
+];
+
+/* 考勤组别：第一项固定为「全部」 */
+var GROUPS = ['全部', '生产一组', '生产二组', '行政组'];
+
+/* 类别：mode=range 走时间段；mode=amount 走数量；disabled 暂不开放 */
+var CATS = [
+  { id:'overtime', name:'加班', char:'加', color:'#f59e0b', mode:'range',  tip:'选择加班时间段，至少 0.5 小时，小时数自动计算' },
+  { id:'leave',    name:'请假', char:'假', color:'#3b82f6', mode:'range',  tip:'选择请假时间段，至少 0.5 小时；天数按 8 小时/天折算' },
+  { id:'late',     name:'迟到', char:'迟', color:'#ef4444', mode:'amount', unit:'分钟', tip:'迟到功能开发中，暂不开放', disabled:true },
+  { id:'early',    name:'早退', char:'退', color:'#8b5cf6', mode:'amount', unit:'分钟', tip:'早退功能开发中，暂不开放', disabled:true }
+];
+
+var HOURS_PER_DAY = 8;      // 请假折算：8 小时 = 1 天
+var MIN_MINUTES   = 30;     // 时间段最少 0.5 小时
+
+/* ---------- 状态 ---------- */
+var STORE_KEY = 'kaoqing_records';
+var THEME_KEY = 'kaoqing_theme';
+var selPeople = new Set();
+var curGroup  = GROUPS[0];
+var curCat    = null;
+var records   = [];
+
+function $(s){ return document.querySelector(s); }
+function todayStr(){
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function toMin(t){ var p = t.split(':'); return parseInt(p[0],10) * 60 + parseInt(p[1],10); }
+
+/* ---------- 区域一：组别 + 人员 ---------- */
+function renderGroups(){
+  var sel = $('#groupSel');
+  sel.innerHTML = '';
+  GROUPS.forEach(function(g){
+    var o = document.createElement('option');
+    o.value = g; o.textContent = g;
+    sel.appendChild(o);
+  });
+  sel.value = curGroup;
+}
+
+function peopleOfGroup(){
+  if (curGroup === GROUPS[0]) return PEOPLE.slice();       // 全部
+  return PEOPLE.filter(function(p){ return p.g === curGroup; });
+}
+
+function renderPeople(){
+  var box = $('#peopleList');
+  var list = peopleOfGroup();
+  box.innerHTML = '';
+  if (!list.length){
+    box.innerHTML = '<p class="people-empty">该组别暂无人员</p>';
+    return;
+  }
+  list.forEach(function(p){
+    var b = document.createElement('button');
+    b.className = 'chip' + (selPeople.has(p.n) ? ' on' : '');
+    b.textContent = p.n;
+    b.addEventListener('click', function(){
+      if (selPeople.has(p.n)) selPeople.delete(p.n); else selPeople.add(p.n);
+      renderPeople();
+      refresh();
+    });
+    box.appendChild(b);
+  });
+}
+
+/* ---------- 区域二：类别 ---------- */
+function renderCats(){
+  var box = $('#catGrid');
+  box.innerHTML = '';
+  CATS.forEach(function(c){
+    var b = document.createElement('button');
+    b.className = 'cat' + (curCat && curCat.id === c.id ? ' on' : '') + (c.disabled ? ' disabled' : '');
+    b.style.setProperty('--c', c.color);
+    b.dataset.cat = c.id;
+    b.innerHTML = '<span class="cat-ico">' + c.char + '</span><span class="cat-name">' + c.name + '</span>';
+    if (!c.disabled){
+      b.addEventListener('click', function(){
+        curCat = (curCat && curCat.id === c.id) ? null : c;   // 再点一次取消
+        applyCat();
+      });
+    }
+    box.appendChild(b);
+  });
+}
+
+/* ---------- 区域三：按类别切换表单 ---------- */
+function applyCat(){
+  renderCats();
+
+  var isRange = curCat && curCat.mode === 'range';
+  $('#rangeBlock').hidden  = !isRange;                    // 加班/请假：时间段
+  $('#amountBlock').hidden = !(curCat && !isRange);       // 迟到/早退：数量（且未选类别时两块都不显示）
+
+  if (curCat){
+    $('#catHint').textContent = curCat.name;
+    $('#catTip').textContent  = curCat.tip;
+    if (!isRange){
+      $('#fAmountLabel').textContent = '数量（' + (curCat.unit || '') + '）';
+      $('#fAmount').placeholder = '请输入' + (curCat.unit || '数量');
+    }
+  } else {
+    $('#catHint').textContent = '未选类别';
+    $('#catTip').textContent  = '请先选择类别。';
+  }
+  updateRange();
+}
+
+/* 时间段 -> 分钟差（跨天自动 +24h） */
+function rangeMinutes(){
+  var s = $('#fStart').value, e = $('#fEnd').value;
+  if (!s || !e) return null;
+  var d = toMin(e) - toMin(s);
+  if (d <= 0) d += 24 * 60;          // 结束早于开始 = 跨天
+  return d;
+}
+
+/* 小时数自动计算 + 最少半小时校验 */
+function updateRange(){
+  var hoursEl = $('#fHours');
+  if (!curCat || curCat.mode !== 'range'){ refresh(); return; }
+
+  var m = rangeMinutes();
+  if (m === null){
+    hoursEl.value = '';
+    hoursEl.classList.remove('bad');
+    hoursEl.placeholder = '请先选择时间段';
+  } else if (m < MIN_MINUTES){
+    hoursEl.value = '时间段不足 0.5 小时';
+    hoursEl.classList.add('bad');
+  } else {
+    var h = m / 60;
+    hoursEl.classList.remove('bad');
+    hoursEl.value = (Math.round(h * 100) / 100) + ' 小时'
+      + (curCat.id === 'leave' ? '（≈ ' + (Math.round((h / HOURS_PER_DAY) * 100) / 100) + ' 天）' : '');
+  }
+  refresh();
+}
+
+function currentAmountText(){
+  if (!curCat) return '';
+  if (curCat.mode === 'range'){
+    var s = $('#fStart').value, e = $('#fEnd').value;
+    if (!s || !e) return '（未选时间段）';
+    var h = Math.round((rangeMinutes() / 60) * 100) / 100;
+    return s + ' - ' + e + '　共 ' + h + ' 小时';
+  }
+  var v = $('#fAmount').value;
+  return v === '' ? '（未填）' : v + ' ' + (curCat.unit || '');
+}
+
+function rangeOK(){
+  if (!curCat) return false;
+  if (curCat.mode !== 'range') return $('#fAmount').value !== '';
+  var m = rangeMinutes();
+  return m !== null && m >= MIN_MINUTES;
+}
+
+/* ---------- 区域四：汇总 / 记录 ---------- */
+function refresh(){
+  $('#peopleCount').textContent = '已选 ' + selPeople.size + ' 人';
+
+  var ok = selPeople.size > 0 && rangeOK();
+  $('#submitBtn').disabled = !ok;
+
+  if (!selPeople.size || !curCat){
+    $('#summary').textContent = '尚未选择人员与类别';
+    return;
+  }
+  $('#summary').innerHTML =
+    '<b>' + curCat.name + '</b>　' + $('#fDate').value + '<br>' +
+    '人员：' + Array.from(selPeople).join('、') + '<br>' +
+    (curCat.mode === 'range' ? '时段：' : '数量：') + currentAmountText();
+}
+
+function renderRecords(){
+  var box = $('#records');
+  box.innerHTML = '';
+  if (!records.length){
+    box.innerHTML = '<p class="empty">暂无记录</p>';
+    return;
+  }
+  records.forEach(function(r, i){
+    var d = document.createElement('div');
+    d.className = 'rec';
+    d.style.setProperty('--c', r.color);
+    d.innerHTML =
+      '<span class="rec-dot"></span>' +
+      '<div class="rec-main">' +
+        '<div class="rec-who">' + r.people.join('、') + '</div>' +
+        '<div class="rec-sub">' + r.date + '　' + r.catName + '　' + r.detail + (r.note ? '　' + r.note : '') + '</div>' +
+      '</div>' +
+      '<button class="rec-del" data-i="' + i + '" title="删除">✕</button>';
+    box.appendChild(d);
+  });
+}
+
+function saveRecords(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(records)); } catch(e){} }
+function loadRecords(){
+  try { var raw = localStorage.getItem(STORE_KEY); if (raw) records = JSON.parse(raw) || []; } catch(e){ records = []; }
+}
+
+function submit(){
+  if (!selPeople.size || !curCat || !rangeOK()) return;
+
+  var rec = {
+    date:    $('#fDate').value || todayStr(),
+    catId:   curCat.id,
+    catName: curCat.name,
+    color:   curCat.color,
+    mode:    curCat.mode,
+    people:  Array.from(selPeople),
+    detail:  currentAmountText(),
+    hours:   curCat.mode === 'range' ? Math.round((rangeMinutes() / 60) * 100) / 100 : null,
+    note:    $('#fNote').value.trim(),
+    ts:      Date.now()
+  };
+
+  /* TODO: 接后端时在这里 POST / 写 Waline / 写 R2，成功后再加入列表 */
+  records.unshift(rec);
+  saveRecords();
+  renderRecords();
+
+  // 提交后只清内容区，保留人员与类别，便于连续录入
+  $('#fStart').value = ''; $('#fEnd').value = ''; $('#fHours').value = '';
+  $('#fAmount').value = ''; $('#fNote').value = '';
+  updateRange();
+}
+
+/* ---------- 主题 ---------- */
+function setTheme(t){
+  $('#app').setAttribute('data-theme', t);
+  $('#themeBtn').textContent = t === 'dark' ? '☀️' : '🌙';
+  try { localStorage.setItem(THEME_KEY, t); } catch(e){}
+}
+
+/* ---------- 事件 ---------- */
+$('#groupSel').addEventListener('change', function(){
+  curGroup = this.value;
+  renderPeople();                 // 已选人员跨组别保留
+});
+$('#selAll').addEventListener('click', function(){
+  peopleOfGroup().forEach(function(p){ selPeople.add(p.n); });
+  renderPeople(); refresh();
+});
+$('#selNone').addEventListener('click', function(){
+  peopleOfGroup().forEach(function(p){ selPeople.delete(p.n); });
+  renderPeople(); refresh();
+});
+$('#fStart').addEventListener('change', updateRange);
+$('#fEnd').addEventListener('change', updateRange);
+$('#fAmount').addEventListener('input', refresh);
+$('#fDate').addEventListener('change', refresh);
+$('#submitBtn').addEventListener('click', submit);
+$('#themeBtn').addEventListener('click', function(){
+  setTheme($('#app').getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+});
+// 记录删除（列表动态生成 → 委托）
+$('#records').addEventListener('click', function(e){
+  var b = e.target.closest('.rec-del');
+  if (!b) return;
+  records.splice(parseInt(b.dataset.i, 10), 1);
+  saveRecords(); renderRecords();
+});
+
+/* ---------- 初始化 ---------- */
+(function init(){
+  var t = 'light';
+  try { t = localStorage.getItem(THEME_KEY) || 'light'; } catch(e){}
+  setTheme(t);
+
+  $('#fDate').value = todayStr();
+  renderGroups();
+  renderPeople();
+  applyCat();
+  loadRecords();
+  renderRecords();
+})();
+</script>
+</body>
+</html>
