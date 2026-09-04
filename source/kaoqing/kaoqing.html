@@ -433,7 +433,7 @@ var PWD_REVIEW  = '1';     // 审核密码：可删除 待审核、待提交
 var PWD_APPROVE = '12';    // 批准密码：可删除 待批准、待审核、待提交
 var PWD_ADMIN   = '123';   // 管理员密码：可删除任意状态（含完成）
 
-/* ---------- Waline 读写（参照 APP.html：同一 Waline 服务端、getWalineUser + Bearer token + /api/comment GET/PUT/POST） ---------- */
+/* ---------- Waline 读写（匿名模式：数据读写均匿名、无需登录；登录仅用于管控「设置」入口；参照 APP.html 同一 Waline 服务端） ---------- */
 var WALINE_SERVER = 'https://waline.snowhoo.net'; // ← 与 APP.html 同一 Waline 服务端（如需更换改这里）
 var CLOUD_BASE    = WALINE_SERVER;                // 兼容 APP.html 的命名
 var WALINE_OAUTH  = 'github'; // 登录方式：github / google / qq / weibo（取决于服务端开启的 OAuth 提供方）
@@ -1038,7 +1038,7 @@ $('#records').addEventListener('click', async function(e){
   syncRecordsToWaline();
 });
 
-/* ---------- Waline 读写（参照 APP.html：getWalineUser + Bearer token + /api/comment 读写 + 8s 超时 + 健壮解析） ---------- */
+/* ---------- Waline 读写（匿名模式：数据读写均匿名、无需登录；登录仅用于管控「设置」入口。读取=公开 GET + 8s 超时 + 健壮解析） ---------- */
 
 /* 读取登录用户：与 Waline 客户端同套存储键（WALINE_USER / @waline/user / waline_user），兼容 OAuth 重定向后写入 */
 /* Waline 登录组件：用官方库驱动登录态，避免手写 OAuth 导致回调后登录态无法回写 localStorage */
@@ -1128,24 +1128,21 @@ function fetchCloudRecord(path){
   var timer = new Promise(function(res, rej){ setTimeout(function(){ rej('timeout'); }, 8000); });
   return Promise.race([p, timer]).then(function(b){ return b; }).catch(function(){ return null; });
 }
-/* 写入/更新某 path：有 oid 走 PUT（更新），无 oid 走 POST（创建），返回 oidRef（含新 oid）或 null */
+/* 匿名写入：Waline 开放匿名评论，数据写库无需登录（登录仅管控设置入口）。
+   匿名评论需 nick+mail，使用固定匿名身份；每次均以 POST 新建一条（匿名无法持 token 做 PUT 更新），
+   读取端 fetchCloudRecord 按 objectId 取最新一条，重复条目不影响读取。 */
+var ANON_NICK = '考勤系统';
+var ANON_MAIL = 'noreply@waline.snowhoo.net';
 function pushCloudRecord(path, obj, oidRef){
-  var u = getWalineUser(); if (!u) return Promise.resolve(null);
-  var token = walineToken(u);
-  var payload = JSON.stringify({ comment: JSON.stringify(obj), url: path, nick: u.display_name || '游客', mail: u.email || '' });
-  var headers = { 'Content-Type': 'application/json' };
-  if (token) headers['Authorization'] = 'Bearer ' + token;
-  var req;
-  if (oidRef && oidRef.oid){
-    req = fetch(CLOUD_BASE + '/api/comment/' + oidRef.oid, { method: 'PUT', headers: headers, body: payload });
-  } else {
-    req = fetch(CLOUD_BASE + '/api/comment', { method: 'POST', headers: headers, body: payload })
-      .then(function(r){ return r.json().then(function(j){ if (r.ok && j.data && j.data.objectId) oidRef.oid = parseInt(j.data.objectId, 10); return r; }); });
-  }
-  return req.then(function(r){ return r.ok ? oidRef : null; }).catch(function(){ return null; });
+  if (!CLOUD_BASE) return Promise.resolve(null);
+  var payload = JSON.stringify({ comment: JSON.stringify(obj), url: path, nick: ANON_NICK, mail: ANON_MAIL, link: '', ua: navigator.userAgent });
+  return fetch(CLOUD_BASE + '/api/comment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, credentials: 'include' })
+    .then(function(r){ return r.json().then(function(j){ if (r.ok && j && j.data && j.data.objectId && oidRef) oidRef.oid = parseInt(j.data.objectId, 10); return r; }); })
+    .then(function(r){ return r.ok ? (oidRef || {}) : null; })
+    .catch(function(){ return null; });
 }
 
-/* 节假日：登录后从 Waline 读取（覆盖兜底表），供加班类别计算 */
+/* 节假日：从 Waline 读取（公开接口，匿名）覆盖兜底表，供加班类别计算 */
 async function loadHolidays(){
   var best = await fetchCloudRecord(HOLIDAY_PATH);
   if (best && best.obj && best.obj.holidays){
@@ -1156,17 +1153,16 @@ async function loadHolidays(){
     };
   }
 }
-/* 考勤记录：整体作为一条 JSON 写入 Waline（RECORDS_PATH），更新优先 */
+/* 考勤记录：整体作为一条 JSON 匿名写入 Waline（RECORDS_PATH），每次新建一条，读取取最新 */
 var RECORDS_PATH = '/kaoqing/records';
 var recordsOid = { oid: 0 };
 async function syncRecordsToWaline(){
-  var u = getWalineUser(); if (!u) return;
   var cur = await fetchCloudRecord(RECORDS_PATH);
   if (cur) recordsOid.oid = cur.oid;
   var payload = { v: 1, type: 'records', updatedAt: Date.now(), records: records };
   await pushCloudRecord(RECORDS_PATH, payload, recordsOid);
 }
-/* 登录后：云端有记录则以云为准；本地有记录且云端空则上传 */
+/* 读取后：云端有记录则以云为准；本地有记录且云端空则上传 */
 async function loadRecordsFromWaline(){
   var best = await fetchCloudRecord(RECORDS_PATH);
   if (best && best.obj && best.obj.records && best.obj.records.length){
@@ -1207,14 +1203,14 @@ function setLoggedOut(){
   sb.classList.add('disabled');
   closeSettings();
 }
-/* 页面加载：优先用本地存储的登录态；无则尝试用 cookie 校验（OAuth 重定向回来时 cookie 已写入但 storage 未写） */
+/* 页面加载：优先用本地存储的登录态（再次访问已登录用户直接生效）；无则尝试用 cookie 校验（/api/token） */
 function checkLogin(){
   var u = getWalineUser();
-  if (u){ applyUser(u); loadPeople(); loadHolidays(); loadRecordsFromWaline(); return; }
+  if (u){ applyUser(u); return; }
   if (!CLOUD_BASE){ setLoggedOut(); return; }
   fetch(CLOUD_BASE + '/api/token', { credentials: 'include' })
     .then(function(r){ return r.json(); })
-    .then(function(j){ if (j && j.data && j.data.objectId){ try { localStorage.setItem('WALINE_USER', JSON.stringify(j.data)); } catch(e){} applyUser(j.data); loadPeople(); loadHolidays(); loadRecordsFromWaline(); } else setLoggedOut(); })
+    .then(function(j){ if (j && j.data && j.data.objectId){ try { localStorage.setItem('WALINE_USER', JSON.stringify(j.data)); } catch(e){} applyUser(j.data); } else setLoggedOut(); })
     .catch(function(){ setLoggedOut(); });
 }
 function loginOAuth(){
@@ -1225,6 +1221,29 @@ async function logout(){
   setLoggedOut();
   showAlert('已退出登录');
 }
+
+/* 登录态感知：本库（v3.15.2）不回调 onLogin，登录态只写 localStorage.WALINE_USER。
+   弹窗登录在同域 popup 通过 postMessage({type:'userInfo'}) 回传主页面 → 直接刷新 UI；
+   另加 focus / visibilitychange / storage 监听作为兜底，确保登录后主页面立即反映已登录。 */
+function refreshLoginState(){
+  var u = getWalineUser();
+  if (u) applyUser(u); else setLoggedOut();
+}
+window.addEventListener('message', function(e){
+  var d = e.data;
+  if (d && typeof d === 'object' && d.type === 'userInfo' && d.data && (d.data.display_name || d.data.nick || d.data.name)){
+    try { localStorage.setItem('WALINE_USER', JSON.stringify(d.data)); } catch(_){}
+    applyUser(d.data);
+  }
+});
+window.addEventListener('storage', function(e){
+  if (e.key === 'WALINE_USER' || e.key === '@waline/user' || e.key === 'waline_user'){
+    if (e.newValue && e.newValue !== 'null'){ try { var u = JSON.parse(e.newValue); if (u && (u.display_name || u.nick || u.name)){ applyUser(u); return; } } catch(_){} }
+    setLoggedOut();
+  }
+});
+window.addEventListener('focus', refreshLoginState);
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) refreshLoginState(); });
 
 /* 设置菜单：未登录不展开；点击空白处关闭 */
 function openSettings(){ if ($('#setBtn').disabled) return; $('#settingsMenu').hidden = false; }
@@ -1245,7 +1264,6 @@ var holidayOid = { oid: 0 };
 async function syncHolidays(){
   closeSettings();
   if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
-  if (!getWalineUser()){ showAlert('请先点击右上角头像登录 Waline'); return; }
   var year = new Date().getFullYear();
   var txt = await askText('获取节假日年份', '默认 ' + year + '，可修改');
   if (txt === null) return;
@@ -1267,14 +1285,14 @@ async function syncHolidays(){
     else makeup.push(item);                          // 调休补班（holiday:false）
   });
 
-  // 若已存在旧记录，取出其 oid 走 PUT 更新而非重复 POST
   var cur = await fetchCloudRecord(HOLIDAY_PATH);
+  var isUpdate = !!(cur && cur.oid);
   if (cur) holidayOid.oid = cur.oid;
   var payload = { v: 1, type: 'holiday', year: year, updatedAt: Date.now(), holidays: holidays, makeup: makeup };
   HOLIDAYS = { year: year, holidays: holidays.map(function(h){ return h.date; }), makeup: makeup.map(function(m){ return m.date; }) };
   var res2 = await pushCloudRecord(HOLIDAY_PATH, payload, holidayOid);
   if (res2){
-    showAlert('已写入 Waline\n路径：' + HOLIDAY_PATH + '\n' + year + ' 年：国假/休息 ' + holidays.length + ' 天，调休补班 ' + makeup.length + ' 天。' + (holidayOid.oid ? '\n（已更新既有记录）' : '\n（已新建记录）'));
+    showAlert('已写入 Waline\n路径：' + HOLIDAY_PATH + '\n' + year + ' 年：国假/休息 ' + holidays.length + ' 天，调休补班 ' + makeup.length + ' 天。' + (isUpdate ? '\n（已覆盖更新既有记录）' : '\n（已新建记录）'));
   } else {
     showAlert('写入 Waline 失败，请检查网络或权限');
   }
@@ -1302,8 +1320,8 @@ async function loadPeople(){
 async function syncPeople(){
   closeSettings();
   if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
-  if (!getWalineUser()){ showAlert('请先点击右上角头像登录 Waline'); return; }
   var cur = await fetchCloudRecord(PEOPLE_PATH);
+  var isUpdate = !!(cur && cur.oid);
   if (cur) peopleOid.oid = cur.oid;
   var payload = { v: 1, type: 'people', updatedAt: Date.now(), people: SEED_PEOPLE_FULL };
   var res = await pushCloudRecord(PEOPLE_PATH, payload, peopleOid);
@@ -1311,7 +1329,7 @@ async function syncPeople(){
     PEOPLE_FULL = SEED_PEOPLE_FULL.slice();
     PEOPLE = PEOPLE_FULL.map(function(p){ return { n:p.name, g:p.group }; });
     rebuildGroups(); renderGroups(); renderPeople(); applyView();
-    showAlert('已写入 Waline\n路径：' + PEOPLE_PATH + '\n共 ' + SEED_PEOPLE_FULL.length + ' 人（含 id/姓名/性别/手机号/一级部门/二级部门/考勤组/权限）。\n性别、手机号留空，可在 Waline 后台补充。' + (peopleOid.oid ? '\n（已更新既有记录）' : '\n（已新建记录）'));
+    showAlert('已写入 Waline\n路径：' + PEOPLE_PATH + '\n共 ' + SEED_PEOPLE_FULL.length + ' 人（含 id/姓名/性别/手机号/一级部门/二级部门/考勤组/权限）。\n性别、手机号留空，可在 Waline 后台补充。' + (isUpdate ? '\n（已覆盖更新既有记录）' : '\n（已新建记录）'));
   } else {
     showAlert('写入 Waline 失败，请检查网络或权限');
   }
@@ -1329,7 +1347,6 @@ function renderPeopleTable(list){
 async function openPeopleConfig(){
   closeSettings();
   if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
-  if (!getWalineUser()){ showAlert('请先点击右上角头像登录 Waline'); return; }
   var best = null;
   try { best = await fetchCloudRecord(PEOPLE_PATH); } catch(e){ best = null; }
   var list = (best && best.obj && best.obj.people && best.obj.people.length) ? best.obj.people : PEOPLE_FULL;
