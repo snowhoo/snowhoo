@@ -18,17 +18,6 @@
   --shadow:0 2px 10px rgba(0,0,0,.06);
   --warn:#ef4444;
 }
-#app[data-theme="dark"]{
-  --bg:#14161c;
-  --bg-surface:#1d2027;
-  --text:#e8eaf0;
-  --text-secondary:#b3b8c6;
-  --text-muted:#7d8494;
-  --border:rgba(255,255,255,.1);
-  --shadow:0 2px 10px rgba(0,0,0,.35);
-  --warn:#f87171;
-}
-
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
 body{
@@ -45,15 +34,11 @@ body{
   background:var(--bg-surface);border-bottom:1px solid var(--border);
 }
 #topbar h1{margin:0;font-size:1.05rem;font-weight:600;letter-spacing:.5px}
-#themeBtn{
-  border:1px solid var(--border);background:transparent;color:var(--text-secondary);
-  width:34px;height:34px;border-radius:50%;font-size:1rem;cursor:pointer;
-}
 
 /* ============ 区域卡片 ============ */
 .wrap{max-width:760px;margin:0 auto;padding:14px 12px;display:flex;flex-direction:column;gap:14px}
 .card{background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
-.card-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.card-head{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:12px 14px;border-bottom:1px solid var(--border)}
 .card-head .idx{
   width:22px;height:22px;flex:0 0 22px;border-radius:50%;
   background:var(--accent);color:#fff;font-size:.75rem;font-weight:600;
@@ -63,83 +48,128 @@ body{
 .card-head .hint{margin-left:auto;font-size:.78rem;color:var(--text-muted)}
 .card-body{padding:14px}
 
-/* ---- 区域一：人员（考勤组别 + 大号姓名卡） ---- */
-.group-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.group-row label{font-size:.8rem;color:var(--text-secondary);flex:0 0 auto}
-.group-row select{
-  padding:8px 10px;border-radius:10px;font-size:.85rem;
-  border:1px solid var(--border);background:var(--bg-surface);color:var(--text);outline:none;
-  font-family:inherit;min-width:120px;
+/* ---- 区域一：人员（组别下拉内嵌标题行 + 大号姓名卡） ---- */
+.gsel{
+  padding:6px 10px;border-radius:10px;font-size:.82rem;
+  border:1px solid var(--border);background:var(--bg-surface);color:var(--text);
+  outline:none;font-family:inherit;min-width:110px;
 }
-.group-row select:focus{border-color:var(--accent)}
-.group-row .count{margin-left:auto;font-size:.8rem;color:var(--text-muted)}
+.gsel:focus{border-color:var(--accent)}
+.card-head .gsel{margin-left:auto}
 
 .chips{display:flex;flex-wrap:wrap;gap:10px}
 .chip{
-  min-width:88px;padding:14px 16px;border-radius:12px;cursor:pointer;
+  min-width:88px;padding:10px 16px;border-radius:12px;cursor:pointer;
   border:1.5px solid var(--border);background:transparent;color:var(--text-secondary);
   font-size:1rem;font-weight:500;text-align:center;
   transition:background .15s,color .15s,border-color .15s;
 }
 .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.row-actions{display:flex;gap:16px;margin-top:14px}
+.chip.disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+.chip.gap-left{margin-left:28px}
+/* 类别选中双色：加班=绿，其它=橙 */
+.chip.on.c-green{background:#16a34a;border-color:#16a34a;color:#fff}
+.chip.on.c-orange{background:#f97316;border-color:#f97316;color:#fff}
+.head-actions{display:flex;align-items:center;gap:12px}
+.head-actions .count{font-size:.78rem;color:var(--text-muted)}
 .link{border:none;background:transparent;color:var(--accent);font-size:.82rem;cursor:pointer;padding:0}
 .people-empty{color:var(--text-muted);font-size:.82rem;margin:0}
 
-/* ---- 区域二：类别 ---- */
-.cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.cat{
-  display:flex;flex-direction:column;align-items:center;gap:7px;
-  padding:12px 4px;border-radius:12px;cursor:pointer;
-  border:1.5px solid var(--border);background:transparent;color:var(--text-secondary);
-  transition:border-color .15s,background .15s;
-}
-.cat .cat-ico{
-  width:34px;height:34px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:.95rem;font-weight:600;color:#fff;background:var(--c,var(--text-muted));
-}
-.cat .cat-name{font-size:.85rem}
-.cat.on{border-color:var(--c,var(--accent));background:var(--accent-soft);color:var(--text)}
-.cat.disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
-.cat.disabled .cat-name::after{content:"（未开放）";font-size:.68rem}
-@media(max-width:520px){.cat-grid{grid-template-columns:repeat(2,1fr)}}
+/* ---- 区域二：类别（复用 .chips / .chip，与人员选择同款式样） ---- */
 
-/* ---- 区域三：内容 ---- */
-.field{margin-bottom:14px}
-.field label{display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:6px}
+/* ---- 区域三：内容（日期/时间段/小时数/说明 四项同一行，窄屏自动折行） ---- */
+[hidden]{display:none!important}
+.form-row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px}
+.form-row > .field,.form-row > .sub-row{margin-bottom:0}
+.sub-row{display:flex;align-items:center;gap:8px}
+.sub-row > .field{flex:1}
+
+.field{display:flex;align-items:center;gap:8px}
+.field > label{flex:0 0 auto;margin:0;font-size:.8rem;color:var(--text-secondary);white-space:nowrap}
 .field input,.field textarea,.field select{
-  width:100%;padding:9px 12px;border-radius:10px;font-size:.88rem;
+  flex:1;min-width:0;width:auto;padding:8px 10px;border-radius:10px;font-size:.85rem;
   border:1px solid var(--border);background:transparent;color:var(--text);outline:none;
   font-family:inherit;
 }
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
-.field textarea{min-height:76px;resize:vertical}
-.time-row{display:flex;align-items:center;gap:8px}
-.time-row input{flex:1;min-width:0}
-.time-row .sep{color:var(--text-muted);font-size:.85rem;flex:0 0 auto}
-#fHours{background:var(--accent-soft);font-weight:600;color:var(--accent);cursor:default}
-#fHours.bad{background:transparent;color:var(--warn);font-weight:500}
+/* 各项宽度：日期/小时数定宽，时间段与说明弹性填充，宽屏同一行、窄屏折行 */
+#rowDate{flex:0 0 auto}
+#rowDate input{flex:0 0 118px}
+#rangeBlock{flex:1 1 300px}
+#rowNote{flex:1 1 140px}
+#rowNote input{min-width:80px}
+.time-row{flex:1;display:flex;align-items:center;gap:6px}
+.time-row select{flex:1 1 66px;min-width:60px}
+.time-row .sep{color:var(--text-muted);font-size:.82rem;flex:0 0 auto}
+#fHours{font-size:.92rem;font-weight:600;color:var(--text-secondary);white-space:nowrap}
+#fHours.bad{color:var(--warn);font-weight:500}
 .tip{font-size:.78rem;color:var(--text-muted);margin:0}
 
-/* ---- 区域四：操作与记录 ---- */
+/* ---- 区域四：记录 ---- */
 .summary{
-  font-size:.85rem;color:var(--text-secondary);line-height:1.7;
-  background:var(--accent-soft);border-radius:10px;padding:10px 12px;margin-bottom:12px;
+  font-size:.82rem;color:var(--text-secondary);line-height:1.5;
+  background:var(--accent-soft);border-radius:10px;padding:8px 10px;margin:12px 0;
 }
-.summary b{color:var(--accent)}
+.save-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;margin-top:12px}
+.save-row .summary{margin:0;flex:1 1 240px;min-width:0}
+.pv-empty{color:var(--warn)}
+.preset-box{display:flex;align-items:flex-start;flex-wrap:wrap;gap:8px 10px;margin-top:12px}
+.preset-label{font-size:.8rem;color:var(--text-secondary);white-space:nowrap;line-height:30px}
+.preset-list{display:flex;flex-wrap:wrap;gap:8px}
+.preset-item{
+  padding:7px 13px;border:1px solid var(--border);border-radius:999px;cursor:pointer;
+  background:var(--bg-surface);color:var(--text-secondary);font-size:.82rem;font-family:inherit;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.preset-item:hover,.preset-item:active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.preset-empty{font-size:.8rem;color:var(--text-muted);line-height:30px}
+.warn{color:var(--warn)}
+.pv-row{display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px}
+.pv-row + .pv-row{margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)}
+.pv-row > span{border-left:1px solid var(--border);padding-left:8px}
+.pv-row > span:first-child{border-left:0;padding-left:0}
+/* 预览列对齐：同一预览内 类别/日期/时段/小时/说明 逐行一致，仅"姓名"长度不同 → 给姓名列固定宽度即可让后续各列对齐 */
+.pv-i{flex:0 0 1.8em;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.pv-n{flex:0 0 4.5em;color:var(--text);font-weight:600;white-space:nowrap}
+.pv-c{color:var(--accent)}
+.pv-c.pv-green{color:#16a34a}
+.pv-c.pv-orange{color:#f97316}
+.pv-d,.pv-t,.pv-h{color:var(--text-secondary);font-variant-numeric:tabular-nums}
+.pv-note{color:var(--text-muted)}
 #submitBtn{
-  width:100%;padding:12px;border:none;border-radius:12px;cursor:pointer;
+  flex:0 0 auto;min-width:120px;padding:12px 22px;border:none;border-radius:12px;cursor:pointer;
   background:var(--accent);color:#fff;font-size:.95rem;font-weight:600;
 }
 #submitBtn:disabled{opacity:.45;cursor:not-allowed}
-.records{margin-top:14px;display:flex;flex-direction:column;gap:8px}
-.rec{display:flex;align-items:center;gap:10px;font-size:.83rem;padding:9px 12px;border:1px solid var(--border);border-radius:10px}
-.rec .rec-dot{width:8px;height:8px;border-radius:50%;background:var(--c,var(--accent));flex:0 0 8px}
-.rec .rec-main{flex:1;min-width:0}
-.rec .rec-who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rec .rec-sub{font-size:.75rem;color:var(--text-muted);margin-top:2px}
-.rec .rec-del{border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:.9rem}
+.records{display:block;overflow-x:auto}
+.rec-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.rec-count{margin-right:auto;font-size:.78rem;color:var(--text-muted)}
+.btn-rec-submit{
+  padding:8px 18px;border:none;border-radius:10px;cursor:pointer;
+  background:var(--accent);color:#fff;font-size:.85rem;font-weight:600;
+}
+.btn-rec-submit:disabled{opacity:.45;cursor:not-allowed}
+.rec-table{width:100%;border-collapse:collapse;font-size:.8rem;min-width:640px}
+.rec-table th,.rec-table td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle}
+.rec-table th{background:var(--bg-surface);color:var(--text-secondary);font-weight:600;text-align:left}
+.rec-table td{color:var(--text)}
+.rec-table .c-check,.rec-table .c-del{width:1%;text-align:center;white-space:nowrap}
+.rec-table .c-idx{width:36px;text-align:center;color:var(--text-muted)}
+.rec-table .c-who{font-weight:600;white-space:normal}
+.rec-table .c-cat{color:var(--accent);white-space:nowrap}
+.rec-table .c-cat.c-green{color:#16a34a}
+.rec-table .c-cat.c-orange{color:#f97316}
+.rec-table .c-date,.rec-table .c-time,.rec-table .c-hours{white-space:nowrap;font-variant-numeric:tabular-nums}
+.rec-table .c-note{white-space:normal;min-width:120px}
+.rec-table .c-status{white-space:nowrap}
+.rec-table .muted{color:var(--text-muted)}
+.rec-check{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.rec-status{display:inline-block;font-size:.72rem;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.st-tj{background:var(--border);color:var(--text-secondary)}
+.st-sh{background:rgba(59,130,246,.15);color:#3b82f6}
+.st-sp{background:rgba(245,158,11,.15);color:#f59e0b}
+.st-ok{background:rgba(34,197,94,.15);color:#22c55e}
+.rec-del{border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:.9rem;padding:0 4px}
 .empty{color:var(--text-muted);font-size:.82rem;text-align:center;margin:6px 0}
 </style>
 </head>
@@ -148,7 +178,6 @@ body{
 
   <header id="topbar">
     <h1>考勤登记</h1>
-    <button id="themeBtn" title="切换主题">🌙</button>
   </header>
 
   <div class="wrap">
@@ -158,18 +187,15 @@ body{
       <div class="card-head">
         <span class="idx">1</span>
         <h2>选择人员</h2>
-      </div>
-      <div class="card-body">
-        <div class="group-row">
-          <label for="groupSel">考勤组别</label>
-          <select id="groupSel"></select>
-          <span class="count" id="peopleCount">已选 0 人</span>
-        </div>
-        <div class="chips" id="peopleList"></div>
-        <div class="row-actions">
+        <div class="head-actions">
           <button class="link" id="selAll">全选</button>
           <button class="link" id="selNone">清空</button>
+          <span class="count" id="peopleCount">已选 0 人</span>
         </div>
+        <select id="groupSel" class="gsel" title="考勤组别"></select>
+      </div>
+      <div class="card-body">
+        <div class="chips" id="peopleList"></div>
       </div>
     </section>
 
@@ -178,10 +204,11 @@ body{
       <div class="card-head">
         <span class="idx">2</span>
         <h2>选择类别</h2>
+        <span class="tip" id="catTip">请先选择类别。</span>
         <span class="hint" id="catHint">未选类别</span>
       </div>
       <div class="card-body">
-        <div class="cat-grid" id="catGrid"></div>
+        <div class="chips" id="catGrid"></div>
       </div>
     </section>
 
@@ -192,40 +219,41 @@ body{
         <h2>考勤内容</h2>
       </div>
       <div class="card-body">
-        <div class="field">
-          <label for="fDate">日期</label>
-          <input type="date" id="fDate">
-        </div>
+        <div class="form-row">
 
-        <!-- 加班 / 请假：时间段 + 小时数自动计算 -->
-        <div id="rangeBlock" hidden>
-          <div class="field">
-            <label>时间段（至少 0.5 小时）</label>
-            <div class="time-row">
-              <input type="time" id="fStart" step="1800">
-              <span class="sep">至</span>
-              <input type="time" id="fEnd" step="1800">
+          <div class="field" id="rowDate">
+            <label for="fDate">时间</label>
+            <input type="date" id="fDate">
+          </div>
+
+          <!-- 时间段 + 小时数自动计算（≥0.5 小时） -->
+          <div class="sub-row" id="rangeBlock" hidden>
+            <div class="field">
+              <div class="time-row">
+                <select id="fStart"></select>
+                <span class="sep">至</span>
+                <select id="fEnd"></select>
+              </div>
             </div>
+            <span id="fHours"></span>
           </div>
-          <div class="field">
-            <label>小时数（自动计算）</label>
-            <input type="text" id="fHours" readonly placeholder="请先选择时间段">
+
+          <div class="field" id="rowNote">
+            <input type="text" id="fNote" placeholder="备注事由…">
           </div>
+
         </div>
 
-        <!-- 迟到 / 早退：数量（暂未开放） -->
-        <div id="amountBlock" hidden>
-          <div class="field">
-            <label for="fAmount" id="fAmountLabel">数量</label>
-            <input type="number" id="fAmount" min="0" step="0.5">
-          </div>
+        <!-- 常用说明：按钮列表，点击即以追加方式填入备注事由（A+B+B 可多次叠加） -->
+        <div class="preset-box">
+          <span class="preset-label">常用说明：</span>
+          <div class="preset-list" id="presetList"></div>
         </div>
-
-        <div class="field">
-          <label for="fNote">说明</label>
-          <textarea id="fNote" placeholder="备注事由…"></textarea>
+        <!-- 待保存内容预览 + 保存（同行，底部对齐） -->
+        <div class="save-row">
+          <div class="summary pv-empty" id="summary">尚未选择人员与类别</div>
+          <button id="submitBtn" disabled>保存</button>
         </div>
-        <p class="tip" id="catTip">请先选择类别。</p>
       </div>
     </section>
 
@@ -236,8 +264,10 @@ body{
         <h2>提交与记录</h2>
       </div>
       <div class="card-body">
-        <div class="summary" id="summary">尚未选择人员与类别</div>
-        <button id="submitBtn" disabled>提交</button>
+        <div class="rec-toolbar">
+          <span class="rec-count" id="recCount">共 0 条</span>
+          <button id="submitRecordsBtn" class="btn-rec-submit" disabled>提交</button>
+        </div>
         <div class="records" id="records">
           <p class="empty">暂无记录</p>
         </div>
@@ -252,35 +282,45 @@ body{
    考勤登记 —— 框架版（二稿）
    四区域：1 选择人员  2 选择类别  3 考勤内容  4 提交与记录
    - PEOPLE / GROUPS / CATS 为占位数据源，接后端时替换即可。
-   - 加班/请假 = 选择时间段（≥0.5 小时），小时数自动计算；迟到/早退暂禁用。
+   - 加班/调休/年假/病假/事假/其它 = 选择时间段（≥0.5 小时），小时数自动计算。
    - 记录暂存在 localStorage，submit() 内留 TODO 未接后端。
    ===================================================================== */
 
 /* ---------- 数据源（TODO: 换成接口 / R2 拉取） ---------- */
 /* 人员：n=姓名，g=所属考勤组别 */
 var PEOPLE = [
-  { n:'张三', g:'生产一组' }, { n:'李四', g:'生产一组' }, { n:'王五', g:'生产一组' },
-  { n:'赵六', g:'生产二组' }, { n:'钱七', g:'生产二组' }, { n:'孙八', g:'生产二组' },
-  { n:'周九', g:'行政组'   }, { n:'吴十', g:'行政组'   }
+  { n:'马道旭', g:'生产一组' }, { n:'顾桢鸿', g:'生产一组' }, { n:'顾晓维', g:'生产一组' }, { n:'吴丽娟', g:'生产一组' }, { n:'夏莉萍', g:'生产一组' },
+  { n:'徐启双', g:'生产二组' }, { n:'张静', g:'生产二组' }, { n:'尤文娟', g:'生产二组' }, { n:'夏卉', g:'生产二组' },
+  { n:'惠雅', g:'行政组' }, { n:'张永妹', g:'行政组' }, { n:'亢亦宁', g:'行政组' }, { n:'赵婷', g:'行政组' }
 ];
 
 /* 考勤组别：第一项固定为「全部」 */
 var GROUPS = ['全部', '生产一组', '生产二组', '行政组'];
 
-/* 类别：mode=range 走时间段；mode=amount 走数量；disabled 暂不开放 */
+/* 类别：统一走时间段（≥0.5 小时），小时数自动计算 */
 var CATS = [
-  { id:'overtime', name:'加班', char:'加', color:'#f59e0b', mode:'range',  tip:'选择加班时间段，至少 0.5 小时，小时数自动计算' },
-  { id:'leave',    name:'请假', char:'假', color:'#3b82f6', mode:'range',  tip:'选择请假时间段，至少 0.5 小时；天数按 8 小时/天折算' },
-  { id:'late',     name:'迟到', char:'迟', color:'#ef4444', mode:'amount', unit:'分钟', tip:'迟到功能开发中，暂不开放', disabled:true },
-  { id:'early',    name:'早退', char:'退', color:'#8b5cf6', mode:'amount', unit:'分钟', tip:'早退功能开发中，暂不开放', disabled:true }
+  { id:'overtime', name:'加班',     char:'加', color:'#f59e0b', mode:'range', tip:'选择加班时间段，至少 0.5 小时，小时数自动计算' },
+  { id:'tiaoxiu',  name:'调休',     char:'调', color:'#10b981', mode:'range', tip:'选择调休时间段，至少 0.5 小时，小时数自动计算' },
+  { id:'nianjia',  name:'年假',     char:'年', color:'#3b82f6', mode:'range', tip:'选择年假时间段，至少 0.5 小时，小时数自动计算' },
+  { id:'bingjia',  name:'病假',     char:'病', color:'#ef4444', mode:'range', tip:'选择病假时间段，至少 0.5 小时，小时数自动计算' },
+  { id:'shijia',   name:'事假',     char:'事', color:'#8b5cf6', mode:'range', tip:'选择事假时间段，至少 0.5 小时，小时数自动计算' },
+  { id:'qita',     name:'其它（请备注）', char:'它', color:'#6b7280', mode:'range', tip:'选择时间段，至少 0.5 小时，并在备注中说明事由' },
 ];
 
-var HOURS_PER_DAY = 8;      // 请假折算：8 小时 = 1 天
+/* 常用说明：按类别分组，选择类别后自动切换对应列表；点击以追加方式填入备注事由（A+B+B 可多次叠加） */
+var PRESET_NOTES = {
+  overtime: ['加班调休', '项目赶工', '临时支援', '会议', '培训', '外勤'],
+  tiaoxiu:  ['加班抵扣', '项目赶工', '临时支援'],
+  nianjia:  ['旅游', '返乡', '探亲', '休息'],
+  bingjia:  ['就医', '休养', '复诊', '住院'],
+  shijia:   ['家事', '办事', '婚丧', '搬家'],
+  qita:     ['详见备注说明事由']
+};
+
 var MIN_MINUTES   = 30;     // 时间段最少 0.5 小时
 
 /* ---------- 状态 ---------- */
 var STORE_KEY = 'kaoqing_records';
-var THEME_KEY = 'kaoqing_theme';
 var selPeople = new Set();
 var curGroup  = GROUPS[0];
 var curCat    = null;
@@ -292,6 +332,19 @@ function todayStr(){
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 function toMin(t){ var p = t.split(':'); return parseInt(p[0],10) * 60 + parseInt(p[1],10); }
+
+/* ---------- 半点刻度：00:00 ~ 23:30 共 48 档，分钟只给 00 / 30 ---------- */
+function buildTimeSlots(sel){
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">--:--</option>';
+  for (var m = 0; m < 24 * 60; m += 30){
+    var v = String(Math.floor(m / 60)).padStart(2,'0') + ':' + String(m % 60).padStart(2,'0');
+    var o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    sel.appendChild(o);
+  }
+  sel.value = cur;                 // 重建后还原原值（若有）
+}
 
 /* ---------- 区域一：组别 + 人员 ---------- */
 function renderGroups(){
@@ -337,16 +390,15 @@ function renderCats(){
   box.innerHTML = '';
   CATS.forEach(function(c){
     var b = document.createElement('button');
-    b.className = 'cat' + (curCat && curCat.id === c.id ? ' on' : '') + (c.disabled ? ' disabled' : '');
-    b.style.setProperty('--c', c.color);
-    b.dataset.cat = c.id;
-    b.innerHTML = '<span class="cat-ico">' + c.char + '</span><span class="cat-name">' + c.name + '</span>';
-    if (!c.disabled){
-      b.addEventListener('click', function(){
-        curCat = (curCat && curCat.id === c.id) ? null : c;   // 再点一次取消
-        applyCat();
-      });
-    }
+    var isOn = curCat && curCat.id === c.id;
+    var onCls = isOn ? (' on ' + (c.id === 'overtime' ? 'c-green' : 'c-orange')) : '';
+    var gapCls = (c.id === 'tiaoxiu') ? ' gap-left' : '';
+    b.className = 'chip' + onCls + gapCls;
+    b.textContent = c.name;
+    b.addEventListener('click', function(){
+      curCat = (curCat && curCat.id === c.id) ? null : c;   // 再点一次取消
+      applyCat();
+    });
     box.appendChild(b);
   });
 }
@@ -355,22 +407,17 @@ function renderCats(){
 function applyCat(){
   renderCats();
 
-  var isRange = curCat && curCat.mode === 'range';
-  $('#rangeBlock').hidden  = !isRange;                    // 加班/请假：时间段
-  $('#amountBlock').hidden = !(curCat && !isRange);       // 迟到/早退：数量（且未选类别时两块都不显示）
+  $('#rangeBlock').hidden = !curCat;                      // 选择类别后显示时间段
 
   if (curCat){
     $('#catHint').textContent = curCat.name;
     $('#catTip').textContent  = curCat.tip;
-    if (!isRange){
-      $('#fAmountLabel').textContent = '数量（' + (curCat.unit || '') + '）';
-      $('#fAmount').placeholder = '请输入' + (curCat.unit || '数量');
-    }
   } else {
     $('#catHint').textContent = '未选类别';
     $('#catTip').textContent  = '请先选择类别。';
   }
   updateRange();
+  renderPresets();          // 切换类别时同步切换常用说明列表
 }
 
 /* 时间段 -> 分钟差（跨天自动 +24h） */
@@ -385,40 +432,31 @@ function rangeMinutes(){
 /* 小时数自动计算 + 最少半小时校验 */
 function updateRange(){
   var hoursEl = $('#fHours');
-  if (!curCat || curCat.mode !== 'range'){ refresh(); return; }
+  if (!curCat){ refresh(); return; }
 
   var m = rangeMinutes();
   if (m === null){
-    hoursEl.value = '';
-    hoursEl.classList.remove('bad');
-    hoursEl.placeholder = '请先选择时间段';
+    hoursEl.textContent = '';
+    hoursEl.className = '';
   } else if (m < MIN_MINUTES){
-    hoursEl.value = '时间段不足 0.5 小时';
-    hoursEl.classList.add('bad');
+    hoursEl.textContent = '时段不足 0.5 小时';
+    hoursEl.className = 'bad';
   } else {
-    var h = m / 60;
-    hoursEl.classList.remove('bad');
-    hoursEl.value = (Math.round(h * 100) / 100) + ' 小时'
-      + (curCat.id === 'leave' ? '（≈ ' + (Math.round((h / HOURS_PER_DAY) * 100) / 100) + ' 天）' : '');
+    hoursEl.className = '';
+    hoursEl.textContent = (Math.round((m / 60) * 100) / 100) + ' 小时';
   }
   refresh();
 }
 
 function currentAmountText(){
   if (!curCat) return '';
-  if (curCat.mode === 'range'){
-    var s = $('#fStart').value, e = $('#fEnd').value;
-    if (!s || !e) return '（未选时间段）';
-    var h = Math.round((rangeMinutes() / 60) * 100) / 100;
-    return s + ' - ' + e + '　共 ' + h + ' 小时';
-  }
-  var v = $('#fAmount').value;
-  return v === '' ? '（未填）' : v + ' ' + (curCat.unit || '');
+  var s = $('#fStart').value, e = $('#fEnd').value;
+  if (!s || !e) return '（未选时间段）';
+  return s + ' - ' + e;
 }
 
 function rangeOK(){
   if (!curCat) return false;
-  if (curCat.mode !== 'range') return $('#fAmount').value !== '';
   var m = rangeMinutes();
   return m !== null && m >= MIN_MINUTES;
 }
@@ -431,35 +469,109 @@ function refresh(){
   $('#submitBtn').disabled = !ok;
 
   if (!selPeople.size || !curCat){
-    $('#summary').textContent = '尚未选择人员与类别';
+    $('#summary').innerHTML = '<div class="pv-empty">尚未选择人员与类别</div>';
     return;
   }
-  $('#summary').innerHTML =
-    '<b>' + curCat.name + '</b>　' + $('#fDate').value + '<br>' +
-    '人员：' + Array.from(selPeople).join('、') + '<br>' +
-    (curCat.mode === 'range' ? '时段：' : '数量：') + currentAmountText();
+
+  /* 预览：一人一行 —— 序号 | 姓名 | 类别 | 日期 | 时段 | 共 X 小时 | 说明 */
+  var date = $('#fDate').value || todayStr();
+  var m    = rangeMinutes();
+  var spanHtml, amtHtml = '';
+  if (m === null) spanHtml = '<span class="warn">未选时段</span>';
+  else spanHtml = esc($('#fStart').value) + ' - ' + esc($('#fEnd').value);
+  amtHtml = (m !== null) ? '共 ' + (Math.round((m / 60) * 100) / 100) + ' 小时' : '';
+  var note = $('#fNote').value.trim();
+
+  $('#summary').innerHTML = Array.from(selPeople).map(function(n, i){
+    return '<div class="pv-row">' +
+      '<span class="pv-i">' + String(i + 1).padStart(2, '0') + '</span>' +
+      '<span class="pv-n">' + esc(n) + '</span>' +
+      '<span class="pv-c ' + (curCat.id === 'overtime' ? 'pv-green' : 'pv-orange') + '">' + curCat.name + '</span>' +
+      '<span class="pv-d">' + date + '</span>' +
+      '<span class="pv-t">' + spanHtml + '</span>' +
+      (amtHtml ? '<span class="pv-h">' + amtHtml + '</span>' : '') +
+      (note ? '<span class="pv-note">' + esc(note) + '</span>' : '') +
+      '</div>';
+  }).join('');
 }
+
+/* 常用说明按钮列表：按当前类别切换对应分组；点击即以追加方式填入备注事由（A+B+B 可多次叠加） */
+function renderPresets(){
+  var box = $('#presetList');
+  box.innerHTML = '';
+  if (!curCat || !PRESET_NOTES[curCat.id]){
+    box.innerHTML = '<span class="preset-empty">选择类别后显示对应常用说明</span>';
+    return;
+  }
+  PRESET_NOTES[curCat.id].forEach(function(txt){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'preset-item';
+    b.textContent = txt;
+    b.addEventListener('click', function(){
+      var note = $('#fNote');
+      note.value = note.value ? (note.value + txt) : txt;   // 追加而非替换
+      refresh();                                            // 实时更新预览说明
+    });
+    box.appendChild(b);
+  });
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"]/g, function(c){
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c];
+  });
+}
+
+var STATUS_CLASS = { '待提交':'st-tj', '待审核':'st-sh', '待审批':'st-sp', '完成':'st-ok' };
 
 function renderRecords(){
   var box = $('#records');
-  box.innerHTML = '';
+  $('#recCount').textContent = '共 ' + records.length + ' 条';
+  $('#submitRecordsBtn').disabled = true;   // 重新渲染后勾选清空，提交按钮先禁用
   if (!records.length){
     box.innerHTML = '<p class="empty">暂无记录</p>';
     return;
   }
+  var html = '<table class="rec-table"><thead><tr>' +
+      '<th class="c-check"></th>' +
+      '<th>#</th>' +
+      '<th>人员</th>' +
+      '<th>类别</th>' +
+      '<th>日期</th>' +
+      '<th>时段</th>' +
+      '<th>小时</th>' +
+      '<th>状态</th>' +
+      '<th>说明</th>' +
+      '<th class="c-del"></th>' +
+    '</tr></thead><tbody>';
   records.forEach(function(r, i){
-    var d = document.createElement('div');
-    d.className = 'rec';
-    d.style.setProperty('--c', r.color);
-    d.innerHTML =
-      '<span class="rec-dot"></span>' +
-      '<div class="rec-main">' +
-        '<div class="rec-who">' + r.people.join('、') + '</div>' +
-        '<div class="rec-sub">' + r.date + '　' + r.catName + '　' + r.detail + (r.note ? '　' + r.note : '') + '</div>' +
-      '</div>' +
-      '<button class="rec-del" data-i="' + i + '" title="删除">✕</button>';
-    box.appendChild(d);
+    var st = r.status || '待提交';
+    var span = r.detail || '';
+    var hoursTxt = '—';
+    if (r.mode === 'range'){
+      var idx = span.indexOf('共 ');
+      if (idx >= 0){ hoursTxt = span.slice(idx + 2).trim(); span = span.slice(0, idx).replace(/\s+$/, ''); }
+      else if (r.hours != null) hoursTxt = r.hours + ' 小时';
+    }
+    var note = r.note
+      ? '<span title="' + esc(r.note) + '">' + esc(r.note) + '</span>'
+      : '<span class="muted">—</span>';
+    html += '<tr>' +
+      '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>' +
+      '<td class="c-idx">' + (i + 1) + '</td>' +
+      '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
+      '<td class="c-cat ' + (r.catId === 'overtime' ? 'c-green' : 'c-orange') + '">' + esc(r.catName) + '</td>' +
+      '<td class="c-date">' + esc(r.date) + '</td>' +
+      '<td class="c-time">' + esc(span) + '</td>' +
+      '<td class="c-hours">' + esc(hoursTxt) + '</td>' +
+      '<td class="c-status"><span class="rec-status ' + (STATUS_CLASS[st] || 'st-tj') + '">' + st + '</span></td>' +
+      '<td class="c-note">' + note + '</td>' +
+      '<td class="c-del"><button class="rec-del" data-i="' + i + '" title="删除">✕</button></td>' +
+    '</tr>';
   });
+  html += '</tbody></table>';
+  box.innerHTML = html;
 }
 
 function saveRecords(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(records)); } catch(e){} }
@@ -470,35 +582,43 @@ function loadRecords(){
 function submit(){
   if (!selPeople.size || !curCat || !rangeOK()) return;
 
-  var rec = {
-    date:    $('#fDate').value || todayStr(),
-    catId:   curCat.id,
-    catName: curCat.name,
-    color:   curCat.color,
-    mode:    curCat.mode,
-    people:  Array.from(selPeople),
-    detail:  currentAmountText(),
-    hours:   curCat.mode === 'range' ? Math.round((rangeMinutes() / 60) * 100) / 100 : null,
-    note:    $('#fNote').value.trim(),
-    ts:      Date.now()
-  };
+  var date   = $('#fDate').value || todayStr();
+  var detail = currentAmountText();
+  var hours  = curCat.mode === 'range' ? Math.round((rangeMinutes() / 60) * 100) / 100 : null;
+  var note   = $('#fNote').value.trim();
+
+  /* 一人一条记录：任意列内容不同即分行，便于后续导入二维数据库 */
+  var newRecs = Array.from(selPeople).map(function(name){
+    return {
+      date:    date,
+      catId:   curCat.id,
+      catName: curCat.name,
+      color:   curCat.color,
+      mode:    curCat.mode,
+      people:  [name],
+      detail:  detail,
+      hours:   hours,
+      note:    note,
+      status:  '待提交',
+      ts:      Date.now()
+    };
+  });
 
   /* TODO: 接后端时在这里 POST / 写 Waline / 写 R2，成功后再加入列表 */
-  records.unshift(rec);
+  records = newRecs.concat(records);   // 新记录置顶，保持选择顺序
   saveRecords();
   renderRecords();
 
-  // 提交后只清内容区，保留人员与类别，便于连续录入
-  $('#fStart').value = ''; $('#fEnd').value = ''; $('#fHours').value = '';
-  $('#fAmount').value = ''; $('#fNote').value = '';
-  updateRange();
-}
-
-/* ---------- 主题 ---------- */
-function setTheme(t){
-  $('#app').setAttribute('data-theme', t);
-  $('#themeBtn').textContent = t === 'dark' ? '☀️' : '🌙';
-  try { localStorage.setItem(THEME_KEY, t); } catch(e){}
+  // 保存后整体归位：人员 / 类别 / 考勤内容 全部恢复初始状态
+  selPeople.clear();
+  renderPeople();
+  curCat = null;
+  applyCat();                 // 取消类别选中、隐藏时段/数量块、重置类别提示
+  $('#fDate').value  = todayStr();
+  $('#fStart').value = ''; $('#fEnd').value = '';
+  $('#fHours').textContent = '';
+  $('#fNote').value = '';
+  refresh();                 // 刷新预览（应红色提示「尚未选择人员与类别」）与保存按钮（禁用）
 }
 
 /* ---------- 事件 ---------- */
@@ -516,11 +636,22 @@ $('#selNone').addEventListener('click', function(){
 });
 $('#fStart').addEventListener('change', updateRange);
 $('#fEnd').addEventListener('change', updateRange);
-$('#fAmount').addEventListener('input', refresh);
+$('#fNote').addEventListener('input', refresh);
 $('#fDate').addEventListener('change', refresh);
 $('#submitBtn').addEventListener('click', submit);
-$('#themeBtn').addEventListener('click', function(){
-  setTheme($('#app').getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+// 勾选记录 → 提交至「待审核」
+$('#submitRecordsBtn').addEventListener('click', function(){
+  var box = $('#records');
+  box.querySelectorAll('.rec-check:checked').forEach(function(cb){
+    var i = parseInt(cb.dataset.i, 10);
+    if (records[i]) records[i].status = '待审核';
+  });
+  saveRecords(); renderRecords();
+});
+// 勾选状态变化 → 控制提交按钮可用
+$('#records').addEventListener('change', function(e){
+  if (!e.target.classList.contains('rec-check')) return;
+  $('#submitRecordsBtn').disabled = $('#records').querySelectorAll('.rec-check:checked').length === 0;
 });
 // 记录删除（列表动态生成 → 委托）
 $('#records').addEventListener('click', function(e){
@@ -532,16 +663,15 @@ $('#records').addEventListener('click', function(e){
 
 /* ---------- 初始化 ---------- */
 (function init(){
-  var t = 'light';
-  try { t = localStorage.getItem(THEME_KEY) || 'light'; } catch(e){}
-  setTheme(t);
-
   $('#fDate').value = todayStr();
+  buildTimeSlots($('#fStart'));
+  buildTimeSlots($('#fEnd'));
   renderGroups();
   renderPeople();
   applyCat();
   loadRecords();
   renderRecords();
+  renderPresets();
 })();
 </script>
 </body>
