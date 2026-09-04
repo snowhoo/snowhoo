@@ -105,6 +105,16 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .people-table tr:last-child td{border-bottom:none}
 .people-table td:last-child,.people-table th:last-child{border-right:none}
 .people-table .muted{color:var(--text-muted)}
+/* 人员配置：工具栏 + 可编辑单元格 */
+.people-toolbar{display:flex;gap:8px;margin:10px 0 4px}
+.pt-btn{padding:6px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;
+  background:var(--bg-surface);color:var(--text-secondary);font-size:.8rem;font-family:inherit}
+.pt-btn:hover{background:var(--bg)}
+.people-table td[contenteditable="true"]{outline:none;cursor:text}
+.people-table td[contenteditable="true"]:focus{background:rgba(59,130,246,.14);box-shadow:inset 0 0 0 1px var(--accent)}
+.people-table .c-del{width:28px;text-align:center}
+.row-del{border:none;background:transparent;color:#e24b4a;font-size:15px;line-height:1;cursor:pointer;padding:0 4px}
+.row-del:hover{color:#a32d2d}
 #secAction .card-head{background:#e9ecf1}
 .card-head .hint{margin-left:auto;font-size:.78rem;color:var(--text-muted)}
 .card-body{padding:10px}
@@ -377,20 +387,26 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   </div>
 </div>
 
-<!-- 人员配置弹窗（管理 Waline 中的人员） -->
+<!-- 人员配置弹窗（增删改 Waline 中的人员，支持 xlsx 导入导出） -->
 <div class="modal-mask" id="peopleMask" hidden>
   <div class="modal people-modal" role="dialog" aria-modal="true">
-    <div class="modal-title">人员配置（Waline）</div>
-    <div class="modal-msg">管理 Waline 中配置的所有人员。下表为当前 Waline 人员（读取失败则显示本地种子）。
-点击「写入/同步 13 人」会把内置 13 人（含 id/姓名/性别/手机号/一级部门/二级部门/考勤组/权限）写入 Waline。</div>
+    <div class="modal-title">人员配置（Waline · /kaoqing/people）</div>
+    <div class="modal-msg">人员数据以 Waline 为唯一来源，前端不再内置写死数据。表格内可直接点击单元格修改；也可导出 xlsx 在 Excel 里批量编辑后再导入。改完点「保存到 Waline（复写）」，原地覆盖原记录，不会多出条目。</div>
+    <div class="people-toolbar">
+      <button type="button" class="pt-btn" id="peopleAddRow">+ 新增一行</button>
+      <button type="button" class="pt-btn" id="peopleExport">导出 xlsx</button>
+      <button type="button" class="pt-btn" id="peopleImport">导入 xlsx</button>
+      <input type="file" id="peopleFile" accept=".xlsx,.xls,.csv" hidden>
+    </div>
     <div class="people-table-wrap"><table class="people-table" id="peopleTable"></table></div>
     <div class="modal-actions">
       <button type="button" class="btn-cancel" id="peopleClose">关闭</button>
-      <button type="button" class="btn-ok" id="peopleSync">写入/同步 13 人到 Waline</button>
+      <button type="button" class="btn-ok" id="peopleSync">保存到 Waline（复写）</button>
     </div>
   </div>
 </div>
 
+<script src="./lib/xlsx.full.min.js"></script>
 <script>
 /* =====================================================================
    考勤登记 —— 框架版（二稿）
@@ -400,31 +416,28 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
    - 记录暂存在 localStorage，submit() 内留 TODO 未接后端。
    ===================================================================== */
 
-/* ---------- 数据源（TODO: 换成接口 / R2 拉取） ---------- */
-/* 人员数据源（统一以 Waline 为权威，前端不再写死展示用人员）：
-   - SEED_PEOPLE_FULL：内置 13 人种子，用于「写入 Waline」；性别/手机号先留空，后续在 Waline 后台补
-   - PEOPLE_FULL：人员完整档案（含 id/姓名/性别/手机号/一级部门/二级部门/考勤组/权限），来自 Waline 或种子
-   - PEOPLE：前端渲染用精简形态（n=姓名，g=考勤组），由 PEOPLE_FULL 派生 */
-var SEED_PEOPLE_FULL = [
-  { id:'P001', name:'马道旭', gender:'', phone:'', dept1:'生产部', dept2:'生产一组', group:'品管考勤组', permission:'' },
-  { id:'P002', name:'顾桢鸿', gender:'', phone:'', dept1:'生产部', dept2:'生产一组', group:'品管考勤组', permission:'' },
-  { id:'P003', name:'顾晓维', gender:'', phone:'', dept1:'生产部', dept2:'生产一组', group:'品管考勤组', permission:'' },
-  { id:'P004', name:'吴丽娟', gender:'', phone:'', dept1:'生产部', dept2:'生产一组', group:'品管考勤组', permission:'' },
-  { id:'P005', name:'夏莉萍', gender:'', phone:'', dept1:'生产部', dept2:'生产一组', group:'品管考勤组', permission:'' },
-  { id:'P006', name:'徐启双', gender:'', phone:'', dept1:'生产部', dept2:'生产二组', group:'品管考勤组', permission:'' },
-  { id:'P007', name:'张静',   gender:'', phone:'', dept1:'生产部', dept2:'生产二组', group:'品管考勤组', permission:'' },
-  { id:'P008', name:'尤文娟', gender:'', phone:'', dept1:'生产部', dept2:'生产二组', group:'品管考勤组', permission:'' },
-  { id:'P009', name:'夏卉',   gender:'', phone:'', dept1:'生产部', dept2:'生产二组', group:'品管考勤组', permission:'' },
-  { id:'P010', name:'惠雅',   gender:'', phone:'', dept1:'行政部', dept2:'行政组', group:'品管考勤组', permission:'' },
-  { id:'P011', name:'张永妹', gender:'', phone:'', dept1:'行政部', dept2:'行政组', group:'品管考勤组', permission:'' },
-  { id:'P012', name:'亢亦宁', gender:'', phone:'', dept1:'行政部', dept2:'行政组', group:'品管考勤组', permission:'' },
-  { id:'P013', name:'赵婷',   gender:'', phone:'', dept1:'行政部', dept2:'行政组', group:'品管考勤组', permission:'' }
-];
-var PEOPLE_FULL = SEED_PEOPLE_FULL.slice();
-var PEOPLE = SEED_PEOPLE_FULL.map(function(p){ return { n:p.name, g:p.group }; });
+/* ---------- 数据源 ---------- */
+/* 人员数据源：以 Waline（/kaoqing/people）为唯一权威来源，前端不再内置任何写死人员。
+   - PEOPLE_FULL：人员完整档案（id/姓名/性别/手机号/一级部门/二级部门/考勤组/权限），全部来自 Waline
+   - PEOPLE：前端渲染用精简形态（n=姓名，g=考勤组），由 PEOPLE_FULL 派生
+   页面打开时由 loadPeople() 从 Waline 拉取；拉取成功前列表为空，右上角状态标记会提示读取结果。 */
+var PEOPLE_FULL = [];
+var PEOPLE = [];
 
 /* 考勤组别：第一项固定为「全部」，其余由 PEOPLE_FULL.group 动态派生（见 rebuildGroups） */
-var GROUPS = ['全部', '品管考勤组'];
+var GROUPS = ['全部'];
+
+/* 人员表格列定义（顺序即 xlsx 列顺序）：key=字段，label=表头 */
+var PEOPLE_COLS = [
+  { key:'id',         label:'ID' },
+  { key:'name',       label:'姓名' },
+  { key:'gender',     label:'性别' },
+  { key:'phone',      label:'手机号' },
+  { key:'dept1',      label:'一级部门' },
+  { key:'dept2',      label:'二级部门' },
+  { key:'group',      label:'考勤组' },
+  { key:'permission', label:'权限' }
+];
 
 /* 类别：统一走时间段（≥0.5 小时），小时数自动计算 */
 var CATS = [
@@ -459,7 +472,7 @@ var CLOUD_BASE    = WALINE_SERVER;                // 兼容 APP.html 的命名
 var WALINE_OAUTH  = 'github'; // 登录方式：github / google / qq / weibo（取决于服务端开启的 OAuth 提供方）
 var HOLIDAY_PATH  = '/kaoqing/holidays'; // 节假日数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var PEOPLE_PATH   = '/kaoqing/people';   // 人员数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
-var COMPANY_NAME  = '公司名称';          // ← 顶栏公司名称（按需改成贵司名称）
+var COMPANY_NAME  = '苏州晶讯科技股份有限公司';   // ← 顶栏公司名称（按需改成贵司名称）
 // 注：跨域请求需 Waline 服务端 CORS_ALLOW_ORIGIN 允许本页域名（本地 file:// 预览会被浏览器拦截）。
 
 /* ---------- 状态 ---------- */
@@ -476,27 +489,10 @@ function todayStr(){
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 function toMin(t){ var p = t.split(':'); return parseInt(p[0],10) * 60 + parseInt(p[1],10); }
-function dateStr(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
-/* 节假日兜底表（2026，依据国务院放假安排 / timor.tech）；登录后若有 Waline 数据则覆盖 */
-function expandRanges(ranges){
-  var out = [];
-  ranges.forEach(function(r){
-    var s = r[0].split('-'), e = r[1].split('-');
-    var d0 = new Date(+s[0], +s[1]-1, +s[2]), d1 = new Date(+e[0], +e[1]-1, +e[2]);
-    for (var d = new Date(d0); d <= d1; d.setDate(d.getDate()+1)) out.push(dateStr(d));
-  });
-  return out;
-}
-var FALLBACK_HOLIDAYS = {
-  year: 2026,
-  holidays: expandRanges([
-    ['2026-01-01','2026-01-03'], ['2026-02-15','2026-02-23'], ['2026-04-04','2026-04-06'],
-    ['2026-05-01','2026-05-05'], ['2026-06-19','2026-06-21'], ['2026-09-25','2026-09-27'],
-    ['2026-10-01','2026-10-07']
-  ]),
-  makeup: ['2026-01-04','2026-02-14','2026-02-28','2026-05-09','2026-09-20','2026-10-10']  // 调休补班（上班日）
-};
-var HOLIDAYS = { year: 2026, holidays: FALLBACK_HOLIDAYS.holidays.slice(), makeup: FALLBACK_HOLIDAYS.makeup.slice() };
+/* 节假日：同样以 Waline（/kaoqing/holidays）为唯一来源，前端不再内置写死的兜底表。
+   页面打开时由 loadHolidays() 拉取；读到之前为空，加班类别会一律算成「平时」，
+   右上角状态标记会提示「节假日未读取」，便于一眼看出是不是没读成功。 */
+var HOLIDAYS = { year: new Date().getFullYear(), holidays: [], makeup: [] };
 /* 加班类别：国假（法定假日）/ 双休（正常周末）/ 平时（工作日，含调休补班上班） */
 function calcOtType(date){
   if (!date) return '平时';
@@ -1163,17 +1159,29 @@ function pushCloudRecord(path, obj, oidRef){
 async function loadHolidays(){
   try {
     var best = await fetchCloudRecord(HOLIDAY_PATH);
-    if (best && best.obj && best.obj.holidays){
+    if (best && best.obj && best.obj.holidays && best.obj.holidays.length){
       HOLIDAYS = {
         year: best.obj.year || HOLIDAYS.year,
         holidays: (best.obj.holidays || []).map(function(h){ return h.date || h; }),
         makeup:   (best.obj.makeup   || []).map(function(m){ return m.date || m; })
       };
+    } else {
+      appendCloud('err', '节假日未读取（Waline 无数据）');
     }
-  } catch(e){ console.error('[kaoqing] loadHolidays 失败', e && e.message ? e.message : e); }
+  } catch(e){
+    appendCloud('err', '节假日读取失败');
+    console.error('[kaoqing] loadHolidays 失败', e && e.message ? e.message : e);
+  }
 }
 /* 云端同步状态标记：一眼看清是否读到了 Waline（读失败多为 file:// 直接打开导致跨域被拦） */
 function setCloud(cls, txt){ var e = $('#cloudStat'); if (!e) return; e.className = 'cloud-stat' + (cls ? (' ' + cls) : ''); e.textContent = txt; }
+/* 在已有状态后面追加一段（人员状态先写、节假日状态后追加，避免互相覆盖） */
+function appendCloud(cls, txt){
+  var e = $('#cloudStat'); if (!e) return;
+  if (e.textContent && e.textContent.indexOf(txt) >= 0) return;   // 防止重复调用时反复追加
+  e.className = 'cloud-stat' + (cls ? (' ' + cls) : '');
+  e.textContent = e.textContent ? (e.textContent + ' · ' + txt) : txt;
+}
 /* 考勤记录：整体作为一条 JSON 匿名写入 Waline（RECORDS_PATH），每次新建一条，读取取最新 */
 var RECORDS_PATH = '/kaoqing/records';
 var recordsOid = { oid: 0 };
@@ -1342,53 +1350,233 @@ async function loadPeople(){
       rebuildGroups(); renderGroups(); renderPeople(); applyView();
       setCloud('ok', 'Waline 已同步 ' + PEOPLE_FULL.length + ' 人');
     } else if (best === null || best === undefined){
-      setCloud('err', 'Waline 读取失败（冷启动超时/网络/CORS）');
+      setCloud('err', 'Waline 读取失败（网络/超时/CORS）');
     } else {
-      setCloud('', '本地种子 ' + PEOPLE_FULL.length + ' 人');
+      setCloud('err', 'Waline 无人员数据，请到设置→人员配置导入');
     }
   } catch(e){
     setCloud('err', 'Waline 读取异常：' + (e && e.message ? e.message : e));
   }
 }
-/* 把内置 13 人（含 8 字段）写入 Waline（更新优先），并立即以该数据刷新前端 */
-async function syncPeople(){
-  closeSettings();
-  if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
-  var cur = await fetchCloudRecord(PEOPLE_PATH);
-  var isUpdate = !!(cur && cur.oid);
-  if (cur) peopleOid.oid = cur.oid;
-  var payload = { v: 1, type: 'people', updatedAt: Date.now(), people: SEED_PEOPLE_FULL };
-  var res = await pushCloudRecord(PEOPLE_PATH, payload, peopleOid);
-  if (res){
-    PEOPLE_FULL = SEED_PEOPLE_FULL.slice();
-    PEOPLE = PEOPLE_FULL.map(function(p){ return { n:p.name, g:p.group }; });
-    rebuildGroups(); renderGroups(); renderPeople(); applyView();
-    showAlert('已写入 Waline\n路径：' + PEOPLE_PATH + '\n共 ' + SEED_PEOPLE_FULL.length + ' 人（含 id/姓名/性别/手机号/一级部门/二级部门/考勤组/权限）。\n性别、手机号留空，可在 Waline 后台补充。' + (isUpdate ? '\n（已覆盖更新既有记录）' : '\n（已新建记录）'));
-  } else {
-    showAlert('写入 Waline 失败，请检查网络或权限');
-  }
+/* ---------- 人员表格：单元格可直接编辑，可增删行 ---------- */
+function escHtml(s){
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function peopleRowTds(p){
+  return PEOPLE_COLS.map(function(c){
+    return '<td contenteditable="true" data-field="' + c.key + '">' + escHtml(p[c.key]) + '</td>';
+  }).join('');
+}
+function bindRowDel(){
+  Array.prototype.forEach.call($('#peopleTable').querySelectorAll('.row-del'), function(b){
+    b.addEventListener('click', function(){ var tr = b.closest('tr'); if (tr) tr.remove(); });
+  });
 }
 function renderPeopleTable(list){
-  var cols = ['ID','姓名','性别','手机号','一级部门','二级部门','考勤组','权限'];
-  var html = '<thead><tr>' + cols.map(function(c){ return '<th>' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
+  var html = '<thead><tr><th class="c-del"></th>' +
+    PEOPLE_COLS.map(function(c){ return '<th>' + c.label + '</th>'; }).join('') + '</tr></thead><tbody>';
   list.forEach(function(p){
-    html += '<tr>' + [p.id,p.name,p.gender,p.phone,p.dept1,p.dept2,p.group,p.permission]
-      .map(function(v){ return '<td>' + (v === '' || v == null ? '<span class="muted">—</span>' : String(v)) + '</td>'; }).join('') + '</tr>';
+    html += '<tr><td class="c-del"><button type="button" class="row-del" title="删除该行">×</button></td>' + peopleRowTds(p) + '</tr>';
   });
   html += '</tbody>';
   $('#peopleTable').innerHTML = html;
+  bindRowDel();
+}
+function addPeopleRow(){
+  var tb = $('#peopleTable').querySelector('tbody');
+  if (!tb){ renderPeopleTable([]); tb = $('#peopleTable').querySelector('tbody'); }
+  var tr = document.createElement('tr');
+  tr.innerHTML = '<td class="c-del"><button type="button" class="row-del" title="删除该行">×</button></td>' +
+                 peopleRowTds({ id:'', name:'', gender:'', phone:'', dept1:'', dept2:'', group:'', permission:'' });
+  tb.appendChild(tr);
+  bindRowDel();
+  var first = tr.querySelector('td[data-field="id"]');
+  if (first) first.focus();
+}
+/* 读取表格当前内容（含手工编辑过的单元格） */
+function readPeopleTable(){
+  var out = [];
+  Array.prototype.forEach.call($('#peopleTable').querySelectorAll('tbody tr'), function(tr){
+    var o = {};
+    PEOPLE_COLS.forEach(function(c, i){
+      var td = tr.children[i + 1];
+      o[c.key] = td ? String(td.textContent || '').replace(/\u00a0/g, ' ').trim() : '';
+    });
+    if (o.name) out.push(o);   // 至少要有姓名，空行忽略
+  });
+  return out;
+}
+
+/* ---------- xlsx 导出 / 导入 ---------- */
+function exportPeopleXlsx(){
+  var list = readPeopleTable();
+  if (!list.length){ showAlert('当前没有人员可导出'); return; }
+  if (typeof XLSX === 'undefined'){ showAlert('xlsx 组件未加载（lib/xlsx.full.min.js 缺失），无法导出'); return; }
+  var rows = [PEOPLE_COLS.map(function(c){ return c.label; })];
+  list.forEach(function(p){ rows.push(PEOPLE_COLS.map(function(c){ return p[c.key] || ''; })); });
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:8},{wch:12},{wch:6},{wch:14},{wch:14},{wch:14},{wch:14},{wch:10}];
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '人员');
+  XLSX.writeFile(wb, '考勤人员_' + todayStr() + '.xlsx');
+}
+/* 表头别名 → 列下标：兼容用户自己做的表（列顺序不一致也能认） */
+var PEOPLE_ALIAS = {
+  'id':0, '编号':0, '工号':0,
+  '姓名':1, '名字':1, '人员':1,
+  '性别':2,
+  '手机号':3, '手机':3, '电话':3, '联系电话':3,
+  '一级部门':4, '部门':4, '一级':4,
+  '二级部门':5, '班组':5, '二级':5, '分组':5,
+  '考勤组':6, '组别':6, '考勤组别':6,
+  '权限':7, '角色':7
+};
+function importPeopleXlsx(file){
+  if (typeof XLSX === 'undefined'){ showAlert('xlsx 组件未加载（lib/xlsx.full.min.js 缺失），无法导入'); return; }
+  var reader = new FileReader();
+  reader.onerror = function(){ showAlert('读取文件失败'); };
+  reader.onload = function(e){
+    var list;
+    try {
+      var wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      if (!ws){ showAlert('表格里没有可读取的工作表'); return; }
+      var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', blankrows: false });
+      if (!rows.length){ showAlert('表格是空的'); return; }
+      var head = rows[0].map(function(v){ return String(v == null ? '' : v).trim().toLowerCase(); });
+      var isHead = head.some(function(h){ return h === '姓名' || h === 'id' || h === '考勤组'; });
+      var idx = PEOPLE_COLS.map(function(c, i){ return i; });
+      if (isHead){
+        idx = PEOPLE_COLS.map(function(){ return -1; });
+        head.forEach(function(h, i){
+          var k = PEOPLE_ALIAS[h];
+          if (k !== undefined && idx[k] === -1) idx[k] = i;
+        });
+      }
+      list = [];
+      for (var r = isHead ? 1 : 0; r < rows.length; r++){
+        var row = rows[r];
+        if (!row) continue;
+        var o = {};
+        PEOPLE_COLS.forEach(function(c, k){
+          var i = idx[k];
+          o[c.key] = (i >= 0 && row[i] != null) ? String(row[i]).trim() : '';
+        });
+        if (o.name) list.push(o);
+      }
+    } catch(err){
+      showAlert('解析失败：' + (err && err.message ? err.message : err));
+      return;
+    }
+    if (!list.length){ showAlert('没能识别到人员数据，表格至少要有「姓名」列'); return; }
+    renderPeopleTable(list);
+    showAlert('已读入 ' + list.length + ' 人，请核对表格后点「保存到 Waline（复写）」。');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ---------- 保存：原地复写 Waline 里那条人员记录（不新增多余条目） ---------- */
+/* Waline 真实接口（取自 lib/waline.js 源码）：
+     改  PUT    {server}/api/comment/{objectId}?lang=zh-CN  需 Authorization: Bearer {token}
+     删  DELETE {server}/api/comment/{objectId}?lang=zh-CN  需 Authorization: Bearer {token}
+     建  POST   {server}/api/comment?lang=zh-CN             带 token 时，新记录归属该账号
+   策略：先尝试 PUT 原地改；改不动（现存那条是匿名发的、没有归属）就带 token 建一条新的
+   并删掉旧的——之后这条归你所有，再保存就能一直原地复写，Waline 里始终只留 1 条。 */
+async function walineSaveRecord(oid, body, token){
+  var base = CLOUD_BASE.replace(/\/$/, '');
+  var lang = 'zh-CN';
+  if (oid && token){
+    try {
+      var r = await fetch(base + '/api/comment/' + oid + '?lang=' + lang, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(body)
+      });
+      var j = await r.json().catch(function(){ return {}; });
+      if (r.ok && j && j.errno === 0) return { mode: 'update', oid: oid };
+    } catch(e){ /* 落到下面的新建分支 */ }
+  }
+  var headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  var r2 = await fetch(base + '/api/comment?lang=' + lang, { method: 'POST', headers: headers, body: JSON.stringify(body) });
+  var j2 = await r2.json().catch(function(){ return {}; });
+  if (!r2.ok) throw new Error('写入失败 HTTP ' + r2.status + ' ' + ((j2 && j2.errmsg) || ''));
+  var newOid = parseInt((j2 && j2.data && j2.data.objectId) || 0, 10);
+  var removed = false;
+  if (oid && token && newOid && newOid !== oid){
+    try {
+      var r3 = await fetch(base + '/api/comment/' + oid + '?lang=' + lang, {
+        method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token }
+      });
+      var j3 = await r3.json().catch(function(){ return {}; });
+      removed = !!(r3.ok && j3 && j3.errno === 0);
+    } catch(e){ removed = false; }
+  }
+  return { mode: 'create', oid: newOid || oid, removed: removed, oldOid: oid };
+}
+async function savePeopleToWaline(){
+  if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
+  var list = readPeopleTable();
+  if (!list.length){ showAlert('表格里没有人员（至少「姓名」列要有值）'); return; }
+  var user = getWalineUser();
+  var token = walineToken(user);
+  if (!token){
+    showAlert('未登录，无法保存。\n请先点右上角「登录」，登录后再保存——这样记录归你账号所有，之后每次保存都是原地复写，不会多出条目。');
+    return;
+  }
+  var payload = { v: 1, type: 'people', updatedAt: Date.now(), people: list };
+  var body = {
+    comment: JSON.stringify(payload), url: PEOPLE_PATH,
+    nick: (user && user.display_name) || ANON_NICK,
+    mail: (user && user.email) || ANON_MAIL,
+    link: '', ua: navigator.userAgent
+  };
+  var oldOid = peopleOid.oid;
+  try {
+    var res = await walineSaveRecord(oldOid, body, token);
+    peopleOid.oid = res.oid;
+    PEOPLE_FULL = list;
+    PEOPLE = PEOPLE_FULL.map(function(p){ return { n: p.name, g: p.group }; });
+    rebuildGroups(); renderGroups(); renderPeople(); applyView();
+    setCloud('ok', 'Waline 已同步 ' + PEOPLE_FULL.length + ' 人');
+    var msg;
+    if (res.mode === 'update'){
+      msg = '已保存：原地复写了原记录（#' + res.oid + '），Waline 里仍然只有 1 条。\n共 ' + list.length + ' 人。';
+    } else if (res.removed){
+      msg = '已保存：原记录是匿名发的、无法原地修改，已新建一条归属你账号的记录（#' + res.oid + '）并删除了旧记录（#' + res.oldOid + '）。\n现在 Waline 里只剩 1 条，以后每次保存都会原地复写。\n共 ' + list.length + ' 人。';
+    } else {
+      msg = '已保存：新建了一条归属你账号的记录（#' + res.oid + '），以后每次保存都会原地复写。\n共 ' + list.length + ' 人。' +
+            (res.oldOid ? '\n注意：旧记录 #' + res.oldOid + ' 删除失败（可能权限不足），请到 Waline 后台手动删掉，否则会残留一条。' : '');
+    }
+    showAlert(msg);
+  } catch(err){
+    showAlert('保存到 Waline 失败：' + (err && err.message ? err.message : err));
+  }
 }
 async function openPeopleConfig(){
   closeSettings();
   if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
-  var best = null;
-  try { best = await fetchCloudRecord(PEOPLE_PATH); } catch(e){ best = null; }
-  var list = (best && best.obj && best.obj.people && best.obj.people.length) ? best.obj.people : PEOPLE_FULL;
+  var list = PEOPLE_FULL;
+  try {
+    var best = await fetchCloudRecord(PEOPLE_PATH);
+    if (best && best.obj && best.obj.people && best.obj.people.length){
+      peopleOid.oid = best.oid;
+      list = best.obj.people;
+    }
+  } catch(e){ /* 读取失败就用当前内存里的数据 */ }
   renderPeopleTable(list);
   $('#peopleMask').hidden = false;
 }
 $('#peopleConfigBtn').addEventListener('click', openPeopleConfig);
-$('#peopleSync').addEventListener('click', syncPeople);
+$('#peopleSync').addEventListener('click', savePeopleToWaline);
+$('#peopleAddRow').addEventListener('click', addPeopleRow);
+$('#peopleExport').addEventListener('click', exportPeopleXlsx);
+$('#peopleImport').addEventListener('click', function(){ $('#peopleFile').click(); });
+$('#peopleFile').addEventListener('change', function(e){
+  var f = e.target.files && e.target.files[0];
+  if (f) importPeopleXlsx(f);
+  e.target.value = '';   // 允许再次选同一个文件
+});
 $('#peopleClose').addEventListener('click', function(){ $('#peopleMask').hidden = true; });
 $('#peopleMask').addEventListener('click', function(e){ if (e.target === $('#peopleMask')) $('#peopleMask').hidden = true; });
 document.addEventListener('keydown', function(e){
