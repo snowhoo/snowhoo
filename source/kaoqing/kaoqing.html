@@ -28,27 +28,73 @@ body{
 #topbar{
   position:sticky;top:0;z-index:50;
   display:flex;align-items:center;justify-content:space-between;
-  padding:40px 16px 12px;
+  padding:12px 16px 12px;
   background:var(--bg-surface);border-bottom:1px solid var(--border);
 }
 #topbar h1{margin:0;font-size:1.05rem;font-weight:600;letter-spacing:.5px}
+/* ---- 顶栏右侧：设置图标 + Waline 登录头像 ---- */
+.top-actions{position:relative;display:flex;align-items:center;gap:10px}
+.icon-btn{
+  width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);border-radius:10px;background:var(--bg-surface);
+  color:var(--text-secondary);cursor:pointer;
+}
+.icon-btn svg{width:18px;height:18px}
+.icon-btn.disabled,.icon-btn:disabled{opacity:.4;cursor:not-allowed}
+.avatar-btn{
+  width:34px;height:34px;border-radius:50%;border:1px dashed var(--border);
+  background:var(--bg-surface);color:var(--text-muted);cursor:pointer;overflow:hidden;
+  display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;padding:0;line-height:1;
+}
+.avatar-btn.on{border-style:solid;border-color:var(--accent)}
+.avatar-btn img{width:100%;height:100%;object-fit:cover}
+.avatar-fallback{line-height:1}
+.settings-menu{
+  position:absolute;right:0;top:calc(100% + 8px);min-width:240px;
+  background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 12px 30px rgba(0,0,0,.16);padding:6px;z-index:60;
+}
+.settings-menu[hidden]{display:none}
+.settings-item{
+  display:block;width:100%;text-align:left;padding:10px 12px;border:none;background:transparent;
+  border-radius:8px;cursor:pointer;font-size:.85rem;color:var(--text);font-family:inherit;white-space:nowrap;
+}
+.settings-item:hover{background:var(--accent-soft);color:var(--accent)}
 
 /* ============ 区域卡片 ============ */
-.wrap{max-width:760px;margin:0 auto;padding:14px 12px;display:flex;flex-direction:column;gap:14px}
+.wrap{max-width:760px;margin:0 auto;padding:5px 5px;display:flex;flex-direction:column;gap:5px}
 .card{background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
-.card-head{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.card-head{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:5px 10px;border-bottom:1px solid var(--border)}
 .card-head .idx{
   width:22px;height:22px;flex:0 0 22px;border-radius:50%;
-  background:var(--accent);color:#fff;font-size:.75rem;font-weight:600;
+  background:#16a34a;color:#fff;font-size:.75rem;font-weight:600;   /* 默认：添加态=绿 */
   display:flex;align-items:center;justify-content:center;
 }
+body.edit-mode .idx{ background:#f97316; }                          /* 修改态=橙 */
 .card-head h2{margin:0;font-size:.95rem;font-weight:600}
+/* ---------- 自定义弹窗（替代原生 prompt/alert） ---------- */
+.modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal-mask[hidden]{display:none}
+.modal{background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.25);width:min(360px,90vw);padding:20px;animation:modalIn .15s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.modal-title{font-size:1rem;font-weight:600;margin-bottom:10px}
+.modal-msg{font-size:.9rem;color:var(--text-muted);margin-bottom:14px;white-space:pre-wrap;word-break:break-word}
+.modal-input-wrap{margin-bottom:14px}
+.modal-input-wrap input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:.95rem;background:var(--bg);color:var(--text);outline:none}
+.modal-input-wrap input:focus{border-color:var(--accent)}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px}
+.modal-actions button{padding:9px 18px;border:none;border-radius:10px;cursor:pointer;font-size:.9rem}
+.modal-actions .btn-ok{background:var(--accent);color:#fff;font-weight:600}
+.modal-actions .btn-ok:hover{filter:brightness(.95)}
+.modal-actions .btn-cancel{background:transparent;border:1px solid var(--border);color:var(--text)}
+.modal-actions .btn-cancel:hover{background:var(--bg)}
+#secAction .card-head{background:#e9ecf1}
 .card-head .hint{margin-left:auto;font-size:.78rem;color:var(--text-muted)}
-.card-body{padding:14px}
+.card-body{padding:10px}
 
 /* ---- 区域一：人员（组别下拉内嵌标题行 + 大号姓名卡） ---- */
 .gsel{
-  padding:6px 10px;border-radius:10px;font-size:.82rem;
+  padding:0px 5px;border-radius:10px;font-size:.82rem;
   border:1px solid var(--border);background:var(--bg-surface);color:var(--text);
   outline:none;font-family:inherit;min-width:110px;
 }
@@ -57,14 +103,13 @@ body{
 
 .chips{display:flex;flex-wrap:wrap;gap:10px}
 .chip{
-  min-width:88px;padding:10px 16px;border-radius:12px;cursor:pointer;
+  min-width:88px;padding:5px 16px;border-radius:12px;cursor:pointer;
   border:1.5px solid var(--border);background:transparent;color:var(--text-secondary);
   font-size:1rem;font-weight:500;text-align:center;
   transition:background .15s,color .15s,border-color .15s;
 }
 .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .chip.disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
-.chip.gap-left{margin-left:28px}
 /* 类别选中双色：加班=绿，其它=橙 */
 .chip.on.c-green{background:#16a34a;border-color:#16a34a;color:#fff}
 .chip.on.c-orange{background:#f97316;border-color:#f97316;color:#fff}
@@ -99,7 +144,7 @@ body{
 .time-row{flex:1;display:flex;align-items:center;gap:6px}
 .time-row select{flex:1 1 66px;min-width:60px}
 .time-row .sep{color:var(--text-muted);font-size:.82rem;flex:0 0 auto}
-#fHours{font-size:.92rem;font-weight:600;color:var(--text-secondary);white-space:nowrap}
+#fHours{font-size:.92rem;font-weight:600;color:var(--text-secondary);white-space:nowrap;min-width:6em;display:inline-block;text-align:left}
 #fHours.bad{color:var(--warn);font-weight:500}
 .tip{font-size:.78rem;color:var(--text-muted);margin:0}
 
@@ -136,8 +181,9 @@ body{
 .pv-note{color:var(--text-muted)}
 #submitBtn{
   flex:0 0 auto;min-width:120px;padding:12px 22px;border:none;border-radius:12px;cursor:pointer;
-  background:var(--accent);color:#fff;font-size:.95rem;font-weight:600;
+  background:#16a34a;color:#fff;font-size:.95rem;font-weight:600;   /* 默认：添加（绿） */
 }
+#submitBtn.edit-mode{background:#f97316;}                           /* 修改模式：橙 */
 #submitBtn:disabled{opacity:.45;cursor:not-allowed}
 .records{display:block;overflow-x:auto}
 .rec-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:10px}
@@ -147,6 +193,11 @@ body{
   background:var(--accent);color:#fff;font-size:.85rem;font-weight:600;
 }
 .btn-rec-submit:disabled{opacity:.45;cursor:not-allowed}
+.btn-rec-action{
+  padding:8px 18px;border:1px solid var(--border);border-radius:10px;cursor:pointer;
+  background:var(--bg-surface);color:var(--text-secondary);font-size:.85rem;font-weight:600;font-family:inherit;
+}
+.btn-rec-action:disabled{opacity:.45;cursor:not-allowed}
 .rec-table{width:100%;border-collapse:collapse;font-size:.8rem;min-width:640px}
 .rec-table th,.rec-table td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle}
 .rec-table th{background:var(--bg-surface);color:var(--text-secondary);font-weight:600;text-align:left}
@@ -168,7 +219,16 @@ body{
 .st-sp{background:rgba(245,158,11,.15);color:#f59e0b}
 .st-ok{background:rgba(34,197,94,.15);color:#22c55e}
 .rec-del{border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:.9rem;padding:0 4px}
+.rec-actions{display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.rec-edit{border:none;background:transparent;color:var(--accent);cursor:pointer;font-size:.82rem;padding:0 4px;display:inline-flex;align-items:center}
+.rec-edit svg{width:14px;height:14px;display:block}
 .empty{color:var(--text-muted);font-size:.82rem;text-align:center;margin:6px 0}
+@media print{
+  #topbar,.card:not(#secAction){display:none!important}
+  #secAction{box-shadow:none;border:none;margin:0}
+  .rec-toolbar{display:none!important}
+  .rec-table th.c-check,.rec-table td.c-check,.rec-table .c-del{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -176,6 +236,17 @@ body{
 
   <header id="topbar">
     <h1>考勤登记</h1>
+    <div class="top-actions">
+      <button id="setBtn" class="icon-btn" disabled title="设置（登录后可用）" aria-label="设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button id="avatarBtn" class="avatar-btn" title="点击登录 Waline">
+        <span class="avatar-fallback">登录</span>
+      </button>
+      <div class="settings-menu" id="settingsMenu" hidden>
+        <button class="settings-item" id="syncHolidayBtn">从 timor.tech API 获取节假日 写进 Waline</button>
+      </div>
+    </div>
   </header>
 
   <div class="wrap">
@@ -198,7 +269,7 @@ body{
     </section>
 
     <!-- ============ 区域二：选择类别 ============ -->
-    <section class="card" id="secCat">
+    <section class="card" id="secCat" hidden>
       <div class="card-head">
         <span class="idx">2</span>
         <h2>选择类别</h2>
@@ -211,7 +282,7 @@ body{
     </section>
 
     <!-- ============ 区域三：考勤内容 ============ -->
-    <section class="card" id="secContent">
+    <section class="card" id="secContent" hidden>
       <div class="card-head">
         <span class="idx">3</span>
         <h2>考勤内容</h2>
@@ -250,21 +321,20 @@ body{
         <!-- 待保存内容预览 + 保存（同行，底部对齐） -->
         <div class="save-row">
           <div class="summary pv-empty" id="summary">尚未选择人员与类别</div>
-          <button id="submitBtn" disabled>保存</button>
+          <button id="submitBtn" disabled>添加</button>
         </div>
       </div>
     </section>
 
     <!-- ============ 区域四：提交与记录 ============ -->
     <section class="card" id="secAction">
-      <div class="card-head">
-        <span class="idx">4</span>
-        <h2>提交与记录</h2>
-      </div>
       <div class="card-body">
         <div class="rec-toolbar">
-          <span class="rec-count" id="recCount">共 0 条</span>
+          <span class="rec-count" id="recCount">本月考勤记录 共 0 条</span>
           <button id="submitRecordsBtn" class="btn-rec-submit" disabled>提交</button>
+          <button id="reviewBtn" class="btn-rec-action" disabled>审核</button>
+          <button id="approveBtn" class="btn-rec-action" disabled>批准</button>
+          <button id="printBtn" class="btn-rec-action" disabled>打印</button>
         </div>
         <div class="records" id="records">
           <p class="empty">暂无记录</p>
@@ -302,7 +372,7 @@ var CATS = [
   { id:'nianjia',  name:'年假',     char:'年', color:'#3b82f6', mode:'range', tip:'选择年假时间段，至少 0.5 小时，小时数自动计算' },
   { id:'bingjia',  name:'病假',     char:'病', color:'#ef4444', mode:'range', tip:'选择病假时间段，至少 0.5 小时，小时数自动计算' },
   { id:'shijia',   name:'事假',     char:'事', color:'#8b5cf6', mode:'range', tip:'选择事假时间段，至少 0.5 小时，小时数自动计算' },
-  { id:'qita',     name:'其它（请备注）', char:'它', color:'#6b7280', mode:'range', tip:'选择时间段，至少 0.5 小时，并在备注中说明事由' },
+  { id:'qita',     name:'其它', char:'它', color:'#6b7280', mode:'range', tip:'选择时间段，至少 0.5 小时，并在备注中说明事由' },
 ];
 
 /* 常用说明：按类别分组，选择类别后自动切换对应列表；点击以追加方式填入备注事由（A+B+B 可多次叠加） */
@@ -317,12 +387,24 @@ var PRESET_NOTES = {
 
 var MIN_MINUTES   = 30;     // 时间段最少 0.5 小时
 
+/* 密码：审核 / 批准 / 管理员（占位值，接后端前请改掉） */
+var PWD_REVIEW  = '1';     // 审核密码：可删除 待审核、待提交
+var PWD_APPROVE = '12';    // 批准密码：可删除 待批准、待审核、待提交
+var PWD_ADMIN   = '123';   // 管理员密码：可删除任意状态（含完成）
+
+/* ---------- Waline 登录 / 节假日写入（按需配置） ---------- */
+var WALINE_SERVER = '';        // ← 填你的 Waline 服务端地址，如 https://waline.example.com
+var WALINE_OAUTH  = 'github'; // 登录方式：github / google / qq / weibo（取决于服务端开启的 OAuth 提供方）
+var HOLIDAY_PATH  = '/kaoqing/holidays'; // 节假日数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
+// 注：跨域请求需 Waline 服务端 CORS_ALLOW_ORIGIN 允许本页域名（本地 file:// 预览会被浏览器拦截）。
+
 /* ---------- 状态 ---------- */
 var STORE_KEY = 'kaoqing_records';
 var selPeople = new Set();
 var curGroup  = GROUPS[0];
 var curCat    = null;
 var records   = [];
+var editIndex = null;   // 修改模式：正在编辑的记录下标（null=新增模式）
 
 function $(s){ return document.querySelector(s); }
 function todayStr(){
@@ -376,7 +458,7 @@ function renderPeople(){
     b.addEventListener('click', function(){
       if (selPeople.has(p.n)) selPeople.delete(p.n); else selPeople.add(p.n);
       renderPeople();
-      refresh();
+      applyView();
     });
     box.appendChild(b);
   });
@@ -390,23 +472,36 @@ function renderCats(){
     var b = document.createElement('button');
     var isOn = curCat && curCat.id === c.id;
     var onCls = isOn ? (' on ' + (c.id === 'overtime' ? 'c-green' : 'c-orange')) : '';
-    var gapCls = (c.id === 'tiaoxiu') ? ' gap-left' : '';
-    b.className = 'chip' + onCls + gapCls;
+    b.className = 'chip' + onCls;
     b.textContent = c.name;
     b.addEventListener('click', function(){
       curCat = (curCat && curCat.id === c.id) ? null : c;   // 再点一次取消
-      applyCat();
+      applyView();
     });
     box.appendChild(b);
   });
 }
 
-/* ---------- 区域三：按类别切换表单 ---------- */
-function applyCat(){
+/* ---------- 视图状态：按「是否选人 / 是否选类别」逐级显示区域，并显示前恢复默认 ---------- */
+function applyView(){
+  var showCat     = selPeople.size > 0;          // 选人 → 显示 选择类别
+  var showContent = showCat && !!curCat;         // 选类别 → 显示 考勤内容
+
+  // 任何隐藏/显示前恢复默认状态：被隐藏层级的下游一并归零
+  if (!showCat)     curCat = null;              // 隐藏「选择类别」→ 取消类别选中
+  if (!showContent){                            // 隐藏「考勤内容」→ 归零内容字段
+    $('#fDate').value      = todayStr();
+    $('#fStart').value     = '';
+    $('#fEnd').value       = '';
+    $('#fHours').textContent = '';
+    $('#fNote').value      = '';
+  }
+
+  $('#secCat').hidden     = !showCat;
+  $('#secContent').hidden = !showContent;
+
   renderCats();
-
-  $('#rangeBlock').hidden = !curCat;                      // 选择类别后显示时间段
-
+  $('#rangeBlock').hidden = !curCat;
   if (curCat){
     $('#catHint').textContent = curCat.name;
     $('#catTip').textContent  = curCat.tip;
@@ -416,6 +511,7 @@ function applyCat(){
   }
   updateRange();
   renderPresets();          // 切换类别时同步切换常用说明列表
+  refresh();
 }
 
 /* 时间段 -> 分钟差（跨天自动 +24h） */
@@ -521,12 +617,12 @@ function esc(s){
   });
 }
 
-var STATUS_CLASS = { '待提交':'st-tj', '待审核':'st-sh', '待审批':'st-sp', '完成':'st-ok' };
+var STATUS_CLASS = { '待提交':'st-tj', '待审核':'st-sh', '待批准':'st-sp', '待审批':'st-sp', '完成':'st-ok' };
 
 function renderRecords(){
   var box = $('#records');
-  $('#recCount').textContent = '共 ' + records.length + ' 条';
-  $('#submitRecordsBtn').disabled = true;   // 重新渲染后勾选清空，提交按钮先禁用
+  $('#recCount').textContent = '本月考勤记录 共 ' + records.length + ' 条';
+  updateRecButtons();   // 重新渲染后勾选清空，记录相关按钮全禁用
   if (!records.length){
     box.innerHTML = '<p class="empty">暂无记录</p>';
     return;
@@ -565,7 +661,7 @@ function renderRecords(){
       '<td class="c-hours">' + esc(hoursTxt) + '</td>' +
       '<td class="c-status"><span class="rec-status ' + (STATUS_CLASS[st] || 'st-tj') + '">' + st + '</span></td>' +
       '<td class="c-note">' + note + '</td>' +
-      '<td class="c-del"><button class="rec-del" data-i="' + i + '" title="删除">✕</button></td>' +
+      '<td class="c-del"><span class="rec-actions"><button class="rec-edit" data-i="' + i + '" title="修改" aria-label="修改"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><button class="rec-del" data-i="' + i + '" title="删除">✕</button></span></td>' +
     '</tr>';
   });
   html += '</tbody></table>';
@@ -577,6 +673,19 @@ function loadRecords(){
   try { var raw = localStorage.getItem(STORE_KEY); if (raw) records = JSON.parse(raw) || []; } catch(e){ records = []; }
 }
 
+/* 保存按钮随模式切换：新增=「添加」(绿) / 修改=「修改」(橙)；并同步步骤圈字(1/2/3)配色 */
+function refreshSaveBtn(){
+  var b = $('#submitBtn');
+  var edit = editIndex !== null;
+  if (!edit){
+    b.textContent = '添加';
+    b.classList.remove('edit-mode');
+  } else {
+    b.textContent = '修改';
+    b.classList.add('edit-mode');
+  }
+  document.body.classList.toggle('edit-mode', edit);   // 步骤圈字：添加=绿 / 修改=橙
+}
 function submit(){
   if (!selPeople.size || !curCat || !rangeOK()) return;
 
@@ -584,6 +693,31 @@ function submit(){
   var detail = currentAmountText();
   var hours  = curCat.mode === 'range' ? Math.round((rangeMinutes() / 60) * 100) / 100 : null;
   var note   = $('#fNote').value.trim();
+
+  /* 修改模式：原地更新该条记录，人员/状态/时间戳保持不变，仅改 日期/时段/类别/说明 */
+  if (editIndex !== null){
+    var old = records[editIndex];
+    records[editIndex] = {
+      date: date,
+      catId: curCat.id,
+      catName: curCat.name,
+      color: curCat.color,
+      mode: curCat.mode,
+      people: old.people,
+      detail: detail,
+      hours: hours,
+      note: note,
+      status: old.status,
+      ts: old.ts
+    };
+    editIndex = null;
+    refreshSaveBtn();
+    saveRecords();
+    renderRecords();
+    selPeople.clear(); renderPeople();
+    curCat = null; applyView();        // 同新增：保存后整体归位
+    return;
+  }
 
   /* 一人一条记录：任意列内容不同即分行，便于后续导入二维数据库 */
   var newRecs = Array.from(selPeople).map(function(name){
@@ -607,57 +741,337 @@ function submit(){
   saveRecords();
   renderRecords();
 
-  // 保存后整体归位：人员 / 类别 / 考勤内容 全部恢复初始状态
+  // 保存后整体归位：人员 / 类别 / 考勤内容 全部恢复初始状态（仅显示 选择人员）
   selPeople.clear();
   renderPeople();
   curCat = null;
-  applyCat();                 // 取消类别选中、隐藏时段/数量块、重置类别提示
-  $('#fDate').value  = todayStr();
-  $('#fStart').value = ''; $('#fEnd').value = '';
-  $('#fHours').textContent = '';
-  $('#fNote').value = '';
-  refresh();                 // 刷新预览（应红色提示「尚未选择人员与类别」）与保存按钮（禁用）
+  applyView();               // 隐藏 选择类别/考勤内容、归零内容字段、重置预览与保存按钮
+  refreshSaveBtn();          // 归位后回到「添加」(绿)
+}
+
+/* 修改：把记录载入表单（区域1~3），进入修改模式；权限控制与删除一致 */
+function startEdit(i){
+  var r = records[i];
+  if (!r) return;
+  editIndex = i;
+  curGroup = GROUPS[0];                       // 切到「全部」保证原人员可见
+  $('#groupSel').value = curGroup;
+  selPeople = new Set(r.people);
+  curCat = CATS.find(function(c){ return c.id === r.catId; });
+  $('#fDate').value = r.date || todayStr();
+  var m = (r.detail || '').match(/^(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+  $('#fStart').value = m ? m[1] : '';
+  $('#fEnd').value   = m ? m[2] : '';
+  $('#fNote').value  = r.note || '';
+  renderGroups();
+  renderPeople();
+  applyView();                               // 选人+选类别 → 显示区域2/3 并填好内容
+  refreshSaveBtn();                          // 进入修改模式：按钮变「修改」(橙)
+  var sc = $('#secContent');
+  if (sc && sc.scrollIntoView) sc.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /* ---------- 事件 ---------- */
 $('#groupSel').addEventListener('change', function(){
   curGroup = this.value;
-  renderPeople();                 // 已选人员跨组别保留
+  renderPeople(); applyView();    // 已选人员跨组别保留，重算视图
 });
 $('#selAll').addEventListener('click', function(){
   peopleOfGroup().forEach(function(p){ selPeople.add(p.n); });
-  renderPeople(); refresh();
+  renderPeople(); applyView();
 });
 $('#selNone').addEventListener('click', function(){
   peopleOfGroup().forEach(function(p){ selPeople.delete(p.n); });
-  renderPeople(); refresh();
+  renderPeople(); applyView();
 });
 $('#fStart').addEventListener('change', updateRange);
 $('#fEnd').addEventListener('change', updateRange);
 $('#fNote').addEventListener('input', refresh);
 $('#fDate').addEventListener('change', refresh);
 $('#submitBtn').addEventListener('click', submit);
-// 勾选记录 → 提交至「待审核」
-$('#submitRecordsBtn').addEventListener('click', function(){
+/* ---------- 记录批量操作辅助 ---------- */
+function updateRecButtons(){
   var box = $('#records');
-  box.querySelectorAll('.rec-check:checked').forEach(function(cb){
-    var i = parseInt(cb.dataset.i, 10);
-    if (records[i]) records[i].status = '待审核';
+  var checked = box.querySelectorAll('.rec-check:checked');
+  if (!checked.length){                       // 未勾选任何记录 → 全禁用
+    $('#submitRecordsBtn').disabled = true;
+    $('#reviewBtn').disabled   = true;
+    $('#approveBtn').disabled  = true;
+    $('#printBtn').disabled    = true;
+    return;
+  }
+  var hasPending = false;     // 待提交（提交用）
+  var hasReviewed = false;    // 待审核（审核用）
+  var hasApproved = false;    // 待批准（批准用）
+  var hasPrintable = false;   // 非待提交（可打印）
+  checked.forEach(function(cb){
+    var r = records[parseInt(cb.dataset.i, 10)];
+    if (!r) return;
+    if (r.status === '待提交'){ hasPending = true; }
+    else { hasPrintable = true; }
+    if (r.status === '待审核') hasReviewed = true;
+    if (r.status === '待批准') hasApproved = true;
   });
-  saveRecords(); renderRecords();
+  $('#submitRecordsBtn').disabled = !hasPending;
+  $('#reviewBtn').disabled   = !hasReviewed;
+  $('#approveBtn').disabled  = !hasApproved;
+  $('#printBtn').disabled    = !hasPrintable;
+}
+/* 自定义弹窗：替代原生 prompt/alert */
+function showModal(opts){
+  opts = opts || {};
+  return new Promise(function(resolve){
+    var mask = $('#modalMask');
+    var cancel = $('#modalCancel');
+    var inp = $('#modalInput');
+    var wrap = $('#modalInputWrap');
+    $('#modalTitle').textContent = opts.title || '';
+    $('#modalMsg').textContent   = opts.message || '';
+    if (opts.password){ wrap.hidden = false; inp.value = ''; inp.type = 'password'; inp.placeholder = ''; }
+    else if (opts.input){ wrap.hidden = false; inp.value = ''; inp.type = 'text'; inp.placeholder = opts.input; }
+    else { wrap.hidden = true; }
+    cancel.hidden = !!opts.hideCancel;
+    $('#modalOk').textContent = opts.okText || '确定';
+    cancel.textContent = opts.cancelText || '取消';
+    function finish(val){
+      document.removeEventListener('keydown', onKey);
+      mask.hidden = true;
+      $('#modalOk').onclick = null;
+      cancel.onclick = null;
+      mask.onclick = null;
+      resolve(val);
+    }
+    function onKey(ev){ if (ev.key === 'Escape') finish((opts.password || opts.input) ? null : false); }
+    $('#modalOk').onclick = function(){ finish((opts.password || opts.input) ? inp.value : true); };
+    cancel.onclick = function(){ finish((opts.password || opts.input) ? null : false); };
+    mask.onclick = function(ev){ if (ev.target === mask) finish((opts.password || opts.input) ? null : false); };
+    document.addEventListener('keydown', onKey);
+    mask.hidden = false;
+    if (opts.password || opts.input) setTimeout(function(){ inp.focus(); }, 0);
+  });
+}
+function askPassword(title){
+  return showModal({ title: title, password: true, okText: '确定', cancelText: '取消' });
+}
+function showAlert(message, title){
+  return showModal({ title: title || '提示', message: message, okText: '确定', hideCancel: true });
+}
+function askText(title, placeholder){
+  return showModal({ title: title, input: placeholder || '', okText: '确定', cancelText: '取消' });
+}
+/* 角色密码校验：审核 / 批准（自定义弹窗） */
+async function confirmRole(role){
+  var label = role === 'review' ? '审核' : '批准';
+  var pwd = await askPassword('请输入' + label + '密码');
+  if (pwd === null) return false;            // 取消
+  var exp = role === 'review' ? PWD_REVIEW : PWD_APPROVE;
+  if (pwd !== exp){ await showAlert('密码错误'); return false; }
+  return true;
+}
+/* 删除权限：待提交直接删（无需密码）；其余按密码层级判定 */
+function canDelete(status, pwd){
+  if (status === '待提交') return true;                                 // 无需密码
+  if (pwd === PWD_ADMIN) return true;                                  // 管理员：全部
+  if (status === '待审核') return pwd === PWD_REVIEW || pwd === PWD_APPROVE;
+  if (status === '待批准') return pwd === PWD_APPROVE;                  // 审核密码无权删待批准
+  return false;                                                        // 完成 仅管理员可删
+}
+function eachChecked(fn){
+  $('#records').querySelectorAll('.rec-check:checked').forEach(function(cb){
+    var i = parseInt(cb.dataset.i, 10);
+    if (records[i]) fn(records[i]);
+  });
+}
+
+// 勾选记录 → 仅「待提交」提交至「待审核」
+$('#submitRecordsBtn').addEventListener('click', function(){
+  var hit = false;
+  eachChecked(function(r){ if (r.status === '待提交'){ r.status = '待审核'; hit = true; } });
+  if (hit){ saveRecords(); renderRecords(); }
 });
-// 勾选状态变化 → 控制提交按钮可用
+// 审核 → 仅「待审核」转「待批准」（需审核密码）
+$('#reviewBtn').addEventListener('click', async function(){
+  if (!await confirmRole('review')) return;
+  var hit = false;
+  eachChecked(function(r){ if (r.status === '待审核'){ r.status = '待批准'; hit = true; } });
+  if (hit){ saveRecords(); renderRecords(); }
+});
+// 批准 → 仅「待批准」转「完成」（需批准密码）
+$('#approveBtn').addEventListener('click', async function(){
+  if (!await confirmRole('approve')) return;
+  var hit = false;
+  eachChecked(function(r){ if (r.status === '待批准'){ r.status = '完成'; hit = true; } });
+  if (hit){ saveRecords(); renderRecords(); }
+});
+// 打印（待提交记录不能打印）
+$('#printBtn').addEventListener('click', async function(){
+  var box = $('#records');
+  var checked = box.querySelectorAll('.rec-check:checked');
+  if (!checked.length){ await showAlert('请先勾选要打印的记录'); return; }
+  var bad = false;
+  checked.forEach(function(cb){ var r = records[parseInt(cb.dataset.i, 10)]; if (r && r.status === '待提交') bad = true; });
+  if (bad){ await showAlert('待提交记录不能打印'); return; }
+  var hidden = [];
+  box.querySelectorAll('.rec-table tbody tr').forEach(function(tr){
+    var cb = tr.querySelector('.rec-check');
+    var r = cb ? records[parseInt(cb.dataset.i, 10)] : null;
+    if (!cb || !cb.checked || (r && r.status === '待提交')){ tr.style.display = 'none'; hidden.push(tr); }
+  });
+  window.print();
+  hidden.forEach(function(tr){ tr.style.display = ''; });
+});
+// 勾选状态变化 → 控制记录相关按钮可用
 $('#records').addEventListener('change', function(e){
   if (!e.target.classList.contains('rec-check')) return;
-  $('#submitRecordsBtn').disabled = $('#records').querySelectorAll('.rec-check:checked').length === 0;
+  updateRecButtons();
 });
-// 记录删除（列表动态生成 → 委托）
-$('#records').addEventListener('click', function(e){
+// 记录删除（列表动态生成 → 委托）：待提交免密，其余按密码层级
+$('#records').addEventListener('click', async function(e){
+  // 修改（权限控制与删除一致）
+  var bEdit = e.target.closest('.rec-edit');
+  if (bEdit){
+    var ie = parseInt(bEdit.dataset.i, 10);
+    var re = records[ie];
+    if (!re) return;
+    if (re.status !== '待提交'){
+      var pwde = await askPassword('请输入修改密码');
+      if (pwde === null) return;                                  // 取消
+      if (!canDelete(re.status, pwde)){ await showAlert('密码错误或无修改权限'); return; }
+    }
+    startEdit(ie);
+    return;
+  }
+  // 删除
   var b = e.target.closest('.rec-del');
   if (!b) return;
-  records.splice(parseInt(b.dataset.i, 10), 1);
+  var i = parseInt(b.dataset.i, 10);
+  var r = records[i];
+  if (!r) return;
+  if (r.status !== '待提交'){
+    var pwd = await askPassword('请输入删除密码');
+    if (pwd === null) return;                                  // 取消
+    if (!canDelete(r.status, pwd)){ await showAlert('密码错误或无删除权限'); return; }
+  }
+  records.splice(i, 1);
   saveRecords(); renderRecords();
 });
+
+/* ---------- Waline 登录 / 节假日写入 ---------- */
+var walineUser = null;   // 当前登录用户
+
+function walineReq(path, opts){
+  opts = opts || {};
+  return fetch(WALINE_SERVER.replace(/\/$/, '') + path, Object.assign({
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' }
+  }, opts));
+}
+
+function applyUser(u){
+  walineUser = u;
+  var av = $('#avatarBtn');
+  av.classList.add('on');
+  if (u.avatar){
+    av.innerHTML = '<img alt="" src="' + u.avatar + '">';
+  } else {
+    av.textContent = (u.display_name || u.email || '?').slice(0, 1);
+  }
+  av.title = (u.display_name || u.email || '已登录') + '（点击退出）';
+  var sb = $('#setBtn');
+  sb.disabled = false;
+  sb.classList.remove('disabled');
+}
+function setLoggedOut(){
+  walineUser = null;
+  var av = $('#avatarBtn');
+  av.classList.remove('on');
+  av.innerHTML = '<span class="avatar-fallback">登录</span>';
+  av.title = '点击登录 Waline';
+  var sb = $('#setBtn');
+  sb.disabled = true;
+  sb.classList.add('disabled');
+  closeSettings();
+}
+async function checkLogin(){
+  if (!WALINE_SERVER){ setLoggedOut(); return; }
+  try {
+    var r = await walineReq('/api/token');
+    var j = await r.json();
+    if (j && j.data && j.data.objectId) applyUser(j.data);
+    else setLoggedOut();
+  } catch(e){ setLoggedOut(); }
+}
+function loginOAuth(){
+  if (!WALINE_SERVER){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
+  var back = location.href.split('#')[0];
+  location.href = WALINE_SERVER.replace(/\/$/, '') + '/api/oauth?type=' + encodeURIComponent(WALINE_OAUTH) + '&redirect=' + encodeURIComponent(back);
+}
+async function logout(){
+  if (!WALINE_SERVER){ setLoggedOut(); return; }
+  try { await walineReq('/api/token', { method: 'DELETE' }); } catch(e){}
+  setLoggedOut();
+  showAlert('已退出登录');
+}
+
+/* 设置菜单：未登录不展开；点击空白处关闭 */
+function openSettings(){ if ($('#setBtn').disabled) return; $('#settingsMenu').hidden = false; }
+function closeSettings(){ $('#settingsMenu').hidden = true; }
+$('#setBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  if ($('#settingsMenu').hidden) openSettings(); else closeSettings();
+});
+document.addEventListener('click', function(e){
+  if (!$('#settingsMenu').hidden && !e.target.closest('#settingsMenu') && !e.target.closest('#setBtn')) closeSettings();
+});
+$('#avatarBtn').addEventListener('click', function(){
+  if (walineUser) logout(); else loginOAuth();
+});
+
+/* 从 timor.tech 获取当年（可改）节假日，整理后写入 Waline */
+async function syncHolidays(){
+  closeSettings();
+  if (!WALINE_SERVER){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
+  if (!walineUser){ showAlert('请先点击右上角头像登录 Waline'); return; }
+  var year = new Date().getFullYear();
+  var txt = await askText('获取节假日年份', '默认 ' + year + '，可修改');
+  if (txt === null) return;
+  txt = (txt || '').trim();
+  if (txt){ if (/^\d{4}$/.test(txt)) year = parseInt(txt, 10); else { showAlert('年份格式不正确（应为 4 位数字）'); return; } }
+
+  var res;
+  try {
+    var r = await fetch('https://timor.tech/api/holiday/year/' + year + '/?type=Y');
+    res = await r.json();
+  } catch(e){ showAlert('获取 timor.tech 失败：' + e.message); return; }
+  if (!res || res.code !== 0){ showAlert('timor.tech 返回异常，可能该年数据尚未发布'); return; }
+
+  var holidays = [], makeup = [];
+  if (res.holiday) Object.keys(res.holiday).forEach(function(k){
+    var it = res.holiday[k];
+    var item = { date: it.date || (year + '-' + k), name: it.name, wage: it.wage };
+    if (it.holiday === true) holidays.push(item);   // 国假/休息日
+    else makeup.push(item);                          // 调休补班（holiday:false）
+  });
+
+  var payload = { year: year, fetchedAt: new Date().toISOString(), holidays: holidays, makeup: makeup };
+  try {
+    var pr = await walineReq('/api/comment', {
+      method: 'POST',
+      body: JSON.stringify({
+        url: HOLIDAY_PATH, path: HOLIDAY_PATH,
+        nick: (walineUser.display_name || walineUser.email || 'kaoqing'),
+        comment: 'HOLIDAY_DATA:' + JSON.stringify(payload)
+      })
+    });
+    var pj = await pr.json().catch(function(){ return {}; });
+    if (pj && (pj.errno === 0 || pj.data)) {
+      showAlert('已写入 Waline\n路径：' + HOLIDAY_PATH + '\n' + year + ' 年：国假/休息 ' + holidays.length + ' 天，调休补班 ' + makeup.length + ' 天。\n（重复同步会生成多条，可在 Waline 后台清理旧数据）');
+    } else {
+      showAlert('写入失败：' + (pj && pj.errmsg ? pj.errmsg : '未知错误'));
+    }
+  } catch(e){ showAlert('写入 Waline 失败：' + e.message); }
+}
+$('#syncHolidayBtn').addEventListener('click', syncHolidays);
 
 /* ---------- 初始化 ---------- */
 (function init(){
@@ -666,11 +1080,28 @@ $('#records').addEventListener('click', function(e){
   buildTimeSlots($('#fEnd'));
   renderGroups();
   renderPeople();
-  applyCat();
+  applyView();
   loadRecords();
   renderRecords();
   renderPresets();
+  refreshSaveBtn();          // 初始：新增模式「添加」(绿)
+  checkLogin();              // 检测 Waline 登录态（有 WALINE_SERVER 时）
 })();
 </script>
+
+<!-- 自定义弹窗（替代原生 prompt/alert） -->
+<div class="modal-mask" id="modalMask" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-msg" id="modalMsg"></div>
+    <div class="modal-input-wrap" id="modalInputWrap" hidden>
+      <input type="password" id="modalInput" autocomplete="off" />
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" id="modalCancel">取消</button>
+      <button type="button" class="btn-ok" id="modalOk">确定</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
