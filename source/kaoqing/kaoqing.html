@@ -731,7 +731,8 @@ function renderRecords(){
     '</tr></thead><tbody>';
   records.forEach(function(r, i){
     var st = r.status || '待提交';
-    var ot = r.otType || calcOtType(r.date);
+    var isOt = r.catId === 'overtime';        // 加班类别仅「加班」需要，其它请假类不需要
+    var ot = isOt ? (r.otType || calcOtType(r.date)) : '';
     var otCls = ot === '国假' ? 'holiday' : (ot === '双休' ? 'weekend' : 'normal');
     var span = r.detail || '';
     var hoursTxt = '—';
@@ -748,7 +749,7 @@ function renderRecords(){
       '<td class="c-idx">' + (i + 1) + '</td>' +
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
       '<td class="c-cat ' + (r.catId === 'overtime' ? 'c-green' : 'c-orange') + '">' + esc(r.catName) + '</td>' +
-      '<td class="c-ottype ot-' + otCls + '">' + ot + '</td>' +
+      '<td class="c-ottype' + (isOt ? (' ot-' + otCls) : '') + '">' + (isOt ? ot : '<span class="muted">—</span>') + '</td>' +
       '<td class="c-date">' + esc(r.date) + '</td>' +
       '<td class="c-time">' + esc(span) + '</td>' +
       '<td class="c-hours">' + esc(hoursTxt) + '</td>' +
@@ -792,7 +793,7 @@ function submit(){
     var old = records[editIndex];
     records[editIndex] = {
       date: date,
-      otType: calcOtType(date),
+      otType: curCat.id === 'overtime' ? calcOtType(date) : '',
       catId: curCat.id,
       catName: curCat.name,
       color: curCat.color,
@@ -818,7 +819,7 @@ function submit(){
   var newRecs = Array.from(selPeople).map(function(name){
     return {
       date:    date,
-      otType:  calcOtType(date),
+      otType:  curCat.id === 'overtime' ? calcOtType(date) : '',
       catId:   curCat.id,
       catName: curCat.name,
       color:   curCat.color,
@@ -1291,6 +1292,22 @@ document.addEventListener('click', function(e){
 $('#avatarBtn').addEventListener('click', function(){
   if (getWalineUser()) logout(); else doLogin();
 });
+/* 登录态跨窗口/标签页实时同步：弹窗（/ui/login）登录成功后写入 WALINE_USER，
+   父页面通过 storage 事件即时感知并更新头像与设置入口，无需手动刷新页面。
+   另加 focus / visibilitychange 兜底：跨域或事件偶发未触发时，切回页面也会校验一次。 */
+function refreshLoginState(){
+  var u = getWalineUser();
+  if (u) applyUser(u); else setLoggedOut();
+}
+window.addEventListener('storage', function(e){
+  if (e && (e.key === 'WALINE_USER' || e.key === '@waline/user' || e.key === 'waline_user')){
+    refreshLoginState();
+    var u = getWalineUser();
+    if (u && loginWin && !loginWin.closed){ try { loginWin.close(); } catch(_){} loginWin = null; }
+  }
+});
+window.addEventListener('focus', refreshLoginState);
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) refreshLoginState(); });
 
 /* 从 timor.tech 获取当年（可改）节假日，整理后写入 Waline（更新优先，避免重复） */
 var holidayOid = { oid: 0 };
