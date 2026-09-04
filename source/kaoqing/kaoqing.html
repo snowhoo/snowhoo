@@ -2,6 +2,7 @@
 layout: false
 ---
 <title>考勤登记</title>
+<link rel="stylesheet" href="./lib/waline.css">
 <style>
 /* ============ 主题变量（与 app 家族一致，改 --accent 即可换主色） ============ */
 :root{
@@ -92,6 +93,12 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .modal-actions .btn-ok:hover{filter:brightness(.95)}
 .modal-actions .btn-cancel{background:transparent;border:1px solid var(--border);color:var(--text)}
 .modal-actions .btn-cancel:hover{background:var(--bg)}
+/* 登录浮层（参照 APP.html：挂载 Waline 组件，由库原生登录按钮触发 onLogin） */
+#loginOverlay .login-panel{width:min(520px,94vw);max-height:88vh;overflow:auto;padding:0}
+#loginOverlay .login-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);font-weight:600}
+#loginOverlay .login-close{background:none;border:none;font-size:22px;line-height:1;cursor:pointer;color:var(--text);opacity:.55}
+#loginOverlay .login-close:hover{opacity:1}
+#loginOverlay .login-body{padding:12px 18px 20px}
 .people-modal{width:min(680px,94vw);padding:18px}
 .people-table-wrap{max-height:52vh;overflow:auto;margin:6px 0;border:1px solid var(--border);border-radius:10px}
 .people-table{width:100%;border-collapse:collapse;font-size:.78rem}
@@ -272,8 +279,18 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
     </div>
   </header>
 
-  <!-- Waline 登录挂载点（隐藏，仅用于驱动登录态，不显示评论界面） -->
-  <div id="walineLoginMount" style="position:absolute;left:-99999px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none"></div>
+  <!-- Waline 登录浮层（严格参照 APP.html：挂载 Waline 组件，由库原生登录按钮触发 onLogin） -->
+  <div class="modal-mask" id="loginOverlay" hidden>
+    <div class="modal login-panel" role="dialog" aria-modal="true">
+      <div class="login-head">
+        <span>登录 Waline</span>
+        <button type="button" class="login-close" id="loginClose" aria-label="关闭">×</button>
+      </div>
+      <div class="login-body">
+        <div id="walineLoginMount"></div>
+      </div>
+    </div>
+  </div>
 
   <div class="wrap">
 
@@ -1046,17 +1063,12 @@ $('#records').addEventListener('click', async function(e){
 function onWalineLogin(user){
   try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e){}
   applyUser(user);
+  // 数据已匿名预读，登录后再拉一次保证最新（参照 APP.html 登录后同步云端）
   loadPeople(); loadHolidays(); loadRecordsFromWaline();
+  closeLoginOverlay();
 }
-/* 触发登录：自托管弹窗打开 waline 登录页；登录成功后该页向 opener 回传 {type:'userInfo'}
-   由 window message 监听接收（写 WALINE_USER + 解锁设置）。不依赖定制库实例（其 init 不暴露 login 方法）。 */
-function doLogin(){
-  if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
-  var back = location.href.split('#')[0];
-  var url = CLOUD_BASE.replace(/\/$/, '') + '/ui/login?lng=zh-CN&redirect=' + encodeURIComponent(back);
-  try { window.open(url, '_blank', 'width=1024,height=600,scrollbars=no,resizable=no'); }
-  catch(e){ location.href = url; }
-}
+/* 触发登录：打开挂载了 Waline 组件的登录浮层，由库原生「登录」按钮驱动 onLogin（严格参照 APP.html 的 init + onLogin 机制） */
+function doLogin(){ openLoginOverlay(); }
 
 function getWalineUser(){
   try {
@@ -1195,28 +1207,37 @@ async function logout(){
   showAlert('已退出登录');
 }
 
-/* 登录态感知：弹窗登录成功后，waline 登录页向 opener 回传 {type:'userInfo', data:user}；
-   收到后写 WALINE_USER 并解锁设置。focus / visibilitychange / storage 作为兜底。 */
-function refreshLoginState(){
-  var u = getWalineUser();
-  if (u) applyUser(u); else setLoggedOut();
+/* ---------- Waline 登录组件初始化（严格参照 APP.html 的 initWalineEarly + onLogin/onLogout） ---------- */
+var walineInstance = null;
+/* 注销回调：库原生「退出」触发，清理本页登录态并锁回设置入口 */
+function onWalineLogout(){
+  try { localStorage.removeItem('WALINE_USER'); } catch(e){}
+  try { localStorage.removeItem('@waline/user'); } catch(e){}
+  try { localStorage.removeItem('waline_user'); } catch(e){}
+  try { sessionStorage.removeItem('WALINE_USER'); } catch(e){}
+  try { sessionStorage.removeItem('@waline/user'); } catch(e){}
+  setLoggedOut();
 }
-function walineOrigin(){ try { return new URL(CLOUD_BASE).origin; } catch(_){ return ''; } }
-window.addEventListener('message', function(e){
-  if (e.origin && walineOrigin() && e.origin !== walineOrigin()) return; // 仅接受 Waline 服务端回传
-  var d = e.data;
-  if (d && typeof d === 'object' && d.type === 'userInfo' && d.data && (d.data.display_name || d.data.nick || d.data.name)){
-    onWalineLogin(d.data);
-  }
-});
-window.addEventListener('storage', function(e){
-  if (e.key === 'WALINE_USER' || e.key === '@waline/user' || e.key === 'waline_user'){
-    if (e.newValue && e.newValue !== 'null'){ try { var u = JSON.parse(e.newValue); if (u && (u.display_name || u.nick || u.name)){ applyUser(u); return; } } catch(_){} }
-    setLoggedOut();
-  }
-});
-window.addEventListener('focus', refreshLoginState);
-document.addEventListener('visibilitychange', function(){ if (!document.hidden) refreshLoginState(); });
+function openLoginOverlay(){ var o = $('#loginOverlay'); if (o) o.hidden = false; }
+function closeLoginOverlay(){ var o = $('#loginOverlay'); if (o) o.hidden = true; }
+/* 页面加载即初始化 Waline（非延迟），这样库原生登录按钮能立刻驱动 onLogin（参照 APP.html initWalineEarly） */
+function initWalineEarly(){
+  if (!CLOUD_BASE) return;
+  import('./lib/waline.js').then(function(mod){
+    try {
+      walineInstance = mod.init({
+        el: '#walineLoginMount',
+        serverURL: WALINE_SERVER,
+        lang: 'zh-CN',
+        avatar: 'mp',
+        pageview: false,
+        onLogin: onWalineLogin,
+        onLogout: onWalineLogout
+      });
+      console.log('[kaoqing] Waline init OK');
+    } catch(e){ console.error('[kaoqing] Waline init error:', e); }
+  }).catch(function(e){ console.error('[kaoqing] Waline import error:', e); });
+}
 
 /* 设置菜单：未登录不展开；点击空白处关闭 */
 function openSettings(){ if ($('#setBtn').disabled) return; $('#settingsMenu').hidden = false; }
@@ -1231,6 +1252,10 @@ document.addEventListener('click', function(e){
 $('#avatarBtn').addEventListener('click', function(){
   if (getWalineUser()) logout(); else doLogin();
 });
+/* 登录浮层关闭：点 × 或点浮层空白处关闭（登录成功后 onLogin 内也会关闭） */
+$('#loginClose').addEventListener('click', closeLoginOverlay);
+$('#loginOverlay').addEventListener('click', function(e){ if (e.target === $('#loginOverlay')) closeLoginOverlay(); });
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !$('#loginOverlay').hidden) closeLoginOverlay(); });
 
 /* 从 timor.tech 获取当年（可改）节假日，整理后写入 Waline（更新优先，避免重复） */
 var holidayOid = { oid: 0 };
@@ -1352,6 +1377,7 @@ document.addEventListener('keydown', function(e){
   loadHolidays();
   loadRecordsFromWaline();
   checkLogin();              // 检测本地 Waline 登录态（已登录则解锁设置入口）
+  initWalineEarly();         // 初始化 Waline 组件（严格参照 APP.html：挂载 #walineLoginMount，由 onLogin 回写登录态）
 })();
 </script>
 
