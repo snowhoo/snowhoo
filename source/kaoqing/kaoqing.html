@@ -99,6 +99,16 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .cloud-toast.read{background:#2f7ed8}    /* 读取中（蓝） */
 .cloud-toast.write{background:#2e9e5b}   /* 写入中（绿） */
 .cloud-toast.error{background:#e0533d}   /* 失败（红） */
+
+/* 历史归档（区域五） */
+.archive-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.archive-bar select{padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text);max-width:240px}
+.archive-view{min-height:64px}
+.archive-view .empty{color:var(--text-muted);font-size:.82rem;padding:8px 0}
+.archive-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.archive-table th,.archive-table td{border:1px solid var(--border);padding:5px 8px;text-align:left;white-space:nowrap}
+.archive-table th{background:var(--bg-surface);color:var(--text-secondary);font-weight:600;position:sticky;top:0}
+
 .people-modal{width:min(680px,94vw);padding:18px}
 .people-table-wrap{max-height:52vh;overflow:auto;margin:6px 0;border:1px solid var(--border);border-radius:10px}
 .people-table{width:100%;border-collapse:collapse;font-size:.78rem}
@@ -284,6 +294,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
         <div class="settings-menu" id="settingsMenu" hidden>
           <button class="settings-item" id="syncHolidayBtn">从 timor.tech API 获取节假日 写进 Waline</button>
           <button class="settings-item" id="peopleConfigBtn">人员配置（管理 Waline 中的人员）</button>
+          <button class="settings-item" id="archiveBtn">归档历史数据到 R2（本月之前）</button>
         </div>
       </div>
     </div>
@@ -385,6 +396,22 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       </div>
     </section>
 
+    <!-- ============ 区域五：历史归档（从 R2 公开桶读取，参照 books.html 的 R2_BASE） ============ -->
+    <section class="card" id="secArchive">
+      <div class="card-head">
+        <span class="idx">5</span>
+        <h2>历史归档</h2>
+      </div>
+      <div class="card-body">
+        <div class="archive-bar">
+          <label for="archiveMonth">选择月份：</label>
+          <select id="archiveMonth"><option value="">— 请选择 —</option></select>
+          <button id="archiveRefresh" class="link">刷新列表</button>
+        </div>
+        <div class="archive-view" id="archiveView"><p class="empty">选择月份后查看该月归档记录</p></div>
+      </div>
+    </section>
+
   </div>
 </div>
 
@@ -477,6 +504,11 @@ var HOLIDAY_PATH  = '/kaoqing/holidays'; // 节假日数据在 Waline 中存放�
 var PEOPLE_PATH   = '/kaoqing/people';   // 人员数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var COMPANY_NAME  = '苏州晶讯科技股份有限公司';   // ← 顶栏公司名称（按需改成贵司名称）
 // 注：跨域请求需 Waline 服务端 CORS_ALLOW_ORIGIN 允许本页域名（本地 file:// 预览会被浏览器拦截）。
+
+/* ---------- 归档到 R2（读取参照 books.html 的 R2 公开访问；写入走后端 kaoqing_archiver.py poller） ---------- */
+var ARCHIVE_R2_BASE  = 'https://pub-d583e3093dc1438882b43509c1571302.r2.dev/'; // 复用 books 同桶公开地址（只读，暴露无害）
+var ARCHIVE_PREFIX   = 'kaoqing-archive/';   // R2 对象前缀：每月一个文件 + index.json
+var ARCHIVE_JOB_PATH = '/kaoqing/archive-jobs'; // 归档任务队列 path（前端匿名入队，poller 用 admin token 消费）
 
 /* ---------- 状态 ---------- */
 var selPeople = new Set();
@@ -1191,6 +1223,139 @@ function cloudToastError(text){
   clearTimeout(_ctTimer);
   _ctTimer = setTimeout(function(){ cloudToastHide(); }, 3000);
 }
+/* ---------- 历史归档（区域五）：写入走后端 poller，读取走 R2 公开桶 ---------- */
+/* 匿名入队一个归档任务：POST 一条评论到 ARCHIVE_JOB_PATH，返回该评论 objectId，交由 kaoqing_archiver.py 消费 */
+async function enqueueArchiveJob(){
+  if (!CLOUD_BASE) throw new Error('未配置 WALINE_SERVER');
+  var body = {
+    comment: JSON.stringify({ type: 'archive', reqAt: Date.now(), count: records.length }),
+    url: ARCHIVE_JOB_PATH, nick: ANON_NICK, mail: ANON_MAIL, link: '', ua: navigator.userAgent
+  };
+  var r = await fetch(CLOUD_BASE + '/api/comment', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  var j = await r.json();
+  var oid = j && j.data && j.data.objectId;
+  if (!oid) throw new Error('未取到任务 objectId');
+  return parseInt(oid, 10);
+}
+/* 拉取某 path 下指定 objectId 的评论并解析（含 15s 超时 + 2 次重试，与 fetchCloudRecord 一致） */
+async function fetchCloudComment(path, objectId, attempt){
+  attempt = attempt || 1;
+  var url = CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(path);
+  try {
+    var ctrl = ('AbortController' in window) ? new AbortController() : null;
+    var tid = ctrl ? setTimeout(function(){ try { ctrl.abort(); } catch(e){} }, 15000) : null;
+    var opts = ctrl ? { signal: ctrl.signal } : {};
+    var r = await fetch(url, opts);
+    if (tid) clearTimeout(tid);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var resp = await r.json();
+    var arr = (resp.data && resp.data.data) || [];
+    for (var i = 0; i < arr.length; i++){
+      if (parseInt(arr[i].objectId, 10) === objectId){
+        return robustParse(arr[i].orig || arr[i].comment || '');
+      }
+    }
+    return null;
+  } catch(e){
+    if (attempt < 3){ await new Promise(function(r){ setTimeout(r, 500 * attempt); }); return fetchCloudComment(path, objectId, attempt + 1); }
+    throw e;
+  }
+}
+/* 轮询归档任务直到后端写回 ok:1（最多等 2 分钟，每 3 秒查一次） */
+async function pollArchiveJob(jobOid, deadline){
+  deadline = deadline || (Date.now() + 120000);
+  while (Date.now() < deadline){
+    try {
+      var obj = await fetchCloudComment(ARCHIVE_JOB_PATH, jobOid);
+      if (obj && obj.ok === 1) return obj;
+      if (obj && obj.error) return obj;
+    } catch(e){ /* 重试等待 */ }
+    await new Promise(function(r){ setTimeout(r, 3000); });
+  }
+  return null;
+}
+/* 触发一次归档：确认 → 入队 → 轮询 → 刷新记录与归档列表 */
+async function doArchive(){
+  if (!CLOUD_BASE){ cloudToastError('数据写入失败!'); return; }
+  var ok = await showModal({ title: '确认归档？', message: '将把本月之前的所有考勤记录按月归档到 R2，并在 Waline 中清除这些历史数据。此操作不可撤销。' });
+  if (!ok) return;
+  cloudToast('write', '正在归档...');
+  try {
+    var jobOid = await enqueueArchiveJob();
+    var res = await pollArchiveJob(jobOid);
+    if (res && res.ok === 1){
+      cloudToastHide();
+      await loadRecordsFromWaline();
+      loadArchiveMonths();
+      showAlert('归档完成！\n已归档月份：' + (res.months || []).join('、') + '\n共 ' + (res.count || 0) + ' 条。\nWaline 中已清除历史数据。');
+    } else if (res && res.error){
+      cloudToastError('数据写入失败!');
+      showAlert('归档失败：' + res.error);
+    } else {
+      cloudToastError('数据写入失败!');
+      showAlert('归档超时：后端未在预期时间内完成。请稍后到「历史归档」刷新列表查看，或确认归档服务（kaoqing_archiver.py）是否正在运行。');
+    }
+  } catch(e){
+    cloudToastError('数据写入失败!');
+    showAlert('归档失败：' + (e && e.message ? e.message : e));
+  }
+}
+/* 读取 R2 上 index.json，填充月份下拉框 */
+async function loadArchiveMonths(){
+  try {
+    var r = await fetch(ARCHIVE_R2_BASE + ARCHIVE_PREFIX + 'index.json', { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var idx = await r.json();
+    var months = idx.months || [];
+    var sel = $('#archiveMonth');
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">— 请选择 —</option>' + months.map(function(m){
+      return '<option value="' + m + '">' + m + '（' + (((idx.count && idx.count[m]) || 0)) + ' 条）</option>';
+    }).join('');
+    if (cur && months.indexOf(cur) >= 0){ sel.value = cur; showArchive(cur); }
+  } catch(e){
+    cloudToastError('数据读取失败!');
+  }
+}
+/* 选月后从 R2 读取该月归档文件并渲染只读表格 */
+async function showArchive(month){
+  var sel = $('#archiveMonth');
+  month = month || sel.value;
+  var view = $('#archiveView');
+  if (!month){ view.innerHTML = '<p class="empty">选择月份后查看该月归档记录</p>'; return; }
+  view.innerHTML = '<p class="empty">加载中...</p>';
+  try {
+    var r = await fetch(ARCHIVE_R2_BASE + ARCHIVE_PREFIX + month + '.json', { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var d = await r.json();
+    var recs = d.records || [];
+    if (!recs.length){ view.innerHTML = '<p class="empty">该月无归档记录</p>'; return; }
+    var cols = ['日期', '加班类别', '类别', '姓名', '状态', '详情', '提交人'];
+    var html = '<table class="archive-table"><thead><tr>' + cols.map(function(c){ return '<th>' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
+    recs.forEach(function(rr){
+      var isOt = rr.catId === 'overtime';
+      var ot = isOt ? (rr.otType || '') : '—';
+      var ocls = ot === '国假' ? 'c-red' : (ot === '双休' ? 'c-blue' : (ot === '平时' ? 'c-gray' : ''));
+      html += '<tr>'
+        + '<td>' + esc(rr.date || '') + '</td>'
+        + '<td class="' + ocls + '">' + esc(ot) + '</td>'
+        + '<td>' + esc(rr.catName || '') + '</td>'
+        + '<td>' + esc(rr.name || '') + '</td>'
+        + '<td>' + esc(rr.status || '') + '</td>'
+        + '<td>' + esc(rr.detail || '') + '</td>'
+        + '<td>' + esc(rr.submitter || '') + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table>';
+    view.innerHTML = html;
+  } catch(e){
+    cloudToastError('数据读取失败!');
+    view.innerHTML = '<p class="empty">读取失败</p>';
+  }
+}
 /* 考勤记录：整体作为一条 JSON 匿名写入 Waline（RECORDS_PATH），每次新建一条，读取取最新 */
 var RECORDS_PATH = '/kaoqing/records';
 var recordsOid = { oid: 0 };
@@ -1614,6 +1779,10 @@ $('#peopleFile').addEventListener('change', function(e){
 });
 $('#peopleClose').addEventListener('click', function(){ $('#peopleMask').hidden = true; });
 $('#peopleMask').addEventListener('click', function(e){ if (e.target === $('#peopleMask')) $('#peopleMask').hidden = true; });
+/* 归档：设置里「归档历史数据到 R2」按钮 + 历史归档卡片的刷新/下拉 */
+$('#archiveBtn').addEventListener('click', function(){ closeSettings(); doArchive(); });
+$('#archiveRefresh').addEventListener('click', loadArchiveMonths);
+$('#archiveMonth').addEventListener('change', function(){ showArchive(this.value); });
 document.addEventListener('keydown', function(e){
   if (e.key === 'Escape' && !$('#peopleMask').hidden) $('#peopleMask').hidden = true;
 });
@@ -1641,6 +1810,7 @@ document.addEventListener('keydown', function(e){
   if (!_ctErrorActive) cloudToastHide();
   checkLogin();              // 检测本地 Waline 登录态（已登录则解锁设置入口）
   initWalineEarly();         // 初始化 Waline 组件（严格参照 APP.html：挂载 #walineLoginMount，由 onLogin 回写登录态）
+  loadArchiveMonths();       // 填充历史归档月份下拉框（读 R2 index.json，失败仅弹红字不阻断页面）
 })();
 </script>
 
