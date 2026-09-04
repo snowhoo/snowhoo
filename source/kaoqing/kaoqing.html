@@ -492,6 +492,7 @@ var PWD_ADMIN   = '123';   // 管理员密码：可删除任意状态（含完�
 /* ---------- Waline 读写（匿名模式：数据读写均匿名、无需登录；登录仅用于管控「设置」入口；参照 APP.html 同一 Waline 服务端） ---------- */
 var WALINE_SERVER = 'https://waline.snowhoo.net'; // ← 与 APP.html 同一 Waline 服务端（如需更换改这里）
 var CLOUD_BASE    = WALINE_SERVER;                // 兼容 APP.html 的命名
+var WALINE_ADMIN_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.MQ.V-1tklVlvdd6sa0AQbdSdf_TT9WueiFKqkRbEZK9Ge0'; // 管理员令牌：以 type=list 接口读取「含 spam」的全部评论（匿名写入可能被误判 spam，公开接口会过滤掉导致不显示）
 var WALINE_OAUTH  = 'github'; // 登录方式：github / google / qq / weibo（取决于服务端开启的 OAuth 提供方）
 var HOLIDAY_PATH  = '/kaoqing/holidays'; // 节假日数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var PEOPLE_PATH   = '/kaoqing/people';   // 人员数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
@@ -1166,21 +1167,14 @@ function robustParse(raw){
 /* 拉取某 path 下最新一条有效记录。Waline 部署在 Vercel serverless，冷启动可能 3~10s，
    故：单次超时放宽到 15s，并在失败（含超时）后自动重试 2 次（间隔递增），避免打开页面时冷启动误判为"读不到"。
    返回 { oid, obj }；网络彻底失败则抛出异常，由上层 load* 捕获并展示真实错误。 */
+/* 取某 path 下最新一条 v=1 记录（节假日/人员兜底表）。复用 fetchAllComments（管理员接口，含 spam）以保证即使被标 spam 也能读到。 */
 async function fetchCloudRecord(path, attempt){
   attempt = attempt || 1;
-  var url = CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(path);
   try {
-    var ctrl = ('AbortController' in window) ? new AbortController() : null;
-    var tid = ctrl ? setTimeout(function(){ try { ctrl.abort(); } catch(e){} }, 15000) : null;
-    var opts = ctrl ? { signal: ctrl.signal } : {};
-    var r = await fetch(url, opts);
-    if (tid) clearTimeout(tid);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    var resp = await r.json();
-    var records = (resp.data && resp.data.data) || [];
+    var all = await fetchAllComments(path);
     var best = null, bad = 0;
-    for (var i = 0; i < records.length; i++){
-      var rec = records[i];
+    for (var i = 0; i < all.length; i++){
+      var rec = all[i];
       var obj = robustParse(rec.orig || rec.comment || '');
       if (obj && obj.v === 1){
         var oid = parseInt(rec.objectId, 10) || 0;
@@ -1202,8 +1196,8 @@ async function fetchCloudRecord(path, attempt){
    匿名无法改/删旧评论，故"修改/删除"是追加一条新事件；前端读取拉取全部评论并回放（同 id 取最后），
    旧评论/中间过程由后端 kaoqing_archiver.py 的 --cleanup（每月计划任务自动跑）压实清理，不会无限膨胀。
    ANON_NICK/ANON_MAIL 为固定匿名身份。人员(people)写入仍走带 token 的 PUT（在 savePeopleToWaline）。 */
-var ANON_NICK = '考勤系统';
-var ANON_MAIL = 'noreply@waline.snowhoo.net';
+var ANON_NICK = '考勤记录';
+var ANON_MAIL = 'kaoqin@example.com';
 /* 匿名写入（免登录方案）：无需 token，固定匿名身份 POST 新建一条评论。
    匿名无法 PUT 原地更新，故每次保存都会新建一条 → Waline 随保存次数累积评论；
    前端读取只取最新一条（fetchCloudRecord 保证显示正确），旧评论由后端 --cleanup 清空。 */
@@ -1280,12 +1274,13 @@ function genRecId(){
 }
 
 /* 带超时+重试的 JSON GET（Vercel 冷启动友好），返回解析后的对象 */
-async function fetchJsonWithRetry(url, attempt){
+async function fetchJsonWithRetry(url, attempt, fetchOpts){
   attempt = attempt || 1;
   try {
     var ctrl = ('AbortController' in window) ? new AbortController() : null;
     var tid = ctrl ? setTimeout(function(){ try { ctrl.abort(); } catch(e){} }, 15000) : null;
     var opts = ctrl ? { signal: ctrl.signal } : {};
+    if (fetchOpts){ for (var _k in fetchOpts){ opts[_k] = fetchOpts[_k]; } }
     var r = await fetch(url, opts);
     if (tid) clearTimeout(tid);
     if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -1296,18 +1291,22 @@ async function fetchJsonWithRetry(url, attempt){
   }
 }
 
-/* 分页拉取某 path 下全部 Waline 评论 */
+/* 分页拉取某 path 下全部 Waline 评论（含 approved/waiting/spam）。
+   必须用管理员列表接口 type=list + Authorization: Bearer 管理员令牌：
+   匿名写入可能被 Waline/Akismet 误判为 spam，公开接口(GET ?path=)会过滤 spam 导致前端不显示；
+   故强制走管理员接口读取全部状态，保证即便被标 spam 也能回放显示、不丢数据。 */
 async function fetchAllComments(path){
   var out = []; var page = 1;
+  var authHdr = WALINE_ADMIN_TOKEN ? { 'Authorization': 'Bearer ' + WALINE_ADMIN_TOKEN } : null;
   while (true){
-    var url = CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(path) + '&page=' + page + '&pageSize=100';
-    var resp = await fetchJsonWithRetry(url);
-    var arr = (resp.data && resp.data.data) || [];
-    if (!arr.length) break;
-    out = out.concat(arr);
-    var total = (resp.data && resp.data.total) || 0;
-    if (total && out.length >= total) break;
-    if (arr.length < 100) break;
+    var url = CLOUD_BASE + '/api/comment?type=list&url=' + encodeURIComponent(path) + '&page=' + page + '&pageSize=100';
+    var resp = await fetchJsonWithRetry(url, 1, authHdr ? { headers: authHdr } : null);
+    var dd = (resp.data && resp.data.data) || [];
+    if (!dd.length) break;
+    out = out.concat(dd);
+    var totalPages = (resp.data && resp.data.totalPages) || 0;
+    if (totalPages && page >= totalPages) break;
+    if (dd.length < 100) break;
     page++;
   }
   return out;

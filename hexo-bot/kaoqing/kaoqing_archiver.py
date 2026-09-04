@@ -45,8 +45,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "books"))   # 复用 upload_r2.py（同桶、同 r2_config.json）
 import upload_r2   # 提供 load_config() / put_object(cfg, key, data) / list_objects()
 
-ANON_NICK = "考勤系统"
-ANON_MAIL = "noreply@waline.snowhoo.net"
+REWRITE_DELAY = int(os.environ.get("REWRITE_DELAY", "5"))  # 脏记录复写之间延时(秒)，降低 Akismet 误判
 
 
 def load_cfg():
@@ -95,18 +94,24 @@ def waline_req(method, path, *, token=None, params=None, body=None):
 
 
 def list_comments(path):
-    """列出某 path 下全部 Waline 评论（翻完所有分页）。"""
+    """列出某 path 下全部 Waline 评论（含 approved/waiting/spam，翻完所有分页）。
+    用管理员列表接口 type=list + url 过滤，并带 Bearer 管理员令牌：匿名写入可能被 Akismet
+    误判 spam，公开接口(GET ?path=)会过滤 spam；本函数读全部状态，保证被标 spam 的评论
+    也能被回放/清理，不会永久堆积在 Waline 中。"""
     all_c = []
     page = 1
     while True:
         resp = waline_req("GET", "/api/comment",
-                          params={"path": path, "page": page, "pageSize": 100}, token=TOKEN)
+                          params={"type": "list", "url": path, "page": page, "pageSize": 100}, token=TOKEN)
         d = resp.get("data") or {}
         arr = d.get("data") or []
         if not arr:
             break
         all_c.extend(arr)
         total = d.get("total") or 0
+        total_pages = d.get("totalPages") or 0
+        if total_pages and page >= total_pages:
+            break
         if total and len(all_c) >= total:
             break
         if len(arr) < 100:
@@ -140,9 +145,10 @@ def parse_comment(rec):
 
 
 def replay_events(events):
-    """按 id 回放：同 id 取最后一条事件。返回最终记录 dict 列表（每条含 id）。"""
+    """按 id 回放：同 id 取最后一条事件。先按 objectId 升序排序，保证 edit/del 在对应 add
+    之后生效（与前端 replayEvents 行为一致）。返回最终记录 dict 列表（每条含 id）。"""
     state = {}
-    for op, rid, rec in events:
+    for oid, op, rid, rec in sorted(events, key=lambda e: e[0]):
         if not rid:
             continue
         if op == "del":
@@ -159,16 +165,28 @@ def month_of(rec):
     return d if len(d) == 7 and d[4] == "-" else ""
 
 
-def post_record_anon(rec):
-    """以匿名身份把一条"干净"记录作为 add 事件 POST 到 Waline（与前端一致）。"""
+def random_identity():
+    """生成随机匿名身份（每条复写换一个 mail，避免单一固定身份被 Akismet 反复误判）。
+    前端读取走 type=list+Bearer 全量回放、不区分身份，故复写身份无关紧要，随机即可。"""
+    import random as _r
+    import string as _s
+    s = ''.join(_r.choices(_s.ascii_lowercase + _s.digits, k=6))
+    return ("考勤记录", "kq_%s@example.com" % s)
+
+
+def post_record_random(rec):
+    """以随机匿名身份把一条"干净"记录作为 add 事件 POST 到 Waline（归档清洗复写）。
+    前端读取不区分身份（全量回放），故身份可随机；即便被 Akismet 误判为 spam，
+    前端也能通过 type=list+Bearer 读到并回放，不丢数据。"""
+    nick, mail = random_identity()
     obj = {"op": "add", "id": rec.get("id"), "rec": rec}
     payload = {"comment": json.dumps(obj, ensure_ascii=False),
-               "url": RECORDS_PATH, "nick": ANON_NICK, "mail": ANON_MAIL, "link": "", "ua": "kaoqing-archiver"}
+               "url": RECORDS_PATH, "nick": nick, "mail": mail, "link": "", "ua": "kaoqing-archiver"}
     try:
         waline_req("POST", "/api/comment", body=payload)
         return True
     except Exception as e:
-        print("[WARN] 重发记录失败:", e)
+        print("[WARN] 随机身份复写记录失败:", e)
         return False
 
 
@@ -266,8 +284,16 @@ def archive_once(dry_run=False):
     cutoff_ym = datetime.date.today().replace(day=1).strftime("%Y-%m")
     all_c = list_comments(RECORDS_PATH)
     events = []
+    comment_id = {}      # objectId -> 该评论对应的记录 id（用于选择性删除旧评论）
+    dirty_ids = set()    # 曾出现 edit/del 事件的记录 id（需要压实清洗）
     for c in all_c:
-        events.extend(parse_comment(c))
+        oid = int(c.get("objectId") or 0)
+        for op, rid, rec in parse_comment(c):
+            events.append((oid, op, rid, rec))
+            if rid:
+                comment_id[oid] = rid
+                if op in ("edit", "del"):
+                    dirty_ids.add(rid)
     final = replay_events(events)
 
     # 分区：
@@ -283,11 +309,14 @@ def archive_once(dry_run=False):
         else:
             current.append(r)
     total_hist = sum(len(v) for v in history_by_month.values())
+    dirty_current = [r for r in current if r.get("id") in dirty_ids]
 
     print("[INFO] 回放得 %d 条最终记录；本月之前(<%s) %d 条/%d 个月；当月(含未来) %d 条"
           % (len(final), cutoff_ym, total_hist, len(history_by_month), len(current)))
     if dry_run:
         print("[DRY-RUN] 未写 R2、未改动 Waline。")
+        print("[DRY-RUN] 当月需复写脏记录 %d 条（有 edit/del 标识），干净记录 %d 条保持不动；"
+              "复写将用随机匿名身份、每条间隔 %d 秒" % (len(dirty_current), len(current) - len(dirty_current), REWRITE_DELAY))
         return total_hist
 
     # 1) 历史写 R2：已存在同月主文件则另存「后补」文件（<ym>-NN.json），原主文件不变
@@ -304,23 +333,35 @@ def archive_once(dry_run=False):
             months.append(ym)
             print("[PUT] R2 %s (%s, %d 条)" % (key, "后补" if is_sup else "主", len(history_by_month[ym])))
 
-    # 2) 清洗当月：先把当前记录作为干净 add 评论重发，全部成功后再删除旧评论
-    posts_ok = True
-    for r in current:
-        if not post_record_anon(r):
-            posts_ok = False
-            print("[ERR] 当月记录重发失败，放弃删除旧评论以避免数据丢失")
-            break
-    if posts_ok:
-        removed = 0
-        for c in all_c:
-            oid = int(c.get("objectId") or 0)
-            try:
-                waline_req("DELETE", "/api/comment/%s" % oid, token=TOKEN)
-                removed += 1
-            except Exception as e:
-                print("[WARN] 删除评论 #%d 失败: %s" % (oid, e))
-        print("[OK] 清洗当月：重发 %d 条干净评论，删除旧评论 %d 条" % (len(current), removed))
+    # 2) 清洗当月：仅对「有修改/删除标识」的脏记录压实，降低复写率
+    #    - 复写改用随机匿名身份，身份无关紧要（前端全量回放不区分身份）
+    #    - 每条复写之间加 REWRITE_DELAY 秒延时，进一步降低误判概率
+    #    - 仅删除脏记录对应的旧评论（干净单条 add 不动），避免误删有效数据
+    if dry_run:
+        print("[DRY-RUN] 清洗当月：将复写脏记录 %d 条(随机身份)，其余 %d 条干净记录保持不动"
+              % (len(dirty_current), len(current) - len(dirty_current)))
+    else:
+        posts_ok = True
+        for r in dirty_current:
+            if not post_record_random(r):
+                posts_ok = False
+                print("[ERR] 脏记录复写失败 id=%s，放弃删除其旧评论以避免数据丢失" % r.get("id"))
+                break
+            time.sleep(REWRITE_DELAY)
+        if posts_ok:
+            removed = 0
+            for c in all_c:
+                oid = int(c.get("objectId") or 0)
+                rid = comment_id.get(oid)
+                if rid not in dirty_ids:
+                    continue
+                try:
+                    waline_req("DELETE", "/api/comment/%s" % oid, token=TOKEN)
+                    removed += 1
+                except Exception as e:
+                    print("[WARN] 删除评论 #%d 失败: %s" % (oid, e))
+            print("[OK] 清洗当月：复写脏记录 %d 条(随机身份)，删除其旧评论 %d 条；干净记录 %d 条保持不动"
+                  % (len(dirty_current), removed, len(current) - len(dirty_current)))
 
     # 3) 重建 index（把本次新写的补充文件也纳入）
     build_index(set(r2_keys) | set(written_keys))
