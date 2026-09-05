@@ -70,7 +70,6 @@ RECORDS_PATH = "/kaoqing/records"
 HOLIDAY_PATH = "/kaoqing/holidays"
 ARCHIVE_PREFIX = "kaoqing-archive/"
 R2_CFG = upload_r2.load_config()
-R2_PUBLIC = (R2_CFG.get("public_url") or "https://pub-d583e3093dc1438882b43509c1571302.r2.dev").rstrip("/")
 
 
 # ----------------------------- Waline REST -----------------------------
@@ -231,7 +230,7 @@ def determine_archive_key(r2_keys, ym):
     if primary not in r2_keys:
         return primary
     max_n = 0
-    pref = ARCHIVE_PREFIX + ym + "-"
+    pref = ARCHIVE_PREFIX + ym + "_"   # 用 "_" 而非 "-"，避免与日期(2026-08-01)混淆
     for k in r2_keys:
         if k.startswith(pref) and k.endswith(".json"):
             suf = k[len(pref):-len(".json")]
@@ -253,17 +252,23 @@ def build_index(r2_keys=None):
         base = key[len(ARCHIVE_PREFIX):-len(".json")]
         if len(base) == 7 and base[4] == "-":
             groups.setdefault(base, []).append((key, True, 0))
-        elif len(base) > 8 and base[4] == "-" and base[7] == "-" and base[8:].isdigit():
+        elif len(base) > 8 and base[4] == "-" and base[7] in ("-", "_") and base[8:].isdigit():
+            # 后补文件：2026-08-01.json(旧) / 2026-08_01.json(新，避免与日期混淆) 均兼容
             groups.setdefault(base[:7], []).append((key, False, int(base[8:])))
     months = []
     for ym in sorted(groups.keys()):
         files = []
         for key, is_primary, seq in sorted(groups[ym], key=lambda x: (not x[1], x[2])):
             try:
-                with urllib.request.urlopen(R2_PUBLIC + "/" + key, timeout=20) as r:
-                    d = json.loads(r.read().decode("utf-8"))
-                cnt = len((d or {}).get("records") or [])
-            except Exception:
+                raw = upload_r2.get_object(R2_CFG, key)
+                d = json.loads(raw.decode("utf-8"))
+                # 优先用归档时写入的 count 字段（避免公开 URL 读不到/一致性延迟导致计数 0）；
+                # 缺省再回退到数 records
+                cnt = (d or {}).get("count")
+                if cnt is None:
+                    cnt = len((d or {}).get("records") or [])
+            except Exception as e:
+                print("[WARN] 读取 %s 计数失败: %s" % (key, e))
                 cnt = 0
             files.append({
                 "key": key,

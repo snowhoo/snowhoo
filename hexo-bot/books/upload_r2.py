@@ -158,6 +158,12 @@ def put_object(cfg, key, data, content_type='application/json; charset=utf-8'):
              body=body, extra_headers={'Content-Type': content_type})
 
 
+def get_object(cfg, key, timeout=30):
+    """Credentialed GET（S3 API，非公开 URL）：返回对象原始 bytes；不存在或鉴权失败抛异常。"""
+    resp = _request(cfg, 'GET', '/%s/%s' % (cfg['bucket'], key), timeout=timeout)
+    return resp.read()
+
+
 def upload_worker(f, cfg, existing, opts, prefix):
     """单文件上传工作单元。返回 (status, key, info)，status ∈ ok|skip|dry|fail。"""
     local = os.path.join(DATA_DIR, f)

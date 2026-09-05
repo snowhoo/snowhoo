@@ -111,11 +111,6 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 #cloudToastStack{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:2000;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
 #cloudToastStack .cloud-toast{position:static;transform:none;max-width:84vw;pointer-events:auto;cursor:default}
 #cloudToastStack .cloud-toast.error{cursor:pointer}
-/* 读写进行中的全屏遮罩：拦截一切点击，透明度 70%，z-index 低于提示栈(2000)高于页面内容 */
-/* 读写进行中的全屏遮罩：本身即「处理中」提示，居中显示文字，透明度 70%，拦截一切点击 */
-#cloudMask{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1900;display:flex;align-items:center;justify-content:center;pointer-events:auto}
-#cloudMaskText{color:#fff;font-size:1.05rem;line-height:1.6;padding:14px 22px;border-radius:8px;background:rgba(0,0,0,.35);max-width:80vw;text-align:center}
-#cloudMaskText.err{color:#ff8585;cursor:pointer}
 
 .people-modal{width:min(680px,94vw);padding:18px}
 .people-table-wrap{max-height:52vh;overflow:auto;margin:6px 0;border:1px solid var(--border);border-radius:10px}
@@ -625,7 +620,6 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 <script src="./lib/xlsx.full.min.js"></script>
 <!-- 读/写/删除过程统一弹窗提示：绿「处理中...」，失败=红「数据读取/写入失败!」（不使用右上角状态） -->
 <div id="cloudToast" class="cloud-toast" hidden></div>
-<div id="cloudMask" hidden><div id="cloudMaskText"></div></div>
 <script>
 /* =====================================================================
    考勤登记 —— 框架版（二稿）
@@ -1368,6 +1362,8 @@ function renderRecords(){
   var sf = (viewMode === 'view') ? 'all' : (($('#recStatus') && $('#recStatus').value) || '待提交');
   var idxs = records.map(function(r, i){ return i; });
   if (sf !== 'all') idxs = idxs.filter(function(i){ return (records[i].status || '待提交') === sf; });
+  // 进行中的占位(空白)记录：无论当前筛选都强制显示，用于承载「保存中…」旋转圆圈
+  records.forEach(function(r, i){ if (r._pending && idxs.indexOf(i) < 0) idxs.push(i); });
   if (viewMode === 'view'){
     $('#recCount').textContent = '归档记录（' + (archiveLabel || '') + '） 共 ' + idxs.length + ' 条';
   } else {
@@ -1409,6 +1405,8 @@ function renderRecords(){
     if (c === 0) c = a - b;                       // 同值：保持原录入相对顺序
     return sortState.dir === 'asc' ? c : -c;
   });
+  order = order.filter(function(i){ return !records[i]._pending; })
+        .concat(order.filter(function(i){ return records[i]._pending; }));   // 进行中占位记录置顶显示其加载圆圈
   order.forEach(function(i, n){
     var r = records[i];
     var st = r.status || '待提交';
@@ -1478,6 +1476,9 @@ function resetForm(){
   applyView();             // 隐藏 选择类别/考勤内容，归零内容字段与预览
   refreshSaveBtn();        // 回到「添加」(绿)
 }
+/* 保存/修改进行中：禁用「添加/修改」提交按钮，防止重复提交 */
+function setFormBusy(busy){ var b = $('#submitBtn'); if (b) b.disabled = busy; }
+
 async function submit(){
   if (!selPeople.size || !curCat || !rangeOK()) return;
 
@@ -1546,13 +1547,20 @@ async function submit(){
     refreshSaveBtn();
     selPeople.clear(); renderPeople();
     curCat = null; applyView();        // 保存后整体归位（UI 状态，与数据无关）
-    cloudToast('write', '处理中...');
+    // 修改进行中：在对应记录勾选框位置显示旋转圆圈 + 文案，并禁用整张记录表（不弹全屏遮罩）
+    procMap[updated.id] = '修改中…';
+    renderRecords();
+    setFormBusy(true);
     try {
       var ok = await postRecordOp('edit', updated);
       for (var e3 = 0; e3 < extra.length; e3++){ if (!await postRecordOp('add', extra[e3])) ok = false; }
-      if (ok){ await loadRecordsFromWaline(); if (!_ctErrorActive) cloudToastHide(); }
-      else { cloudToastError('数据写入失败!'); }
-    } catch(e){ cloudToastError('数据写入失败!'); console.error('[kaoqing] edit 失败', e && e.message ? e.message : e); }
+      if (ok){ await loadRecordsFromWaline(true); procMap = {}; renderRecords(); }
+      else { procMap = {}; renderRecords(); cloudToast('error', '数据写入失败', 'edit'); }
+    } catch(e){
+      procMap = {}; renderRecords(); cloudToast('error', '修改失败', 'edit');
+      console.error('[kaoqing] edit 失败', e && e.message ? e.message : e);
+    }
+    setFormBusy(false);
     return;
   }
 
@@ -1562,18 +1570,31 @@ async function submit(){
     segs.forEach(function(sg){ newRecs.push(mkRec(name, sg)); });
   });
 
-  /* 直接走库：逐条 await 匿名 POST 单条「add」事件到 Waline，全部成功后复读 Waline 重渲染；
-     绝不直接改本地 records 缓存（避免与库不一致）。 */
-  cloudToast('write', '处理中...');
+  /* 添加保存：先插入一条空白记录承载「保存中…」圆圈，再走与状态变更相同的方式（无遮罩、整表禁用）。
+     成功后复读 Waline 会整体替换 records（占位记录随之消失）；失败则移除占位并恢复。 */
+  var pid = 'pending_' + Date.now();
+  var placeholder = { id: pid, _pending: true, people: [], date: '', catId: '', catName: '', detail: '', note: '', status: '', mode: 'range', hours: null, ts: Date.now() };
+  records.unshift(placeholder);
+  procMap[pid] = '保存中…';
+  renderRecords();
+  setFormBusy(true);
   try {
     var allOk = true;
     for (var k = 0; k < newRecs.length; k++){
       if (!await postRecordOp('add', newRecs[k])) allOk = false;
     }
-    if (allOk){ await loadRecordsFromWaline(); if (!_ctErrorActive) cloudToastHide(); }
-    else { cloudToastError('部分数据写入失败!'); }
-  } catch(e){ cloudToastError('数据写入失败!'); console.error('[kaoqing] add 失败', e && e.message ? e.message : e); }
+    if (allOk){ await loadRecordsFromWaline(true); procMap = {}; renderRecords(); }
+    else {
+      records = records.filter(function(r){ return !r._pending; });   // 移除占位记录
+      procMap = {}; renderRecords(); cloudToast('error', '部分数据写入失败', 'add');
+    }
+  } catch(e){
+    records = records.filter(function(r){ return !r._pending; });   // 移除占位记录
+    procMap = {}; renderRecords(); cloudToast('error', '数据写入失败', 'add');
+    console.error('[kaoqing] add 失败', e && e.message ? e.message : e);
+  }
   // 保存后整体归位：人员 / 类别 / 考勤内容 全部恢复初始状态（UI 状态，与数据无关）
+  setFormBusy(false);
   selPeople.clear();
   renderPeople();
   curCat = null;
@@ -1973,14 +1994,16 @@ $('#records').addEventListener('click', async function(e){
     message:'确定要删除这条记录吗？\n' + (r.people.join('、')) + ' / ' + r.date + ' / ' + (r.detail || ''),
     okText:'确认删除', cancelText:'取消' });
   if (!okOne) return;
-  cloudToast('write', '处理中...');
+  // 删除进行中：在对应记录勾选框位置显示旋转圆圈 + 文案，并禁用整张记录表（不弹全屏遮罩）
+  procMap[r.id] = '删除中…';
+  renderRecords();
   try {
     var ok = await postRecordOp('del', { id: r.id });   // 先写删除标识记录到 Waline（按 id 标记 del 事件）
-    if (!ok){ cloudToastError('数据写入失败!'); return; }
-    await loadRecordsFromWaline();                      // 再复读 Waline（事件回放）→ 重新渲染，绝不直接改本地缓存（不秒删）
-    if (!_ctErrorActive) cloudToastHide();
+    if (!ok){ procMap = {}; renderRecords(); cloudToast('error', '数据写入失败', 'del'); return; }
+    await loadRecordsFromWaline(true);                  // 再复读 Waline（事件回放）→ 重新渲染，绝不直接改本地缓存（不秒删）
+    procMap = {}; renderRecords();
   } catch(e){
-    cloudToastError('数据读取失败!');
+    procMap = {}; renderRecords(); cloudToast('error', '数据读取失败', 'del');
     console.error('[kaoqing] 删除后复读失败', e && e.message ? e.message : e);
   }
 });
@@ -2017,14 +2040,16 @@ $('#delRecordsBtn').addEventListener('click', async function(){
     message:'确定要删除选中的 ' + targets.length + ' 条记录吗？此操作不可撤销。\n' + preview,
     okText:'确认删除', cancelText:'取消' });
   if (!okAll) return;
-  cloudToast('write', '处理中...');
+  // 删除进行中：在对应记录勾选框位置显示旋转圆圈 + 文案，并禁用整张记录表（不弹全屏遮罩）
+  targets.forEach(function(r){ procMap[r.id] = '删除中…'; });
+  renderRecords();
   try {
     var tasks = targets.map(function(r){ return postRecordOp('del', { id: r.id }); });
     var res = await Promise.all(tasks);
-    if (res.every(function(b){ return b; })){ await loadRecordsFromWaline(); if (!_ctErrorActive) cloudToastHide(); }
-    else { cloudToastError('部分数据写入失败!'); }
+    if (res.every(function(b){ return b; })){ await loadRecordsFromWaline(true); procMap = {}; renderRecords(); }
+    else { procMap = {}; renderRecords(); cloudToast('error', '部分数据写入失败', 'del'); }
   } catch(e){
-    cloudToastError('数据写入失败!');
+    procMap = {}; renderRecords(); cloudToast('error', '批量删除失败', 'del');
     console.error('[kaoqing] 批量删除失败', e && e.message ? e.message : e);
   }
 });
@@ -2041,7 +2066,7 @@ function onWalineLogin(user){
   applyUser(user);
   // 数据已匿名预读，登录后再拉一次保证最新（参照 APP.html 登录后同步云端）
   // 人员：优先读缓存，缓存读不到才读 Waline（缓存里可长按删除/拖动排序，想恢复点末尾「同步」）
-  if (!loadPeopleCache()){ loadPeople(); } loadHolidays(); loadRecordsFromWaline();
+  if (!loadPeopleCache()){ loadPeople(); } loadHolidays(); loadRecordsFromWaline(true);
   // 登录成功：自动关闭登录弹窗（避免遗留空白窗口）
   if (loginWin && !loginWin.closed){ try { loginWin.close(); } catch(e){} }
   loginWin = null;
@@ -2230,28 +2255,8 @@ async function ensureHolidays(){
 var _ctTimer = null, _ctErrorActive = false;
 var _ctMap = {};        // key -> {el, timer}
 var _ctStack = null;
-/* 全屏遮罩：任何 read/write 提示进行中时显示，阻止页面交互；全部结束后隐藏 */
-var _busySet = {};      // keyed 读写标记 -> 显示文字
-var _busySingle = 0;    // 无 key 的读写计数
-var _busySingleText = '';
-var _maskErr = false;   // 失败态：遮罩改显红色错误文字（点击关闭）
-var _maskErrText = '';
-function _maskEl(){ return document.getElementById('cloudMask'); }
-function _maskTextEl(){ return document.getElementById('cloudMaskText'); }
-function _maskRefresh(){
-  var keys = Object.keys(_busySet);
-  var any = keys.length > 0 || _busySingle > 0 || _maskErr;
-  var m = _maskEl(); if (!m) return;
-  m.hidden = !any;
-  var t = _maskTextEl(); if (!t) return;
-  if (!any) return;
-  if (_maskErr){ t.textContent = _maskErrText || '出错了'; t.className = 'err'; }
-  else { t.textContent = (_busySingle > 0 ? _busySingleText : (keys.length ? _busySet[keys[0]] : '')) || '处理中…'; t.className = ''; }
-}
-function busyAdd(key, text){ if (key) _busySet[key] = text || '处理中…'; else { _busySingle++; _busySingleText = text || '处理中…'; } _maskRefresh(); }
-function busyDel(key){ if (key) delete _busySet[key]; else _busySingle = Math.max(0, _busySingle - 1); _maskRefresh(); }
-// 失败态遮罩：点击任意处关闭（仅错误态可关；处理中态点击无效，防止误关）
-(function(){ var m = _maskEl(); if (m) m.onclick = function(){ if (_maskErr){ _maskErr = false; _maskErrText = ''; for (var k in _busySet) delete _busySet[k]; _busySingle = 0; _maskRefresh(); } }; })();
+/* 轻量提示条（非阻塞，不再弹全屏遮罩）：ok=处理中/成功(绿)，error=失败(红，6 秒自动消失或点击关闭)。
+   原 read/write 全屏遮罩已移除——所有读写统一改为轻量提示；记录类操作改用就地旋转圆圈(procMap)。 */
 function _ctStackEl(){
   if (!_ctStack){
     _ctStack = document.createElement('div');
@@ -2261,7 +2266,7 @@ function _ctStackEl(){
   return _ctStack;
 }
 function cloudToast(kind, text, key){
-  if (kind === 'read' || kind === 'write'){ busyAdd(key, text); return; }  // 处理中 = 全屏遮罩（中央文字），不再单独弹绿条
+  if (kind === 'read' || kind === 'write') kind = 'ok';   // 处理中 = 轻量绿条（不再遮罩）
   if (key){
     var m = _ctMap[key] || (_ctMap[key] = { el: null, timer: null });
     if (!m.el){ m.el = document.createElement('div'); _ctStackEl().appendChild(m.el); }
@@ -2291,16 +2296,13 @@ function cloudToastHide(key){
   if (key){
     var m = _ctMap[key];
     if (m){ if (m.timer) clearTimeout(m.timer); if (m.el) m.el.hidden = true; }
-    busyDel(key);
     return;
   }
-  busyDel();
   var box = $('#cloudToast'); if (!box) return;
   box.hidden = true; clearTimeout(_ctTimer); _ctErrorActive = false;
 }
 function cloudToastError(text, key){
-  if (key) busyDel(key); else _busySingle = 0;   // 清掉该读写的「处理中」，转失败态
-  _maskErr = true; _maskErrText = text; _maskRefresh();   // 失败也走遮罩（红字，点击关闭）
+  cloudToast('error', text, key);   // 失败提示（覆盖同 key 的「处理中」绿条）；不再走遮罩
 }
 /* 考勤记录：每条考勤 = 一条独立 Waline 评论（匿名 POST 单条事件，op∈{add,edit,del}，id 唯一）。
    读取时拉取该 path 全部评论 → 解析为事件 → 按 id 回放成当前二维表；旧整包格式(type=='records')按 leg_<oid>_<i> 兼容迁移。
@@ -2428,16 +2430,13 @@ async function loadArchiveMonths(quiet){
     var sel = $('#recSource');
     sel.innerHTML = '<option value="waline">最新未归档记录</option>';
     months.forEach(function(m){
-      if (!m.files || !m.files.length) return;
-      var og = document.createElement('optgroup');
-      og.label = m.ym + '（' + m.files.length + ' 个文件）';
-      m.files.forEach(function(f){
+      (m.files || []).forEach(function(f){
         var o = document.createElement('option');
         o.value = f.key;
-        o.textContent = (f.type === 'supplement' ? '↳ 补录 ' : '') + f.name + '（' + f.count + ' 条）';
-        og.appendChild(o);
+        var nm = (f.name || '').replace(/\.json$/i, '');   // 2026-08.json → 2026-08；2026-08_01.json → 2026-08_01
+        o.textContent = nm + '(' + (f.count || 0) + ')';     // 直接显示「2026-08(1)」「2026-08_01(1)」
+        sel.appendChild(o);
       });
-      sel.appendChild(og);
     });
     if (!quiet) cloudToastHide('loadArchive');
     return true;
@@ -2456,7 +2455,7 @@ function setViewMode(mode){
 }
 async function switchToWaline(){
   setViewMode('edit');
-  await loadRecordsFromWaline();
+  await loadRecordsFromWaline(true);
 }
 async function switchToArchive(key){
   setViewMode('view');
