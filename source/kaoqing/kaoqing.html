@@ -2,6 +2,7 @@
 layout: false
 ---
 <title>考勤登记</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="./lib/waline.css">
 <style>
 /* ============ 主题变量（与 app 家族一致，改 --accent 即可换主色） ============ */
@@ -198,9 +199,15 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 #rangeBlock{flex:1 1 300px}
 #rowNote{flex:1 1 140px}
 #rowNote input{min-width:80px}
-.time-row{flex:1;display:flex;align-items:center;gap:6px}
+.time-segs{flex:1;display:flex;flex-direction:column;gap:8px;min-width:180px}
+.time-row{display:flex;align-items:center;gap:6px}
 .time-row select{flex:1 1 66px;min-width:60px}
 .time-row .sep{color:var(--text-muted);font-size:.82rem;flex:0 0 auto}
+.seg-act{border:none;background:var(--accent-soft);color:var(--accent);cursor:pointer;
+  width:28px;height:28px;border-radius:8px;font-size:1.05rem;line-height:1;flex:0 0 auto;
+  display:inline-flex;align-items:center;justify-content:center}
+.seg-act:hover{filter:brightness(.96)}
+.seg-act.del{background:rgba(224,75,74,.14);color:#e24b4a}
 #fHours{font-size:.92rem;font-weight:600;color:var(--text-secondary);white-space:nowrap;min-width:6em;display:inline-block;text-align:left}
 #fHours.bad{color:var(--warn);font-weight:500}
 .tip{font-size:.78rem;color:var(--text-muted);margin:0}
@@ -285,6 +292,19 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .rec-edit{border:none;background:transparent;color:var(--accent);cursor:pointer;font-size:.82rem;padding:0 4px;display:inline-flex;align-items:center}
 .rec-edit svg{width:14px;height:14px;display:block}
 .empty{color:var(--text-muted);font-size:.82rem;text-align:center;margin:6px 0}
+/* 考勤配置弹窗（午休扣除） */
+.cfg-row{display:flex;align-items:center;gap:10px;margin:10px 0;flex-wrap:wrap}
+.cfg-row label{font-size:.85rem;color:var(--text-secondary);white-space:nowrap}
+.cfg-row input[type=time]{padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--bg);color:var(--text);outline:none;font-family:inherit}
+.cfg-row input[type=time]:focus{border-color:var(--accent)}
+.cfg-check{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--text);cursor:pointer}
+.cfg-check input{width:16px;height:16px;accent-color:var(--accent)}
+/* 手机端：卡片标题字号归一，避免异常放大/缩小 */
+@media (max-width:640px){
+  .card-head h2{font-size:1.02rem}
+  .tb-center{font-size:.92rem}
+  .tb-company{font-size:.86rem}
+}
 @media print{
   #topbar,.card:not(#secAction){display:none!important}
   #secAction{box-shadow:none;border:none;margin:0}
@@ -313,6 +333,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
         <div class="settings-menu" id="settingsMenu" hidden>
           <button class="settings-item" id="syncHolidayBtn">从 timor.tech API 获取节假日 写进 Waline</button>
           <button class="settings-item" id="peopleConfigBtn">人员配置（管理 Waline 中的人员）</button>
+          <button class="settings-item" id="cfgBtn">考勤配置（午休扣除设置）</button>
           <div class="settings-sep"></div>
           <div id="holidayInfo" class="settings-info" hidden></div>
         </div>
@@ -369,15 +390,9 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
             <input type="date" id="fDate">
           </div>
 
-          <!-- 时间段 + 小时数自动计算（≥0.5 小时） -->
+          <!-- 多时间段：最多 3 段（含午休扣除配置） -->
           <div class="sub-row" id="rangeBlock" hidden>
-            <div class="field">
-              <div class="time-row">
-                <select id="fStart"></select>
-                <span class="sep">至</span>
-                <select id="fEnd"></select>
-              </div>
-            </div>
+            <div class="time-segs" id="timeSegs"></div>
             <span id="fHours"></span>
           </div>
 
@@ -436,6 +451,27 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
     <div class="modal-actions">
       <button type="button" class="btn-cancel" id="peopleClose">关闭</button>
       <button type="button" class="btn-ok" id="peopleSync">保存到 Waline（复写）</button>
+    </div>
+  </div>
+</div>
+
+<!-- 考勤配置弹窗（午休扣除：勾选框 + 午休时间段，写入 Waline /kaoqing/config） -->
+<div class="modal-mask" id="cfgMask" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-title">考勤配置 · 午休扣除</div>
+    <div class="modal-msg">勾选后，录入的时间段若涵盖午休时段，则自动扣除该部分时长（仅对跨过午休的时间段生效）。配置保存在 Waline（/kaoqing/config），全端共享。</div>
+    <div class="cfg-row">
+      <label class="cfg-check"><input type="checkbox" id="cfgDeductLunch"> 请假不包含午休时间</label>
+    </div>
+    <div class="cfg-row">
+      <label for="cfgLunchStart">午休时间段</label>
+      <input type="time" id="cfgLunchStart" value="12:00">
+      <span class="sep">至</span>
+      <input type="time" id="cfgLunchEnd" value="13:00">
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" id="cfgClose">关闭</button>
+      <button type="button" class="btn-ok" id="cfgSave">保存到 Waline</button>
     </div>
   </div>
 </div>
@@ -509,6 +545,10 @@ var WALINE_ADMIN_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.MQ.V-1tklVlvdd6sa0AQbdSdf_TT9Wuei
 var WALINE_OAUTH  = 'github'; // 登录方式：github / google / qq / weibo（取决于服务端开启的 OAuth 提供方）
 var HOLIDAY_PATH  = '/kaoqing/holidays'; // 节假日数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var PEOPLE_PATH   = '/kaoqing/people';   // 人员数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
+var CONFIG_PATH   = '/kaoqing/config';   // 考勤配置（午休扣除）存放路径（写入为一条 JSON 评论）
+var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00' }; // 午休扣除配置（页面启动从 Waline 读取覆盖）
+var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
+var timeSegs      = [{ start:'', end:'' }];   // 考勤内容：当前表单时间段列表（最多 3 段）
 var COMPANY_NAME  = '苏州晶讯科技股份有限公司';   // ← 顶栏公司名称（按需改成贵司名称）
 // 注：跨域请求需 Waline 服务端 CORS_ALLOW_ORIGIN 允许本页域名（本地 file:// 预览会被浏览器拦截）。
 
@@ -621,8 +661,8 @@ function applyView(){
   if (!showCat)     curCat = null;              // 隐藏「选择类别」→ 取消类别选中
   if (!showContent){                            // 隐藏「考勤内容」→ 归零内容字段
     $('#fDate').value      = todayStr();
-    $('#fStart').value     = '';
-    $('#fEnd').value       = '';
+    timeSegs = [{ start:'', end:'' }];
+    renderTimeSegs();
     $('#fHours').textContent = '';
     $('#fNote').value      = '';
   }
@@ -644,45 +684,120 @@ function applyView(){
   refresh();
 }
 
-/* 时间段 -> 分钟差（跨天自动 +24h） */
-function rangeMinutes(){
-  var s = $('#fStart').value, e = $('#fEnd').value;
-  if (!s || !e) return null;
-  var d = toMin(e) - toMin(s);
+/* ---------- 多时间段（最多 3 段） ---------- */
+/* 渲染时间段行：每个时间段一行，含 起/止 下拉；
+   末尾按钮规则：最后一行的末尾显示「+」（未满 3 段时）用于新增；非首行显示「−」用于移除。 */
+function renderTimeSegs(){
+  var box = $('#timeSegs'); if (!box) return;
+  box.innerHTML = '';
+  timeSegs.forEach(function(seg, i){
+    var row = document.createElement('div');
+    row.className = 'time-row';
+    row.setAttribute('data-i', String(i));
+    var s = document.createElement('select'); s.className = 'fStart'; buildTimeSlots(s); s.value = seg.start || '';
+    var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '至';
+    var e = document.createElement('select'); e.className = 'fEnd'; buildTimeSlots(e); e.value = seg.end || '';
+    row.appendChild(s); row.appendChild(sep); row.appendChild(e);
+    if (i > 0){
+      var del = document.createElement('button');
+      del.type = 'button'; del.className = 'seg-act del'; del.textContent = '−'; del.title = '移除该时间段';
+      del.setAttribute('data-act', 'del'); del.setAttribute('data-i', String(i));
+      row.appendChild(del);
+    }
+    if (i === timeSegs.length - 1 && timeSegs.length < 3){
+      var add = document.createElement('button');
+      add.type = 'button'; add.className = 'seg-act'; add.textContent = '+'; add.title = '增加时间段（最多 3 段）';
+      add.setAttribute('data-act', 'add'); add.setAttribute('data-i', String(i));
+      row.appendChild(add);
+    }
+    box.appendChild(row);
+  });
+}
+function addTimeSeg(){
+  if (timeSegs.length >= 3) return;
+  timeSegs.push({ start:'', end:'' });
+  renderTimeSegs(); updateRange();
+}
+function delTimeSeg(i){
+  if (i <= 0 || i >= timeSegs.length) return;
+  timeSegs.splice(i, 1);
+  renderTimeSegs(); updateRange();
+}
+/* 单个时间段 -> 分钟差（跨天自动 +24h） */
+function segMinutes(seg){
+  if (!seg.start || !seg.end) return null;
+  var d = toMin(seg.end) - toMin(seg.start);
   if (d <= 0) d += 24 * 60;          // 结束早于开始 = 跨天
   return d;
 }
+/* 单个时间段与午休窗口的重叠分钟数（处理跨天：同时检测 前/当/次日 午休） */
+function lunchOverlap(a0, b0, L, R){
+  if (b0 <= a0) b0 += 24 * 60;
+  var total = 0;
+  [-1440, 0, 1440].forEach(function(off){
+    var l = L + off, r = R + off;
+    var lo = Math.max(a0, l), hi = Math.min(b0, r);
+    if (hi > lo) total += hi - lo;
+  });
+  return total;
+}
+/* 汇总所有时间段：返回 {totalMin, anyComplete, partial}（已按配置扣除午休） */
+function computeTotal(){
+  var total = 0, anyComplete = false, partial = false;
+  timeSegs.forEach(function(seg){
+    var ms = seg.start || '', me = seg.end || '';
+    if (ms && me){
+      var m = segMinutes(seg);
+      if (m != null && m >= MIN_MINUTES){ anyComplete = true; total += m; }
+    } else if (ms || me){
+      partial = true;   // 只填了一端
+    }
+  });
+  if (CONFIG.deductLunch && anyComplete){
+    var L = toMin(CONFIG.lunchStart), R = toMin(CONFIG.lunchEnd);
+    timeSegs.forEach(function(seg){
+      if (seg.start && seg.end){
+        var a0 = toMin(seg.start), b0 = toMin(seg.end);
+        total -= lunchOverlap(a0, b0, L, R);
+      }
+    });
+    if (total < 0) total = 0;
+  }
+  return { totalMin: total, anyComplete: anyComplete, partial: partial };
+}
 
-/* 小时数自动计算 + 最少半小时校验 */
+/* 小时数自动计算 + 最少半小时校验（多时间段汇总，含午休扣除） */
 function updateRange(){
   var hoursEl = $('#fHours');
   if (!curCat){ refresh(); return; }
 
-  var m = rangeMinutes();
-  if (m === null){
+  var c = computeTotal();
+  if (!c.anyComplete && !c.partial){
     hoursEl.textContent = '';
     hoursEl.className = '';
-  } else if (m < MIN_MINUTES){
-    hoursEl.textContent = '时段不足 0.5 小时';
+  } else if (c.partial){
+    hoursEl.textContent = '请补全时间段';
     hoursEl.className = 'bad';
   } else {
     hoursEl.className = '';
-    hoursEl.textContent = (Math.round((m / 60) * 100) / 100) + ' 小时';
+    hoursEl.textContent = (Math.round((c.totalMin / 60) * 100) / 100) + ' 小时';
   }
   refresh();
 }
 
 function currentAmountText(){
   if (!curCat) return '';
-  var s = $('#fStart').value, e = $('#fEnd').value;
-  if (!s || !e) return '（未选时间段）';
-  return s + ' - ' + e;
+  var parts = [];
+  timeSegs.forEach(function(seg){
+    if (seg.start && seg.end) parts.push(seg.start + ' - ' + seg.end);
+  });
+  return parts.length ? parts.join('; ') : '（未选时间段）';
 }
 
 function rangeOK(){
   if (!curCat) return false;
-  var m = rangeMinutes();
-  return m !== null && m >= MIN_MINUTES;
+  var c = computeTotal();
+  return c.anyComplete && !c.partial;
 }
 
 /* ---------- 区域四：汇总 / 记录 ---------- */
@@ -699,11 +814,16 @@ function refresh(){
 
   /* 预览：一人一行 —— 序号 | 姓名 | 类别 | 日期 | 时段 | 共 X 小时 | 说明 */
   var date = $('#fDate').value || todayStr();
-  var m    = rangeMinutes();
+  var c    = computeTotal();
   var spanHtml, amtHtml = '';
-  if (m === null) spanHtml = '<span class="warn">未选时段</span>';
-  else spanHtml = esc($('#fStart').value) + ' - ' + esc($('#fEnd').value);
-  amtHtml = (m !== null) ? '共 ' + (Math.round((m / 60) * 100) / 100) + ' 小时' : '';
+  if (!c.anyComplete && !c.partial) spanHtml = '<span class="warn">未选时段</span>';
+  else if (c.partial) spanHtml = '<span class="warn">时段未补全</span>';
+  else {
+    var parts = [];
+    timeSegs.forEach(function(sg){ if (sg.start && sg.end) parts.push(esc(sg.start) + ' - ' + esc(sg.end)); });
+    spanHtml = parts.join('; ');
+  }
+  amtHtml = (c.anyComplete) ? '共 ' + (Math.round((c.totalMin / 60) * 100) / 100) + ' 小时' : '';
   var note = $('#fNote').value.trim();
 
   $('#summary').innerHTML = Array.from(selPeople).map(function(n, i){
@@ -767,7 +887,16 @@ function renderRecords(){
   html += '<th>#</th><th>人员</th><th>类别</th><th>加班类别</th><th>日期</th><th>时段</th><th>小时</th><th>状态</th><th>说明</th>';
   if (editable) html += '<th class="c-del"></th>';
   html += '</tr></thead><tbody>';
-  records.forEach(function(r, i){
+  // 按记录内容里的「业务日期」从新到旧排序（降序）；同日期保持稳定（保持原录入相对顺序）
+  var order = records.map(function(r, idx){ return idx; });
+  order.sort(function(a, b){
+    var da = records[a].date || '';
+    var db = records[b].date || '';
+    if (da === db) return a - b;          // 同日期：原顺序在前
+    return da < db ? 1 : -1;              // 新日期（字符串更大）排在前
+  });
+  order.forEach(function(i, n){
+    var r = records[i];
     var st = r.status || '待提交';
     var isOt = r.catId === 'overtime';        // 加班类别仅「加班」需要，其它请假类不需要
     var ot = isOt ? (r.otType || calcOtType(r.date)) : '';
@@ -784,7 +913,7 @@ function renderRecords(){
       : '<span class="muted">—</span>';
     html += '<tr>';
     if (editable) html += '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>';
-    html += '<td class="c-idx">' + (i + 1) + '</td>' +
+    html += '<td class="c-idx">' + (n + 1) + '</td>' +
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
       '<td class="c-cat ' + (r.catId === 'overtime' ? 'c-green' : 'c-orange') + '">' + esc(r.catName) + '</td>' +
       '<td class="c-ottype' + (isOt ? (' ot-' + otCls) : '') + '">' + (isOt ? ot : '<span class="muted">—</span>') + '</td>' +
@@ -820,7 +949,7 @@ async function submit(){
 
   var date   = $('#fDate').value || todayStr();
   var detail = currentAmountText();
-  var hours  = curCat.mode === 'range' ? Math.round((rangeMinutes() / 60) * 100) / 100 : null;
+  var hours  = curCat.mode === 'range' ? Math.round((computeTotal().totalMin / 60) * 100) / 100 : null;
   var note   = $('#fNote').value.trim();
 
   /* 修改模式：直接走库——把更新作为 edit 事件 POST 到 Waline，成功后再复读 Waline 重渲染；
@@ -903,9 +1032,16 @@ function startEdit(i){
   selPeople = new Set(r.people);
   curCat = CATS.find(function(c){ return c.id === r.catId; });
   $('#fDate').value = r.date || todayStr();
-  var m = (r.detail || '').match(/^(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
-  $('#fStart').value = m ? m[1] : '';
-  $('#fEnd').value   = m ? m[2] : '';
+  timeSegs = [];
+  var ms = (r.detail || '').match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/g) || [];
+  if (ms.length){
+    ms.forEach(function(t){
+      var p = t.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+      if (p) timeSegs.push({ start: p[1], end: p[2] });
+    });
+  }
+  if (!timeSegs.length) timeSegs = [{ start:'', end:'' }];
+  renderTimeSegs();
   $('#fNote').value  = r.note || '';
   renderGroups();
   renderPeople();
@@ -928,8 +1064,29 @@ $('#selNone').addEventListener('click', function(){
   peopleOfGroup().forEach(function(p){ selPeople.delete(p.n); });
   renderPeople(); applyView();
 });
-$('#fStart').addEventListener('change', updateRange);
-$('#fEnd').addEventListener('change', updateRange);
+/* 多时间段：事件委托（行内 select / 按钮为动态生成） */
+$('#timeSegs').addEventListener('change', function(e){
+  var sel = e.target;
+  if (!sel || (!sel.classList.contains('fStart') && !sel.classList.contains('fEnd'))) return;
+  var row = sel.closest('.time-row'); if (!row) return;
+  var idx = parseInt(row.getAttribute('data-i'), 10);
+  var seg = timeSegs[idx]; if (!seg) return;
+  if (sel.classList.contains('fStart')) seg.start = sel.value;
+  else seg.end = sel.value;
+  updateRange();
+});
+$('#timeSegs').addEventListener('click', function(e){
+  var btn = e.target.closest('.seg-act'); if (!btn) return;
+  var act = btn.getAttribute('data-act');
+  var i = parseInt(btn.getAttribute('data-i'), 10);
+  if (act === 'add') addTimeSeg();
+  else if (act === 'del') delTimeSeg(i);
+});
+/* 考勤配置（午休扣除） */
+$('#cfgBtn').addEventListener('click', openConfig);
+$('#cfgSave').addEventListener('click', saveConfigToWaline);
+$('#cfgClose').addEventListener('click', function(){ $('#cfgMask').hidden = true; });
+$('#cfgMask').addEventListener('click', function(e){ if (e.target === $('#cfgMask')) $('#cfgMask').hidden = true; });
 $('#fNote').addEventListener('input', refresh);
 $('#fDate').addEventListener('change', refresh);
 $('#submitBtn').addEventListener('click', submit);
@@ -1923,6 +2080,61 @@ async function openPeopleConfig(){
   $('#peopleMask').hidden = false;
 }
 $('#peopleConfigBtn').addEventListener('click', openPeopleConfig);
+/* ---------- 考勤配置（午休扣除）：读取 / 弹窗 / 写入 Waline ---------- */
+async function loadConfig(){
+  try {
+    var best = await fetchCloudRecord(CONFIG_PATH, 'config');
+    if (best && best.obj){
+      configOid = best.oid;
+      if (typeof best.obj.deductLunch === 'boolean') CONFIG.deductLunch = best.obj.deductLunch;
+      if (best.obj.lunchStart) CONFIG.lunchStart = best.obj.lunchStart;
+      if (best.obj.lunchEnd)   CONFIG.lunchEnd   = best.obj.lunchEnd;
+    }
+  } catch(e){
+    console.warn('[kaoqing] 读取考勤配置失败（使用默认）', e && e.message ? e.message : e);
+  }
+}
+function openConfig(){
+  closeSettings();
+  $('#cfgDeductLunch').checked = CONFIG.deductLunch;
+  $('#cfgLunchStart').value = CONFIG.lunchStart;
+  $('#cfgLunchEnd').value   = CONFIG.lunchEnd;
+  $('#cfgMask').hidden = false;
+}
+async function saveConfigToWaline(){
+  if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
+  var payload = {
+    v: 1, type: 'config',
+    deductLunch: $('#cfgDeductLunch').checked,
+    lunchStart: $('#cfgLunchStart').value || '12:00',
+    lunchEnd:   $('#cfgLunchEnd').value   || '13:00'
+  };
+  var user = getWalineUser();
+  var token = WALINE_ADMIN_TOKEN || walineToken(user);
+  if (!token){
+    showAlert('未配置管理员令牌且未登录，无法保存。\n请先点右上角「登录」，或在脚本中配置 WALINE_ADMIN_TOKEN。');
+    return;
+  }
+  var body = {
+    comment: JSON.stringify(payload), url: CONFIG_PATH,
+    nick: (user && user.display_name) || ANON_NICK,
+    mail: (user && user.email) || ANON_MAIL,
+    link: '', ua: navigator.userAgent
+  };
+  cloudToast('write', '处理中：保存考勤配置...', 'saveCfg');
+  try {
+    var res = await walineSaveRecord(configOid, body, token);
+    configOid = res.oid;
+    CONFIG.deductLunch = payload.deductLunch;
+    CONFIG.lunchStart  = payload.lunchStart;
+    CONFIG.lunchEnd    = payload.lunchEnd;
+    cloudToastHide('saveCfg');
+    showAlert('已保存考勤配置（午休扣除' + (CONFIG.deductLunch ? '已开启' : '已关闭') + '，午休 ' + CONFIG.lunchStart + '-' + CONFIG.lunchEnd + '）。');
+  } catch(err){
+    cloudToastError('数据写入失败!', 'saveCfg');
+    showAlert('保存到 Waline 失败：' + (err && err.message ? err.message : err));
+  }
+}
 /* 归档下拉：切换 最新未归档记录(Waline) / 归档记录(R2 只读) */
 $('#recSource').addEventListener('change', function(){
   if (this.value === 'waline'){ switchToWaline(); }
@@ -1946,8 +2158,7 @@ document.addEventListener('keydown', function(e){
 /* ---------- 初始化 ---------- */
 (async function init(){
   $('#fDate').value = todayStr();
-  buildTimeSlots($('#fStart'));
-  buildTimeSlots($('#fEnd'));
+  renderTimeSegs();
   renderGroups();
   renderPeople();
   applyView();
@@ -1955,11 +2166,12 @@ document.addEventListener('keydown', function(e){
   renderPresets();
   refreshSaveBtn();          // 初始：新增模式「添加」(绿)
   $('#companyName').textContent = COMPANY_NAME;
-  // 打开页面即直接读取 Waline 同步人员 / 节假日 / 考勤记录（读为公开接口，无需登录）
+  // 打开页面即直接读取 Waline 同步人员 / 节假日 / 考勤记录 / 考勤配置（读为公开接口，无需登录）
   // 各读取函数各自显示「处理中」并自行在成功/失败时收尾，互不覆盖
   try {
     await loadPeople();
     await loadHolidays();
+    await loadConfig();
     await loadRecordsFromWaline();
   } catch(e){ /* 子函数已各自以弹窗提示错误 */ }
   loadArchiveMonths();          // 区域五：填充归档月份下拉（读 R2 index.json，失败仅打 warn 不阻断页面）
