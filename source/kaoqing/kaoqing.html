@@ -304,6 +304,20 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .rec-count{font-size:.78rem;color:var(--text-muted)}
 .rec-source{padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text);max-width:240px}
 .rec-status-sel{padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text);font-family:inherit}
+/* 节假日懒加载中：需要显示加班类别的地方显示旋转圆圈 */
+.ot-spin{
+  display:inline-block;width:13px;height:13px;vertical-align:-2px;border-radius:50%;
+  border:2px solid var(--border);border-top-color:var(--accent);
+  animation:ot-spin .7s linear infinite;
+}
+@keyframes ot-spin{ to{ transform:rotate(360deg) } }
+/* 记录表懒加载中：在「该状态下暂无记录」位置显示旋转圆圈 + 文案 */
+.rec-loading{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 0;color:var(--text-muted);font-size:.82rem}
+.rec-spin{
+  display:inline-block;width:16px;height:16px;border-radius:50%;
+  border:2px solid var(--border);border-top-color:var(--accent);
+  animation:ot-spin .7s linear infinite;
+}
 .btn-rec-submit{
   padding:8px 18px;border:1px solid transparent;border-radius:10px;cursor:pointer;
   background:var(--accent);color:#fff;font-size:.85rem;font-weight:600;
@@ -699,8 +713,13 @@ function toMin(t){ var p = t.split(':'); return parseInt(p[0],10) * 60 + parseIn
    并弹「节假日读取失败」提示，便于一眼看出是不是没读成功。绝不默认算成「平时」以免掩盖问题。 */
 var HOLIDAYS = { year: new Date().getFullYear(), holidays: [], rest: [], makeup: [] };
 var HOLIDAYS_OK = false;   // 节假日是否成功读取；未读取/读取失败→false，calcOtType 返回「未知」以暴露问题
-/* 加班类别：国假（法定假日）/ 双休（正常周末）/ 平时（工作日，含调休补班上班）/ 未知（节假日未读取，不臆测） */
+var HOLIDAY_CACHE_KEY = 'kaoqing_holidays_cache';   // 节假日缓存：只有「本年」数据才算有效缓存
+var holidaysLoading = false;                        // 节假日懒加载中 → 需要显示加班类别的地方显示旋转圆圈
+var recordsLoading = false;                         // 记录表数据懒加载中 → 在「该状态下暂无记录」位置显示旋转圆圈
+/* 加班类别：国假（法定假日）/ 双休（正常周末）/ 平时（工作日，含调休补班上班）/
+   「加载中」= 节假日正在后台懒加载（渲染成旋转圆圈）；「未知」= 未读取/读取失败，不臆测 */
 function calcOtType(date){
+  if (holidaysLoading) return '加载中';     // 懒加载中：显示旋转圆圈
   if (!HOLIDAYS_OK) return '未知';          // 节假日未成功读取：显示未知，避免默认「平时」掩盖问题
   if (!date) return '平时';
   if (HOLIDAYS.holidays.indexOf(date) >= 0) return '国假';   // 法定假日（wage=3）
@@ -800,6 +819,7 @@ function renderCats(){
     b.textContent = c.name;
     b.addEventListener('click', function(){
       curCat = (curCat && curCat.id === c.id) ? null : c;   // 再点一次取消
+      if (curCat && isOtCatId(curCat.id)) ensureHolidays(); // 加班：后台懒加载节假日（不弹遮罩，加载处显示旋转圆圈）
       applyView();
     });
     box.appendChild(b);
@@ -1053,14 +1073,19 @@ function refresh(){
   Array.from(selPeople).forEach(function(n){
     timeSegs.forEach(function(sg){
       idx++;
-      var catName = curCat.name;
-      if (isOtCatId(curCat.id)) catName = calcOtType(sg.date) + '加班';   // 加班类型按本行日期自动判定，并入类别
+      var catHtml = esc(curCat.name);
+      if (isOtCatId(curCat.id)){
+        var ot = calcOtType(sg.date);                      // 加班类型按本行日期自动判定，并入类别
+        catHtml = (ot === '加载中')
+          ? '<span class="ot-spin" title="节假日加载中…"></span>'   // 懒加载中：旋转圆圈
+          : esc(ot + '加班');
+      }
       var t   = (sg.start && sg.end) ? (esc(sg.start) + ' - ' + esc(sg.end)) : '<span class="warn">未选时段</span>';
       var hrs = segHoursText(sg) || '？？小时';
       rows.push('<div class="pv-row">' +
         '<span class="pv-i">' + String(idx).padStart(2, '0') + '</span>' +
         '<span class="pv-n">' + esc(n) + '</span>' +
-        '<span class="pv-c ' + catCls + '">' + esc(catName) + '</span>' +
+        '<span class="pv-c ' + catCls + '">' + catHtml + '</span>' +
         '<span class="pv-d">' + esc(sg.date || '—') + '</span>' +
         '<span class="pv-t">' + t + '</span>' +
         '<span class="pv-h">' + hrs + '</span>' +
@@ -1314,7 +1339,11 @@ function renderRecords(){
   }
   updateRecButtons();   // 重新渲染后勾选清空，记录相关按钮全禁用
   if (!idxs.length){
-    box.innerHTML = '<p class="empty">' + (records.length ? '该状态下暂无记录' : '暂无记录') + '</p>';
+    if (recordsLoading){
+      box.innerHTML = '<div class="rec-loading"><span class="rec-spin"></span>加载中…</div>';
+    } else {
+      box.innerHTML = '<p class="empty">' + (records.length ? '该状态下暂无记录' : '暂无记录') + '</p>';
+    }
     return;
   }
   var editable = (viewMode === 'edit');   // 归档(R2)只读：不渲染勾选框与改删按钮
@@ -1357,6 +1386,10 @@ function renderRecords(){
       if (idx >= 0){ hoursTxt = span.slice(idx + 2).trim(); span = span.slice(0, idx).replace(/\s+$/, ''); }
       else if (r.hours != null) hoursTxt = r.hours + ' 小时';
     }
+    var catDisplay = isOt ? (ot + '加班') : (r.catName || '');
+    var catCell = (isOt && ot === '加载中')
+      ? '<span class="ot-spin" title="节假日加载中…"></span>'   // 懒加载中：旋转圆圈
+      : esc(catDisplay);
     var note = r.note
       ? '<span title="' + esc(r.note) + '">' + esc(r.note) + '</span>'
       : '<span class="muted">—</span>';
@@ -1364,7 +1397,7 @@ function renderRecords(){
     if (editable) html += '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>';
     html += '<td class="c-idx">' + (i + 1) + '</td>' +   // ID = 录入顺序（records 数组下标即录入序，后录入更大）
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
-      '<td class="c-cat ' + (isOt ? 'c-green' : 'c-orange') + '">' + esc(catDisplay) + '</td>' +
+      '<td class="c-cat ' + (isOt ? 'c-green' : 'c-orange') + '">' + catCell + '</td>' +
       '<td class="c-date">' + esc(r.date) + '</td>' +
       '<td class="c-time">' + esc(fmtSpan(span)) + '</td>' +
       '<td class="c-hours">' + esc(hoursTxt) + '</td>' +
@@ -1994,10 +2027,11 @@ async function anonPostCloud(path, obj){
   } catch(e){ return false; }
 }
 
-/* 节假日：从 Waline 读取（公开接口，匿名）覆盖兜底表，供加班类别计算 */
-async function loadHolidays(){
+/* 节假日：从 Waline 读取（公开接口，匿名）。页面打开不加载，点「加班」类别时才由 ensureHolidays() 懒加载：
+   quiet=true 时不弹全屏遮罩，加载期间由 calcOtType 返回「加载中」，在需要显示加班类别处渲染旋转圆圈。 */
+async function loadHolidays(quiet){
   HOLIDAYS_OK = false;   // 先置未知，读取成功才置 true
-  cloudToast('read', '处理中：读取节假日...', 'loadHolidays');
+  if (!quiet) cloudToast('read', '处理中：读取节假日...', 'loadHolidays');
   try {
     var best = await fetchCloudRecord(HOLIDAY_PATH, 'holiday');
     if (best && best.obj && best.obj.holidays && best.obj.holidays.length){
@@ -2018,19 +2052,56 @@ async function loadHolidays(){
         makeup: (best.obj.makeup || []).map(function(m){ return (m && typeof m === 'object') ? (m.date || m) : m; })
       };
       HOLIDAYS_OK = true;
+      saveHolidayCache();        // 写入缓存（含 year），下次优先读缓存
       renderHolidayInfo();   // 读取成功：刷新设置菜单里的节假日配置展示
-      cloudToastHide('loadHolidays');
+      if (!quiet) cloudToastHide('loadHolidays');
     } else {
       // 未配置节假日数据（best 为空）→ 读不到，明确提示，并标记未知，绝不臆测为「平时」
-      cloudToastError('节假日读取失败!', 'loadHolidays');
+      if (quiet) cloudToast('error', '节假日读取失败', 'loadHolidays');       // 懒加载：只弹小提示条，不弹遮罩
+      else cloudToastError('节假日读取失败!', 'loadHolidays');
       console.warn('[kaoqing] 未读取到节假日数据（未配置或读取异常），加班类别将显示「未知」');
       renderHolidayInfo();
     }
   } catch(e){
-    cloudToastError('节假日读取失败!', 'loadHolidays');
+    if (quiet) cloudToast('error', '节假日读取失败', 'loadHolidays');
+    else cloudToastError('节假日读取失败!', 'loadHolidays');
     console.error('[kaoqing] loadHolidays 失败', e && e.message ? e.message : e);
     renderHolidayInfo();
   }
+}
+
+/* ---------- 节假日懒加载：优先「本年」缓存，无缓存才读 Waline 并写缓存 ---------- */
+function saveHolidayCache(){
+  try { localStorage.setItem(HOLIDAY_CACHE_KEY, JSON.stringify(HOLIDAYS)); } catch(e){}
+}
+/* 只有「本年」的缓存才算有效：跨年后旧缓存自动失效，会重新读 Waline */
+function loadHolidayCache(){
+  try {
+    var raw = localStorage.getItem(HOLIDAY_CACHE_KEY);
+    if (!raw) return false;
+    var o = JSON.parse(raw);
+    if (!o || Number(o.year) !== new Date().getFullYear()) return false;
+    if (!Array.isArray(o.holidays) || !o.holidays.length) return false;
+    HOLIDAYS = { year: Number(o.year), holidays: o.holidays || [], rest: o.rest || [], makeup: o.makeup || [] };
+    HOLIDAYS_OK = true;
+    return true;
+  } catch(e){ return false; }
+}
+/* 节假日状态变化 → 重绘所有会显示加班类别的地方 */
+function refreshOtViews(){
+  refresh();            // 预览 / 汇总
+  renderRecords();      // 记录表「类别」列
+  renderHolidayInfo();  // 设置菜单里的节假日配置展示
+}
+async function ensureHolidays(){
+  if (HOLIDAYS_OK || holidaysLoading) return;
+  holidaysLoading = true;
+  refreshOtViews();                                    // 先把「未知」换成旋转圆圈
+  try {
+    if (!loadHolidayCache()) await loadHolidays(true);  // 本年缓存优先；无缓存读 Waline（quiet：不弹遮罩）
+  } catch(e){ console.error('[kaoqing] ensureHolidays 失败', e && e.message ? e.message : e); }
+  holidaysLoading = false;
+  refreshOtViews();                                    // 加载完成：换回真实加班类别
 }
 /* 读/写/删除过程统一提示：绿「处理中...」，失败=红「读取/写入失败!」。不使用右上角状态标记。
    支持多任务并发：每个操作传 key，互不影响、各自独立显示/消失；不传 key 则复用全局单例 #cloudToast（兼容旧调用）。
@@ -2204,21 +2275,30 @@ async function postRecordOp(op, rec){
 }
 
 /* 读取：以 Waline 为唯一来源（无 localStorage 兜底）。拉取全量评论 → 回放成当前二维表。 */
-async function loadRecordsFromWaline(){
-  cloudToast('read', '处理中：读取考勤记录...', 'loadRecords');
+async function loadRecordsFromWaline(quiet){
+  if (quiet){
+    recordsLoading = true; renderRecords();   // 懒加载：不弹遮罩，先在「该状态下暂无记录」位置显示旋转圆圈
+  } else {
+    cloudToast('read', '处理中：读取考勤记录...', 'loadRecords');
+  }
   try {
     var all = await fetchAllComments(RECORDS_PATH);
     var events = [];
     for (var i = 0; i < all.length; i++){ events = events.concat(parseCommentToEvents(all[i])); }
     records = replayEvents(events);
+    if (quiet) recordsLoading = false;
     renderRecords();
-    cloudToastHide('loadRecords');
-  } catch(e){ cloudToastError('考勤记录读取失败!', 'loadRecords'); console.error('[kaoqing] loadRecordsFromWaline 失败', e && e.message ? e.message : e); }
+    if (!quiet) cloudToastHide('loadRecords');
+  } catch(e){
+    if (quiet){ recordsLoading = false; renderRecords(); cloudToast('error', '考勤记录读取失败', 'loadRecords'); }
+    else { cloudToastError('考勤记录读取失败!', 'loadRecords'); }
+    console.error('[kaoqing] loadRecordsFromWaline 失败', e && e.message ? e.message : e);
+  }
 }
 
 /* 归档下拉（合并原区域五卡片）：从 R2 index.json 填充「归档记录」选项；「最新未归档记录」固定为第一项(value=waline)。归档写入由后端 kaoqing_archiver.py 定时任务完成，前端不发起。 */
-async function loadArchiveMonths(){
-  cloudToast('read', '处理中：读取归档列表...', 'loadArchive');
+async function loadArchiveMonths(quiet){
+  if (!quiet) cloudToast('read', '处理中：读取归档列表...', 'loadArchive');
   try {
     var resp = await fetch(ARCHIVE_R2_BASE + ARCHIVE_PREFIX + 'index.json?t=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) throw new Error('index ' + resp.status);
@@ -2238,10 +2318,13 @@ async function loadArchiveMonths(){
       });
       sel.appendChild(og);
     });
-    cloudToastHide('loadArchive');
+    if (!quiet) cloudToastHide('loadArchive');
+    return true;
   } catch(e){
-    cloudToastError('归档列表读取失败!', 'loadArchive');
+    if (quiet) cloudToast('error', '归档列表读取失败', 'loadArchive');
+    else cloudToastError('归档列表读取失败!', 'loadArchive');
     console.warn('[kaoqing] loadArchiveMonths 失败', e && e.message ? e.message : e);
+    return false;
   }
 }
 /* 视图切换：edit=最新未归档(Waline 可改删)；view=归档(R2 只读，不能修改/删除) */
@@ -2910,6 +2993,16 @@ $('#recSource').addEventListener('change', function(){
   if (this.value === 'waline'){ switchToWaline(); }
   else { switchToArchive(this.value); }
 });
+/* 归档列表懒加载：页面打开不加载，仅在用户点开「数据选择」下拉框时才读 R2 index.json（不弹遮罩） */
+var archiveMonthsLoaded = false;
+async function lazyLoadArchiveMonths(){
+  if (archiveMonthsLoaded) return;
+  archiveMonthsLoaded = true;                       // 先置位防重入；失败再复位以便下次重试
+  var ok = await loadArchiveMonths(true);           // quiet：不弹遮罩
+  if (!ok) archiveMonthsLoaded = false;
+}
+$('#recSource').addEventListener('mousedown', lazyLoadArchiveMonths);   // 鼠标点开下拉框即触发
+$('#recSource').addEventListener('focus', lazyLoadArchiveMonths);        // 键盘聚焦（Tab）亦可触发
 /* 状态筛选：切换后按状态重渲染记录表 */
 $('#recStatus').addEventListener('change', function(){ renderRecords(); });
 $('#peopleSync').addEventListener('click', savePeopleToWaline);
@@ -2937,18 +3030,17 @@ document.addEventListener('keydown', function(e){
   renderPresets();
   refreshSaveBtn();          // 初始：新增模式「添加」(绿)
   $('#companyName').textContent = COMPANY_NAME;
-  // 打开页面即直接读取 Waline 同步人员 / 节假日 / 考勤记录 / 考勤配置（读为公开接口，无需登录）
-  // 各读取函数各自显示「处理中」并自行在成功/失败时收尾，互不覆盖
+  // 打开页面：人员（优先缓存）、考勤配置、常用说明 立即读取（公开接口，无需登录）；
+  // 节假日 / 记录表 / 归档列表 改为懒加载（详见各 ensure*/lazy* 触发点），打开页面不阻塞、不弹遮罩。
   try {
     // 人员：优先读缓存，读不到才读 Waline（与首屏一致）
     if (!loadPeopleCache()){ await loadPeople(); }
-    await loadHolidays();
     await loadConfig();
     loadPresetCache();        // 常用说明：优先缓存，无缓存则播种自 Waline 配置并写回缓存
     renderPresets();          // 按缓存 / Waline 配置刷新常用说明标签
-    await loadRecordsFromWaline();
+    loadRecordsFromWaline(true);   // 记录表懒加载：不弹遮罩，加载时显示旋转圆圈（fire-and-forget，不阻塞后续初始化）
   } catch(e){ /* 子函数已各自以弹窗提示错误 */ }
-  loadArchiveMonths();          // 区域五：填充归档月份下拉（读 R2 index.json，失败仅打 warn 不阻断页面）
+  // 归档列表不在打开时加载；用户点开「数据选择」下拉框时才由 lazyLoadArchiveMonths 读取
   checkLogin();              // 检测本地 Waline 登录态（已登录则解锁设置入口）
   initWalineEarly();         // 初始化 Waline 组件（严格参照 APP.html：挂载 #walineLoginMount，由 onLogin 回写登录态）
 })();
