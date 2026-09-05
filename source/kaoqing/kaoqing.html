@@ -199,8 +199,9 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 }
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
 /* 各项宽度：日期/小时数定宽，时间段与说明弹性填充，宽屏同一行、窄屏折行 */
-#rowDate{flex:0 0 auto}
-#rowDate input{flex:0 0 118px}
+.time-row .fDate{flex:0 0 118px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:.86rem;background:transparent}
+.time-row .all-day{display:inline-flex;align-items:center;gap:3px;font-size:.78rem;color:var(--text-secondary);cursor:pointer;flex:0 0 auto}
+.time-row .all-day input{width:14px;height:14px;accent-color:var(--accent)}
 #rangeBlock{flex:1 1 300px}
 #rowNote{flex:1 1 140px}
 #rowNote input{min-width:80px}
@@ -289,6 +290,12 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .rec-table .c-status{white-space:nowrap}
 .rec-table .muted{color:var(--text-muted)}
 .rec-check{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+/* 表头全选框：部分选中时在方框内显示黑色方块（indeterminate 自定义外观） */
+.rec-check-all{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.rec-check-all:indeterminate{appearance:none;-webkit-appearance:none;position:relative;
+  width:16px;height:16px;border:1px solid var(--accent);border-radius:3px;background:transparent}
+.rec-check-all:indeterminate::after{content:'';position:absolute;left:50%;top:50%;
+  width:8px;height:8px;margin:-4px 0 0 -4px;background:#000;border-radius:1px}
 .rec-status{display:inline-block;font-size:.72rem;padding:2px 9px;border-radius:999px;white-space:nowrap}
 .st-tj{background:var(--border);color:var(--text-secondary)}
 .st-sh{background:rgba(59,130,246,.15);color:#3b82f6}
@@ -392,12 +399,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       <div class="card-body">
         <div class="form-row">
 
-          <div class="field" id="rowDate">
-            <label for="fDate">时间</label>
-            <input type="date" id="fDate">
-          </div>
-
-          <!-- 多时间段：最多 3 段（含午休扣除配置） -->
+          <!-- 每行 = 一条完整记录：日期 | 整天 | 起 | 至 | 止 | 备注事由 | 本行小时 | +/−（最多 3 行） -->
           <div class="sub-row" id="rangeBlock" hidden>
             <div class="time-segs" id="timeSegs"></div>
             <span id="fHours"></span>
@@ -458,11 +460,11 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   </div>
 </div>
 
-<!-- 考勤配置弹窗（午休扣除：勾选框 + 午休时间段，写入 Waline /kaoqing/config） -->
+<!-- 考勤配置弹窗（午休扣除 + 正常上班时间，写入 Waline /kaoqing/config） -->
 <div class="modal-mask" id="cfgMask" hidden>
   <div class="modal" role="dialog" aria-modal="true">
-    <div class="modal-title">考勤配置 · 午休扣除</div>
-    <div class="modal-msg">勾选后，录入的时间段若涵盖午休时段，则自动扣除该部分时长（仅对跨过午休的时间段生效）。配置保存在 Waline（/kaoqing/config），全端共享。</div>
+    <div class="modal-title">考勤配置 · 午休扣除与上班时间</div>
+    <div class="modal-msg">勾选后，录入的时间段若涵盖午休时段，则自动扣除该部分时长（仅对跨过午休的时间段生效）。正常上班时间用于「整天」勾选时自动带入时间段。配置保存在 Waline（/kaoqing/config），全端共享。</div>
     <div class="cfg-row">
       <label class="cfg-check"><input type="checkbox" id="cfgDeductLunch"> 请假不包含午休时间</label>
     </div>
@@ -471,6 +473,12 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       <input type="time" id="cfgLunchStart" value="12:00">
       <span class="sep">至</span>
       <input type="time" id="cfgLunchEnd" value="13:00">
+    </div>
+    <div class="cfg-row">
+      <label for="cfgWorkStart">正常上班时间</label>
+      <input type="time" id="cfgWorkStart" value="08:30">
+      <span class="sep">至</span>
+      <input type="time" id="cfgWorkEnd" value="17:30">
     </div>
     <div class="modal-actions">
       <button type="button" class="btn-cancel" id="cfgClose">关闭</button>
@@ -515,19 +523,38 @@ var PEOPLE_COLS = [
   { key:'permission', label:'权限' }
 ];
 
-/* 类别：统一走时间段（≥0.5 小时），小时数自动计算 */
+/* 类别：统一走时间段（≥0.5 小时），小时数自动计算。
+   加班已细分为「国假加班 / 双休加班 / 平时加班」——加班类型直接写在类别里（otType），
+   不再由系统按日期自动判定；录入人自己选，报表按类别名统计。 */
 var CATS = [
-  { id:'overtime', name:'加班',     char:'加', color:'#f59e0b', mode:'range', tip:'选择加班时间段，至少 0.5 小时，小时数自动计算' },
+  { id:'ot-holiday', name:'国假加班', char:'国', color:'#f59e0b', mode:'range', otType:'国假', tip:'法定节假日加班，选择加班时间段，至少 0.5 小时' },
+  { id:'ot-weekend', name:'双休加班', char:'双', color:'#f59e0b', mode:'range', otType:'双休', tip:'休息日/调休放假加班，选择加班时间段，至少 0.5 小时' },
+  { id:'ot-normal',  name:'平时加班', char:'平', color:'#f59e0b', mode:'range', otType:'平时', tip:'工作日加班，选择加班时间段，至少 0.5 小时' },
   { id:'tiaoxiu',  name:'调休',     char:'调', color:'#10b981', mode:'range', tip:'选择调休时间段，至少 0.5 小时，小时数自动计算' },
   { id:'nianjia',  name:'年假',     char:'年', color:'#3b82f6', mode:'range', tip:'选择年假时间段，至少 0.5 小时，小时数自动计算' },
   { id:'bingjia',  name:'病假',     char:'病', color:'#ef4444', mode:'range', tip:'选择病假时间段，至少 0.5 小时，小时数自动计算' },
   { id:'shijia',   name:'事假',     char:'事', color:'#8b5cf6', mode:'range', tip:'选择事假时间段，至少 0.5 小时，小时数自动计算' },
   { id:'qita',     name:'其它', char:'它', color:'#6b7280', mode:'range', tip:'选择时间段，至少 0.5 小时，并在备注中说明事由' },
 ];
+/* 加班类判定：新类别带 otType 即为加班；旧记录 catId==='overtime' 仍按加班显示（历史兼容） */
+function isOtCatId(id){
+  if (id === 'overtime') return true;
+  var c = CATS.find(function(x){ return x.id === id; });
+  return !!(c && c.otType);
+}
+/* 按类别 id 取其固定加班类型（非加班类返回 ''） */
+function catOtType(id){
+  var c = CATS.find(function(x){ return x.id === id; });
+  return (c && c.otType) ? c.otType : '';
+}
 
 /* 常用说明：按类别分组，选择类别后自动切换对应列表；点击以追加方式填入备注事由（A+B+B 可多次叠加） */
+var OT_PRESETS = ['加班调休', '项目赶工', '临时支援', '会议', '培训', '外勤'];
 var PRESET_NOTES = {
-  overtime: ['加班调休', '项目赶工', '临时支援', '会议', '培训', '外勤'],
+  'ot-holiday': OT_PRESETS,
+  'ot-weekend': OT_PRESETS,
+  'ot-normal':  OT_PRESETS,
+  overtime:     OT_PRESETS,
   tiaoxiu:  ['加班抵扣', '项目赶工', '临时支援'],
   nianjia:  ['旅游', '返乡', '探亲', '休息'],
   bingjia:  ['就医', '休养', '复诊', '住院'],
@@ -550,9 +577,11 @@ var WALINE_OAUTH  = 'github'; // 登录方式：github / google / qq / weibo（�
 var HOLIDAY_PATH  = '/kaoqing/holidays'; // 节假日数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var PEOPLE_PATH   = '/kaoqing/people';   // 人员数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var CONFIG_PATH   = '/kaoqing/config';   // 考勤配置（午休扣除）存放路径（写入为一条 JSON 评论）
-var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00' }; // 午休扣除配置（页面启动从 Waline 读取覆盖）
+var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30' }; // 考勤配置（午休扣除 + 正常上班时间，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
-var timeSegs      = [{ start:'', end:'', note:'' }];   // 考勤内容：当前表单时间段列表（最多 3 段，每行含独立备注事由）
+/* 一行 = 一条完整记录：日期 / 整天 / 起止时间 / 备注事由 / 本行独立小时（最多 3 行，每行独立成一条记录） */
+function newSeg(date){ return { date: date || todayStr(), allDay:false, start:'', end:'', note:'' }; }
+var timeSegs      = [ newSeg() ];
 var COMPANY_NAME  = '苏州晶讯科技股份有限公司';   // ← 顶栏公司名称（按需改成贵司名称）
 // 注：跨域请求需 Waline 服务端 CORS_ALLOW_ORIGIN 允许本页域名（本地 file:// 预览会被浏览器拦截）。
 
@@ -598,6 +627,13 @@ function buildTimeSlots(sel){
     sel.appendChild(o);
   }
   sel.value = cur;                 // 重建后还原原值（若有）
+}
+/* 兜底：配置的「正常上班时间」可能是非整半点（如 08:15），确保该值存在于下拉选项中 */
+function ensureTimeOption(sel, val){
+  if (!val) return;
+  for (var i = 0; i < sel.options.length; i++){ if (sel.options[i].value === val) return; }
+  var o = document.createElement('option'); o.value = val; o.textContent = val;
+  sel.appendChild(o);
 }
 
 /* ---------- 区域一：组别 + 人员 ---------- */
@@ -645,7 +681,7 @@ function renderCats(){
   CATS.forEach(function(c){
     var b = document.createElement('button');
     var isOn = curCat && curCat.id === c.id;
-    var onCls = isOn ? (' on ' + (c.id === 'overtime' ? 'c-green' : 'c-orange')) : '';
+    var onCls = isOn ? (' on ' + (isOtCatId(c.id) ? 'c-green' : 'c-orange')) : '';
     b.className = 'chip' + onCls;
     b.textContent = c.name;
     b.addEventListener('click', function(){
@@ -664,8 +700,7 @@ function applyView(){
   // 任何隐藏/显示前恢复默认状态：被隐藏层级的下游一并归零
   if (!showCat)     curCat = null;              // 隐藏「选择类别」→ 取消类别选中
   if (!showContent){                            // 隐藏「考勤内容」→ 归零内容字段
-    $('#fDate').value      = todayStr();
-    timeSegs = [{ start:'', end:'', note:'' }];
+    timeSegs = [ newSeg() ];
     renderTimeSegs();
     $('#fHours').textContent = '';
   }
@@ -697,21 +732,25 @@ function renderTimeSegs(){
     var row = document.createElement('div');
     row.className = 'time-row';
     row.setAttribute('data-i', String(i));
-    var s = document.createElement('select'); s.className = 'fStart'; buildTimeSlots(s); s.value = seg.start || '';
+    var d = document.createElement('input'); d.type = 'date'; d.className = 'fDate'; d.value = seg.date || todayStr();
+    var adWrap = document.createElement('label'); adWrap.className = 'all-day'; adWrap.title = '按配置的正常上班时间自动填入';
+    var ad = document.createElement('input'); ad.type = 'checkbox'; ad.className = 'allDayChk'; ad.checked = !!seg.allDay;
+    adWrap.appendChild(ad); adWrap.appendChild(document.createTextNode('整天'));
+    var s = document.createElement('select'); s.className = 'fStart'; buildTimeSlots(s); ensureTimeOption(s, seg.start); s.value = seg.start || ''; s.disabled = !!seg.allDay;
     var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '至';
-    var e = document.createElement('select'); e.className = 'fEnd'; buildTimeSlots(e); e.value = seg.end || '';
+    var e = document.createElement('select'); e.className = 'fEnd'; buildTimeSlots(e); ensureTimeOption(e, seg.end); e.value = seg.end || ''; e.disabled = !!seg.allDay;
     var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
-    var h = document.createElement('span'); h.className = 'segHours'; h.textContent = segHoursText(seg);
-    row.appendChild(s); row.appendChild(sep); row.appendChild(e); row.appendChild(note); row.appendChild(h);
+    var h = document.createElement('span'); h.className = 'segHours'; h.textContent = segHoursText(seg) || '？？小时';
+    row.appendChild(d); row.appendChild(adWrap); row.appendChild(s); row.appendChild(sep); row.appendChild(e); row.appendChild(note); row.appendChild(h);
     if (i > 0){
       var del = document.createElement('button');
-      del.type = 'button'; del.className = 'seg-act del'; del.textContent = '−'; del.title = '移除该时间段';
+      del.type = 'button'; del.className = 'seg-act del'; del.textContent = '−'; del.title = '移除该行';
       del.setAttribute('data-act', 'del'); del.setAttribute('data-i', String(i));
       row.appendChild(del);
     }
-    if (i === timeSegs.length - 1 && timeSegs.length < 3){
+    if (editIndex === null && i === timeSegs.length - 1 && timeSegs.length < 3){
       var add = document.createElement('button');
-      add.type = 'button'; add.className = 'seg-act'; add.textContent = '+'; add.title = '增加时间段（最多 3 段）';
+      add.type = 'button'; add.className = 'seg-act'; add.textContent = '+'; add.title = '复制新增一行（最多 3 行）';
       add.setAttribute('data-act', 'add'); add.setAttribute('data-i', String(i));
       row.appendChild(add);
     }
@@ -720,7 +759,8 @@ function renderTimeSegs(){
 }
 function addTimeSeg(){
   if (timeSegs.length >= 3) return;
-  timeSegs.push({ start:'', end:'', note:'' });
+  var last = timeSegs[timeSegs.length - 1];
+  timeSegs.push({ date: last.date, allDay: last.allDay, start: last.start, end: last.end, note: last.note });   // 完全复制上一行（日期/整天/时段/备注）
   renderTimeSegs(); updateRange();
 }
 function delTimeSeg(i){
@@ -735,18 +775,26 @@ function segMinutes(seg){
   if (d <= 0) d += 24 * 60;          // 结束早于开始 = 跨天
   return d;
 }
-/* 单个时间段扣除午休后的小时文字（如 "2.5 小时"），无效/不足 0.5h 返回 '' */
-function segHoursText(seg){
-  if (!seg.start || !seg.end) return '';
+/* 单行扣除午休后的分钟数（无效 / 不足 0.5h 返回 null） */
+function segHoursMin(seg){
+  if (!seg.start || !seg.end) return null;
   var m = segMinutes(seg);
-  if (m == null || m < MIN_MINUTES) return '';
-  var h = m;
+  if (m == null || m < MIN_MINUTES) return null;
   if (CONFIG.deductLunch){
     var L = toMin(CONFIG.lunchStart), R = toMin(CONFIG.lunchEnd);
-    h -= lunchOverlap(toMin(seg.start), toMin(seg.end), L, R);
-    if (h < 0) h = 0;
+    m -= lunchOverlap(toMin(seg.start), toMin(seg.end), L, R);
+    if (m < 0) m = 0;
   }
-  return (Math.round((h / 60) * 100) / 100) + ' 小时';
+  return m;
+}
+/* 单行小时文字：未计算返回 ''（调用处兜底显示「？？小时」） */
+function segHoursText(seg){
+  var m = segHoursMin(seg);
+  return (m === null) ? '' : (Math.round((m / 60) * 100) / 100) + ' 小时';
+}
+/* 单行是否构成一条完整记录（日期 + 起止 + ≥0.5h） */
+function segComplete(seg){
+  return !!(seg.date && seg.start && seg.end) && segHoursMin(seg) !== null;
 }
 /* 单个时间段与午休窗口的重叠分钟数（处理跨天：同时检测 前/当/次日 午休） */
 function lunchOverlap(a0, b0, L, R){
@@ -763,24 +811,15 @@ function lunchOverlap(a0, b0, L, R){
 function computeTotal(){
   var total = 0, anyComplete = false, partial = false;
   timeSegs.forEach(function(seg){
-    var ms = seg.start || '', me = seg.end || '';
-    if (ms && me){
-      var m = segMinutes(seg);
-      if (m != null && m >= MIN_MINUTES){ anyComplete = true; total += m; }
-    } else if (ms || me){
-      partial = true;   // 只填了一端
+    var hasS = !!seg.start, hasE = !!seg.end;
+    if (hasS && hasE){
+      if (!seg.date){ partial = true; return; }   // 缺日期
+      var m = segHoursMin(seg);                   // 已含午休扣除
+      if (m !== null){ anyComplete = true; total += m; }
+    } else if (hasS || hasE){
+      partial = true;                             // 只填了一端
     }
   });
-  if (CONFIG.deductLunch && anyComplete){
-    var L = toMin(CONFIG.lunchStart), R = toMin(CONFIG.lunchEnd);
-    timeSegs.forEach(function(seg){
-      if (seg.start && seg.end){
-        var a0 = toMin(seg.start), b0 = toMin(seg.end);
-        total -= lunchOverlap(a0, b0, L, R);
-      }
-    });
-    if (total < 0) total = 0;
-  }
   return { totalMin: total, anyComplete: anyComplete, partial: partial };
 }
 
@@ -789,7 +828,7 @@ function updateRange(){
   var hoursEl = $('#fHours');
   if (!curCat){ hoursEl.textContent = ''; hoursEl.className = ''; refresh(); return; }
   var c = computeTotal();
-  if (c.partial){ hoursEl.textContent = '请补全时间段'; hoursEl.className = 'bad'; }
+  if (c.partial){ hoursEl.textContent = '请补全日期或时间段'; hoursEl.className = 'bad'; }
   else { hoursEl.textContent = ''; hoursEl.className = ''; }
   refresh();
 }
@@ -839,39 +878,26 @@ function refresh(){
     return;
   }
 
-  /* 预览：一人一行 —— 序号 | 姓名 | 类别 | 日期 | 时段 | 各行独立小时 | 说明 */
-  var date = $('#fDate').value || todayStr();
-  var c    = computeTotal();
-  var spanHtml, amtHtml = '';
-  if (!c.anyComplete && !c.partial) spanHtml = '<span class="warn">未选时段</span>';
-  else if (c.partial) spanHtml = '<span class="warn">时段未补全</span>';
-  else {
-    var parts = [];
+  /* 预览：分条 —— 每人 × 每行 = 一条记录（序号 | 姓名 | 类别 | 日期 | 时段 | 本行小时 | 说明） */
+  var catCls = isOtCatId(curCat.id) ? 'pv-green' : 'pv-orange';
+  var rows = [], idx = 0;
+  Array.from(selPeople).forEach(function(n){
     timeSegs.forEach(function(sg){
-      if (sg.start && sg.end){
-        var t = esc(sg.start) + '-' + esc(sg.end);
-        if (sg.note) t += '(' + esc(sg.note) + ')';
-        parts.push(t);
-      }
+      idx++;
+      var t   = (sg.start && sg.end) ? (esc(sg.start) + '-' + esc(sg.end)) : '<span class="warn">未选时段</span>';
+      var hrs = segHoursText(sg) || '？？小时';
+      rows.push('<div class="pv-row">' +
+        '<span class="pv-i">' + String(idx).padStart(2, '0') + '</span>' +
+        '<span class="pv-n">' + esc(n) + '</span>' +
+        '<span class="pv-c ' + catCls + '">' + curCat.name + '</span>' +
+        '<span class="pv-d">' + esc(sg.date || '—') + '</span>' +
+        '<span class="pv-t">' + t + '</span>' +
+        '<span class="pv-h">' + hrs + '</span>' +
+        (sg.note ? '<span class="pv-note">' + esc(sg.note) + '</span>' : '') +
+        '</div>');
     });
-    spanHtml = parts.join(' ; ');
-  }
-  // 每行独立小时（不再累计成总）
-  var hrs = timeSegs.filter(function(sg){ return sg.start && sg.end; }).map(segHoursText).filter(Boolean);
-  amtHtml = hrs.length ? hrs.join(' ; ') : '';
-  var note = timeSegs.map(function(s){ return s.note ? s.note.trim() : ''; }).filter(Boolean).join(' ; ');
-
-  $('#summary').innerHTML = Array.from(selPeople).map(function(n, i){
-    return '<div class="pv-row">' +
-      '<span class="pv-i">' + String(i + 1).padStart(2, '0') + '</span>' +
-      '<span class="pv-n">' + esc(n) + '</span>' +
-      '<span class="pv-c ' + (curCat.id === 'overtime' ? 'pv-green' : 'pv-orange') + '">' + curCat.name + '</span>' +
-      '<span class="pv-d">' + date + '</span>' +
-      '<span class="pv-t">' + spanHtml + '</span>' +
-      (amtHtml ? '<span class="pv-h">' + amtHtml + '</span>' : '') +
-      (note ? '<span class="pv-note">' + esc(note) + '</span>' : '') +
-      '</div>';
-  }).join('');
+  });
+  $('#summary').innerHTML = rows.length ? rows.join('') : '<div class="pv-empty">暂无待保存内容</div>';
 }
 
 /* 常用说明按钮列表：按当前类别切换对应分组；点击即以追加方式填入备注事由（A+B+B 可多次叠加） */
@@ -888,7 +914,7 @@ function renderPresets(){
     b.className = 'preset-item';
     b.textContent = txt;
     b.addEventListener('click', function(){
-      if (!timeSegs.length) timeSegs = [{ start:'', end:'', note:'' }];
+      if (!timeSegs.length) timeSegs = [ newSeg() ];
       var first = $('#timeSegs .time-row .fSegNote');
       if (first){
         first.value = first.value ? (first.value + txt) : txt;   // 追加而非替换
@@ -922,7 +948,7 @@ function renderRecords(){
   }
   var editable = (viewMode === 'edit');   // 归档(R2)只读：不渲染勾选框与改删按钮
   var html = '<table class="rec-table"><thead><tr>';
-  if (editable) html += '<th class="c-check"></th>';
+  if (editable) html += '<th class="c-check"><input type="checkbox" id="recCheckAll" class="rec-check-all" title="全选 / 取消全选"></th>';
   html += '<th>#</th><th>人员</th><th>类别</th><th>加班类别</th><th>日期</th><th>时段</th><th>小时</th><th>状态</th><th>说明</th>';
   if (editable) html += '<th class="c-del"></th>';
   html += '</tr></thead><tbody>';
@@ -937,8 +963,8 @@ function renderRecords(){
   order.forEach(function(i, n){
     var r = records[i];
     var st = r.status || '待提交';
-    var isOt = r.catId === 'overtime';        // 加班类别仅「加班」需要，其它请假类不需要
-    var ot = isOt ? (r.otType || calcOtType(r.date)) : '';
+    var isOt = isOtCatId(r.catId);           // 加班类（国假/双休/平时加班，含历史 'overtime'）显示加班类型；请假类不需要
+    var ot = isOt ? (catOtType(r.catId) || r.otType || calcOtType(r.date)) : '';
     var otCls = ot === '国假' ? 'holiday' : (ot === '双休' ? 'weekend' : 'normal');
     var span = r.detail || '';
     var hoursTxt = '—';
@@ -954,7 +980,7 @@ function renderRecords(){
     if (editable) html += '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>';
     html += '<td class="c-idx">' + (n + 1) + '</td>' +
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
-      '<td class="c-cat ' + (r.catId === 'overtime' ? 'c-green' : 'c-orange') + '">' + esc(r.catName) + '</td>' +
+      '<td class="c-cat ' + (isOtCatId(r.catId) ? 'c-green' : 'c-orange') + '">' + esc(r.catName) + '</td>' +
       '<td class="c-ottype' + (isOt ? (' ot-' + otCls) : '') + '">' + (isOt ? ot : '<span class="muted">—</span>') + '</td>' +
       '<td class="c-date">' + esc(r.date) + '</td>' +
       '<td class="c-time">' + esc(span) + '</td>' +
@@ -986,30 +1012,44 @@ function refreshSaveBtn(){
 async function submit(){
   if (!selPeople.size || !curCat || !rangeOK()) return;
 
-  var date   = $('#fDate').value || todayStr();
-  var detail = currentAmountText();
-  var hours  = curCat.mode === 'range' ? Math.round((computeTotal().totalMin / 60) * 100) / 100 : null;
-  var note   = timeSegs.map(function(s){ return s.note ? s.note.trim() : ''; }).filter(Boolean).join(' ; ');
+  var ot   = curCat.otType || '';   // 加班类型直接取自类别（国假/双休/平时加班），不再按日期自动判定
+  /* 每一行 = 一条独立记录：日期 / 时段 / 小时 / 备注 全部取自该行 */
+  function mkRec(name, sg){
+    return {
+      id:      genRecId(),
+      date:    sg.date,
+      otType:  ot,
+      catId:   curCat.id,
+      catName: curCat.name,
+      color:   curCat.color,
+      mode:    curCat.mode,
+      people:  [name],
+      detail:  sg.start + '-' + sg.end,
+      hours:   Math.round((segHoursMin(sg) / 60) * 100) / 100,
+      note:    sg.note || '',
+      status:  '待提交',
+      ts:      Date.now()
+    };
+  }
+  var segs = timeSegs.filter(segComplete);   // 只提交填写完整的行
 
-  /* 修改模式：直接走库——把更新作为 edit 事件 POST 到 Waline，成功后再复读 Waline 重渲染；
-     绝不直接改本地 records 缓存（避免与库不一致）。 */
+  /* 修改模式：第一行以 edit 事件更新原记录；其余行按新增记录 add（避免多段旧记录被截断丢失） */
   if (editIndex !== null){
-    var old = records[editIndex];
+    var old  = records[editIndex];
+    var f    = segs[0];
     var updated = {
       id: (old && old.id) || genRecId(),
-      date: date,
-      otType: curCat.id === 'overtime' ? calcOtType(date) : '',
-      catId: curCat.id,
-      catName: curCat.name,
-      color: curCat.color,
-      mode: curCat.mode,
+      date: f.date, otType: ot,
+      catId: curCat.id, catName: curCat.name, color: curCat.color, mode: curCat.mode,
       people: old.people,
-      detail: detail,
-      hours: hours,
-      note: note,
+      detail: f.start + '-' + f.end,
+      hours:  Math.round((segHoursMin(f) / 60) * 100) / 100,
+      note:   f.note || '',
       status: old.status,
-      ts: old.ts
+      ts:     old.ts
     };
+    var extra = [];
+    for (var e2 = 1; e2 < segs.length; e2++) extra.push(mkRec((old.people && old.people[0]) || '', segs[e2]));
     editIndex = null;
     refreshSaveBtn();
     selPeople.clear(); renderPeople();
@@ -1017,29 +1057,17 @@ async function submit(){
     cloudToast('write', '处理中...');
     try {
       var ok = await postRecordOp('edit', updated);
+      for (var e3 = 0; e3 < extra.length; e3++){ if (!await postRecordOp('add', extra[e3])) ok = false; }
       if (ok){ await loadRecordsFromWaline(); if (!_ctErrorActive) cloudToastHide(); }
       else { cloudToastError('数据写入失败!'); }
     } catch(e){ cloudToastError('数据写入失败!'); console.error('[kaoqing] edit 失败', e && e.message ? e.message : e); }
     return;
   }
 
-  /* 一人一条记录：任意列内容不同即分行，便于后续导入二维数据库；每条独立 id，发 add 事件 */
-  var newRecs = Array.from(selPeople).map(function(name){
-    return {
-      id:      genRecId(),
-      date:    date,
-      otType:  curCat.id === 'overtime' ? calcOtType(date) : '',
-      catId:   curCat.id,
-      catName: curCat.name,
-      color:   curCat.color,
-      mode:    curCat.mode,
-      people:  [name],
-      detail:  detail,
-      hours:   hours,
-      note:    note,
-      status:  '待提交',
-      ts:      Date.now()
-    };
+  /* 每人 × 每行 = 一条记录，各自独立 id，逐条发 add 事件 */
+  var newRecs = [];
+  Array.from(selPeople).forEach(function(name){
+    segs.forEach(function(sg){ newRecs.push(mkRec(name, sg)); });
   });
 
   /* 直接走库：逐条 await 匿名 POST 单条「add」事件到 Waline，全部成功后复读 Waline 重渲染；
@@ -1070,10 +1098,13 @@ function startEdit(i){
   $('#groupSel').value = curGroup;
   selPeople = new Set(r.people);
   curCat = CATS.find(function(c){ return c.id === r.catId; });
-  $('#fDate').value = r.date || todayStr();
   timeSegs = parseDetail(r.detail);
-  if (!timeSegs.length) timeSegs = [{ start:'', end:'', note:'' }];
-  if (r.note && timeSegs[0]) timeSegs[0].note = timeSegs[0].note || r.note;   // 旧整条备注归到第一行
+  if (!timeSegs.length) timeSegs = [ newSeg(r.date) ];
+  timeSegs.forEach(function(sg, k){
+    if (!sg.date) sg.date = r.date || todayStr();
+    sg.allDay = (sg.start === CONFIG.workStart && sg.end === CONFIG.workEnd);   // 恰为上班时段 → 视为整天
+    if (k === 0 && !sg.note && r.note) sg.note = r.note;   // 旧整条备注归到第一行
+  });
   renderTimeSegs();
   renderGroups();
   renderPeople();
@@ -1097,15 +1128,23 @@ $('#selNone').addEventListener('click', function(){
   renderPeople(); applyView();
 });
 /* 多时间段：事件委托（行内 select / 按钮为动态生成） */
+/* 行内事件（日期 / 整天 / 起止 均为动态生成，统一委托到 #timeSegs） */
 $('#timeSegs').addEventListener('change', function(e){
-  var sel = e.target;
-  if (!sel || (!sel.classList.contains('fStart') && !sel.classList.contains('fEnd'))) return;
-  var row = sel.closest('.time-row'); if (!row) return;
+  var el = e.target;
+  var row = (el && el.closest) ? el.closest('.time-row') : null; if (!row) return;
   var idx = parseInt(row.getAttribute('data-i'), 10);
   var seg = timeSegs[idx]; if (!seg) return;
-  if (sel.classList.contains('fStart')) seg.start = sel.value;
-  else seg.end = sel.value;
-  var hrsEl = row.querySelector('.segHours'); if (hrsEl) hrsEl.textContent = segHoursText(seg);   // 该行独立小时实时更新
+  if (el.classList.contains('fStart')) seg.start = el.value;
+  else if (el.classList.contains('fEnd')) seg.end = el.value;
+  else if (el.classList.contains('fDate')){ seg.date = el.value; refresh(); return; }
+  else if (el.classList.contains('allDayChk')){                       // 整天：本行时段按正常上班时间填入并锁定
+    seg.allDay = el.checked;
+    if (seg.allDay){ seg.start = CONFIG.workStart; seg.end = CONFIG.workEnd; }
+    renderTimeSegs(); updateRange();
+    return;
+  }
+  else return;
+  var hrsEl = row.querySelector('.segHours'); if (hrsEl) hrsEl.textContent = segHoursText(seg) || '？？小时';   // 本行小时实时更新
   updateRange();
 });
 $('#timeSegs').addEventListener('click', function(e){
@@ -1128,10 +1167,19 @@ $('#cfgBtn').addEventListener('click', openConfig);
 $('#cfgSave').addEventListener('click', saveConfigToWaline);
 $('#cfgClose').addEventListener('click', function(){ $('#cfgMask').hidden = true; });
 $('#cfgMask').addEventListener('click', function(e){ if (e.target === $('#cfgMask')) $('#cfgMask').hidden = true; });
-$('#fDate').addEventListener('change', refresh);
 $('#submitBtn').addEventListener('click', submit);
 /* ---------- 记录批量操作辅助 ---------- */
+/* 表头全选框状态：全部选中→打勾；部分选中→ indeterminate（方框内显示黑色方块） */
+function updateCheckAll(){
+  var all = $('#recCheckAll'); if (!all) return;
+  var cbs = $('#records').querySelectorAll('.rec-check');
+  var n = cbs.length, c = 0;
+  cbs.forEach(function(cb){ if (cb.checked) c++; });
+  all.checked       = (n > 0 && c === n);
+  all.indeterminate = (c > 0 && c < n);
+}
 function updateRecButtons(){
+  updateCheckAll();
   if (viewMode === 'view'){                   // 归档(R2 只读)：状态变更/打印全禁用，仅展示
     $('#submitRecordsBtn').disabled = true;
     $('#reviewBtn').disabled   = true;
@@ -1281,7 +1329,13 @@ $('#printBtn').addEventListener('click', async function(){
 });
 // 勾选状态变化 → 控制记录相关按钮可用
 $('#records').addEventListener('change', function(e){
-  if (!e.target.classList.contains('rec-check')) return;
+  var t = e.target;
+  if (t.id === 'recCheckAll'){                 // 表头全选：勾选→全选，取消→全部取消
+    $('#records').querySelectorAll('.rec-check').forEach(function(cb){ cb.checked = t.checked; });
+    updateRecButtons();
+    return;
+  }
+  if (!t.classList.contains('rec-check')) return;
   updateRecButtons();
 });
 // 记录删除（列表动态生成 → 委托）：待提交免密，其余按密码层级
@@ -2151,6 +2205,8 @@ async function loadConfig(){
       if (typeof best.obj.deductLunch === 'boolean') CONFIG.deductLunch = best.obj.deductLunch;
       if (best.obj.lunchStart) CONFIG.lunchStart = best.obj.lunchStart;
       if (best.obj.lunchEnd)   CONFIG.lunchEnd   = best.obj.lunchEnd;
+      if (best.obj.workStart)  CONFIG.workStart  = best.obj.workStart;
+      if (best.obj.workEnd)    CONFIG.workEnd    = best.obj.workEnd;
     }
   } catch(e){
     console.warn('[kaoqing] 读取考勤配置失败（使用默认）', e && e.message ? e.message : e);
@@ -2161,6 +2217,8 @@ function openConfig(){
   $('#cfgDeductLunch').checked = CONFIG.deductLunch;
   $('#cfgLunchStart').value = CONFIG.lunchStart;
   $('#cfgLunchEnd').value   = CONFIG.lunchEnd;
+  $('#cfgWorkStart').value  = CONFIG.workStart;
+  $('#cfgWorkEnd').value    = CONFIG.workEnd;
   $('#cfgMask').hidden = false;
 }
 async function saveConfigToWaline(){
@@ -2169,7 +2227,9 @@ async function saveConfigToWaline(){
     v: 1, type: 'config',
     deductLunch: $('#cfgDeductLunch').checked,
     lunchStart: $('#cfgLunchStart').value || '12:00',
-    lunchEnd:   $('#cfgLunchEnd').value   || '13:00'
+    lunchEnd:   $('#cfgLunchEnd').value   || '13:00',
+    workStart:  $('#cfgWorkStart').value  || '08:30',
+    workEnd:    $('#cfgWorkEnd').value    || '17:30'
   };
   var user = getWalineUser();
   var token = WALINE_ADMIN_TOKEN || walineToken(user);
@@ -2190,8 +2250,10 @@ async function saveConfigToWaline(){
     CONFIG.deductLunch = payload.deductLunch;
     CONFIG.lunchStart  = payload.lunchStart;
     CONFIG.lunchEnd    = payload.lunchEnd;
+    CONFIG.workStart   = payload.workStart;
+    CONFIG.workEnd     = payload.workEnd;
     cloudToastHide('saveCfg');
-    showAlert('已保存考勤配置（午休扣除' + (CONFIG.deductLunch ? '已开启' : '已关闭') + '，午休 ' + CONFIG.lunchStart + '-' + CONFIG.lunchEnd + '）。');
+    showAlert('已保存考勤配置：午休扣除' + (CONFIG.deductLunch ? '已开启' : '已关闭') + '，午休 ' + CONFIG.lunchStart + '-' + CONFIG.lunchEnd + '；正常上班 ' + CONFIG.workStart + '-' + CONFIG.workEnd + '。');
   } catch(err){
     cloudToastError('数据写入失败!', 'saveCfg');
     showAlert('保存到 Waline 失败：' + (err && err.message ? err.message : err));
@@ -2219,7 +2281,6 @@ document.addEventListener('keydown', function(e){
 
 /* ---------- 初始化 ---------- */
 (async function init(){
-  $('#fDate').value = todayStr();
   renderTimeSegs();
   renderGroups();
   renderPeople();
