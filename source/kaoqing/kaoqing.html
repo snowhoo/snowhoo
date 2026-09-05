@@ -206,17 +206,17 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 #rowNote{flex:1 1 140px}
 #rowNote input{min-width:80px}
 .time-segs{flex:1;display:flex;flex-direction:column;gap:8px;min-width:180px}
-.time-row{display:grid;grid-template-columns:120px auto 72px auto 72px minmax(90px,1fr) 66px 32px;align-items:center;gap:6px}
+.time-row{display:grid;width:100%;grid-template-columns:120px auto 72px auto 72px minmax(90px,1fr) 66px auto;align-items:center;gap:6px}
 .time-row select{width:100%}
 .time-row .sep{color:var(--text-muted);font-size:.82rem;white-space:nowrap}
 .time-row .fSegNote{width:100%;min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.86rem;background:transparent}
 .time-row .segHours{width:66px;text-align:right;color:var(--accent);font-size:.82rem;font-weight:600;white-space:nowrap}
 .seg-act{border:none;background:var(--accent-soft);color:var(--accent);cursor:pointer;
-  width:28px;height:28px;border-radius:8px;font-size:1.05rem;line-height:1;
+  width:28px;height:28px;border-radius:8px;font-size:1.05rem;line-height:1;flex:0 0 auto;
   display:inline-flex;align-items:center;justify-content:center}
 .seg-act:hover{filter:brightness(.96)}
 .seg-act.del{background:rgba(224,75,74,.14);color:#e24b4a}
-.seg-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end}
+.seg-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end;min-width:34px}
 #fHours{font-size:.92rem;font-weight:600;color:var(--text-secondary);white-space:nowrap;min-width:6em;display:inline-block;text-align:left}
 #fHours.bad{color:var(--warn);font-weight:500}
 .tip{font-size:.78rem;color:var(--text-muted);margin:0}
@@ -366,7 +366,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   .tb-center{font-size:.92rem}
   .tb-company{font-size:.86rem}
   .time-segs{overflow-x:auto}
-  .time-row{grid-template-columns:104px auto 64px auto 64px minmax(70px,1fr) 58px 30px;gap:5px}
+  .time-row{grid-template-columns:104px auto 64px auto 64px minmax(70px,1fr) 58px auto;gap:5px}
 }
 @media print{
   #topbar,.card:not(#secAction){display:none!important}
