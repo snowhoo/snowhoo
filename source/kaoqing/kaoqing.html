@@ -177,7 +177,6 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .chip.on.c-green{background:#16a34a;border-color:#16a34a;color:#fff}
 .chip.on.c-orange{background:#f97316;border-color:#f97316;color:#fff}
 .head-actions{display:flex;align-items:center;gap:12px}
-.head-actions .count{font-size:.78rem;color:var(--text-muted)}
 .link{border:none;background:transparent;color:var(--accent);font-size:.82rem;cursor:pointer;padding:0}
 .people-empty{color:var(--text-muted);font-size:.82rem;margin:0}
 
@@ -419,7 +418,6 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
         <div class="head-actions">
           <button class="link" id="selAll">全选</button>
           <button class="link" id="selNone">清空</button>
-          <span class="count" id="peopleCount">已选 0 人</span>
         </div>
         <select id="groupSel" class="gsel" title="考勤组别"></select>
       </div>
@@ -994,8 +992,6 @@ function rangeOK(){
 
 /* ---------- 区域四：汇总 / 记录 ---------- */
 function refresh(){
-  $('#peopleCount').textContent = '已选 ' + selPeople.size + ' 人';
-
   var ok = selPeople.size > 0 && rangeOK();
   $('#submitBtn').disabled = !ok;
 
