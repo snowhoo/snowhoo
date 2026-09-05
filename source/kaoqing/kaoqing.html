@@ -233,12 +233,38 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .preset-label{font-size:.8rem;color:var(--text-secondary);white-space:nowrap;line-height:30px}
 .preset-list{display:flex;flex-wrap:wrap;gap:8px}
 .preset-item{
-  padding:7px 13px;border:1px solid var(--border);border-radius:999px;cursor:pointer;
+  position:relative;display:inline-flex;align-items:center;gap:6px;
+  padding:6px 26px 6px 13px;border:1px solid var(--border);border-radius:999px;cursor:pointer;
   background:var(--bg-surface);color:var(--text-secondary);font-size:.82rem;font-family:inherit;
   transition:background .15s,color .15s,border-color .15s;
 }
 .preset-item:hover,.preset-item:active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.preset-del{
+  position:absolute;top:-6px;right:-6px;width:17px;height:17px;border-radius:50%;
+  border:1px solid var(--border);background:var(--bg-surface);color:var(--text-muted);
+  font-size:.72rem;line-height:1;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .15s,color .15s,border-color .15s;
+}
+.preset-del:hover{background:#fee2e2;color:#ef4444;border-color:#ef4444}
 .preset-empty{font-size:.8rem;color:var(--text-muted);line-height:30px}
+/* + 号按钮 + 弹菜单（系统值 / 自定义） */
+.preset-add-wrap{position:relative;display:inline-flex;align-items:center}
+.preset-add{
+  width:30px;height:30px;border:1px dashed var(--border);border-radius:999px;background:var(--bg-surface);
+  color:var(--text-secondary);font-size:1.1rem;line-height:1;cursor:pointer;font-family:inherit;
+  transition:border-color .15s,color .15s;
+}
+.preset-add:hover{border-color:var(--accent);color:var(--accent)}
+.preset-add-menu{
+  position:absolute;left:0;top:36px;z-index:50;min-width:96px;
+  background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,.12);padding:4px;display:flex;flex-direction:column;gap:2px;
+}
+.preset-add-item{
+  border:none;background:transparent;text-align:left;padding:7px 10px;border-radius:7px;cursor:pointer;
+  font-size:.84rem;color:var(--text);font-family:inherit;
+}
+.preset-add-item:hover{background:var(--accent-soft);color:var(--accent)}
 .warn{color:var(--warn)}
 .pv-row{display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px}
 .pv-row + .pv-row{margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)}
@@ -272,6 +298,11 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   background:var(--bg-surface);color:var(--text-secondary);font-size:.85rem;font-weight:600;font-family:inherit;
 }
 .btn-rec-action:disabled{opacity:.45;cursor:not-allowed}
+.btn-rec-del{
+  padding:8px 18px;border:1px solid #ef4444;border-radius:10px;cursor:pointer;
+  background:rgba(239,68,68,.12);color:#ef4444;font-size:.85rem;font-weight:600;font-family:inherit;
+}
+.btn-rec-del:disabled{opacity:.45;cursor:not-allowed}
 .rec-table{width:100%;border-collapse:collapse;font-size:.8rem;min-width:640px}
 .rec-table th,.rec-table td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle}
 .rec-table th{background:var(--bg-surface);color:var(--text-secondary);font-weight:600;text-align:left}
@@ -314,6 +345,16 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .cfg-row input[type=time]:focus{border-color:var(--accent)}
 .cfg-check{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--text);cursor:pointer}
 .cfg-check input{width:16px;height:16px;accent-color:var(--accent)}
+.cfg-row.cfg-col{flex-direction:column;align-items:stretch;gap:6px}
+.cfg-textarea{
+  width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid var(--border);border-radius:8px;
+  font-size:.85rem;font-family:inherit;background:var(--bg);color:var(--text);outline:none;resize:vertical;line-height:1.5;
+}
+.cfg-textarea:focus{border-color:var(--accent)}
+.preset-cfg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 12px}
+.preset-cfg-cell{display:flex;flex-direction:column;gap:4px}
+.preset-cfg-name{font-size:.8rem;color:var(--text-secondary)}
+@media (max-width:520px){ .preset-cfg-grid{grid-template-columns:repeat(2,1fr)} }
 /* 手机端：卡片标题字号归一，避免异常放大/缩小 */
 @media (max-width:640px){
   .card-head h2{font-size:1.02rem}
@@ -408,10 +449,17 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 
         </div>
 
-        <!-- 常用说明：按钮列表，点击即以追加方式填入备注事由（A+B+B 可多次叠加） -->
+        <!-- 常用说明：标签列表，点击即追加填入备注事由；点 + 弹菜单「系统值 / 自定义」；每条可 × 删除（增删仅写缓存） -->
         <div class="preset-box">
           <span class="preset-label">常用说明：</span>
           <div class="preset-list" id="presetList"></div>
+          <div class="preset-add-wrap">
+            <button type="button" class="preset-add" id="presetAddBtn" title="添加常用说明">+</button>
+            <div class="preset-add-menu" id="presetAddMenu" hidden>
+              <button type="button" class="preset-add-item" data-act="system">系统值</button>
+              <button type="button" class="preset-add-item" data-act="custom">自定义</button>
+            </div>
+          </div>
         </div>
         <!-- 待保存内容预览 + 保存（同行，底部对齐） -->
         <div class="save-row">
@@ -431,6 +479,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
           <button id="reviewBtn" class="btn-rec-action" disabled>审核</button>
           <button id="approveBtn" class="btn-rec-action" disabled>批准</button>
           <button id="printBtn" class="btn-rec-action" disabled>打印</button>
+          <button id="delRecordsBtn" class="btn-rec-del" disabled>删除选中</button>
         </div>
         <div class="records" id="records">
           <p class="empty">暂无记录</p>
@@ -480,6 +529,18 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       <input type="time" id="cfgWorkStart" value="08:30">
       <span class="sep">至</span>
       <input type="time" id="cfgWorkEnd" value="17:30">
+    </div>
+    <div class="cfg-row cfg-col">
+      <label>常用说明（系统值 · 按类别 · 每行一条 · 保存到 Waline 全端共享）</label>
+      <div class="preset-cfg-grid" id="cfgPresetNotes">
+        <div class="preset-cfg-cell"><span class="preset-cfg-name">加班</span><textarea class="cfg-textarea cfg-pn" data-cat="overtime" rows="2" placeholder="每行一条"></textarea></div>
+        <div class="preset-cfg-cell"><span class="preset-cfg-name">调休</span><textarea class="cfg-textarea cfg-pn" data-cat="tiaoxiu" rows="2" placeholder="每行一条"></textarea></div>
+        <div class="preset-cfg-cell"><span class="preset-cfg-name">年假</span><textarea class="cfg-textarea cfg-pn" data-cat="nianjia" rows="2" placeholder="每行一条"></textarea></div>
+        <div class="preset-cfg-cell"><span class="preset-cfg-name">病假</span><textarea class="cfg-textarea cfg-pn" data-cat="bingjia" rows="2" placeholder="每行一条"></textarea></div>
+        <div class="preset-cfg-cell"><span class="preset-cfg-name">事假</span><textarea class="cfg-textarea cfg-pn" data-cat="shijia" rows="2" placeholder="每行一条"></textarea></div>
+        <div class="preset-cfg-cell"><span class="preset-cfg-name">其它</span><textarea class="cfg-textarea cfg-pn" data-cat="qita" rows="2" placeholder="每行一条"></textarea></div>
+      </div>
+    </div>
     </div>
     <div class="modal-actions">
       <button type="button" class="btn-cancel" id="cfgClose">关闭</button>
@@ -542,16 +603,12 @@ function isOtCatId(id){
   return false;
 }
 
-/* 常用说明：按类别分组，选择类别后自动切换对应列表；点击以追加方式填入备注事由（A+B+B 可多次叠加） */
-var OT_PRESETS = ['加班调休', '项目赶工', '临时支援', '会议', '培训', '外勤'];
-var PRESET_NOTES = {
-  overtime:     OT_PRESETS,
-  tiaoxiu:  ['加班抵扣', '项目赶工', '临时支援'],
-  nianjia:  ['旅游', '返乡', '探亲', '休息'],
-  bingjia:  ['就医', '休养', '复诊', '住院'],
-  shijia:   ['家事', '办事', '婚丧', '搬家'],
-  qita:     ['详见备注说明事由']
-};
+/* 常用说明：不再写死具体文案，但保留「按类别分类」的结构。系统值来自 Waline /kaoqing/config 的
+   presetNotes（按类别 id 分组的对象，由设置面板维护、全端共享）；展示用 PRESET_CACHE 按类别缓存
+   （优先），无缓存则初次播种自 Waline 配置并写回缓存。用户点 + 号可「追加系统值」(当前类别的 Waline 值)
+   或「自定义录入」；每条可 × 删除；这些增删均只写缓存、不回写 Waline。 */
+var PRESET_CACHE_KEY = 'kaoqing_preset_notes_cache';   // 常用说明工作列表缓存键
+var PRESET_CACHE = {};                                 // { 类别id: [字符串,...] }，仅存 localStorage 缓存
 
 var MIN_MINUTES   = 30;     // 时间段最少 0.5 小时
 
@@ -568,7 +625,7 @@ var WALINE_OAUTH  = 'github'; // 登录方式：github / google / qq / weibo（�
 var HOLIDAY_PATH  = '/kaoqing/holidays'; // 节假日数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var PEOPLE_PATH   = '/kaoqing/people';   // 人员数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var CONFIG_PATH   = '/kaoqing/config';   // 考勤配置（午休扣除）存放路径（写入为一条 JSON 评论）
-var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30' }; // 考勤配置（午休扣除 + 正常上班时间，页面启动从 Waline 读取覆盖）
+var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30', presetNotes:{} }; // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值(按类别)，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
 /* 一行 = 一条完整记录：日期 / 整天 / 起止时间 / 备注事由 / 本行独立小时（最多 3 行，每行独立成一条记录） */
 function newSeg(date){ return { date: date || todayStr(), allDay:false, start:'', end:'', note:'' }; }
@@ -711,7 +768,7 @@ function applyView(){
     $('#catTip').textContent  = '请先选择类别。';
   }
   updateRange();
-  renderPresets();          // 切换类别时同步切换常用说明列表
+  renderPresets();          // 刷新常用说明标签列表（全局，不再随类别切换）
   refresh();
 }
 
@@ -952,39 +1009,107 @@ function refresh(){
   $('#summary').innerHTML = rows.length ? rows.join('') : '<div class="pv-empty">暂无待保存内容</div>';
 }
 
-/* 常用说明按钮列表：按当前类别切换对应分组；点击即以追加方式填入备注事由（A+B+B 可多次叠加） */
+/* ---------- 常用说明：按类别分类 / 缓存优先 / 系统值来自 Waline 配置 ---------- */
+/* 加载顺序：优先读 localStorage 缓存（按类别的对象）；无缓存则按类别播种自 Waline 配置(CONFIG.presetNotes)，并写回缓存供下次用。 */
+function loadPresetCache(){
+  var seeded = false;
+  try {
+    var raw = localStorage.getItem(PRESET_CACHE_KEY);
+    if (raw){
+      var obj = JSON.parse(raw);
+      if (obj && typeof obj === 'object' && !Array.isArray(obj)){
+        PRESET_CACHE = obj;
+        CATS.forEach(function(c){ if (!Array.isArray(PRESET_CACHE[c.id])) PRESET_CACHE[c.id] = []; });
+        seeded = true;
+      }
+    }
+  } catch(e){ /* 缓存损坏则走下面播种 */ }
+  if (!seeded){
+    PRESET_CACHE = {};
+    CATS.forEach(function(c){
+      PRESET_CACHE[c.id] = (((CONFIG.presetNotes || {})[c.id]) || []).slice();
+    });
+    savePresetCache();
+  }
+}
+function savePresetCache(){
+  try { localStorage.setItem(PRESET_CACHE_KEY, JSON.stringify(PRESET_CACHE)); } catch(e){}
+}
+function getPresetList(catId){
+  return (PRESET_CACHE[catId] || []).slice();
+}
+/* 把一条常用说明（追加方式）填入「光标所在行」的备注（A+B+B 可多次叠加） */
+function appendPresetToNote(txt){
+  if (!timeSegs.length) timeSegs = [ newSeg() ];
+  // 只填「光标所在行」的备注：优先用当前聚焦的输入框，否则退回记录的最后聚焦行，再否则第一行
+  var targetIdx = 0, inp = null;
+  if (document.activeElement && document.activeElement.classList.contains('fSegNote')){
+    var ar = document.activeElement.closest('.time-row');
+    if (ar) targetIdx = parseInt(ar.getAttribute('data-i'), 10) || 0;
+    inp = document.activeElement;
+  } else if (timeSegs[focusedSegNoteIdx]){
+    targetIdx = focusedSegNoteIdx;
+    inp = document.querySelector('#timeSegs .time-row[data-i="' + targetIdx + '"] .fSegNote');
+  } else {
+    inp = document.querySelector('#timeSegs .time-row .fSegNote');
+  }
+  if (inp){
+    var cur = inp.value.trim();
+    inp.value = cur ? (cur + txt) : txt;            // 追加而非替换
+    if (timeSegs[targetIdx]) timeSegs[targetIdx].note = inp.value;
+  }
+  refresh();                                          // 实时更新预览说明
+}
+/* 增：向某类别工作列表追加一条（去重），只写缓存 */
+function addPreset(catId, txt){
+  txt = (txt || '').trim();
+  if (!txt) return;
+  if (!PRESET_CACHE[catId]) PRESET_CACHE[catId] = [];
+  if (PRESET_CACHE[catId].indexOf(txt) === -1) PRESET_CACHE[catId].push(txt);
+  savePresetCache();
+  renderPresets();
+}
+/* 删：按类别 + 索引移除（来自 × 按钮），只写缓存 */
+function removePreset(catId, idx){
+  if (!PRESET_CACHE[catId]) return;
+  if (idx < 0 || idx >= PRESET_CACHE[catId].length) return;
+  PRESET_CACHE[catId].splice(idx, 1);
+  savePresetCache();
+  renderPresets();
+}
+
+/* 常用说明标签列表（按当前类别过滤）：点击标签=追加填入备注事由；点 ×=删除该条目（增删均只写缓存，不回写 Waline）。 */
 function renderPresets(){
   var box = $('#presetList');
   box.innerHTML = '';
-  if (!curCat || !PRESET_NOTES[curCat.id]){
+  if (!curCat){
     box.innerHTML = '<span class="preset-empty">选择类别后显示对应常用说明</span>';
     return;
   }
-  PRESET_NOTES[curCat.id].forEach(function(txt){
+  var list = getPresetList(curCat.id);
+  if (!list.length){
+    box.innerHTML = '<span class="preset-empty">暂无常用说明，点右侧 + 号从「系统值」或「自定义」添加</span>';
+    return;
+  }
+  list.forEach(function(txt, idx){
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'preset-item';
-    b.textContent = txt;
-    b.addEventListener('click', function(){
-      if (!timeSegs.length) timeSegs = [ newSeg() ];
-      // 只填「光标所在行」的备注：优先用当前聚焦的输入框，否则退回记录的最后聚焦行，再否则第一行
-      var targetIdx = 0, inp = null;
-      if (document.activeElement && document.activeElement.classList.contains('fSegNote')){
-        var ar = document.activeElement.closest('.time-row');
-        if (ar) targetIdx = parseInt(ar.getAttribute('data-i'), 10) || 0;
-        inp = document.activeElement;
-      } else if (timeSegs[focusedSegNoteIdx]){
-        targetIdx = focusedSegNoteIdx;
-        inp = document.querySelector('#timeSegs .time-row[data-i="' + targetIdx + '"] .fSegNote');
-      } else {
-        inp = document.querySelector('#timeSegs .time-row .fSegNote');
+    var span = document.createElement('span');
+    span.className = 'preset-text';
+    span.textContent = txt;
+    b.appendChild(span);
+    var del = document.createElement('span');
+    del.className = 'preset-del';
+    del.textContent = '×';
+    del.title = '删除该常用说明（仅本机缓存）';
+    b.appendChild(del);
+    b.addEventListener('click', function(e){
+      if (e.target === del || del.contains(e.target)){   // 点 × → 删除
+        removePreset(curCat.id, idx);
+      } else {                                            // 点标签本体 → 追加到备注
+        appendPresetToNote(txt);
       }
-      if (inp){
-        var cur = inp.value.trim();
-        inp.value = cur ? (cur + txt) : txt;            // 追加而非替换
-        if (timeSegs[targetIdx]) timeSegs[targetIdx].note = inp.value;
-      }
-      refresh();                                            // 实时更新预览说明
     });
     box.appendChild(b);
   });
@@ -1246,6 +1371,39 @@ $('#selNone').addEventListener('click', function(){
   peopleOfGroup().forEach(function(p){ selPeople.delete(p.n); });
   renderPeople(); applyView();
 });
+/* 常用说明：+ 号弹菜单（系统值 / 自定义），增删均只写缓存 */
+$('#presetAddBtn').addEventListener('click', function(e){
+  e.stopPropagation();
+  var m = $('#presetAddMenu');
+  m.hidden = !m.hidden;
+});
+$('#presetAddMenu').addEventListener('click', function(e){
+  e.stopPropagation();
+  var item = e.target.closest('.preset-add-item');
+  if (!item) return;
+  var act = item.getAttribute('data-act');
+  $('#presetAddMenu').hidden = true;
+  if (!curCat){
+    showAlert('请先选择类别，再添加常用说明。');
+    return;
+  }
+  var catId = curCat.id;
+  if (act === 'system'){
+    // 追加「当前类别」在 Waline 配置中的系统值（去重）
+    var sys = ((CONFIG.presetNotes || {})[catId]) || [];
+    if (!sys.length){ showAlert('「' + curCat.name + '」系统值为空：请先在「设置 → 考勤配置」里填写该类别的常用说明并保存到 Waline。'); return; }
+    sys.forEach(function(t){ addPreset(catId, t); });
+  } else if (act === 'custom'){
+    askText('自定义常用说明（' + curCat.name + '）', '请输入一条常用说明').then(function(v){
+      if (v === null || v === undefined) return;       // 取消
+      addPreset(catId, v);
+    });
+  }
+});
+document.addEventListener('click', function(e){
+  var m = $('#presetAddMenu');
+  if (m && !m.hidden && !e.target.closest('#presetAddWrap')) m.hidden = true;
+});
 /* 多时间段：事件委托（行内 select / 按钮为动态生成） */
 /* 行内事件（日期 / 整天 / 起止 均为动态生成，统一委托到 #timeSegs） */
 $('#timeSegs').addEventListener('change', function(e){
@@ -1306,11 +1464,12 @@ function updateCheckAll(){
 }
 function updateRecButtons(){
   updateCheckAll();
-  if (viewMode === 'view'){                   // 归档(R2 只读)：状态变更/打印全禁用，仅展示
+  if (viewMode === 'view'){                   // 归档(R2) 只读：状态变更/打印/删除全禁用，仅展示
     $('#submitRecordsBtn').disabled = true;
     $('#reviewBtn').disabled   = true;
     $('#approveBtn').disabled  = true;
     $('#printBtn').disabled    = true;
+    $('#delRecordsBtn').disabled = true;
     return;
   }
   var box = $('#records');
@@ -1320,6 +1479,7 @@ function updateRecButtons(){
     $('#reviewBtn').disabled   = true;
     $('#approveBtn').disabled  = true;
     $('#printBtn').disabled    = true;
+    $('#delRecordsBtn').disabled = true;
     return;
   }
   var hasPending = false;     // 待提交（提交用）
@@ -1338,6 +1498,7 @@ function updateRecButtons(){
   $('#reviewBtn').disabled   = !hasReviewed;
   $('#approveBtn').disabled  = !hasApproved;
   $('#printBtn').disabled    = !hasPrintable;
+  $('#delRecordsBtn').disabled = false;        // 已勾选至少一条 → 允许「删除选中」
 }
 /* 自定义弹窗：替代原生 prompt/alert */
 function showModal(opts){
@@ -1491,6 +1652,11 @@ $('#records').addEventListener('click', async function(e){
     if (pwd === null) return;                                  // 取消
     if (!canDelete(r.status, pwd)){ await showAlert('密码错误或无删除权限'); return; }
   }
+  // 再确认（单条删除也要弹窗确认，防误删）
+  var okOne = await showModal({ title:'确认删除',
+    message:'确定要删除这条记录吗？\n' + (r.people.join('、')) + ' / ' + r.date + ' / ' + (r.detail || ''),
+    okText:'确认删除', cancelText:'取消' });
+  if (!okOne) return;
   cloudToast('write', '处理中...');
   try {
     var ok = await postRecordOp('del', { id: r.id });   // 先写删除标识记录到 Waline（按 id 标记 del 事件）
@@ -1510,6 +1676,41 @@ $('#records').addEventListener('click', function(e){
   if (sortState.key === key){ sortState.dir = (sortState.dir === 'asc' ? 'desc' : 'asc'); }
   else { sortState.key = key; sortState.dir = 'asc'; }
   renderRecords();
+});
+// 批量删除选中：含受保护状态(非待提交)需一次性密码；删前统一再确认
+$('#delRecordsBtn').addEventListener('click', async function(){
+  var cbs = $('#records').querySelectorAll('.rec-check:checked');
+  var targets = [];
+  cbs.forEach(function(cb){
+    var i = parseInt(cb.dataset.i, 10);
+    if (records[i]) targets.push(records[i]);
+  });
+  if (!targets.length) return;
+  // 含非「待提交」记录（需审核/批准/完成）→ 一次性校验删除密码（需能覆盖全部选中）
+  var needPwd = targets.some(function(r){ return r.status !== '待提交'; });
+  if (needPwd){
+    var pwd = await askPassword('选中含需审核/批准/完成的记录，请输入删除密码');
+    if (pwd === null) return;                                  // 取消
+    var allOk = targets.every(function(r){ return canDelete(r.status, pwd); });
+    if (!allOk){ await showAlert('密码错误或无删除权限（含受保护记录无法删除）'); return; }
+  }
+  // 再确认：列出待删条目（过多则截断预览）
+  var preview = targets.slice(0, 10).map(function(r){ return '· ' + (r.people.join('、')) + ' ' + r.date + ' ' + (r.detail || ''); }).join('\n');
+  if (targets.length > 10) preview += '\n…（其余 ' + (targets.length - 10) + ' 条）';
+  var okAll = await showModal({ title:'确认批量删除',
+    message:'确定要删除选中的 ' + targets.length + ' 条记录吗？此操作不可撤销。\n' + preview,
+    okText:'确认删除', cancelText:'取消' });
+  if (!okAll) return;
+  cloudToast('write', '处理中...');
+  try {
+    var tasks = targets.map(function(r){ return postRecordOp('del', { id: r.id }); });
+    var res = await Promise.all(tasks);
+    if (res.every(function(b){ return b; })){ await loadRecordsFromWaline(); if (!_ctErrorActive) cloudToastHide(); }
+    else { cloudToastError('部分数据写入失败!'); }
+  } catch(e){
+    cloudToastError('数据写入失败!');
+    console.error('[kaoqing] 批量删除失败', e && e.message ? e.message : e);
+  }
 });
 
 /* ---------- Waline 读写：读取为匿名公开 GET（8s 超时 + 健壮解析）。
@@ -2342,6 +2543,7 @@ async function loadConfig(){
       if (best.obj.lunchEnd)   CONFIG.lunchEnd   = best.obj.lunchEnd;
       if (best.obj.workStart)  CONFIG.workStart  = best.obj.workStart;
       if (best.obj.workEnd)    CONFIG.workEnd    = best.obj.workEnd;
+      if (best.obj.presetNotes && typeof best.obj.presetNotes === 'object' && !Array.isArray(best.obj.presetNotes)) CONFIG.presetNotes = best.obj.presetNotes;
     }
   } catch(e){
     console.warn('[kaoqing] 读取考勤配置失败（使用默认）', e && e.message ? e.message : e);
@@ -2354,17 +2556,29 @@ function openConfig(){
   $('#cfgLunchEnd').value   = CONFIG.lunchEnd;
   $('#cfgWorkStart').value  = CONFIG.workStart;
   $('#cfgWorkEnd').value    = CONFIG.workEnd;
+  // 常用说明：按类别分别填入对应 textarea
+  document.querySelectorAll('#cfgPresetNotes .cfg-pn').forEach(function(ta){
+    var cat = ta.getAttribute('data-cat');
+    ta.value = (((CONFIG.presetNotes || {})[cat]) || []).join('\n');
+  });
   $('#cfgMask').hidden = false;
 }
 async function saveConfigToWaline(){
   if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
+  // 常用说明：按类别分别读取各 textarea → { catId: [字符串] }
+  var presetRaw = {};
+  document.querySelectorAll('#cfgPresetNotes .cfg-pn').forEach(function(ta){
+    var cat = ta.getAttribute('data-cat');
+    presetRaw[cat] = ta.value.split('\n').map(function(s){ return s.trim(); }).filter(function(s){ return s.length; });
+  });
   var payload = {
     v: 1, type: 'config',
     deductLunch: $('#cfgDeductLunch').checked,
     lunchStart: $('#cfgLunchStart').value || '12:00',
     lunchEnd:   $('#cfgLunchEnd').value   || '13:00',
     workStart:  $('#cfgWorkStart').value  || '08:30',
-    workEnd:    $('#cfgWorkEnd').value    || '17:30'
+    workEnd:    $('#cfgWorkEnd').value    || '17:30',
+    presetNotes: presetRaw
   };
   var user = getWalineUser();
   var token = WALINE_ADMIN_TOKEN || walineToken(user);
@@ -2387,6 +2601,7 @@ async function saveConfigToWaline(){
     CONFIG.lunchEnd    = payload.lunchEnd;
     CONFIG.workStart   = payload.workStart;
     CONFIG.workEnd     = payload.workEnd;
+    CONFIG.presetNotes = payload.presetNotes || {};
     cloudToastHide('saveCfg');
     showAlert('已保存考勤配置：午休扣除' + (CONFIG.deductLunch ? '已开启' : '已关闭') + '，午休 ' + CONFIG.lunchStart + '-' + CONFIG.lunchEnd + '；正常上班 ' + CONFIG.workStart + '-' + CONFIG.workEnd + '。');
   } catch(err){
@@ -2430,6 +2645,8 @@ document.addEventListener('keydown', function(e){
     await loadPeople();
     await loadHolidays();
     await loadConfig();
+    loadPresetCache();        // 常用说明：优先缓存，无缓存则播种自 Waline 配置并写回缓存
+    renderPresets();          // 按缓存 / Waline 配置刷新常用说明标签
     await loadRecordsFromWaline();
   } catch(e){ /* 子函数已各自以弹窗提示错误 */ }
   loadArchiveMonths();          // 区域五：填充归档月份下拉（读 R2 index.json，失败仅打 warn 不阻断页面）
