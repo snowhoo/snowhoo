@@ -216,6 +216,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   display:inline-flex;align-items:center;justify-content:center}
 .seg-act:hover{filter:brightness(.96)}
 .seg-act.del{background:rgba(224,75,74,.14);color:#e24b4a}
+.seg-actions{flex:0 0 auto;display:flex;gap:6px;align-items:center;min-width:34px;justify-content:flex-end}
 #fHours{font-size:.92rem;font-weight:600;color:var(--text-secondary);white-space:nowrap;min-width:6em;display:inline-block;text-align:left}
 #fHours.bad{color:var(--warn);font-weight:500}
 .tip{font-size:.78rem;color:var(--text-muted);margin:0}
@@ -344,7 +345,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
         <div class="settings-menu" id="settingsMenu" hidden>
           <button class="settings-item" id="syncHolidayBtn">从 timor.tech API 获取节假日</button>
           <button class="settings-item" id="peopleConfigBtn">人员管理</button>
-          <button class="settings-item" id="cfgBtn">考勤配置（午休设置）</button>
+          <button class="settings-item" id="cfgBtn">考勤配置（上班时间设置）</button>
           <div class="settings-sep"></div>
           <div id="holidayInfo" class="settings-info" hidden></div>
         </div>
@@ -569,6 +570,7 @@ var configOid     = null;                // 配置记录在 Waline 中的 oid（
 /* 一行 = 一条完整记录：日期 / 整天 / 起止时间 / 备注事由 / 本行独立小时（最多 3 行，每行独立成一条记录） */
 function newSeg(date){ return { date: date || todayStr(), allDay:false, start:'', end:'', note:'' }; }
 var timeSegs      = [ newSeg() ];
+var focusedSegNoteIdx = 0;       // 当前聚焦的「备注事由」所在行号（常用说明只填该行）
 var COMPANY_NAME  = '苏州晶讯科技股份有限公司';   // ← 顶栏公司名称（按需改成贵司名称）
 // 注：跨域请求需 Waline 服务端 CORS_ALLOW_ORIGIN 允许本页域名（本地 file:// 预览会被浏览器拦截）。
 
@@ -729,18 +731,21 @@ function renderTimeSegs(){
     var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
     var h = document.createElement('span'); h.className = 'segHours'; h.textContent = segHoursText(seg) || '？？小时';
     row.appendChild(d); row.appendChild(adWrap); row.appendChild(s); row.appendChild(sep); row.appendChild(e); row.appendChild(note); row.appendChild(h);
+    // 动作容器：每行固定宽度，内部按需放 删除/新增 按钮，保证上下行控件对齐（不挤在一起）
+    var acts = document.createElement('div'); acts.className = 'seg-actions';
     if (i > 0){
       var del = document.createElement('button');
       del.type = 'button'; del.className = 'seg-act del'; del.textContent = '−'; del.title = '移除该行';
       del.setAttribute('data-act', 'del'); del.setAttribute('data-i', String(i));
-      row.appendChild(del);
+      acts.appendChild(del);
     }
     if (editIndex === null && i === timeSegs.length - 1 && timeSegs.length < 3){
       var add = document.createElement('button');
       add.type = 'button'; add.className = 'seg-act'; add.textContent = '+'; add.title = '复制新增一行（最多 3 行）';
       add.setAttribute('data-act', 'add'); add.setAttribute('data-i', String(i));
-      row.appendChild(add);
+      acts.appendChild(add);
     }
+    row.appendChild(acts);
     box.appendChild(row);
   });
 }
@@ -809,6 +814,23 @@ function computeTotal(){
   });
   return { totalMin: total, anyComplete: anyComplete, partial: partial };
 }
+/* 两时间段是否相交（同一天、时间重叠才冲突；端点相接不算；跨天按 24h 处理） */
+function segsOverlap(a, b){
+  var a0 = toMin(a.start), a1 = toMin(a.end); if (a1 <= a0) a1 += 1440;
+  var b0 = toMin(b.start), b1 = toMin(b.end); if (b1 <= b0) b1 += 1440;
+  return Math.max(a0, b0) < Math.min(a1, b1);
+}
+/* 多行日期时间冲突检测：同一天出现重叠时间段即冲突（不同日期不冲突，独立行本就可不同）。返回 {i,j} 或 null */
+function findTimeConflict(){
+  var comp = timeSegs.filter(segComplete);
+  for (var i = 0; i < comp.length; i++){
+    for (var j = i + 1; j < comp.length; j++){
+      if (comp[i].date !== comp[j].date) continue;
+      if (segsOverlap(comp[i], comp[j])) return { i: i, j: j };
+    }
+  }
+  return null;
+}
 
 /* 时段校验提示（累计小时不再在此显示，改为每行独立显示在行尾） */
 function updateRange(){
@@ -839,12 +861,18 @@ function currentAmountText(){
   var parts = [];
   timeSegs.forEach(function(seg){
     if (seg.start && seg.end){
-      var t = seg.start + '-' + seg.end;
+      var t = seg.start + ' - ' + seg.end;   // 统一带空格格式，存储一致
       if (seg.note) t += '(' + seg.note + ')';
       parts.push(t);
     }
   });
   return parts.length ? parts.join(' ; ') : '（未选时间段）';
+}
+
+/* 时间段显示归一化：无论存储是 08:00-17:00 还是 08:00 - 17:00，统一显示为「HH:MM - HH:MM」（多段以 ; 分隔），保证表格对齐 */
+function fmtSpan(raw){
+  if (!raw) return '';
+  return String(raw).replace(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/g, '$1 - $2');
 }
 
 function rangeOK(){
@@ -873,7 +901,7 @@ function refresh(){
       idx++;
       var catName = curCat.name;
       if (isOtCatId(curCat.id)) catName = calcOtType(sg.date) + '加班';   // 加班类型按本行日期自动判定，并入类别
-      var t   = (sg.start && sg.end) ? (esc(sg.start) + '-' + esc(sg.end)) : '<span class="warn">未选时段</span>';
+      var t   = (sg.start && sg.end) ? (esc(sg.start) + ' - ' + esc(sg.end)) : '<span class="warn">未选时段</span>';
       var hrs = segHoursText(sg) || '？？小时';
       rows.push('<div class="pv-row">' +
         '<span class="pv-i">' + String(idx).padStart(2, '0') + '</span>' +
@@ -904,10 +932,22 @@ function renderPresets(){
     b.textContent = txt;
     b.addEventListener('click', function(){
       if (!timeSegs.length) timeSegs = [ newSeg() ];
-      var first = $('#timeSegs .time-row .fSegNote');
-      if (first){
-        first.value = first.value ? (first.value + txt) : txt;   // 追加而非替换
-        timeSegs[0].note = first.value;
+      // 只填「光标所在行」的备注：优先用当前聚焦的输入框，否则退回记录的最后聚焦行，再否则第一行
+      var targetIdx = 0, inp = null;
+      if (document.activeElement && document.activeElement.classList.contains('fSegNote')){
+        var ar = document.activeElement.closest('.time-row');
+        if (ar) targetIdx = parseInt(ar.getAttribute('data-i'), 10) || 0;
+        inp = document.activeElement;
+      } else if (timeSegs[focusedSegNoteIdx]){
+        targetIdx = focusedSegNoteIdx;
+        inp = document.querySelector('#timeSegs .time-row[data-i="' + targetIdx + '"] .fSegNote');
+      } else {
+        inp = document.querySelector('#timeSegs .time-row .fSegNote');
+      }
+      if (inp){
+        var cur = inp.value.trim();
+        inp.value = cur ? (cur + txt) : txt;            // 追加而非替换
+        if (timeSegs[targetIdx]) timeSegs[targetIdx].note = inp.value;
       }
       refresh();                                            // 实时更新预览说明
     });
@@ -972,7 +1012,7 @@ function renderRecords(){
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
       '<td class="c-cat ' + (isOt ? 'c-green' : 'c-orange') + '">' + esc(catDisplay) + '</td>' +
       '<td class="c-date">' + esc(r.date) + '</td>' +
-      '<td class="c-time">' + esc(span) + '</td>' +
+      '<td class="c-time">' + esc(fmtSpan(span)) + '</td>' +
       '<td class="c-hours">' + esc(hoursTxt) + '</td>' +
       '<td class="c-status"><span class="rec-status ' + (STATUS_CLASS[st] || 'st-tj') + '">' + st + '</span></td>' +
       '<td class="c-note">' + note + '</td>';
@@ -1020,6 +1060,14 @@ async function submit(){
     };
   }
   var segs = timeSegs.filter(segComplete);   // 只提交填写完整的行
+
+  /* 多行日期时间冲突：同一天时间段重叠 → 弹窗提示且禁止保存 */
+  var conflict = findTimeConflict();
+  if (conflict){
+    showAlert('时间段冲突：第 ' + (conflict.i + 1) + ' 行与第 ' + (conflict.j + 1) + ' 行在同一天（' +
+      segs[conflict.i].date + '）时间重叠，请调整后再保存。', '无法保存');
+    return;
+  }
 
   /* 修改模式：第一行以 edit 事件更新原记录；其余行按新增记录 add（避免多段旧记录被截断丢失） */
   if (editIndex !== null){
@@ -1149,6 +1197,13 @@ $('#timeSegs').addEventListener('input', function(e){
   var idx = parseInt(row.getAttribute('data-i'), 10);
   if (timeSegs[idx]) timeSegs[idx].note = inp.value;
   refresh();
+});
+/* 记录当前聚焦的备注输入框行号：常用说明只填「光标所在行」，而非所有行 */
+$('#timeSegs').addEventListener('focusin', function(e){
+  if (e.target && e.target.classList.contains('fSegNote')){
+    var row = e.target.closest('.time-row');
+    if (row) focusedSegNoteIdx = parseInt(row.getAttribute('data-i'), 10) || 0;
+  }
 });
 /* 考勤配置（午休扣除） */
 $('#cfgBtn').addEventListener('click', openConfig);
