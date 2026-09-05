@@ -1500,7 +1500,7 @@ async function submit(){
   function mkRec(name, sg){
     return {
       id:      genRecId(),
-      docNo:   peekDocNo(curCat.id, sg.date),   // 占位预览号；最终号在「流水号锁」内取（见下方 add 块），避免并发重号
+      docNo:   '',   // 不预占号：最终单据号在「流水号锁」内取（见下方 add 块），写库后随回读显示
       date:    sg.date,
       otType:  calcOtType(sg.date),   // 按日期自动判定：国假 / 双休 / 平时（节假日未读取→未知）
       catId:   curCat.id,
@@ -1547,7 +1547,7 @@ async function submit(){
     var f    = segs[0];
     var updated = {
       id: (old && old.id) || genRecId(),
-      docNo: (old && old.docNo) || peekDocNo(curCat.id, f.date),   // 修改沿用原单据号，不重新编号
+      docNo: (old && old.docNo) || '',   // 修改沿用原单据号，不重新编号；原记录无号时不预占（回读后显示）
       date: f.date, otType: calcOtType(f.date),   // 按日期自动判定加班类型
       catId: curCat.id, catName: curCat.name, color: curCat.color, mode: curCat.mode,
       people: old.people,
@@ -1589,7 +1589,7 @@ async function submit(){
   /* 添加保存：先插入一条空白记录承载「保存中…」圆圈，再走与状态变更相同的方式（无遮罩、整表禁用）。
      成功后复读 Waline 会整体替换 records（占位记录随之消失）；失败则移除占位并恢复。 */
   var pid = 'pending_' + Date.now();
-  var placeholder = { id: pid, _pending: true, docNo: (segs[0] ? peekDocNo(curCat.id, segs[0].date) : ''), people: [], date: '', catId: '', catName: '', detail: '', note: '', status: '', mode: 'range', hours: null, ts: Date.now() };
+  var placeholder = { id: pid, _pending: true, docNo: '', people: [], date: '', catId: '', catName: '', detail: '', note: '', status: '', mode: 'range', hours: null, ts: Date.now() };
   records.unshift(placeholder);
   procMap[pid] = '保存中…';
   renderRecords();
@@ -1604,7 +1604,7 @@ async function submit(){
       var localCounters = {};
       function nextInLock(catId, dateStr){
         var key = docNoKey(catId, dateStr);
-        if (!(key in localCounters)) localCounters[key] = Math.max(docNoMaxOf(key), lock.counters[key] || 0);
+        if (!(key in localCounters)) localCounters[key] = lock.counters[key] || 0;   // 仅以流水配置(serial)为权威源取号，不扫描前端列表
         localCounters[key] += 1;
         return key + String(localCounters[key]).padStart(3, '0');
       }
@@ -2375,23 +2375,6 @@ function docNoKey(catId, dateStr){
 function parseDocNoSeq(dn){          // 从单据号解析序号（修正原 slice(6) 越界 bug：key 实为 5 位 YYMM+J/Q）
   var m = (dn || '').match(/^(\d{4}[JQ])(\d+)$/);
   return m ? parseInt(m[2], 10) : 0;
-}
-function docNoMaxOf(key){          // 当前 records 中该 key 的最大序号（无则 0）
-  var max = 0;
-  for (var i = 0; i < records.length; i++){
-    var dn = records[i] && records[i].docNo;
-    if (dn && dn.indexOf(key) === 0){ var n = parseDocNoSeq(dn); if (n > max) max = n; }
-  }
-  return max;
-}
-function serialFloor(key){         // 流水号配置提供的「已用最大序号」地板（前端实时维护、单调递增，避免与已删除/归档单据撞号）
-  var c = (SERIAL && SERIAL.counters && SERIAL.counters[key]) || 0;
-  return (typeof c === 'number' && c > 0) ? c : 0;
-}
-function peekDocNo(catId, dateStr){   // 预览下一个单据号（不占用计数，用于占位空白行显示）
-  var key = docNoKey(catId, dateStr);
-  var base = Math.max(docNoMaxOf(key), serialFloor(key));   // 以「本地已存在最大号」与「流水号配置」的较大者为基
-  return key + String(base + 1).padStart(3, '0');
 }
 var SERIAL = { counters: {} };       // 单据流水号配置：{ "2609J": 33, "2609Q": 12 }，key=YYMM+类别前缀，value=已用最大序号（由前端加锁实时写入，单调递增）
 var serialOid = null;                // 流水号配置记录在 Waline 中的 oid（原地复写用）
