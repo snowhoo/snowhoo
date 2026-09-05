@@ -2428,6 +2428,7 @@ async function loadArchiveMonths(quiet){
     var data = await resp.json();
     var months = (data && data.months) || [];
     var sel = $('#recSource');
+    var prevVal = sel.value;                        // 重建选项前记住当前选中项，重建后还原（避免下拉框选中项被重置到「最新未归档记录」）
     sel.innerHTML = '<option value="waline">最新未归档记录</option>';
     months.forEach(function(m){
       (m.files || []).forEach(function(f){
@@ -2438,6 +2439,10 @@ async function loadArchiveMonths(quiet){
         sel.appendChild(o);
       });
     });
+    if (prevVal && prevVal !== 'waline'){           // 还原到原先选中的归档文件（设置 .value 不触发 change 事件，不会误切换视图）
+      var stillThere = Array.prototype.some.call(sel.options, function(op){ return op.value === prevVal; });
+      if (stillThere) sel.value = prevVal;
+    }
     if (!quiet) cloudToastHide('loadArchive');
     return true;
   } catch(e){
@@ -3125,7 +3130,7 @@ async function lazyLoadArchiveMonths(){
   var ok = await loadArchiveMonths(true);           // quiet：不弹遮罩
   archiveMonthsLoading = false;
   hideRecSourceSpin();
-  if (!ok) archiveMonthsLoaded = false;             // 失败复位，下次打开下拉框可重试
+  archiveMonthsLoaded = ok;                         // 成功置位防重入（不再每次点开下拉框都重建→重置选中项）；失败保持 false 以便下次打开可重试
 }
 $('#recSource').addEventListener('mousedown', lazyLoadArchiveMonths);   // 鼠标点开下拉框即触发
 $('#recSource').addEventListener('focus', lazyLoadArchiveMonths);        // 键盘聚焦（Tab）亦可触发
