@@ -606,12 +606,12 @@ var PEOPLE_COLS = [
    加班为单一「加班」类别；具体是「国假加班 / 双休加班 / 平时加班」由系统按记录日期自动判定
    （见 calcOtType），不写死在类别里；表格不单列「加班类别」列，直接并入「类别」列显示。 */
 var CATS = [
-  { id:'overtime', name:'加班',     char:'加', color:'#f59e0b', mode:'range', tip:'选择加班时间段，至少 0.5 小时；加班类型（国假/双休/平时）按日期自动判定' },
-  { id:'tiaoxiu',  name:'调休',     char:'调', color:'#10b981', mode:'range', tip:'选择调休时间段，至少 0.5 小时，小时数自动计算' },
-  { id:'nianjia',  name:'年假',     char:'年', color:'#3b82f6', mode:'range', tip:'选择年假时间段，至少 0.5 小时，小时数自动计算' },
-  { id:'bingjia',  name:'病假',     char:'病', color:'#ef4444', mode:'range', tip:'选择病假时间段，至少 0.5 小时，小时数自动计算' },
-  { id:'shijia',   name:'事假',     char:'事', color:'#8b5cf6', mode:'range', tip:'选择事假时间段，至少 0.5 小时，小时数自动计算' },
-  { id:'qita',     name:'其它', char:'它', color:'#6b7280', mode:'range', tip:'选择时间段，至少 0.5 小时，并在备注中说明事由' },
+  { id:'overtime', name:'加班',     char:'加', color:'#f59e0b', mode:'range', tip:'加班类型（国假/双休/平时）按日期自动判定' },
+  { id:'tiaoxiu',  name:'调休',     char:'调', color:'#10b981', mode:'range', tip:'小时数自动计算' },
+  { id:'nianjia',  name:'年假',     char:'年', color:'#3b82f6', mode:'range', tip:'小时数自动计算' },
+  { id:'bingjia',  name:'病假',     char:'病', color:'#ef4444', mode:'range', tip:'小时数自动计算' },
+  { id:'shijia',   name:'事假',     char:'事', color:'#8b5cf6', mode:'range', tip:'小时数自动计算' },
+  { id:'qita',     name:'其它', char:'它', color:'#6b7280', mode:'range', tip:'请备注说明' },
 ];
 /* 加班类判定：catId==='overtime'（含此前误拆的 ot-* 记录）视为加班类 */
 function isOtCatId(id){
