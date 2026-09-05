@@ -275,6 +275,9 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .rec-table{width:100%;border-collapse:collapse;font-size:.8rem;min-width:640px}
 .rec-table th,.rec-table td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle}
 .rec-table th{background:var(--bg-surface);color:var(--text-secondary);font-weight:600;text-align:left}
+.rec-table th.th-sort{cursor:pointer;user-select:none;white-space:nowrap}
+.rec-table th.th-sort:hover{color:var(--text)}
+.rec-table th.th-sort.active{color:var(--accent)}
 .rec-table td{color:var(--text)}
 .rec-table .c-check,.rec-table .c-del{width:1%;text-align:center;white-space:nowrap}
 .rec-table .c-idx{width:36px;text-align:center;color:var(--text-muted)}
@@ -582,6 +585,7 @@ var records   = [];
 var editIndex = null;   // 修改模式：正在编辑的记录下标（null=新增模式）
 var viewMode   = 'edit';   // 'edit'=最新未归档(Waline 可改删)；'view'=归档(R2 只读，不能修改/删除)
 var archiveLabel = '';     // 当前归档文件名（标题展示用）
+var sortState  = { key: 'date', dir: 'desc' };   // 表格表头排序状态：key=列标识，dir=asc/desc（点一次正序、再点反序）
 
 function $(s){ return document.querySelector(s); }
 function todayStr(){
@@ -994,6 +998,26 @@ function esc(s){
 
 var STATUS_CLASS = { '待提交':'st-tj', '待审核':'st-sh', '待批准':'st-sp', '待审批':'st-sp', '完成':'st-ok' };
 
+/* 表头排序：取某条记录在指定列上的「可比较值」。i 为 records 数组下标（即录入顺序）。
+   idx=录入序；who=人员首名；cat=显示类别；date=业务日期；time=起始时间；hours=数值；status/note=文本 */
+function recSortValue(i, key){
+  var r = records[i];
+  if (!r) return '';
+  if (key === 'idx')   return i;
+  if (key === 'who')   return (r.people && r.people[0]) || '';
+  if (key === 'cat'){
+    var isOt = isOtCatId(r.catId);
+    var ot = calcOtType(r.date); if (ot === '未知' && r.otType) ot = r.otType;
+    return isOt ? (ot + '加班') : (r.catName || '');
+  }
+  if (key === 'date')  return r.date || '';
+  if (key === 'time')  return (r.detail || '').replace(/^(\d{1,2}:\d{2}).*$/, '$1');  // 取起始时间 HH:MM
+  if (key === 'hours') return (r.hours == null) ? -1 : Number(r.hours);
+  if (key === 'status')return r.status || '';
+  if (key === 'note')  return r.note || '';
+  return '';
+}
+
 function renderRecords(){
   var box = $('#records');
   if (viewMode === 'view'){
@@ -1009,16 +1033,28 @@ function renderRecords(){
   var editable = (viewMode === 'edit');   // 归档(R2)只读：不渲染勾选框与改删按钮
   var html = '<table class="rec-table"><thead><tr>';
   if (editable) html += '<th class="c-check"><input type="checkbox" id="recCheckAll" class="rec-check-all" title="全选 / 取消全选"></th>';
-  html += '<th>#</th><th>人员</th><th>类别</th><th>日期</th><th>时段</th><th>小时</th><th>状态</th><th>说明</th>';
+  // 可点击排序的表头：点击正序→再点反序；当前排序列高亮并显示 ▲/▼
+  var heads = [
+    ['idx','#'], ['who','人员'], ['cat','类别'], ['date','日期'],
+    ['time','时段'], ['hours','小时'], ['status','状态'], ['note','说明']
+  ];
+  heads.forEach(function(h){
+    var key = h[0], label = h[1], cls = 'th-sort', ind = '';
+    if (sortState.key === key){ cls += ' active'; ind = (sortState.dir === 'asc' ? ' ▲' : ' ▼'); }
+    html += '<th class="' + cls + '" data-sort="' + key + '" title="点击排序">' + label + ind + '</th>';
+  });
   if (editable) html += '<th class="c-del"></th>';
   html += '</tr></thead><tbody>';
-  // 按记录内容里的「业务日期」从新到旧排序（降序）；同日期保持稳定（保持原录入相对顺序）
+  // 排序：按 sortState（默认「业务日期」从新到旧）；同值保持稳定（按录入顺序 a-b）
   var order = records.map(function(r, idx){ return idx; });
   order.sort(function(a, b){
-    var da = records[a].date || '';
-    var db = records[b].date || '';
-    if (da === db) return a - b;          // 同日期：原顺序在前
-    return da < db ? 1 : -1;              // 新日期（字符串更大）排在前
+    var va = recSortValue(a, sortState.key);
+    var vb = recSortValue(b, sortState.key);
+    var c = 0;
+    if (typeof va === 'number' && typeof vb === 'number') c = va - vb;
+    else c = String(va).localeCompare(String(vb), 'zh');
+    if (c === 0) c = a - b;                       // 同值：保持原录入相对顺序
+    return sortState.dir === 'asc' ? c : -c;
   });
   order.forEach(function(i, n){
     var r = records[i];
@@ -1039,7 +1075,7 @@ function renderRecords(){
       : '<span class="muted">—</span>';
     html += '<tr>';
     if (editable) html += '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>';
-    html += '<td class="c-idx">' + (n + 1) + '</td>' +
+    html += '<td class="c-idx">' + (i + 1) + '</td>' +   // ID = 录入顺序（records 数组下标即录入序，后录入更大）
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
       '<td class="c-cat ' + (isOt ? 'c-green' : 'c-orange') + '">' + esc(catDisplay) + '</td>' +
       '<td class="c-date">' + esc(r.date) + '</td>' +
@@ -1465,6 +1501,15 @@ $('#records').addEventListener('click', async function(e){
     cloudToastError('数据读取失败!');
     console.error('[kaoqing] 删除后复读失败', e && e.message ? e.message : e);
   }
+});
+// 表头点击排序：点一次正序(asc)、再点同列反序(desc)；切换列则重置为 asc
+$('#records').addEventListener('click', function(e){
+  var th = e.target.closest('th[data-sort]');
+  if (!th) return;
+  var key = th.getAttribute('data-sort');
+  if (sortState.key === key){ sortState.dir = (sortState.dir === 'asc' ? 'desc' : 'asc'); }
+  else { sortState.key = key; sortState.dir = 'asc'; }
+  renderRecords();
 });
 
 /* ---------- Waline 读写：读取为匿名公开 GET（8s 超时 + 健壮解析）。
