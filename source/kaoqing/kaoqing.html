@@ -304,6 +304,9 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .rec-count{font-size:.78rem;color:var(--text-muted)}
 .rec-source{padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text);max-width:240px}
 .rec-status-sel{padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text);font-family:inherit}
+/* 归档下拉懒加载中：在下拉框旁显示旋转圆圈（不弹遮罩） */
+.rec-source-wrap{position:relative;display:inline-flex;align-items:center}
+.rec-source-spin{margin-left:6px;display:inline-flex}
 /* 节假日懒加载中：需要显示加班类别的地方显示旋转圆圈 */
 .ot-spin{
   display:inline-block;width:13px;height:13px;vertical-align:-2px;border-radius:50%;
@@ -343,13 +346,13 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .rec-table td{color:var(--text)}
 .rec-table .c-check,.rec-table .c-del{width:1%;text-align:center;white-space:nowrap}
 .rec-table .c-idx{width:36px;text-align:center;color:var(--text-muted)}
-.rec-table .c-who{font-weight:600;white-space:normal}
+.rec-table .c-who{font-weight:600;white-space:normal;min-width:56px}
 .rec-table .c-cat{color:var(--accent);white-space:nowrap}
 .rec-table .c-cat.c-green{color:#16a34a}
 .rec-table .c-cat.c-orange{color:#f97316}
 .rec-table .c-date,.rec-table .c-time,.rec-table .c-hours{white-space:nowrap;font-variant-numeric:tabular-nums}
 .rec-table .c-cat{white-space:nowrap;font-weight:600}
-.rec-table .c-note{white-space:normal;min-width:120px}
+.rec-table .c-note{white-space:normal}
 .rec-table .c-status{white-space:nowrap}
 .rec-table .muted{color:var(--text-muted)}
 .rec-check{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
@@ -511,7 +514,10 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
     <section class="card" id="secAction">
       <div class="card-body">
         <div class="rec-toolbar">
-          <select id="recSource" class="rec-source"><option value="waline">最新未归档记录</option></select>
+          <span class="rec-source-wrap">
+            <select id="recSource" class="rec-source"><option value="waline">最新未归档记录</option></select>
+            <span id="recSourceSpin" class="rec-source-spin" hidden><span class="ot-spin" title="归档列表加载中…"></span></span>
+          </span>
           <select id="recStatus" class="rec-status-sel" title="按状态筛选记录">
             <option value="all">全部状态</option>
             <option value="待提交" selected>待提交</option>
@@ -521,7 +527,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
           </select>
           <span class="rec-count" id="recCount">共 0 条</span>
           <button id="delRecordsBtn" class="btn-rec-del" disabled>删选</button>
-          <button id="submitRecordsBtn" class="btn-rec-submit" disabled>提交</button>
+          <button id="submitRecordsBtn" class="btn-rec-submit" disabled>提交并打印</button>
           <button id="reviewBtn" class="btn-rec-action" disabled>审核</button>
           <button id="approveBtn" class="btn-rec-action" disabled>批准</button>
           <button id="printBtn" class="btn-rec-action" disabled>打印</button>
@@ -1045,10 +1051,10 @@ function currentAmountText(){
   return parts.length ? parts.join(' ; ') : '（未选时间段）';
 }
 
-/* 时间段显示归一化：无论存储是 08:00-17:00 还是 08:00 - 17:00，统一显示为「HH:MM - HH:MM」（多段以 ; 分隔），保证表格对齐 */
+/* 时间段显示归一化：无论存储是 08:00-17:00 还是 08:00 - 17:00，统一显示为「HH:MM-HH:MM」（无空格，多段以 ; 分隔），保证表格对齐 */
 function fmtSpan(raw){
   if (!raw) return '';
-  return String(raw).replace(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/g, '$1 - $2');
+  return String(raw).replace(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/g, '$1-$2');
 }
 
 function rangeOK(){
@@ -1080,7 +1086,7 @@ function refresh(){
           ? '<span class="ot-spin" title="节假日加载中…"></span>'   // 懒加载中：旋转圆圈
           : esc(ot + '加班');
       }
-      var t   = (sg.start && sg.end) ? (esc(sg.start) + ' - ' + esc(sg.end)) : '<span class="warn">未选时段</span>';
+      var t   = (sg.start && sg.end) ? (esc(sg.start) + '-' + esc(sg.end)) : '<span class="warn">未选时段</span>';
       var hrs = segHoursText(sg) || '？？小时';
       rows.push('<div class="pv-row">' +
         '<span class="pv-i">' + String(idx).padStart(2, '0') + '</span>' +
@@ -1780,8 +1786,46 @@ async function eachChecked(condStatus, nextStatus){
   } catch(e){ cloudToastError('数据写入失败!'); console.error('[kaoqing] 状态变更失败', e && e.message ? e.message : e); }
 }
 
-// 勾选记录 → 仅「待提交」提交至「待审核」
-$('#submitRecordsBtn').addEventListener('click', function(){ eachChecked('待提交', '待审核'); });
+/* 提交并打印：先把勾选的「待提交」记录提交至「待审核」，提交成功（已重新拉取并渲染）后，
+   按记录 id 定位这些刚提交的记录并自动打印（复用 window.print，不另弹遮罩） */
+async function submitAndPrint(){
+  var ids = [];
+  $('#records').querySelectorAll('.rec-check:checked').forEach(function(cb){
+    var i = parseInt(cb.dataset.i, 10);
+    if (records[i] && records[i].status === '待提交') ids.push(records[i].id);
+  });
+  if (!ids.length){ await showAlert('请先勾选要提交的待提交记录'); return; }
+  await eachChecked('待提交', '待审核');   // 提交并重新拉取（会重渲染、清空勾选）
+  printRecordsByIds(ids);                  // 提交后按 id 定位刚提交的记录打印
+}
+/* 按记录 id 集合打印：仅显示这些行、临时勾选并调用 window.print，打印后还原；
+   仍为「待提交」的记录视为提交失败、不予打印 */
+function printRecordsByIds(ids){
+  if (!ids || !ids.length) return;
+  var box = $('#records');
+  if (!box) return;
+  var set = {};
+  ids.forEach(function(id){ set[id] = true; });
+  var hidden = [], any = false;
+  box.querySelectorAll('.rec-table tbody tr').forEach(function(tr){
+    var cb = tr.querySelector('.rec-check');
+    var r  = cb ? records[parseInt(cb.dataset.i, 10)] : null;
+    if (cb && r && set[r.id] && r.status !== '待提交'){
+      cb.checked = true; any = true;        // 目标记录：临时勾选并打印
+    } else {
+      tr.style.display = 'none'; hidden.push(tr);   // 其余行：打印时隐藏
+    }
+  });
+  if (!any){ hidden.forEach(function(tr){ tr.style.display = ''; }); return; }
+  window.print();
+  hidden.forEach(function(tr){ tr.style.display = ''; });   // 还原隐藏行
+  box.querySelectorAll('.rec-check').forEach(function(cb){
+    var r = records[parseInt(cb.dataset.i, 10)];
+    if (r && set[r.id]) cb.checked = false;                // 取消临时勾选
+  });
+}
+// 勾选记录 → 仅「待提交」提交至「待审核」，随后自动打印
+$('#submitRecordsBtn').addEventListener('click', submitAndPrint);
 // 审核 → 仅「待审核」转「待批准」（需审核密码）
 $('#reviewBtn').addEventListener('click', async function(){
   if (!await confirmRole('review')) return;
@@ -2995,11 +3039,17 @@ $('#recSource').addEventListener('change', function(){
 });
 /* 归档列表懒加载：页面打开不加载，仅在用户点开「数据选择」下拉框时才读 R2 index.json（不弹遮罩） */
 var archiveMonthsLoaded = false;
+var archiveMonthsLoading = false;
+function showRecSourceSpin(){ var s = $('#recSourceSpin'); if (s) s.hidden = false; }
+function hideRecSourceSpin(){ var s = $('#recSourceSpin'); if (s) s.hidden = true; }
 async function lazyLoadArchiveMonths(){
-  if (archiveMonthsLoaded) return;
-  archiveMonthsLoaded = true;                       // 先置位防重入；失败再复位以便下次重试
+  if (archiveMonthsLoaded || archiveMonthsLoading) return;
+  archiveMonthsLoading = true;
+  showRecSourceSpin();                              // 加载中：下拉框旁显示旋转圆圈（不弹遮罩）
   var ok = await loadArchiveMonths(true);           // quiet：不弹遮罩
-  if (!ok) archiveMonthsLoaded = false;
+  archiveMonthsLoading = false;
+  hideRecSourceSpin();
+  if (!ok) archiveMonthsLoaded = false;             // 失败复位，下次打开下拉框可重试
 }
 $('#recSource').addEventListener('mousedown', lazyLoadArchiveMonths);   // 鼠标点开下拉框即触发
 $('#recSource').addEventListener('focus', lazyLoadArchiveMonths);        // 键盘聚焦（Tab）亦可触发
@@ -3041,7 +3091,8 @@ document.addEventListener('keydown', function(e){
     loadRecordsFromWaline(true);   // 记录表懒加载：不弹遮罩，加载时显示旋转圆圈（fire-and-forget，不阻塞后续初始化）
   } catch(e){ /* 子函数已各自以弹窗提示错误 */ }
   // 归档列表不在打开时加载；用户点开「数据选择」下拉框时才由 lazyLoadArchiveMonths 读取
-  checkLogin();              // 检测本地 Waline 登录态（已登录则解锁设置入口）
+  // 用户登录态检测改为懒加载：不 await、不阻塞其它加载/渲染，置于微任务中于空闲时执行
+  Promise.resolve().then(checkLogin);
   initWalineEarly();         // 初始化 Waline 组件（严格参照 APP.html：挂载 #walineLoginMount，由 onLogin 回写登录态）
 })();
 </script>
