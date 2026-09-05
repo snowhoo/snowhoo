@@ -1343,13 +1343,13 @@ function renderRecords(){
   } else {
     $('#recCount').textContent = '共 ' + idxs.length + ' 条';
   }
-  updateRecButtons();   // 重新渲染后勾选清空，记录相关按钮全禁用
   if (!idxs.length){
     if (recordsLoading){
       box.innerHTML = '<div class="rec-loading"><span class="rec-spin"></span>加载中…</div>';
     } else {
       box.innerHTML = '<p class="empty">' + (records.length ? '该状态下暂无记录' : '暂无记录') + '</p>';
     }
+    updateRecButtons();   // 在「新」DOM 已渲染后重算按钮现隐/可用（空态时全部隐藏）
     return;
   }
   var editable = (viewMode === 'edit');   // 归档(R2)只读：不渲染勾选框与改删按钮
@@ -1414,6 +1414,7 @@ function renderRecords(){
   });
   html += '</tbody></table>';
   box.innerHTML = html;
+  updateRecButtons();   // 必须在新表格已渲染、勾选框为最新状态后重算按钮现隐/可用（修复：原先在替换 innerHTML 前计算，导致状态沿用旧勾选）
 }
 
 /* 记录不再落地 localStorage：读写全部走 Waline（见 loadRecordsFromWaline / postRecordOp） */
@@ -3083,7 +3084,8 @@ document.addEventListener('keydown', function(e){
   renderGroups();
   renderPeople();
   applyView();
-  renderRecords();          // 先渲染空态，稍后 loadRecordsFromWaline 从 Waline 拉取后再次渲染
+  recordsLoading = true;    // 默认进入即显示「加载中…」旋转圆圈，加载完成前不显示「暂无记录」
+  renderRecords();          // 首屏即显示加载圆圈，稍后 loadRecordsFromWaline 从 Waline 拉取后再次渲染
   renderPresets();
   refreshSaveBtn();          // 初始：新增模式「添加」(绿)
   $('#companyName').textContent = COMPANY_NAME;
