@@ -368,7 +368,9 @@ def archive_once(dry_run=False):
             print("[OK] 清洗当月：复写脏记录 %d 条(随机身份)，删除其旧评论 %d 条；干净记录 %d 条保持不动"
                   % (len(dirty_current), removed, len(current) - len(dirty_current)))
 
-    # 3) 重建 index（把本次新写的补充文件也纳入）
+    # 3) 单据流水号配置现由前端在新建/删除记录时实时写入（带管理员令牌），后端不再维护
+
+    # 4) 重建 index（把本次新写的补充文件也纳入）
     build_index(set(r2_keys) | set(written_keys))
     print("[OK] 归档 %d 条(%s)；当月清洗 %d 条。" % (total_hist, ",".join(months), len(current)))
     return total_hist

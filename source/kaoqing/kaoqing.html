@@ -690,11 +690,21 @@ var PWD_ADMIN   = '123';   // 管理员密码：可删除任意状态（含完�
 /* ---------- Waline 读写（匿名模式：数据读写均匿名、无需登录；登录仅用于管控「设置」入口；参照 APP.html 同一 Waline 服务端） ---------- */
 var WALINE_SERVER = 'https://waline.snowhoo.net'; // ← 与 APP.html 同一 Waline 服务端（如需更换改这里）
 var CLOUD_BASE    = WALINE_SERVER;                // 兼容 APP.html 的命名
-var WALINE_ADMIN_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.MQ.V-1tklVlvdd6sa0AQbdSdf_TT9WueiFKqkRbEZK9Ge0'; // 管理员令牌：以 type=list 接口读取「含 spam」的全部评论（匿名写入可能被误判 spam，公开接口会过滤掉导致不显示）
+// 管理员令牌：源码中以「反转 + 异或固定密钥 + base64」混淆存储，避免明文被直接复制（仅防随手抓取，非加密）。运行时还原为真实令牌。
+var _TK_SEED = '8kQ~zL#';
+var _TK_OBF  = 'CA4WRzEWZlo5Og8xCkpdHgZHLhh8Xg8CGhgdYggKIkgeKFVUPT0VDn0ObkUAM1R1aVElYDcAGWpyAh4XGQtBUCEoGw==';
+function _tk_deobf(){
+  var bin = atob(_TK_OBF);
+  var s = '';
+  for (var i = 0; i < bin.length; i++) s += String.fromCharCode(bin.charCodeAt(i) ^ _TK_SEED.charCodeAt(i % _TK_SEED.length));
+  return s.split('').reverse().join('');
+}
+var WALINE_ADMIN_TOKEN = _tk_deobf(); // 以 type=list 接口读取「含 spam」的全部评论（匿名写入可能被误判 spam，公开接口会过滤掉导致不显示）
 var WALINE_OAUTH  = 'github'; // 登录方式：github / google / qq / weibo（取决于服务端开启的 OAuth 提供方）
 var HOLIDAY_PATH  = '/kaoqing/holidays'; // 节假日数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var PEOPLE_PATH   = '/kaoqing/people';   // 人员数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var CONFIG_PATH   = '/kaoqing/config';   // 考勤配置（午休扣除）存放路径（写入为一条 JSON 评论）
+var SERIAL_PATH   = '/kaoqing/serial';   // 单据流水号配置（年月+类别 → 已用最大序号），由前端在新建/删除记录时实时写入（带管理员令牌），Waline 中始终仅 1 条
 var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30', presetNotes:{} }; // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值(按类别)，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
 /* 一行 = 一条完整记录：日期 / 整天 / 起止时间 / 备注事由 / 本行独立小时（最多 3 行，每行独立成一条记录） */
@@ -1431,7 +1441,7 @@ function renderRecords(){
         html += '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>';
       }
     }
-    html += '<td class="c-idx">' + (i + 1) + '</td>' +   // ID = 录入顺序（records 数组下标即录入序，后录入更大）
+    html += '<td class="c-idx">' + esc(r.docNo != null ? r.docNo : (i + 1)) + '</td>' +   // # = 单据号（加班J/请假Q，YYMM分段）；旧记录无 docNo 时回退录入序号
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
       '<td class="c-cat ' + (isOt ? 'c-green' : 'c-orange') + '">' + catCell + '</td>' +
       '<td class="c-date">' + esc(r.date) + '</td>' +
@@ -1477,10 +1487,20 @@ function setFormBusy(busy){ var b = $('#submitBtn'); if (b) b.disabled = busy; }
 async function submit(){
   if (!selPeople.size || !curCat || !rangeOK()) return;
 
+  /* Bug1 修复：保存时若处于归档视图或其它状态筛选下，先切回「未归档 + 待提交」再插入空白行，
+     否则空白行会插进归档/其它状态表里、且单据号也基于错误的数据集。 */
+  var wasView = (viewMode === 'view');
+  setViewMode('edit');
+  if (wasView){ await loadRecordsFromWaline(true); }   // 从归档切回需重新拉未归档（records 才正确）
+  var rsEl = $('#recStatus');
+  if (rsEl){ rsEl.hidden = false; rsEl.value = '待提交'; }   // 强制切到「待提交」筛选，使空白行可见
+  renderRecords();
+
   /* 每一行 = 一条独立记录：日期 / 时段 / 小时 / 备注 全部取自该行；加班类型按本行日期自动判定 */
   function mkRec(name, sg){
     return {
       id:      genRecId(),
+      docNo:   peekDocNo(curCat.id, sg.date),   // 占位预览号；最终号在「流水号锁」内取（见下方 add 块），避免并发重号
       date:    sg.date,
       otType:  calcOtType(sg.date),   // 按日期自动判定：国假 / 双休 / 平时（节假日未读取→未知）
       catId:   curCat.id,
@@ -1527,6 +1547,7 @@ async function submit(){
     var f    = segs[0];
     var updated = {
       id: (old && old.id) || genRecId(),
+      docNo: (old && old.docNo) || peekDocNo(curCat.id, f.date),   // 修改沿用原单据号，不重新编号
       date: f.date, otType: calcOtType(f.date),   // 按日期自动判定加班类型
       catId: curCat.id, catName: curCat.name, color: curCat.color, mode: curCat.mode,
       people: old.people,
@@ -1568,18 +1589,41 @@ async function submit(){
   /* 添加保存：先插入一条空白记录承载「保存中…」圆圈，再走与状态变更相同的方式（无遮罩、整表禁用）。
      成功后复读 Waline 会整体替换 records（占位记录随之消失）；失败则移除占位并恢复。 */
   var pid = 'pending_' + Date.now();
-  var placeholder = { id: pid, _pending: true, people: [], date: '', catId: '', catName: '', detail: '', note: '', status: '', mode: 'range', hours: null, ts: Date.now() };
+  var placeholder = { id: pid, _pending: true, docNo: (segs[0] ? peekDocNo(curCat.id, segs[0].date) : ''), people: [], date: '', catId: '', catName: '', detail: '', note: '', status: '', mode: 'range', hours: null, ts: Date.now() };
   records.unshift(placeholder);
   procMap[pid] = '保存中…';
   renderRecords();
   setFormBusy(true);
   try {
     var allOk = true;
-    for (var k = 0; k < newRecs.length; k++){
-      if (!await postRecordOp('add', newRecs[k])) allOk = false;
+    /* —— 流水号锁：取号 + 写新记录 + 写回流水配置 全部在锁内，确保并发不重号 ——
+       一次多条写入：锁一次，顺序写多条，一次写回流水配置、一次解锁（避免频繁加解锁） */
+    var lock = await acquireSerialLock();
+    try {
+      // 以锁内读到的 counters 为天花板；本次保存内用 localCounters 自增（支持同一 年月+类别 多条）
+      var localCounters = {};
+      function nextInLock(catId, dateStr){
+        var key = docNoKey(catId, dateStr);
+        if (!(key in localCounters)) localCounters[key] = Math.max(docNoMaxOf(key), lock.counters[key] || 0);
+        localCounters[key] += 1;
+        return key + String(localCounters[key]).padStart(3, '0');
+      }
+      // 回填单据号（提交前占位显示的可能不是最终号，以锁内取号为准）
+      newRecs.forEach(function(r){ r.docNo = nextInLock(r.catId, r.date); });
+      for (var k = 0; k < newRecs.length; k++){
+        if (!await postRecordOp('add', newRecs[k])) allOk = false;
+      }
+      // 计算最终 counters（取锁内读到的与本次生成的较大值，单调递增不回退）
+      var finalCounters = Object.assign({}, lock.counters);
+      for (var lk in localCounters){ finalCounters[lk] = Math.max(finalCounters[lk] || 0, localCounters[lk]); }
+      await releaseSerialLock(lock.oid, finalCounters);
+    } catch(e){
+      try { await releaseSerialLock(lock.oid, lock.counters); } catch(_){}   // 异常也要尽量解锁，避免死锁
+      throw e;
     }
-    if (allOk){ await loadRecordsFromWaline(true); procMap = {}; renderRecords(); }
-    else {
+    if (allOk){
+      await loadRecordsFromWaline(true); procMap = {}; renderRecords();
+    } else {
       records = records.filter(function(r){ return !r._pending; });   // 移除占位记录
       procMap = {}; renderRecords(); cloudToast('error', '部分数据写入失败', 'add');
     }
@@ -2041,7 +2085,10 @@ $('#delRecordsBtn').addEventListener('click', async function(){
   try {
     var tasks = targets.map(function(r){ return postRecordOp('del', { id: r.id }); });
     var res = await Promise.all(tasks);
-    if (res.every(function(b){ return b; })){ await loadRecordsFromWaline(true); procMap = {}; renderRecords(); }
+    if (res.every(function(b){ return b; })){
+      await loadRecordsFromWaline(true);
+      procMap = {}; renderRecords();
+    }
     else { procMap = {}; renderRecords(); cloudToast('error', '部分数据写入失败', 'del'); }
   } catch(e){
     procMap = {}; renderRecords(); cloudToast('error', '批量删除失败', 'del');
@@ -2311,6 +2358,92 @@ var ARCHIVE_PREFIX  = 'kaoqing-archive/';
 /* 生成稳定唯一 id（新记录用） */
 function genRecId(){
   return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+/* 单据号（#列展示用，唯一、跨归档也靠 YYMM 前缀天然分月避免撞号）
+   格式：YYMM + 类别前缀 + 3 位序号；加班(overtime)前缀 J，任何请假前缀 Q。
+   例：2026-09 的加班第 1 条 = 2609-J001；请假第 1 条 = 2609-Q001。
+   YYMM 取自记录业务日期（保证补录上月也归入上月单据号段，不会与本月撞号）。 */
+function docNoKey(catId, dateStr){
+  var yymm;
+  var m = (dateStr || '').match(/^(\d{4})-(\d{2})-\d{2}$/);
+  if (m){ yymm = m[1].slice(2) + m[2]; }
+  else { var d = new Date(); yymm = String(d.getFullYear()).slice(2) + String(d.getMonth() + 1).padStart(2, '0'); }
+  var prefix = isOtCatId(catId) ? 'J' : 'Q';
+  return yymm + prefix;
+}
+function parseDocNoSeq(dn){          // 从单据号解析序号（修正原 slice(6) 越界 bug：key 实为 5 位 YYMM+J/Q）
+  var m = (dn || '').match(/^(\d{4}[JQ])(\d+)$/);
+  return m ? parseInt(m[2], 10) : 0;
+}
+function docNoMaxOf(key){          // 当前 records 中该 key 的最大序号（无则 0）
+  var max = 0;
+  for (var i = 0; i < records.length; i++){
+    var dn = records[i] && records[i].docNo;
+    if (dn && dn.indexOf(key) === 0){ var n = parseDocNoSeq(dn); if (n > max) max = n; }
+  }
+  return max;
+}
+function serialFloor(key){         // 流水号配置提供的「已用最大序号」地板（前端实时维护、单调递增，避免与已删除/归档单据撞号）
+  var c = (SERIAL && SERIAL.counters && SERIAL.counters[key]) || 0;
+  return (typeof c === 'number' && c > 0) ? c : 0;
+}
+function peekDocNo(catId, dateStr){   // 预览下一个单据号（不占用计数，用于占位空白行显示）
+  var key = docNoKey(catId, dateStr);
+  var base = Math.max(docNoMaxOf(key), serialFloor(key));   // 以「本地已存在最大号」与「流水号配置」的较大者为基
+  return key + String(base + 1).padStart(3, '0');
+}
+var SERIAL = { counters: {} };       // 单据流水号配置：{ "2609J": 33, "2609Q": 12 }，key=YYMM+类别前缀，value=已用最大序号（由前端加锁实时写入，单调递增）
+var serialOid = null;                // 流水号配置记录在 Waline 中的 oid（原地复写用）
+
+/* ---------- 单据流水号「锁」：避免并发取号重号 ----------
+   做法（用户指定）：写新数据前，先对流水号配置记录加锁标识；取号→写新记录→写流水配置→解锁。
+   一次多条写入：锁定一次，顺序写多条，一次写流水配置、一次解锁（避免频繁加解锁）。
+   Waline 不支持服务端事务，这里用「租约锁 + 二次确认」近似原子：
+     - lock 字段存进 serial 评论 JSON；取锁 = PUT 写入 {lock:{ts,tag}} 后，立刻重读确认该 tag 确为最新（防双写竞态）；
+     - 若锁属他人且未过期 → 退避重试（排队）；过期则视为失效可抢占（防崩溃死锁）；
+     - lease(20s) 远大于正常写入耗时，保证正常并发不会误抢占。 */
+var SERIAL_LOCK_LEASE_MS   = 20000;   // 锁有效期：超过此时间未解锁，其它客户端可抢占
+var SERIAL_LOCK_TIMEOUT_MS = 30000;   // 取锁总等待上限：超过则报错让用户稍后重试
+function sleepMs(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+function randTag(){ return 'L' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function buildSerialBody(obj){
+  return { comment: JSON.stringify(obj), url: SERIAL_PATH, nick: ANON_NICK, mail: ANON_MAIL, link: '', ua: navigator.userAgent };
+}
+/* 取锁：返回 { oid, counters, tag }；失败时抛错 */
+async function acquireSerialLock(){
+  if (!WALINE_ADMIN_TOKEN){ throw new Error('未配置管理员令牌，无法锁定流水号'); }
+  var tag = randTag();
+  var deadline = Date.now() + SERIAL_LOCK_TIMEOUT_MS;
+  while (true){
+    var best = await fetchCloudRecord(SERIAL_PATH, 'serial');   // { oid, obj } 或 null
+    var obj = (best && best.obj) ? best.obj : { v: 1, type: 'serial', counters: {}, updatedAt: 0 };
+    var lock = obj.lock;
+    var now = Date.now();
+    var lockedByOther = lock && lock.tag && lock.tag !== tag && (now - (lock.ts || 0) < SERIAL_LOCK_LEASE_MS);
+    if (lockedByOther){
+      if (now > deadline) throw new Error('流水号锁定超时，请稍后重试');
+      await sleepMs(300 + Math.random() * 500);   // 排队退避
+      continue;
+    }
+    // 未锁 / 已过期 / 自己残留 → 尝试取锁
+    var newObj = { v: 1, type: 'serial', updatedAt: now, counters: obj.counters || {}, lock: { ts: now, tag: tag } };
+    await walineSaveRecord(best ? best.oid : null, buildSerialBody(newObj), WALINE_ADMIN_TOKEN);
+    // 二次确认：重读最新 serial，确认 tag 仍为我们写入的（防双写竞态被他人抢占）
+    var after = await fetchCloudRecord(SERIAL_PATH, 'serial');
+    if (after && after.obj && after.obj.lock && after.obj.lock.tag === tag){
+      return { oid: after.oid, counters: after.obj.counters || {}, tag: tag };
+    }
+    if (now > deadline) throw new Error('流水号锁定超时，请稍后重试');   // 落败（被抢占）→ 重试
+    await sleepMs(300 + Math.random() * 500);
+  }
+}
+/* 解锁 + 写回 counters（单调递增，不回退）。异常不抛，仅告警（下次操作仍可重试） */
+async function releaseSerialLock(oid, counters){
+  if (!oid || !WALINE_ADMIN_TOKEN) return;
+  var newObj = { v: 1, type: 'serial', updatedAt: Date.now(), counters: counters || {}, lock: null };
+  try { await walineSaveRecord(oid, buildSerialBody(newObj), WALINE_ADMIN_TOKEN); }
+  catch(e){ console.warn('[kaoqing] 解锁/写回流水号失败（下次操作重试）', e && e.message ? e.message : e); }
 }
 
 /* 带超时+重试的 JSON GET（Vercel 冷启动友好），返回解析后的对象 */
@@ -3049,6 +3182,21 @@ async function loadConfig(){
     console.warn('[kaoqing] 读取考勤配置失败（使用默认）', e && e.message ? e.message : e);
   }
 }
+/* 单据流水号配置：从 Waline（/kaoqing/serial，单条 type:'serial' 评论）读取 counters。
+   该配置由前端在「新建记录」时用管理员令牌加锁实时写入（PUT 原地复写，单调递增、始终仅 1 条），
+   作「已用最大号」地板值：叠加本地已存在记录最大值，保证新单据不与任何已用号（含已删除/归档）撞号。 */
+async function loadSerial(){
+  try {
+    var best = await fetchCloudRecord(SERIAL_PATH, 'serial');
+    if (best && best.obj && best.obj.counters){
+      SERIAL.counters = best.obj.counters || {};
+      serialOid = best.oid;
+      console.log('[kaoqing] 已载入单据流水号配置', SERIAL.counters);
+    }
+  } catch(e){
+    console.warn('[kaoqing] 读取单据流水号配置失败（将从当前记录推算）', e && e.message ? e.message : e);
+  }
+}
 function openConfig(){
   closeSettings();
   $('#cfgDeductLunch').checked = CONFIG.deductLunch;
@@ -3164,6 +3312,7 @@ document.addEventListener('keydown', function(e){
     // 人员：优先读缓存，读不到才读 Waline（与首屏一致）
     if (!loadPeopleCache()){ await loadPeople(); }
     await loadConfig();
+    loadSerial();   // 单据流水号配置：fire-and-forget（只读，用 max(本地, 配置) 兜底，不阻塞后续初始化）
     loadPresetCache();        // 常用说明：优先缓存，无缓存则播种自 Waline 配置并写回缓存
     renderPresets();          // 按缓存 / Waline 配置刷新常用说明标签
     loadRecordsFromWaline(true);   // 记录表懒加载：不弹遮罩，加载时显示旋转圆圈（fire-and-forget，不阻塞后续初始化）
