@@ -282,10 +282,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .rec-table .c-cat.c-green{color:#16a34a}
 .rec-table .c-cat.c-orange{color:#f97316}
 .rec-table .c-date,.rec-table .c-time,.rec-table .c-hours{white-space:nowrap;font-variant-numeric:tabular-nums}
-.rec-table .c-ottype{white-space:nowrap;font-weight:600}
-.rec-table .ot-holiday{color:#dc2626}
-.rec-table .ot-weekend{color:#2563eb}
-.rec-table .ot-normal{color:#64748b}
+.rec-table .c-cat{white-space:nowrap;font-weight:600}
 .rec-table .c-note{white-space:normal;min-width:120px}
 .rec-table .c-status{white-space:nowrap}
 .rec-table .muted{color:var(--text-muted)}
@@ -524,36 +521,26 @@ var PEOPLE_COLS = [
 ];
 
 /* 类别：统一走时间段（≥0.5 小时），小时数自动计算。
-   加班已细分为「国假加班 / 双休加班 / 平时加班」——加班类型直接写在类别里（otType），
-   不再由系统按日期自动判定；录入人自己选，报表按类别名统计。 */
+   加班为单一「加班」类别；具体是「国假加班 / 双休加班 / 平时加班」由系统按记录日期自动判定
+   （见 calcOtType），不写死在类别里；表格不单列「加班类别」列，直接并入「类别」列显示。 */
 var CATS = [
-  { id:'ot-holiday', name:'国假加班', char:'国', color:'#f59e0b', mode:'range', otType:'国假', tip:'法定节假日加班，选择加班时间段，至少 0.5 小时' },
-  { id:'ot-weekend', name:'双休加班', char:'双', color:'#f59e0b', mode:'range', otType:'双休', tip:'休息日/调休放假加班，选择加班时间段，至少 0.5 小时' },
-  { id:'ot-normal',  name:'平时加班', char:'平', color:'#f59e0b', mode:'range', otType:'平时', tip:'工作日加班，选择加班时间段，至少 0.5 小时' },
+  { id:'overtime', name:'加班',     char:'加', color:'#f59e0b', mode:'range', tip:'选择加班时间段，至少 0.5 小时；加班类型（国假/双休/平时）按日期自动判定' },
   { id:'tiaoxiu',  name:'调休',     char:'调', color:'#10b981', mode:'range', tip:'选择调休时间段，至少 0.5 小时，小时数自动计算' },
   { id:'nianjia',  name:'年假',     char:'年', color:'#3b82f6', mode:'range', tip:'选择年假时间段，至少 0.5 小时，小时数自动计算' },
   { id:'bingjia',  name:'病假',     char:'病', color:'#ef4444', mode:'range', tip:'选择病假时间段，至少 0.5 小时，小时数自动计算' },
   { id:'shijia',   name:'事假',     char:'事', color:'#8b5cf6', mode:'range', tip:'选择事假时间段，至少 0.5 小时，小时数自动计算' },
   { id:'qita',     name:'其它', char:'它', color:'#6b7280', mode:'range', tip:'选择时间段，至少 0.5 小时，并在备注中说明事由' },
 ];
-/* 加班类判定：新类别带 otType 即为加班；旧记录 catId==='overtime' 仍按加班显示（历史兼容） */
+/* 加班类判定：catId==='overtime'（含此前误拆的 ot-* 记录）视为加班类 */
 function isOtCatId(id){
   if (id === 'overtime') return true;
-  var c = CATS.find(function(x){ return x.id === id; });
-  return !!(c && c.otType);
-}
-/* 按类别 id 取其固定加班类型（非加班类返回 ''） */
-function catOtType(id){
-  var c = CATS.find(function(x){ return x.id === id; });
-  return (c && c.otType) ? c.otType : '';
+  if (typeof id === 'string' && id.indexOf('ot-') === 0) return true;   // 兼容此前误拆的三类
+  return false;
 }
 
 /* 常用说明：按类别分组，选择类别后自动切换对应列表；点击以追加方式填入备注事由（A+B+B 可多次叠加） */
 var OT_PRESETS = ['加班调休', '项目赶工', '临时支援', '会议', '培训', '外勤'];
 var PRESET_NOTES = {
-  'ot-holiday': OT_PRESETS,
-  'ot-weekend': OT_PRESETS,
-  'ot-normal':  OT_PRESETS,
   overtime:     OT_PRESETS,
   tiaoxiu:  ['加班抵扣', '项目赶工', '临时支援'],
   nianjia:  ['旅游', '返乡', '探亲', '休息'],
@@ -601,7 +588,7 @@ function todayStr(){
 }
 function toMin(t){ var p = t.split(':'); return parseInt(p[0],10) * 60 + parseInt(p[1],10); }
 /* 节假日：同样以 Waline（/kaoqing/holidays）为唯一来源，前端不再内置写死的兜底表。
-   页面打开时由 loadHolidays() 拉取；读取失败（未配置/异常）时加班类别一律显示「未知」，
+   页面打开时由 loadHolidays() 拉取；读取失败（未配置/异常）时加班类型按日期判定为「未知」，即「类别」列显示「未知加班」，
    并弹「节假日读取失败」提示，便于一眼看出是不是没读成功。绝不默认算成「平时」以免掩盖问题。 */
 var HOLIDAYS = { year: new Date().getFullYear(), holidays: [], rest: [], makeup: [] };
 var HOLIDAYS_OK = false;   // 节假日是否成功读取；未读取/读取失败→false，calcOtType 返回「未知」以暴露问题
@@ -884,12 +871,14 @@ function refresh(){
   Array.from(selPeople).forEach(function(n){
     timeSegs.forEach(function(sg){
       idx++;
+      var catName = curCat.name;
+      if (isOtCatId(curCat.id)) catName = calcOtType(sg.date) + '加班';   // 加班类型按本行日期自动判定，并入类别
       var t   = (sg.start && sg.end) ? (esc(sg.start) + '-' + esc(sg.end)) : '<span class="warn">未选时段</span>';
       var hrs = segHoursText(sg) || '？？小时';
       rows.push('<div class="pv-row">' +
         '<span class="pv-i">' + String(idx).padStart(2, '0') + '</span>' +
         '<span class="pv-n">' + esc(n) + '</span>' +
-        '<span class="pv-c ' + catCls + '">' + curCat.name + '</span>' +
+        '<span class="pv-c ' + catCls + '">' + esc(catName) + '</span>' +
         '<span class="pv-d">' + esc(sg.date || '—') + '</span>' +
         '<span class="pv-t">' + t + '</span>' +
         '<span class="pv-h">' + hrs + '</span>' +
@@ -949,7 +938,7 @@ function renderRecords(){
   var editable = (viewMode === 'edit');   // 归档(R2)只读：不渲染勾选框与改删按钮
   var html = '<table class="rec-table"><thead><tr>';
   if (editable) html += '<th class="c-check"><input type="checkbox" id="recCheckAll" class="rec-check-all" title="全选 / 取消全选"></th>';
-  html += '<th>#</th><th>人员</th><th>类别</th><th>加班类别</th><th>日期</th><th>时段</th><th>小时</th><th>状态</th><th>说明</th>';
+  html += '<th>#</th><th>人员</th><th>类别</th><th>日期</th><th>时段</th><th>小时</th><th>状态</th><th>说明</th>';
   if (editable) html += '<th class="c-del"></th>';
   html += '</tr></thead><tbody>';
   // 按记录内容里的「业务日期」从新到旧排序（降序）；同日期保持稳定（保持原录入相对顺序）
@@ -963,9 +952,10 @@ function renderRecords(){
   order.forEach(function(i, n){
     var r = records[i];
     var st = r.status || '待提交';
-    var isOt = isOtCatId(r.catId);           // 加班类（国假/双休/平时加班，含历史 'overtime'）显示加班类型；请假类不需要
-    var ot = isOt ? (catOtType(r.catId) || r.otType || calcOtType(r.date)) : '';
-    var otCls = ot === '国假' ? 'holiday' : (ot === '双休' ? 'weekend' : 'normal');
+    var isOt = isOtCatId(r.catId);           // 加班类：具体「国假/双休/平时加班」按日期自动判定，并入「类别」列
+    var ot = calcOtType(r.date);             // 加班类型按日期自动判断
+    if (ot === '未知' && r.otType) ot = r.otType;   // 节假日未读取时兜底用存储值
+    var catDisplay = isOt ? (ot + '加班') : (r.catName || '');
     var span = r.detail || '';
     var hoursTxt = '—';
     if (r.mode === 'range'){
@@ -980,8 +970,7 @@ function renderRecords(){
     if (editable) html += '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>';
     html += '<td class="c-idx">' + (n + 1) + '</td>' +
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
-      '<td class="c-cat ' + (isOtCatId(r.catId) ? 'c-green' : 'c-orange') + '">' + esc(r.catName) + '</td>' +
-      '<td class="c-ottype' + (isOt ? (' ot-' + otCls) : '') + '">' + (isOt ? ot : '<span class="muted">—</span>') + '</td>' +
+      '<td class="c-cat ' + (isOt ? 'c-green' : 'c-orange') + '">' + esc(catDisplay) + '</td>' +
       '<td class="c-date">' + esc(r.date) + '</td>' +
       '<td class="c-time">' + esc(span) + '</td>' +
       '<td class="c-hours">' + esc(hoursTxt) + '</td>' +
@@ -1012,13 +1001,12 @@ function refreshSaveBtn(){
 async function submit(){
   if (!selPeople.size || !curCat || !rangeOK()) return;
 
-  var ot   = curCat.otType || '';   // 加班类型直接取自类别（国假/双休/平时加班），不再按日期自动判定
-  /* 每一行 = 一条独立记录：日期 / 时段 / 小时 / 备注 全部取自该行 */
+  /* 每一行 = 一条独立记录：日期 / 时段 / 小时 / 备注 全部取自该行；加班类型按本行日期自动判定 */
   function mkRec(name, sg){
     return {
       id:      genRecId(),
       date:    sg.date,
-      otType:  ot,
+      otType:  calcOtType(sg.date),   // 按日期自动判定：国假 / 双休 / 平时（节假日未读取→未知）
       catId:   curCat.id,
       catName: curCat.name,
       color:   curCat.color,
@@ -1039,7 +1027,7 @@ async function submit(){
     var f    = segs[0];
     var updated = {
       id: (old && old.id) || genRecId(),
-      date: f.date, otType: ot,
+      date: f.date, otType: calcOtType(f.date),   // 按日期自动判定加班类型
       catId: curCat.id, catName: curCat.name, color: curCat.color, mode: curCat.mode,
       people: old.people,
       detail: f.start + '-' + f.end,
