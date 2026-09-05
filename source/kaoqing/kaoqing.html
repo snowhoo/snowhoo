@@ -327,6 +327,11 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   border:2px solid var(--border);border-top-color:var(--accent);
   animation:ot-spin .7s linear infinite;
 }
+/* 状态变更进行中：勾选框位置改显 旋转圆圈 + 文案 */
+.proc-cell{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.proc-text{font-size:.78rem;color:var(--text-secondary)}
+/* 状态变更进行中：整张记录表禁用（指针穿透关闭、轻微半透明，但圆圈仍可见） */
+.rec-table.rec-disabled{pointer-events:none;opacity:.55}
 .btn-rec-submit{
   padding:8px 18px;border:1px solid transparent;border-radius:10px;cursor:pointer;
   background:var(--accent);color:#fff;font-size:.85rem;font-weight:600;
@@ -729,6 +734,7 @@ var HOLIDAYS_OK = false;   // 节假日是否成功读取；未读取/读取失�
 var HOLIDAY_CACHE_KEY = 'kaoqing_holidays_cache';   // 节假日缓存：只有「本年」数据才算有效缓存
 var holidaysLoading = false;                        // 节假日懒加载中 → 需要显示加班类别的地方显示旋转圆圈
 var recordsLoading = false;                         // 记录表数据懒加载中 → 在「该状态下暂无记录」位置显示旋转圆圈
+var procMap = {};                                   // 状态变更进行中：recordId -> 文案（如「提交中…」）；存在时对应勾选框位置显示旋转圆圈+文案，整表禁用
 /* 加班类别：国假（法定假日）/ 双休（正常周末）/ 平时（工作日，含调休补班上班）/
    「加载中」= 节假日正在后台懒加载（渲染成旋转圆圈）；「未知」= 未读取/读取失败，不臆测 */
 function calcOtType(date){
@@ -1377,7 +1383,8 @@ function renderRecords(){
     return;
   }
   var editable = (viewMode === 'edit');   // 归档(R2)只读：不渲染勾选框与改删按钮
-  var html = '<table class="rec-table"><thead><tr>';
+  var procActive = Object.keys(procMap).length > 0;   // 状态变更进行中 → 整表禁用（勾选框位置改显加载圆圈+文案）
+  var html = '<table class="rec-table' + (procActive ? ' rec-disabled' : '') + '"><thead><tr>';
   if (editable) html += '<th class="c-check"><input type="checkbox" id="recCheckAll" class="rec-check-all" title="全选 / 取消全选"></th>';
   // 可点击排序的表头：点击正序→再点反序；当前排序列高亮并显示 ▲/▼
   var heads = [
@@ -1424,7 +1431,13 @@ function renderRecords(){
       ? '<span title="' + esc(r.note) + '">' + esc(r.note) + '</span>'
       : '<span class="muted">—</span>';
     html += '<tr data-i="' + i + '">';
-    if (editable) html += '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>';
+    if (editable){
+      if (procMap[r.id]){   // 状态变更进行中：勾选框位置改显 旋转圆圈 + 操作文案
+        html += '<td class="c-check proc-cell"><span class="rec-spin"></span><span class="proc-text">' + esc(procMap[r.id]) + '</span></td>';
+      } else {
+        html += '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>';
+      }
+    }
     html += '<td class="c-idx">' + (i + 1) + '</td>' +   // ID = 录入顺序（records 数组下标即录入序，后录入更大）
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
       '<td class="c-cat ' + (isOt ? 'c-green' : 'c-orange') + '">' + catCell + '</td>' +
@@ -1804,14 +1817,17 @@ function canDelete(status, pwd){
 }
 /* 直接走库：先收集符合条件的记录，复制后改状态 POST 到 Waline，全部成功后再复读 Waline 重渲染。
    不改动本地 records（避免乐观更新与库不一致）；失败则保留库原状、由复读还原。 */
-async function eachChecked(condStatus, nextStatus){
+async function eachChecked(condStatus, nextStatus, opText){
   var targets = [];
   $('#records').querySelectorAll('.rec-check:checked').forEach(function(cb){
     var i = parseInt(cb.dataset.i, 10);
     if (records[i] && records[i].status === condStatus) targets.push(records[i]);
   });
   if (!targets.length) return;
-  cloudToast('write', '处理中...');
+  // 状态变更进行中：在对应记录的勾选框位置显示「旋转圆圈 + 文案」，并禁用整张记录表（不弹全屏遮罩）
+  var ids = targets.map(function(r){ return r.id; });
+  ids.forEach(function(id){ procMap[id] = opText; });
+  renderRecords();
   try {
     var tasks = targets.map(function(r){
       var copy = Object.assign({}, r);
@@ -1820,12 +1836,20 @@ async function eachChecked(condStatus, nextStatus){
     });
     var results = await Promise.all(tasks);
     if (results.every(function(b){ return b; })){
-      await loadRecordsFromWaline();
-      if (!_ctErrorActive) cloudToastHide();
+      await loadRecordsFromWaline(true);   // quiet：不弹遮罩
+      procMap = {};                        // 处理完成：去掉圆圈、解除整表禁用
+      renderRecords();
     } else {
-      cloudToastError('部分数据写入失败!');
+      procMap = {};
+      renderRecords();
+      cloudToast('error', '部分数据写入失败', 'eachChecked');   // 顶部小提示，不弹遮罩
     }
-  } catch(e){ cloudToastError('数据写入失败!'); console.error('[kaoqing] 状态变更失败', e && e.message ? e.message : e); }
+  } catch(e){
+    procMap = {};
+    renderRecords();
+    cloudToast('error', '状态变更失败', 'eachChecked');
+    console.error('[kaoqing] 状态变更失败', e && e.message ? e.message : e);
+  }
 }
 
 /* 提交并打印：先把勾选的「待提交」记录提交至「待审核」，提交成功（已重新拉取并渲染）后，
@@ -1837,7 +1861,7 @@ async function submitAndPrint(){
     if (records[i] && records[i].status === '待提交') ids.push(records[i].id);
   });
   if (!ids.length){ await showAlert('请先勾选要提交的待提交记录'); return; }
-  await eachChecked('待提交', '待审核');   // 提交并重新拉取（会重渲染、清空勾选）
+  await eachChecked('待提交', '待审核', '提交中…');   // 提交并重新拉取（进行中显示圆圈+文案、禁用整表，不弹遮罩）
   printRecordsByIds(ids);                  // 提交后按 id 定位刚提交的记录打印
 }
 /* 按记录 id 集合打印：仅显示这些行、临时勾选并调用 window.print，打印后还原；
@@ -1871,12 +1895,12 @@ $('#submitRecordsBtn').addEventListener('click', submitAndPrint);
 // 审核 → 仅「待审核」转「待批准」（需审核密码）
 $('#reviewBtn').addEventListener('click', async function(){
   if (!await confirmRole('review')) return;
-  eachChecked('待审核', '待批准');
+  eachChecked('待审核', '待批准', '审核中…');
 });
 // 批准 → 仅「待批准」转「完成」（需批准密码）
 $('#approveBtn').addEventListener('click', async function(){
   if (!await confirmRole('approve')) return;
-  eachChecked('待批准', '完成');
+  eachChecked('待批准', '完成', '审批中…');
 });
 // 打印（待提交记录不能打印）
 $('#printBtn').addEventListener('click', async function(){
