@@ -176,6 +176,18 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 /* 类别选中双色：加班=绿，其它=橙 */
 .chip.on.c-green{background:#16a34a;border-color:#16a34a;color:#fff}
 .chip.on.c-orange{background:#f97316;border-color:#f97316;color:#fff}
+/* 人员卡片编辑态（长按进入）：右上角 × 从缓存删除 / 拖动调整顺序 */
+.chip.person{position:relative;-webkit-touch-callout:none}
+.chip-del{
+  display:none;position:absolute;top:-7px;right:-7px;width:19px;height:19px;border-radius:50%;
+  background:#e24b4a;color:#fff;font-size:.8rem;line-height:19px;text-align:center;
+  box-shadow:0 1px 4px rgba(0,0,0,.28);z-index:3;cursor:pointer;
+}
+.people-edit .chip-del{display:block}
+.people-edit .chip.person{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.chip.person.dragging{opacity:.5;cursor:grabbing}
+/* 末尾「同步」卡片：与人员卡片同尺寸，连击从 Waline 同步 */
+.chip-sync{border-style:dashed;color:var(--text-muted);font-weight:500}
 .head-actions{display:flex;align-items:center;gap:12px}
 .link{border:none;background:transparent;color:var(--accent);font-size:.82rem;cursor:pointer;padding:0}
 .people-empty{color:var(--text-muted);font-size:.82rem;margin:0}
@@ -586,6 +598,8 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
    页面打开时由 loadPeople() 从 Waline 拉取；拉取成功前列表为空，右上角状态标记会提示读取结果。 */
 var PEOPLE_FULL = [];
 var PEOPLE = [];
+var PEOPLE_CACHE_KEY = 'kaoqing_people_cache';   // 人员缓存（localStorage）：优先读缓存，读不到才读 Waline
+var peopleEdit = false;                          // 人员卡片编辑态（长按进入：显示右上角 ×，可拖动排序）
 
 /* 考勤组别：第一项固定为「全部」，其余由 PEOPLE_FULL.group 动态派生（见 rebuildGroups） */
 var GROUPS = ['全部'];
@@ -724,21 +738,41 @@ function renderPeople(){
   var box = $('#peopleList');
   var list = peopleOfGroup();
   box.innerHTML = '';
+  box.classList.toggle('people-edit', peopleEdit);     // 编辑态（× / 拖动）在重渲染后保持
   if (!list.length){
     box.innerHTML = '<p class="people-empty">该组别暂无人员</p>';
-    return;
-  }
-  list.forEach(function(p){
-    var b = document.createElement('button');
-    b.className = 'chip' + (selPeople.has(p.n) ? ' on' : '');
-    b.textContent = p.n;
-    b.addEventListener('click', function(){
-      if (selPeople.has(p.n)) selPeople.delete(p.n); else selPeople.add(p.n);
-      renderPeople();
-      applyView();
+  } else {
+    list.forEach(function(p){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip person' + (selPeople.has(p.n) ? ' on' : '');
+      b.setAttribute('data-name', p.n);
+      b.textContent = p.n;
+      var x = document.createElement('span');           // 右上角 ×：仅编辑态显示，点击从缓存删除
+      x.className = 'chip-del';
+      x.textContent = '×';
+      x.title = '从缓存中删除';
+      b.appendChild(x);
+      b.addEventListener('click', function(){
+        if (peopleEdit) return;                         // 编辑态：点卡片本体不切换选中
+        if (selPeople.has(p.n)) selPeople.delete(p.n); else selPeople.add(p.n);
+        renderPeople();
+        applyView();
+      });
+      x.addEventListener('click', function(e){
+        e.stopPropagation();
+        deletePersonFromCache(p.n);
+      });
+      box.appendChild(b);
     });
-    box.appendChild(b);
-  });
+  }
+  // 所有人员卡片之后：同尺寸「同步」卡片，连击从 Waline 同步人员到缓存
+  var sync = document.createElement('button');
+  sync.type = 'button';
+  sync.className = 'chip chip-sync';
+  sync.textContent = '同步';
+  sync.title = '连击（快速点两次）从 Waline 同步人员到缓存';
+  box.appendChild(sync);
 }
 
 /* ---------- 区域二：类别 ---------- */
@@ -1739,7 +1773,8 @@ function onWalineLogin(user){
   try { localStorage.setItem('WALINE_USER', JSON.stringify(user)); } catch(e){}
   applyUser(user);
   // 数据已匿名预读，登录后再拉一次保证最新（参照 APP.html 登录后同步云端）
-  loadPeople(); loadHolidays(); loadRecordsFromWaline();
+  // 人员：优先读缓存，缓存读不到才读 Waline（缓存里可长按删除/拖动排序，想恢复点末尾「同步」）
+  if (!loadPeopleCache()){ loadPeople(); } loadHolidays(); loadRecordsFromWaline();
   // 登录成功：自动关闭登录弹窗（避免遗留空白窗口）
   if (loginWin && !loginWin.closed){ try { loginWin.close(); } catch(e){} }
   loginWin = null;
@@ -2305,6 +2340,7 @@ function rebuildGroups(){
   var seen = {}; var gs = [];
   PEOPLE_FULL.forEach(function(p){ if (p.group && !seen[p.group]){ seen[p.group] = true; gs.push(p.group); } });
   GROUPS = ['全部'].concat(gs);
+  if (GROUPS.indexOf(curGroup) === -1) curGroup = GROUPS[0];   // 原组别已不存在（人员被删空）时回到「全部」
 }
 /* 读取 Waline 中的人员，成功则替换前端 PEOPLE；无 Waline / 未登录 / 失败则保留种子 */
 async function loadPeople(){
@@ -2316,6 +2352,7 @@ async function loadPeople(){
       PEOPLE_FULL = best.obj.people;
       PEOPLE = PEOPLE_FULL.map(function(p){ return { n:p.name, g:p.group }; });
       rebuildGroups(); renderGroups(); renderPeople(); applyView();
+      savePeopleCache();                       // 从 Waline 读到后立即写入缓存，供下次优先读取
       cloudToastHide('loadPeople');
     } else {
       // 未配置人员数据（best 为空）→ 读不到，明确提示读取什么失败
@@ -2327,6 +2364,136 @@ async function loadPeople(){
     console.error('[kaoqing] loadPeople 失败', e && e.message ? e.message : e);
   }
 }
+/* ---------- 人员缓存：优先读缓存，读不到才读 Waline ---------- */
+function savePeopleCache(){
+  try { localStorage.setItem(PEOPLE_CACHE_KEY, JSON.stringify(PEOPLE_FULL || [])); } catch(e){}
+}
+/* 从缓存读人员：成功 true；缓存缺失/损坏/为空 → false（此时才去读 Waline） */
+function loadPeopleCache(){
+  try {
+    var raw = localStorage.getItem(PEOPLE_CACHE_KEY);
+    if (!raw) return false;
+    var arr = JSON.parse(raw);
+    if (!Array.isArray(arr) || !arr.length) return false;
+    if (!arr.some(function(p){ return p && p.name; })) return false;
+    PEOPLE_FULL = arr;
+    PEOPLE = PEOPLE_FULL.map(function(p){ return { n: p.name, g: p.group }; });
+    rebuildGroups(); renderGroups(); renderPeople(); applyView();
+    return true;
+  } catch(e){ return false; }
+}
+/* 手动从 Waline 同步人员到缓存（「同步」卡片连击触发） */
+async function syncPeopleFromWaline(){
+  await loadPeople();                       // loadPeople 成功时已写入缓存
+  cloudToast('ok', '已同步：人员已更新', 'syncPeople');
+  setTimeout(function(){ cloudToastHide('syncPeople'); }, 1600);
+}
+/* 编辑态：长按人员卡片进入（显示右上角 ×、可拖动排序），点空白区域退出 */
+function setPeopleEdit(on){
+  peopleEdit = !!on;
+  var box = $('#peopleList');
+  if (box) box.classList.toggle('people-edit', peopleEdit);
+}
+/* 从缓存中删除某人（不动 Waline，可用「同步」恢复） */
+function deletePersonFromCache(name){
+  PEOPLE_FULL = PEOPLE_FULL.filter(function(p){ return p.name !== name; });
+  PEOPLE = PEOPLE_FULL.map(function(p){ return { n: p.name, g: p.group }; });
+  selPeople.delete(name);
+  savePeopleCache();
+  rebuildGroups(); renderGroups(); renderPeople(); applyView();
+}
+/* 按可见顺序重排人员（order = 当前显示姓名的新的顺序），写入缓存 */
+function reorderPeople(order){
+  var vis = {}; order.forEach(function(n){ vis[n] = true; });
+  var byName = {};
+  PEOPLE_FULL.forEach(function(p){ if (p && p.name && vis[p.name] && !byName[p.name]) byName[p.name] = p; });
+  var q = order.slice();
+  PEOPLE_FULL = PEOPLE_FULL.map(function(p){
+    if (!(p && p.name && vis[p.name])) return p;          // 未显示的人员保持原位
+    return byName[q.shift()] || p;
+  });
+  PEOPLE = PEOPLE_FULL.map(function(p){ return { n: p.name, g: p.group }; });
+  savePeopleCache();
+  renderPeople();
+}
+
+/* ---------- 人员卡片手势：长按进编辑态 / × 删除 / 拖动排序 / 点空白退出 / 同步卡片连击 ---------- */
+(function initPeopleGestures(){
+  var box = $('#peopleList'); if (!box) return;
+  var LONG_PRESS = 500, TOL = 8, press = null, syncLast = 0;
+  function personChip(t){ return (t && t.closest) ? t.closest('.chip.person') : null; }
+
+  box.addEventListener('pointerdown', function(e){
+    if (e.target.closest && e.target.closest('.chip-del')) return;   // 点 × 不启动长按/拖动
+    var chip = personChip(e.target);
+    if (!chip) return;
+    press = { el: chip, x: e.clientX, y: e.clientY, moved: false, dragging: false, armed: !!peopleEdit, timer: null };
+    if (!peopleEdit){
+      press.timer = setTimeout(function(){                            // 长按 → 进入编辑态
+        if (!press) return;
+        setPeopleEdit(true);
+        press.armed = true;                                           // 手指未抬起，可继续拖动
+      }, LONG_PRESS);
+    }
+  });
+
+  function onMove(e){
+    if (!press) return;
+    var dx = e.clientX - press.x, dy = e.clientY - press.y;
+    if (!press.moved && (Math.abs(dx) + Math.abs(dy)) > TOL){
+      press.moved = true;
+      if (!peopleEdit){ clearTimeout(press.timer); press.armed = false; }   // 非编辑态：视为滑动/滚动，取消长按
+    }
+    if (!press.moved || !press.armed) return;
+    if (!press.dragging){ press.dragging = true; press.el.classList.add('dragging'); }
+    e.preventDefault();
+    // 按「阅读顺序」找插入点：指针在某卡片中线之后，该卡片就排在前面
+    var chips = box.querySelectorAll('.chip.person'), ref = null;
+    for (var i = 0; i < chips.length; i++){
+      var el = chips[i]; if (el === press.el) continue;
+      var r = el.getBoundingClientRect(), before;
+      if (e.clientY > r.bottom)    before = true;                                  // 指针在该卡片下方
+      else if (e.clientY >= r.top) before = (e.clientX > r.left + r.width / 2);     // 同一行：比较中线
+      else                         before = false;                                 // 指针在该卡片上方
+      if (!before){ ref = el; break; }
+    }
+    box.insertBefore(press.el, ref || box.querySelector('.chip-sync'));   // ref 为空 → 排到「同步」卡片之前
+  }
+  function endPress(){
+    if (!press) return;
+    clearTimeout(press.timer);
+    if (press.dragging){
+      press.el.classList.remove('dragging');
+      var order = [];
+      box.querySelectorAll('.chip.person').forEach(function(el){ order.push(el.getAttribute('data-name')); });
+      reorderPeople(order);
+    }
+    press = null;
+  }
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', endPress);
+  document.addEventListener('pointercancel', endPress);
+  // 触屏拖动时阻止页面跟着滚（长按后手指静止 500ms，浏览器尚未起滚，此时可拦下）
+  box.addEventListener('touchmove', function(e){ if (press && press.dragging) e.preventDefault(); }, { passive: false });
+  box.addEventListener('contextmenu', function(e){ if (peopleEdit && personChip(e.target)) e.preventDefault(); });
+
+  // 「同步」卡片：连击（500ms 内点两次）从 Waline 同步人员到缓存
+  box.addEventListener('click', function(e){
+    var sc = (e.target.closest) ? e.target.closest('.chip-sync') : null;
+    if (!sc) return;
+    var now = Date.now();
+    if (now - syncLast < 500){ syncLast = 0; syncPeopleFromWaline(); }
+    else syncLast = now;
+  });
+
+  // 点击空白区域：退出编辑态，恢复正常状态
+  document.addEventListener('click', function(e){
+    if (!peopleEdit) return;
+    if (e.target && e.target.closest && e.target.closest('.chip')) return;
+    setPeopleEdit(false);
+  });
+})();
+
 /* ---------- 人员表格：单元格可直接编辑，可增删行 ---------- */
 function escHtml(s){
   return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -2511,6 +2678,7 @@ async function savePeopleToWaline(){
     peopleOid.oid = res.oid;
     PEOPLE_FULL = list;
     PEOPLE = PEOPLE_FULL.map(function(p){ return { n: p.name, g: p.group }; });
+    savePeopleCache();                       // 管理员保存后同步写缓存，避免本地仍是旧缓存
     rebuildGroups(); renderGroups(); renderPeople(); applyView();
     cloudToastHide('savePeople');
     var msg;
@@ -2657,7 +2825,8 @@ document.addEventListener('keydown', function(e){
   // 打开页面即直接读取 Waline 同步人员 / 节假日 / 考勤记录 / 考勤配置（读为公开接口，无需登录）
   // 各读取函数各自显示「处理中」并自行在成功/失败时收尾，互不覆盖
   try {
-    await loadPeople();
+    // 人员：优先读缓存，读不到才读 Waline（与首屏一致）
+    if (!loadPeopleCache()){ await loadPeople(); }
     await loadHolidays();
     await loadConfig();
     loadPresetCache();        // 常用说明：优先缓存，无缓存则播种自 Waline 配置并写回缓存
