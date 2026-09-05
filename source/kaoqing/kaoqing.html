@@ -306,7 +306,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .rec-status-sel{padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text);font-family:inherit}
 /* 归档下拉懒加载中：在下拉框旁显示旋转圆圈（不弹遮罩） */
 .rec-source-wrap{position:relative;display:inline-flex;align-items:center}
-.rec-source-spin{margin-left:6px;display:inline-flex}
+.rec-source-spin{margin-left:6px}
 /* 节假日懒加载中：需要显示加班类别的地方显示旋转圆圈 */
 .ot-spin{
   display:inline-block;width:13px;height:13px;vertical-align:-2px;border-radius:50%;
@@ -526,11 +526,11 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
             <option value="完成">完成</option>
           </select>
           <span class="rec-count" id="recCount">共 0 条</span>
-          <button id="delRecordsBtn" class="btn-rec-del" disabled>删选</button>
-          <button id="submitRecordsBtn" class="btn-rec-submit" disabled>提交并打印</button>
-          <button id="reviewBtn" class="btn-rec-action" disabled>审核</button>
-          <button id="approveBtn" class="btn-rec-action" disabled>批准</button>
-          <button id="printBtn" class="btn-rec-action" disabled>打印</button>
+          <button id="delRecordsBtn" class="btn-rec-del" hidden>删选</button>
+          <button id="submitRecordsBtn" class="btn-rec-submit" hidden>提交并打印</button>
+          <button id="reviewBtn" class="btn-rec-action" hidden>审核</button>
+          <button id="approveBtn" class="btn-rec-action" hidden>批准</button>
+          <button id="printBtn" class="btn-rec-action" hidden>打印</button>
         </div>
         <div class="records" id="records">
           <p class="empty">暂无记录</p>
@@ -1665,22 +1665,29 @@ function updateCheckAll(){
 }
 function updateRecButtons(){
   updateCheckAll();
-  if (viewMode === 'view'){                   // 归档(R2) 只读：状态变更/打印/删除全禁用，仅展示
-    $('#submitRecordsBtn').disabled = true;
-    $('#reviewBtn').disabled   = true;
-    $('#approveBtn').disabled  = true;
-    $('#printBtn').disabled    = true;
-    $('#delRecordsBtn').disabled = true;
+  // 记录表所有动作按钮：默认隐藏，仅满足各自条件时才显示（hidden 与 disabled 同步）
+  function toggleBtn(sel, show){
+    var el = $(sel);
+    if (!el) return;
+    el.hidden = !show;          // 不满足条件 → 隐藏
+    el.disabled = !show;        // 满足条件 → 显示且可点
+  }
+  if (viewMode === 'view'){                   // 归档(R2) 只读：全部动作按钮隐藏
+    toggleBtn('#submitRecordsBtn', false);
+    toggleBtn('#reviewBtn', false);
+    toggleBtn('#approveBtn', false);
+    toggleBtn('#printBtn', false);
+    toggleBtn('#delRecordsBtn', false);
     return;
   }
   var box = $('#records');
   var checked = box.querySelectorAll('.rec-check:checked');
-  if (!checked.length){                       // 未勾选任何记录 → 全禁用
-    $('#submitRecordsBtn').disabled = true;
-    $('#reviewBtn').disabled   = true;
-    $('#approveBtn').disabled  = true;
-    $('#printBtn').disabled    = true;
-    $('#delRecordsBtn').disabled = true;
+  if (!checked.length){                       // 未勾选任何记录 → 全部隐藏
+    toggleBtn('#submitRecordsBtn', false);
+    toggleBtn('#reviewBtn', false);
+    toggleBtn('#approveBtn', false);
+    toggleBtn('#printBtn', false);
+    toggleBtn('#delRecordsBtn', false);
     return;
   }
   var hasPending = false;     // 待提交（提交用）
@@ -1695,11 +1702,11 @@ function updateRecButtons(){
     if (r.status === '待审核') hasReviewed = true;
     if (r.status === '待批准') hasApproved = true;
   });
-  $('#submitRecordsBtn').disabled = !hasPending;
-  $('#reviewBtn').disabled   = !hasReviewed;
-  $('#approveBtn').disabled  = !hasApproved;
-  $('#printBtn').disabled    = !hasPrintable;
-  $('#delRecordsBtn').disabled = false;        // 已勾选至少一条 → 允许「删选」
+  toggleBtn('#submitRecordsBtn', hasPending);
+  toggleBtn('#reviewBtn', hasReviewed);
+  toggleBtn('#approveBtn', hasApproved);
+  toggleBtn('#printBtn', hasPrintable);
+  toggleBtn('#delRecordsBtn', true);          // 已勾选至少一条 → 显示「删选」
 }
 /* 自定义弹窗：替代原生 prompt/alert */
 function showModal(opts){
