@@ -188,6 +188,8 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .chip.person.dragging{opacity:.5;cursor:grabbing}
 /* 末尾「同步」卡片：与人员卡片同尺寸，连击从 Waline 同步 */
 .chip-sync{border-style:dashed;color:var(--text-muted);font-weight:500}
+/* 修改模式：锁定人员（不可改）—— 仅显示当前记录人员，灰色禁止 */
+.chip.person.locked{opacity:.55;cursor:not-allowed;background:#ececec;color:#999;border-color:#ddd}
 .head-actions{display:flex;align-items:center;gap:12px}
 .link{border:none;background:transparent;color:var(--accent);font-size:.82rem;cursor:pointer;padding:0}
 .people-empty{color:var(--text-muted);font-size:.82rem;margin:0}
@@ -299,6 +301,10 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 }
 #submitBtn.edit-mode{background:#f97316;}                           /* 修改模式：橙 */
 #submitBtn:disabled{opacity:.45;cursor:not-allowed}
+/* 取消按钮：位于保存/修改按钮上方，灰色 */
+.cancel-btn{flex:0 0 auto;padding:8px 18px;border:1px solid var(--border);border-radius:10px;cursor:pointer;
+  background:#e5e7eb;color:#6b7280;font-size:.85rem;font-weight:600;}
+.cancel-btn:hover{background:#d1d5db}
 .records{display:block;overflow-x:auto}
 .rec-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
 .rec-count{font-size:.78rem;color:var(--text-muted)}
@@ -505,6 +511,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
         <!-- 待保存内容预览 + 保存（同行，底部对齐） -->
         <div class="save-row">
           <div class="summary pv-empty" id="summary">尚未选择人员与类别</div>
+          <button type="button" class="cancel-btn" id="cancelBtn">取消</button>
           <button id="submitBtn" disabled>添加</button>
         </div>
       </div>
@@ -777,6 +784,23 @@ function renderPeople(){
   var list = peopleOfGroup();
   box.innerHTML = '';
   box.classList.toggle('people-edit', peopleEdit);     // 编辑态（× / 拖动）在重渲染后保持
+  // 修改模式：人员不可改 → 仅渲染当前记录的姓名（灰色禁止），隐藏其它人员与末尾「同步」卡片
+  if (editIndex !== null){
+    var locked = (records[editIndex] && records[editIndex].people) || [];
+    if (!locked.length){
+      box.innerHTML = '<p class="people-empty">（修改模式：该记录无人员）</p>';
+    } else {
+      locked.forEach(function(n){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip person locked';
+        b.textContent = n;
+        b.disabled = true;
+        box.appendChild(b);
+      });
+    }
+    return;
+  }
   if (!list.length){
     box.innerHTML = '<p class="people-empty">该组别暂无人员</p>';
   } else {
@@ -1399,7 +1423,7 @@ function renderRecords(){
     var note = r.note
       ? '<span title="' + esc(r.note) + '">' + esc(r.note) + '</span>'
       : '<span class="muted">—</span>';
-    html += '<tr>';
+    html += '<tr data-i="' + i + '">';
     if (editable) html += '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>';
     html += '<td class="c-idx">' + (i + 1) + '</td>' +   // ID = 录入顺序（records 数组下标即录入序，后录入更大）
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
@@ -1431,6 +1455,15 @@ function refreshSaveBtn(){
     b.classList.add('edit-mode');
   }
   document.body.classList.toggle('edit-mode', edit);   // 步骤圈字：添加=绿 / 修改=橙
+}
+/* 取消：恢复初始界面（新增/修改共用）—— 清空人员、类别、内容，退出修改模式 */
+function resetForm(){
+  editIndex = null;
+  selPeople.clear();
+  curCat = null;
+  renderPeople();          // 退出锁定态 → 恢复完整人员卡片 + 「同步」卡片
+  applyView();             // 隐藏 选择类别/考勤内容，归零内容字段与预览
+  refreshSaveBtn();        // 回到「添加」(绿)
 }
 async function submit(){
   if (!selPeople.size || !curCat || !rangeOK()) return;
@@ -1654,6 +1687,7 @@ $('#cfgSave').addEventListener('click', saveConfigToWaline);
 $('#cfgClose').addEventListener('click', function(){ $('#cfgMask').hidden = true; });
 $('#cfgMask').addEventListener('click', function(e){ if (e.target === $('#cfgMask')) $('#cfgMask').hidden = true; });
 $('#submitBtn').addEventListener('click', submit);
+$('#cancelBtn').addEventListener('click', resetForm);   // 取消 → 恢复初始界面
 /* ---------- 记录批量操作辅助 ---------- */
 /* 表头全选框状态：全部选中→打勾；部分选中→ indeterminate（方框内显示黑色方块） */
 function updateCheckAll(){
@@ -1871,6 +1905,17 @@ $('#records').addEventListener('change', function(e){
   }
   if (!t.classList.contains('rec-check')) return;
   updateRecButtons();
+});
+// 双击记录表「姓名」单元格 → 进入修改状态（归档只读 / viewMode==='view' 不触发）
+$('#records').addEventListener('dblclick', function(e){
+  if (viewMode === 'view') return;
+  var cell = e.target.closest('.c-who');
+  if (!cell) return;
+  var tr = cell.closest('tr');
+  if (!tr) return;
+  var i = parseInt(tr.getAttribute('data-i'), 10);
+  if (isNaN(i) || !records[i]) return;
+  startEdit(i);
 });
 // 记录删除（列表动态生成 → 委托）：待提交免密，其余按密码层级
 $('#records').addEventListener('click', async function(e){
