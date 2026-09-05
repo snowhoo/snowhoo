@@ -367,6 +367,8 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   .rec-toolbar{display:none!important}
   .rec-table th.c-check,.rec-table td.c-check,.rec-table .c-del{display:none!important}
 }
+.page-footer{margin-top:28px;padding:18px 0 10px;text-align:center;color:var(--text-muted);font-size:.85rem;border-top:1px solid var(--border)}
+.page-footer #companyName{font-weight:600;color:var(--text-secondary)}
 </style>
 </head>
 <body>
@@ -375,7 +377,6 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   <header id="topbar">
     <div class="tb-left">
       <img src="logo.png" alt="logo" class="tb-logo" onerror="this.style.display='none'">
-      <span class="tb-company" id="companyName"></span>
     </div>
     <div class="tb-center">考勤登记管理系统</div>
     <div class="tb-right">
@@ -487,6 +488,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       </div>
     </section>
 
+    <footer class="page-footer"><span id="companyName"></span></footer>
 
   </div>
 </div>
