@@ -303,6 +303,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .rec-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
 .rec-count{font-size:.78rem;color:var(--text-muted)}
 .rec-source{padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text);max-width:240px}
+.rec-status-sel{padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text);font-family:inherit}
 .btn-rec-submit{
   padding:8px 18px;border:1px solid transparent;border-radius:10px;cursor:pointer;
   background:var(--accent);color:#fff;font-size:.85rem;font-weight:600;
@@ -497,6 +498,13 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       <div class="card-body">
         <div class="rec-toolbar">
           <select id="recSource" class="rec-source"><option value="waline">最新未归档记录</option></select>
+          <select id="recStatus" class="rec-status-sel" title="按状态筛选记录">
+            <option value="all">全部状态</option>
+            <option value="待提交" selected>待提交</option>
+            <option value="待审核">待审核</option>
+            <option value="待批准">待批准</option>
+            <option value="完成">完成</option>
+          </select>
           <span class="rec-count" id="recCount">共 0 条</span>
           <button id="delRecordsBtn" class="btn-rec-del" disabled>删选</button>
           <button id="submitRecordsBtn" class="btn-rec-submit" disabled>提交</button>
@@ -1295,14 +1303,18 @@ function recSortValue(i, key){
 
 function renderRecords(){
   var box = $('#records');
+  // 状态筛选：默认「待提交」。归档只读浏览（R2）不筛选，否则切到归档月份会因默认状态而看不到数据
+  var sf = (viewMode === 'view') ? 'all' : (($('#recStatus') && $('#recStatus').value) || '待提交');
+  var idxs = records.map(function(r, i){ return i; });
+  if (sf !== 'all') idxs = idxs.filter(function(i){ return (records[i].status || '待提交') === sf; });
   if (viewMode === 'view'){
-    $('#recCount').textContent = '归档记录（' + (archiveLabel || '') + '） 共 ' + records.length + ' 条';
+    $('#recCount').textContent = '归档记录（' + (archiveLabel || '') + '） 共 ' + idxs.length + ' 条';
   } else {
-    $('#recCount').textContent = '共 ' + records.length + ' 条';
+    $('#recCount').textContent = '共 ' + idxs.length + ' 条';
   }
   updateRecButtons();   // 重新渲染后勾选清空，记录相关按钮全禁用
-  if (!records.length){
-    box.innerHTML = '<p class="empty">暂无记录</p>';
+  if (!idxs.length){
+    box.innerHTML = '<p class="empty">' + (records.length ? '该状态下暂无记录' : '暂无记录') + '</p>';
     return;
   }
   var editable = (viewMode === 'edit');   // 归档(R2)只读：不渲染勾选框与改删按钮
@@ -1321,7 +1333,7 @@ function renderRecords(){
   if (editable) html += '<th class="c-del"></th>';
   html += '</tr></thead><tbody>';
   // 排序：按 sortState（默认「业务日期」从新到旧）；同值保持稳定（按录入顺序 a-b）
-  var order = records.map(function(r, idx){ return idx; });
+  var order = idxs.slice();
   order.sort(function(a, b){
     var va = recSortValue(a, sortState.key);
     var vb = recSortValue(b, sortState.key);
@@ -2898,6 +2910,8 @@ $('#recSource').addEventListener('change', function(){
   if (this.value === 'waline'){ switchToWaline(); }
   else { switchToArchive(this.value); }
 });
+/* 状态筛选：切换后按状态重渲染记录表 */
+$('#recStatus').addEventListener('change', function(){ renderRecords(); });
 $('#peopleSync').addEventListener('click', savePeopleToWaline);
 $('#peopleAddRow').addEventListener('click', addPeopleRow);
 $('#peopleExport').addEventListener('click', exportPeopleXlsx);
