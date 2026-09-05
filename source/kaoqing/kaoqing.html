@@ -330,7 +330,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   <header id="topbar">
     <div class="tb-left">
       <img src="logo.png" alt="logo" class="tb-logo" onerror="this.style.display='none'">
-      <span class="tb-company" id="companyName">苏州晶讯科技股份有限公司</span>
+      <span class="tb-company" id="companyName"></span>
     </div>
     <div class="tb-center">考勤登记管理系统</div>
     <div class="tb-right">
@@ -342,9 +342,9 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
           <span class="avatar-fallback">登录</span>
         </button>
         <div class="settings-menu" id="settingsMenu" hidden>
-          <button class="settings-item" id="syncHolidayBtn">从 timor.tech API 获取节假日 写进 Waline</button>
-          <button class="settings-item" id="peopleConfigBtn">人员配置（管理 Waline 中的人员）</button>
-          <button class="settings-item" id="cfgBtn">考勤配置（午休扣除设置）</button>
+          <button class="settings-item" id="syncHolidayBtn">从 timor.tech API 获取节假日</button>
+          <button class="settings-item" id="peopleConfigBtn">人员管理</button>
+          <button class="settings-item" id="cfgBtn">考勤配置（午休设置）</button>
           <div class="settings-sep"></div>
           <div id="holidayInfo" class="settings-info" hidden></div>
         </div>
