@@ -522,7 +522,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       <div class="card-body">
         <div class="rec-toolbar">
           <span class="rec-source-wrap">
-            <select id="recSource" class="rec-source"><option value="waline">最新未归档记录</option></select>
+            <select id="recSource" class="rec-source"><option value="waline">未归档记录</option></select>
             <span id="recSourceSpin" class="rec-source-spin" hidden><span class="ot-spin" title="归档列表加载中…"></span></span>
           </span>
           <select id="recStatus" class="rec-status-sel" title="按状态筛选记录">
@@ -710,8 +710,7 @@ var curGroup  = GROUPS[0];
 var curCat    = null;
 var records   = [];
 var editIndex = null;   // 修改模式：正在编辑的记录下标（null=新增模式）
-var viewMode   = 'edit';   // 'edit'=最新未归档(Waline 可改删)；'view'=归档(R2 只读，不能修改/删除)
-var archiveLabel = '';     // 当前归档文件名（标题展示用）
+var viewMode   = 'edit';   // 'edit'=未归档(Waline 可改删)；'view'=归档(R2 只读，不能修改/删除)
 var sortState  = { key: 'date', dir: 'desc' };   // 表格表头排序状态：key=列标识，dir=asc/desc（点一次正序、再点反序）
 
 function $(s){ return document.querySelector(s); }
@@ -1364,11 +1363,7 @@ function renderRecords(){
   if (sf !== 'all') idxs = idxs.filter(function(i){ return (records[i].status || '待提交') === sf; });
   // 进行中的占位(空白)记录：无论当前筛选都强制显示，用于承载「保存中…」旋转圆圈
   records.forEach(function(r, i){ if (r._pending && idxs.indexOf(i) < 0) idxs.push(i); });
-  if (viewMode === 'view'){
-    $('#recCount').textContent = '归档记录（' + (archiveLabel || '') + '） 共 ' + idxs.length + ' 条';
-  } else {
-    $('#recCount').textContent = '共 ' + idxs.length + ' 条';
-  }
+  $('#recCount').textContent = '共 ' + idxs.length + ' 条';   // 归档/未归档 统一只显示「共 N 条」，不再额外标注「归档记录（xxx）」
   if (!idxs.length){
     if (recordsLoading){
       box.innerHTML = '<div class="rec-loading"><span class="rec-spin"></span>加载中…</div>';
@@ -2419,7 +2414,7 @@ async function loadRecordsFromWaline(quiet){
   }
 }
 
-/* 归档下拉（合并原区域五卡片）：从 R2 index.json 填充「归档记录」选项；「最新未归档记录」固定为第一项(value=waline)。归档写入由后端 kaoqing_archiver.py 定时任务完成，前端不发起。 */
+/* 归档下拉（合并原区域五卡片）：从 R2 index.json 填充「归档记录」选项；「未归档记录」固定为第一项(value=waline)。归档写入由后端 kaoqing_archiver.py 定时任务完成，前端不发起。 */
 async function loadArchiveMonths(quiet){
   if (!quiet) cloudToast('read', '处理中：读取归档列表...', 'loadArchive');
   try {
@@ -2428,8 +2423,8 @@ async function loadArchiveMonths(quiet){
     var data = await resp.json();
     var months = (data && data.months) || [];
     var sel = $('#recSource');
-    var prevVal = sel.value;                        // 重建选项前记住当前选中项，重建后还原（避免下拉框选中项被重置到「最新未归档记录」）
-    sel.innerHTML = '<option value="waline">最新未归档记录</option>';
+    var prevVal = sel.value;                        // 重建选项前记住当前选中项，重建后还原（避免下拉框选中项被重置到「未归档记录」）
+    sel.innerHTML = '<option value="waline">未归档记录</option>';
     months.forEach(function(m){
       (m.files || []).forEach(function(f){
         var o = document.createElement('option');
@@ -2452,10 +2447,12 @@ async function loadArchiveMonths(quiet){
     return false;
   }
 }
-/* 视图切换：edit=最新未归档(Waline 可改删)；view=归档(R2 只读，不能修改/删除) */
+/* 视图切换：edit=未归档(Waline 可改删)；view=归档(R2 只读，不能修改/删除) */
 function setViewMode(mode){
   viewMode = mode;
   $('#records').classList.toggle('readonly', mode === 'view');
+  var rs = $('#recStatus');
+  if (rs) rs.hidden = (mode === 'view');   // 归档(R2 只读) 视图：隐藏「状态下拉框」（归档无状态概念，统一显示全部）
   updateRecButtons();
 }
 async function switchToWaline(){
@@ -2468,7 +2465,6 @@ async function switchToArchive(key){
 }
 /* 载入 R2 归档文件到 records 并只读渲染（不写库、不能改删） */
 async function loadArchive(key){
-  archiveLabel = (key || '').replace(ARCHIVE_PREFIX, '');
   try {
     cloudToast('write', '处理中...');
     var resp = await fetch(ARCHIVE_R2_BASE + key + '?t=' + Date.now(), { cache: 'no-store' });
@@ -3113,7 +3109,7 @@ async function saveConfigToWaline(){
     showAlert('保存到 Waline 失败：' + (err && err.message ? err.message : err));
   }
 }
-/* 归档下拉：切换 最新未归档记录(Waline) / 归档记录(R2 只读) */
+/* 归档下拉：切换 未归档记录(Waline) / 归档记录(R2 只读) */
 $('#recSource').addEventListener('change', function(){
   if (this.value === 'waline'){ switchToWaline(); }
   else { switchToArchive(this.value); }
