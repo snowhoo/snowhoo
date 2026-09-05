@@ -8,7 +8,7 @@ layout: false
 /* ============ 主题变量（与 app 家族一致，改 --accent 即可换主色） ============ */
 :root{
   --accent:#4f46e5;
-  --accent-soft:rgba(79,70,229,.12);
+  --accent-soft:rgba(217,217,217,.23);
   --bg:#f4f5f9;
   --bg-surface:#fff;
   --text:#1f2233;
@@ -77,7 +77,7 @@ body{
 /* ============ 区域卡片 ============ */
 .wrap{max-width:760px;margin:0 auto;padding:5px 5px;display:flex;flex-direction:column;gap:5px}
 .card{background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
-.card-head{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:5px 10px;border-bottom:1px solid var(--border)}
+.card-head{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:5px 10px;border-bottom:1px solid var(--border);background-color:var(--accent-soft)}
 .card-head .idx{
   width:22px;height:22px;flex:0 0 22px;border-radius:50%;
   background:#16a34a;color:#fff;font-size:.75rem;font-weight:600;   /* 默认：添加态=绿 */
@@ -206,11 +206,11 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 #rowNote{flex:1 1 140px}
 #rowNote input{min-width:80px}
 .time-segs{flex:1;display:flex;flex-direction:column;gap:8px;min-width:180px}
-.time-row{display:grid;width:100%;grid-template-columns:120px auto 72px auto 72px minmax(90px,1fr) 66px auto;align-items:center;gap:6px}
+.time-row{display:grid;width:100%;grid-template-columns:120px auto 56px auto 56px minmax(90px,1fr) 66px 60px;align-items:center;gap:6px}
 .time-row select{width:100%}
 .time-row .sep{color:var(--text-muted);font-size:.82rem;white-space:nowrap}
-.time-row .fSegNote{width:100%;min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.86rem;background:transparent}
-.time-row .segHours{width:66px;text-align:right;color:var(--accent);font-size:.82rem;font-weight:600;white-space:nowrap}
+.time-row .fSegNote{width:100%;min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.86rem;background:transparent;max-width:220}
+.time-row .segHours{width:66px;text-align:right;color:var(--accent);font-size:.82rem;font-weight:400;white-space:nowrap}
 .seg-act{border:none;background:var(--accent-soft);color:var(--accent);cursor:pointer;
   width:28px;height:28px;border-radius:8px;font-size:1.05rem;line-height:1;flex:0 0 auto;
   display:inline-flex;align-items:center;justify-content:center}
