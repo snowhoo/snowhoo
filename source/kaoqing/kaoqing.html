@@ -84,7 +84,7 @@ body{
   display:flex;align-items:center;justify-content:center;
 }
 body.edit-mode .idx{ background:#f97316; }                          /* 修改态=橙 */
-.card-head h2{margin:0;font-size:.95rem;font-weight:400}
+.card-head h2{margin:0;font-size:.78rem;font-weight:400}
 /* ---------- 自定义弹窗（替代原生 prompt/alert） ---------- */
 .modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000}
 .modal-mask[hidden]{display:none}
@@ -166,7 +166,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 
 .chips{display:flex;flex-wrap:wrap;gap:10px}
 .chip{
-  min-width:88px;padding:5px 16px;border-radius:12px;cursor:pointer;
+  min-width:95px;padding:5px 16px;border-radius:12px;cursor:pointer;
   border:1.5px solid var(--border);background:transparent;color:var(--text-secondary);
   font-size:1rem;font-weight:600;text-align:center;
   transition:background .15s,color .15s,border-color .15s;
@@ -245,18 +245,22 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .preset-list{display:flex;flex-wrap:wrap;gap:8px}
 .preset-item{
   position:relative;display:inline-flex;align-items:center;gap:6px;
-  padding:6px 26px 6px 13px;border:1px solid var(--border);border-radius:999px;cursor:pointer;
+  padding:6px 13px;border:1px solid var(--border);border-radius:999px;cursor:pointer;
   background:var(--bg-surface);color:var(--text-secondary);font-size:.82rem;font-family:inherit;
-  transition:background .15s,color .15s,border-color .15s;
+  transition:background .15s,color .15s,border-color .15s;-webkit-touch-callout:none;
 }
 .preset-item:hover,.preset-item:active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
 .preset-del{
   position:absolute;top:-6px;right:-6px;width:17px;height:17px;border-radius:50%;
   border:1px solid var(--border);background:var(--bg-surface);color:var(--text-muted);
-  font-size:.72rem;line-height:1;display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;line-height:1;display:none;align-items:center;justify-content:center;
   cursor:pointer;transition:background .15s,color .15s,border-color .15s;
 }
 .preset-del:hover{background:#fee2e2;color:#ef4444;border-color:#ef4444}
+/* 常用说明编辑态（长按进入）：显示右上角 × / 可拖动排序 */
+.preset-edit .preset-del{display:flex}
+.preset-edit .preset-item{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.preset-item.dragging{opacity:.5;cursor:grabbing}
 .preset-empty{font-size:.8rem;color:var(--text-muted);line-height:30px}
 /* + 号按钮 + 弹菜单（系统值 / 自定义） */
 .preset-add-wrap{position:relative;display:inline-flex;align-items:center}
@@ -386,7 +390,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   .rec-toolbar{display:none!important}
   .rec-table th.c-check,.rec-table td.c-check,.rec-table .c-del{display:none!important}
 }
-.page-footer{margin-top:10px;padding:0px 0 10px;text-align:center;color:var(--text-muted);font-size:.85rem;}
+.page-footer{margin-top:10px;padding:0px 0 10px;text-align:center;color:var(--text-muted);font-size:1.05rem;}
 .page-footer #companyName{font-weight:600;color:var(--text-secondary)}
 </style>
 </head>
@@ -620,12 +624,12 @@ var PEOPLE_COLS = [
    加班为单一「加班」类别；具体是「国假加班 / 双休加班 / 平时加班」由系统按记录日期自动判定
    （见 calcOtType），不写死在类别里；表格不单列「加班类别」列，直接并入「类别」列显示。 */
 var CATS = [
-  { id:'overtime', name:'加班',  char:'加', color:'#f59e0b', mode:'range', tip:'加班类型（国假/双休/平时）自动判定' },
-  { id:'tiaoxiu',  name:'调休',  char:'调', color:'#10b981', mode:'range', tip:'小时数自动计算' },
-  { id:'nianjia',  name:'年假',  char:'年', color:'#3b82f6', mode:'range', tip:'小时数自动计算' },
-  { id:'bingjia',  name:'病假',  char:'病', color:'#ef4444', mode:'range', tip:'小时数自动计算' },
-  { id:'shijia',   name:'事假',  char:'事', color:'#8b5cf6', mode:'range', tip:'小时数自动计算' },
-  { id:'qita',     name:'其它',	char:'它', color:'#6b7280', mode:'range', tip:'小时数自动计算;请备注说明。' },
+  { id:'overtime', name:'加班',  char:'加', color:'#f59e0b', mode:'range', tip:'自动判定国假/双休/平时' },
+  { id:'tiaoxiu',  name:'调休',  char:'调', color:'#10b981', mode:'range', tip:'自动计算时数' },
+  { id:'nianjia',  name:'年假',  char:'年', color:'#3b82f6', mode:'range', tip:'自动计算时数' },
+  { id:'bingjia',  name:'病假',  char:'病', color:'#ef4444', mode:'range', tip:'自动计算时数' },
+  { id:'shijia',   name:'事假',  char:'事', color:'#8b5cf6', mode:'range', tip:'自动计算时数' },
+  { id:'qita',     name:'其它',	char:'它', color:'#6b7280', mode:'range', tip:'自动计算时数;请备注说明。' },
 ];
 /* 加班类判定：catId==='overtime'（含此前误拆的 ot-* 记录）视为加班类 */
 function isOtCatId(id){
@@ -640,6 +644,7 @@ function isOtCatId(id){
    或「自定义录入」；每条可 × 删除；这些增删均只写缓存、不回写 Waline。 */
 var PRESET_CACHE_KEY = 'kaoqing_preset_notes_cache';   // 常用说明工作列表缓存键
 var PRESET_CACHE = {};                                 // { 类别id: [字符串,...] }，仅存 localStorage 缓存
+var presetEdit   = false;                              // 常用说明编辑态（长按进入：显示右上角 ×，可拖动排序）
 
 var MIN_MINUTES   = 30;     // 时间段最少 0.5 小时
 
@@ -1127,10 +1132,31 @@ function removePreset(catId, idx){
   renderPresets();
 }
 
-/* 常用说明标签列表（按当前类别过滤）：点击标签=追加填入备注事由；点 ×=删除该条目（增删均只写缓存，不回写 Waline）。 */
+/* 编辑态：长按常用说明进入（显示右上角 ×、可拖动排序），点空白区域退出 */
+function setPresetEdit(on){
+  presetEdit = !!on;
+  var box = $('#presetList');
+  if (box) box.classList.toggle('preset-edit', presetEdit);
+}
+/* 拖动排序：order = 当前显示条目的新顺序（文本数组），写回缓存 */
+function reorderPresets(catId, order){
+  if (!catId || !PRESET_CACHE[catId]) return;
+  var rest = PRESET_CACHE[catId].slice(), next = [];
+  order.forEach(function(t){
+    var i = rest.indexOf(t);
+    if (i !== -1){ next.push(t); rest.splice(i, 1); }
+  });
+  PRESET_CACHE[catId] = next.concat(rest);      // 兜底：未出现在新顺序里的条目保留在后，不丢数据
+  savePresetCache();
+  renderPresets();
+}
+
+/* 常用说明标签列表（按当前类别过滤）：
+   普通态：点标签=追加填入备注事由；编辑态（长按进入）：右上角 ×=从缓存删除，拖动=调整顺序。增删排序均只写缓存。 */
 function renderPresets(){
   var box = $('#presetList');
   box.innerHTML = '';
+  box.classList.toggle('preset-edit', presetEdit);     // 编辑态（× / 拖动）在重渲染后保持
   if (!curCat){
     box.innerHTML = '<span class="preset-empty">选择类别后显示对应常用说明</span>';
     return;
@@ -1144,6 +1170,8 @@ function renderPresets(){
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'preset-item';
+    b.setAttribute('data-txt', txt);
+    b.setAttribute('data-idx', String(idx));
     var span = document.createElement('span');
     span.className = 'preset-text';
     span.textContent = txt;
@@ -1154,15 +1182,88 @@ function renderPresets(){
     del.title = '删除该常用说明（仅本机缓存）';
     b.appendChild(del);
     b.addEventListener('click', function(e){
+      if (presetEdit) return;                            // 编辑态：点标签本体不填备注
       if (e.target === del || del.contains(e.target)){   // 点 × → 删除
         removePreset(curCat.id, idx);
-      } else {                                            // 点标签本体 → 追加到备注
+      } else {                                           // 点标签本体 → 追加到备注
         appendPresetToNote(txt);
       }
+    });
+    del.addEventListener('click', function(e){
+      e.stopPropagation();
+      removePreset(curCat.id, idx);
     });
     box.appendChild(b);
   });
 }
+
+/* ---------- 常用说明手势：长按进编辑态 / × 删除 / 拖动排序 / 点空白退出 ---------- */
+(function initPresetGestures(){
+  var box = $('#presetList'); if (!box) return;
+  var LONG_PRESS = 500, TOL = 8, press = null;
+  function itemOf(t){ return (t && t.closest) ? t.closest('.preset-item') : null; }
+
+  box.addEventListener('pointerdown', function(e){
+    if (e.target.closest && e.target.closest('.preset-del')) return;   // 点 × 不启动长按/拖动
+    var it = itemOf(e.target);
+    if (!it) return;
+    press = { el: it, x: e.clientX, y: e.clientY, moved: false, dragging: false, armed: !!presetEdit, timer: null };
+    if (!presetEdit){
+      press.timer = setTimeout(function(){                              // 长按 → 进入编辑态
+        if (!press) return;
+        setPresetEdit(true);
+        press.armed = true;                                             // 手指未抬起，可继续拖动
+      }, LONG_PRESS);
+    }
+  });
+
+  function onMove(e){
+    if (!press) return;
+    var dx = e.clientX - press.x, dy = e.clientY - press.y;
+    if (!press.moved && (Math.abs(dx) + Math.abs(dy)) > TOL){
+      press.moved = true;
+      if (!presetEdit){ clearTimeout(press.timer); press.armed = false; }   // 非编辑态：视为滑动，取消长按
+    }
+    if (!press.moved || !press.armed) return;
+    if (!press.dragging){ press.dragging = true; press.el.classList.add('dragging'); }
+    e.preventDefault();
+    // 按「阅读顺序」找插入点：指针在某标签中线之后，该标签就排在前面
+    var items = box.querySelectorAll('.preset-item'), ref = null;
+    for (var i = 0; i < items.length; i++){
+      var el = items[i]; if (el === press.el) continue;
+      var r = el.getBoundingClientRect(), before;
+      if (e.clientY > r.bottom)    before = true;                                   // 指针在该标签下方
+      else if (e.clientY >= r.top) before = (e.clientX > r.left + r.width / 2);      // 同一行：比较中线
+      else                         before = false;                                  // 指针在该标签上方
+      if (!before){ ref = el; break; }
+    }
+    if (ref) box.insertBefore(press.el, ref); else box.appendChild(press.el);
+  }
+  function endPress(){
+    if (!press) return;
+    clearTimeout(press.timer);
+    if (press.dragging){
+      press.el.classList.remove('dragging');
+      var order = [];
+      box.querySelectorAll('.preset-item').forEach(function(el){ order.push(el.getAttribute('data-txt')); });
+      reorderPresets(curCat ? curCat.id : '', order);
+    }
+    press = null;
+  }
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', endPress);
+  document.addEventListener('pointercancel', endPress);
+  // 触屏拖动时阻止页面跟着滚
+  box.addEventListener('touchmove', function(e){ if (press && press.dragging) e.preventDefault(); }, { passive: false });
+  box.addEventListener('contextmenu', function(e){ if (presetEdit && itemOf(e.target)) e.preventDefault(); });
+
+  // 点击空白区域：退出编辑态，恢复正常状态
+  document.addEventListener('click', function(e){
+    if (!presetEdit) return;
+    if (e.target && e.target.closest && e.target.closest('.preset-item')) return;
+    setPresetEdit(false);
+  });
+})();
 
 function esc(s){
   return String(s).replace(/[&<>"]/g, function(c){
