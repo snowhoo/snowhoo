@@ -111,6 +111,11 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 #cloudToastStack{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:2000;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
 #cloudToastStack .cloud-toast{position:static;transform:none;max-width:84vw;pointer-events:auto;cursor:default}
 #cloudToastStack .cloud-toast.error{cursor:pointer}
+/* 读写进行中的全屏遮罩：拦截一切点击，透明度 70%，z-index 低于提示栈(2000)高于页面内容 */
+/* 读写进行中的全屏遮罩：本身即「处理中」提示，居中显示文字，透明度 70%，拦截一切点击 */
+#cloudMask{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1900;display:flex;align-items:center;justify-content:center;pointer-events:auto}
+#cloudMaskText{color:#fff;font-size:1.05rem;line-height:1.6;padding:14px 22px;border-radius:8px;background:rgba(0,0,0,.35);max-width:80vw;text-align:center}
+#cloudMaskText.err{color:#ff8585;cursor:pointer}
 
 .people-modal{width:min(680px,94vw);padding:18px}
 .people-table-wrap{max-height:52vh;overflow:auto;margin:6px 0;border:1px solid var(--border);border-radius:10px}
@@ -479,6 +484,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 <script src="./lib/xlsx.full.min.js"></script>
 <!-- 读/写/删除过程统一弹窗提示：绿「处理中...」，失败=红「数据读取/写入失败!」（不使用右上角状态） -->
 <div id="cloudToast" class="cloud-toast" hidden></div>
+<div id="cloudMask" hidden><div id="cloudMaskText"></div></div>
 <script>
 /* =====================================================================
    考勤登记 —— 框架版（二稿）
@@ -1445,6 +1451,28 @@ async function loadHolidays(){
 var _ctTimer = null, _ctErrorActive = false;
 var _ctMap = {};        // key -> {el, timer}
 var _ctStack = null;
+/* 全屏遮罩：任何 read/write 提示进行中时显示，阻止页面交互；全部结束后隐藏 */
+var _busySet = {};      // keyed 读写标记 -> 显示文字
+var _busySingle = 0;    // 无 key 的读写计数
+var _busySingleText = '';
+var _maskErr = false;   // 失败态：遮罩改显红色错误文字（点击关闭）
+var _maskErrText = '';
+function _maskEl(){ return document.getElementById('cloudMask'); }
+function _maskTextEl(){ return document.getElementById('cloudMaskText'); }
+function _maskRefresh(){
+  var keys = Object.keys(_busySet);
+  var any = keys.length > 0 || _busySingle > 0 || _maskErr;
+  var m = _maskEl(); if (!m) return;
+  m.hidden = !any;
+  var t = _maskTextEl(); if (!t) return;
+  if (!any) return;
+  if (_maskErr){ t.textContent = _maskErrText || '出错了'; t.className = 'err'; }
+  else { t.textContent = (_busySingle > 0 ? _busySingleText : (keys.length ? _busySet[keys[0]] : '')) || '处理中…'; t.className = ''; }
+}
+function busyAdd(key, text){ if (key) _busySet[key] = text || '处理中…'; else { _busySingle++; _busySingleText = text || '处理中…'; } _maskRefresh(); }
+function busyDel(key){ if (key) delete _busySet[key]; else _busySingle = Math.max(0, _busySingle - 1); _maskRefresh(); }
+// 失败态遮罩：点击任意处关闭（仅错误态可关；处理中态点击无效，防止误关）
+(function(){ var m = _maskEl(); if (m) m.onclick = function(){ if (_maskErr){ _maskErr = false; _maskErrText = ''; for (var k in _busySet) delete _busySet[k]; _busySingle = 0; _maskRefresh(); } }; })();
 function _ctStackEl(){
   if (!_ctStack){
     _ctStack = document.createElement('div');
@@ -1454,6 +1482,7 @@ function _ctStackEl(){
   return _ctStack;
 }
 function cloudToast(kind, text, key){
+  if (kind === 'read' || kind === 'write'){ busyAdd(key, text); return; }  // 处理中 = 全屏遮罩（中央文字），不再单独弹绿条
   if (key){
     var m = _ctMap[key] || (_ctMap[key] = { el: null, timer: null });
     if (!m.el){ m.el = document.createElement('div'); _ctStackEl().appendChild(m.el); }
@@ -1483,17 +1512,16 @@ function cloudToastHide(key){
   if (key){
     var m = _ctMap[key];
     if (m){ if (m.timer) clearTimeout(m.timer); if (m.el) m.el.hidden = true; }
+    busyDel(key);
     return;
   }
+  busyDel();
   var box = $('#cloudToast'); if (!box) return;
   box.hidden = true; clearTimeout(_ctTimer); _ctErrorActive = false;
 }
 function cloudToastError(text, key){
-  if (key){ cloudToast('error', text, key); return; }
-  _ctErrorActive = true;
-  cloudToast('error', text);
-  clearTimeout(_ctTimer);
-  _ctTimer = setTimeout(function(){ cloudToastHide(); }, 3000);
+  if (key) busyDel(key); else _busySingle = 0;   // 清掉该读写的「处理中」，转失败态
+  _maskErr = true; _maskErrText = text; _maskRefresh();   // 失败也走遮罩（红字，点击关闭）
 }
 /* 考勤记录：每条考勤 = 一条独立 Waline 评论（匿名 POST 单条事件，op∈{add,edit,del}，id 唯一）。
    读取时拉取该 path 全部评论 → 解析为事件 → 按 id 回放成当前二维表；旧整包格式(type=='records')按 leg_<oid>_<i> 兼容迁移。
