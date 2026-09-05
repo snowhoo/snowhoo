@@ -750,6 +750,7 @@ function renderTimeSegs(){
   });
 }
 function addTimeSeg(){
+  if (editIndex !== null) return;   // 修改模式禁止新增行（修改只能单行）
   if (timeSegs.length >= 3) return;
   var last = timeSegs[timeSegs.length - 1];
   timeSegs.push({ date: last.date, allDay: last.allDay, start: last.start, end: last.end, note: last.note });   // 完全复制上一行（日期/整天/时段/备注）
@@ -827,6 +828,36 @@ function findTimeConflict(){
     for (var j = i + 1; j < comp.length; j++){
       if (comp[i].date !== comp[j].date) continue;
       if (segsOverlap(comp[i], comp[j])) return { i: i, j: j };
+    }
+  }
+  return null;
+}
+
+/* 与已有记录冲突检测：待保存的每个时间段（按其所属人员）不能与「本人已有记录」在同一天、时间段重叠。
+   saveSegs: 已 filter 完整的段数组；peopleNames: 本次涉及人员；excludeId: 修改时排除自身记录 id（避免与待改记录自身比较） */
+function findExistingConflict(saveSegs, peopleNames, excludeId){
+  if (!saveSegs.length || !peopleNames || !peopleNames.length) return null;
+  for (var ri = 0; ri < records.length; ri++){
+    var rec = records[ri];
+    if (!rec || !rec.id) continue;
+    if (excludeId && rec.id === excludeId) continue;            // 修改自身，跳过
+    if (!rec.people || !rec.people.length) continue;
+    var hit = rec.people.filter(function(p){ return peopleNames.indexOf(p) >= 0; });
+    if (!hit.length) continue;                                   // 不同人 → 不冲突
+    var recSegs = parseDetail(rec.detail);                       // 历史记录可能多段，逐段比对
+    for (var si = 0; si < saveSegs.length; si++){
+      var ns = saveSegs[si];
+      if (ns.date !== rec.date) continue;                        // 不同天 → 跳过
+      for (var k = 0; k < recSegs.length; k++){
+        if (segsOverlap(ns, recSegs[k])){
+          return {
+            person: hit[0],
+            date: rec.date,
+            seg: { start: ns.start, end: ns.end },
+            otherDetail: recSegs[k].start + '-' + recSegs[k].end
+          };
+        }
+      }
     }
   }
   return null;
@@ -1061,11 +1092,27 @@ async function submit(){
   }
   var segs = timeSegs.filter(segComplete);   // 只提交填写完整的行
 
-  /* 多行日期时间冲突：同一天时间段重叠 → 弹窗提示且禁止保存 */
-  var conflict = findTimeConflict();
-  if (conflict){
-    showAlert('时间段冲突：第 ' + (conflict.i + 1) + ' 行与第 ' + (conflict.j + 1) + ' 行在同一天（' +
-      segs[conflict.i].date + '）时间重叠，请调整后再保存。', '无法保存');
+  /* 多行自身冲突：仅新增模式检测（修改已限制单行，不再做此检查）。
+     同一天多个时间段重叠 → 弹窗提示且禁止保存 */
+  if (editIndex === null){
+    var conflict = findTimeConflict();
+    if (conflict){
+      showAlert('时间段冲突：第 ' + (conflict.i + 1) + ' 行与第 ' + (conflict.j + 1) + ' 行在同一天（' +
+        segs[conflict.i].date + '）时间重叠，请调整后再保存。', '无法保存');
+      return;
+    }
+  }
+
+  /* 与已有记录冲突（新增 + 修改都查）：所选人员的待保存行，不能与本人已有记录在同一天、时间段重叠 */
+  var savePeople = (editIndex !== null)
+    ? ((records[editIndex] && records[editIndex].people) || [])
+    : Array.from(selPeople);
+  var excludeId  = (editIndex !== null && records[editIndex]) ? records[editIndex].id : null;
+  var exConflict = findExistingConflict(segs, savePeople, excludeId);
+  if (exConflict){
+    showAlert('与已有记录冲突：' + exConflict.person + ' 在 ' + exConflict.date +
+      ' 已有时间段（' + exConflict.otherDetail + '），与本次填写的（' + exConflict.seg.start + '-' + exConflict.seg.end +
+      '）重叠，请调整日期或时段后再保存。', '无法保存');
     return;
   }
 
