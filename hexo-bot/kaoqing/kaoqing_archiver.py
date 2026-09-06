@@ -8,11 +8,12 @@
 ==========================================================================
 【存储模型】
 ==========================================================================
-前端的每条考勤 = Waline 中一条独立评论，内容为事件：
-    {"op":"add"|"edit", "id":<唯一id>, "rec":{...记录字段...}}
-    {"op":"del",          "id":<唯一id>}            # 删除标记（追加，不真删旧评论）
-匿名无法改/删旧评论，故修改/删除都是"追加一条新事件"；读取端按 id 回放（同 id 取最后），
-后端 --cleanup 负责把中间过程物理压实（删除旧评论、把当前状态重发为干净 add 评论）。
+前端的每条考勤 = Waline 中一条独立评论（带管理员令牌写入，即 approved）：
+    {"op":"add",  "id":<唯一id>, "rec":{...记录字段...}}   # 新建（POST）
+    {"op":"edit", "id":<唯一id>, "rec":{...记录字段...}}   # 修改：PUT 覆盖原评论（原地，单条）
+    {"op":"del",  "id":<唯一id>}                            # 删除：DELETE 原评论（硬删）
+旧模型（匿名事件流）遗留的「同一 id 多条 add/edit/del 评论」仍会被回放兼容；后端 --cleanup
+仅做去重清洗：删除同一 id 的多余旧评论（保留最新一条）及被 del 标记而物理仍在的评论，不再复写。
 
 兼容旧整包格式：{"v":1,"type":"records","records":[...]}，按 leg_<oid>_<i> 还原为 add 事件。
 
@@ -20,7 +21,7 @@
 【本脚本职责（满足 4 点要求）】
 ==========================================================================
 1. 读取本月以前记录 → 回放清洗成正常独立记录 → 按月写 R2 → 删除 Waline 中这些归档评论
-2. 对 Waline 中本月数据也做清洗（回放成正常独立记录并重发干净评论、删旧评论）
+2. 对 Waline 中本月数据也做清洗（去重：同 id 多余旧评论删冗余、被 del 标记的评论物理删除，不再复写）
 3. 即使没有"本月之前"的数据，也照样清洗本月数据
 4. 未来日期数据当作本月数据处理（归入 current，不归档、只清洗）
 
@@ -45,7 +46,6 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "books"))   # 复用 upload_r2.py（同桶、同 r2_config.json）
 import upload_r2   # 提供 load_config() / put_object(cfg, key, data) / list_objects()
 
-REWRITE_DELAY = int(os.environ.get("REWRITE_DELAY", "5"))  # 脏记录复写之间延时(秒)，降低 Akismet 误判
 
 
 def load_cfg():
@@ -164,29 +164,6 @@ def month_of(rec):
     return d if len(d) == 7 and d[4] == "-" else ""
 
 
-def random_identity():
-    """生成随机匿名身份（每条复写换一个 mail，避免单一固定身份被 Akismet 反复误判）。
-    前端读取走 type=list+Bearer 全量回放、不区分身份，故复写身份无关紧要，随机即可。"""
-    import random as _r
-    import string as _s
-    s = ''.join(_r.choices(_s.ascii_lowercase + _s.digits, k=6))
-    return ("考勤记录", "kq_%s@example.com" % s)
-
-
-def post_record_random(rec):
-    """以随机匿名身份把一条"干净"记录作为 add 事件 POST 到 Waline（归档清洗复写）。
-    前端读取不区分身份（全量回放），故身份可随机；即便被 Akismet 误判为 spam，
-    前端也能通过 type=list+Bearer 读到并回放，不丢数据。"""
-    nick, mail = random_identity()
-    obj = {"op": "add", "id": rec.get("id"), "rec": rec}
-    payload = {"comment": json.dumps(obj, ensure_ascii=False),
-               "url": RECORDS_PATH, "nick": nick, "mail": mail, "link": "", "ua": "kaoqing-archiver"}
-    try:
-        waline_req("POST", "/api/comment", body=payload)
-        return True
-    except Exception as e:
-        print("[WARN] 随机身份复写记录失败:", e)
-        return False
 
 
 # ----------------------------- 清理重复评论（节假日整包格式用） -----------------------------
@@ -283,28 +260,26 @@ def build_index(r2_keys=None):
 
 # ----------------------------- 主动归档 + 清洗 -----------------------------
 def archive_once(dry_run=False):
-    """读 Waline → 回放 → 仅把「日期<本月 且 状态=='完成'」的记录按月写R2并删Waline评论；
-    其余（本月/未来、或历史但未完成）留在 Waline 做清洗压实（即未完成的记录不归档、保留）。
-    返回归档条数（无符合归档条件的记录则 0，但仍清洗当月）。"""
+    """读 Waline → 回放 → 仅把「日期<本月 且 状态=='完成'」的记录按月写R2并从 Waline 删除；
+    其余（本月/未来、或历史但未完成）留在 Waline，仅做「去重清洗」：删除同一 id 的多余旧评论
+    （保留最新一条）以及被 del 事件标记而物理仍在的评论。新模型下记录已是单条最终态，不再复写
+    （避免把管理员 approved 记录匿名化/被判 spam）。返回归档条数（无符合归档条件则 0，但仍清洗）。"""
     cutoff_ym = datetime.date.today().replace(day=1).strftime("%Y-%m")
     all_c = list_comments(RECORDS_PATH)
     events = []
-    comment_id = {}      # objectId -> 该评论对应的记录 id（用于选择性删除旧评论）
-    dirty_ids = set()    # 曾出现 edit/del 事件的记录 id（需要压实清洗）
+    id_to_oids = {}      # 记录 id -> 该 id 在 Waline 中对应的全部 objectId（用于去重/删除）
     for c in all_c:
         oid = int(c.get("objectId") or 0)
         for op, rid, rec in parse_comment(c):
             events.append((oid, op, rid, rec))
             if rid:
-                comment_id[oid] = rid
-                if op in ("edit", "del"):
-                    dirty_ids.add(rid)
+                id_to_oids.setdefault(rid, set()).add(oid)
     final = replay_events(events)
+    final_ids = {r.get("id") for r in final}
 
     # 分区：
-    #   - 历史归档 = 日期 < 本月 且 状态=='完成'  → 写 R2 并删 Waline 评论
-    #   - 保留(不归档) = 其余（本月/未来、或历史但状态未完成的）→ 留在 Waline，仅做清洗压实
-    #     即：状态未完成的记录不归档，长期保留在「最新未归档记录」，直到其变为完成且跨月后才归档
+    #   - 历史归档 = 日期 < 本月 且 状态=='完成'  → 写 R2 并从 Waline 删除（避免重复归档）
+    #   - 保留(不归档) = 其余（本月/未来、或历史但状态未完成的）→ 留在 Waline，仅做去重清洗
     history_by_month = {}
     current = []
     for r in final:
@@ -314,65 +289,69 @@ def archive_once(dry_run=False):
         else:
             current.append(r)
     total_hist = sum(len(v) for v in history_by_month.values())
-    dirty_current = [r for r in current if r.get("id") in dirty_ids]
+    hist_ids = set()
+    for v in history_by_month.values():
+        for r in v:
+            hist_ids.add(r.get("id"))
 
     print("[INFO] 回放得 %d 条最终记录；本月之前(<%s) %d 条/%d 个月；当月(含未来) %d 条"
           % (len(final), cutoff_ym, total_hist, len(history_by_month), len(current)))
+
+    # 计算需删除的 oid（历史已归档的全部删；当月同 id 多条留最新删冗余；被 del 标记全删）
+    def plan_deletions():
+        todo = set()
+        for rid, oids in id_to_oids.items():
+            if rid in hist_ids:
+                todo |= oids                                  # 已进 R2，Waline 中全部删除
+            elif rid in final_ids:
+                if len(oids) > 1:                             # 单 id 多条残留：保留最新，删其余
+                    todo |= (oids - {max(oids)})
+            else:
+                todo |= oids                                  # 被 del 事件标记：物理删除全部
+        return todo
+
     if dry_run:
+        todo = plan_deletions()
+        dup = sum(1 for rid, oids in id_to_oids.items()
+                  if rid in final_ids and len(oids) > 1)
+        del_marked = sum(1 for rid in id_to_oids if rid not in final_ids)
         print("[DRY-RUN] 未写 R2、未改动 Waline。")
-        print("[DRY-RUN] 当月需复写脏记录 %d 条（有 edit/del 标识），干净记录 %d 条保持不动；"
-              "复写将用随机匿名身份、每条间隔 %d 秒" % (len(dirty_current), len(current) - len(dirty_current), REWRITE_DELAY))
+        print("[DRY-RUN] 计划删除 Waline 评论 %d 条：历史已归档 %d 条全删 / 当月同 id 多余旧评论 %d 条删冗余 / 被删标记 %d 条全删"
+              % (len(todo), len(hist_ids), dup, del_marked))
         return total_hist
 
     # 1) 历史写 R2：已存在同月主文件则另存「后补」文件（<ym>-NN.json），原主文件不变
     r2_keys = upload_r2.list_objects(R2_CFG, prefix=ARCHIVE_PREFIX)
     written_keys = []
     months = []
-    if history_by_month:
-        for ym in sorted(history_by_month.keys()):
-            key = determine_archive_key(r2_keys, ym)
-            is_sup = key != (ARCHIVE_PREFIX + ym + ".json")
-            put_r2(key, {"month": ym, "count": len(history_by_month[ym]),
-                         "records": history_by_month[ym], "supplement": is_sup})
-            written_keys.append(key)
-            months.append(ym)
-            print("[PUT] R2 %s (%s, %d 条)" % (key, "后补" if is_sup else "主", len(history_by_month[ym])))
+    for ym in sorted(history_by_month.keys()):
+        key = determine_archive_key(r2_keys, ym)
+        is_sup = key != (ARCHIVE_PREFIX + ym + ".json")
+        put_r2(key, {"month": ym, "count": len(history_by_month[ym]),
+                     "records": history_by_month[ym], "supplement": is_sup})
+        written_keys.append(key)
+        months.append(ym)
+        print("[PUT] R2 %s (%s, %d 条)" % (key, "后补" if is_sup else "主", len(history_by_month[ym])))
 
-    # 2) 清洗当月：仅对「有修改/删除标识」的脏记录压实，降低复写率
-    #    - 复写改用随机匿名身份，身份无关紧要（前端全量回放不区分身份）
-    #    - 每条复写之间加 REWRITE_DELAY 秒延时，进一步降低误判概率
-    #    - 仅删除脏记录对应的旧评论（干净单条 add 不动），避免误删有效数据
-    if dry_run:
-        print("[DRY-RUN] 清洗当月：将复写脏记录 %d 条(随机身份)，其余 %d 条干净记录保持不动"
-              % (len(dirty_current), len(current) - len(dirty_current)))
-    else:
-        posts_ok = True
-        for r in dirty_current:
-            if not post_record_random(r):
-                posts_ok = False
-                print("[ERR] 脏记录复写失败 id=%s，放弃删除其旧评论以避免数据丢失" % r.get("id"))
-                break
-            time.sleep(REWRITE_DELAY)
-        if posts_ok:
-            removed = 0
-            for c in all_c:
-                oid = int(c.get("objectId") or 0)
-                rid = comment_id.get(oid)
-                if rid not in dirty_ids:
-                    continue
-                try:
-                    waline_req("DELETE", "/api/comment/%s" % oid, token=TOKEN)
-                    removed += 1
-                except Exception as e:
-                    print("[WARN] 删除评论 #%d 失败: %s" % (oid, e))
-            print("[OK] 清洗当月：复写脏记录 %d 条(随机身份)，删除其旧评论 %d 条；干净记录 %d 条保持不动"
-                  % (len(dirty_current), removed, len(current) - len(dirty_current)))
+    # 2) 删除 Waline 评论（按 plan_deletions；全在 /kaoqing/records 内，精确 oid 删除）
+    todo = plan_deletions()
+    removed = 0
+    for oid in sorted(todo):
+        try:
+            waline_req("DELETE", "/api/comment/%s" % oid, token=TOKEN)
+            removed += 1
+        except Exception as e:
+            print("[WARN] 删除评论 #%d 失败: %s" % (oid, e))
+    dup = sum(1 for rid, oids in id_to_oids.items() if rid in final_ids and len(oids) > 1)
+    del_marked = sum(1 for rid in id_to_oids if rid not in final_ids)
+    print("[OK] 删除 Waline 评论 %d 条（历史已归档 %d / 当月冗余 %d / 被删标记 %d）；干净单条记录保留不动"
+          % (removed, len(hist_ids), dup, del_marked))
 
     # 3) 单据流水号配置现由前端在新建/删除记录时实时写入（带管理员令牌），后端不再维护
 
     # 4) 重建 index（把本次新写的补充文件也纳入）
     build_index(set(r2_keys) | set(written_keys))
-    print("[OK] 归档 %d 条(%s)；当月清洗 %d 条。" % (total_hist, ",".join(months), len(current)))
+    print("[OK] 归档 %d 条(%s)；删除 Waline 评论 %d 条。" % (total_hist, ",".join(months), removed))
     return total_hist
 
 

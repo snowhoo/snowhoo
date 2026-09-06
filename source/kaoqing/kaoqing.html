@@ -1374,7 +1374,7 @@ var STATUS_CLASS = { '待提交':'st-tj', '待审核':'st-sh', '待批准':'st-s
 function recSortValue(i, key){
   var r = records[i];
   if (!r) return '';
-  if (key === 'idx')   return r.docNo || '';   // 按单据号(docNo)排序（零填充3位+YYMM+类别前缀，字典序=数值序，跨月/跨类别均正确）；空号(占位/旧数据)排末尾
+  if (key === 'idx')   return r.docNo || '';   // 按单据号(docNo)排序（字母前缀+YYMM+零填充3位，字典序=数值序，跨月/跨类别均正确）；空号(占位/旧数据)排末尾
   if (key === 'who')   return (r.people && r.people[0]) || '';
   if (key === 'cat'){
     var isOt = isOtCatId(r.catId);
@@ -1467,7 +1467,7 @@ function renderRecords(){
         html += '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>';
       }
     }
-    html += '<td class="c-idx">' + esc(r.docNo != null ? r.docNo : (i + 1)) + '</td>' +   // # = 单据号（加班J/请假Q，YYMM分段）；旧记录无 docNo 时回退录入序号
+    html += '<td class="c-idx">' + esc(r.docNo != null ? r.docNo : (i + 1)) + '</td>' +   // # = 单据号（加班J/请假G，字母前置+YYMM分段）；旧记录无 docNo 时回退录入序号
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
       '<td class="c-cat ' + (isOt ? 'c-green' : 'c-orange') + '">' + catCell + '</td>' +
       '<td class="c-date">' + esc(r.date) + '</td>' +
@@ -1577,6 +1577,7 @@ async function submit(){
     var f    = segs[0];
     var updated = {
       id: (old && old.id) || genRecId(),
+      oid: (old && old.oid) || null,     // 带原评论 oid：edit 时直接 PUT 原地覆盖（不再新建事件评论）
       docNo: (old && old.docNo) || '',   // 修改沿用原单据号，不重新编号；原记录无号时不预占（回读后显示）
       date: f.date, otType: calcOtType(f.date),   // 按日期自动判定加班类型
       catId: curCat.id, catName: curCat.name, color: curCat.color, mode: curCat.mode,
@@ -1599,6 +1600,7 @@ async function submit(){
     setFormBusy(true);
     try {
       var ok = await postRecordOp('edit', updated);
+      if (ok && ok.oid) updated.oid = ok.oid;
       for (var e3 = 0; e3 < extra.length; e3++){ if (!await postRecordOp('add', extra[e3])) ok = false; }
       if (ok){ await syncRecords(); procMap = {}; renderRecords(); }
       else { procMap = {}; renderRecords(); cloudToast('error', '数据写入失败', 'edit'); }
@@ -1655,6 +1657,7 @@ async function pumpWriteQueue(){
         rec.docNo = key + String(seq).padStart(3, '0');
         var ok = await postRecordOp('add', rec);   // 评论内容含 rec（已带 docNo）→ 写成功后 Waline 与前端 id/docNo 一致，无需回读
         if (ok){
+          if (ok.oid){ rec.oid = ok.oid; item.ph.oid = ok.oid; }  // 带 token 写：回填 oid，供今后 edit/del 直接定位原评论
           item.ph.docNo = rec.docNo;               // 写一条即回填该条 #号（即时反馈）
           item.ph._pending = false;                // 视为已落地记录，纳入正常筛选/排序
           delete procMap[rec.id];
@@ -2099,7 +2102,7 @@ $('#records').addEventListener('click', async function(e){
   procMap[r.id] = '删除中…';
   renderRecords();
   try {
-    var ok = await postRecordOp('del', { id: r.id });   // 先写删除标识记录到 Waline（按 id 标记 del 事件）
+    var ok = await postRecordOp('del', { id: r.id, oid: r.oid });   // 带 token 直接 DELETE 原评论（不再写 del 事件）
     if (!ok){ procMap = {}; renderRecords(); cloudToast('error', '数据写入失败', 'del'); return; }
     await syncRecords();                  // 再复读 Waline（事件回放）→ 重新渲染，绝不直接改本地缓存（不秒删）；同步保留进行中占位
     procMap = {}; renderRecords();
@@ -2145,7 +2148,7 @@ $('#delRecordsBtn').addEventListener('click', async function(){
   targets.forEach(function(r){ procMap[r.id] = '删除中…'; });
   renderRecords();
   try {
-    var tasks = targets.map(function(r){ return postRecordOp('del', { id: r.id }); });
+    var tasks = targets.map(function(r){ return postRecordOp('del', { id: r.id, oid: r.oid }); });
     var res = await Promise.all(tasks);
     if (res.every(function(b){ return b; })){
       await syncRecords();
@@ -2248,10 +2251,12 @@ async function fetchCloudRecord(path, type, attempt){
     throw e;
   }
 }
-/* 考勤/节假日写入：采用免登录的匿名 POST（用户无需登录、不带 token），每条考勤 = 一条独立评论。
-   匿名无法改/删旧评论，故"修改/删除"是追加一条新事件；前端读取拉取全部评论并回放（同 id 取最后），
-   旧评论/中间过程由后端 kaoqing_archiver.py 的 --cleanup（每月计划任务自动跑）压实清理，不会无限膨胀。
-   ANON_NICK/ANON_MAIL 为固定匿名身份。人员(people)写入仍走带 token 的 PUT（在 savePeopleToWaline）。 */
+/* 写入方式：
+   - 考勤记录：现统一走 postRecordOp（带 WALINE_ADMIN_TOKEN）——add 用 token POST 新建、edit 用 token PUT 原评论、del 用 token DELETE 原评论；
+     不再追加「事件流」评论（旧数据仍按 replayEvents 兼容回放，每条最终记录带 oid 供定位原评论）。
+   - 节假日：仍用免登录的匿名 POST（用户无需登录、不带 token），每条 = 一条独立评论，由后端 --cleanup 压实。
+   - 人员(people)：走带 token 的 PUT 原地复写（见 savePeopleToWaline）。
+   ANON_NICK/ANON_MAIL 为固定匿名身份（节假日/兜底用）。 */
 var ANON_NICK = '考勤记录';
 var ANON_MAIL = 'kaoqin@example.com';
 /* 匿名写入（免登录方案）：无需 token，固定匿名身份 POST 新建一条评论。
@@ -2423,22 +2428,22 @@ function genRecId(){
 }
 
 /* 单据号（#列展示用，唯一、跨归档也靠 YYMM 前缀天然分月避免撞号）
-   格式：YYMM + 类别前缀 + 3 位序号；加班(overtime)前缀 J，任何请假前缀 Q。
-   例：2026-09 的加班第 1 条 = 2609-J001；请假第 1 条 = 2609-Q001。
+   格式：类别前缀 + YYMM + 3 位序号；加班(overtime)前缀 J，任何请假前缀 G。
+   例：2026-09 的加班第 1 条 = J2609001；请假第 1 条 = G2609001。
    YYMM 取自记录业务日期（保证补录上月也归入上月单据号段，不会与本月撞号）。 */
 function docNoKey(catId, dateStr){
   var yymm;
   var m = (dateStr || '').match(/^(\d{4})-(\d{2})-\d{2}$/);
   if (m){ yymm = m[1].slice(2) + m[2]; }
   else { var d = new Date(); yymm = String(d.getFullYear()).slice(2) + String(d.getMonth() + 1).padStart(2, '0'); }
-  var prefix = isOtCatId(catId) ? 'J' : 'Q';
-  return yymm + prefix;
+  var prefix = isOtCatId(catId) ? 'J' : 'G';
+  return prefix + yymm;
 }
-function parseDocNoSeq(dn){          // 从单据号解析序号（修正原 slice(6) 越界 bug：key 实为 5 位 YYMM+J/Q）
-  var m = (dn || '').match(/^(\d{4}[JQ])(\d+)$/);
+function parseDocNoSeq(dn){          // 从单据号解析序号（兼容新格式 字母前置「J2609001」与旧格式「2609J001」）
+  var m = (dn || '').match(/^([JQG]\d{4}|\d{4}[JQG])(\d+)$/);
   return m ? parseInt(m[2], 10) : 0;
 }
-var SERIAL = { counters: {} };       // 单据流水号配置：{ "2609J": 33, "2609Q": 12 }，key=YYMM+类别前缀，value=已用最大序号（由前端加锁实时写入，单调递增）
+var SERIAL = { counters: {} };       // 单据流水号配置：{ "J2609": 33, "G2609": 12 }，key=类别前缀+YYMM，value=已用最大序号（由前端加锁实时写入，单调递增）
 var serialOid = null;                // 流水号配置记录在 Waline 中的 oid（原地复写用）
 
 /* ---------- 单据流水号「锁」：避免并发取号重号 ----------
@@ -2548,7 +2553,8 @@ function parseCommentToEvents(c){
   return [];
 }
 
-/* 按 id 回放：同 id 取最后一条事件；op=='del' 标记为删除（置 null） */
+/* 按 id 回放：同 id 取最后一条事件；op=='del' 标记为删除（置 null）。
+   最终每条记录保留其「最后操作那条评论」的 oid（供 edit/del 用 token 直接 PUT/DELETE 原评论，不再追加新事件）。 */
 function replayEvents(events){
   events.sort(function(a, b){ return a.oid - b.oid; });
   var state = {};
@@ -2556,18 +2562,45 @@ function replayEvents(events){
     var e = events[i];
     if (!e.id) continue;
     if (e.op === 'del'){ state[e.id] = null; }
-    else { var r = (e.rec && typeof e.rec === 'object') ? e.rec : {}; r.id = e.id; state[e.id] = r; }
+    else { var r = (e.rec && typeof e.rec === 'object') ? e.rec : {}; r.id = e.id; r.oid = e.oid; state[e.id] = r; }
   }
   var final = [];
   for (var k in state){ if (state[k]) final.push(state[k]); }
   return final;
 }
 
-/* 新增/修改/删除：单条事件匿名 POST（每条考勤 = 一条独立评论，无需登录） */
+/* 新增/修改/删除考勤记录。
+   现在统一用「管理员令牌」写入（WALINE_ADMIN_TOKEN）：
+     - add：带 token POST 新建一条（归属管理员账号，不会被 Akismet 判 spam，公开接口也能读到）；返回 {oid}。
+     - edit：带 token PUT 原评论（rec.oid 定位）原地覆盖，不再追加 edit 事件；old 无 oid（极旧数据）时 walineSaveRecord 会退回「新建+删旧」。
+     - del：带 token DELETE 原评论（rec.oid 定位），直接硬删，不再追加 del 事件。
+   无令牌时退回匿名追加事件（旧行为兜底，保证页面不崩）。 */
+async function tokenDeleteComment(oid){
+  if (!CLOUD_BASE || !oid) return false;
+  var base = CLOUD_BASE.replace(/\/$/, '');
+  try {
+    var r = await fetch(base + '/api/comment/' + oid + '?lang=zh-CN', {
+      method: 'DELETE', headers: { 'Authorization': 'Bearer ' + WALINE_ADMIN_TOKEN }
+    });
+    var j = await r.json().catch(function(){ return {}; });
+    return !!(r.ok && j && j.errno === 0);
+  } catch(e){ return false; }
+}
 async function postRecordOp(op, rec){
   if (!CLOUD_BASE) return false;
-  var obj = { op: op, id: rec.id, rec: (op === 'del' ? null : rec) };
-  return anonPostCloud(RECORDS_PATH, obj);
+  if (WALINE_ADMIN_TOKEN){
+    if (op === 'del') return rec.oid ? await tokenDeleteComment(rec.oid) : false;
+    var body = {
+      comment: JSON.stringify({ op: op, id: rec.id, rec: (op === 'del' ? null : rec) }),
+      url: RECORDS_PATH, nick: ANON_NICK, mail: ANON_MAIL, link: '', ua: navigator.userAgent
+    };
+    try {
+      var res = await walineSaveRecord(rec.oid || null, body, WALINE_ADMIN_TOKEN);
+      return res && res.oid ? res : false;   // 成功：返回带 oid 的对象（truthy）；失败：false
+    } catch(e){ return false; }
+  }
+  // 无令牌兜底：匿名追加事件（旧行为，edit/del 不会产生 oid → 之后只能继续追加事件）
+  return anonPostCloud(RECORDS_PATH, { op: op, id: rec.id, rec: (op === 'del' ? null : rec) });
 }
 
 /* 读取：以 Waline 为唯一来源（无 localStorage 兜底）。拉取全量评论 → 回放成当前二维表。 */
