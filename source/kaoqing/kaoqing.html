@@ -207,7 +207,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 }
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
 /* 各时间段行：弹性布局（flex），元素按 日期/整天/起/至/止/小时/备注/± 顺序流动，窄屏自动折行 */
-.time-row .fDate{flex:0 0 auto;width:140px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600}
+.time-row .fDate{flex:0 0 auto;width:110px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600}
 .time-row .all-day{display:inline-flex;align-items:center;gap:3px;font-size:.82rem;color:var(--text-secondary);cursor:pointer;min-width:56px;font-weight:600}
 .time-row .all-day input{width:14px;height:14px;accent-color:var(--accent)}
 #rangeBlock{flex:1 1 300px}
@@ -217,14 +217,14 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .time-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:100%}
 .time-row select{flex:0 0 auto;width:auto;font-size:.82rem;font-weight:600}
 .time-row .sep{color:var(--text-muted);font-size:.82rem;white-space:nowrap}
-.time-row .fSegNote{flex:1 1 140px;min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent}
+.time-row .fSegNote{flex:1 1 140px;min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;max-width:120px;}
 .time-row .segHours{flex:0 0 auto;width:55px;text-align:right;font-size:.82rem;font-weight:600;white-space:nowrap;color:var(--text-secondary)}
 .seg-actions{margin-left:auto}   /* ± 按钮固定推到行尾 */
 .seg-act{border:none;background:var(--accent-soft);color:var(--accent);cursor:pointer;
-  width:28px;height:28px;border-radius:8px;font-size:1.05rem;line-height:1;flex:0 0 auto;
+  width:25px;height:25px;border-radius:8px;font-size:1.05rem;line-height:1;flex:0 0 auto;
   display:inline-flex;align-items:center;justify-content:center}
 .seg-act:hover{filter:brightness(.96)}
-.seg-act.del{background:rgba(224,75,74,.14);color:#e24b4a}
+.seg-act.del{color:#e24b4a}
 .seg-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end;min-width:34px}
 #fHours{font-size:.92rem;font-weight:600;color:var(--text-secondary);white-space:nowrap;min-width:6em;display:inline-block;text-align:left}
 #fHours.bad{color:var(--warn);font-weight:500}
