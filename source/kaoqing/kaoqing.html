@@ -193,7 +193,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 
 /* ---- 区域三：内容（日期/时间段/小时数/说明 四项同一行，窄屏自动折行） ---- */
 [hidden]{display:none!important}
-.form-row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px}
+.form-row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px;font-size:1rem}
 .form-row > .field,.form-row > .sub-row{margin-bottom:0}
 .sub-row{display:flex;align-items:center;gap:8px}
 .sub-row > .field{flex:1}
@@ -208,7 +208,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
 /* 各时间段行：用 CSS Grid 固定列宽，保证多行之间的 日期/时段/小时/± 严格对齐 */
 .time-row .fDate{width:100%;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:.86rem;background:transparent}
-.time-row .all-day{display:inline-flex;align-items:center;gap:3px;font-size:.78rem;color:var(--text-secondary);cursor:pointer}
+.time-row .all-day{display:inline-flex;align-items:center;gap:3px;font-size:.78rem;color:var(--text-secondary);cursor:pointer;min-width:50px}
 .time-row .all-day input{width:14px;height:14px;accent-color:var(--accent)}
 #rangeBlock{flex:1 1 300px}
 #rowNote{flex:1 1 140px}
@@ -351,7 +351,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .rec-table th.th-sort.active{color:var(--accent)}
 .rec-table td{color:var(--text)}
 .rec-table .c-check,.rec-table .c-del{width:1%;text-align:center;white-space:nowrap}
-.rec-table .c-idx{width:36px;text-align:center;color:var(--text-muted);font-size: 0.6em}
+.rec-table .c-idx{width:36px;text-align:center;color:var(--text-muted);font-size: 0.6rem}
 .rec-table .c-who{font-weight:600;white-space:normal;min-width:50px}
 .rec-table .c-cat{color:var(--accent);white-space:nowrap}
 .rec-table .c-cat.c-green{color:#16a34a}
@@ -915,8 +915,8 @@ function renderTimeSegs(){
     var s = document.createElement('select'); s.className = 'fStart'; buildTimeSlots(s); ensureTimeOption(s, seg.start); s.value = seg.start || ''; s.disabled = !!seg.allDay;
     var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '至';
     var e = document.createElement('select'); e.className = 'fEnd'; buildTimeSlots(e); ensureTimeOption(e, seg.end); e.value = seg.end || ''; e.disabled = !!seg.allDay;
-    var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
     var h = document.createElement('span'); h.className = 'segHours'; h.textContent = segHoursText(seg) || '？？小时';
+	var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
     row.appendChild(d); row.appendChild(adWrap); row.appendChild(s); row.appendChild(sep); row.appendChild(e); row.appendChild(note); row.appendChild(h);
     // 动作容器：每行固定宽度，内部按需放 删除/新增 按钮，保证上下行控件对齐（不挤在一起）
     var acts = document.createElement('div'); acts.className = 'seg-actions';
