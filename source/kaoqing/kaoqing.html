@@ -246,8 +246,6 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   transition:background .15s,color .15s,border-color .15s;-webkit-touch-callout:none;
 }
 .preset-item:hover,.preset-item:active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
-.preset-add-inline{margin-left:1px;color:var(--accent);font-weight:700;font-size:.95rem;opacity:.5;transition:opacity .15s}
-.preset-item:hover .preset-add-inline{opacity:1}
 .preset-del{
   position:absolute;top:-6px;right:-6px;width:17px;height:17px;border-radius:50%;
   border:1px solid var(--border);background:var(--bg-surface);color:var(--text-muted);
@@ -416,7 +414,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   
 }
 @media (max-width:640px){
-  .pv-row > span{border-left:0;padding-left:0;font-size:.68rem}   /* 小屏预览去掉竖线分隔，改为纯空格 */
+  .pv-row > span{border-left:0;padding-left:0;font-size:.67rem}   /* 小屏预览去掉竖线分隔，改为纯空格 */
 }
 @media print{
   #topbar,.card:not(#secAction){display:none!important}
@@ -1246,7 +1244,12 @@ function appendPresetToNote(txt){
   }
   if (inp){
     var cur = inp.value.trim();
-    inp.value = cur ? (cur + txt) : txt;            // 追加而非替换
+    if (!cur){                                         // 备注为空：直接填入
+      inp.value = txt;
+    } else {                                           // 已有内容：前面补「/」分隔（避免连续重复的 /）
+      var sep = /\/$/.test(cur) ? '' : '/';
+      inp.value = cur + sep + txt;
+    }
     if (timeSegs[targetIdx]) timeSegs[targetIdx].note = inp.value;
   }
   refresh();                                          // 实时更新预览说明
@@ -1314,10 +1317,6 @@ function renderPresets(){
     span.className = 'preset-text';
     span.textContent = txt;
     b.appendChild(span);
-    var plus = document.createElement('span');          // 内联「+」：与文本同一 div，点整条即追加到备注
-    plus.className = 'preset-add-inline';
-    plus.textContent = '+';
-    b.appendChild(plus);
     var del = document.createElement('span');
     del.className = 'preset-del';
     del.textContent = '×';
@@ -1327,7 +1326,7 @@ function renderPresets(){
       if (presetEdit) return;                            // 编辑态：点标签本体不填备注
       if (e.target === del || del.contains(e.target)){   // 点 × → 删除
         removePreset(curCat.id, idx);
-      } else {                                           // 点标签本体（含内联 +）→ 追加到备注
+      } else {                                           // 点标签本体 → 追加到备注
         appendPresetToNote(txt);
       }
     });
