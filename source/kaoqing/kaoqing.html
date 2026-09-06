@@ -152,7 +152,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 
 /* ---- 区域一：人员（组别下拉内嵌标题行 + 大号姓名卡） ---- */
 .gsel{
-  padding:0px 5px;border-radius:10px;font-size:.82rem;
+  padding:2px 5px;border-radius:8px;font-size:.78rem;
   border:1px solid var(--border);background:var(--bg-surface);color:var(--text);
   outline:none;font-family:inherit;
 }
@@ -238,7 +238,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .pv-empty{color:var(--warn)}
 .preset-box{display:flex;align-items:flex-start;flex-wrap:wrap;gap:8px 10px;margin-top:12px}
 .preset-label{font-size:.8rem;color:var(--text-secondary);white-space:nowrap;line-height:30px}
-.preset-list{display:flex;flex-wrap:wrap;gap:8px}
+.preset-list{display:flex;flex-wrap:wrap;gap:8px;color: var(--text-muted);padding: 10px 10px;border-radius: 12px;border: 1px solid var(--border);border-style: dashed}
 .preset-item{
   position:relative;display:inline-flex;align-items:center;gap:6px;
   padding:6px 13px;border:1px solid var(--border);border-radius:999px;cursor:pointer;
@@ -505,14 +505,14 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
         <!-- 常用说明：标签列表，点击即追加填入备注事由；点 + 弹菜单「系统值 / 自定义」；每条可 × 删除（增删仅写缓存） -->
         <div class="preset-box">
           <span class="preset-label">常用说明</span>
-          <div class="preset-list" id="presetList"></div>
-          <div class="preset-add-wrap">
+          <div class="preset-list" id="presetList"><div class="preset-add-wrap">
             <button type="button" class="preset-add" id="presetAddBtn" title="添加常用说明">+</button>
             <div class="preset-add-menu" id="presetAddMenu" hidden>
               <button type="button" class="preset-add-item" data-act="system">系统值</button>
               <button type="button" class="preset-add-item" data-act="custom">自定义</button>
             </div>
-          </div>
+          </div></div>
+          
         </div>
         <!-- 待保存内容预览 -->
         <div class="save-row">
