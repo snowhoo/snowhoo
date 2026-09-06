@@ -267,7 +267,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 }
 .preset-add:hover{border-color:var(--accent);color:var(--accent)}
 .preset-add-menu{
-  position:absolute;left:0;top:36px;z-index:50;min-width:96px;
+  position:fixed;left:0;top:0;z-index:200;min-width:96px;
   background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;
   box-shadow:0 8px 24px rgba(0,0,0,.12);padding:4px;display:flex;flex-direction:column;gap:2px;
 }
@@ -1396,6 +1396,13 @@ function renderPresetAdd(box){
   box.appendChild(wrap);
   btn.addEventListener('click', function(e){
     e.stopPropagation();
+    if (menu.hidden){                                  // 打开前按按钮位置定点（fixed 定位，避开卡片 overflow:hidden 裁剪）
+      var r = btn.getBoundingClientRect();
+      var left = Math.max(8, r.left);
+      if (left + 110 > window.innerWidth) left = window.innerWidth - 110;   // 防止右侧溢出视口
+      menu.style.left = left + 'px';
+      menu.style.top  = (r.bottom + 6) + 'px';
+    }
     menu.hidden = !menu.hidden;
   });
   menu.addEventListener('click', function(e){
