@@ -1060,9 +1060,9 @@ function renderTimeSegs(){
     var adWrap = document.createElement('label'); adWrap.className = 'all-day'; adWrap.title = '按配置的正常上班时间自动填入';
     var ad = document.createElement('input'); ad.type = 'checkbox'; ad.className = 'allDayChk'; ad.checked = !!seg.allDay;
     adWrap.appendChild(ad); adWrap.appendChild(document.createTextNode('整天'));
-    var s = document.createElement('input'); s.type = 'text'; s.className = 'fTime fStart'; s.readOnly = true; s.placeholder = '起'; s.value = seg.start || ''; s.disabled = !!seg.allDay;
+    var s = document.createElement('input'); s.type = 'text'; s.className = 'fTime fStart'; s.readOnly = true; s.placeholder = '--：--'; s.value = seg.start || ''; s.disabled = !!seg.allDay;
     var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '-';
-    var e = document.createElement('input'); e.type = 'text'; e.className = 'fTime fEnd'; e.readOnly = true; e.placeholder = '止'; e.value = seg.end || ''; e.disabled = !!seg.allDay;
+    var e = document.createElement('input'); e.type = 'text'; e.className = 'fTime fEnd'; e.readOnly = true; e.placeholder = '--：--'; e.value = seg.end || ''; e.disabled = !!seg.allDay;
     var h = document.createElement('span'); h.className = 'segHours'; h.textContent = segHoursText(seg) || '？？小时';
 	var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
     row.appendChild(d); row.appendChild(adWrap); row.appendChild(s); row.appendChild(sep); row.appendChild(e); row.appendChild(h); row.appendChild(note);
