@@ -1408,7 +1408,7 @@ function renderRecords(){
     return;
   }
   var editable = (viewMode === 'edit');   // 归档(R2)只读：不渲染勾选框与改删按钮
-  var busy = Object.keys(procMap).length > 0 || writeQueue.length > 0 || readingBack;   // 状态变更进行中 / 写库队列非空 / 回读进行中 → 整表 + 两个下拉框禁用
+  var busy = Object.keys(procMap).length > 0 || _pumping || readingBack;   // 状态变更进行中 / 队列正在消费(_pumping) / 回读进行中 → 整表 + 两个下拉框禁用（注意：以 _pumping 为准而非 writeQueue.length，避免「解锁等待期间新增项滞留队列」让禁用态卡死）
   var html = '<table class="rec-table' + (busy ? ' rec-disabled' : '') + '"><thead><tr>';
   if (editable) html += '<th class="c-check"><input type="checkbox" id="recCheckAll" class="rec-check-all" title="全选 / 取消全选"></th>';
   // 可点击排序的表头：点击正序→再点反序；当前排序列高亮并显示 ▲/▼
@@ -1675,11 +1675,13 @@ async function pumpWriteQueue(){
     }
     await releaseSerialLock(lock.oid, lock.counters);   // 全部写完：一次解锁（counters 单调递增，不回退）
   } catch(e){
-    // 取锁失败：整批标记失败（号未推进，下次保存可重试）
+    // 取锁失败：整批标记失败并清空队列（号未推进，下次保存可重试）；清空队列避免 finally 重排空时反复取锁陷入死循环
     writeQueue.forEach(function(it){ it.ph._failed = true; procMap[it.rec.id] = '写入失败'; });
+    writeQueue.length = 0;
     console.error('[kaoqing] 取锁失败', e && e.message ? e.message : e);
   } finally {
     _pumping = false;
+    if (writeQueue.length){ pumpWriteQueue(); return; }   // 重入窗口（取锁/解锁等待期间）新增的项需继续排空；_pumping 已置 false，会真正进入消费，避免滞留队列让禁用态卡死
     procMap = {};             // 清空瞬时标记（失败项靠 _failed 持久标记，不被清掉）
     renderRecords();          // 解除禁用（busy=false）
   }
