@@ -1209,8 +1209,25 @@ function findRuleConflict(segs, catId){
   if (!isLeave && !isOt) return null;                       // 其它类别不校验这两条规则
   for (var i = 0; i < segs.length; i++){
     var sg = segs[i], date = sg.date;
-    if (isLeave && !isWorkday(date)) return { rule: 1, i: i, date: date };   // 休息日(国假/调休休息/正常双休)无需请假
+    if (isLeave){
+      if (!isWorkday(date)) return { rule: 1, i: i, date: date };   // 休息日(国假/调休休息/正常双休)无需请假
+      // 工作日请假：时段须 100% 落在正常上班时段内，任何超出(过早/过晚)都拦截
+      if (!sg.allDay && sg.start && sg.end){
+        var s = toMin(sg.start), e = toMin(sg.end);
+        var ws = toMin(CONFIG.workStart), we = toMin(CONFIG.workEnd);
+        if (s < ws || e > we) return { rule: 3, i: i, date: date, start: sg.start, end: sg.end };
+      }
+    }
     if (isOt && isWorkday(date) && segOverlapWork(sg))      return { rule: 2, i: i, date: date };
+  }
+  return null;
+}
+/* 业务规则：起始时间 > 终止时间（非整天、起止均填写）→ 拦截。不区分类别（请假/加班/其它均查），视为录入错误（不支持跨天）。返回 {i,start,end} 或 null */
+function findOrderConflict(segs){
+  for (var i = 0; i < segs.length; i++){
+    var sg = segs[i];
+    if (sg.allDay) continue;
+    if (sg.start && sg.end && toMin(sg.start) > toMin(sg.end)) return { i: i, start: sg.start, end: sg.end };
   }
   return null;
 }
@@ -1794,9 +1811,20 @@ async function submit(){
     if (ruleC.rule === 1){
       var rlabel = restDayLabel(ruleC.date);
       await showAlert('请假与休息日重叠：' + where + ' 落在' + (rlabel || '休息日') + '，休息日无需请假，请调整日期或类别后再保存。', '无法保存');
+    } else if (ruleC.rule === 3){
+      await showAlert('请假时段不在工作时间内：' + where + ' 落在工作日，但时段（' + ruleC.start + '-' + ruleC.end + '）未完全落在正常工作时间（' + CONFIG.workStart + '-' + CONFIG.workEnd + '）内，请假须 100% 在工作时段内，请调整时段后再保存。', '无法保存');
     } else {
       await showAlert('加班与正常工作时间重叠：' + where + ' 与正常工作时间（' + CONFIG.workStart + '-' + CONFIG.workEnd + '）重叠，加班不应安排在正常上班时段，请调整时段后再保存。', '无法保存');
     }
+    return;
+  }
+
+  /* 起始 > 终止 校验：不区分类别（请假/加班等均拦截），视为录入错误 */
+  var orderC = findOrderConflict(segs);
+  if (orderC){
+    var os = segs[orderC.i];
+    var owhere = '第 ' + (orderC.i + 1) + ' 行（' + os.date + ' ' + orderC.start + '-' + orderC.end + '）';
+    await showAlert('起始时间晚于终止时间：' + owhere + ' 起始 ' + orderC.start + ' 大于终止 ' + orderC.end + '，请调整后再保存。', '无法保存');
     return;
   }
 
