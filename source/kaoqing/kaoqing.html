@@ -207,18 +207,18 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 }
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
 /* 各时间段行：用 CSS Grid 固定列宽，保证多行之间的 日期/时段/小时/± 严格对齐 */
-.time-row .fDate{width:100%;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:.86rem;background:transparent}
-.time-row .all-day{display:inline-flex;align-items:center;gap:3px;font-size:.1rem;color:var(--text-secondary);cursor:pointer;min-width:56px}
+.time-row .fDate{width:130;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:.86rem;background:transparent;font-weight: 600}
+.time-row .all-day{display:inline-flex;align-items:center;gap:3px;font-size:1rem;color:var(--text-secondary);cursor:pointer;min-width:56px;font-weight:600}
 .time-row .all-day input{width:14px;height:14px;accent-color:var(--accent)}
 #rangeBlock{flex:1 1 300px}
 #rowNote{flex:1 1 140px}
 #rowNote input{min-width:80px}
 .time-segs{flex:1;display:flex;flex-direction:column;gap:8px;min-width:180px}
 .time-row{display:grid;width:100%;grid-template-columns:120px 60px 56px auto 56px 240px 66px 70px;align-items:center;gap:6px}
-.time-row select{width:100%}
-.time-row .sep{color:var(--text-muted);font-size:.82rem;white-space:nowrap}
-.time-row .fSegNote{width:100%;min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.86rem;background:transparent;max-width:220}
-.time-row .segHours{width:66px;text-align:right;color:var(--accent);font-size:.82rem;font-weight:400;white-space:nowrap}
+.time-row select{width:100%;font-size:1rem}
+.time-row .sep{color:var(--text-muted);font-size:1rem;white-space:nowrap}
+.time-row .fSegNote{min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:1rem;background:transparent;max-width:220}
+.time-row .segHours{width:55px;text-align:right;font-size:1rem;font-weight:600;white-space:nowrap;color:var(--text-secondary)}
 .seg-act{border:none;background:var(--accent-soft);color:var(--accent);cursor:pointer;
   width:28px;height:28px;border-radius:8px;font-size:1.05rem;line-height:1;flex:0 0 auto;
   display:inline-flex;align-items:center;justify-content:center}
@@ -721,7 +721,7 @@ var curCat    = null;
 var records   = [];
 var editIndex = null;   // 修改模式：正在编辑的记录下标（null=新增模式）
 var viewMode   = 'edit';   // 'edit'=未归档(Waline 可改删)；'view'=归档(R2 只读，不能修改/删除)
-var sortState  = { key: 'date', dir: 'desc' };   // 表格表头排序状态：key=列标识，dir=asc/desc（点一次正序、再点反序）
+var sortState  = { key: 'idx', dir: 'desc' };   // 表格表头排序状态：默认按「#号(docNo)」从新到旧；key=列标识，dir=asc/desc（点一次正序、再点反序）
 
 function $(s){ return document.querySelector(s); }
 function todayStr(){
@@ -917,7 +917,7 @@ function renderTimeSegs(){
     var e = document.createElement('select'); e.className = 'fEnd'; buildTimeSlots(e); ensureTimeOption(e, seg.end); e.value = seg.end || ''; e.disabled = !!seg.allDay;
     var h = document.createElement('span'); h.className = 'segHours'; h.textContent = segHoursText(seg) || '？？小时';
 	var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
-    row.appendChild(d); row.appendChild(adWrap); row.appendChild(s); row.appendChild(sep); row.appendChild(e); row.appendChild(note); row.appendChild(h);
+    row.appendChild(d); row.appendChild(adWrap); row.appendChild(s); row.appendChild(sep); row.appendChild(e); row.appendChild(h); row.appendChild(note);
     // 动作容器：每行固定宽度，内部按需放 删除/新增 按钮，保证上下行控件对齐（不挤在一起）
     var acts = document.createElement('div'); acts.className = 'seg-actions';
     if (i > 0){
@@ -1353,7 +1353,7 @@ var STATUS_CLASS = { '待提交':'st-tj', '待审核':'st-sh', '待批准':'st-s
 function recSortValue(i, key){
   var r = records[i];
   if (!r) return '';
-  if (key === 'idx')   return i;
+  if (key === 'idx')   return r.docNo || '';   // 按单据号(docNo)排序（零填充3位+YYMM+类别前缀，字典序=数值序，跨月/跨类别均正确）；空号(占位/旧数据)排末尾
   if (key === 'who')   return (r.people && r.people[0]) || '';
   if (key === 'cat'){
     var isOt = isOtCatId(r.catId);
@@ -1402,7 +1402,7 @@ function renderRecords(){
   });
   if (editable) html += '<th class="c-del"></th>';
   html += '</tr></thead><tbody>';
-  // 排序：按 sortState（默认「业务日期」从新到旧）；同值保持稳定（按录入顺序 a-b）
+  // 排序：按 sortState（默认「#号」从新到旧）；同值保持稳定（按录入顺序 a-b）
   var order = idxs.slice();
   order.sort(function(a, b){
     var va = recSortValue(a, sortState.key);
@@ -1413,8 +1413,8 @@ function renderRecords(){
     if (c === 0) c = a - b;                       // 同值：保持原录入相对顺序
     return sortState.dir === 'asc' ? c : -c;
   });
-  order = order.filter(function(i){ return !records[i]._pending; })
-        .concat(order.filter(function(i){ return records[i]._pending; }));   // 进行中占位记录置顶显示其加载圆圈
+  order = order.filter(function(i){ return records[i]._pending; })          // 进行中占位记录置顶显示其加载圆圈（插在最前面，而非后边）
+        .concat(order.filter(function(i){ return !records[i]._pending; }));
   order.forEach(function(i, n){
     var r = records[i];
     var st = r.status || '待提交';
