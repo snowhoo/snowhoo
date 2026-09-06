@@ -246,6 +246,8 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   transition:background .15s,color .15s,border-color .15s;-webkit-touch-callout:none;
 }
 .preset-item:hover,.preset-item:active{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.preset-add-inline{margin-left:1px;color:var(--accent);font-weight:700;font-size:.95rem;opacity:.5;transition:opacity .15s}
+.preset-item:hover .preset-add-inline{opacity:1}
 .preset-del{
   position:absolute;top:-6px;right:-6px;width:17px;height:17px;border-radius:50%;
   border:1px solid var(--border);background:var(--bg-surface);color:var(--text-muted);
@@ -505,15 +507,9 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 
         </div>
 
-        <!-- 常用说明：标签列表，点击即追加填入备注事由；点 + 弹菜单「系统值 / 自定义」；每条可 × 删除（增删仅写缓存） -->
+        <!-- 常用说明：标签列表，点击即追加填入备注事由；每条内联「+」、列表末尾内联「+」弹菜单「系统值 / 自定义」；每条可 × 删除（增删仅写缓存） -->
         <div class="preset-box">
-                    <div class="preset-list" id="presetList"></div><div class="preset-add-wrap">
-            <button type="button" class="preset-add" id="presetAddBtn" title="添加常用说明">+</button>
-            <div class="preset-add-menu" id="presetAddMenu" hidden>
-              <button type="button" class="preset-add-item" data-act="system">系统值</button>
-              <button type="button" class="preset-add-item" data-act="custom">自定义</button>
-            </div>
-          </div>
+                    <div class="preset-list" id="presetList"></div>
           
         </div>
         <!-- 待保存内容预览 -->
@@ -1304,7 +1300,8 @@ function renderPresets(){
   }
   var list = getPresetList(curCat.id);
   if (!list.length){
-    box.innerHTML = '<span class="preset-empty">暂无常用说明，点右侧 + 号从「系统值」或「自定义」添加</span>';
+    box.innerHTML = '<span class="preset-empty">暂无常用说明，点 + 号从「系统值」或「自定义」添加</span>';
+    renderPresetAdd(box);
     return;
   }
   list.forEach(function(txt, idx){
@@ -1317,6 +1314,10 @@ function renderPresets(){
     span.className = 'preset-text';
     span.textContent = txt;
     b.appendChild(span);
+    var plus = document.createElement('span');          // 内联「+」：与文本同一 div，点整条即追加到备注
+    plus.className = 'preset-add-inline';
+    plus.textContent = '+';
+    b.appendChild(plus);
     var del = document.createElement('span');
     del.className = 'preset-del';
     del.textContent = '×';
@@ -1326,7 +1327,7 @@ function renderPresets(){
       if (presetEdit) return;                            // 编辑态：点标签本体不填备注
       if (e.target === del || del.contains(e.target)){   // 点 × → 删除
         removePreset(curCat.id, idx);
-      } else {                                           // 点标签本体 → 追加到备注
+      } else {                                           // 点标签本体（含内联 +）→ 追加到备注
         appendPresetToNote(txt);
       }
     });
@@ -1335,6 +1336,41 @@ function renderPresets(){
       removePreset(curCat.id, idx);
     });
     box.appendChild(b);
+  });
+  renderPresetAdd(box);
+}
+
+/* 在常用说明列表末尾内联追加「+」按钮（不再单独成容器）：点开「系统值 / 自定义」菜单，新增预设（仅写缓存） */
+function renderPresetAdd(box){
+  var wrap = document.createElement('span');
+  wrap.className = 'preset-add-wrap';
+  var btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'preset-add'; btn.id = 'presetAddBtn'; btn.title = '添加常用说明'; btn.textContent = '+';
+  var menu = document.createElement('div');
+  menu.className = 'preset-add-menu'; menu.id = 'presetAddMenu'; menu.hidden = true;
+  menu.innerHTML = '<button type="button" class="preset-add-item" data-act="system">系统值</button><button type="button" class="preset-add-item" data-act="custom">自定义</button>';
+  wrap.appendChild(btn); wrap.appendChild(menu);
+  box.appendChild(wrap);
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    menu.hidden = !menu.hidden;
+  });
+  menu.addEventListener('click', function(e){
+    var item = e.target.closest('.preset-add-item'); if (!item) return;
+    e.stopPropagation(); menu.hidden = true;
+    var act = item.getAttribute('data-act');
+    if (!curCat){ showAlert('请先选择类别，再添加常用说明。'); return; }
+    var catId = curCat.id;
+    if (act === 'system'){
+      var sys = ((CONFIG.presetNotes || {})[catId]) || [];
+      if (!sys.length){ showAlert('「' + curCat.name + '」系统值为空：请先在「设置 → 考勤配置」里填写该类别的常用说明并保存到 Waline。'); return; }
+      sys.forEach(function(t){ addPreset(catId, t); });
+    } else if (act === 'custom'){
+      askText('自定义常用说明（' + curCat.name + '）', '请输入一条常用说明').then(function(v){
+        if (v === null || v === undefined) return;       // 取消
+        addPreset(catId, v);
+      });
+    }
   });
 }
 
@@ -1799,35 +1835,6 @@ $('#selAll').addEventListener('click', function(){
 $('#selNone').addEventListener('click', function(){
   peopleOfGroup().forEach(function(p){ selPeople.delete(p.n); });
   renderPeople(); applyView();
-});
-/* 常用说明：+ 号弹菜单（系统值 / 自定义），增删均只写缓存 */
-$('#presetAddBtn').addEventListener('click', function(e){
-  e.stopPropagation();
-  var m = $('#presetAddMenu');
-  m.hidden = !m.hidden;
-});
-$('#presetAddMenu').addEventListener('click', function(e){
-  e.stopPropagation();
-  var item = e.target.closest('.preset-add-item');
-  if (!item) return;
-  var act = item.getAttribute('data-act');
-  $('#presetAddMenu').hidden = true;
-  if (!curCat){
-    showAlert('请先选择类别，再添加常用说明。');
-    return;
-  }
-  var catId = curCat.id;
-  if (act === 'system'){
-    // 追加「当前类别」在 Waline 配置中的系统值（去重）
-    var sys = ((CONFIG.presetNotes || {})[catId]) || [];
-    if (!sys.length){ showAlert('「' + curCat.name + '」系统值为空：请先在「设置 → 考勤配置」里填写该类别的常用说明并保存到 Waline。'); return; }
-    sys.forEach(function(t){ addPreset(catId, t); });
-  } else if (act === 'custom'){
-    askText('自定义常用说明（' + curCat.name + '）', '请输入一条常用说明').then(function(v){
-      if (v === null || v === undefined) return;       // 取消
-      addPreset(catId, v);
-    });
-  }
 });
 document.addEventListener('click', function(e){
   var m = $('#presetAddMenu');
