@@ -614,6 +614,24 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       </div>
     </div>
 
+    <div class="cfg-section">
+      <div class="cfg-section-title">管理密码</div>
+      <div class="cfg-hint">用于「审核 / 批准」及删除受保护记录（待提交免密）。密码只在本机计算 SHA-256 哈希后保存，<b>明文不落库</b>（/kaoqing/config 可被公开接口匿名读取）。出于安全不回显原文：<b>留空 = 不修改</b>，忘记密码只能重设。</div>
+      <div class="cfg-line">
+        <span class="cfg-label">审核密码</span>
+        <input type="password" id="cfgPwdReview" autocomplete="new-password" placeholder="未设置">
+      </div>
+      <div class="cfg-line">
+        <span class="cfg-label">批准密码</span>
+        <input type="password" id="cfgPwdApprove" autocomplete="new-password" placeholder="未设置">
+      </div>
+      <div class="cfg-line">
+        <span class="cfg-label">管理员密码</span>
+        <input type="password" id="cfgPwdAdmin" autocomplete="new-password" placeholder="未设置">
+      </div>
+      <div class="cfg-hint">权限层级：管理员 &gt; 批准 &gt; 审核。管理员可删除任意状态（含完成）；批准可删「待批准 / 待审核 / 待提交」；审核可删「待审核 / 待提交」。</div>
+    </div>
+
     <div class="modal-actions">
       <button type="button" class="btn-cancel" id="cfgClose">关闭</button>
       <button type="button" class="btn-ok" id="cfgSave">保存到 Waline</button>
@@ -694,10 +712,36 @@ var presetEdit   = false;                              // 常用说明编辑态�
 
 var MIN_MINUTES   = 30;     // 时间段最少 0.5 小时
 
-/* 密码：审核 / 批准 / 管理员（占位值，接后端前请改掉） */
-var PWD_REVIEW  = '1';     // 审核密码：可删除 待审核、待提交
-var PWD_APPROVE = '12';    // 批准密码：可删除 待批准、待审核、待提交
-var PWD_ADMIN   = '123';   // 管理员密码：可删除任意状态（含完成）
+/* ---------- 管理密码（审核 / 批准 / 管理员）----------
+   密码不再硬编码在源码中，改为存于 Waline 配置（/kaoqing/config，与考勤配置同一条评论），
+   由「设置 → 考勤配置 → 管理密码」设置，全端共享。
+   存储形态：仅存 SHA-256 哈希（加固定盐），**明文不落库**，因为 /kaoqing/config 可被公开接口匿名读取。
+   注意：这是纯前端系统的安全上限（盐在源码中公开），请勿使用与其它系统相同的重要密码。 */
+var PWD_SALT = 'kaoqing#role#2026';   // 哈希固定盐（仅用于避免明文落库，非强安全）
+/* 无 crypto.subtle 时（极老浏览器 / 非安全上下文）的降级哈希，保证任何情况下都不写明文 */
+function _fallbackHash(s){
+  var h1 = 0x811c9dc5, h2 = 0x01000193;
+  for (var i = 0; i < s.length; i++){
+    h1 = (h1 ^ s.charCodeAt(i)) >>> 0; h1 = (h1 * 16777619) >>> 0;
+    h2 = (h2 + s.charCodeAt(i) * (i + 7)) >>> 0; h2 = ((h2 << 13) | (h2 >>> 19)) >>> 0;
+  }
+  return ('fb$' + h1.toString(16).padStart(8,'0') + h2.toString(16).padStart(8,'0'));
+}
+async function pwdHash(pwd){
+  if (pwd == null || pwd === '') return '';
+  try {
+    var data = new TextEncoder().encode(PWD_SALT + '|' + pwd);
+    var buf = await crypto.subtle.digest('SHA-256', data);
+    return Array.prototype.map.call(new Uint8Array(buf), function(b){ return b.toString(16).padStart(2, '0'); }).join('');
+  } catch(e){
+    return _fallbackHash(PWD_SALT + '|' + pwd);
+  }
+}
+/* 校验输入密码是否匹配已存哈希（存哈希为空 = 未配置，一律不匹配） */
+async function pwdMatch(input, storedHash){
+  if (!input || !storedHash) return false;
+  return (await pwdHash(input)) === storedHash;
+}
 
 /* ---------- Waline 读写（匿名模式：数据读写均匿名、无需登录；登录仅用于管控「设置」入口；参照 APP.html 同一 Waline 服务端） ---------- */
 var WALINE_SERVER = 'https://waline.snowhoo.net'; // ← 与 APP.html 同一 Waline 服务端（如需更换改这里）
@@ -717,7 +761,8 @@ var HOLIDAY_PATH  = '/kaoqing/holidays'; // 节假日数据在 Waline 中存放�
 var PEOPLE_PATH   = '/kaoqing/people';   // 人员数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var CONFIG_PATH   = '/kaoqing/config';   // 考勤配置（午休扣除）存放路径（写入为一条 JSON 评论）
 var SERIAL_PATH   = '/kaoqing/serial';   // 单据流水号配置（年月+类别 → 已用最大序号），由前端在新建/删除记录时实时写入（带管理员令牌），Waline 中始终仅 1 条
-var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30', presetNotes:{} }; // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值(按类别)，页面启动从 Waline 读取覆盖）
+var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30', presetNotes:{},
+                      pwdReview:'', pwdApprove:'', pwdAdmin:'' };  // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值 + 管理密码哈希(审核/批准/管理员)，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
 /* 一行 = 一条完整记录：日期 / 整天 / 起止时间 / 备注事由 / 本行独立小时（最多 3 行，每行独立成一条记录） */
 function newSeg(date){ return { date: date || todayStr(), allDay:false, start:'', end:'', note:'' }; }
@@ -1938,21 +1983,26 @@ function showAlert(message, title){
 function askText(title, placeholder){
   return showModal({ title: title, input: placeholder || '', okText: '确定', cancelText: '取消' });
 }
-/* 角色密码校验：审核 / 批准（自定义弹窗） */
+/* 角色密码校验：审核 / 批准（自定义弹窗）。密码取 Waline 配置中的哈希，未配置则直接拒绝并引导去设置 */
 async function confirmRole(role){
   var label = role === 'review' ? '审核' : '批准';
+  var stored = role === 'review' ? CONFIG.pwdReview : CONFIG.pwdApprove;
+  if (!stored){
+    await showAlert('尚未配置「' + label + '」密码。\n请到右上角「设置 → 考勤配置 → 管理密码」中设置。');
+    return false;
+  }
   var pwd = await askPassword('请输入' + label + '密码');
   if (pwd === null) return false;            // 取消
-  var exp = role === 'review' ? PWD_REVIEW : PWD_APPROVE;
-  if (pwd !== exp){ await showAlert('密码错误'); return false; }
+  if (!(await pwdMatch(pwd, stored))){ await showAlert('密码错误'); return false; }
   return true;
 }
-/* 删除权限：待提交直接删（无需密码）；其余按密码层级判定 */
-function canDelete(status, pwd){
+/* 删除权限：待提交直接删（无需密码）；其余按密码层级判定。密码为 Waline 配置中的哈希（未配置 → 一律无权） */
+async function canDelete(status, pwd){
   if (status === '待提交') return true;                                 // 无需密码
-  if (pwd === PWD_ADMIN) return true;                                  // 管理员：全部
-  if (status === '待审核') return pwd === PWD_REVIEW || pwd === PWD_APPROVE;
-  if (status === '待批准') return pwd === PWD_APPROVE;                  // 审核密码无权删待批准
+  if (!pwd) return false;
+  if (CONFIG.pwdAdmin && (await pwdMatch(pwd, CONFIG.pwdAdmin))) return true;   // 管理员：全部（含完成）
+  if (status === '待审核') return (await pwdMatch(pwd, CONFIG.pwdReview)) || (await pwdMatch(pwd, CONFIG.pwdApprove));
+  if (status === '待批准') return await pwdMatch(pwd, CONFIG.pwdApprove);     // 审核密码无权删待批准
   return false;                                                        // 完成 仅管理员可删
 }
 /* 直接走库：先收集符合条件的记录，复制后改状态 POST 到 Waline，全部成功后再复读 Waline 重渲染。
@@ -2092,7 +2142,7 @@ $('#records').addEventListener('click', async function(e){
     if (re.status !== '待提交'){
       var pwde = await askPassword('请输入修改密码');
       if (pwde === null) return;                                  // 取消
-      if (!canDelete(re.status, pwde)){ await showAlert('密码错误或无修改权限'); return; }
+      if (!(await canDelete(re.status, pwde))){ await showAlert('密码错误或无修改权限'); return; }
     }
     startEdit(ie);
     return;
@@ -2106,7 +2156,7 @@ $('#records').addEventListener('click', async function(e){
   if (r.status !== '待提交'){
     var pwd = await askPassword('请输入删除密码');
     if (pwd === null) return;                                  // 取消
-    if (!canDelete(r.status, pwd)){ await showAlert('密码错误或无删除权限'); return; }
+    if (!(await canDelete(r.status, pwd))){ await showAlert('密码错误或无删除权限'); return; }
   }
   // 再确认（单条删除也要弹窗确认，防误删）
   var okOne = await showModal({ title:'确认删除',
@@ -2149,7 +2199,10 @@ $('#delRecordsBtn').addEventListener('click', async function(){
   if (needPwd){
     var pwd = await askPassword('选中含需审核/批准/完成的记录，请输入删除密码');
     if (pwd === null) return;                                  // 取消
-    var allOk = targets.every(function(r){ return canDelete(r.status, pwd); });
+    var allOk = true;                                          // canDelete 已改为异步(哈希比对)，不能用 every 同步遍历
+    for (var ti = 0; ti < targets.length; ti++){
+      if (!(await canDelete(targets[ti].status, pwd))){ allOk = false; break; }
+    }
     if (!allOk){ await showAlert('密码错误或无删除权限（含受保护记录无法删除）'); return; }
   }
   // 再确认：列出待删条目（过多则截断预览）
@@ -3280,6 +3333,10 @@ async function loadConfig(){
       if (best.obj.workStart)  CONFIG.workStart  = best.obj.workStart;
       if (best.obj.workEnd)    CONFIG.workEnd    = best.obj.workEnd;
       if (best.obj.presetNotes && typeof best.obj.presetNotes === 'object' && !Array.isArray(best.obj.presetNotes)) CONFIG.presetNotes = best.obj.presetNotes;
+      // 管理密码：只接收哈希字符串（明文绝不落库）
+      if (typeof best.obj.pwdReview  === 'string') CONFIG.pwdReview  = best.obj.pwdReview;
+      if (typeof best.obj.pwdApprove === 'string') CONFIG.pwdApprove = best.obj.pwdApprove;
+      if (typeof best.obj.pwdAdmin   === 'string') CONFIG.pwdAdmin   = best.obj.pwdAdmin;
     }
   } catch(e){
     console.warn('[kaoqing] 读取考勤配置失败（使用默认）', e && e.message ? e.message : e);
@@ -3312,6 +3369,12 @@ function openConfig(){
     var cat = ta.getAttribute('data-cat');
     ta.value = (((CONFIG.presetNotes || {})[cat]) || []).join('\n');
   });
+  // 管理密码：不回显原文，仅用 placeholder 反映「已设置 / 未设置」，留空 = 不修改
+  [['#cfgPwdReview', CONFIG.pwdReview], ['#cfgPwdApprove', CONFIG.pwdApprove], ['#cfgPwdAdmin', CONFIG.pwdAdmin]].forEach(function(p){
+    var el = $(p[0]); if (!el) return;
+    el.value = '';
+    el.placeholder = p[1] ? '已设置（留空则不修改）' : '未设置';
+  });
   $('#cfgMask').hidden = false;
 }
 async function saveConfigToWaline(){
@@ -3322,6 +3385,15 @@ async function saveConfigToWaline(){
     var cat = ta.getAttribute('data-cat');
     presetRaw[cat] = ta.value.split('\n').map(function(s){ return s.trim(); }).filter(function(s){ return s.length; });
   });
+  // 管理密码：留空 = 保持原哈希不变；填写 = 计算 SHA-256 哈希后覆盖（明文绝不入库）
+  var pwdReview  = ($('#cfgPwdReview')  && $('#cfgPwdReview').value)  || '';
+  var pwdApprove = ($('#cfgPwdApprove') && $('#cfgPwdApprove').value) || '';
+  var pwdAdmin   = ($('#cfgPwdAdmin')   && $('#cfgPwdAdmin').value)   || '';
+  var pwdNew = {
+    review:  pwdReview  ? await pwdHash(pwdReview)  : CONFIG.pwdReview,
+    approve: pwdApprove ? await pwdHash(pwdApprove) : CONFIG.pwdApprove,
+    admin:   pwdAdmin   ? await pwdHash(pwdAdmin)   : CONFIG.pwdAdmin
+  };
   var payload = {
     v: 1, type: 'config',
     deductLunch: $('#cfgDeductLunch').checked,
@@ -3329,7 +3401,10 @@ async function saveConfigToWaline(){
     lunchEnd:   $('#cfgLunchEnd').value   || '13:00',
     workStart:  $('#cfgWorkStart').value  || '08:30',
     workEnd:    $('#cfgWorkEnd').value    || '17:30',
-    presetNotes: presetRaw
+    presetNotes: presetRaw,
+    pwdReview:  pwdNew.review,
+    pwdApprove: pwdNew.approve,
+    pwdAdmin:   pwdNew.admin
   };
   var user = getWalineUser();
   var token = WALINE_ADMIN_TOKEN || walineToken(user);
@@ -3353,8 +3428,20 @@ async function saveConfigToWaline(){
     CONFIG.workStart   = payload.workStart;
     CONFIG.workEnd     = payload.workEnd;
     CONFIG.presetNotes = payload.presetNotes || {};
+    CONFIG.pwdReview   = payload.pwdReview;
+    CONFIG.pwdApprove  = payload.pwdApprove;
+    CONFIG.pwdAdmin    = payload.pwdAdmin;
+    // 保存后清空输入框并刷新 placeholder（避免误以为还留在表单里 / 反映最新设置状态）
+    [['#cfgPwdReview', CONFIG.pwdReview], ['#cfgPwdApprove', CONFIG.pwdApprove], ['#cfgPwdAdmin', CONFIG.pwdAdmin]].forEach(function(p){
+      var el = $(p[0]); if (!el) return;
+      el.value = '';
+      el.placeholder = p[1] ? '已设置（留空则不修改）' : '未设置';
+    });
     cloudToastHide('saveCfg');
-    showAlert('已保存考勤配置：午休扣除' + (CONFIG.deductLunch ? '已开启' : '已关闭') + '，午休 ' + CONFIG.lunchStart + '-' + CONFIG.lunchEnd + '；正常上班 ' + CONFIG.workStart + '-' + CONFIG.workEnd + '。');
+    var pwdMsg = ['审核', '批准', '管理员'].map(function(n, k){
+      return n + (k === 0 ? CONFIG.pwdReview : (k === 1 ? CONFIG.pwdApprove : CONFIG.pwdAdmin) ? '已设置' : '未设置');
+    }).join('，');
+    showAlert('已保存考勤配置：午休扣除' + (CONFIG.deductLunch ? '已开启' : '已关闭') + '，午休 ' + CONFIG.lunchStart + '-' + CONFIG.lunchEnd + '；正常上班 ' + CONFIG.workStart + '-' + CONFIG.workEnd + '。\n管理密码：' + pwdMsg + '。');
   } catch(err){
     cloudToastError('数据写入失败!', 'saveCfg');
     showAlert('保存到 Waline 失败：' + (err && err.message ? err.message : err));
