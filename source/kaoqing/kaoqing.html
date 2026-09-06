@@ -37,7 +37,7 @@ body{
 .tb-center{position:absolute;left:50%;transform:translateX(-50%);font-size:1.05rem;font-weight:600;letter-spacing:.5px;white-space:nowrap}
 .tb-right{display:flex;align-items:center;justify-content:flex-end;flex:1}
 .tb-logo{height:30px;width:auto;display:block}
-.tb-company{font-size:1rem;font-weight:600;white-space:nowrap}
+.tb-company{font-size:.82rem;font-weight:600;white-space:nowrap}
 /* ---- 顶栏右侧：设置图标 + Waline 登录头像 ---- */
 .top-actions{position:relative;display:flex;align-items:center;gap:10px}
 .icon-btn{
@@ -90,7 +90,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .modal-mask[hidden]{display:none}
 .modal{background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.25);width:min(360px,90vw);max-height:90vh;overflow-y:auto;padding:20px;animation:modalIn .15s ease}
 @keyframes modalIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.modal-title{font-size:1rem;font-weight:600;margin-bottom:10px}
+.modal-title{font-size:.82rem;font-weight:600;margin-bottom:10px}
 .modal-msg{font-size:.9rem;color:var(--text-muted);margin-bottom:14px;white-space:pre-wrap;word-break:break-word}
 .modal-input-wrap{margin-bottom:14px}
 .modal-input-wrap input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:.95rem;background:var(--bg);color:var(--text);outline:none}
@@ -163,7 +163,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .chip{
   min-width:95px;padding:5px 16px;border-radius:12px;cursor:pointer;
   border:1.5px solid var(--border);background:transparent;color:var(--text-secondary);
-  font-size:1rem;font-weight:600;text-align:center;
+  font-size:.82rem;font-weight:600;text-align:center;
   transition:background .15s,color .15s,border-color .15s;
 }
 .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -193,7 +193,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 
 /* ---- 区域三：内容（日期/时间段/小时数/说明 四项同一行，窄屏自动折行） ---- */
 [hidden]{display:none!important}
-.form-row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px;font-size:1rem}
+.form-row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px;font-size:.82rem}
 .form-row > .field,.form-row > .sub-row{margin-bottom:0}
 .sub-row{display:flex;align-items:center;gap:8px}
 .sub-row > .field{flex:1}
@@ -207,18 +207,18 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 }
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
 /* 各时间段行：弹性布局（flex），元素按 日期/整天/起/至/止/小时/备注/± 顺序流动，窄屏自动折行 */
-.time-row .fDate{flex:0 0 auto;width:140px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:1rem;background:transparent;font-weight:600}
-.time-row .all-day{display:inline-flex;align-items:center;gap:3px;font-size:1rem;color:var(--text-secondary);cursor:pointer;min-width:56px;font-weight:600}
+.time-row .fDate{flex:0 0 auto;width:140px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600}
+.time-row .all-day{display:inline-flex;align-items:center;gap:3px;font-size:.82rem;color:var(--text-secondary);cursor:pointer;min-width:56px;font-weight:600}
 .time-row .all-day input{width:14px;height:14px;accent-color:var(--accent)}
 #rangeBlock{flex:1 1 300px}
 #rowNote{flex:1 1 140px}
 #rowNote input{min-width:80px}
 .time-segs{flex:1;display:flex;flex-direction:column;gap:8px;min-width:180px}
 .time-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:100%}
-.time-row select{flex:0 0 auto;width:auto;font-size:1rem;font-weight:600}
-.time-row .sep{color:var(--text-muted);font-size:1rem;white-space:nowrap}
-.time-row .fSegNote{flex:1 1 140px;min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:1rem;background:transparent}
-.time-row .segHours{flex:0 0 auto;width:55px;text-align:right;font-size:1rem;font-weight:600;white-space:nowrap;color:var(--text-secondary)}
+.time-row select{flex:0 0 auto;width:auto;font-size:.82rem;font-weight:600}
+.time-row .sep{color:var(--text-muted);font-size:.82rem;white-space:nowrap}
+.time-row .fSegNote{flex:1 1 140px;min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent}
+.time-row .segHours{flex:0 0 auto;width:55px;text-align:right;font-size:.82rem;font-weight:600;white-space:nowrap;color:var(--text-secondary)}
 .seg-actions{margin-left:auto}   /* ± 按钮固定推到行尾 */
 .seg-act{border:none;background:var(--accent-soft);color:var(--accent);cursor:pointer;
   width:28px;height:28px;border-radius:8px;font-size:1.05rem;line-height:1;flex:0 0 auto;
