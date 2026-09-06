@@ -1086,6 +1086,15 @@ function isWorkday(date){
   var w = new Date(date + 'T00:00:00').getDay();
   return !(w === 0 || w === 6);                              // 周一~周五
 }
+/* 休息日类型标注（独立于 HOLIDAYS_OK，始终可判定）：返回 '' 表示非休息日 */
+function restDayLabel(date){
+  if (!date) return '';
+  if (HOLIDAYS.holidays.indexOf(date) >= 0) return '法定节假日（国假）';   // 国假
+  if (HOLIDAYS.rest.indexOf(date) >= 0)      return '调休休息日';            // 调休放假
+  var w = new Date(date + 'T00:00:00').getDay();
+  if (w === 0 || w === 6) return '正常双休（周末）';                       // 自然周末
+  return '';
+}
 /* 时间段是否与「正常上班时段」(workStart~workEnd) 重叠 */
 function segOverlapWork(sg){
   if (sg.allDay) return true;                                // 整天=workStart~workEnd，必然重叠
@@ -1103,7 +1112,7 @@ function findRuleConflict(segs, catId){
   if (!isLeave && !isOt) return null;                       // 其它类别不校验这两条规则
   for (var i = 0; i < segs.length; i++){
     var sg = segs[i], date = sg.date;
-    if (isLeave && HOLIDAYS.holidays.indexOf(date) >= 0) return { rule: 1, i: i, date: date };
+    if (isLeave && !isWorkday(date)) return { rule: 1, i: i, date: date };   // 休息日(国假/调休休息/正常双休)无需请假
     if (isOt && isWorkday(date) && segOverlapWork(sg))      return { rule: 2, i: i, date: date };
   }
   return null;
@@ -1679,7 +1688,8 @@ async function submit(){
     var rs = segs[ruleC.i];
     var where = '第 ' + (ruleC.i + 1) + ' 行（' + ruleC.date + (rs.start ? (' ' + rs.start + '-' + rs.end) : '') + '）';
     if (ruleC.rule === 1){
-      await showAlert('请假与节假日重叠：' + where + ' 落在法定节假日（国假），请假不应安排在节假日，请调整日期或类别后再保存。', '无法保存');
+      var rlabel = restDayLabel(ruleC.date);
+      await showAlert('请假与休息日重叠：' + where + ' 落在' + (rlabel || '休息日') + '，休息日无需请假，请调整日期或类别后再保存。', '无法保存');
     } else {
       await showAlert('加班与正常工作时间重叠：' + where + ' 与正常工作时间（' + CONFIG.workStart + '-' + CONFIG.workEnd + '）重叠，加班不应安排在正常上班时段，请调整时段后再保存。', '无法保存');
     }
