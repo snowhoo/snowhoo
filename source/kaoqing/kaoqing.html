@@ -206,19 +206,20 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   font-family:inherit;
 }
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
-/* 各时间段行：用 CSS Grid 固定列宽，保证多行之间的 日期/时段/小时/± 严格对齐 */
-.time-row .fDate{width:130;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:.86rem;background:transparent;font-weight: 600}
+/* 各时间段行：弹性布局（flex），元素按 日期/整天/起/至/止/小时/备注/± 顺序流动，窄屏自动折行 */
+.time-row .fDate{flex:0 0 auto;width:140px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:1rem;background:transparent;font-weight:600}
 .time-row .all-day{display:inline-flex;align-items:center;gap:3px;font-size:1rem;color:var(--text-secondary);cursor:pointer;min-width:56px;font-weight:600}
 .time-row .all-day input{width:14px;height:14px;accent-color:var(--accent)}
 #rangeBlock{flex:1 1 300px}
 #rowNote{flex:1 1 140px}
 #rowNote input{min-width:80px}
 .time-segs{flex:1;display:flex;flex-direction:column;gap:8px;min-width:180px}
-.time-row{display:grid;width:100%;grid-template-columns:120px 60px 56px auto 56px 240px 66px 70px;align-items:center;gap:6px}
-.time-row select{width:100%;font-size:1rem}
+.time-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:100%}
+.time-row select{flex:0 0 auto;width:auto;font-size:1rem}
 .time-row .sep{color:var(--text-muted);font-size:1rem;white-space:nowrap}
-.time-row .fSegNote{min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:1rem;background:transparent;max-width:220}
-.time-row .segHours{width:55px;text-align:right;font-size:1rem;font-weight:600;white-space:nowrap;color:var(--text-secondary)}
+.time-row .fSegNote{flex:1 1 140px;min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:1rem;background:transparent}
+.time-row .segHours{flex:0 0 auto;width:55px;text-align:right;font-size:1rem;font-weight:600;white-space:nowrap;color:var(--text-secondary)}
+.seg-actions{margin-left:auto}   /* ± 按钮固定推到行尾 */
 .seg-act{border:none;background:var(--accent-soft);color:var(--accent);cursor:pointer;
   width:28px;height:28px;border-radius:8px;font-size:1.05rem;line-height:1;flex:0 0 auto;
   display:inline-flex;align-items:center;justify-content:center}
@@ -232,7 +233,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 /* ---- 区域四：记录 ---- */
 .summary{
   font-size:.82rem;color:var(--text-secondary);line-height:1.5;
-  background:var(--accent-soft);border-radius:10px;padding:8px 10px;margin:12px 0;
+  background:var(--accent-soft);border-radius:10px;padding:5px 10px;margin:12px 0;
 }
 .save-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;margin-top:12px}
 .save-row .summary{margin:0;flex:1 1 240px;min-width:0}
@@ -280,7 +281,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .warn{color:var(--warn)}
 .pv-row{display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px}
 .pv-row + .pv-row{margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)}
-.pv-row > span{border-left:1px solid var(--border);padding-left:8px}
+.pv-row > span{border-left:1px solid var(--border);padding-left:5px}
 .pv-row > span:first-child{border-left:0;padding-left:0}
 /* 预览列对齐：同一预览内 类别/日期/时段/小时/说明 逐行一致，仅"姓名"长度不同 → 给姓名列固定宽度即可让后续各列对齐 */
 .pv-i{flex:0 0 1.8em;color:var(--text-muted);font-variant-numeric:tabular-nums}
@@ -300,6 +301,9 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .cancel-btn{flex:0 0 auto;padding:8px 18px;border:1px solid var(--border);border-radius:10px;cursor:pointer;
   background:#e5e7eb;color:#6b7280;font-size:.85rem;font-weight:600;}
 .cancel-btn:hover{background:#d1d5db}
+/* 取消 / 添加(保存) 按钮位于「考勤内容」标题栏右侧成对显示（随区域显示而显示，进入添加/修改即出现） */
+.card-head .cancel-btn{margin-left:auto;padding:4px 14px;font-size:.78rem;border-radius:8px}
+.card-head #submitBtn{padding:4px 14px;font-size:.78rem;border-radius:8px}
 .records{display:block;overflow-x:auto}
 .rec-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
 .rec-count{font-size:.78rem;color:var(--text-muted)}
@@ -406,7 +410,9 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   .tb-center{font-size:.92rem}
   .tb-company{font-size:.86rem}
   .time-segs{overflow-x:auto}
-  .time-row{grid-template-columns:104px auto 64px auto 64px minmax(70px,1fr) 58px auto;gap:5px}
+  .time-row{gap:5px;flex-wrap:wrap}
+  .time-row .fDate{width:120px}
+  .time-row .fSegNote{flex:1 1 100%}   /* 窄屏备注占满整行，避免挤压时段控件 */
 }
 @media print{
   #topbar,.card:not(#secAction){display:none!important}
@@ -484,6 +490,8 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       <div class="card-head">
         <span class="idx">3</span>
         <h2>考勤内容</h2>
+        <button type="button" class="cancel-btn" id="cancelBtn">取消</button>
+        <button id="submitBtn" disabled>添加</button>
       </div>
       <div class="card-body">
         <div class="form-row">
@@ -508,11 +516,9 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
             </div>
           </div>
         </div>
-        <!-- 待保存内容预览 + 保存（同行，底部对齐） -->
+        <!-- 待保存内容预览 -->
         <div class="save-row">
           <div class="summary pv-empty" id="summary">尚未选择人员与类别</div>
-          <button type="button" class="cancel-btn" id="cancelBtn">取消</button>
-          <button id="submitBtn" disabled>添加</button>
         </div>
       </div>
     </section>
