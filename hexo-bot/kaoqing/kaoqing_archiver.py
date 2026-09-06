@@ -36,6 +36,7 @@
 import os
 import sys
 import json
+import re
 import time
 import datetime
 import urllib.request
@@ -92,11 +93,29 @@ def waline_req(method, path, *, token=None, params=None, body=None):
         return json.loads(r.read().decode("utf-8"))
 
 
+def _same_url(field, path):
+    """评论自带的 url 字段是否等于目标 path（兼容 URL 编码差异）。"""
+    if field is None:
+        return False
+    a = str(field)
+    if a == path:
+        return True
+    try:
+        return urllib.parse.unquote(a) == urllib.parse.unquote(path)
+    except Exception:
+        return False
+
+
 def list_comments(path):
     """列出某 path 下全部 Waline 评论（含 approved/waiting/spam，翻完所有分页）。
-    用管理员列表接口 type=list + url 过滤，并带 Bearer 管理员令牌：匿名写入可能被 Akismet
-    误判 spam，公开接口(GET ?path=)会过滤 spam；本函数读全部状态，保证被标 spam 的评论
-    也能被回放/清理，不会永久堆积在 Waline 中。"""
+
+    ⚠️⚠️ 关键安全点（实测确认）：Waline 的 `type=list` 接口**忽略 url 参数** —— 即便带上
+    url=/kaoqing/xxx，它仍返回「整个实例」的所有评论（含 /app_n/*、/app-game/*、books.html
+    等其它项目）。因此绝不能靠接口参数来限定 path，必须在 Python 端按每条评论自身的 url 字段
+    精确过滤，否则会把别人项目的评论当成当前 path 的数据来处理甚至删除（2026-09-05 事故教训）。
+
+    读取仍用管理员列表接口 + Bearer 管理员令牌：匿名写入可能被 Akismet 误判 spam，
+    公开接口(GET ?path=)会过滤 spam；本函数读全部状态，保证被标 spam 的评论也能被回放/清理。"""
     all_c = []
     page = 1
     while True:
@@ -116,7 +135,11 @@ def list_comments(path):
         if len(arr) < 100:
             break
         page += 1
-    return all_c
+    # 按评论自身的 url 精确过滤（type=list 不按 url 过滤，只翻页不筛）
+    matched = [c for c in all_c if _same_url(c.get("url"), path)]
+    if len(matched) != len(all_c):
+        print("[INFO] %s: 接口返回全实例 %d 条 → 按 url 精确过滤后本 path 命中 %d 条" % (path, len(all_c), len(matched)))
+    return matched
 
 
 # ----------------------------- 事件回放（核心） -----------------------------
@@ -167,25 +190,57 @@ def month_of(rec):
 
 
 # ----------------------------- 清理重复评论（节假日整包格式用） -----------------------------
-def purge_orphans(path):
+def robust_parse_comment(raw):
+    """与前端 robustParse 一致：Waline 常把 comment 包成 <p>…</p>、并把引号转成弯引号，
+    直接 json.loads 会失败 → 先去标签、弯引号转直引号、截取首尾大括号再解析。"""
+    if not raw:
+        return None
+    s = re.sub(r"<[^>]*>", "", str(raw))
+    s = s.replace("\u201c", '"').replace("\u201d", '"').replace("&quot;", '"').replace("&amp;", "&")
+    st = s.find("{")
+    en = s.rfind("}")
+    if st < 0 or en <= st:
+        return None
+    try:
+        return json.loads(s[st:en + 1])
+    except Exception:
+        return None
+
+
+def purge_orphans(path, type_name, dry_run=False):
+    """清理某 path 下「整包格式」记录的重复评论，只保留最新（最大 oid）一条。
+
+    用途：节假日(/kaoqing/holidays, type='holiday') 等整包数据此前用匿名 POST 每次同步都
+    追加一条新评论 → 重复堆积。现前端已改为带管理员令牌原地 PUT 复写（只留 1 条），
+    本函数负责清理历史遗留的重复项。
+
+    安全铁律（2026-09-05 事故教训，任何删除动作都必须遵守）：
+      1. 只处理 /kaoqing/* 路径，其它项目的评论绝不动；
+      2. 只删「按 url 精确过滤后 且 type 精确匹配」的精确 oid；
+         绝不反向过滤（不允许"删除不匹配 X 的其余全部"）；
+      3. dry_run=True 时只打印计划，绝不执行删除。"""
+    if not str(path).startswith("/kaoqing/"):
+        print("[SKIP] 拒绝清理非 kaoqing 路径: %s" % path)
+        return 0
     arr = list_comments(path)
     valid = []
     for rec in arr:
         oid = int(rec.get("objectId") or 0)
-        try:
-            o = json.loads(rec.get("orig") or rec.get("comment") or "")
-        except Exception:
-            o = None
-        if o and o.get("type") == "records":
+        o = robust_parse_comment(rec.get("orig") or rec.get("comment") or "")
+        if o and o.get("type") == type_name:
             valid.append((oid, o))
     if len(valid) <= 1:
+        print("[OK] %s 无需清理（url 命中 %d 条，其中 type=%s 的 %d 条）" % (path, len(arr), type_name, len(valid)))
         return 0
     valid.sort(key=lambda x: x[0])
     keep_oid = valid[-1][0]
+    drop = [oid for oid, _ in valid if oid != keep_oid]
+    print("[%s] %s: type=%s 命中 %d 条 → 保留 #%d，待删 %s" %
+          ("DRY-RUN" if dry_run else "PLAN", path, type_name, len(valid), keep_oid, drop))
+    if dry_run:
+        return 0
     removed = 0
-    for oid, _ in valid:
-        if oid == keep_oid:
-            continue
+    for oid in drop:
         try:
             waline_req("DELETE", "/api/comment/%s" % oid, token=TOKEN)
             removed += 1
@@ -372,14 +427,15 @@ def main():
     if args.dry_run:
         print("[archiver] DRY-RUN waline=%s" % WALINE_SERVER)
         archive_once(dry_run=True)
+        purge_orphans(HOLIDAY_PATH, "holiday", dry_run=True)
         return
     print("[archiver] 启动 waline=%s 模式=%s" % (WALINE_SERVER, "loop" if args.loop else "once"))
     while True:
         n = archive_once(dry_run=False)
         if n:
             print("[archiver] 本轮归档 %d 条" % n)
-        # 节假日仍为整包格式，仅清理重复评论
-        purge_orphans(HOLIDAY_PATH)
+        # 节假日仍为整包格式，仅清理重复评论（type='holiday'；只保留最新一条）
+        purge_orphans(HOLIDAY_PATH, "holiday", dry_run=False)
         if not args.loop:
             break
         time.sleep(CFG["poll_interval"])

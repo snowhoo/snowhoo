@@ -1389,6 +1389,18 @@ function recSortValue(i, key){
   return '';
 }
 
+/* 读写进行中 → 禁用「数据选择」「状态筛选」两个下拉框，防止切换视图打断写入。
+   注意：以 _pumping 为准而非 writeQueue.length，避免「解锁等待期间新增项滞留队列」让禁用态卡死。 */
+function recBusyNow(){
+  return Object.keys(procMap).length > 0 || !!_pumping || !!readingBack;
+}
+/* 同步两个下拉框的禁用态。必须在 renderRecords 的**所有**分支（含「无记录」提前 return 的分支）都调用，
+   否则记录表被清空后下拉框会残留上一次的 disabled=true 而永久卡死。 */
+function syncRecDropsDisabled(busy){
+  var _src = document.getElementById('recSource'); if (_src) _src.disabled = !!busy;
+  var _st  = document.getElementById('recStatus'); if (_st)  _st.disabled  = !!busy;
+}
+
 function renderRecords(){
   var box = $('#records');
   // 状态筛选：默认「待提交」。归档只读浏览（R2）不筛选，否则切到归档月份会因默认状态而看不到数据
@@ -1404,11 +1416,12 @@ function renderRecords(){
     } else {
       box.innerHTML = '<p class="empty">' + (records.length ? '该状态下暂无记录' : '暂无记录') + '</p>';
     }
+    syncRecDropsDisabled(recBusyNow());   // 空态也必须同步解禁，否则下拉框会残留禁用态（记录被删光后卡死）
     updateRecButtons();   // 在「新」DOM 已渲染后重算按钮现隐/可用（空态时全部隐藏）
     return;
   }
   var editable = (viewMode === 'edit');   // 归档(R2)只读：不渲染勾选框与改删按钮
-  var busy = Object.keys(procMap).length > 0 || _pumping || readingBack;   // 状态变更进行中 / 队列正在消费(_pumping) / 回读进行中 → 整表 + 两个下拉框禁用（注意：以 _pumping 为准而非 writeQueue.length，避免「解锁等待期间新增项滞留队列」让禁用态卡死）
+  var busy = recBusyNow();   // 状态变更进行中 / 队列正在消费(_pumping) / 回读进行中 → 整表 + 两个下拉框禁用
   var html = '<table class="rec-table' + (busy ? ' rec-disabled' : '') + '"><thead><tr>';
   if (editable) html += '<th class="c-check"><input type="checkbox" id="recCheckAll" class="rec-check-all" title="全选 / 取消全选"></th>';
   // 可点击排序的表头：点击正序→再点反序；当前排序列高亮并显示 ▲/▼
@@ -1480,9 +1493,7 @@ function renderRecords(){
   });
   html += '</tbody></table>';
   box.innerHTML = html;
-  // 读写进行中（状态变更或写库队列非空）：禁用「数据选择」「状态筛选」两个下拉框，防止切换视图打断写入
-  var _src = document.getElementById('recSource'); if (_src) _src.disabled = busy;
-  var _st = document.getElementById('recStatus'); if (_st) _st.disabled = busy;
+  syncRecDropsDisabled(busy);   // 禁用「数据选择」「状态筛选」两个下拉框，防止切换视图打断写入
   updateRecButtons();   // 必须在新表格已渲染、勾选框为最新状态后重算按钮现隐/可用（修复：原先在替换 innerHTML 前计算，导致状态沿用旧勾选）
 }
 
@@ -1700,7 +1711,9 @@ async function syncRecords(){
     });
     renderRecords();           // 此刻仍 disabled（readingBack=true）
   } finally {
-    readingBack = false;       // 回读完成，交由 pumpWriteQueue 的 finally 解除禁用
+    readingBack = false;       // 回读完成
+    renderRecords();           // 必须重渲染一次：否则回读结束的禁用态(res-disabled/下拉框)不会解除
+                               // （部分调用方如 switchToWaline 在 syncRecords 之后不再渲染 → 会永久卡在禁用态）
   }
 }
 
@@ -2253,36 +2266,16 @@ async function fetchCloudRecord(path, type, attempt){
     throw e;
   }
 }
-/* 写入方式：
-   - 考勤记录：现统一走 postRecordOp（带 WALINE_ADMIN_TOKEN）——add 用 token POST 新建、edit 用 token PUT 原评论、del 用 token DELETE 原评论；
+/* 写入方式（已全部走管理员令牌 WALINE_ADMIN_TOKEN，页面内不再有任何匿名写库）：
+   - 考勤记录：postRecordOp —— add 用 token POST 新建、edit 用 token PUT 原评论、del 用 token DELETE 原评论；
      不再追加「事件流」评论（旧数据仍按 replayEvents 兼容回放，每条最终记录带 oid 供定位原评论）。
-   - 节假日：仍用免登录的匿名 POST（用户无需登录、不带 token），每条 = 一条独立评论，由后端 --cleanup 压实。
-   - 人员(people)：走带 token 的 PUT 原地复写（见 savePeopleToWaline）。
-   ANON_NICK/ANON_MAIL 为固定匿名身份（节假日/兜底用）。 */
+   - 节假日：syncHolidays —— 带 token 的 PUT 原地复写（walineSaveRecord），Waline 始终只留 1 条；
+     此前用匿名 POST 每次同步都追加一条，是节假日重复记录的根因。
+   - 人员(people) / 配置(config) / 流水号(serial)：同样带 token 的 PUT 原地复写。
+   无管理员令牌时一律明确失败报错，绝不退回匿名写入（匿名写拿不到 oid，之后无法改删）。
+   ANON_NICK/ANON_MAIL 仅作为评论的展示用 nick/mail 元数据（请求头仍带 Bearer），不代表匿名写入。 */
 var ANON_NICK = '考勤记录';
 var ANON_MAIL = 'kaoqin@example.com';
-/* 匿名写入（免登录方案）：无需 token，固定匿名身份 POST 新建一条评论。
-   匿名无法 PUT 原地更新，故每次保存都会新建一条 → Waline 随保存次数累积评论；
-   前端读取只取最新一条（fetchCloudRecord 保证显示正确），旧评论由后端 --cleanup 清空。 */
-async function anonPostCloud(path, obj){
-  if (!CLOUD_BASE) return false;
-  var payload = {
-    comment: JSON.stringify(obj),
-    url: path,
-    nick: ANON_NICK,
-    mail: ANON_MAIL,
-    link: '',
-    ua: navigator.userAgent
-  };
-  try {
-    var r = await fetch(CLOUD_BASE + '/api/comment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    return r.ok;
-  } catch(e){ return false; }
-}
 
 /* 节假日：从 Waline 读取（公开接口，匿名）。页面打开不加载，点「加班」类别时才由 ensureHolidays() 懒加载：
    quiet=true 时不弹全屏遮罩，加载期间由 calcOtType 返回「加载中」，在需要显示加班类别处渲染旋转圆圈。 */
@@ -2291,6 +2284,7 @@ async function loadHolidays(quiet){
   if (!quiet) cloudToast('read', '处理中：读取节假日...', 'loadHolidays');
   try {
     var best = await fetchCloudRecord(HOLIDAY_PATH, 'holiday');
+    holidayOid.oid = best ? best.oid : 0;   // 记住节假日评论 oid：供 syncHolidays 用管理员令牌原地复写（不再每次新建一条）
     if (best && best.obj && best.obj.holidays && best.obj.holidays.length){
       // 按 timor.tech 的 wage 字段把放假区间拆成「法定国假(wage=3)」与「调休放假/休息日(wage=2)」两类；
       // 调休放假日本质是休息日（双休待遇），不归为「国假」。补班日归 makeup（平时）。
@@ -2601,8 +2595,10 @@ async function postRecordOp(op, rec){
       return res && res.oid ? res : false;   // 成功：返回带 oid 的对象（truthy）；失败：false
     } catch(e){ return false; }
   }
-  // 无令牌兜底：匿名追加事件（旧行为，edit/del 不会产生 oid → 之后只能继续追加事件）
-  return anonPostCloud(RECORDS_PATH, { op: op, id: rec.id, rec: (op === 'del' ? null : rec) });
+  // 无管理员令牌：不再退回「匿名追加事件」——匿名写入拿不到 oid，之后 edit/del 无法定位原评论，
+  // 会把数据模型打回「事件流」且无法再原地改删，故明确失败并提示，而不是默默写成匿名脏数据。
+  console.error('[kaoqing] 未配置管理员令牌，拒绝匿名写入考勤记录（op=' + op + '）');
+  return false;
 }
 
 /* 读取：以 Waline 为唯一来源（无 localStorage 兜底）。拉取全量评论 → 回放成当前二维表。 */
@@ -2846,13 +2842,24 @@ async function syncHolidays(){
   });
 
   var payload = { v: 1, type: 'holiday', year: year, updatedAt: Date.now(), holidays: holidays, rest: rest, makeup: makeup };
+  /* 与人员/配置一致：用管理员令牌原地复写（PUT），Waline 里始终只留 1 条，不再每次同步都追加一条新评论（重复记录根因）。
+     walineSaveRecord 在旧评论为匿名、PUT 不动时会自动「带 token 新建 + 删除旧的」，顺带清掉历史重复。 */
+  var body = { comment: JSON.stringify(payload), url: HOLIDAY_PATH, nick: ANON_NICK, mail: ANON_MAIL, link: '', ua: navigator.userAgent };
+  if (!WALINE_ADMIN_TOKEN){
+    showAlert('未配置管理员令牌，无法写入节假日。\n请先在脚本中配置 WALINE_ADMIN_TOKEN。');
+    return;
+  }
   cloudToast('write','处理中...');
   try {
-    var ok = await anonPostCloud(HOLIDAY_PATH, payload);
+    var res = await walineSaveRecord(holidayOid.oid, body, WALINE_ADMIN_TOKEN);
+    if (res && res.oid) holidayOid.oid = res.oid;
+    var ok = !!(res && res.oid);
     if (ok){
       await loadHolidays();   // 写库成功后以库为准刷新本地 HOLIDAYS（不提前缓存）
       if (!_ctErrorActive) cloudToastHide();
-      showAlert('已写入 Waline\n路径：' + HOLIDAY_PATH + '\n' + year + ' 年：国假 ' + holidays.length + ' 天，调休休息 ' + rest.length + ' 天，补班 ' + makeup.length + ' 天。');
+      showAlert('已' + (res.mode === 'update' ? '更新' : '写入') + ' Waline（原地复写，始终只留 1 条）\n路径：' + HOLIDAY_PATH +
+                '\n' + year + ' 年：国假 ' + holidays.length + ' 天，调休休息 ' + rest.length + ' 天，补班 ' + makeup.length + ' 天。' +
+                (res.removed ? '\n已清理旧节假日评论 #' + res.oldOid + '。' : ''));
     } else {
       cloudToastError('数据写入失败!');
       showAlert('写入 Waline 失败，请检查网络或权限');
