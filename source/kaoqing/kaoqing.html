@@ -215,7 +215,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 #rowNote input{min-width:80px}
 .time-segs{flex:1;display:flex;flex-direction:column;gap:8px;min-width:180px}
 .time-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:100%}
-.time-row select{flex:0 0 auto;width:auto;font-size:1rem}
+.time-row select{flex:0 0 auto;width:auto;font-size:1rem;font-weight:600}
 .time-row .sep{color:var(--text-muted);font-size:1rem;white-space:nowrap}
 .time-row .fSegNote{flex:1 1 140px;min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:1rem;background:transparent}
 .time-row .segHours{flex:0 0 auto;width:55px;text-align:right;font-size:1rem;font-weight:600;white-space:nowrap;color:var(--text-secondary)}
@@ -583,7 +583,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 
     <div class="cfg-section">
       <div class="cfg-section-title">午休扣除</div>
-      <label class="cfg-check"><input type="checkbox" id="cfgDeductLunch"> 请假时间段若涵盖午休时段，自动扣除该部分时长</label>
+      <label class="cfg-check"><input type="checkbox" id="cfgDeductLunch"> 请假类时段若涵盖午休时段，自动扣除该部分时长（加班类不扣午休）</label>
       <div class="cfg-line">
         <span class="cfg-label">午休时段</span>
         <input type="time" id="cfgLunchStart" value="12:00">
@@ -676,6 +676,14 @@ function isOtCatId(id){
   if (id === 'overtime') return true;
   if (typeof id === 'string' && id.indexOf('ot-') === 0) return true;   // 兼容此前误拆的三类
   return false;
+}
+/* 请假类：除加班外的其余类别（调休/年假/病假/事假/其它）一律视为请假。
+   午休扣除仅对请假类生效；加班类全天固定为有效工时、不扣午休。 */
+var LEAVE_CAT_IDS = ['tiaoxiu','nianjia','bingjia','shijia','qita'];
+function isLeaveCat(id){
+  if (isOtCatId(id)) return false;                 // 加班永不算请假
+  if (typeof id === 'string' && LEAVE_CAT_IDS.indexOf(id) >= 0) return true;
+  return false;                                    // 未知类别默认按请假处理（保守）
 }
 
 /* 常用说明：不再写死具体文案，但保留「按类别分类」的结构。系统值来自 Waline /kaoqing/config 的
@@ -961,21 +969,36 @@ function segMinutes(seg){
   if (d <= 0) d += 24 * 60;          // 结束早于开始 = 跨天
   return d;
 }
-/* 单行扣除午休后的分钟数（无效 / 不足 0.5h 返回 null） */
-function segHoursMin(seg){
+/* 单行分钟数（无效 / 不足 0.5h 返回 null）。
+   catId：本行类别（缺省取当前表单类别 curCat）。
+   规则：
+     - 整天(allDay)：全天工时 = 上班时间段(workStart~workEnd) 之差（由设置决定，不写死）；
+       加班类不扣午休；请假类且开启午休扣除时，再减去与午休窗口重叠部分。
+     - 非整天：仅「请假类」(isLeaveCat) 且配置开启午休扣除时，扣除与午休窗口重叠的时长；
+       加班类绝不扣午休。 */
+function segHoursMin(seg, catId){
   if (!seg.start || !seg.end) return null;
   var m = segMinutes(seg);
   if (m == null || m < MIN_MINUTES) return null;
-  if (CONFIG.deductLunch){
-    var L = toMin(CONFIG.lunchStart), R = toMin(CONFIG.lunchEnd);
-    m -= lunchOverlap(toMin(seg.start), toMin(seg.end), L, R);
+  var cid = (catId != null) ? catId : (curCat ? curCat.id : null);
+  // 整天：按「上班时间段」配置计算全天工时
+  if (seg.allDay){
+    m = segMinutes({ start: CONFIG.workStart, end: CONFIG.workEnd });
+    if (isLeaveCat(cid) && CONFIG.deductLunch){
+      m -= lunchOverlap(toMin(CONFIG.workStart), toMin(CONFIG.workEnd), toMin(CONFIG.lunchStart), toMin(CONFIG.lunchEnd));
+    }
+    if (m < 0) m = 0;
+    return m;
+  }
+  if (isLeaveCat(cid) && CONFIG.deductLunch){
+    m -= lunchOverlap(toMin(seg.start), toMin(seg.end), toMin(CONFIG.lunchStart), toMin(CONFIG.lunchEnd));
     if (m < 0) m = 0;
   }
   return m;
 }
 /* 单行小时文字：未计算返回 ''（调用处兜底显示「？？小时」） */
-function segHoursText(seg){
-  var m = segHoursMin(seg);
+function segHoursText(seg, catId){
+  var m = segHoursMin(seg, catId);
   return (m === null) ? '' : (Math.round((m / 60) * 100) / 100) + ' 小时';
 }
 /* 单行是否构成一条完整记录（日期 + 起止 + ≥0.5h） */
@@ -1000,7 +1023,7 @@ function computeTotal(){
     var hasS = !!seg.start, hasE = !!seg.end;
     if (hasS && hasE){
       if (!seg.date){ partial = true; return; }   // 缺日期
-      var m = segHoursMin(seg);                   // 已含午休扣除
+      var m = segHoursMin(seg, curCat ? curCat.id : null);   // 已含午休扣除（仅请假类）
       if (m !== null){ anyComplete = true; total += m; }
     } else if (hasS || hasE){
       partial = true;                             // 只填了一端
@@ -1129,7 +1152,7 @@ function refresh(){
           : esc(ot + '加班');
       }
       var t   = (sg.start && sg.end) ? (esc(sg.start) + '-' + esc(sg.end)) : '<span class="warn">未选时段</span>';
-      var hrs = segHoursText(sg) || '？？小时';
+      var hrs = segHoursText(sg, curCat.id) || '？？小时';
       rows.push('<div class="pv-row">' +
         '<span class="pv-i">' + String(idx).padStart(2, '0') + '</span>' +
         '<span class="pv-n">' + esc(n) + '</span>' +
@@ -1524,7 +1547,7 @@ async function submit(){
       mode:    curCat.mode,
       people:  [name],
       detail:  sg.start + '-' + sg.end,
-      hours:   Math.round((segHoursMin(sg) / 60) * 100) / 100,
+      hours:   Math.round((segHoursMin(sg, curCat.id) / 60) * 100) / 100,
       note:    sg.note || '',
       status:  '待提交',
       ts:      Date.now()
@@ -1567,7 +1590,7 @@ async function submit(){
       catId: curCat.id, catName: curCat.name, color: curCat.color, mode: curCat.mode,
       people: old.people,
       detail: f.start + '-' + f.end,
-      hours:  Math.round((segHoursMin(f) / 60) * 100) / 100,
+      hours:  Math.round((segHoursMin(f, curCat.id) / 60) * 100) / 100,
       note:   f.note || '',
       status: old.status,
       ts:     old.ts
@@ -1764,6 +1787,10 @@ $('#timeSegs').addEventListener('change', function(e){
   var seg = timeSegs[idx]; if (!seg) return;
   if (el.classList.contains('fStart')) seg.start = el.value;
   else if (el.classList.contains('fEnd')) seg.end = el.value;
+  if (el.classList.contains('fStart') || el.classList.contains('fEnd')){
+    // 起止时间恰为上班时段 → 视为「整天」（与编辑回填判定一致），保证整天工时固定 8.5h
+    seg.allDay = (seg.start === CONFIG.workStart && seg.end === CONFIG.workEnd);
+  }
   else if (el.classList.contains('fDate')){ seg.date = el.value; refresh(); return; }
   else if (el.classList.contains('allDayChk')){                       // 整天：本行时段按正常上班时间填入并锁定
     seg.allDay = el.checked;
