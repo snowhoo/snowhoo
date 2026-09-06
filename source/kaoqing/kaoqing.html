@@ -1074,6 +1074,40 @@ function segsOverlap(a, b){
   var b0 = toMin(b.start), b1 = toMin(b.end); if (b1 <= b0) b1 += 1440;
   return Math.max(a0, b0) < Math.min(a1, b1);
 }
+/* 工作日判定：国假/调休休息日 → 否；调休补班 → 是；其余按自然周（周一~周五为工作日）。
+   节假日未成功读取(HOLIDAYS_OK=false)时退化为纯自然周判定（不臆测补班/调休）。 */
+function isWorkday(date){
+  if (!date) return false;
+  if (HOLIDAYS_OK){
+    if (HOLIDAYS.holidays.indexOf(date) >= 0) return false;   // 法定国假
+    if (HOLIDAYS.rest.indexOf(date) >= 0)      return false;   // 调休休息日
+    if (HOLIDAYS.makeup.indexOf(date) >= 0)    return true;    // 调休补班=工作日
+  }
+  var w = new Date(date + 'T00:00:00').getDay();
+  return !(w === 0 || w === 6);                              // 周一~周五
+}
+/* 时间段是否与「正常上班时段」(workStart~workEnd) 重叠 */
+function segOverlapWork(sg){
+  if (sg.allDay) return true;                                // 整天=workStart~workEnd，必然重叠
+  if (!sg.start || !sg.end) return false;
+  var s = toMin(sg.start), e = toMin(sg.end);
+  if (s > e){ var t = s; s = e; e = t; }                    // 容错：起止颠倒
+  var ws = toMin(CONFIG.workStart), we = toMin(CONFIG.workEnd);
+  return s < we && e > ws;                                  // 任一交集即重叠
+}
+/* 业务规则校验（新增 + 修改都查）：返回 {rule,i,date} 或 null
+   规则1 请假类 与 节假日(国假) 重叠 → 禁止；
+   规则2 加班类 与 正常工作时间(工作日 workStart~workEnd) 重叠 → 禁止。 */
+function findRuleConflict(segs, catId){
+  var isLeave = isLeaveCat(catId), isOt = isOtCatId(catId);
+  if (!isLeave && !isOt) return null;                       // 其它类别不校验这两条规则
+  for (var i = 0; i < segs.length; i++){
+    var sg = segs[i], date = sg.date;
+    if (isLeave && HOLIDAYS.holidays.indexOf(date) >= 0) return { rule: 1, i: i, date: date };
+    if (isOt && isWorkday(date) && segOverlapWork(sg))      return { rule: 2, i: i, date: date };
+  }
+  return null;
+}
 /* 多行日期时间冲突检测：同一天出现重叠时间段即冲突（不同日期不冲突，独立行本就可不同）。返回 {i,j} 或 null */
 function findTimeConflict(){
   var comp = timeSegs.filter(segComplete);
@@ -1638,6 +1672,19 @@ async function submit(){
     };
   }
   var segs = timeSegs.filter(segComplete);   // 只提交填写完整的行
+
+  /* 业务规则校验：请假↔节假日 / 加班↔正常工作时间 重叠 → 禁止保存 */
+  var ruleC = findRuleConflict(segs, curCat.id);
+  if (ruleC){
+    var rs = segs[ruleC.i];
+    var where = '第 ' + (ruleC.i + 1) + ' 行（' + ruleC.date + (rs.start ? (' ' + rs.start + '-' + rs.end) : '') + '）';
+    if (ruleC.rule === 1){
+      await showAlert('请假与节假日重叠：' + where + ' 落在法定节假日（国假），请假不应安排在节假日，请调整日期或类别后再保存。', '无法保存');
+    } else {
+      await showAlert('加班与正常工作时间重叠：' + where + ' 与正常工作时间（' + CONFIG.workStart + '-' + CONFIG.workEnd + '）重叠，加班不应安排在正常上班时段，请调整时段后再保存。', '无法保存');
+    }
+    return;
+  }
 
   /* 多行自身冲突：仅新增模式检测（修改已限制单行，不再做此检查）。
      同一天多个时间段重叠 → 弹窗提示且禁止保存 */
