@@ -283,7 +283,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .pv-row > span:first-child{border-left:0;padding-left:0}
 /* 预览列对齐：同一预览内 类别/日期/时段/小时/说明 逐行一致，仅"姓名"长度不同 → 给姓名列固定宽度即可让后续各列对齐 */
 .pv-i{flex:0 0 0em;color:var(--text-muted);font-variant-numeric:tabular-nums}
-.pv-n{flex:0 0 3.4em;color:var(--text);font-weight:600;white-space:nowrap}
+.pv-n{flex:0 0 3.5em;color:var(--text);font-weight:600;white-space:nowrap}
 .pv-c{color:var(--accent)}
 .pv-c.pv-green{color:#16a34a}
 .pv-c.pv-orange{color:#f97316}
@@ -430,7 +430,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
     <div class="tb-left">
       <img src="logo.png" alt="logo" class="tb-logo" onerror="this.style.display='none'">
     </div>
-    <div class="tb-center">考勤登记系统</div>
+    <div class="tb-center">考勤登记</div>
     <div class="tb-right">
       <div class="top-actions">
         <button id="setBtn" class="icon-btn" disabled title="设置（登录后可用）" aria-label="设置">
@@ -504,7 +504,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 
         <!-- 常用说明：标签列表，点击即追加填入备注事由；点 + 弹菜单「系统值 / 自定义」；每条可 × 删除（增删仅写缓存） -->
         <div class="preset-box">
-          <span class="preset-label">常用说明：</span>
+          <span class="preset-label">常用说明</span>
           <div class="preset-list" id="presetList"></div>
           <div class="preset-add-wrap">
             <button type="button" class="preset-add" id="presetAddBtn" title="添加常用说明">+</button>
@@ -557,8 +557,8 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 <!-- 人员配置弹窗（增删改 Waline 中的人员，支持 xlsx 导入导出） -->
 <div class="modal-mask" id="peopleMask" hidden>
   <div class="modal people-modal" role="dialog" aria-modal="true">
-    <div class="modal-title">人员配置（Waline · /kaoqing/people）</div>
-    <div class="modal-msg">人员数据以 Waline 为唯一来源，前端不再内置写死数据。表格内可直接点击单元格修改；也可导出 xlsx 在 Excel 里批量编辑后再导入。改完点「保存到 Waline（复写）」，原地覆盖原记录，不会多出条目。</div>
+    <div class="modal-title">人员配置</div>
+    <div class="modal-msg">表格内可直接点击单元格修改；也可导出 xlsx 在 Excel 里批量编辑后再导入。改完点「保存」。</div>
     <div class="people-toolbar">
       <button type="button" class="pt-btn" id="peopleAddRow">+ 新增一行</button>
       <button type="button" class="pt-btn" id="peopleExport">导出 xlsx</button>
@@ -568,7 +568,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
     <div class="people-table-wrap"><table class="people-table" id="peopleTable"></table></div>
     <div class="modal-actions">
       <button type="button" class="btn-cancel" id="peopleClose">关闭</button>
-      <button type="button" class="btn-ok" id="peopleSync">保存到 Waline（复写）</button>
+      <button type="button" class="btn-ok" id="peopleSync">保存</button>
     </div>
   </div>
 </div>
