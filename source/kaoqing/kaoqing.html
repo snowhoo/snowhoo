@@ -207,7 +207,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 }
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
 /* 各时间段行：弹性布局（flex），元素按 日期/整天/起/至/止/小时/备注/± 顺序流动，窄屏自动折行 */
-.time-row .fDate{flex:0 0 auto;width:120px;padding:3px 3px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600}
+.time-row .fDate{flex:0 0 auto;width:120px;padding:3px 3px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600;font-family: inherit}
 .time-row .all-day{display:inline-flex;align-items:center;gap:3px;font-size:.82rem;color:var(--text-secondary);cursor:pointer;min-width:56px;font-weight:600}
 .time-row .all-day input{width:14px;height:14px;accent-color:var(--accent)}
 #rangeBlock{flex:1 1 300px}
@@ -386,7 +386,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .cfg-section-title{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:10px;letter-spacing:.03em}
 .cfg-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0}
 .cfg-label{font-size:.85rem;color:var(--text-secondary);min-width:62px}
-.cfg-line input[type=time]{padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--bg-surface);color:var(--text);outline:none;font-family:inherit}
+.cfg-line input[type=time]{padding:3px 3px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--bg-surface);color:var(--text);outline:none;font-family:inherit}
 .cfg-line input[type=time]:focus{border-color:var(--accent)}
 .cfg-line .sep{color:var(--text-muted);font-size:.82rem;flex:0 0 auto}
 .cfg-check{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--text);cursor:pointer;margin:2px 0}
@@ -592,12 +592,12 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
         <span class="sep">-</span>
         <input type="time" id="cfgWorkEnd" value="17:30">
       </div>
-      <div class="cfg-hint">勾选考勤卡片中的「整天」时，自动带入此时间段。</div>
+      <div class="cfg-hint">勾选「整天」，自动带入此时间段。</div>
     </div>
 
     <div class="cfg-section">
       <div class="cfg-section-title">常用说明（系统值）</div>
-      <div class="cfg-hint">按类别填写，每行一条，保存到 Waline 全端共享；前端用户可在此基础上追加自定义条目。</div>
+      <div class="cfg-hint">按类别每行一条；用户可追加自定义条目。</div>
       <div class="preset-cfg-grid" id="cfgPresetNotes">
         <div class="preset-cfg-cell"><span class="preset-cfg-name">加班</span><textarea class="cfg-textarea cfg-pn" data-cat="overtime" rows="3" placeholder="每行一条"></textarea></div>
         <div class="preset-cfg-cell"><span class="preset-cfg-name">调休</span><textarea class="cfg-textarea cfg-pn" data-cat="tiaoxiu" rows="3" placeholder="每行一条"></textarea></div>
@@ -610,7 +610,8 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 
     <div class="cfg-section">
       <div class="cfg-section-title">管理密码</div>
-      <div class="cfg-hint">用于「审核 / 批准」及删除受保护记录（待提交免密）。密码只在本机计算 SHA-256 哈希后保存，<b>明文不落库</b>（/kaoqing/config 可被公开接口匿名读取）。出于安全不回显原文：<b>留空 = 不修改</b>，忘记密码只能重设。</div>
+      <div class="cfg-hint">用于「审核/批准/删除」。<b>留空 = 不修改</b>，忘记密码只能重设。</div>
+	  <!--用于「审核 / 批准」及删除受保护记录（待提交免密）。密码只在本机计算 SHA-256 哈希后保存，明文不落库（/kaoqing/config 可被公开接口匿名读取）。出于安全不回显原文：留空 = 不修改，忘记密码只能重设。-->
       <div class="cfg-line">
         <span class="cfg-label">审核密码</span>
         <input type="password" id="cfgPwdReview" autocomplete="new-password" placeholder="未设置">
@@ -623,12 +624,12 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
         <span class="cfg-label">管理员密码</span>
         <input type="password" id="cfgPwdAdmin" autocomplete="new-password" placeholder="未设置">
       </div>
-      <div class="cfg-hint">权限层级：管理员 &gt; 批准 &gt; 审核。管理员可删除任意状态（含完成）；批准可删「待批准 / 待审核 / 待提交」；审核可删「待审核 / 待提交」。</div>
+      <div class="cfg-hint">权限层级：管理员 &gt; 批准 &gt; 审核。<br>管理员可删除任意状态（含完成）<br>批准可删「待批准/待审核/待提交」<br>审核可删「待审核/待提交」</div>
     </div>
 
     <div class="modal-actions">
       <button type="button" class="btn-cancel" id="cfgClose">关闭</button>
-      <button type="button" class="btn-ok" id="cfgSave">保存到 Waline</button>
+      <button type="button" class="btn-ok" id="cfgSave">保存</button>
     </div>
   </div>
 </div>
