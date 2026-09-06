@@ -871,10 +871,22 @@ function initTimePicker(){
   document.addEventListener('keydown', function(e){
     if (!tpEl.hidden && e.key === 'Escape') closeTimePicker(false);
   });
+  window.addEventListener('scroll', positionTimePicker, true);   // 弹窗打开时跟随输入框一起滚动（capture 捕获任意滚动容器）
+  window.addEventListener('resize', positionTimePicker);
 }
 function updateTpPreview(){
   if (!tpPreview) return;
   tpPreview.textContent = (tpHour == null ? '--' : String(tpHour).padStart(2,'0')) + ':' + (tpMin == null ? '--' : String(tpMin).padStart(2,'0'));
+}
+function positionTimePicker(){
+  if (!tpEl || tpEl.hidden || !tpCurrent) return;
+  var r = tpCurrent.getBoundingClientRect();
+  var pw = tpEl.offsetWidth, ph = tpEl.offsetHeight;
+  var left = r.left; var top = r.bottom + 6;
+  if (left + pw > document.documentElement.clientWidth - 8) left = document.documentElement.clientWidth - pw - 8;
+  if (left < 8) left = 8;
+  if (top + ph > document.documentElement.clientHeight - 8){ top = r.top - ph - 6; if (top < 8) top = 8; }
+  tpEl.style.left = left + 'px'; tpEl.style.top = top + 'px';
 }
 function openTimePicker(inputEl){
   if (!tpEl) initTimePicker();          // 延迟初始化兜底：脚本早于 #timePicker 解析时也确保可用
@@ -891,13 +903,7 @@ function openTimePicker(inputEl){
   }
   updateTpPreview();
   tpEl.hidden = false;
-  var r = inputEl.getBoundingClientRect();
-  var pw = tpEl.offsetWidth, ph = tpEl.offsetHeight;
-  var left = r.left; var top = r.bottom + 6;
-  if (left + pw > document.documentElement.clientWidth - 8) left = document.documentElement.clientWidth - pw - 8;
-  if (left < 8) left = 8;
-  if (top + ph > document.documentElement.clientHeight - 8){ top = r.top - ph - 6; if (top < 8) top = 8; }
-  tpEl.style.left = left + 'px'; tpEl.style.top = top + 'px';
+  positionTimePicker();   // 固定定位：按输入框当前视口位置定位，滚动时由 scroll 监听持续跟随
 }
 function closeTimePicker(fill, val){
   if (fill && tpCurrent && val) applyTimeInput(tpCurrent, val);
