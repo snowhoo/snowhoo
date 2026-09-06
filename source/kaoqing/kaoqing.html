@@ -738,6 +738,8 @@ var HOLIDAY_CACHE_KEY = 'kaoqing_holidays_cache';   // 节假日缓存：只有�
 var holidaysLoading = false;                        // 节假日懒加载中 → 需要显示加班类别的地方显示旋转圆圈
 var recordsLoading = false;                         // 记录表数据懒加载中 → 在「该状态下暂无记录」位置显示旋转圆圈
 var procMap = {};                                   // 状态变更进行中：recordId -> 文案（如「提交中…」）；存在时对应勾选框位置显示旋转圆圈+文案，整表禁用
+var writeQueue = [];                                // 新增记录的本地写库队列：{ rec, ph }；保存后立即占位显示 + 后台顺序写库，不阻塞继续添加
+var _pumping = false;                               // 队列消费中标志（防止 pumpWriteQueue 重入）
 /* 加班类别：国假（法定假日）/ 双休（正常周末）/ 平时（工作日，含调休补班上班）/
    「加载中」= 节假日正在后台懒加载（渲染成旋转圆圈）；「未知」= 未读取/读取失败，不臆测 */
 function calcOtType(date){
@@ -1384,8 +1386,8 @@ function renderRecords(){
     return;
   }
   var editable = (viewMode === 'edit');   // 归档(R2)只读：不渲染勾选框与改删按钮
-  var procActive = Object.keys(procMap).length > 0;   // 状态变更进行中 → 整表禁用（勾选框位置改显加载圆圈+文案）
-  var html = '<table class="rec-table' + (procActive ? ' rec-disabled' : '') + '"><thead><tr>';
+  var busy = Object.keys(procMap).length > 0 || writeQueue.length > 0;   // 状态变更进行中 或 写库队列非空 → 整表 + 两个下拉框禁用
+  var html = '<table class="rec-table' + (busy ? ' rec-disabled' : '') + '"><thead><tr>';
   if (editable) html += '<th class="c-check"><input type="checkbox" id="recCheckAll" class="rec-check-all" title="全选 / 取消全选"></th>';
   // 可点击排序的表头：点击正序→再点反序；当前排序列高亮并显示 ▲/▼
   var heads = [
@@ -1454,6 +1456,9 @@ function renderRecords(){
   });
   html += '</tbody></table>';
   box.innerHTML = html;
+  // 读写进行中（状态变更或写库队列非空）：禁用「数据选择」「状态筛选」两个下拉框，防止切换视图打断写入
+  var _src = document.getElementById('recSource'); if (_src) _src.disabled = busy;
+  var _st = document.getElementById('recStatus'); if (_st) _st.disabled = busy;
   updateRecButtons();   // 必须在新表格已渲染、勾选框为最新状态后重算按钮现隐/可用（修复：原先在替换 innerHTML 前计算，导致状态沿用旧勾选）
 }
 
@@ -1481,8 +1486,9 @@ function resetForm(){
   applyView();             // 隐藏 选择类别/考勤内容，归零内容字段与预览
   refreshSaveBtn();        // 回到「添加」(绿)
 }
-/* 保存/修改进行中：禁用「添加/修改」提交按钮，防止重复提交 */
-function setFormBusy(busy){ var b = $('#submitBtn'); if (b) b.disabled = busy; }
+/* 保存/修改进行中：禁用逻辑已统一交由 renderRecords（依据「procMap 或写库队列是否非空」）处理表格行操作与两个下拉框。
+   添加/修改提交按钮始终保持可用 —— 以支持「本地队列」模式下用户连续添加、无需等待前一条写完。 */
+function setFormBusy(busy){ /* no-op：禁用态由 renderRecords 统一管理 */ }
 
 async function submit(){
   if (!selPeople.size || !curCat || !rangeOK()) return;
@@ -1491,7 +1497,7 @@ async function submit(){
      否则空白行会插进归档/其它状态表里、且单据号也基于错误的数据集。 */
   var wasView = (viewMode === 'view');
   setViewMode('edit');
-  if (wasView){ await loadRecordsFromWaline(true); }   // 从归档切回需重新拉未归档（records 才正确）
+  if (wasView){ await syncRecords(); }   // 从归档切回需重新拉未归档（records 才正确；同步保留进行中占位）
   var rsEl = $('#recStatus');
   if (rsEl){ rsEl.hidden = false; rsEl.value = '待提交'; }   // 强制切到「待提交」筛选，使空白行可见
   renderRecords();
@@ -1570,7 +1576,7 @@ async function submit(){
     try {
       var ok = await postRecordOp('edit', updated);
       for (var e3 = 0; e3 < extra.length; e3++){ if (!await postRecordOp('add', extra[e3])) ok = false; }
-      if (ok){ await loadRecordsFromWaline(true); procMap = {}; renderRecords(); }
+      if (ok){ await syncRecords(); procMap = {}; renderRecords(); }
       else { procMap = {}; renderRecords(); cloudToast('error', '数据写入失败', 'edit'); }
     } catch(e){
       procMap = {}; renderRecords(); cloudToast('error', '修改失败', 'edit');
@@ -1580,65 +1586,82 @@ async function submit(){
     return;
   }
 
-  /* 每人 × 每行 = 一条记录，各自独立 id，逐条发 add 事件 */
+  /* 每人 × 每行 = 一条记录，各自独立 id */
   var newRecs = [];
   Array.from(selPeople).forEach(function(name){
     segs.forEach(function(sg){ newRecs.push(mkRec(name, sg)); });
   });
 
-  /* 添加保存：先插入一条空白记录承载「保存中…」圆圈，再走与状态变更相同的方式（无遮罩、整表禁用）。
-     成功后复读 Waline 会整体替换 records（占位记录随之消失）；失败则移除占位并恢复。 */
-  var pid = 'pending_' + Date.now();
-  var placeholder = { id: pid, _pending: true, docNo: '', people: [], date: '', catId: '', catName: '', detail: '', note: '', status: '', mode: 'range', hours: null, ts: Date.now() };
-  records.unshift(placeholder);
-  procMap[pid] = '保存中…';
+  /* 本地队列模式：立即把数据（除未确定的#号外）全部插入表格占位 → 后台异步顺序写库 → 页面立即恢复初始、可继续添加。
+     无论前面数据是否写完，继续添加都会插入表格等待写入，相当于一个本地写库队列。 */
+  newRecs.forEach(function(rec){
+    var ph = {
+      id: rec.id, _pending: true, docNo: '',
+      people: rec.people, date: rec.date, otType: rec.otType, catId: rec.catId,
+      catName: rec.catName, color: rec.color, mode: rec.mode, detail: rec.detail,
+      hours: rec.hours, note: rec.note, status: '待提交', ts: rec.ts
+    };
+    records.unshift(ph);
+    procMap[rec.id] = '保存中…';
+    writeQueue.push({ rec: rec, ph: ph });
+  });
   renderRecords();
-  setFormBusy(true);
-  try {
-    var allOk = true;
-    /* —— 流水号锁：取号 + 写新记录 + 写回流水配置 全部在锁内，确保并发不重号 ——
-       一次多条写入：锁一次，顺序写多条，一次写回流水配置、一次解锁（避免频繁加解锁） */
-    var lock = await acquireSerialLock();
-    try {
-      // 以锁内读到的 counters 为天花板；本次保存内用 localCounters 自增（支持同一 年月+类别 多条）
-      var localCounters = {};
-      function nextInLock(catId, dateStr){
-        var key = docNoKey(catId, dateStr);
-        if (!(key in localCounters)) localCounters[key] = lock.counters[key] || 0;   // 仅以流水配置(serial)为权威源取号，不扫描前端列表
-        localCounters[key] += 1;
-        return key + String(localCounters[key]).padStart(3, '0');
-      }
-      // 回填单据号（提交前占位显示的可能不是最终号，以锁内取号为准）
-      newRecs.forEach(function(r){ r.docNo = nextInLock(r.catId, r.date); });
-      for (var k = 0; k < newRecs.length; k++){
-        if (!await postRecordOp('add', newRecs[k])) allOk = false;
-      }
-      // 计算最终 counters（取锁内读到的与本次生成的较大值，单调递增不回退）
-      var finalCounters = Object.assign({}, lock.counters);
-      for (var lk in localCounters){ finalCounters[lk] = Math.max(finalCounters[lk] || 0, localCounters[lk]); }
-      await releaseSerialLock(lock.oid, finalCounters);
-    } catch(e){
-      try { await releaseSerialLock(lock.oid, lock.counters); } catch(_){}   // 异常也要尽量解锁，避免死锁
-      throw e;
-    }
-    if (allOk){
-      await loadRecordsFromWaline(true); procMap = {}; renderRecords();
-    } else {
-      records = records.filter(function(r){ return !r._pending; });   // 移除占位记录
-      procMap = {}; renderRecords(); cloudToast('error', '部分数据写入失败', 'add');
-    }
-  } catch(e){
-    records = records.filter(function(r){ return !r._pending; });   // 移除占位记录
-    procMap = {}; renderRecords(); cloudToast('error', '数据写入失败', 'add');
-    console.error('[kaoqing] add 失败', e && e.message ? e.message : e);
-  }
-  // 保存后整体归位：人员 / 类别 / 考勤内容 全部恢复初始状态（UI 状态，与数据无关）
-  setFormBusy(false);
   selPeople.clear();
-  renderPeople();
-  curCat = null;
-  applyView();               // 隐藏 选择类别/考勤内容、归零内容字段、重置预览与保存按钮
-  refreshSaveBtn();          // 归位后回到「添加」(绿)
+  resetForm();             // 恢复初始：清空人员/类别/内容，回到「添加」绿按钮，可继续添加
+  pumpWriteQueue();        // 后台异步写库（fire-and-forget，不阻塞继续添加）
+  return;
+}
+
+/* 本地写库队列消费：串行处理 writeQueue，每条带「流水号锁」取号写库（保证不重号），不阻塞 UI。
+   队列非空期间 renderRecords 会禁用表格行操作与两个下拉框；全部写完才统一回读（syncRecords）呈现真实记录。 */
+async function pumpWriteQueue(){
+  if (_pumping) return;     // 重入保护：已在消费则退出（循环会持续处理后续入队项）
+  _pumping = true;
+  try {
+    while (writeQueue.length){
+      var item = writeQueue.shift();
+      var rec = item.rec;
+      try {
+        var lock = await acquireSerialLock();
+        try {
+          var key = docNoKey(rec.catId, rec.date);
+          var seq = (lock.counters[key] || 0) + 1;            // 仅以流水配置(serial)为权威源取号
+          rec.docNo = key + String(seq).padStart(3, '0');
+          var ok = await postRecordOp('add', rec);
+          var fc = Object.assign({}, lock.counters);
+          fc[key] = Math.max(fc[key] || 0, seq);              // 单调递增，不回退
+          await releaseSerialLock(lock.oid, fc);
+          if (ok){ delete procMap[rec.id]; }                  // 写成功：去掉圆圈（占位仍在，等队列清空统一回读）
+          else { procMap[rec.id] = '写入失败'; cloudToast('error', '部分数据写入失败', 'add'); }
+        } catch(e){
+          try { await releaseSerialLock(lock.oid, lock.counters); } catch(_){}   // 异常也要解锁，避免死锁
+          procMap[rec.id] = '写入失败';
+          console.error('[kaoqing] 写库失败', e && e.message ? e.message : e);
+        }
+      } catch(e){
+        procMap[rec.id] = '写入失败';
+        console.error('[kaoqing] 取锁失败', e && e.message ? e.message : e);
+      }
+      renderRecords();        // 更新圆圈 / 失败标记（下拉框/表格禁用态随 busy 自动维持）
+    }
+    try { await syncRecords(); } catch(e){ console.error('[kaoqing] 回读失败', e && e.message ? e.message : e); }
+  } finally {
+    _pumping = false;
+    procMap = {};             // 清空进行中/失败标记
+    renderRecords();          // 解除禁用（busy=false）
+  }
+}
+
+/* 回读 Waline 并重新渲染；同时把「写库队列中尚未写完」的占位记录补回表格，
+   避免回读（整体重写 records）把正在写入的占位冲掉。 */
+async function syncRecords(){
+  await loadRecordsFromWaline(true);
+  writeQueue.forEach(function(it){
+    if (procMap[it.rec.id] === '写入失败') return;
+    var exists = records.some(function(r){ return r.id === it.rec.id; });
+    if (!exists) records.unshift(it.ph);
+  });
+  renderRecords();
 }
 
 /* 修改：把记录载入表单（区域1~3），进入修改模式；权限控制与删除一致 */
@@ -1896,7 +1919,7 @@ async function eachChecked(condStatus, nextStatus, opText){
     });
     var results = await Promise.all(tasks);
     if (results.every(function(b){ return b; })){
-      await loadRecordsFromWaline(true);   // quiet：不弹遮罩
+      await syncRecords();   // quiet：不弹遮罩（同步保留进行中占位）
       procMap = {};                        // 处理完成：去掉圆圈、解除整表禁用
       renderRecords();
     } else {
@@ -2039,7 +2062,7 @@ $('#records').addEventListener('click', async function(e){
   try {
     var ok = await postRecordOp('del', { id: r.id });   // 先写删除标识记录到 Waline（按 id 标记 del 事件）
     if (!ok){ procMap = {}; renderRecords(); cloudToast('error', '数据写入失败', 'del'); return; }
-    await loadRecordsFromWaline(true);                  // 再复读 Waline（事件回放）→ 重新渲染，绝不直接改本地缓存（不秒删）
+    await syncRecords();                  // 再复读 Waline（事件回放）→ 重新渲染，绝不直接改本地缓存（不秒删）；同步保留进行中占位
     procMap = {}; renderRecords();
   } catch(e){
     procMap = {}; renderRecords(); cloudToast('error', '数据读取失败', 'del');
@@ -2086,7 +2109,7 @@ $('#delRecordsBtn').addEventListener('click', async function(){
     var tasks = targets.map(function(r){ return postRecordOp('del', { id: r.id }); });
     var res = await Promise.all(tasks);
     if (res.every(function(b){ return b; })){
-      await loadRecordsFromWaline(true);
+      await syncRecords();
       procMap = {}; renderRecords();
     }
     else { procMap = {}; renderRecords(); cloudToast('error', '部分数据写入失败', 'del'); }
@@ -2573,7 +2596,7 @@ function setViewMode(mode){
 }
 async function switchToWaline(){
   setViewMode('edit');
-  await loadRecordsFromWaline(true);
+  await syncRecords();
 }
 async function switchToArchive(key){
   setViewMode('view');
