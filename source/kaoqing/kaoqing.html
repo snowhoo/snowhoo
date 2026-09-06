@@ -230,7 +230,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 
 /* ---- 区域四：记录 ---- */
 .summary{
-  font-size:.6rem;color:var(--text-secondary);line-height:1.5;
+  font-size:.72rem;color:var(--text-secondary);line-height:1.5;
   background:var(--accent-soft);border-radius:10px;padding:5px 10px;margin:12px 0;
 }
 .save-row{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;margin-top:12px}
@@ -412,6 +412,9 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   .time-row .fDate{width:115px}
   .time-row .fSegNote{flex:1 1 100%;max-width: 250px}   /* 窄屏备注占满整行，避免挤压时段控件 */
   
+}
+@media (max-width:640px){
+  .pv-row > span{border-left:0;padding-left:0}   /* 小屏预览去掉竖线分隔，改为纯空格 */
 }
 @media print{
   #topbar,.card:not(#secAction){display:none!important}
