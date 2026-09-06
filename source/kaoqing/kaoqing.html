@@ -740,6 +740,7 @@ var recordsLoading = false;                         // 记录表数据懒加载�
 var procMap = {};                                   // 状态变更进行中：recordId -> 文案（如「提交中…」）；存在时对应勾选框位置显示旋转圆圈+文案，整表禁用
 var writeQueue = [];                                // 新增记录的本地写库队列：{ rec, ph }；保存后立即占位显示 + 后台顺序写库，不阻塞继续添加
 var _pumping = false;                               // 队列消费中标志（防止 pumpWriteQueue 重入）
+var readingBack = false;                            // 回读(Waline)进行中标志：回读期间表格+两个下拉框保持禁用，回读完成后才解禁
 /* 加班类别：国假（法定假日）/ 双休（正常周末）/ 平时（工作日，含调休补班上班）/
    「加载中」= 节假日正在后台懒加载（渲染成旋转圆圈）；「未知」= 未读取/读取失败，不臆测 */
 function calcOtType(date){
@@ -1386,7 +1387,7 @@ function renderRecords(){
     return;
   }
   var editable = (viewMode === 'edit');   // 归档(R2)只读：不渲染勾选框与改删按钮
-  var busy = Object.keys(procMap).length > 0 || writeQueue.length > 0;   // 状态变更进行中 或 写库队列非空 → 整表 + 两个下拉框禁用
+  var busy = Object.keys(procMap).length > 0 || writeQueue.length > 0 || readingBack;   // 状态变更进行中 / 写库队列非空 / 回读进行中 → 整表 + 两个下拉框禁用
   var html = '<table class="rec-table' + (busy ? ' rec-disabled' : '') + '"><thead><tr>';
   if (editable) html += '<th class="c-check"><input type="checkbox" id="recCheckAll" class="rec-check-all" title="全选 / 取消全选"></th>';
   // 可点击排序的表头：点击正序→再点反序；当前排序列高亮并显示 ▲/▼
@@ -1437,7 +1438,9 @@ function renderRecords(){
       : '<span class="muted">—</span>';
     html += '<tr data-i="' + i + '">';
     if (editable){
-      if (procMap[r.id]){   // 状态变更进行中：勾选框位置改显 旋转圆圈 + 操作文案
+      if (r._failed){   // 写库失败：号已占用不复用，占位保留并显示失败标记（无勾选框，不可被选中操作）
+        html += '<td class="c-check proc-cell failed-cell"><span class="proc-text" style="color:#e74c3c">✕ 写入失败</span></td>';
+      } else if (procMap[r.id]){   // 状态变更进行中：勾选框位置改显 旋转圆圈 + 操作文案
         html += '<td class="c-check proc-cell"><span class="rec-spin"></span><span class="proc-text">' + esc(procMap[r.id]) + '</span></td>';
       } else {
         html += '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>';
@@ -1612,42 +1615,48 @@ async function submit(){
   return;
 }
 
-/* 本地写库队列消费：串行处理 writeQueue，每条带「流水号锁」取号写库（保证不重号），不阻塞 UI。
-   队列非空期间 renderRecords 会禁用表格行操作与两个下拉框；全部写完才统一回读（syncRecords）呈现真实记录。 */
+/* 本地写库队列消费：取「流水号锁」一次 → 只要队列还有待写数据就持有锁顺序逐条写，全写完才一次解锁。
+   排队期间（含新增续入队项）都取同一把锁内的计数器，#号落号即占用、失败也不复用；
+   写库成功后立即回填该条 #号（不等统一回读）；全部写完不再回读（评论内容含逻辑 id 与 docNo，前端与 Waline 已一致）。 */
 async function pumpWriteQueue(){
   if (_pumping) return;     // 重入保护：已在消费则退出（循环会持续处理后续入队项）
   _pumping = true;
+  var lock = null;
   try {
+    lock = await acquireSerialLock();            // 取锁一次（被他人持有则退避轮询排队）
     while (writeQueue.length){
       var item = writeQueue.shift();
       var rec = item.rec;
       try {
-        var lock = await acquireSerialLock();
-        try {
-          var key = docNoKey(rec.catId, rec.date);
-          var seq = (lock.counters[key] || 0) + 1;            // 仅以流水配置(serial)为权威源取号
-          rec.docNo = key + String(seq).padStart(3, '0');
-          var ok = await postRecordOp('add', rec);
-          var fc = Object.assign({}, lock.counters);
-          fc[key] = Math.max(fc[key] || 0, seq);              // 单调递增，不回退
-          await releaseSerialLock(lock.oid, fc);
-          if (ok){ delete procMap[rec.id]; }                  // 写成功：去掉圆圈（占位仍在，等队列清空统一回读）
-          else { procMap[rec.id] = '写入失败'; cloudToast('error', '部分数据写入失败', 'add'); }
-        } catch(e){
-          try { await releaseSerialLock(lock.oid, lock.counters); } catch(_){}   // 异常也要解锁，避免死锁
+        var key = docNoKey(rec.catId, rec.date);
+        var seq = (lock.counters[key] || 0) + 1;   // 仅以流水配置(serial)为权威源取号；落号即占用，失败也不回退/复用
+        lock.counters[key] = seq;                  // 本地立即推进，保证同批/续入队项不重号
+        rec.docNo = key + String(seq).padStart(3, '0');
+        var ok = await postRecordOp('add', rec);   // 评论内容含 rec（已带 docNo）→ 写成功后 Waline 与前端 id/docNo 一致，无需回读
+        if (ok){
+          item.ph.docNo = rec.docNo;               // 写一条即回填该条 #号（即时反馈）
+          item.ph._pending = false;                // 视为已落地记录，纳入正常筛选/排序
+          delete procMap[rec.id];
+        } else {
+          item.ph._failed = true;                  // 号已占用不复用；占位保留、标记失败待用户处理
           procMap[rec.id] = '写入失败';
-          console.error('[kaoqing] 写库失败', e && e.message ? e.message : e);
+          cloudToast('error', '部分数据写入失败', 'add');
         }
       } catch(e){
+        item.ph._failed = true;
         procMap[rec.id] = '写入失败';
-        console.error('[kaoqing] 取锁失败', e && e.message ? e.message : e);
+        console.error('[kaoqing] 写库失败', e && e.message ? e.message : e);
       }
-      renderRecords();        // 更新圆圈 / 失败标记（下拉框/表格禁用态随 busy 自动维持）
+      renderRecords();        // 更新圆圈 / 失败标记 / 回填#号（下拉框/表格禁用态随 busy 自动维持）
     }
-    try { await syncRecords(); } catch(e){ console.error('[kaoqing] 回读失败', e && e.message ? e.message : e); }
+    await releaseSerialLock(lock.oid, lock.counters);   // 全部写完：一次解锁（counters 单调递增，不回退）
+  } catch(e){
+    // 取锁失败：整批标记失败（号未推进，下次保存可重试）
+    writeQueue.forEach(function(it){ it.ph._failed = true; procMap[it.rec.id] = '写入失败'; });
+    console.error('[kaoqing] 取锁失败', e && e.message ? e.message : e);
   } finally {
     _pumping = false;
-    procMap = {};             // 清空进行中/失败标记
+    procMap = {};             // 清空瞬时标记（失败项靠 _failed 持久标记，不被清掉）
     renderRecords();          // 解除禁用（busy=false）
   }
 }
@@ -1655,13 +1664,18 @@ async function pumpWriteQueue(){
 /* 回读 Waline 并重新渲染；同时把「写库队列中尚未写完」的占位记录补回表格，
    避免回读（整体重写 records）把正在写入的占位冲掉。 */
 async function syncRecords(){
-  await loadRecordsFromWaline(true);
-  writeQueue.forEach(function(it){
-    if (procMap[it.rec.id] === '写入失败') return;
-    var exists = records.some(function(r){ return r.id === it.rec.id; });
-    if (!exists) records.unshift(it.ph);
-  });
-  renderRecords();
+  readingBack = true;          // 回读期间保持表格禁用
+  try {
+    await loadRecordsFromWaline(true);
+    writeQueue.forEach(function(it){
+      if (procMap[it.rec.id] === '写入失败') return;
+      var exists = records.some(function(r){ return r.id === it.rec.id; });
+      if (!exists) records.unshift(it.ph);
+    });
+    renderRecords();           // 此刻仍 disabled（readingBack=true）
+  } finally {
+    readingBack = false;       // 回读完成，交由 pumpWriteQueue 的 finally 解除禁用
+  }
 }
 
 /* 修改：把记录载入表单（区域1~3），进入修改模式；权限控制与删除一致 */
