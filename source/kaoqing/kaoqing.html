@@ -206,7 +206,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   font-family:inherit;
 }
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
-/* 各时间段行：弹性布局（flex），元素按 日期/天/起/至/止/小时/备注/± 顺序流动，窄屏自动折行 */
+/* 各时间段行：弹性布局（flex），元素按 日期/整天/起/至/止/小时/备注/± 顺序流动，窄屏自动折行 */
 .time-row .fDate{flex:0 0 auto;width:110px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600}
 .time-row .all-day{display:inline-flex;align-items:center;gap:3px;font-size:.82rem;color:var(--text-secondary);cursor:pointer;min-width:56px;font-weight:600}
 .time-row .all-day input{width:14px;height:14px;accent-color:var(--accent)}
@@ -494,7 +494,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       <div class="card-body">
         <div class="form-row">
 
-          <!-- 每行 = 一条完整记录：日期 | 天 | 起 | 至 | 止 | 备注事由 | 本行小时 | +/−（最多 3 行） -->
+          <!-- 每行 = 一条完整记录：日期 | 整天 | 起 | 至 | 止 | 备注事由 | 本行小时 | +/−（最多 3 行） -->
           <div class="sub-row" id="rangeBlock" hidden>
             <div class="time-segs" id="timeSegs"></div>
           </div>
@@ -597,7 +597,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
         <span class="sep">至</span>
         <input type="time" id="cfgWorkEnd" value="17:30">
       </div>
-      <div class="cfg-hint">勾选考勤卡片中的「天」时，自动带入此时间段。</div>
+      <div class="cfg-hint">勾选考勤卡片中的「整天」时，自动带入此时间段。</div>
     </div>
 
     <div class="cfg-section">
@@ -718,7 +718,7 @@ var CONFIG_PATH   = '/kaoqing/config';   // 考勤配置（午休扣除）存放
 var SERIAL_PATH   = '/kaoqing/serial';   // 单据流水号配置（年月+类别 → 已用最大序号），由前端在新建/删除记录时实时写入（带管理员令牌），Waline 中始终仅 1 条
 var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30', presetNotes:{} }; // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值(按类别)，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
-/* 一行 = 一条完整记录：日期 / 天 / 起止时间 / 备注事由 / 本行独立小时（最多 3 行，每行独立成一条记录） */
+/* 一行 = 一条完整记录：日期 / 整天 / 起止时间 / 备注事由 / 本行独立小时（最多 3 行，每行独立成一条记录） */
 function newSeg(date){ return { date: date || todayStr(), allDay:false, start:'', end:'', note:'' }; }
 var timeSegs      = [ newSeg() ];
 var focusedSegNoteIdx = 0;       // 当前聚焦的「备注事由」所在行号（常用说明只填该行）
@@ -921,7 +921,7 @@ function renderTimeSegs(){
     var d = document.createElement('input'); d.type = 'date'; d.className = 'fDate'; d.value = seg.date || todayStr();
     var adWrap = document.createElement('label'); adWrap.className = 'all-day'; adWrap.title = '按配置的正常上班时间自动填入';
     var ad = document.createElement('input'); ad.type = 'checkbox'; ad.className = 'allDayChk'; ad.checked = !!seg.allDay;
-    adWrap.appendChild(ad); adWrap.appendChild(document.createTextNode('天'));
+    adWrap.appendChild(ad); adWrap.appendChild(document.createTextNode('整天'));
     var s = document.createElement('select'); s.className = 'fStart'; buildTimeSlots(s); ensureTimeOption(s, seg.start); s.value = seg.start || ''; s.disabled = !!seg.allDay;
     var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '至';
     var e = document.createElement('select'); e.className = 'fEnd'; buildTimeSlots(e); ensureTimeOption(e, seg.end); e.value = seg.end || ''; e.disabled = !!seg.allDay;
@@ -950,7 +950,7 @@ function addTimeSeg(){
   if (editIndex !== null) return;   // 修改模式禁止新增行（修改只能单行）
   if (timeSegs.length >= 3) return;
   var last = timeSegs[timeSegs.length - 1];
-  timeSegs.push({ date: last.date, allDay: last.allDay, start: last.start, end: last.end, note: last.note });   // 完全复制上一行（日期/天/时段/备注）
+  timeSegs.push({ date: last.date, allDay: last.allDay, start: last.start, end: last.end, note: last.note });   // 完全复制上一行（日期/整天/时段/备注）
   renderTimeSegs(); updateRange();
 }
 function delTimeSeg(i){
@@ -968,16 +968,16 @@ function segMinutes(seg){
 /* 单行分钟数（无效 / 不足 0.5h 返回 null）。
    catId：本行类别（缺省取当前表单类别 curCat）。
    规则：
-     - 天(allDay)：全天工时 = 上班时间段(workStart~workEnd) 之差（由设置决定，不写死）；
+     - 整天(allDay)：全天工时 = 上班时间段(workStart~workEnd) 之差（由设置决定，不写死）；
        加班类不扣午休；请假类且开启午休扣除时，再减去与午休窗口重叠部分。
-     - 非天：仅「请假类」(isLeaveCat) 且配置开启午休扣除时，扣除与午休窗口重叠的时长；
+     - 非整天：仅「请假类」(isLeaveCat) 且配置开启午休扣除时，扣除与午休窗口重叠的时长；
        加班类绝不扣午休。 */
 function segHoursMin(seg, catId){
   if (!seg.start || !seg.end) return null;
   var m = segMinutes(seg);
   if (m == null || m < MIN_MINUTES) return null;
   var cid = (catId != null) ? catId : (curCat ? curCat.id : null);
-  // 天：按「上班时间段」配置计算全天工时
+  // 整天：按「上班时间段」配置计算全天工时
   if (seg.allDay){
     m = segMinutes({ start: CONFIG.workStart, end: CONFIG.workEnd });
     if (isLeaveCat(cid) && CONFIG.deductLunch){
@@ -1711,7 +1711,7 @@ function startEdit(i){
   if (!timeSegs.length) timeSegs = [ newSeg(r.date) ];
   timeSegs.forEach(function(sg, k){
     if (!sg.date) sg.date = r.date || todayStr();
-    sg.allDay = (sg.start === CONFIG.workStart && sg.end === CONFIG.workEnd);   // 恰为上班时段 → 视为天
+    sg.allDay = (sg.start === CONFIG.workStart && sg.end === CONFIG.workEnd);   // 恰为上班时段 → 视为整天
     if (k === 0 && !sg.note && r.note) sg.note = r.note;   // 旧整条备注归到第一行
   });
   renderTimeSegs();
@@ -1770,7 +1770,7 @@ document.addEventListener('click', function(e){
   if (m && !m.hidden && !e.target.closest('#presetAddWrap')) m.hidden = true;
 });
 /* 多时间段：事件委托（行内 select / 按钮为动态生成） */
-/* 行内事件（日期 / 天 / 起止 均为动态生成，统一委托到 #timeSegs） */
+/* 行内事件（日期 / 整天 / 起止 均为动态生成，统一委托到 #timeSegs） */
 $('#timeSegs').addEventListener('change', function(e){
   var el = e.target;
   var row = (el && el.closest) ? el.closest('.time-row') : null; if (!row) return;
@@ -1779,11 +1779,11 @@ $('#timeSegs').addEventListener('change', function(e){
   if (el.classList.contains('fStart')) seg.start = el.value;
   else if (el.classList.contains('fEnd')) seg.end = el.value;
   if (el.classList.contains('fStart') || el.classList.contains('fEnd')){
-    // 起止时间恰为上班时段 → 视为「天」（与编辑回填判定一致），保证天工时固定 8.5h
+    // 起止时间恰为上班时段 → 视为「整天」（与编辑回填判定一致）
     seg.allDay = (seg.start === CONFIG.workStart && seg.end === CONFIG.workEnd);
   }
   else if (el.classList.contains('fDate')){ seg.date = el.value; refresh(); return; }
-  else if (el.classList.contains('allDayChk')){                       // 天：本行时段按正常上班时间填入并锁定
+  else if (el.classList.contains('allDayChk')){                       // 整天：本行时段按正常上班时间填入并锁定
     seg.allDay = el.checked;
     if (seg.allDay){ seg.start = CONFIG.workStart; seg.end = CONFIG.workEnd; }
     renderTimeSegs(); updateRange();
