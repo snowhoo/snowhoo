@@ -577,11 +577,9 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 <div class="modal-mask" id="cfgMask" hidden>
   <div class="modal modal-config" role="dialog" aria-modal="true">
     <div class="modal-title">考勤配置</div>
-    <div class="modal-msg">配置保存在 Waline（/kaoqing/config），全端共享。</div>
-
-    <div class="cfg-section">
+ <div class="cfg-section">
       <div class="cfg-section-title">午休扣除</div>
-      <label class="cfg-check"><input type="checkbox" id="cfgDeductLunch"> 请假类时段若涵盖午休时段，自动扣除该部分时长（加班类不扣午休）</label>
+      <label class="cfg-check"><input type="checkbox" id="cfgDeductLunch">请假午休扣除</label>
       <div class="cfg-line">
         <span class="cfg-label">午休时段</span>
         <input type="time" id="cfgLunchStart" value="12:00">
