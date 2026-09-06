@@ -440,6 +440,17 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 </style>
 </head>
 <body>
+<!-- 时间选择弹窗（替换起止下拉框；必须置于主脚本之前，init() 同步执行时需已存在于 DOM） -->
+<div id="timePicker" class="time-picker" hidden>
+  <div class="tp-hours" id="tpHours"></div>
+  <div class="tp-foot">
+    <div class="tp-mins" id="tpMins">
+      <button type="button" class="tp-min" data-min="00">00</button>
+      <button type="button" class="tp-min" data-min="30">30</button>
+    </div>
+    <div class="tp-preview" id="tpPreview">--:--</div>
+  </div>
+</div>
 <div id="app" data-theme="light">
 
   <header id="topbar">
@@ -823,7 +834,8 @@ function calcOtType(date){
 var tpEl, tpHours, tpMins, tpPreview, tpCurrent = null, tpHour = null, tpMin = null;
 function initTimePicker(){
   tpEl = $('#timePicker'); tpHours = $('#tpHours'); tpMins = $('#tpMins'); tpPreview = $('#tpPreview');
-  if (!tpEl) return;
+  if (!tpEl) return;                  // #timePicker 尚未解析（脚本早于它执行）时静默退出，交由 openTimePicker 延迟初始化
+  if (tpHours.childElementCount) return;   // 已初始化（含事件绑定），避免重复绑定
   var frag = document.createDocumentFragment();
   for (var h = 0; h < 24; h++){
     var b = document.createElement('button');
@@ -865,6 +877,7 @@ function updateTpPreview(){
   tpPreview.textContent = (tpHour == null ? '--' : String(tpHour).padStart(2,'0')) + ':' + (tpMin == null ? '--' : String(tpMin).padStart(2,'0'));
 }
 function openTimePicker(inputEl){
+  if (!tpEl) initTimePicker();          // 延迟初始化兜底：脚本早于 #timePicker 解析时也确保可用
   if (!tpEl) return;
   var m = /^(\d{1,2}):(\d{2})$/.exec((inputEl.value || '').trim());
   tpCurrent = inputEl; tpHour = null; tpMin = null;
@@ -3676,18 +3689,6 @@ document.addEventListener('keydown', function(e){
       <button type="button" class="btn-cancel" id="modalCancel">取消</button>
       <button type="button" class="btn-ok" id="modalOk">确定</button>
     </div>
-  </div>
-</div>
-
-<!-- 时间选择弹窗（替换起止下拉框） -->
-<div id="timePicker" class="time-picker" hidden>
-  <div class="tp-hours" id="tpHours"></div>
-  <div class="tp-foot">
-    <div class="tp-mins" id="tpMins">
-      <button type="button" class="tp-min" data-min="00">00</button>
-      <button type="button" class="tp-min" data-min="30">30</button>
-    </div>
-    <div class="tp-preview" id="tpPreview">--:--</div>
   </div>
 </div>
 
