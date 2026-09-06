@@ -495,7 +495,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       <div class="card-body">
         <div class="form-row">
 
-          <!-- 每行 = 一条完整记录：日期 | 整天 | 起 | 至 | 止 | 备注事由 | 本行小时 | +/−（最多 3 行） -->
+          <!-- 每行 = 一条完整记录：日期 | 整天 | 起 | 至 | 止 | 备注事由 | 本行小时 | +/−（最多 5 行） -->
           <div class="sub-row" id="rangeBlock" hidden>
             <div class="time-segs" id="timeSegs"></div>
           </div>
@@ -762,7 +762,7 @@ var SERIAL_PATH   = '/kaoqing/serial';   // 单据流水号配置（年月+类�
 var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30', presetNotes:{},
                       pwdReview:'', pwdApprove:'', pwdAdmin:'' };  // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值 + 管理密码哈希(审核/批准/管理员)，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
-/* 一行 = 一条完整记录：日期 / 整天 / 起止时间 / 备注事由 / 本行独立小时（最多 3 行，每行独立成一条记录） */
+/* 一行 = 一条完整记录：日期 / 整天 / 起止时间 / 备注事由 / 本行独立小时（最多 5 行，每行独立成一条记录） */
 function newSeg(date){ return { date: date || todayStr(), allDay:false, start:'', end:'', note:'' }; }
 var timeSegs      = [ newSeg() ];
 var focusedSegNoteIdx = 0;       // 当前聚焦的「备注事由」所在行号（常用说明只填该行）
@@ -952,9 +952,9 @@ function applyView(){
   refresh();
 }
 
-/* ---------- 多时间段（最多 3 段） ---------- */
+/* ---------- 多时间段（最多 5 段） ---------- */
 /* 渲染时间段行：每个时间段一行，含 起/止 下拉；
-   末尾按钮规则：最后一行的末尾显示「+」（未满 3 段时）用于新增；非首行显示「−」用于移除。 */
+   末尾按钮规则：最后一行的末尾显示「+」（未满 5 段时）用于新增；非首行显示「−」用于移除。 */
 function renderTimeSegs(){
   var box = $('#timeSegs'); if (!box) return;
   box.innerHTML = '';
@@ -980,9 +980,9 @@ function renderTimeSegs(){
       del.setAttribute('data-act', 'del'); del.setAttribute('data-i', String(i));
       acts.appendChild(del);
     }
-    if (editIndex === null && i === timeSegs.length - 1 && timeSegs.length < 3){
+    if (editIndex === null && i === timeSegs.length - 1 && timeSegs.length < 5){
       var add = document.createElement('button');
-      add.type = 'button'; add.className = 'seg-act'; add.textContent = '+'; add.title = '复制新增一行（最多 3 行）';
+      add.type = 'button'; add.className = 'seg-act'; add.textContent = '+'; add.title = '复制新增一行（最多 5 行）';
       add.setAttribute('data-act', 'add'); add.setAttribute('data-i', String(i));
       acts.appendChild(add);
     }
@@ -992,7 +992,7 @@ function renderTimeSegs(){
 }
 function addTimeSeg(){
   if (editIndex !== null) return;   // 修改模式禁止新增行（修改只能单行）
-  if (timeSegs.length >= 3) return;
+  if (timeSegs.length >= 5) return;
   var last = timeSegs[timeSegs.length - 1];
   timeSegs.push({ date: last.date, allDay: last.allDay, start: last.start, end: last.end, note: last.note });   // 完全复制上一行（日期/整天/时段/备注）
   renderTimeSegs(); updateRange();
