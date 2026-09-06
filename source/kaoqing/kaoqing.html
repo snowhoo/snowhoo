@@ -215,7 +215,8 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 #rowNote input{min-width:80px}
 .time-segs{flex:1;display:flex;flex-direction:column;gap:8px;min-width:180px}
 .time-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:100%}
-.time-row select{flex:0 0 auto;width:auto;padding:3px 3px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600}
+.time-row .fTime{flex:0 0 auto;width:72px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600;text-align:center;color:var(--text);cursor:pointer;font-family:inherit}
+.time-row .fTime:disabled{opacity:.5;cursor:not-allowed}
 .time-row .sep{color:var(--text-muted);font-size:.82rem;white-space:nowrap}
 .time-row .fSegNote{flex:1 1 140px;min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;max-width:260px;}
 .time-row .segHours{flex:0 0 auto;width:0px;text-align:right;font-size:0rem;font-weight:600;white-space:nowrap;color:var(--text-secondary)}
@@ -424,6 +425,18 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 }
 .page-footer{margin-top:10px;padding:0px 0 10px;text-align:center;color:var(--text-muted);font-size:1rem;}
 .page-footer #companyName{font-weight:600;color:var(--text-secondary)}
+/* 时间选择弹窗（替换起止下拉框） */
+.time-picker{position:fixed;z-index:300;width:252px;background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.16);padding:10px;font-family:inherit}
+.time-picker .tp-hours{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.time-picker .tp-hour{padding:7px 0;border:1px solid var(--border);border-radius:7px;background:transparent;color:var(--text);font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .12s}
+.time-picker .tp-hour:hover{border-color:var(--accent);color:var(--accent)}
+.time-picker .tp-hour.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.time-picker .tp-foot{display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.time-picker .tp-mins{display:flex;gap:5px}
+.time-picker .tp-min{flex:1;padding:8px 0;border:1px solid var(--border);border-radius:7px;background:transparent;color:var(--text);font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit}
+.time-picker .tp-min:hover{border-color:var(--accent);color:var(--accent)}
+.time-picker .tp-min.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.time-picker .tp-preview{flex:1;text-align:right;font-size:1.15rem;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -806,24 +819,89 @@ function calcOtType(date){
   return (w === 0 || w === 6) ? '双休' : '平时';
 }
 
-/* ---------- 半点刻度：00:00 ~ 23:30 共 48 档，分钟只给 00 / 30 ---------- */
-function buildTimeSlots(sel){
-  var cur = sel.value;
-  sel.innerHTML = '<option value="">--:--</option>';
-  for (var m = 0; m < 24 * 60; m += 30){
-    var v = String(Math.floor(m / 60)).padStart(2,'0') + ':' + String(m % 60).padStart(2,'0');
-    var o = document.createElement('option');
-    o.value = v; o.textContent = v;
-    sel.appendChild(o);
+/* ---------- 时间选择弹窗（替换起止下拉框：文本框 + 6×4 整点 + 00/30 分钟，选完分钟即填入关闭） ---------- */
+var tpEl, tpHours, tpMins, tpPreview, tpCurrent = null, tpHour = null, tpMin = null;
+function initTimePicker(){
+  tpEl = $('#timePicker'); tpHours = $('#tpHours'); tpMins = $('#tpMins'); tpPreview = $('#tpPreview');
+  if (!tpEl) return;
+  var frag = document.createDocumentFragment();
+  for (var h = 0; h < 24; h++){
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'tp-hour'; b.setAttribute('data-hour', String(h));
+    b.textContent = String(h).padStart(2,'0');
+    frag.appendChild(b);
   }
-  sel.value = cur;                 // 重建后还原原值（若有）
+  tpHours.appendChild(frag);
+  tpHours.addEventListener('click', function(e){
+    var btn = e.target.closest('.tp-hour'); if (!btn) return;
+    tpHours.querySelectorAll('.tp-hour').forEach(function(x){ x.classList.remove('on'); });
+    btn.classList.add('on');
+    tpHour = parseInt(btn.getAttribute('data-hour'), 10);
+    if (tpMin == null) tpMin = 0;                 // 未选分钟时默认 00，预览即 HH:00
+    updateTpPreview();
+  });
+  tpMins.addEventListener('click', function(e){
+    var btn = e.target.closest('.tp-min'); if (!btn) return;
+    tpMins.querySelectorAll('.tp-min').forEach(function(x){ x.classList.remove('on'); });
+    btn.classList.add('on');
+    tpMin = parseInt(btn.getAttribute('data-min'), 10);
+    if (tpHour == null) tpHour = 0;               // 未选整点时默认 00
+    updateTpPreview();
+    var val = String(tpHour).padStart(2,'0') + ':' + String(tpMin).padStart(2,'0');
+    closeTimePicker(true, val);                   // 选完分钟直接填入并关闭
+  });
+  tpEl.addEventListener('click', function(e){ e.stopPropagation(); });   // 点弹窗内部不冒泡，避免误关
+  document.addEventListener('click', function(e){
+    if (tpEl.hidden) return;
+    if (e.target.closest('.fTime')) return;       // 点到其它时间框交给 #timeSegs 重新打开
+    closeTimePicker(false);
+  });
+  document.addEventListener('keydown', function(e){
+    if (!tpEl.hidden && e.key === 'Escape') closeTimePicker(false);
+  });
 }
-/* 兜底：配置的「正常上班时间」可能是非整半点（如 08:15），确保该值存在于下拉选项中 */
-function ensureTimeOption(sel, val){
-  if (!val) return;
-  for (var i = 0; i < sel.options.length; i++){ if (sel.options[i].value === val) return; }
-  var o = document.createElement('option'); o.value = val; o.textContent = val;
-  sel.appendChild(o);
+function updateTpPreview(){
+  if (!tpPreview) return;
+  tpPreview.textContent = (tpHour == null ? '--' : String(tpHour).padStart(2,'0')) + ':' + (tpMin == null ? '--' : String(tpMin).padStart(2,'0'));
+}
+function openTimePicker(inputEl){
+  if (!tpEl) return;
+  var m = /^(\d{1,2}):(\d{2})$/.exec((inputEl.value || '').trim());
+  tpCurrent = inputEl; tpHour = null; tpMin = null;
+  tpHours.querySelectorAll('.tp-hour').forEach(function(x){ x.classList.remove('on'); });
+  tpMins.querySelectorAll('.tp-min').forEach(function(x){ x.classList.remove('on'); });
+  if (m){
+    tpHour = parseInt(m[1], 10); tpMin = parseInt(m[2], 10);
+    var hb = tpHours.querySelector('.tp-hour[data-hour="' + tpHour + '"]');
+    var mb = tpMins.querySelector('.tp-min[data-min="' + String(tpMin).padStart(2,'0') + '"]');
+    if (hb) hb.classList.add('on'); if (mb) mb.classList.add('on');
+  }
+  updateTpPreview();
+  tpEl.hidden = false;
+  var r = inputEl.getBoundingClientRect();
+  var pw = tpEl.offsetWidth, ph = tpEl.offsetHeight;
+  var left = r.left; var top = r.bottom + 6;
+  if (left + pw > document.documentElement.clientWidth - 8) left = document.documentElement.clientWidth - pw - 8;
+  if (left < 8) left = 8;
+  if (top + ph > document.documentElement.clientHeight - 8){ top = r.top - ph - 6; if (top < 8) top = 8; }
+  tpEl.style.left = left + 'px'; tpEl.style.top = top + 'px';
+}
+function closeTimePicker(fill, val){
+  if (fill && tpCurrent && val) applyTimeInput(tpCurrent, val);
+  if (tpEl) tpEl.hidden = true;
+  tpCurrent = null;
+}
+function applyTimeInput(inputEl, value){
+  var row = inputEl.closest('.time-row'); if (!row) return;
+  var idx = parseInt(row.getAttribute('data-i'), 10);
+  var seg = timeSegs[idx]; if (!seg) return;
+  inputEl.value = value;
+  if (inputEl.classList.contains('fStart')) seg.start = value;
+  else if (inputEl.classList.contains('fEnd')) seg.end = value;
+  seg.allDay = (seg.start === CONFIG.workStart && seg.end === CONFIG.workEnd);   // 恰为上班时段→视为整天
+  var hrsEl = row.querySelector('.segHours');
+  if (hrsEl) hrsEl.textContent = segHoursText(seg) || '？？小时';
+  updateRange();
 }
 
 /* ---------- 区域一：组别 + 人员 ---------- */
@@ -963,9 +1041,9 @@ function renderTimeSegs(){
     var adWrap = document.createElement('label'); adWrap.className = 'all-day'; adWrap.title = '按配置的正常上班时间自动填入';
     var ad = document.createElement('input'); ad.type = 'checkbox'; ad.className = 'allDayChk'; ad.checked = !!seg.allDay;
     adWrap.appendChild(ad); adWrap.appendChild(document.createTextNode('整天'));
-    var s = document.createElement('select'); s.className = 'fStart'; buildTimeSlots(s); ensureTimeOption(s, seg.start); s.value = seg.start || ''; s.disabled = !!seg.allDay;
+    var s = document.createElement('input'); s.type = 'text'; s.className = 'fTime fStart'; s.readOnly = true; s.placeholder = '起'; s.value = seg.start || ''; s.disabled = !!seg.allDay;
     var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '-';
-    var e = document.createElement('select'); e.className = 'fEnd'; buildTimeSlots(e); ensureTimeOption(e, seg.end); e.value = seg.end || ''; e.disabled = !!seg.allDay;
+    var e = document.createElement('input'); e.type = 'text'; e.className = 'fTime fEnd'; e.readOnly = true; e.placeholder = '止'; e.value = seg.end || ''; e.disabled = !!seg.allDay;
     var h = document.createElement('span'); h.className = 'segHours'; h.textContent = segHoursText(seg) || '？？小时';
 	var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
     row.appendChild(d); row.appendChild(adWrap); row.appendChild(s); row.appendChild(sep); row.appendChild(e); row.appendChild(h); row.appendChild(note);
@@ -1911,13 +1989,7 @@ $('#timeSegs').addEventListener('change', function(e){
   var row = (el && el.closest) ? el.closest('.time-row') : null; if (!row) return;
   var idx = parseInt(row.getAttribute('data-i'), 10);
   var seg = timeSegs[idx]; if (!seg) return;
-  if (el.classList.contains('fStart')) seg.start = el.value;
-  else if (el.classList.contains('fEnd')) seg.end = el.value;
-  if (el.classList.contains('fStart') || el.classList.contains('fEnd')){
-    // 起止时间恰为上班时段 → 视为「整天」（与编辑回填判定一致）
-    seg.allDay = (seg.start === CONFIG.workStart && seg.end === CONFIG.workEnd);
-  }
-  else if (el.classList.contains('fDate')){ seg.date = el.value; refresh(); return; }
+  if (el.classList.contains('fDate')){ seg.date = el.value; refresh(); return; }
   else if (el.classList.contains('allDayChk')){                       // 整天：本行时段按正常上班时间填入并锁定
     seg.allDay = el.checked;
     if (seg.allDay){ seg.start = CONFIG.workStart; seg.end = CONFIG.workEnd; }
@@ -1925,10 +1997,16 @@ $('#timeSegs').addEventListener('change', function(e){
     return;
   }
   else return;
-  var hrsEl = row.querySelector('.segHours'); if (hrsEl) hrsEl.textContent = segHoursText(seg) || '？？小时';   // 本行小时实时更新
-  updateRange();
 });
 $('#timeSegs').addEventListener('click', function(e){
+  var t = e.target.closest('.fTime');
+  if (t){                                                       // 点时间文本框 → 打开时间选择弹窗（再点同一框则关闭）
+    if (!t.disabled){
+      if (!tpEl.hidden && tpCurrent === t) closeTimePicker(false);
+      else openTimePicker(t);
+    }
+    return;
+  }
   var btn = e.target.closest('.seg-act'); if (!btn) return;
   var act = btn.getAttribute('data-act');
   var i = parseInt(btn.getAttribute('data-i'), 10);
@@ -3558,6 +3636,7 @@ document.addEventListener('keydown', function(e){
 
 /* ---------- 初始化 ---------- */
 (async function init(){
+  initTimePicker();          // 时间选择弹窗（文本框 + 6×4 整点 + 00/30 分钟）
   renderTimeSegs();
   renderGroups();
   renderPeople();
@@ -3597,6 +3676,18 @@ document.addEventListener('keydown', function(e){
       <button type="button" class="btn-cancel" id="modalCancel">取消</button>
       <button type="button" class="btn-ok" id="modalOk">确定</button>
     </div>
+  </div>
+</div>
+
+<!-- 时间选择弹窗（替换起止下拉框） -->
+<div id="timePicker" class="time-picker" hidden>
+  <div class="tp-hours" id="tpHours"></div>
+  <div class="tp-foot">
+    <div class="tp-mins" id="tpMins">
+      <button type="button" class="tp-min" data-min="00">00</button>
+      <button type="button" class="tp-min" data-min="30">30</button>
+    </div>
+    <div class="tp-preview" id="tpPreview">--:--</div>
   </div>
 </div>
 
