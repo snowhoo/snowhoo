@@ -226,8 +226,6 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
 .seg-act:hover{filter:brightness(.96)}
 .seg-act.del{color:#e24b4a}
 .seg-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end;min-width:34px}
-#fHours{font-size:.92rem;font-weight:600;color:var(--text-secondary);white-space:nowrap;min-width:6em;display:inline-block;text-align:left}
-#fHours.bad{color:var(--warn);font-weight:500}
 .tip{font-size:.78rem;color:var(--text-muted);margin:0}
 
 /* ---- 区域四：记录 ---- */
@@ -411,7 +409,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   .tb-company{font-size:.82rem}
   .time-segs{overflow-x:auto}
   .time-row{gap:5px;flex-wrap:wrap}
-  .time-row .fDate{width:120px}
+  .time-row .fDate{width:110px}
   .time-row .fSegNote{flex:1 1 100%}   /* 窄屏备注占满整行，避免挤压时段控件 */
 }
 @media print{
@@ -499,7 +497,6 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
           <!-- 每行 = 一条完整记录：日期 | 天 | 起 | 至 | 止 | 备注事由 | 本行小时 | +/−（最多 3 行） -->
           <div class="sub-row" id="rangeBlock" hidden>
             <div class="time-segs" id="timeSegs"></div>
-            <span id="fHours"></span>
           </div>
 
         </div>
@@ -623,7 +620,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
   </div>
 </div>
 
-<script src="./lib/xlsx.full.min.js"></script>
+<!-- xlsx 改为按需懒加载（见 ensureXlsx）：避免 864KB 的 xlsx.full.min.js 阻塞首屏解析，解决打开页面卡在加载内容前的问题 -->
 <!-- 读/写/删除过程统一弹窗提示：绿「处理中...」，失败=红「数据读取/写入失败!」（不使用右上角状态） -->
 <div id="cloudToast" class="cloud-toast" hidden></div>
 <script>
@@ -892,7 +889,6 @@ function applyView(){
   if (!showContent){                            // 隐藏「考勤内容」→ 归零内容字段
     timeSegs = [ newSeg() ];
     renderTimeSegs();
-    $('#fHours').textContent = '';
   }
 
   $('#secCat').hidden     = !showCat;
@@ -1079,13 +1075,8 @@ function findExistingConflict(saveSegs, peopleNames, excludeId){
   return null;
 }
 
-/* 时段校验提示（累计小时不再在此显示，改为每行独立显示在行尾） */
+/* 时间段变更后刷新（总小时数改为每行独立显示在行尾，不再在此处占位提示） */
 function updateRange(){
-  var hoursEl = $('#fHours');
-  if (!curCat){ hoursEl.textContent = ''; hoursEl.className = ''; refresh(); return; }
-  var c = computeTotal();
-  if (c.partial){ hoursEl.textContent = '请补全日期或时间段'; hoursEl.className = 'bad'; }
-  else { hoursEl.textContent = ''; hoursEl.className = ''; }
   refresh();
 }
 
@@ -3047,10 +3038,26 @@ function readPeopleTable(){
 }
 
 /* ---------- xlsx 导出 / 导入 ---------- */
-function exportPeopleXlsx(){
+/* xlsx 体积大（~864KB），改为「首次用到时才加载」：打开页面不再阻塞首屏。
+   返回 Promise，resolve 后全局 XLSX 可用；缓存加载中的 Promise 避免重复注入。 */
+var _xlsxLoading = null;
+function ensureXlsx(){
+  if (typeof XLSX !== 'undefined') return Promise.resolve();
+  if (_xlsxLoading) return _xlsxLoading;
+  _xlsxLoading = new Promise(function(resolve, reject){
+    var s = document.createElement('script');
+    s.src = './lib/xlsx.full.min.js';
+    s.async = true;
+    s.onload = function(){ (typeof XLSX !== 'undefined') ? resolve() : reject(new Error('xlsx 组件加载后未定义')); };
+    s.onerror = function(){ _xlsxLoading = null; reject(new Error('xlsx 组件加载失败：lib/xlsx.full.min.js 缺失或网络错误')); };
+    document.head.appendChild(s);
+  });
+  return _xlsxLoading;
+}
+async function exportPeopleXlsx(){
   var list = readPeopleTable();
   if (!list.length){ showAlert('当前没有人员可导出'); return; }
-  if (typeof XLSX === 'undefined'){ showAlert('xlsx 组件未加载（lib/xlsx.full.min.js 缺失），无法导出'); return; }
+  try { await ensureXlsx(); } catch(e){ showAlert(e.message); return; }
   var rows = [PEOPLE_COLS.map(function(c){ return c.label; })];
   list.forEach(function(p){ rows.push(PEOPLE_COLS.map(function(c){ return p[c.key] || ''; })); });
   var ws = XLSX.utils.aoa_to_sheet(rows);
@@ -3070,8 +3077,8 @@ var PEOPLE_ALIAS = {
   '考勤组':6, '组别':6, '考勤组别':6,
   '权限':7, '角色':7
 };
-function importPeopleXlsx(file){
-  if (typeof XLSX === 'undefined'){ showAlert('xlsx 组件未加载（lib/xlsx.full.min.js 缺失），无法导入'); return; }
+async function importPeopleXlsx(file){
+  try { await ensureXlsx(); } catch(e){ showAlert(e.message); return; }
   var reader = new FileReader();
   reader.onerror = function(){ showAlert('读取文件失败'); };
   reader.onload = function(e){
