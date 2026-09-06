@@ -585,7 +585,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       <div class="cfg-line">
         <span class="cfg-label">午休时段</span>
         <input type="time" id="cfgLunchStart" value="12:00">
-        <span class="sep">至</span>
+        <span class="sep">-</span>
         <input type="time" id="cfgLunchEnd" value="13:00">
       </div>
     </div>
@@ -595,7 +595,7 @@ body.edit-mode .idx{ background:#f97316; }                          /* 修改态
       <div class="cfg-line">
         <span class="cfg-label">上班时间</span>
         <input type="time" id="cfgWorkStart" value="08:30">
-        <span class="sep">至</span>
+        <span class="sep">-</span>
         <input type="time" id="cfgWorkEnd" value="17:30">
       </div>
       <div class="cfg-hint">勾选考勤卡片中的「整天」时，自动带入此时间段。</div>
@@ -924,7 +924,7 @@ function renderTimeSegs(){
     var ad = document.createElement('input'); ad.type = 'checkbox'; ad.className = 'allDayChk'; ad.checked = !!seg.allDay;
     adWrap.appendChild(ad); adWrap.appendChild(document.createTextNode('整天'));
     var s = document.createElement('select'); s.className = 'fStart'; buildTimeSlots(s); ensureTimeOption(s, seg.start); s.value = seg.start || ''; s.disabled = !!seg.allDay;
-    var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '至';
+    var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '-';
     var e = document.createElement('select'); e.className = 'fEnd'; buildTimeSlots(e); ensureTimeOption(e, seg.end); e.value = seg.end || ''; e.disabled = !!seg.allDay;
     var h = document.createElement('span'); h.className = 'segHours'; h.textContent = segHoursText(seg) || '？？小时';
 	var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
