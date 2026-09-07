@@ -578,7 +578,6 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
           <button id="reviewBtn" class="btn-rec-action" hidden>审核</button>
           <button id="approveBtn" class="btn-rec-action" hidden>批准</button>
           <button id="printBtn" class="btn-rec-action" hidden>模板打印</button>
-          <button id="exportXlsxBtn" class="btn-rec-action" hidden>导出xlsx</button>
         </div>
         <div class="records" id="records">
           <p class="empty">暂无记录</p>
@@ -844,7 +843,7 @@ var GROUP_PRINT_CFG = {};   // 打印设置（按考勤组+类别绑定）：{ [
 var cfgGpCur        = '';    // 打印设置面板当前选中的考勤组
 var cfgGpCat        = 'ot';  // 打印设置面板当前编辑的类别：ot=加班 lv=请假
 var PRINT_CAT       = 'ot';  // 当前打印的类别（ot/lv）；buildPrintData 按记录类别设定，供 personPhName 取对应绑定的人员
-var PRINT_PER_PAGE  = 0;    // 当前打印每页条数（0=用引擎默认 10）；打印/导出前按当前考勤组+类别配置注入
+var PRINT_PER_PAGE  = 0;    // 当前打印每页条数（0=用引擎默认 10）；打印前按当前考勤组+类别配置注入
 var PRINT_GROUP     = '';    // 当前打印批次记录所属考勤组（buildPrintData 按首位人员反推）；绑定按考勤组取用时优先于此，解决主视图停在「全部」时取不到绑定的问题
 // 绑定按考勤组键名取用：优先用「本次打印记录所属考勤组」；若其无绑定则回退到当前选中的考勤组（curGroup，可能是「全部」）
 function effGroupKey(){ return (PRINT_GROUP && PRINT_GROUP !== GROUPS[0] && GROUP_PRINT_CFG[PRINT_GROUP]) ? PRINT_GROUP : curGroup; }
@@ -2351,7 +2350,6 @@ $('#approveBtn').addEventListener('click', async function(){
 // 模板打印：忠于 xlsx 模板排版，渲染成网页后调起浏览器打印对话框（可打印 / 另存 PDF）
 $('#printBtn').addEventListener('click', printTemplatePreview);
 // 导出 xlsx：保留原「下载 xlsx」能力，用于归档 / 在 Excel 继续编辑
-$('#exportXlsxBtn').addEventListener('click', downloadTemplateXlsx);
 function weekdayOf(date){
   if (!date) return '';
   var w = new Date(date + 'T00:00:00').getDay();
@@ -2554,7 +2552,7 @@ function _parseCells(rw, ss){
     if (type === 'inlineStr'){ var tM = inner.match(/<t[^>]*>([\s\S]*?)<\/t>/); text = tM ? tM[1] : ''; }
     else if (type === 's'){ var vM = inner.match(/<v>(\d+)<\/v>/); text = vM ? (ss[+vM[1]] || '') : ''; }
     else { var vM2 = inner.match(/<v>([\s\S]*?)<\/v>/); text = vM2 ? vM2[1] : ''; }
-    var raw = refM ? m[0] : m[0].replace(/^<c\b/, '<c r="' + ref + '"');   // 把推断出的 r 补回 raw，供 _emitCell 改写
+    var raw = refM ? m[0] : m[0].replace(/^<c\b/, '<c r="' + ref + '"');   // 把推断出的 r 补回 raw
     cells.push({ ref: ref, style: style, type: type, raw: raw, text: text, vm: vm });
   }
   return cells;
@@ -2564,164 +2562,13 @@ function _fillText(text, rec, docVm){
     .replace(/\{\{\{(.+?)\}\}\}/g, function(_, k){ k = k.trim(); return (docVm && docVm[k] != null) ? String(docVm[k]) : ''; })
     .replace(/\{\{(.+?)\}\}/g,  function(_, k){ k = k.trim(); return (rec && rec[k] != null) ? String(rec[k]) : ''; });
 }
-function _emitCell(cell, newRef, rec, docVm, mode){
-  var txt = cell.text;
-  var hasDoc = /\{\{\{/.test(txt);
-  var hasRow = /\{\{(?!\{)/.test(txt);   // 仅两层花括号（排除三层文档级）
-  if (!hasDoc && !hasRow){
-    if (mode === 'blank') return '<c r="' + newRef + '" s="' + cell.style + '"/>';   // 不足一页的空白行：整格清空（连固定值也清掉）
-    return cell.raw.replace(/\br="[A-Z]+\d+"/g, 'r="' + newRef + '"');
-  }
-  var resolved = txt;
-  if (hasDoc){
-    resolved = resolved.replace(/\{\{\{(.+?)\}\}\}/g, function(_, k){ k = k.trim(); return (docVm && docVm[k] != null) ? String(docVm[k]) : ''; });
-  }
-  if (hasRow){
-    resolved = resolved.replace(/\{\{(.+?)\}\}/g, function(_, k){
-      k = k.trim();
-      if (mode === 'data' && rec && rec[k] != null) return String(rec[k]);   // 记录行：取本条数据
-      if (mode === 'blank') return '';                                       // 空白行：记录占位符清空
-      if (docVm && docVm[k] != null) return String(docVm[k]);                // 页眉/页脚：优先取文档级值（如 姓名 等文档级键）
-      return '{' + '{' + k + '}' + '}';                                      // 无对应值：保留原样，避免整格变空（如页脚的 复核/申请人 标签）
-    });
-  }
-  return '<c r="' + newRef + '" s="' + cell.style + '" t="inlineStr"><is><t xml:space="preserve">' + _xmlEsc(resolved) + '</t></is></c>';
-}
-function _emitRow(rw, newRowNum, rec, docVm, mode){
-  var cells = _parseCells(rw, SS_CACHE);
-  var inner = '';
-  cells.forEach(function(c){
-    var col = c.ref.replace(/\d+/, '');
-    inner += _emitCell(c, col + newRowNum, rec, docVm, mode);
-  });
-  var open = rw.match(/<row\b[^>]*>/)[0].replace(/\br="\d+"/, 'r="' + newRowNum + '"');
-  return open + inner + '</row>';
-}
 // 列字母<->数字互转（合并单元格坐标偏移用）
 function colToNum(col){ var n = 0; for (var i = 0; i < col.length; i++) n = n * 26 + (col.charCodeAt(i) - 64); return n; }
 function numToCol(n){ var s = ''; while (n > 0){ var m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; }
-function shiftMg(mg, delta){ return { sr: mg.sr + delta, sc: mg.sc, er: mg.er + delta, ec: mg.ec }; }
-var SS_CACHE = [];   // 当前模板的 sharedStrings 缓存（_emitRow 复用）
-async function fillTemplateByXml(ab, recVals, docVals, outName){
-  var JSZip = window.JSZip;
-  if (!JSZip) throw new Error('jszip 未加载');
-  var zip = await JSZip.loadAsync(ab);
-  // 共享字符串表
-  SS_CACHE = [];
-  if (zip.file('xl/sharedStrings.xml')){
-    var sxml = await zip.file('xl/sharedStrings.xml').async('string');
-    var siRe = /<si>([\s\S]*?)<\/si>/g, m;
-    while ((m = siRe.exec(sxml))){
-      var tRe = /<t[^>]*>([\s\S]*?)<\/t>/g, tm, txt = '';
-      while ((tm = tRe.exec(m[1]))) txt += tm[1];
-      SS_CACHE.push(txt);
-    }
-  }
-  // 定位模板表单 sheet（跳过 readme 图例；选含行级记录占位符的 sheet）
-  var wbXml = await zip.file('xl/workbook.xml').async('string');
-  var order = (wbXml.match(/<sheet [^>]*\/?>/g) || []).map(function(s){
-    return { name: (s.match(/name="([^"]+)"/) || [])[1] || '', rid: (s.match(/r:id="([^"]+)"/) || [])[1] || '' };
-  });
-  var relsXml = await zip.file('xl/_rels/workbook.xml.rels').async('string');
-  function relTarget(rid){ var m = relsXml.match(new RegExp('Id="' + rid + '"[^>]*?Target="([^"]+)"')); return m ? m[1] : null; }
-  var targetSheet = null;
-  for (var oi = 0; oi < order.length; oi++){
-    if (order[oi].name && order[oi].name.toLowerCase() === 'readme') continue;
-    var tgt = relTarget(order[oi].rid); if (!tgt) continue;
-    var path = tgt.charAt(0) === '/' ? 'xl' + tgt : 'xl/' + tgt.replace(/^xl\//, '');
-    if (!zip.file(path)) continue;
-    var sx = await zip.file(path).async('string');
-    if (/\{\{[^}]+\}\}/.test(sx)){ targetSheet = path; break; }
-  }
-  if (!targetSheet) targetSheet = 'xl/worksheets/sheet1.xml';
-  var sheetXml = await zip.file(targetSheet).async('string');
-  var sdMatch = sheetXml.match(/<sheetData>([\s\S]*?)<\/sheetData>/);
-  if (!sdMatch) throw new Error('模板未找到 sheetData');
-  var rowRe = /<row\b[^>]*>[\s\S]*?<\/row>/g, rm;
-  var rows = [];
-  while ((rm = rowRe.exec(sdMatch[1]))) rows.push(rm[0]);
-  if (!rows.length) throw new Error('模板没有数据行');
-  // 找记录行：含 2 括号行级记录占位符（键名属 RECORD_KEYS）
-  var dataIdx = -1;
-  rows.forEach(function(rw, idx){
-    if (dataIdx >= 0) return;
-    _parseCells(rw, SS_CACHE).forEach(function(c){
-      if (dataIdx >= 0) return;
-      if (/\{\{\{/.test(c.text)) return;            // 三层括号属文档级，不算
-      var mm = c.text.match(/\{\{(.+?)\}\}/);
-      if (mm && RECORD_KEYS[mm[1].trim()]) dataIdx = idx;
-    });
-  });
-  if (dataIdx < 0) throw new Error('模板未找到含行级占位符（如 姓名）的记录行');
-  var perPage = (PRINT_PER_PAGE > 0) ? PRINT_PER_PAGE : 10;   // 每页记录数：优先用打印设置里按考勤组绑定的「每页条数」
-  var N = recVals.length, P = Math.max(1, Math.ceil(N / perPage));
-  // 文档级记录键：取「第一位有该字段值的人员」（避免首位人员恰好缺该字段导致表头空白；符合「三括号=文档级取第一位人员」约定）
-  var docVm = Object.assign({}, docVals);
-  recVals.forEach(function(rec){
-    if (!rec) return;
-    for (var dk in rec) if (docVm[dk] == null || docVm[dk] === '') docVm[dk] = rec[dk];
-  });
-  var headerRows = rows.slice(0, dataIdx);
-  var dataRowXml = rows[dataIdx];
-  var footerRows = rows.slice(dataIdx + 1);
-  var pageH = headerRows.length + perPage + footerRows.length;
-  var outRows = [], maxRow = 0;
-  function pushRow(rw, newNum, rec, mode){
-    outRows.push(_emitRow(rw, newNum, rec, docVm, mode));
-    if (newNum > maxRow) maxRow = newNum;
-  }
-  for (var p = 0; p < P; p++){
-    var base = p * pageH;
-    headerRows.forEach(function(rw){ pushRow(rw, parseInt(_rowNum(rw), 10) + base, null, 'static'); });
-    for (var i = 0; i < perPage; i++){
-      var rec = recVals[p * perPage + i] || null;
-      pushRow(dataRowXml, parseInt(_rowNum(dataRowXml), 10) + base + i, rec, rec ? 'data' : 'blank');
-    }
-    footerRows.forEach(function(rw){ pushRow(rw, parseInt(_rowNum(rw), 10) + base + perPage - 1, null, 'static'); });
-  }
-  var newSd = '<sheetData>' + outRows.join('') + '</sheetData>';
-  var newSheet = sheetXml.replace(/<sheetData>[\s\S]*?<\/sheetData>/, newSd);
-  // 更新 dimension（Excel 会重算，但写上更准确）
-  if (/<dimension[^>]*\/>/.test(newSheet)) newSheet = newSheet.replace(/<dimension[^>]*\/>/, '<dimension ref="A1:G' + maxRow + '"/>');
-  // 复制并偏移合并单元格：否则多页时只有第 1 页有合并、后续页标题/部门等合并缺失（Excel 打开会丢失格式）
-  var mcMatch = newSheet.match(/<mergeCells[\s\S]*?<\/mergeCells>/);
-  if (mcMatch){
-    var mgRe = /<mergeCell ref="([^"]+)"/g, mmg;
-    var merges = [];
-    while ((mmg = mgRe.exec(mcMatch[0]))){
-      var pr = mmg[1].split(':'), a = pr[0], b = pr[1] || pr[0];
-      merges.push({ sr: parseInt(a.replace(/[A-Z]/g, '')), sc: colToNum(a.replace(/\d+/, '')), er: parseInt(b.replace(/[A-Z]/g, '')), ec: colToNum(b.replace(/\d+/, '')) });
-    }
-    var dataRowOrig = parseInt(_rowNum(dataRowXml), 10);
-    var newMerges = [];
-    merges.forEach(function(mg){
-      var seg = (mg.er <= dataRowOrig - 1) ? 'header'
-              : (mg.sr >= dataRowOrig + 1) ? 'footer'
-              : (mg.sr === dataRowOrig && mg.er === dataRowOrig) ? 'data' : 'cross';
-      for (var pp = 0; pp < P; pp++){
-        var base2 = pp * pageH;
-        if (seg === 'header') newMerges.push(shiftMg(mg, base2));
-        else if (seg === 'footer') newMerges.push(shiftMg(mg, base2 + perPage - 1));
-        else if (seg === 'data'){ for (var i2 = 0; i2 < perPage; i2++) newMerges.push(shiftMg(mg, base2 + i2)); }
-        else newMerges.push(shiftMg(mg, base2 + perPage - 1));   // cross：兜底按 footer 偏移
-      }
-    });
-    var newMcXml = '<mergeCells count="' + newMerges.length + '">' + newMerges.map(function(m){
-      return '<mergeCell ref="' + numToCol(m.sc) + m.sr + ':' + numToCol(m.ec) + m.er + '"/>';
-    }).join('') + '</mergeCells>';
-    newSheet = newSheet.replace(/<mergeCells[\s\S]*?<\/mergeCells>/, newMcXml);
-  }
-  zip.file(targetSheet, newSheet);
-  var blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a'); a.href = url; a.download = outName;
-  document.body.appendChild(a); a.click();
-  setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 1500);
-}
+var SS_CACHE = [];   // 当前模板的 sharedStrings 缓存（打印路径解析模板时复用）
 
-// ===== 模板打印：两种出口 =====
+// ===== 模板打印（网页打印 / 另存 PDF 出口）=====
 // 1) printTemplatePreview —— 忠于 xlsx 模板排版，渲染成网页后直接调起浏览器打印对话框（可打印 / 另存 PDF）
-// 2) downloadTemplateXlsx —— 原「下载 xlsx」能力保留，用于归档 / 在 Excel 继续编辑
 // 打印 / 导出：人员档案**直接去 Waline 拉**，与本地缓存彻底无关——不读缓存，也不写缓存。
 // 原因：页面初始化是「缓存优先」（loadPeopleCache() 命中就不再回 Waline），本地副本可能陈旧
 // （如后补的「一级部门 dept1」没进缓存），而 buildRecordVals 是按姓名从 PEOPLE_FULL 取人员字段的，
@@ -3264,23 +3111,6 @@ async function printTemplatePreview(){
   var rs = [];
   checked.forEach(function(cb){ var i = parseInt(cb.dataset.i, 10); if (records[i]) rs.push(records[i]); });
   await printRecordsViaTemplate(rs);
-}
-async function downloadTemplateXlsx(){
-  var box = $('#records');
-  var checked = box.querySelectorAll('.rec-check:checked');
-  if (!checked.length){ await showAlert('请先勾选要打印的记录'); return; }
-  var rs = [];
-  checked.forEach(function(cb){ var i = parseInt(cb.dataset.i, 10); if (records[i]) rs.push(records[i]); });
-  if (!rs.length){ await showAlert('没有可打印的记录'); return; }
-  try { await ensurePeopleLoaded(); } catch(e){}
-  var data = buildPrintData(rs);
-  PRINT_PER_PAGE = ((gpSub().perPage) || 0) | 0;   // 按考勤组+类别配置注入每页条数（0=引擎默认 10）；gpSub() 自动用 buildPrintData 已设的 PRINT_GROUP/PRINT_CAT
-  var ab;
-  try { ab = await fetchTemplateAb(data.allOt); } catch(e){ return; }
-  try { await ensureJszip(); } catch(e){ showAlert(e.message); return; }
-  try {
-    await fillTemplateByXml(ab, data.recVals, data.docVals, (data.allOt ? '加班记录_' : '请假记录_') + todayStr() + '.xlsx');
-  } catch(e){ await showAlert('生成打印文件失败：' + e.message, '模板打印失败'); return; }
 }
 // 勾选状态变化 → 控制记录相关按钮可用
 $('#records').addEventListener('change', function(e){
