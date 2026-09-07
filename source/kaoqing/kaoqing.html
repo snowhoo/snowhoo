@@ -924,7 +924,7 @@ function normalizeGpCfg(src){
   return out;
 }
 /* 一行 = 一条完整记录段：起日期 / 至日期(请假跨天用，空=单日) / 整天 / 起止时间 / 备注事由。
-   注意：加班/其它每「行」仍是独立记录；请假改为单条录入，至日期在同一行内表达跨天。 */
+   注意：仅「加班」每「行」是独立记录；请假/其它改为单条录入，至日期在同一行内表达跨天。 */
 function newSeg(date){ return { date: date || todayStr(), endDate:'', allDay:false, start:'', end:'', note:'' }; }
 var timeSegs      = [ newSeg() ];
 var focusedSegNoteIdx = 0;       // 当前聚焦的「备注事由」所在行号（常用说明只填该行）
@@ -1235,7 +1235,7 @@ function applyView(){
   $('#secCat').hidden     = !showCat;
   $('#secContent').hidden = !showContent;
 
-  // 请假：单条录入（带至日期），强制 timeSegs 只保留一行（保留已填的起日期，避免切类别时误清）；加班/其它保持多行
+  // 请假/其它：单条录入（带至日期），强制 timeSegs 只保留一行（保留已填的起日期，避免切类别时误清）；仅「加班」保持多行
   if (curCat && isLeaveCat(curCat.id) && editIndex === null && timeSegs.length !== 1){
     timeSegs = [ timeSegs[0] || newSeg() ];
     renderTimeSegs();
@@ -1257,8 +1257,8 @@ function applyView(){
 
 /* ---------- 多时间段（最多 5 段） ---------- */
 /* 渲染时间段行：
-   加班/其它：每个时间段一行，含 起/止 时间，末尾「+ / −」增删（最多 5 行，每行独立成一条记录）；
-   请假：单条录入，一行含 起日期 + 至日期（空=单日）+ 整天 + 起止时间 + 小时 + 备注，不显示增删按钮。 */
+   加班：每个时间段一行，含 起/止 时间，末尾「+ / −」增删（最多 5 行，每行独立成一条记录）；
+   请假/其它：单条录入，一行含 起日期 + 至日期（空=单日）+ 整天 + 起止时间 + 小时 + 备注，不显示增删按钮。 */
 function renderTimeSegs(){
   var box = $('#timeSegs'); if (!box) return;
   box.innerHTML = '';
@@ -1277,7 +1277,7 @@ function renderTimeSegs(){
     var de = document.createElement('input'); de.type = 'date'; de.className = 'fEndDate'; de.value = seg.endDate || ''; de.title = '至日期：空=单日，填了即跨天（与起日期同属一条请假）';
     var e = document.createElement('input'); e.type = 'text'; e.className = 'fTime fEnd'; e.readOnly = true; e.placeholder = '至时间'; e.value = seg.end || ''; e.disabled = !!seg.allDay; e.title = '至时间（点此选择）';
     var dl = document.createElement('span'); dl.className = 'sep'; dl.textContent = '至';     // 请假：起~至 跨天分隔
-    var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '-';   // 加班/其它：同日 起-止 分隔
+    var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '-';   // 加班：同日 起-止 分隔
     var h = document.createElement('span'); h.className = 'segHours'; h.textContent = segHoursText(seg) || '？？小时';
     var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
 
@@ -1289,13 +1289,13 @@ function renderTimeSegs(){
       row.appendChild(de); row.appendChild(e);
       row.appendChild(h); row.appendChild(note);
     } else {
-      // 加班/其它：起日期 + 整天 + 起时间 - 止时间 + 小时 + 备注（可多行）
+      // 加班：起日期 + 整天 + 起时间 - 止时间 + 小时 + 备注（可多行）
       row.appendChild(d); row.appendChild(adWrap);
       row.appendChild(s); row.appendChild(sep); row.appendChild(e);
       row.appendChild(h); row.appendChild(note);
     }
 
-    // 动作容器：加班/其它多行才显示 删除/新增；请假单条不显示
+    // 动作容器：仅「加班」多行才显示 删除/新增；请假/其它单条不显示
     var acts = document.createElement('div'); acts.className = 'seg-actions';
     if (!isLeave){
       if (i > 0){
@@ -1915,14 +1915,13 @@ function syncRecDropsDisabled(busy){
   var _st  = document.getElementById('recStatus'); if (_st)  _st.disabled  = !!busy;
 }
 
-/* 记录表「日期」单元格内容：跨天显示 起日期 起时间 / 至 / 至日期 至时间（一格内换行）；单日显示 日期 起-止时间 */
+/* 记录表「日期」单元格内容：只显示日期，不含时间。
+   跨天：起日期 / 至 / 至日期（一格内换行）；单日：仅起日期。 */
 function recDateCellHtml(r){
-  var parts = (r.detail || '').split('-');
-  var sT = (parts[0] || '').trim(), eT = (parts[1] || '').trim();
   if (r.endDate && r.endDate !== r.date){
-    return esc(r.date) + ' ' + esc(sT) + '<br><span class="date-sep">至</span><br>' + esc(r.endDate) + ' ' + esc(eT);
+    return esc(r.date) + '<br><span class="date-sep">至</span><br>' + esc(r.endDate);
   }
-  return esc(r.date) + (sT && eT ? ' ' + esc(sT) + '-' + esc(eT) : (sT ? ' ' + esc(sT) : ''));
+  return esc(r.date);
 }
 
 function renderRecords(){
@@ -2067,7 +2066,7 @@ async function submit(){
       id:      genRecId(),
       docNo:   '',   // 不预占号：最终单据号在「流水号锁」内取（见下方 add 块），写库后随回读显示
       date:    sg.date,
-      endDate: sg.endDate || '',   // 请假跨天：至日期（空=单日）；加班/其它恒空
+      endDate: sg.endDate || '',   // 请假/其它跨天：至日期（空=单日）；仅加班恒空
       otType:  calcOtType(sg.date),   // 按日期自动判定：国假 / 双休 / 平时（节假日未读取→未知）
       catId:   curCat.id,
       catName: curCat.name,
