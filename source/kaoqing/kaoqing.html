@@ -561,8 +561,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
           <button id="submitRecordsBtn" class="btn-rec-submit" hidden>提交并打印</button>
           <button id="reviewBtn" class="btn-rec-action" hidden>审核</button>
           <button id="approveBtn" class="btn-rec-action" hidden>批准</button>
-          <button id="printBtn" class="btn-rec-action" hidden>打印</button>
-          <button id="tplPrintBtn" class="btn-rec-action" hidden>模板打印</button>
+          <button id="printBtn" class="btn-rec-action" hidden>模板打印</button>
         </div>
         <div class="records" id="records">
           <p class="empty">暂无记录</p>
@@ -2107,7 +2106,6 @@ function updateRecButtons(){
     toggleBtn('#reviewBtn', false);
     toggleBtn('#approveBtn', false);
     toggleBtn('#printBtn', false);
-    toggleBtn('#tplPrintBtn', false);
     toggleBtn('#delRecordsBtn', false);
     return;
   }
@@ -2118,7 +2116,6 @@ function updateRecButtons(){
     toggleBtn('#reviewBtn', false);
     toggleBtn('#approveBtn', false);
     toggleBtn('#printBtn', false);
-    toggleBtn('#tplPrintBtn', false);
     toggleBtn('#delRecordsBtn', false);
     return;
   }
@@ -2138,7 +2135,6 @@ function updateRecButtons(){
   toggleBtn('#reviewBtn', hasReviewed);
   toggleBtn('#approveBtn', hasApproved);
   toggleBtn('#printBtn', hasPrintable);
-  toggleBtn('#tplPrintBtn', checked.length > 0);   // 勾选任意记录即可模板打印（导出，不限状态）
   toggleBtn('#delRecordsBtn', true);          // 已勾选至少一条 → 显示「删选」
 }
 /* 自定义弹窗：替代原生 prompt/alert */
@@ -2293,22 +2289,7 @@ $('#approveBtn').addEventListener('click', async function(){
   eachChecked('待批准', '完成', '审批中…');
 });
 // 打印（待提交记录不能打印）
-$('#printBtn').addEventListener('click', async function(){
-  var box = $('#records');
-  var checked = box.querySelectorAll('.rec-check:checked');
-  if (!checked.length){ await showAlert('请先勾选要打印的记录'); return; }
-  var bad = false;
-  checked.forEach(function(cb){ var r = records[parseInt(cb.dataset.i, 10)]; if (r && r.status === '待提交') bad = true; });
-  if (bad){ await showAlert('待提交记录不能打印'); return; }
-  var hidden = [];
-  box.querySelectorAll('.rec-table tbody tr').forEach(function(tr){
-    var cb = tr.querySelector('.rec-check');
-    var r = cb ? records[parseInt(cb.dataset.i, 10)] : null;
-    if (!cb || !cb.checked || (r && r.status === '待提交')){ tr.style.display = 'none'; hidden.push(tr); }
-  });
-  window.print();
-  hidden.forEach(function(tr){ tr.style.display = ''; });
-});
+$('#printBtn').addEventListener('click', printRecordsByTemplate);   // 原「打印」按钮即模板打印入口（用户预留）
 // 模板打印：调用用户自设计的 xlsx 模板（kaoqing/template/请假申请单模板.xlsx、加班申请单模板.xlsx），
 // 按勾选记录逐行填充占位符后导出（保留模板原有样式/列宽/合并单元格）。模板由用户排版，系统只做占位符替换。
 function weekdayOf(date){
@@ -2521,7 +2502,6 @@ async function printRecordsByTemplate(){
   if (tplWs) fillSheetTemplate(tplWs, recVals, docVals);
   XLSX.writeFile(wb, (allOt ? '加班记录_' : '请假记录_') + todayStr() + '.xlsx');
 }
-$('#tplPrintBtn').addEventListener('click', printRecordsByTemplate);
 // 勾选状态变化 → 控制记录相关按钮可用
 $('#records').addEventListener('change', function(e){
   var t = e.target;
