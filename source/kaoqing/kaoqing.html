@@ -663,6 +663,39 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
       <div class="cfg-hint">权限层级：管理员 &gt; 批准 &gt; 审核。<br>管理员可删除任意状态（含完成）<br>批准可删「待批准/待审核/待提交」<br>审核可删「待审核/待提交」</div>
     </div>
 
+    <div class="cfg-section">
+      <div class="cfg-section-title">打印设置（按考勤组绑定）</div>
+      <div class="cfg-hint">为不同考勤组绑定：打印模板文件、每页条数、考勤人、一/二级部门领导。绑定的人员用于模板签名占位符（考勤人 / 一级部门领导 / 二级部门领导，均为三括号写法），按当前考勤组自动取用。</div>
+      <div class="cfg-line">
+        <span class="cfg-label">考勤组</span>
+        <select id="cfgGpSel"></select>
+      </div>
+      <div class="cfg-line">
+        <span class="cfg-label">打印模板文件</span>
+        <input type="text" id="cfgGpTpl" list="cfgTplList" placeholder="如 加班申请单模板.xlsx">
+        <datalist id="cfgTplList">
+          <option value="加班申请单模板.xlsx"></option>
+          <option value="请假申请单模板.xlsx"></option>
+        </datalist>
+      </div>
+      <div class="cfg-line">
+        <span class="cfg-label">每页条数</span>
+        <input type="number" id="cfgGpPerPage" min="1" max="50" value="10">
+      </div>
+      <div class="cfg-line">
+        <span class="cfg-label">考勤人</span>
+        <select id="cfgGpKqRen"></select>
+      </div>
+      <div class="cfg-line">
+        <span class="cfg-label">一级部门领导</span>
+        <select id="cfgGpD1"></select>
+      </div>
+      <div class="cfg-line">
+        <span class="cfg-label">二级部门领导</span>
+        <select id="cfgGpD2"></select>
+      </div>
+    </div>
+
     <div class="modal-actions">
       <button type="button" class="btn-cancel" id="cfgClose">关闭</button>
       <button type="button" class="btn-ok" id="cfgSave">保存</button>
@@ -795,6 +828,9 @@ var SERIAL_PATH   = '/kaoqing/serial';   // 单据流水号配置（年月+类�
 var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30', presetNotes:{},
                       pwdReview:'', pwdApprove:'', pwdAdmin:'' };  // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值 + 管理密码哈希(审核/批准/管理员)，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
+var GROUP_PRINT_CFG = {};   // 打印设置（按考勤组绑定）：{ [考勤组名]: { tplFile, perPage, kaoqingRen, dept1Leader, dept2Leader } }，随 /kaoqing/config 一并读写
+var cfgGpCur        = '';    // 打印设置面板当前选中的考勤组
+var PRINT_PER_PAGE  = 0;    // 当前打印每页条数（0=用引擎默认 10）；打印/导出前按当前考勤组配置注入
 /* 一行 = 一条完整记录：日期 / 整天 / 起止时间 / 备注事由 / 本行独立小时（最多 5 行，每行独立成一条记录） */
 function newSeg(date){ return { date: date || todayStr(), allDay:false, start:'', end:'', note:'' }; }
 var timeSegs      = [ newSeg() ];
@@ -2091,6 +2127,7 @@ $('#timeSegs').addEventListener('focusin', function(e){
 $('#cfgBtn').addEventListener('click', openConfig);
 $('#cfgSave').addEventListener('click', saveConfigToWaline);
 $('#cfgClose').addEventListener('click', function(){ $('#cfgMask').hidden = true; });
+$('#cfgGpSel').addEventListener('change', function(){ cfgGpCur = this.value; loadGpCfgIntoForm(); });
 $('#cfgMask').addEventListener('click', function(e){ if (e.target === $('#cfgMask')) $('#cfgMask').hidden = true; });
 $('#submitBtn').addEventListener('click', submit);
 $('#cancelBtn').addEventListener('click', resetForm);   // 取消 → 恢复初始界面
@@ -2605,7 +2642,7 @@ async function fillTemplateByXml(ab, recVals, docVals, outName){
     });
   });
   if (dataIdx < 0) throw new Error('模板未找到含行级占位符（如 姓名）的记录行');
-  var perPage = 10;                                  // 每页记录数（改这里调整）
+  var perPage = (PRINT_PER_PAGE > 0) ? PRINT_PER_PAGE : 10;   // 每页记录数：优先用打印设置里按考勤组绑定的「每页条数」
   var N = recVals.length, P = Math.max(1, Math.ceil(N / perPage));
   // 文档级记录键：取「第一位有该字段值的人员」（避免首位人员恰好缺该字段导致表头空白；符合「三括号=文档级取第一位人员」约定）
   var docVm = Object.assign({}, docVals);
@@ -2701,14 +2738,22 @@ function buildPrintData(rs){
     '总小时': Math.round(totalHours * 100) / 100,
     '当前组别': curGroup || '',
     '当前类别': (curCat && curCat.name) || '',
-    '当前状态': (($('#recStatus') && $('#recStatus').value) || '')
+    '当前状态': (($('#recStatus') && $('#recStatus').value) || ''),
+    // 人员签名占位符（登录名/考勤人/一二级部门领导）的姓名文本：xlsx 下载路径按文档级占位符原样显示姓名；
+    // 打印路径由签名图机制（PERSON_PH_KEYS）优先处理，此处值不影响。
+    '登录名': currentLoginNick(),
+    '考勤人': ((GROUP_PRINT_CFG[curGroup] || {}).kaoqingRen || ''),
+    '一级部门领导': ((GROUP_PRINT_CFG[curGroup] || {}).dept1Leader || ''),
+    '二级部门领导': ((GROUP_PRINT_CFG[curGroup] || {}).dept2Leader || '')
   };
   var recVals = [];
   rs.forEach(function(r, i){ recVals.push(buildRecordVals(r, i)); });
   return { allOt: allOt, docVals: docVals, recVals: recVals };
 }
 async function fetchTemplateAb(allOt){
-  var fname = allOt ? '加班申请单模板.xlsx' : '请假申请单模板.xlsx';
+  // 优先用当前考勤组在打印设置里绑定的模板文件；未绑定则按类别（加班/请假）回退到默认模板
+  var gp = (curGroup && GROUP_PRINT_CFG[curGroup]) || {};
+  var fname = (gp.tplFile && gp.tplFile.trim()) ? gp.tplFile.trim() : (allOt ? '加班申请单模板.xlsx' : '请假申请单模板.xlsx');
   var enc = encodeURIComponent(fname);
   var candidates = ['template/' + enc, 'kaoqing/template/' + enc, '../kaoqing/template/' + enc];
   var tried = [], resp = null;
@@ -3004,7 +3049,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     });
   });
   if (dataIdx < 0) throw new Error('模板未找到含行级占位符（如 姓名）的记录行');
-  var perPage = 10;
+  var perPage = (PRINT_PER_PAGE > 0) ? PRINT_PER_PAGE : 10;
   var N = recVals.length, P = Math.max(1, Math.ceil(N / perPage));
   // 文档级记录键：取「第一位有该字段值的人员」（避免首位人员恰好缺该字段导致表头空白；符合「三括号=文档级取第一位人员」约定）
   var docVm = Object.assign({}, docVals);
@@ -3014,7 +3059,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   });
   // 固定人员签名：模板里用三括号直接写姓名（例如写 顾晓维）这类「既不是文档级键、也不是记录级键」的写法，
   // 一律按人名处理，取 names/<姓名>.jpg（放在页眉/页脚就是固定审批人签名，每页都会出现）
-  var fixedNames = [], fnSeen = {}, loginNick = currentLoginNick();
+  var fixedNames = [], fnSeen = {};
   rows.forEach(function(rw){
     _parseCells(rw, SS_CACHE).forEach(function(c){
       if (!c.text) return;
@@ -3022,9 +3067,10 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       while ((fm = fre.exec(c.text))){
         var k = fm[1].trim();
         if (!k || DOC_KEYS[k] || RECORD_KEYS[k] || fnSeen[k]) continue;
-        // 三括号「登录名」占位符：解析为当前登录人昵称，再按该昵称取签名图（与固定人员机制一致）
-        if (k === '登录名'){
-          if (loginNick && !fnSeen[loginNick]){ fnSeen[loginNick] = true; fixedNames.push(loginNick); }
+        // 三括号「人员签名」占位符（登录名 / 考勤人 / 一二级部门领导）：解析为某个人员真实姓名，再按该姓名取签名图（与固定人员机制一致）
+        if (PERSON_PH_KEYS[k]){
+          var pn = personPhName(k);
+          if (pn && !fnSeen[pn]){ fnSeen[pn] = true; fixedNames.push(pn); }
           continue;
         }
         fnSeen[k] = true; fixedNames.push(k);
@@ -3053,10 +3099,12 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       var css = cellCss(styleMap[+c.style] || {});
       if (rh) css += (css ? ';' : '') + 'height:' + rh;   // 行高落到 td 才可靠（tr 的 height 浏览器不强制）
       var styleAttr = css ? ' style="' + css + '"' : '';
-      // 签名占位符（三种写法）：
+      // 签名占位符（四种写法）：
       //   1) 两括号 / 三括号的「签名」键 —— 按「当前记录首位人员」取签名图
       //   2) 三括号里直接写具体姓名（例如写 顾晓维） —— 固定人员，直接取 names/顾晓维.jpg
-      //   3) 三括号「登录名」 —— 解析为当前登录人昵称，再按该昵称取 names/<昵称>.jpg（与固定人员机制一致）
+      //   3) 三括号「登录名」 —— 解析为当前登录人昵称，再按该昵称取 names/<昵称>.jpg
+      //   4) 三括号「考勤人 / 一级部门领导 / 二级部门领导」 —— 解析为打印设置里按考勤组绑定的人员姓名，再取签名图
+      //      以上 3/4 均由 PERSON_PH_KEYS / personPhName 统一处理；未取得姓名时留空（不显示姓名、也不显示破图）
       // 做法：先把占位符换成「哨兵 + 姓名 + 哨兵」，等占位符解析与 XML 转义之后再换回 <img>，
       // 这样「签名：」这类前缀不会被丢掉；找不到签名图时留空（不显示姓名、也不显示破图）
       var SIG = '\u0001';
@@ -3070,7 +3118,8 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
         srcTxt = srcTxt.replace(/\{\{\{([^}]+)\}\}\}/g, function(all, k){
           k = k.trim();
           if (DOC_KEYS[k] || RECORD_KEYS[k]) return all;      // 文档级 / 记录级键 → 交回原有解析
-          if (k === '登录名') return loginNick ? SIG + loginNick + SIG : '';   // 当前登录人签名：解析为昵称再取图
+          // 三括号「人员签名」占位符（登录名/考勤人/一二级部门领导）：解析为人员姓名再取签名图；未取到姓名则留空
+          if (PERSON_PH_KEYS[k]){ var pn = personPhName(k); return pn ? SIG + pn + SIG : ''; }
           return SIG + k + SIG;                               // 其余一律按「固定人员姓名」取签名图
         });
       }
@@ -3114,6 +3163,7 @@ async function printTemplatePreview(){
   try { await ensureJszip(); } catch(e){ showAlert(e.message); return; }
   try { await ensurePeopleLoaded(); } catch(e){}
   var data = buildPrintData(rs);
+  PRINT_PER_PAGE = (((GROUP_PRINT_CFG[curGroup] || {}).perPage) || 0) | 0;   // 按考勤组配置注入每页条数（0=引擎默认 10）
   var signByName = await fetchSignatureImages(data.recVals);   // 按姓名取签名图（内联 dataUri，保证打印时已加载）
   var ab;
   try { ab = await fetchTemplateAb(data.allOt); } catch(e){ return; }
@@ -3136,6 +3186,7 @@ async function downloadTemplateXlsx(){
   if (!rs.length){ await showAlert('没有可打印的记录'); return; }
   try { await ensurePeopleLoaded(); } catch(e){}
   var data = buildPrintData(rs);
+  PRINT_PER_PAGE = (((GROUP_PRINT_CFG[curGroup] || {}).perPage) || 0) | 0;   // 按考勤组配置注入每页条数（0=引擎默认 10）
   var ab;
   try { ab = await fetchTemplateAb(data.allOt); } catch(e){ return; }
   try { await ensureJszip(); } catch(e){ showAlert(e.message); return; }
@@ -3314,6 +3365,18 @@ function walineToken(u){
 function currentLoginNick(){
   var u = getWalineUser();
   return (u && u.display_name) ? u.display_name : '';
+}
+// 三括号「人员签名」占位符：登录名 / 考勤人 / 一级部门领导 / 二级部门领导。
+// 均解析为某个人员的真实姓名，再按该姓名取 names/<姓名>.jpg 签名图（与固定人员机制一致）。
+// 取值来源：登录名=当前登录昵称；其余=打印设置里按考勤组绑定的人员姓名（GROUP_PRINT_CFG[curGroup]）。
+var PERSON_PH_KEYS = { '登录名':1, '考勤人':1, '一级部门领导':1, '二级部门领导':1 };
+function personPhName(k){
+  if (k === '登录名') return currentLoginNick();
+  var g = GROUP_PRINT_CFG[curGroup] || {};
+  if (k === '考勤人')        return g.kaoqingRen  || '';
+  if (k === '一级部门领导')   return g.dept1Leader || '';
+  if (k === '二级部门领导')   return g.dept2Leader || '';
+  return '';
 }
 /* 健壮解析：去除 Waline 管理后台可能的 HTML/markdown 污染，定位 JSON 大括号并解析 */
 function robustParse(raw){
@@ -4391,6 +4454,8 @@ async function loadConfig(){
       if (typeof best.obj.pwdReview  === 'string') CONFIG.pwdReview  = best.obj.pwdReview;
       if (typeof best.obj.pwdApprove === 'string') CONFIG.pwdApprove = best.obj.pwdApprove;
       if (typeof best.obj.pwdAdmin   === 'string') CONFIG.pwdAdmin   = best.obj.pwdAdmin;
+      // 打印设置（按考勤组绑定）：覆盖到内存（页面其它位置按 curGroup 取用）
+      if (best.obj.groupPrint && typeof best.obj.groupPrint === 'object' && !Array.isArray(best.obj.groupPrint)) GROUP_PRINT_CFG = best.obj.groupPrint || {};
     }
   } catch(e){
     console.warn('[kaoqing] 读取考勤配置失败（使用默认）', e && e.message ? e.message : e);
@@ -4411,6 +4476,29 @@ async function loadSerial(){
     console.warn('[kaoqing] 读取单据流水号配置失败（将从当前记录推算）', e && e.message ? e.message : e);
   }
 }
+// 打印设置（按考勤组绑定）面板辅助函数
+function fillPersonSel(selId){
+  var sel = $('#' + selId); if (!sel) return;
+  var html = '<option value="">（未设置）</option>';
+  (PEOPLE_FULL || []).forEach(function(p){ if (p && p.name) html += '<option value="' + esc(p.name) + '">' + esc(p.name) + '</option>'; });
+  sel.innerHTML = html;
+}
+function renderGpSel(){
+  var sel = $('#cfgGpSel'); if (!sel) return;
+  var html = '';
+  GROUPS.slice(1).forEach(function(g){ html += '<option value="' + esc(g) + '">' + esc(g) + '</option>'; });
+  sel.innerHTML = html;
+  if (!cfgGpCur && GROUPS[1]) cfgGpCur = GROUPS[1];
+  sel.value = cfgGpCur;
+}
+function loadGpCfgIntoForm(){
+  var g = GROUP_PRINT_CFG[cfgGpCur] || {};
+  var t = $('#cfgGpTpl');      if (t)  t.value  = g.tplFile || '';
+  var pp = $('#cfgGpPerPage'); if (pp) pp.value = g.perPage || 10;
+  var r = $('#cfgGpKqRen');    if (r)  r.value  = g.kaoqingRen || '';
+  var d1 = $('#cfgGpD1');      if (d1) d1.value = g.dept1Leader || '';
+  var d2 = $('#cfgGpD2');      if (d2) d2.value = g.dept2Leader || '';
+}
 function openConfig(){
   closeSettings();
   $('#cfgDeductLunch').checked = CONFIG.deductLunch;
@@ -4429,6 +4517,10 @@ function openConfig(){
     el.value = '';
     el.placeholder = p[1] ? '已设置（留空则不修改）' : '未设置';
   });
+  // 打印设置（按考勤组绑定）：填充考勤组下拉、人员下拉，并载入当前组的绑定值
+  renderGpSel();
+  fillPersonSel('cfgGpKqRen'); fillPersonSel('cfgGpD1'); fillPersonSel('cfgGpD2');
+  loadGpCfgIntoForm();
   $('#cfgMask').hidden = false;
 }
 async function saveConfigToWaline(){
@@ -4448,6 +4540,16 @@ async function saveConfigToWaline(){
     approve: pwdApprove ? await pwdHash(pwdApprove) : CONFIG.pwdApprove,
     admin:   pwdAdmin   ? await pwdHash(pwdAdmin)   : CONFIG.pwdAdmin
   };
+  // 打印设置（按考勤组绑定）：把面板当前考勤组的字段写回 GROUP_PRINT_CFG（再随 payload 一并存入 config）
+  if (cfgGpCur){
+    GROUP_PRINT_CFG[cfgGpCur] = {
+      tplFile:     (($('#cfgGpTpl') && $('#cfgGpTpl').value) || '').trim(),
+      perPage:     Math.max(1, parseInt((($('#cfgGpPerPage') && $('#cfgGpPerPage').value) || '10'), 10) || 10),
+      kaoqingRen:  (($('#cfgGpKqRen') && $('#cfgGpKqRen').value) || ''),
+      dept1Leader: (($('#cfgGpD1') && $('#cfgGpD1').value) || ''),
+      dept2Leader: (($('#cfgGpD2') && $('#cfgGpD2').value) || '')
+    };
+  }
   var payload = {
     v: 1, type: 'config',
     deductLunch: $('#cfgDeductLunch').checked,
@@ -4458,7 +4560,8 @@ async function saveConfigToWaline(){
     presetNotes: presetRaw,
     pwdReview:  pwdNew.review,
     pwdApprove: pwdNew.approve,
-    pwdAdmin:   pwdNew.admin
+    pwdAdmin:   pwdNew.admin,
+    groupPrint: GROUP_PRINT_CFG
   };
   var user = getWalineUser();
   var token = WALINE_ADMIN_TOKEN || walineToken(user);
