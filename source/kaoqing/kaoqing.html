@@ -1478,17 +1478,16 @@ function findRuleConflict(segs, catId){
   return null;
 }
 /* 业务规则：起始 > 终止 → 拦截。不区分类别。
-   判定升级为「日期+时间」整体比较：至日期早于起日期、或同日但至时间早于起时间才报错；
-   两个时间分属不同日期（请假跨天，至日期>起日期）时不再因「至时间<起时间」误判。返回 {i,start,end} 或 null */
+   日期级：至日期早于起日期 → 非法（任何状态都查，含「整天」——整天只代表时段填满，不豁免日期顺序）。
+   时刻级：同日（至日期空或=起日期）且非整天时，再比 起时间>止时间 → 非法；跨天（至日期>起日期）时间分属不同日，不比较时刻。返回 {i,start,end} 或 null */
 function findOrderConflict(segs){
   for (var i = 0; i < segs.length; i++){
     var sg = segs[i];
-    if (sg.allDay) continue;
-    if (!sg.start || !sg.end) continue;
     var sd = sg.date, ed = sg.endDate || sg.date;
     var dayGap = daysBetween(sd, ed);                // 负数=至日期早于起日期 → 非法
     if (dayGap < 0) return { i: i, start: sg.start, end: sg.end };
-    if (dayGap === 0 && toMin(sg.start) > toMin(sg.end)) return { i: i, start: sg.start, end: sg.end };
+    if (dayGap === 0 && !sg.allDay && sg.start && sg.end && toMin(sg.start) > toMin(sg.end))
+      return { i: i, start: sg.start, end: sg.end };
     // dayGap > 0：跨天（至日期晚于起日期），时间在不同日，不比较时刻
   }
   return null;
@@ -1616,7 +1615,9 @@ function refresh(){
         '<span class="pv-i">' + String(idx).padStart(2, '0') + '</span>' +
         '<span class="pv-n">' + esc(n) + '</span>' +
         '<span class="pv-c ' + catCls + '">' + catHtml + '</span>' +
-        '<span class="pv-d">' + esc((sg.endDate && sg.endDate !== sg.date) ? (sg.date + ' ~ ' + sg.endDate) : (sg.date || '—')) + '</span>' +
+        '<span class="pv-d">' + ((sg.endDate && sg.endDate !== sg.date)
+            ? (esc(sg.date) + '<br><span class="date-sep">至</span><br>' + esc(sg.endDate))
+            : esc(sg.date || '—')) + '</span>' +
         '<span class="pv-t">' + t + '</span>' +
         '<span class="pv-h">' + hrs + '</span>' +
         (sg.note ? '<span class="pv-note">' + esc(sg.note) + '</span>' : '') +
@@ -2185,7 +2186,7 @@ async function submit(){
   newRecs.forEach(function(rec){
     var ph = {
       id: rec.id, _pending: true, docNo: '',
-      people: rec.people, date: rec.date, otType: rec.otType, catId: rec.catId,
+      people: rec.people, date: rec.date, endDate: rec.endDate || '', otType: rec.otType, catId: rec.catId,
       catName: rec.catName, color: rec.color, mode: rec.mode, detail: rec.detail,
       hours: rec.hours, note: rec.note, status: '待提交', ts: rec.ts
     };
