@@ -445,7 +445,8 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 @media print{
   body.printing-template > *:not(#printArea){display:none!important}
   body.printing-template #printArea{display:block!important;width:100%;margin:0;padding:0}
-  @page{size:A4;margin:10mm}
+  /* 不锁定纸张尺寸/方向：交由打印对话框选择（选「横向」即可旋转）。若固定 size:A4 会把方向锁死成纵向、忽略对话框的横向选择 */
+  @page{margin:10mm}
 }
 </style>
 </head>
@@ -2603,8 +2604,12 @@ async function fillTemplateByXml(ab, recVals, docVals, outName){
   if (dataIdx < 0) throw new Error('模板未找到含行级占位符（如 姓名）的记录行');
   var perPage = 10;                                  // 每页记录数（改这里调整）
   var N = recVals.length, P = Math.max(1, Math.ceil(N / perPage));
+  // 文档级记录键：取「第一位有该字段值的人员」（避免首位人员恰好缺该字段导致表头空白；符合「三括号=文档级取第一位人员」约定）
   var docVm = Object.assign({}, docVals);
-  if (recVals[0]) for (var dk in recVals[0]) docVm[dk] = recVals[0][dk];   // 文档级取第一位人员
+  recVals.forEach(function(rec){
+    if (!rec) return;
+    for (var dk in rec) if (docVm[dk] == null || docVm[dk] === '') docVm[dk] = rec[dk];
+  });
   var headerRows = rows.slice(0, dataIdx);
   var dataRowXml = rows[dataIdx];
   var footerRows = rows.slice(dataIdx + 1);
@@ -2666,6 +2671,12 @@ async function fillTemplateByXml(ab, recVals, docVals, outName){
 // ===== 模板打印：两种出口 =====
 // 1) printTemplatePreview —— 忠于 xlsx 模板排版，渲染成网页后直接调起浏览器打印对话框（可打印 / 另存 PDF）
 // 2) downloadTemplateXlsx —— 原「下载 xlsx」能力保留，用于归档 / 在 Excel 继续编辑
+// 打印 / 导出前确保人员档案已加载：PEOPLE_FULL 为空时补拉一次。
+// 否则 buildRecordVals 按姓名取人员字段（工号/部门/考勤组等）会全部落空，导致三级花括号文档级占位符（如一级部门）取不到值。
+async function ensurePeopleLoaded(){
+  if (PEOPLE_FULL && PEOPLE_FULL.length) return;
+  if (!loadPeopleCache()){ try { await loadPeople(); } catch(e){} }
+}
 // 公共：buildPrintData 构造记录 / 文档级占位符值；fetchTemplateAb 拉取模板并给出友好报错
 function buildPrintData(rs){
   var allOt = rs.every(function(r){ return isOtCatId(r.catId); });
@@ -2864,8 +2875,12 @@ async function renderTemplateToHtml(ab, recVals, docVals){
   if (dataIdx < 0) throw new Error('模板未找到含行级占位符（如 姓名）的记录行');
   var perPage = 10;
   var N = recVals.length, P = Math.max(1, Math.ceil(N / perPage));
+  // 文档级记录键：取「第一位有该字段值的人员」（避免首位人员恰好缺该字段导致表头空白；符合「三括号=文档级取第一位人员」约定）
   var docVm = Object.assign({}, docVals);
-  if (recVals[0]) for (var dk in recVals[0]) docVm[dk] = recVals[0][dk];
+  recVals.forEach(function(rec){
+    if (!rec) return;
+    for (var dk in rec) if (docVm[dk] == null || docVm[dk] === '') docVm[dk] = rec[dk];
+  });
   var headerRows = rows.slice(0, dataIdx), dataRowXml = rows[dataIdx], footerRows = rows.slice(dataIdx + 1);
   // 列宽比例（%）
   var totalW = 0; for (var i = 1; i <= cols.count; i++) totalW += (cols.width[i] || 8);
@@ -2915,6 +2930,7 @@ async function printTemplatePreview(){
   checked.forEach(function(cb){ var i = parseInt(cb.dataset.i, 10); if (records[i]) rs.push(records[i]); });
   if (!rs.length){ await showAlert('没有可打印的记录'); return; }
   try { await ensureJszip(); } catch(e){ showAlert(e.message); return; }
+  try { await ensurePeopleLoaded(); } catch(e){}
   var data = buildPrintData(rs);
   var ab;
   try { ab = await fetchTemplateAb(data.allOt); } catch(e){ return; }
@@ -2935,6 +2951,7 @@ async function downloadTemplateXlsx(){
   var rs = [];
   checked.forEach(function(cb){ var i = parseInt(cb.dataset.i, 10); if (records[i]) rs.push(records[i]); });
   if (!rs.length){ await showAlert('没有可打印的记录'); return; }
+  try { await ensurePeopleLoaded(); } catch(e){}
   var data = buildPrintData(rs);
   var ab;
   try { ab = await fetchTemplateAb(data.allOt); } catch(e){ return; }
