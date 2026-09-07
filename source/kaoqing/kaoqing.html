@@ -662,10 +662,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
     <div class="cfg-section">
       <div class="cfg-section-title">常用说明（系统值）</div>
       <div class="cfg-hint">按类别每行一条；用户可追加自定义条目。</div>
-      <div class="preset-cfg-grid" id="cfgPresetNotes">
-        <div class="preset-cfg-cell"><span class="preset-cfg-name">加班</span><textarea class="cfg-textarea cfg-pn" data-cat="overtime" rows="3" placeholder="每行一条"></textarea></div>
-        <div class="preset-cfg-cell"><span class="preset-cfg-name">其它</span><textarea class="cfg-textarea cfg-pn" data-cat="qita" rows="3" placeholder="每行一条"></textarea></div>
-      </div>
+      <div class="preset-cfg-grid" id="cfgPresetNotes"></div>
     </div>
 
     <div class="cfg-section">
@@ -843,6 +840,48 @@ var PRESET_CACHE_KEY = 'kaoqing_preset_notes_cache';   // 常用说明工作列�
 var PRESET_CACHE = {};                                 // { 类别id: [字符串,...] }，仅存 localStorage 缓存
 var presetEdit   = false;                              // 常用说明编辑态（长按进入：显示右上角 ×，可拖动排序）
 
+/* 常用说明（系统值）设置面板所需的「类别 → catId」清单：
+   加班(overtime) + 其它(qita 兜底) + 休假类型配置里「直接显示/其它菜单」的全部类型（映射其真实 catId：
+   命中内置类别复用原 id，否则 lt- 前缀动态 id）。用于动态生成设置面板里的每行 textarea。 */
+function presetCatIdOf(name){
+  var c = findCatByName(name);
+  return c ? c.id : ('lt-' + name);
+}
+function getAllPresetCats(){
+  var seen = {}, out = [];
+  function push(name, id){
+    if (seen[id]) return;
+    seen[id] = 1; out.push({ name: name, id: id });
+  }
+  push('加班', 'overtime');
+  push('其它', 'qita');
+  (CONFIG.leaveTypes.direct || []).concat(CONFIG.leaveTypes.other || []).forEach(function(nm){
+    push(nm, presetCatIdOf(nm));
+  });
+  return out;
+}
+/* 按当前休假类型配置动态渲染「常用说明（系统值）」网格：每类别一行 textarea（取代原先写死的 加班/其它 两行） */
+function renderPresetCfgGrid(){
+  var grid = $('#cfgPresetNotes');
+  if (!grid) return;
+  grid.innerHTML = '';
+  getAllPresetCats().forEach(function(c){
+    var cell = document.createElement('div');
+    cell.className = 'preset-cfg-cell';
+    var nm = document.createElement('span');
+    nm.className = 'preset-cfg-name';
+    nm.textContent = c.name;
+    var ta = document.createElement('textarea');
+    ta.className = 'cfg-textarea cfg-pn';
+    ta.setAttribute('data-cat', c.id);
+    ta.rows = 3;
+    ta.placeholder = '每行一条';
+    cell.appendChild(nm);
+    cell.appendChild(ta);
+    grid.appendChild(cell);
+  });
+}
+
 var MIN_MINUTES   = 30;     // 时间段最少 0.5 小时
 
 /* ---------- 管理密码（审核 / 批准 / 管理员）----------
@@ -895,7 +934,7 @@ var PEOPLE_PATH   = '/kaoqing/people';   // 人员数据在 Waline 中存放的�
 var CONFIG_PATH   = '/kaoqing/config';   // 考勤配置（午休扣除）存放路径（写入为一条 JSON 评论）
 var SERIAL_PATH   = '/kaoqing/serial';   // 单据流水号配置（年月+类别 → 已用最大序号），由前端在新建/删除记录时实时写入（带管理员令牌），Waline 中始终仅 1 条
 var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30', presetNotes:{},
-                      leaveTypes:{ direct:['调休','年假','病假','事假'], other:['婚假','产假','陪产假','丧假'] },
+                      leaveTypes:{ direct:[], other:[] },   // 休假类型完全由 Waline /kaoqing/config 驱动；此处不留写死类别，避免「配置未读取前」显示硬编码项（页面启动即异步加载配置覆盖）
                       pwdReview:'', pwdApprove:'', pwdAdmin:'' };  // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值 + 休假类型 + 管理密码哈希，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
 var GROUP_PRINT_CFG = {};   // 打印设置（按考勤组+类别绑定）：{ [考勤组名]: { ot:{...}, lv:{...} } }，ot=加班 lv=请假；每类含 tplFile/perPage/kaoqingRen/dept1Leader/dept2Leader；随 /kaoqing/config 一并读写
@@ -1634,6 +1673,11 @@ function loadPresetCache(){
       if (obj && typeof obj === 'object' && !Array.isArray(obj)){
         PRESET_CACHE = obj;
         CATS.forEach(function(c){ if (!Array.isArray(PRESET_CACHE[c.id])) PRESET_CACHE[c.id] = []; });
+        // 为新配置的自定义休假类型建立空缓存键，避免其系统值无法显示
+        (CONFIG.leaveTypes.direct || []).concat(CONFIG.leaveTypes.other || []).forEach(function(nm){
+          var id = presetCatIdOf(nm);
+          if (!Array.isArray(PRESET_CACHE[id])) PRESET_CACHE[id] = [];
+        });
         seeded = true;
       }
     }
@@ -1643,6 +1687,10 @@ function loadPresetCache(){
     CATS.forEach(function(c){
       PRESET_CACHE[c.id] = (((CONFIG.presetNotes || {})[c.id]) || []).slice();
     });
+    (CONFIG.leaveTypes.direct || []).concat(CONFIG.leaveTypes.other || []).forEach(function(nm){
+      var id = presetCatIdOf(nm);
+      PRESET_CACHE[id] = (((CONFIG.presetNotes || {})[id]) || []).slice();
+    });
     savePresetCache();
   }
 }
@@ -1650,7 +1698,8 @@ function savePresetCache(){
   try { localStorage.setItem(PRESET_CACHE_KEY, JSON.stringify(PRESET_CACHE)); } catch(e){}
 }
 function getPresetList(catId){
-  return (PRESET_CACHE[catId] || []).slice();
+  if (PRESET_CACHE[catId]) return PRESET_CACHE[catId].slice();
+  return (((CONFIG.presetNotes || {})[catId]) || []).slice();   // 缓存缺键（如自定义 lt- 类型）→ 回退读 Waline 配置的系统值
 }
 /* 把一条常用说明（追加方式）填入「光标所在行」的备注（A+B+B 可多次叠加） */
 function appendPresetToNote(txt){
@@ -4716,7 +4765,8 @@ function openConfig(){
   $('#cfgLunchEnd').value   = CONFIG.lunchEnd;
   $('#cfgWorkStart').value  = CONFIG.workStart;
   $('#cfgWorkEnd').value    = CONFIG.workEnd;
-  // 常用说明：按类别分别填入对应 textarea
+  // 常用说明：先按当前休假类型配置动态生成「每类别一行」textarea，再回填各自系统值
+  renderPresetCfgGrid();
   document.querySelectorAll('#cfgPresetNotes .cfg-pn').forEach(function(ta){
     var cat = ta.getAttribute('data-cat');
     ta.value = (((CONFIG.presetNotes || {})[cat]) || []).join('\n');
