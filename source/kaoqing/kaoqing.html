@@ -364,7 +364,9 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .rec-table .c-cat{color:var(--accent);white-space:nowrap}
 .rec-table .c-cat.c-green{color:#16a34a}
 .rec-table .c-cat.c-orange{color:#f97316}
-.rec-table .c-date,.rec-table .c-time,.rec-table .c-hours{white-space:nowrap;font-variant-numeric:tabular-nums}
+.rec-table .c-time,.rec-table .c-hours{white-space:nowrap;font-variant-numeric:tabular-nums}
+.rec-table .c-date{white-space:normal;line-height:1.4;font-variant-numeric:tabular-nums}
+.rec-table .c-date .date-sep{color:var(--text-muted)}
 .rec-table .c-cat{white-space:nowrap;font-weight:600}
 .rec-table .c-note{white-space:normal}
 .rec-table .c-status{white-space:nowrap}
@@ -1265,22 +1267,34 @@ function renderTimeSegs(){
     var row = document.createElement('div');
     row.className = 'time-row';
     row.setAttribute('data-i', String(i));
-    var d = document.createElement('input'); d.type = 'date'; d.className = 'fDate'; d.value = seg.date || todayStr();
-    var adWrap = document.createElement('label'); adWrap.className = 'all-day'; adWrap.title = '按配置的正常上班时间自动填入';
+
+    var adWrap = document.createElement('label'); adWrap.className = 'all-day'; adWrap.title = '整天=每日起止均为配置的上班时段（跨天则每天都按整天算）';
     var ad = document.createElement('input'); ad.type = 'checkbox'; ad.className = 'allDayChk'; ad.checked = !!seg.allDay;
     adWrap.appendChild(ad); adWrap.appendChild(document.createTextNode('整天'));
-    var s = document.createElement('input'); s.type = 'text'; s.className = 'fTime fStart'; s.readOnly = true; s.placeholder = '--:--'; s.value = seg.start || ''; s.disabled = !!seg.allDay;
-    var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '-';
-    var e = document.createElement('input'); e.type = 'text'; e.className = 'fTime fEnd'; e.readOnly = true; e.placeholder = '--:--'; e.value = seg.end || ''; e.disabled = !!seg.allDay;
+
+    var d = document.createElement('input'); d.type = 'date'; d.className = 'fDate'; d.value = seg.date || todayStr(); d.title = '起日期';
+    var s = document.createElement('input'); s.type = 'text'; s.className = 'fTime fStart'; s.readOnly = true; s.placeholder = '起时间'; s.value = seg.start || ''; s.disabled = !!seg.allDay; s.title = '起时间（点此选择）';
+    var de = document.createElement('input'); de.type = 'date'; de.className = 'fEndDate'; de.value = seg.endDate || ''; de.title = '至日期：空=单日，填了即跨天（与起日期同属一条请假）';
+    var e = document.createElement('input'); e.type = 'text'; e.className = 'fTime fEnd'; e.readOnly = true; e.placeholder = '至时间'; e.value = seg.end || ''; e.disabled = !!seg.allDay; e.title = '至时间（点此选择）';
+    var dl = document.createElement('span'); dl.className = 'sep'; dl.textContent = '至';     // 请假：起~至 跨天分隔
+    var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '-';   // 加班/其它：同日 起-止 分隔
     var h = document.createElement('span'); h.className = 'segHours'; h.textContent = segHoursText(seg) || '？？小时';
     var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
-    row.appendChild(d);
-    if (isLeave){   // 请假：至日期（空=单日，不跨天）
-      var dl = document.createElement('span'); dl.className = 'sep'; dl.textContent = '至';
-      var de = document.createElement('input'); de.type = 'date'; de.className = 'fEndDate'; de.value = seg.endDate || ''; de.title = '至日期：空=单日，填了即跨天（起日期~至日期 同一条请假）';
-      row.appendChild(dl); row.appendChild(de);
+
+    if (isLeave){
+      // 请假：统一一行，不区分单日/跨天 = 整天 + 起日期 起时间 至 至日期 至时间 + 备注
+      row.appendChild(adWrap);
+      row.appendChild(d); row.appendChild(s);
+      row.appendChild(dl);
+      row.appendChild(de); row.appendChild(e);
+      row.appendChild(h); row.appendChild(note);
+    } else {
+      // 加班/其它：起日期 + 整天 + 起时间 - 止时间 + 小时 + 备注（可多行）
+      row.appendChild(d); row.appendChild(adWrap);
+      row.appendChild(s); row.appendChild(sep); row.appendChild(e);
+      row.appendChild(h); row.appendChild(note);
     }
-    row.appendChild(adWrap); row.appendChild(s); row.appendChild(sep); row.appendChild(e); row.appendChild(h); row.appendChild(note);
+
     // 动作容器：加班/其它多行才显示 删除/新增；请假单条不显示
     var acts = document.createElement('div'); acts.className = 'seg-actions';
     if (!isLeave){
@@ -1901,6 +1915,16 @@ function syncRecDropsDisabled(busy){
   var _st  = document.getElementById('recStatus'); if (_st)  _st.disabled  = !!busy;
 }
 
+/* 记录表「日期」单元格内容：跨天显示 起日期 起时间 / 至 / 至日期 至时间（一格内换行）；单日显示 日期 起-止时间 */
+function recDateCellHtml(r){
+  var parts = (r.detail || '').split('-');
+  var sT = (parts[0] || '').trim(), eT = (parts[1] || '').trim();
+  if (r.endDate && r.endDate !== r.date){
+    return esc(r.date) + ' ' + esc(sT) + '<br><span class="date-sep">至</span><br>' + esc(r.endDate) + ' ' + esc(eT);
+  }
+  return esc(r.date) + (sT && eT ? ' ' + esc(sT) + '-' + esc(eT) : (sT ? ' ' + esc(sT) : ''));
+}
+
 function renderRecords(){
   var box = $('#records');
   // 状态筛选：默认「待提交」。归档只读浏览（R2）不筛选，否则切到归档月份会因默认状态而看不到数据
@@ -1983,7 +2007,7 @@ function renderRecords(){
     html += '<td class="c-idx">' + esc(r.docNo != null ? r.docNo : (i + 1)) + '</td>' +   // # = 单据号（加班J/请假G，字母前置+YYMM分段）；旧记录无 docNo 时回退录入序号
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
       '<td class="c-cat ' + (isOt ? 'c-green' : 'c-orange') + '">' + catCell + '</td>' +
-      '<td class="c-date">' + esc((r.endDate && r.endDate !== r.date) ? (r.date + ' ~ ' + r.endDate) : r.date) + '</td>' +
+      '<td class="c-date">' + recDateCellHtml(r) + '</td>' +
       '<td class="c-time">' + esc(fmtSpan(span)) + '</td>' +
       '<td class="c-hours">' + esc(hoursTxt) + '</td>' +
       '<td class="c-status"><span class="rec-status ' + (STATUS_CLASS[st] || 'st-tj') + '">' + st + '</span></td>' +
