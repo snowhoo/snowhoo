@@ -3014,7 +3014,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   });
   // 固定人员签名：模板里用三括号直接写姓名（例如写 顾晓维）这类「既不是文档级键、也不是记录级键」的写法，
   // 一律按人名处理，取 names/<姓名>.jpg（放在页眉/页脚就是固定审批人签名，每页都会出现）
-  var fixedNames = [], fnSeen = {};
+  var fixedNames = [], fnSeen = {}, loginNick = currentLoginNick();
   rows.forEach(function(rw){
     _parseCells(rw, SS_CACHE).forEach(function(c){
       if (!c.text) return;
@@ -3022,6 +3022,11 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       while ((fm = fre.exec(c.text))){
         var k = fm[1].trim();
         if (!k || DOC_KEYS[k] || RECORD_KEYS[k] || fnSeen[k]) continue;
+        // 三括号「登录名」占位符：解析为当前登录人昵称，再按该昵称取签名图（与固定人员机制一致）
+        if (k === '登录名'){
+          if (loginNick && !fnSeen[loginNick]){ fnSeen[loginNick] = true; fixedNames.push(loginNick); }
+          continue;
+        }
         fnSeen[k] = true; fixedNames.push(k);
       }
     });
@@ -3048,9 +3053,10 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       var css = cellCss(styleMap[+c.style] || {});
       if (rh) css += (css ? ';' : '') + 'height:' + rh;   // 行高落到 td 才可靠（tr 的 height 浏览器不强制）
       var styleAttr = css ? ' style="' + css + '"' : '';
-      // 签名占位符（两种写法）：
+      // 签名占位符（三种写法）：
       //   1) 两括号 / 三括号的「签名」键 —— 按「当前记录首位人员」取签名图
       //   2) 三括号里直接写具体姓名（例如写 顾晓维） —— 固定人员，直接取 names/顾晓维.jpg
+      //   3) 三括号「登录名」 —— 解析为当前登录人昵称，再按该昵称取 names/<昵称>.jpg（与固定人员机制一致）
       // 做法：先把占位符换成「哨兵 + 姓名 + 哨兵」，等占位符解析与 XML 转义之后再换回 <img>，
       // 这样「签名：」这类前缀不会被丢掉；找不到签名图时留空（不显示姓名、也不显示破图）
       var SIG = '\u0001';
@@ -3064,6 +3070,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
         srcTxt = srcTxt.replace(/\{\{\{([^}]+)\}\}\}/g, function(all, k){
           k = k.trim();
           if (DOC_KEYS[k] || RECORD_KEYS[k]) return all;      // 文档级 / 记录级键 → 交回原有解析
+          if (k === '登录名') return loginNick ? SIG + loginNick + SIG : '';   // 当前登录人签名：解析为昵称再取图
           return SIG + k + SIG;                               // 其余一律按「固定人员姓名」取签名图
         });
       }
@@ -3301,6 +3308,12 @@ function walineToken(u){
   var t = (u && u.token) || '';
   if (!t){ try { var s = JSON.parse(localStorage.getItem('WALINE_USER') || '{}'); if (s.token) t = s.token; } catch(e){} }
   return t;
+}
+// 取当前登录人昵称（用于模板三括号「登录名」占位符的签名图定位）。无登录返回空串。
+// 注意：只读 WALINE_USER 登录会话，不写任何缓存（不刷新人员缓存）。
+function currentLoginNick(){
+  var u = getWalineUser();
+  return (u && u.display_name) ? u.display_name : '';
 }
 /* 健壮解析：去除 Waline 管理后台可能的 HTML/markdown 污染，定位 JSON 大括号并解析 */
 function robustParse(raw){
