@@ -212,7 +212,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 }
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
 /* 各时间段行：弹性布局（flex），元素按 日期/整天/起/至/止/小时/备注/± 顺序流动，窄屏自动折行 */
-.time-row .fDate{flex:0 0 auto;width:120px;padding:3px 3px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600;font-family: inherit}
+.time-row .fDate,.time-row .fEndDate{flex:0 0 auto;width:120px;padding:3px 3px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600;font-family: inherit}
 .time-row .all-day{display:inline-flex;align-items:center;gap:3px;font-size:.82rem;color:var(--text-secondary);cursor:pointer;min-width:56px;font-weight:600}
 .time-row .all-day input{width:14px;height:14px;accent-color:var(--accent)}
 #rangeBlock{flex:1 1 300px}
@@ -921,8 +921,9 @@ function normalizeGpCfg(src){
   });
   return out;
 }
-/* 一行 = 一条完整记录：日期 / 整天 / 起止时间 / 备注事由 / 本行独立小时（最多 5 行，每行独立成一条记录） */
-function newSeg(date){ return { date: date || todayStr(), allDay:false, start:'', end:'', note:'' }; }
+/* 一行 = 一条完整记录段：起日期 / 至日期(请假跨天用，空=单日) / 整天 / 起止时间 / 备注事由。
+   注意：加班/其它每「行」仍是独立记录；请假改为单条录入，至日期在同一行内表达跨天。 */
+function newSeg(date){ return { date: date || todayStr(), endDate:'', allDay:false, start:'', end:'', note:'' }; }
 var timeSegs      = [ newSeg() ];
 var focusedSegNoteIdx = 0;       // 当前聚焦的「备注事由」所在行号（常用说明只填该行）
 var COMPANY_NAME  = '苏州晶讯科技股份有限公司';   // ← 顶栏公司名称（按需改成贵司名称）
@@ -943,6 +944,17 @@ function todayStr(){
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 function toMin(t){ var p = t.split(':'); return parseInt(p[0],10) * 60 + parseInt(p[1],10); }
+/* 日期差（天）：b - a（按自然日，忽略时区/夏令时，中国无 DST，round 防浮点） */
+function daysBetween(a, b){
+  if (!a || !b) return 0;
+  var da = new Date(a + 'T00:00:00').getTime(), db = new Date(b + 'T00:00:00').getTime();
+  return Math.round((db - da) / 86400000);
+}
+/* 在日期 a 上 +d 天，返回 YYYY-MM-DD */
+function addDays(a, d){
+  var t = new Date(new Date(a + 'T00:00:00').getTime() + d * 86400000);
+  return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+}
 /* 节假日：同样以 Waline（/kaoqing/holidays）为唯一来源，前端不再内置写死的兜底表。
    页面打开时由 loadHolidays() 拉取；读取失败（未配置/异常）时加班类型按日期判定为「未知」，即「类别」列显示「未知加班」，
    并弹「节假日读取失败」提示，便于一眼看出是不是没读成功。绝不默认算成「平时」以免掩盖问题。 */
@@ -1221,6 +1233,12 @@ function applyView(){
   $('#secCat').hidden     = !showCat;
   $('#secContent').hidden = !showContent;
 
+  // 请假：单条录入（带至日期），强制 timeSegs 只保留一行（保留已填的起日期，避免切类别时误清）；加班/其它保持多行
+  if (curCat && isLeaveCat(curCat.id) && editIndex === null && timeSegs.length !== 1){
+    timeSegs = [ timeSegs[0] || newSeg() ];
+    renderTimeSegs();
+  }
+
   renderCats();
   $('#rangeBlock').hidden = !curCat;
   if (curCat){
@@ -1236,11 +1254,13 @@ function applyView(){
 }
 
 /* ---------- 多时间段（最多 5 段） ---------- */
-/* 渲染时间段行：每个时间段一行，含 起/止 下拉；
-   末尾按钮规则：最后一行的末尾显示「+」（未满 5 段时）用于新增；非首行显示「−」用于移除。 */
+/* 渲染时间段行：
+   加班/其它：每个时间段一行，含 起/止 时间，末尾「+ / −」增删（最多 5 行，每行独立成一条记录）；
+   请假：单条录入，一行含 起日期 + 至日期（空=单日）+ 整天 + 起止时间 + 小时 + 备注，不显示增删按钮。 */
 function renderTimeSegs(){
   var box = $('#timeSegs'); if (!box) return;
   box.innerHTML = '';
+  var isLeave = curCat && isLeaveCat(curCat.id);   // 请假 → 单条 + 至日期
   timeSegs.forEach(function(seg, i){
     var row = document.createElement('div');
     row.className = 'time-row';
@@ -1253,21 +1273,29 @@ function renderTimeSegs(){
     var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '-';
     var e = document.createElement('input'); e.type = 'text'; e.className = 'fTime fEnd'; e.readOnly = true; e.placeholder = '--:--'; e.value = seg.end || ''; e.disabled = !!seg.allDay;
     var h = document.createElement('span'); h.className = 'segHours'; h.textContent = segHoursText(seg) || '？？小时';
-	var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
-    row.appendChild(d); row.appendChild(adWrap); row.appendChild(s); row.appendChild(sep); row.appendChild(e); row.appendChild(h); row.appendChild(note);
-    // 动作容器：每行固定宽度，内部按需放 删除/新增 按钮，保证上下行控件对齐（不挤在一起）
-    var acts = document.createElement('div'); acts.className = 'seg-actions';
-    if (i > 0){
-      var del = document.createElement('button');
-      del.type = 'button'; del.className = 'seg-act del'; del.textContent = '−'; del.title = '移除该行';
-      del.setAttribute('data-act', 'del'); del.setAttribute('data-i', String(i));
-      acts.appendChild(del);
+    var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
+    row.appendChild(d);
+    if (isLeave){   // 请假：至日期（空=单日，不跨天）
+      var dl = document.createElement('span'); dl.className = 'sep'; dl.textContent = '至';
+      var de = document.createElement('input'); de.type = 'date'; de.className = 'fEndDate'; de.value = seg.endDate || ''; de.title = '至日期：空=单日，填了即跨天（起日期~至日期 同一条请假）';
+      row.appendChild(dl); row.appendChild(de);
     }
-    if (editIndex === null && i === timeSegs.length - 1 && timeSegs.length < 5){
-      var add = document.createElement('button');
-      add.type = 'button'; add.className = 'seg-act'; add.textContent = '+'; add.title = '复制新增一行（最多 5 行）';
-      add.setAttribute('data-act', 'add'); add.setAttribute('data-i', String(i));
-      acts.appendChild(add);
+    row.appendChild(adWrap); row.appendChild(s); row.appendChild(sep); row.appendChild(e); row.appendChild(h); row.appendChild(note);
+    // 动作容器：加班/其它多行才显示 删除/新增；请假单条不显示
+    var acts = document.createElement('div'); acts.className = 'seg-actions';
+    if (!isLeave){
+      if (i > 0){
+        var del = document.createElement('button');
+        del.type = 'button'; del.className = 'seg-act del'; del.textContent = '−'; del.title = '移除该行';
+        del.setAttribute('data-act', 'del'); del.setAttribute('data-i', String(i));
+        acts.appendChild(del);
+      }
+      if (editIndex === null && i === timeSegs.length - 1 && timeSegs.length < 5){
+        var add = document.createElement('button');
+        add.type = 'button'; add.className = 'seg-act'; add.textContent = '+'; add.title = '复制新增一行（最多 5 行）';
+        add.setAttribute('data-act', 'add'); add.setAttribute('data-i', String(i));
+        acts.appendChild(add);
+      }
     }
     row.appendChild(acts);
     box.appendChild(row);
@@ -1301,20 +1329,36 @@ function segMinutes(seg){
        加班类绝不扣午休。 */
 function segHoursMin(seg, catId){
   if (!seg.start || !seg.end) return null;
+  var cid = (catId != null) ? catId : (curCat ? curCat.id : null);
+  var ws = toMin(CONFIG.workStart), we = toMin(CONFIG.workEnd);
+  var L  = toMin(CONFIG.lunchStart),  R = toMin(CONFIG.lunchEnd);
+  // 跨天（仅请假类有至日期）：按「起日期~至日期」逐日累计「实际涵盖的工作时间」，绝不能单日工时×天数。
+  //   起日：起时间 ~ 下班时段；中间日：整天(上班~下班)；止日：上班时段 ~ 至时间。
+  //   每日各自按配置扣午休（仅请假类）→ 天然「午休每天扣一次」。半天/小时级跨天均准确。
+  var isCross = isLeaveCat(cid) && seg.endDate && seg.endDate >= seg.date && daysBetween(seg.date, seg.endDate) > 0;
+  if (isCross){
+    var s0 = toMin(seg.start), e0 = toMin(seg.end);
+    var span = daysBetween(seg.date, seg.endDate);   // >=1
+    var tot = 0;
+    for (var d = 0; d <= span; d++){
+      var a, b;
+      if (d === 0)         { a = Math.max(s0, ws); b = we; }   // 起日：起时间 ~ 下班
+      else if (d === span) { a = ws; b = Math.min(e0, we); }   // 止日：上班 ~ 至时间
+      else                 { a = ws; b = we; }                 // 中间日：整天
+      if (b <= a) continue;                                    // 该日无涵盖工时（容错）
+      var dm = b - a;
+      if (isLeaveCat(cid) && CONFIG.deductLunch) dm -= lunchOverlap(a, b, L, R);
+      if (dm < 0) dm = 0;
+      tot += dm;
+    }
+    return tot;
+  }
+  // 单日（含整天 / 半天体）：按本日时段计算
   var m = segMinutes(seg);
   if (m == null || m < MIN_MINUTES) return null;
-  var cid = (catId != null) ? catId : (curCat ? curCat.id : null);
-  // 整天：按「上班时间段」配置计算全天工时
-  if (seg.allDay){
-    m = segMinutes({ start: CONFIG.workStart, end: CONFIG.workEnd });
-    if (isLeaveCat(cid) && CONFIG.deductLunch){
-      m -= lunchOverlap(toMin(CONFIG.workStart), toMin(CONFIG.workEnd), toMin(CONFIG.lunchStart), toMin(CONFIG.lunchEnd));
-    }
-    if (m < 0) m = 0;
-    return m;
-  }
+  if (seg.allDay) m = we - ws;                                   // 整天 = 上班时长
   if (isLeaveCat(cid) && CONFIG.deductLunch){
-    m -= lunchOverlap(toMin(seg.start), toMin(seg.end), toMin(CONFIG.lunchStart), toMin(CONFIG.lunchEnd));
+    m -= lunchOverlap(toMin(seg.start), toMin(seg.end), L, R);
     if (m < 0) m = 0;
   }
   return m;
@@ -1391,32 +1435,45 @@ function segOverlapWork(sg){
   return s < we && e > ws;                                  // 任一交集即重叠
 }
 /* 业务规则校验（新增 + 修改都查）：返回 {rule,i,date} 或 null
-   规则1 请假类 与 节假日(国假) 重叠 → 禁止；
-   规则2 加班类 与 正常工作时间(工作日 workStart~workEnd) 重叠 → 禁止。 */
+   规则1 请假类 与 休息日 重叠 → 禁止（逐日检查 起日期~至日期 每一天）；
+   规则2 加班类 与 正常工作时间(工作日 workStart~workEnd) 重叠 → 禁止。
+   请假跨天：每个覆盖日都单独校验，i 仍为原始段下标（请假单条=0）。 */
 function findRuleConflict(segs, catId){
   var isLeave = isLeaveCat(catId), isOt = isOtCatId(catId);
   if (!isLeave && !isOt) return null;                       // 其它类别不校验这两条规则
   for (var i = 0; i < segs.length; i++){
-    var sg = segs[i], date = sg.date;
-    if (isLeave){
-      if (!isWorkday(date)) return { rule: 1, i: i, date: date };   // 休息日(国假/调休休息/正常双休)无需请假
-      // 工作日请假：时段须 100% 落在正常上班时段内，任何超出(过早/过晚)都拦截
-      if (!sg.allDay && sg.start && sg.end){
-        var s = toMin(sg.start), e = toMin(sg.end);
-        var ws = toMin(CONFIG.workStart), we = toMin(CONFIG.workEnd);
-        if (s < ws || e > we) return { rule: 3, i: i, date: date, start: sg.start, end: sg.end };
+    var sg = segs[i];
+    var ed = (isLeave && sg.endDate && sg.endDate >= sg.date) ? sg.endDate : sg.date;
+    var nDays = daysBetween(sg.date, ed);
+    for (var d = 0; d <= nDays; d++){
+      var date = addDays(sg.date, d);
+      if (isLeave){
+        if (!isWorkday(date)) return { rule: 1, i: i, date: date };   // 休息日(国假/调休休息/正常双休)无需请假
+        // 工作日请假：时段须 100% 落在正常上班时段内，任何超出(过早/过晚)都拦截
+        if (!sg.allDay && sg.start && sg.end){
+          var s = toMin(sg.start), e = toMin(sg.end);
+          var ws = toMin(CONFIG.workStart), we = toMin(CONFIG.workEnd);
+          if (s < ws || e > we) return { rule: 3, i: i, date: date, start: sg.start, end: sg.end };
+        }
       }
+      if (isOt && isWorkday(date) && segOverlapWork(sg))    return { rule: 2, i: i, date: date };
     }
-    if (isOt && isWorkday(date) && segOverlapWork(sg))      return { rule: 2, i: i, date: date };
   }
   return null;
 }
-/* 业务规则：起始时间 > 终止时间（非整天、起止均填写）→ 拦截。不区分类别（请假/加班/其它均查），视为录入错误（不支持跨天）。返回 {i,start,end} 或 null */
+/* 业务规则：起始 > 终止 → 拦截。不区分类别。
+   判定升级为「日期+时间」整体比较：至日期早于起日期、或同日但至时间早于起时间才报错；
+   两个时间分属不同日期（请假跨天，至日期>起日期）时不再因「至时间<起时间」误判。返回 {i,start,end} 或 null */
 function findOrderConflict(segs){
   for (var i = 0; i < segs.length; i++){
     var sg = segs[i];
     if (sg.allDay) continue;
-    if (sg.start && sg.end && toMin(sg.start) > toMin(sg.end)) return { i: i, start: sg.start, end: sg.end };
+    if (!sg.start || !sg.end) continue;
+    var sd = sg.date, ed = sg.endDate || sg.date;
+    var dayGap = daysBetween(sd, ed);                // 负数=至日期早于起日期 → 非法
+    if (dayGap < 0) return { i: i, start: sg.start, end: sg.end };
+    if (dayGap === 0 && toMin(sg.start) > toMin(sg.end)) return { i: i, start: sg.start, end: sg.end };
+    // dayGap > 0：跨天（至日期晚于起日期），时间在不同日，不比较时刻
   }
   return null;
 }
@@ -1432,10 +1489,17 @@ function findTimeConflict(){
   return null;
 }
 
-/* 与已有记录冲突检测：待保存的每个时间段（按其所属人员）不能与「本人已有记录」在同一天、时间段重叠。
+/* 与已有记录冲突检测：待保存的每个时间段（按其所属人员）不能与「本人已有记录」在重叠日期、时间段重叠。
+   请假跨天：把待保存段与已有记录都按「起日期~至日期」逐日展开后再比对（双方都支持 toDate 区间）。
    saveSegs: 已 filter 完整的段数组；peopleNames: 本次涉及人员；excludeId: 修改时排除自身记录 id（避免与待改记录自身比较） */
 function findExistingConflict(saveSegs, peopleNames, excludeId){
   if (!saveSegs.length || !peopleNames || !peopleNames.length) return null;
+  var expNew = [];   // 待保存段按日期区间展开为每日 {date,start,end}
+  saveSegs.forEach(function(ns){
+    var ed = (ns.endDate && ns.endDate >= ns.date) ? ns.endDate : ns.date;
+    var n = daysBetween(ns.date, ed);
+    for (var d = 0; d <= n; d++) expNew.push({ date: addDays(ns.date, d), start: ns.start, end: ns.end });
+  });
   for (var ri = 0; ri < records.length; ri++){
     var rec = records[ri];
     if (!rec || !rec.id) continue;
@@ -1443,15 +1507,16 @@ function findExistingConflict(saveSegs, peopleNames, excludeId){
     if (!rec.people || !rec.people.length) continue;
     var hit = rec.people.filter(function(p){ return peopleNames.indexOf(p) >= 0; });
     if (!hit.length) continue;                                   // 不同人 → 不冲突
-    var recSegs = parseDetail(rec.detail);                       // 历史记录可能多段，逐段比对
-    for (var si = 0; si < saveSegs.length; si++){
-      var ns = saveSegs[si];
-      if (ns.date !== rec.date) continue;                        // 不同天 → 跳过
+    var recStart = rec.date, recEnd = (rec.endDate && rec.endDate >= rec.date) ? rec.endDate : rec.date;
+    var recSegs = parseDetail(rec.detail);                       // 历史记录可能多段，逐段比对（同一请假每天同窗口）
+    for (var si = 0; si < expNew.length; si++){
+      var ns = expNew[si];
+      if (ns.date < recStart || ns.date > recEnd) continue;      // 不在已有记录覆盖的日期区间内 → 跳过
       for (var k = 0; k < recSegs.length; k++){
         if (segsOverlap(ns, recSegs[k])){
           return {
             person: hit[0],
-            date: rec.date,
+            date: ns.date,
             seg: { start: ns.start, end: ns.end },
             otherDetail: recSegs[k].start + '-' + recSegs[k].end
           };
@@ -1535,7 +1600,7 @@ function refresh(){
         '<span class="pv-i">' + String(idx).padStart(2, '0') + '</span>' +
         '<span class="pv-n">' + esc(n) + '</span>' +
         '<span class="pv-c ' + catCls + '">' + catHtml + '</span>' +
-        '<span class="pv-d">' + esc(sg.date || '—') + '</span>' +
+        '<span class="pv-d">' + esc((sg.endDate && sg.endDate !== sg.date) ? (sg.date + ' ~ ' + sg.endDate) : (sg.date || '—')) + '</span>' +
         '<span class="pv-t">' + t + '</span>' +
         '<span class="pv-h">' + hrs + '</span>' +
         (sg.note ? '<span class="pv-note">' + esc(sg.note) + '</span>' : '') +
@@ -1918,7 +1983,7 @@ function renderRecords(){
     html += '<td class="c-idx">' + esc(r.docNo != null ? r.docNo : (i + 1)) + '</td>' +   // # = 单据号（加班J/请假G，字母前置+YYMM分段）；旧记录无 docNo 时回退录入序号
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
       '<td class="c-cat ' + (isOt ? 'c-green' : 'c-orange') + '">' + catCell + '</td>' +
-      '<td class="c-date">' + esc(r.date) + '</td>' +
+      '<td class="c-date">' + esc((r.endDate && r.endDate !== r.date) ? (r.date + ' ~ ' + r.endDate) : r.date) + '</td>' +
       '<td class="c-time">' + esc(fmtSpan(span)) + '</td>' +
       '<td class="c-hours">' + esc(hoursTxt) + '</td>' +
       '<td class="c-status"><span class="rec-status ' + (STATUS_CLASS[st] || 'st-tj') + '">' + st + '</span></td>' +
@@ -1978,6 +2043,7 @@ async function submit(){
       id:      genRecId(),
       docNo:   '',   // 不预占号：最终单据号在「流水号锁」内取（见下方 add 块），写库后随回读显示
       date:    sg.date,
+      endDate: sg.endDate || '',   // 请假跨天：至日期（空=单日）；加班/其它恒空
       otType:  calcOtType(sg.date),   // 按日期自动判定：国假 / 双休 / 平时（节假日未读取→未知）
       catId:   curCat.id,
       catName: curCat.name,
@@ -2050,7 +2116,7 @@ async function submit(){
       id: (old && old.id) || genRecId(),
       oid: (old && old.oid) || null,     // 带原评论 oid：edit 时直接 PUT 原地覆盖（不再新建事件评论）
       docNo: (old && old.docNo) || '',   // 修改沿用原单据号，不重新编号；原记录无号时不预占（回读后显示）
-      date: f.date, otType: calcOtType(f.date),   // 按日期自动判定加班类型
+      date: f.date, endDate: f.endDate || '', otType: calcOtType(f.date),   // 按日期自动判定加班类型；endDate 随请假跨天带回
       catId: curCat.id, catName: curCat.name, color: curCat.color, mode: curCat.mode,
       people: old.people,
       detail: f.start + '-' + f.end,
@@ -2192,6 +2258,7 @@ function startEdit(i){
     if (!sg.date) sg.date = r.date || todayStr();
     sg.allDay = (sg.start === CONFIG.workStart && sg.end === CONFIG.workEnd);   // 恰为上班时段 → 视为整天
     if (k === 0 && !sg.note && r.note) sg.note = r.note;   // 旧整条备注归到第一行
+    if (k === 0 && r.endDate) sg.endDate = r.endDate;       // 回填至日期（请假跨天）；其它记录 endDate 恒空
   });
   renderTimeSegs();
   renderGroups();
@@ -2227,6 +2294,7 @@ $('#timeSegs').addEventListener('change', function(e){
   var idx = parseInt(row.getAttribute('data-i'), 10);
   var seg = timeSegs[idx]; if (!seg) return;
   if (el.classList.contains('fDate')){ seg.date = el.value; refresh(); return; }
+  else if (el.classList.contains('fEndDate')){ seg.endDate = el.value; refresh(); return; }   // 至日期：空=单日
   else if (el.classList.contains('allDayChk')){                       // 整天：本行时段按正常上班时间填入并锁定
     seg.allDay = el.checked;
     if (seg.allDay){ seg.start = CONFIG.workStart; seg.end = CONFIG.workEnd; }
@@ -2528,7 +2596,7 @@ function buildRecordVals(r, idx){
     '二级部门': p0 ? (p0.dept2 || '') : '',
     '考勤组': p0 ? (p0.group || '') : '',
     '权限': p0 ? (p0.permission || '') : '',
-    '日期': r.date || '',
+    '日期': (r.endDate && r.endDate !== r.date) ? (r.date + ' ~ ' + r.endDate) : (r.date || ''),
     '星期': weekdayOf(r.date),
     '开始': start,
     '结束': end,
