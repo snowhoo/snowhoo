@@ -2472,11 +2472,15 @@ function fillSheetTemplate(ws, recs, docVals, perPage){
 function _xmlEsc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function _rowNum(rw){ var m = rw.match(/<row\b[^>]*\br="(\d+)"/); return m ? m[1] : '1'; }
 function _parseCells(rw, ss){
-  var cells = [], re = /<c\b([^>]*?)(\/?)>(?:([\s\S]*?)<\/c>)?/g, m;
+  // 单元格有两种形态：自闭合 <c .../> 与成对 <c ...>...</c>。
+  // 注意：不能写成 <c ...>(?:...</c>)? 的"可选闭合"形式——正则会把"自闭合单元 + 后续含 </c> 的单元"
+  // 误并成一个匹配，导致多个单元格被吞掉、内部单元格的 r 行号不被改写，Excel 打开报"部分内容有问题"并丢格。
+  // 故把"自闭合"作为第一个分支优先整体匹配，再匹配成对单元。
+  var cells = [], re = /<c\b([^>]*?)\/>|<c\b([^>]*?)>([\s\S]*?)<\/c>/g, m;
   var rowNumM = rw.match(/<row\b[^>]*\br="(\d+)"/); var rowNum = rowNumM ? rowNumM[1] : '1';
   var curCol = 0;   // 当前列号（无 r 属性时按 Excel 规则顺推：上一格的下一列）
   while ((m = re.exec(rw))){
-    var attrs = m[1], inner = m[3] || '';
+    var attrs = m[1] || m[2], inner = m[3] || '';
     var refM = attrs.match(/\br="([A-Z]+\d+)"/);
     var ref;
     if (refM){ ref = refM[1]; curCol = colToNum(ref.replace(/\d+/, '')); }
@@ -2503,7 +2507,7 @@ function _emitCell(cell, newRef, rec, docVm, mode){
   var hasRow = /\{\{(?!\{)/.test(txt);   // 仅两层花括号（排除三层文档级）
   if (!hasDoc && !hasRow){
     if (mode === 'blank') return '<c r="' + newRef + '" s="' + cell.style + '"/>';   // 不足一页的空白行：整格清空（连固定值也清掉）
-    return cell.raw.replace(/\br="[A-Z]+\d+"/, 'r="' + newRef + '"');
+    return cell.raw.replace(/\br="[A-Z]+\d+"/g, 'r="' + newRef + '"');
   }
   var resolved = txt;
   if (hasDoc){
