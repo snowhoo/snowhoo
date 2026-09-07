@@ -562,6 +562,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
           <button id="reviewBtn" class="btn-rec-action" hidden>审核</button>
           <button id="approveBtn" class="btn-rec-action" hidden>批准</button>
           <button id="printBtn" class="btn-rec-action" hidden>打印</button>
+          <button id="tplPrintBtn" class="btn-rec-action" hidden>模板打印</button>
         </div>
         <div class="records" id="records">
           <p class="empty">暂无记录</p>
@@ -2106,6 +2107,7 @@ function updateRecButtons(){
     toggleBtn('#reviewBtn', false);
     toggleBtn('#approveBtn', false);
     toggleBtn('#printBtn', false);
+    toggleBtn('#tplPrintBtn', false);
     toggleBtn('#delRecordsBtn', false);
     return;
   }
@@ -2116,6 +2118,7 @@ function updateRecButtons(){
     toggleBtn('#reviewBtn', false);
     toggleBtn('#approveBtn', false);
     toggleBtn('#printBtn', false);
+    toggleBtn('#tplPrintBtn', false);
     toggleBtn('#delRecordsBtn', false);
     return;
   }
@@ -2135,6 +2138,7 @@ function updateRecButtons(){
   toggleBtn('#reviewBtn', hasReviewed);
   toggleBtn('#approveBtn', hasApproved);
   toggleBtn('#printBtn', hasPrintable);
+  toggleBtn('#tplPrintBtn', checked.length > 0);   // 勾选任意记录即可模板打印（导出，不限状态）
   toggleBtn('#delRecordsBtn', true);          // 已勾选至少一条 → 显示「删选」
 }
 /* 自定义弹窗：替代原生 prompt/alert */
@@ -2305,6 +2309,219 @@ $('#printBtn').addEventListener('click', async function(){
   window.print();
   hidden.forEach(function(tr){ tr.style.display = ''; });
 });
+// 模板打印：调用用户自设计的 xlsx 模板（kaoqing/template/请假申请单模板.xlsx、加班申请单模板.xlsx），
+// 按勾选记录逐行填充占位符后导出（保留模板原有样式/列宽/合并单元格）。模板由用户排版，系统只做占位符替换。
+function weekdayOf(date){
+  if (!date) return '';
+  var w = new Date(date + 'T00:00:00').getDay();
+  return ['周日','周一','周二','周三','周四','周五','周六'][w];
+}
+var RECORD_KEYS = { '序号':1,'单据号':1,'姓名':1,'工号':1,'性别':1,'手机号':1,'一级部门':1,'二级部门':1,'考勤组':1,'权限':1,'日期':1,'星期':1,'开始':1,'结束':1,'时段':1,'小时':1,'说明':1,'状态':1,'类别':1,'加班类型':1 };
+var DOC_KEYS = { '打印日期':1,'打印时间':1,'总条数':1,'总小时':1,'当前组别':1,'当前类别':1,'当前状态':1 };
+function isRecKey(k){ return !!RECORD_KEYS[k]; }
+function firstPersonOf(rec){
+  if (!rec || !rec.people || !rec.people.length) return null;
+  if (!PEOPLE_FULL || !PEOPLE_FULL.length) return null;
+  for (var i = 0; i < PEOPLE_FULL.length; i++){ if (PEOPLE_FULL[i].name === rec.people[0]) return PEOPLE_FULL[i]; }
+  return null;
+}
+function buildRecordVals(r, idx){
+  var isOt = isOtCatId(r.catId);
+  var ot = r.otType || calcOtType(r.date);
+  if (ot === '未知' && r.otType) ot = r.otType;
+  var catDisplay = isOt ? (ot + '加班') : (r.catName || '');
+  var span = r.detail || '';
+  var start = '', end = '';
+  var mm = (span || '').match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+  if (mm){ start = mm[1]; end = mm[2]; }
+  var who = (r.people || []).join('、');
+  var p0 = firstPersonOf(r);          // 人员字段取「首位」人员（多人记录只取第一人）
+  return {
+    '序号': idx + 1,
+    '单据号': r.docNo != null ? r.docNo : (idx + 1),
+    '姓名': who,
+    '工号': (p0 && p0.id != null) ? p0.id : '',
+    '性别': p0 ? (p0.gender || '') : '',
+    '手机号': p0 ? (p0.phone || '') : '',
+    '一级部门': p0 ? (p0.dept1 || '') : '',
+    '二级部门': p0 ? (p0.dept2 || '') : '',
+    '考勤组': p0 ? (p0.group || '') : '',
+    '权限': p0 ? (p0.permission || '') : '',
+    '日期': r.date || '',
+    '星期': weekdayOf(r.date),
+    '开始': start,
+    '结束': end,
+    '时段': span,
+    '小时': (r.hours == null) ? '' : r.hours,
+    '说明': r.note || '',
+    '状态': r.status || '待提交',
+    '类别': catDisplay,
+    '加班类型': isOt ? ot : ''
+  };
+}
+// 占位符约定：{{{key}}} = 文档级（表头信息，仅取一次：记录类键取第一位人员，文档键取文档值）；
+//             {{key}}  = 行级（表体明细，随每条记录替换）。含「行级记录占位符」的行才被当作数据行参与分页。
+function parsePH(v){
+  var res = [];
+  var s = (v == null ? '' : String(v));
+  s = s.replace(/\{\{\{([^}]+)\}\}\}/g, function(_, k){ res.push({ full: '{{{' + k + '}}}', key: k.trim(), level: 'doc' }); return ' '; });
+  s = s.replace(/\{\{([^}]+)\}\}/g,    function(_, k){ res.push({ full: '{{' + k + '}}',  key: k.trim(), level: 'row' }); return ' '; });
+  return res;
+}
+/* 核心：把含行级占位符的「数据行」按记录数复制并替换；文档级占位符整表只取一次；保留样式与合并单元格 */
+function fillSheetTemplate(ws, recs, docVals){
+  var ref = ws['!ref']; if (!ref) return;
+  var range = XLSX.utils.decode_range(ref);
+  var cells = {};          // "r_c" -> cellObj
+  var phOf = {};           // "r_c" -> [{full,key,level}]
+  var rowRec = {};         // "r_c" -> [recKey,...]（行级记录占位符）
+  Object.keys(ws).forEach(function(k){
+    if (k[0] === '!') return;
+    var d = XLSX.utils.decode_cell(k);
+    cells[d.r + '_' + d.c] = ws[k];
+    var v = ws[k].v;
+    if (typeof v === 'string'){
+      var phs = parsePH(v);
+      if (phs.length){
+        var addr = d.r + '_' + d.c;
+        phOf[addr] = phs;
+        phs.forEach(function(p){ if (p.level === 'row' && isRecKey(p.key)) (rowRec[addr] = rowRec[addr] || []).push(p.key); });
+      }
+    }
+  });
+
+  // 数据行 = 含「行级记录占位符」的行（文档级占位符不会使所在行变成数据行）
+  var dataRows = [];
+  for (var r = range.s.r; r <= range.e.r; r++){
+    var hit = false;
+    for (var c = range.s.c; c <= range.e.c; c++){
+      if (rowRec[r + '_' + c] && rowRec[r + '_' + c].length){ hit = true; break; }
+    }
+    if (hit) dataRows.push(r);
+  }
+  if (!dataRows.length) return;
+  var D = dataRows.length;                  // 每页数据行数（= 模板数据行数量）
+  var totalRows = range.e.r - range.s.r + 1;
+  var N = recs.length;
+  var P = Math.max(1, Math.ceil(N / D));    // 总页数
+
+  var out = {};                            // "r_c" -> newCell
+  function copyCell(sr, sc, dr, dc, isDataRow, ri){
+    var src = cells[sr + '_' + sc]; if (!src) return;
+    var nc = Object.assign({}, src);
+    var phs = phOf[sr + '_' + sc];
+    if (phs){
+      var txt = String(src.v == null ? '' : src.v);
+      phs.forEach(function(p){
+        var val;
+        if (p.level === 'doc'){
+          val = (docVm[p.key] != null) ? docVm[p.key] : p.full;
+        } else if (isDataRow && ri < N){
+          val = (recs[ri] && recs[ri][p.key] != null) ? recs[ri][p.key]
+               : (docVals[p.key] != null ? docVals[p.key] : p.full);
+        } else if (isDataRow){
+          val = '';   // 本页数据行未用完 → 清空行级占位符
+        } else {
+          val = (docVm[p.key] != null) ? docVm[p.key] : p.full;
+        }
+        txt = txt.split(p.full).join(String(val));
+      });
+      nc.t = 's'; nc.v = txt;
+      delete nc.f; delete nc.w;
+    }
+    out[dr + '_' + dc] = nc;
+  }
+
+  // 逐页复制「整张模板」：固定表头/表尾随模板一起复制，只把本页数据行填成记录，未用完清空
+  var mergesOut = [];
+  for (var p = 0; p < P; p++){
+    var base = range.s.r + p * totalRows;   // 本页起始行
+    // 文档级取值池：每页独立，记录类键取「本页第一位人员」（多页打印时表头随本页走，而非永远是全局第一条）
+    var docVm = Object.assign({}, docVals);
+    var ri0 = p * D;
+    if (recs[ri0]) for (var dk in recs[ri0]) docVm[dk] = recs[ri0][dk];
+    for (var r2 = range.s.r; r2 <= range.e.r; r2++){
+      for (var c2 = range.s.c; c2 <= range.e.c; c2++){
+        var di = dataRows.indexOf(r2);
+        copyCell(r2, c2, base + (r2 - range.s.r), c2, di >= 0, di >= 0 ? p * D + di : -1);
+      }
+    }
+    if (ws['!merges']){
+      ws['!merges'].forEach(function(mg){
+        mergesOut.push({ s: { r: mg.s.r + base - range.s.r, c: mg.s.c }, e: { r: mg.e.r + base - range.s.r, c: mg.e.c } });
+      });
+    }
+  }
+  Object.keys(ws).forEach(function(k){ if (k[0] !== '!') delete ws[k]; });
+  Object.keys(out).forEach(function(k){
+    var pr = k.split('_'); var rr = +pr[0], cc = +pr[1];
+    ws[XLSX.utils.encode_cell({ r: rr, c: cc })] = out[k];
+  });
+  ws['!ref'] = XLSX.utils.encode_range({ s: { r: range.s.r, c: range.s.c }, e: { r: range.s.r + P * totalRows - 1, c: range.e.c } });
+  if (ws['!merges'] !== undefined) ws['!merges'] = mergesOut;
+  // 尽力写入打印分页符（社区版 SheetJS 可能忽略，但不影响内容；各页模板已各自完整）
+  try {
+    var brk = { row: [], col: [] };
+    for (var pp = 1; pp < P; pp++) brk.row.push(range.s.r + pp * totalRows - 1);
+    ws['!breaks'] = brk;
+  } catch(e){}
+}
+async function printRecordsByTemplate(){
+  var box = $('#records');
+  var checked = box.querySelectorAll('.rec-check:checked');
+  if (!checked.length){ await showAlert('请先勾选要打印的记录'); return; }
+  var rs = [];
+  checked.forEach(function(cb){
+    var i = parseInt(cb.dataset.i, 10);
+    if (records[i]) rs.push(records[i]);
+  });
+  if (!rs.length){ await showAlert('没有可打印的记录'); return; }
+  try { await ensureXlsx(); } catch(e){ showAlert(e.message); return; }
+  // 按类别选模板：勾选记录全部为加班类 → 加班模板，否则（含请假/其它/混合）用请假模板
+  var allOt = rs.every(function(r){ return isOtCatId(r.catId); });
+  var fname = allOt ? '加班申请单模板.xlsx' : '请假申请单模板.xlsx';
+  // 兼容两种部署形态（页面以 /kaoqing/ 目录 或 /kaoqing.html 文件方式访问），逐个候选尝试，首个返回 200 即采用
+  var enc = encodeURIComponent(fname);
+  var candidates = ['template/' + enc, 'kaoqing/template/' + enc, '../kaoqing/template/' + enc];
+  var tried = [], resp = null;
+  for (var ci = 0; ci < candidates.length; ci++){
+    var cu;
+    try { cu = new URL(candidates[ci], location.href).toString(); } catch(e){ continue; }
+    tried.push(cu);
+    try {
+      var r = await fetch(cu, { cache: 'no-store' });
+      if (r.ok){ resp = r; break; }
+    } catch(e){ /* 跨域/网络错误 → 试下一个候选 */ }
+  }
+  if (!resp){
+    await showAlert('未找到模板文件：' + fname + '\n已尝试路径：\n' + tried.join('\n') + '\n请把它放到 kaoqing/template/ 目录下（与 kaoqing.html 同级），且页面需通过 http(s) 访问（file:// 直接打开本地文件时浏览器禁止读取模板）。', '模板打印失败');
+    return;
+  }
+  var ab;
+  try { ab = await resp.arrayBuffer(); } catch(e){ await showAlert('读取模板失败：' + e.message, '模板打印失败'); return; }
+  var wb;
+  try { wb = XLSX.read(new Uint8Array(ab), { type: 'array' }); }
+  catch(e){ await showAlert('解析模板失败：' + e.message, '模板打印失败'); return; }
+  var totalHours = 0;
+  rs.forEach(function(r){ if (r.hours != null) totalHours += Number(r.hours) || 0; });
+  var dnow = new Date(), p2 = function(n){ return String(n).padStart(2, '0'); };
+  var docVals = {
+    '打印日期': todayStr(),
+    '打印时间': p2(dnow.getHours()) + ':' + p2(dnow.getMinutes()),
+    '总条数': rs.length,
+    '总小时': Math.round(totalHours * 100) / 100,
+    '当前组别': curGroup || '',
+    '当前类别': (curCat && curCat.name) || '',
+    '当前状态': (($('#recStatus') && $('#recStatus').value) || '')
+  };
+  var recVals = [];
+  rs.forEach(function(r, i){ recVals.push(buildRecordVals(r, i)); });
+  // 只填充第一个 sheet（模板文件第一个 sheet 即打印模板；readme/图例类放在后面 sheet 不参与）
+  var tplWs = wb.Sheets[wb.SheetNames[0]];
+  if (tplWs) fillSheetTemplate(tplWs, recVals, docVals);
+  XLSX.writeFile(wb, (allOt ? '加班记录_' : '请假记录_') + todayStr() + '.xlsx');
+}
+$('#tplPrintBtn').addEventListener('click', printRecordsByTemplate);
 // 勾选状态变化 → 控制记录相关按钮可用
 $('#records').addEventListener('change', function(e){
   var t = e.target;
