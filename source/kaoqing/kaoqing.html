@@ -407,7 +407,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .lt-add-line input[type=text]{flex:1 1 160px;min-width:140px;padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:.82rem;background:var(--bg-surface);color:var(--text);font-family:inherit}
 .lt-add-line button{padding:5px 10px;font-size:.78rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text);cursor:pointer}
 /* 卡片2「其它」弹出菜单 */
-.other-menu{position:absolute;z-index:50;min-width:140px;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:4px;max-height:240px;overflow:auto}
+.other-menu{position:fixed;z-index:2000;min-width:140px;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:4px;max-height:240px;overflow:auto}
 .other-item{padding:7px 10px;border-radius:7px;cursor:pointer;font-size:.85rem;color:var(--text)}
 .other-item:hover{background:var(--accent-soft)}
 .other-empty{padding:9px 10px;font-size:.8rem;color:var(--text-muted)}
@@ -1189,11 +1189,15 @@ function toggleOtherMenu(e, btn){
       menu.appendChild(it);
     });
   }
-  grid.style.position = 'relative';
-  grid.appendChild(menu);
-  var gr = grid.getBoundingClientRect(), br = btn.getBoundingClientRect();
-  menu.style.left = (br.left - gr.left + grid.scrollLeft) + 'px';
-  menu.style.top  = (br.bottom - gr.top + grid.scrollTop + 4) + 'px';
+  document.body.appendChild(menu);   // 挂到 body：fixed 定位脱离卡片 .card 的 overflow:hidden 裁剪
+  var br = btn.getBoundingClientRect();
+  var estH = Math.min(240, others.length * 36 + 8) || 40;   // 预估菜单高度，用于底部越界翻转
+  var left = Math.max(8, br.left);
+  if (left + 150 > window.innerWidth) left = window.innerWidth - 150;   // 右侧溢出视口 → 左移
+  var top = br.bottom + 6;
+  if (top + estH > window.innerHeight) top = Math.max(8, br.top - estH - 6);  // 底部溢出 → 翻到按钮上方
+  menu.style.left = left + 'px';
+  menu.style.top  = top + 'px';
   setTimeout(function(){ document.addEventListener('click', closeOtherMenu, { once:true }); }, 0);
 }
 function closeOtherMenu(){
