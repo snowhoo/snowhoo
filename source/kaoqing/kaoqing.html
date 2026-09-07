@@ -2340,13 +2340,16 @@ function buildRecordVals(r, idx){
     '加班类型': isOt ? ot : ''
   };
 }
-// 占位符约定：{{{key}}} = 文档级（表头信息，仅取一次：记录类键取第一位人员，文档键取文档值）；
-//             {{key}}  = 行级（表体明细，随每条记录替换）。含「行级记录占位符」的行才被当作数据行参与分页。
+// 占位符约定：三层花括号(文档级) 与 两层花括号(行级)。
+//   文档级仅取一次：记录类键取第一位人员，文档键取文档值；
+//   行级随每条记录替换。含「行级记录占位符」的行才被当作数据行参与分页。
 function parsePH(v){
   var res = [];
   var s = (v == null ? '' : String(v));
-  s = s.replace(/\{\{\{([^}]+)\}\}\}/g, function(_, k){ res.push({ full: '{{{' + k + '}}}', key: k.trim(), level: 'doc' }); return ' '; });
-  s = s.replace(/\{\{([^}]+)\}\}/g,    function(_, k){ res.push({ full: '{{' + k + '}}',  key: k.trim(), level: 'row' }); return ' '; });
+  var L3 = '{' + '{' + '{', R3 = '}' + '}' + '}';   // 三层花括号前缀/后缀（避免源码出现连续花括号被模板引擎误判）
+  var L2 = '{' + '{',       R2 = '}' + '}';
+  s = s.replace(/\{\{\{([^}]+)\}\}\}/g, function(_, k){ res.push({ full: L3 + k + R3, key: k.trim(), level: 'doc' }); return ' '; });
+  s = s.replace(/\{\{([^}]+)\}\}/g,    function(_, k){ res.push({ full: L2 + k + R2, key: k.trim(), level: 'row' }); return ' '; });
   return res;
 }
 /* 核心：把含行级占位符的「数据行」按记录数复制并替换；文档级占位符整表只取一次；保留样式与合并单元格 */
