@@ -359,11 +359,15 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .rec-table th.th-sort.active{color:var(--accent)}
 .rec-table td{color:var(--text)}
 .rec-table .c-check,.rec-table .c-del{width:1%;text-align:center;white-space:nowrap}
-.rec-table .c-idx{width:36px;text-align:center;color:var(--text-muted);font-size: 0.6rem}
+.rec-table .c-idx{width:46px;text-align:center;color:var(--text-muted);font-size: 0.6rem}
 .rec-table .c-who{font-weight:600;white-space:normal;min-width:50px}
 .rec-table .c-cat{color:var(--accent);white-space:nowrap}
 .rec-table .c-cat.c-green{color:#16a34a}
 .rec-table .c-cat.c-orange{color:#f97316}
+/* 单据号首字母：颜色/字重/字号与「类别」列文字（平时加班=绿、其它请假=橙）保持一致 */
+.rec-table .c-idx .doc-prefix{font-weight:600;font-size:1rem;line-height:1}
+.rec-table .c-idx .doc-prefix.c-green{color:#16a34a}
+.rec-table .c-idx .doc-prefix.c-orange{color:#f97316}
 .rec-table .c-time,.rec-table .c-hours{white-space:nowrap;font-variant-numeric:tabular-nums}
 .rec-table .c-date{white-space:normal;line-height:1.4;font-variant-numeric:tabular-nums}
 .rec-table .c-date .date-sep{color:var(--text-muted)}
@@ -2022,8 +2026,8 @@ function renderRecords(){
   if (editable) html += '<th class="c-check"><input type="checkbox" id="recCheckAll" class="rec-check-all" title="全选 / 取消全选"></th>';
   // 可点击排序的表头：点击正序→再点反序；当前排序列高亮并显示 ▲/▼
   var heads = [
-    ['idx','#'], ['who','人员'], ['cat','类别'], ['date','日期'],
-    ['time','时段'], ['hours','小时'], ['status','状态'], ['note','说明']
+    ['idx','#'], ['who','人员'], ['date','日期'],
+    ['time','时段'], ['hours','小时'], ['cat','类别'], ['status','状态'], ['note','说明']
   ];
   heads.forEach(function(h){
     var key = h[0], label = h[1], cls = 'th-sort', ind = '';
@@ -2076,12 +2080,15 @@ function renderRecords(){
         html += '<td class="c-check"><input type="checkbox" class="rec-check" data-i="' + i + '"></td>';
       }
     }
-    html += '<td class="c-idx">' + esc(r.docNo != null ? r.docNo : (i + 1)) + '</td>' +   // # = 单据号（加班J/请假G，字母前置+YYMM分段）；旧记录无 docNo 时回退录入序号
+    var docNoStr = String(r.docNo != null ? r.docNo : (i + 1));
+    var docHtml = docNoStr === '' ? '' :
+      ('<span class="doc-prefix ' + (isOt ? 'c-green' : 'c-orange') + '">' + esc(docNoStr.charAt(0)) + '</span>' + esc(docNoStr.slice(1)));
+    html += '<td class="c-idx">' + docHtml + '</td>' +   // # = 单据号（加班J/请假G，字母前置+YYMM分段，首字母颜色与类别列一致）；旧记录无 docNo 时回退录入序号
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
-      '<td class="c-cat ' + (isOt ? 'c-green' : 'c-orange') + '">' + catCell + '</td>' +
       '<td class="c-date">' + recDateCellHtml(r) + '</td>' +
       '<td class="c-time">' + esc(fmtSpan(span)) + '</td>' +
       '<td class="c-hours">' + esc(hoursTxt) + '</td>' +
+      '<td class="c-cat ' + (isOt ? 'c-green' : 'c-orange') + '">' + catCell + '</td>' +
       '<td class="c-status"><span class="rec-status ' + (STATUS_CLASS[st] || 'st-tj') + '">' + st + '</span></td>' +
       '<td class="c-note">' + note + '</td>';
     if (editable) html += '<td class="c-del"><span class="rec-actions"><button class="rec-edit" data-i="' + i + '" title="修改" aria-label="修改"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><button class="rec-del" data-i="' + i + '" title="删除">✕</button></span></td>';
@@ -3437,7 +3444,8 @@ $('#records').addEventListener('change', function(e){
   updateRecButtons();
 });
 // 双击记录表「姓名」单元格 → 进入修改状态（归档只读 / viewMode==='view' 不触发）
-$('#records').addEventListener('dblclick', function(e){
+// 与 .rec-edit 按钮一致：待提交免密，其余按密码层级授权（审核/批准/管理），未授权不得修改
+$('#records').addEventListener('dblclick', async function(e){
   if (viewMode === 'view') return;
   var cell = e.target.closest('.c-who');
   if (!cell) return;
@@ -3445,6 +3453,12 @@ $('#records').addEventListener('dblclick', function(e){
   if (!tr) return;
   var i = parseInt(tr.getAttribute('data-i'), 10);
   if (isNaN(i) || !records[i]) return;
+  var re = records[i];
+  if (re.status !== '待提交'){
+    var pwde = await askPassword('请输入修改密码');
+    if (pwde === null) return;                                  // 取消
+    if (!(await canDelete(re.status, pwde))){ await showAlert('密码错误或无修改权限'); return; }
+  }
   startEdit(i);
 });
 // 记录删除（列表动态生成 → 委托）：待提交免密，其余按密码层级
