@@ -88,6 +88,11 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 /* ---------- 自定义弹窗（替代原生 prompt/alert） ---------- */
 .modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:1000}
 .modal-mask[hidden]{display:none}
+/* 全屏加载遮罩：模板打印准备期间显示，拦截所有点击（z-index 低于 modal-mask，使错误提示仍可弹出） */
+#busyMask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:900;color:#fff}
+#busyMask[hidden]{display:none}
+.busy-spin{width:42px;height:42px;border-radius:50%;border:4px solid rgba(255,255,255,.32);border-top-color:#fff;animation:ot-spin .8s linear infinite}
+#busyText{font-size:.9rem;letter-spacing:1px}
 .modal{background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.25);width:min(360px,90vw);max-height:90vh;overflow-y:auto;padding:20px;animation:modalIn .15s ease}
 @keyframes modalIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .modal-title{font-size:.82rem;font-weight:600;margin-bottom:10px}
@@ -1707,7 +1712,8 @@ function recSortValue(i, key){
 /* 读写进行中 → 禁用「数据选择」「状态筛选」两个下拉框，防止切换视图打断写入。
    注意：以 _pumping 为准而非 writeQueue.length，避免「解锁等待期间新增项滞留队列」让禁用态卡死。 */
 function recBusyNow(){
-  return Object.keys(procMap).length > 0 || !!_pumping || !!readingBack;
+  // 状态变更进行中 / 写库队列消费中 / 回读(Waline)中 / 记录表(Waline)加载中 → 表格与两个筛选下拉框禁用，防止打断或误操作
+  return Object.keys(procMap).length > 0 || !!_pumping || !!readingBack || !!recordsLoading;
 }
 /* 同步两个下拉框的禁用态。必须在 renderRecords 的**所有**分支（含「无记录」提前 return 的分支）都调用，
    否则记录表被清空后下拉框会残留上一次的 disabled=true 而永久卡死。 */
@@ -2311,7 +2317,7 @@ async function eachChecked(condStatus, nextStatus, opText){
 }
 
 /* 提交并打印：先把勾选的「待提交」记录提交至「待审核」，提交成功（已重新拉取并渲染）后，
-   按记录 id 定位这些刚提交的记录并自动打印（复用 window.print，不另弹遮罩） */
+   按记录 id 定位这些刚提交的记录，再走 xlsx 模板打印（与「模板打印」按钮同一套排版） */
 async function submitAndPrint(){
   var ids = [];
   $('#records').querySelectorAll('.rec-check:checked').forEach(function(cb){
@@ -2320,35 +2326,14 @@ async function submitAndPrint(){
   });
   if (!ids.length){ await showAlert('请先勾选要提交的待提交记录'); return; }
   await eachChecked('待提交', '待审核', '提交中…');   // 提交并重新拉取（进行中显示圆圈+文案、禁用整表，不弹遮罩）
-  printRecordsByIds(ids);                  // 提交后按 id 定位刚提交的记录打印
-}
-/* 按记录 id 集合打印：仅显示这些行、临时勾选并调用 window.print，打印后还原；
-   仍为「待提交」的记录视为提交失败、不予打印 */
-function printRecordsByIds(ids){
-  if (!ids || !ids.length) return;
-  var box = $('#records');
-  if (!box) return;
+  // 提交完成后，从已重新拉取的记录里定位刚提交的记录（状态已变为非待提交），走模板打印
   var set = {};
   ids.forEach(function(id){ set[id] = true; });
-  var hidden = [], any = false;
-  box.querySelectorAll('.rec-table tbody tr').forEach(function(tr){
-    var cb = tr.querySelector('.rec-check');
-    var r  = cb ? records[parseInt(cb.dataset.i, 10)] : null;
-    if (cb && r && set[r.id] && r.status !== '待提交'){
-      cb.checked = true; any = true;        // 目标记录：临时勾选并打印
-    } else {
-      tr.style.display = 'none'; hidden.push(tr);   // 其余行：打印时隐藏
-    }
-  });
-  if (!any){ hidden.forEach(function(tr){ tr.style.display = ''; }); return; }
-  window.print();
-  hidden.forEach(function(tr){ tr.style.display = ''; });   // 还原隐藏行
-  box.querySelectorAll('.rec-check').forEach(function(cb){
-    var r = records[parseInt(cb.dataset.i, 10)];
-    if (r && set[r.id]) cb.checked = false;                // 取消临时勾选
-  });
+  var rs = records.filter(function(r){ return set[r.id] && r.status !== '待提交'; });
+  if (!rs.length){ await showAlert('提交已完成，但未能定位到刚提交的记录，请改用手动「模板打印」'); return; }
+  await printRecordsViaTemplate(rs);
 }
-// 勾选记录 → 仅「待提交」提交至「待审核」，随后自动打印
+// 勾选记录 → 仅「待提交」提交至「待审核」，随后自动走模板打印
 $('#submitRecordsBtn').addEventListener('click', submitAndPrint);
 // 审核 → 仅「待审核」转「待批准」（需审核密码）
 $('#reviewBtn').addEventListener('click', async function(){
@@ -3179,29 +3164,43 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   }
   return pagesHtml;
 }
+// 全屏加载遮罩：模板打印准备期间显示，拦截所有点击，防止误操作（z-index 低于 modal-mask，使错误弹窗仍可见）
+function showBusy(text){ var m=$('#busyMask'); if(!m) return; var t=$('#busyText'); if(t && text) t.textContent=text; m.hidden=false; }
+function hideBusy(){ var m=$('#busyMask'); if(m) m.hidden=true; }
+// 模板打印核心：传入记录数组，忠于 xlsx 模板排版渲染成网页后调起浏览器打印对话框（可打印 / 另存 PDF）
+async function printRecordsViaTemplate(rs){
+  if (!rs || !rs.length){ await showAlert('没有可打印的记录'); return; }
+  showBusy('模板打印准备中…');
+  try {
+    try { await ensureJszip(); } catch(e){ showAlert(e.message); return; }
+    try { await ensurePeopleLoaded(); } catch(e){}
+    var data = buildPrintData(rs);
+    PRINT_PER_PAGE = ((gpSub(data.allOt).perPage) || 0) | 0;   // 按考勤组+类别配置注入每页条数（0=引擎默认 10）
+    var signByName = await fetchSignatureImages(data.recVals);   // 按姓名取签名图（内联 dataUri，保证打印时已加载）
+    var ab;
+    try { ab = await fetchTemplateAb(data.allOt); }
+    catch(e){ await showAlert('加载打印模板失败：' + (e && e.message ? e.message : e), '模板打印失败'); return; }
+    var html;
+    try { html = await renderTemplateToHtml(ab, data.recVals, data.docVals, signByName); }
+    catch(e){ await showAlert('生成打印视图失败：' + e.message, '模板打印失败'); return; }
+    var pa = $('#printArea'); if (!pa){ pa = document.createElement('div'); pa.id = 'printArea'; document.body.appendChild(pa); }
+    pa.innerHTML = html;
+    document.body.classList.add('printing-template');
+    var cleanup = function(){ document.body.classList.remove('printing-template'); };
+    window.addEventListener('afterprint', cleanup, { once: true });
+    setTimeout(function(){ window.print(); cleanup(); }, 80);
+  } finally {
+    hideBusy();
+  }
+}
+// 模板打印（从勾选记录）：忠于 xlsx 模板排版，渲染成网页后调起浏览器打印对话框
 async function printTemplatePreview(){
   var box = $('#records');
   var checked = box.querySelectorAll('.rec-check:checked');
   if (!checked.length){ await showAlert('请先勾选要打印的记录'); return; }
   var rs = [];
   checked.forEach(function(cb){ var i = parseInt(cb.dataset.i, 10); if (records[i]) rs.push(records[i]); });
-  if (!rs.length){ await showAlert('没有可打印的记录'); return; }
-  try { await ensureJszip(); } catch(e){ showAlert(e.message); return; }
-  try { await ensurePeopleLoaded(); } catch(e){}
-  var data = buildPrintData(rs);
-  PRINT_PER_PAGE = ((gpSub(data.allOt).perPage) || 0) | 0;   // 按考勤组+类别配置注入每页条数（0=引擎默认 10）
-  var signByName = await fetchSignatureImages(data.recVals);   // 按姓名取签名图（内联 dataUri，保证打印时已加载）
-  var ab;
-  try { ab = await fetchTemplateAb(data.allOt); } catch(e){ return; }
-  var html;
-  try { html = await renderTemplateToHtml(ab, data.recVals, data.docVals, signByName); }
-  catch(e){ await showAlert('生成打印视图失败：' + e.message, '模板打印失败'); return; }
-  var pa = $('#printArea'); if (!pa){ pa = document.createElement('div'); pa.id = 'printArea'; document.body.appendChild(pa); }
-  pa.innerHTML = html;
-  document.body.classList.add('printing-template');
-  var cleanup = function(){ document.body.classList.remove('printing-template'); };
-  window.addEventListener('afterprint', cleanup, { once: true });
-  setTimeout(function(){ window.print(); cleanup(); }, 80);
+  await printRecordsViaTemplate(rs);
 }
 async function downloadTemplateXlsx(){
   var box = $('#records');
@@ -4722,5 +4721,6 @@ document.addEventListener('keydown', function(e){
 </div>
 
 <div id="printArea"></div>
+<div id="busyMask" hidden><span class="busy-spin"></span><div id="busyText">模板打印准备中…</div></div>
 </body>
 </html>
