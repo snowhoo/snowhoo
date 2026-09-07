@@ -1324,21 +1324,27 @@ function renderTimeSegs(){
     row.className = 'time-row';
     row.setAttribute('data-i', String(i));
 
+    var mdWrap = document.createElement('label'); mdWrap.className = 'all-day'; mdWrap.title = '勾选后显示「至日期」填写框；勾选并填写即跨天请假';
+    var md = document.createElement('input'); md.type = 'checkbox'; md.className = 'multiDayChk'; md.checked = !!seg.endDate;
+    mdWrap.appendChild(md); mdWrap.appendChild(document.createTextNode('多天'));
+
     var adWrap = document.createElement('label'); adWrap.className = 'all-day'; adWrap.title = '整天=每日起止均为配置的上班时段（跨天则每天都按整天算）';
     var ad = document.createElement('input'); ad.type = 'checkbox'; ad.className = 'allDayChk'; ad.checked = !!seg.allDay;
     adWrap.appendChild(ad); adWrap.appendChild(document.createTextNode('整天'));
 
     var d = document.createElement('input'); d.type = 'date'; d.className = 'fDate'; d.value = seg.date || todayStr(); d.title = '起日期';
     var s = document.createElement('input'); s.type = 'text'; s.className = 'fTime fStart'; s.readOnly = true; s.placeholder = '起时间'; s.value = seg.start || ''; s.disabled = !!seg.allDay; s.title = '起时间（点此选择）';
-    var de = document.createElement('input'); de.type = 'date'; de.className = 'fEndDate'; de.value = seg.endDate || ''; de.title = '至日期：空=单日，填了即跨天（与起日期同属一条请假）';
+    var isMulti = !!seg.endDate;
+    var de = document.createElement('input'); de.type = 'date'; de.className = 'fEndDate'; de.value = seg.endDate || ''; de.title = '至日期（多天时填写，空=单日）'; de.style.display = isMulti ? '' : 'none';
     var e = document.createElement('input'); e.type = 'text'; e.className = 'fTime fEnd'; e.readOnly = true; e.placeholder = '至时间'; e.value = seg.end || ''; e.disabled = !!seg.allDay; e.title = '至时间（点此选择）';
-    var dl = document.createElement('span'); dl.className = 'sep'; dl.textContent = '至';     // 请假：起~至 跨天分隔
+    var dl = document.createElement('span'); dl.className = 'sep endDateSep'; dl.textContent = isMulti ? '至' : '-';     // 多天：起 至 至日期；单日：起 - 至（同日）
     var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '-';   // 加班：同日 起-止 分隔
     var h = document.createElement('span'); h.className = 'segHours'; h.textContent = segHoursText(seg) || '？？小时';
     var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
 
     if (isLeave){
-      // 请假：统一一行，不区分单日/跨天 = 整天 + 起日期 起时间 至 至日期 至时间 + 备注
+      // 请假：统一一行，不区分单日/跨天 = 多天 + 整天 + 起日期 起时间 [至/跨天分隔] 至日期 至时间 + 备注
+      row.appendChild(mdWrap);     // 多天：默认不勾选；勾选才显示「至日期」填写框
       row.appendChild(adWrap);
       row.appendChild(d); row.appendChild(s);
       row.appendChild(dl);
@@ -2385,6 +2391,15 @@ $('#timeSegs').addEventListener('change', function(e){
   var seg = timeSegs[idx]; if (!seg) return;
   if (el.classList.contains('fDate')){ seg.date = el.value; refresh(); return; }
   else if (el.classList.contains('fEndDate')){ seg.endDate = el.value; refresh(); return; }   // 至日期：空=单日
+  else if (el.classList.contains('multiDayChk')){
+    if (!el.checked) seg.endDate = '';   // 取消勾选 → 清空终日期（视为单日）
+    var deEl = row.querySelector('.fEndDate');
+    var dlEl = row.querySelector('.endDateSep');
+    if (deEl){ deEl.style.display = el.checked ? '' : 'none'; if (!el.checked) deEl.value = ''; }
+    if (dlEl) dlEl.textContent = el.checked ? '至' : '-';
+    refresh();
+    return;
+  }
   else if (el.classList.contains('allDayChk')){                       // 整天：本行时段按正常上班时间填入并锁定
     seg.allDay = el.checked;
     if (seg.allDay){ seg.start = CONFIG.workStart; seg.end = CONFIG.workEnd; }
