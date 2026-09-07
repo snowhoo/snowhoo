@@ -436,7 +436,17 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .time-picker .tp-min{flex:1;padding:8px 28px;border:1px solid var(--border);border-radius:7px;background:transparent;color:var(--text);font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit}
 .time-picker .tp-min:hover{border-color:var(--accent);color:var(--accent)}
 .time-picker .tp-min.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.time-picker .tp-preview{flex:1;text-align:right;font-size:1.15rem;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+  .time-picker .tp-preview{flex:1;text-align:right;font-size:1.15rem;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+/* 模板打印预览：忠于 xlsx 模板排版，调起浏览器打印对话框（可打印 / 另存 PDF） */
+#printArea{display:none}
+#printArea .tpl-table{border-collapse:collapse;width:100%;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000}
+#printArea .tpl-table td{padding:2px 5px;font-size:10pt;vertical-align:middle;word-break:break-word;overflow:hidden}
+#printArea .pg-break{page-break-after:always;height:0;line-height:0;font-size:0}
+@media print{
+  body.printing-template > *:not(#printArea){display:none!important}
+  body.printing-template #printArea{display:block!important;width:100%;margin:0;padding:0}
+  @page{size:A4;margin:10mm}
+}
 </style>
 </head>
 <body>
@@ -562,6 +572,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
           <button id="reviewBtn" class="btn-rec-action" hidden>审核</button>
           <button id="approveBtn" class="btn-rec-action" hidden>批准</button>
           <button id="printBtn" class="btn-rec-action" hidden>模板打印</button>
+          <button id="exportXlsxBtn" class="btn-rec-action" hidden>导出xlsx</button>
         </div>
         <div class="records" id="records">
           <p class="empty">暂无记录</p>
@@ -2288,10 +2299,10 @@ $('#approveBtn').addEventListener('click', async function(){
   if (!await confirmRole('approve')) return;
   eachChecked('待批准', '完成', '审批中…');
 });
-// 打印（待提交记录不能打印）
-$('#printBtn').addEventListener('click', printRecordsByTemplate);   // 原「打印」按钮即模板打印入口（用户预留）
-// 模板打印：调用用户自设计的 xlsx 模板（kaoqing/template/请假申请单模板.xlsx、加班申请单模板.xlsx），
-// 按勾选记录逐行填充占位符后导出（保留模板原有样式/列宽/合并单元格）。模板由用户排版，系统只做占位符替换。
+// 模板打印：忠于 xlsx 模板排版，渲染成网页后调起浏览器打印对话框（可打印 / 另存 PDF）
+$('#printBtn').addEventListener('click', printTemplatePreview);
+// 导出 xlsx：保留原「下载 xlsx」能力，用于归档 / 在 Excel 继续编辑
+$('#exportXlsxBtn').addEventListener('click', downloadTemplateXlsx);
 function weekdayOf(date){
   if (!date) return '';
   var w = new Date(date + 'T00:00:00').getDay();
@@ -2652,39 +2663,12 @@ async function fillTemplateByXml(ab, recVals, docVals, outName){
   setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 1500);
 }
 
-async function printRecordsByTemplate(){
-  var box = $('#records');
-  var checked = box.querySelectorAll('.rec-check:checked');
-  if (!checked.length){ await showAlert('请先勾选要打印的记录'); return; }
-  var rs = [];
-  checked.forEach(function(cb){
-    var i = parseInt(cb.dataset.i, 10);
-    if (records[i]) rs.push(records[i]);
-  });
-  if (!rs.length){ await showAlert('没有可打印的记录'); return; }
-  try { await ensureXlsx(); } catch(e){ showAlert(e.message); return; }
-  // 按类别选模板：勾选记录全部为加班类 → 加班模板，否则（含请假/其它/混合）用请假模板
+// ===== 模板打印：两种出口 =====
+// 1) printTemplatePreview —— 忠于 xlsx 模板排版，渲染成网页后直接调起浏览器打印对话框（可打印 / 另存 PDF）
+// 2) downloadTemplateXlsx —— 原「下载 xlsx」能力保留，用于归档 / 在 Excel 继续编辑
+// 公共：buildPrintData 构造记录 / 文档级占位符值；fetchTemplateAb 拉取模板并给出友好报错
+function buildPrintData(rs){
   var allOt = rs.every(function(r){ return isOtCatId(r.catId); });
-  var fname = allOt ? '加班申请单模板.xlsx' : '请假申请单模板.xlsx';
-  // 兼容两种部署形态（页面以 /kaoqing/ 目录 或 /kaoqing.html 文件方式访问），逐个候选尝试，首个返回 200 即采用
-  var enc = encodeURIComponent(fname);
-  var candidates = ['template/' + enc, 'kaoqing/template/' + enc, '../kaoqing/template/' + enc];
-  var tried = [], resp = null;
-  for (var ci = 0; ci < candidates.length; ci++){
-    var cu;
-    try { cu = new URL(candidates[ci], location.href).toString(); } catch(e){ continue; }
-    tried.push(cu);
-    try {
-      var r = await fetch(cu, { cache: 'no-store' });
-      if (r.ok){ resp = r; break; }
-    } catch(e){ /* 跨域/网络错误 → 试下一个候选 */ }
-  }
-  if (!resp){
-    await showAlert('未找到模板文件：' + fname + '\n已尝试路径：\n' + tried.join('\n') + '\n请把它放到 kaoqing/template/ 目录下（与 kaoqing.html 同级），且页面需通过 http(s) 访问（file:// 直接打开本地文件时浏览器禁止读取模板）。', '模板打印失败');
-    return;
-  }
-  var ab;
-  try { ab = await resp.arrayBuffer(); } catch(e){ await showAlert('读取模板失败：' + e.message, '模板打印失败'); return; }
   var totalHours = 0;
   rs.forEach(function(r){ if (r.hours != null) totalHours += Number(r.hours) || 0; });
   var dnow = new Date(), p2 = function(n){ return String(n).padStart(2, '0'); };
@@ -2699,11 +2683,258 @@ async function printRecordsByTemplate(){
   };
   var recVals = [];
   rs.forEach(function(r, i){ recVals.push(buildRecordVals(r, i)); });
-  // 在 XML/ZIP 层填充：保留模板 styles.xml 与每个单元格的 s="N" 样式索引，仅替换文字、复制行
-  // （SheetJS 0.18.5 读不出模板真实样式，故绕过它，用 JSZip 直接操作 xlsx 内部 XML）
+  return { allOt: allOt, docVals: docVals, recVals: recVals };
+}
+async function fetchTemplateAb(allOt){
+  var fname = allOt ? '加班申请单模板.xlsx' : '请假申请单模板.xlsx';
+  var enc = encodeURIComponent(fname);
+  var candidates = ['template/' + enc, 'kaoqing/template/' + enc, '../kaoqing/template/' + enc];
+  var tried = [], resp = null;
+  for (var ci = 0; ci < candidates.length; ci++){
+    var cu; try { cu = new URL(candidates[ci], location.href).toString(); } catch(e){ continue; }
+    tried.push(cu);
+    try { var r = await fetch(cu, { cache: 'no-store' }); if (r.ok){ resp = r; break; } } catch(e){ /* 跨域 / 网络错误 → 试下一个候选 */ }
+  }
+  if (!resp){
+    await showAlert('未找到模板文件：' + fname + '\n已尝试路径：\n' + tried.join('\n') + '\n请把它放到 kaoqing/template/ 目录下（与 kaoqing.html 同级），且页面需通过 http(s) 访问（file:// 直接打开本地文件时浏览器禁止读取模板）。', '模板打印失败');
+    throw new Error('no template');
+  }
+  return await resp.arrayBuffer();
+}
+// 读取模板样式表，把 s 索引映射成可用于网页的内联 CSS 片段
+async function parseStyles(zip){
+  var map = [];
+  if (!zip.file('xl/styles.xml')) return map;
+  var xml = await zip.file('xl/styles.xml').async('string');
+  var fonts = [], fontRe = /<font>([\s\S]*?)<\/font>/g, fm;
+  while ((fm = fontRe.exec(xml))){
+    fonts.push({
+      bold: /<b\b/.test(fm[1]),
+      size: (fm[1].match(/<sz\b[^>]*\bval="([\d.]+)"/) || [])[1] || '11',
+      name: (fm[1].match(/<name\b[^>]*\bval="([^"]+)"/) || [])[1] || 'Calibri',
+      color: (fm[1].match(/<color\b[^>]*\brgb="([^"]+)"/) || [])[1] || null
+    });
+  }
+  var fills = [], fillRe = /<fill>([\s\S]*?)<\/fill>/g, flm;
+  while ((flm = fillRe.exec(xml))){
+    var solid = flm[1].match(/<patternFill\b[^>]*\bpatternType="solid"[^>]*>([\s\S]*?)<\/patternFill>/);
+    fills.push(solid ? ((solid[1].match(/<fgColor\b[^>]*\brgb="([^"]+)"/) || [])[1] || null) : null);
+  }
+  function sideOf(block, tag){
+    var sm = block.match(new RegExp('<' + tag + '\\b[^>]*?style="([^"]+)"'));
+    var cm = block.match(new RegExp('<' + tag + '\\b[^>]*?<color[^>]*?rgb="([^"]+)"'));
+    return { style: sm ? sm[1] : null, color: cm ? cm[1] : null };
+  }
+  var borders = [], bordRe = /<border>([\s\S]*?)<\/border>/g, bm;
+  while ((bm = bordRe.exec(xml))) borders.push({ left: sideOf(bm[1], 'left'), right: sideOf(bm[1], 'right'), top: sideOf(bm[1], 'top'), bottom: sideOf(bm[1], 'bottom') });
+  var xm = xml.match(/<cellXfs\b[^>]*>([\s\S]*?)<\/cellXfs>/);
+  if (xm){
+    var xfRe = /<xf\b([\s\S]*?)(?:\/>|<\/xf>)/g, xim;
+    while ((xim = xfRe.exec(xm[1]))){
+      var full = xim[0];
+      var a = (full.match(/^<xf\b([^>]*)/) || [])[1] || '';
+      var fontId = (a.match(/\bfontId="(\d+)"/) || [])[1] || '0';
+      var fillId = (a.match(/\bfillId="(\d+)"/) || [])[1] || '0';
+      var borderId = (a.match(/\bborderId="(\d+)"/) || [])[1] || '0';
+      var alM = full.match(/<alignment\b([^>]*?)\/?>/);
+      var align = null;
+      if (alM) align = { h: (alM[1].match(/\bhorizontal="([^"]+)"/) || [])[1] || null, v: (alM[1].match(/\bvertical="([^"]+)"/) || [])[1] || null, wrap: /\bwrapText="1"/.test(alM[1]) };
+      map.push({ font: fonts[+fontId] || fonts[0], fill: fills[+fillId] || null, border: borders[+borderId] || null, align: align });
+    }
+  }
+  return map;
+}
+function cellCss(st){
+  var css = [];
+  if (st.font){
+    if (st.font.bold) css.push('font-weight:bold');
+    if (st.font.size) css.push('font-size:' + st.font.size + 'pt');
+    if (st.font.name) css.push("font-family:'" + st.font.name + "',sans-serif");
+    if (st.font.color) css.push('color:#' + st.font.color.slice(2));
+  }
+  if (st.fill) css.push('background:#' + st.fill.slice(2));
+  if (st.align){
+    if (st.align.h === 'center') css.push('text-align:center');
+    else if (st.align.h === 'right') css.push('text-align:right');
+    else if (st.align.h === 'left') css.push('text-align:left');
+    if (st.align.v === 'center') css.push('vertical-align:middle');
+    else if (st.align.v === 'top') css.push('vertical-align:top');
+    else if (st.align.v === 'bottom') css.push('vertical-align:bottom');
+    if (st.align.wrap) css.push('white-space:normal');
+  }
+  if (st.border){
+    ['left','right','top','bottom'].forEach(function(sd){
+      var b = st.border[sd];
+      if (b && b.style){ var col = b.color ? ('#' + b.color.slice(2)) : '#000'; css.push('border-' + sd + ':1px solid ' + col); }
+    });
+  }
+  return css.join(';');
+}
+function resolveCell(text, rec, docVm, mode){
+  if (!text || !/\{\{/.test(text)) return text || '';
+  var t = text;
+  t = t.replace(/\{\{\{(.+?)\}\}\}/g, function(_, k){ k = k.trim(); return (docVm && docVm[k] != null) ? String(docVm[k]) : ''; });
+  t = t.replace(/\{\{(.+?)\}\}/g, function(_, k){
+    k = k.trim();
+    if (mode === 'data' && rec && rec[k] != null) return String(rec[k]);
+    if (mode === 'blank') return '';
+    if (docVm && docVm[k] != null) return String(docVm[k]);
+    return '{' + '{' + k + '}' + '}';
+  });
+  return t;
+}
+// 把 xlsx 模板解析为网页表格 HTML（忠于模板排版：列宽 / 行高 / 合并 / 样式 / 占位符）
+async function renderTemplateToHtml(ab, recVals, docVals){
+  var JSZip = window.JSZip; if (!JSZip) throw new Error('jszip 未加载');
+  var zip = await JSZip.loadAsync(ab);
+  SS_CACHE = [];
+  if (zip.file('xl/sharedStrings.xml')){
+    var sxml = await zip.file('xl/sharedStrings.xml').async('string');
+    var siRe = /<si>([\s\S]*?)<\/si>/g, m;
+    while ((m = siRe.exec(sxml))){
+      var tRe = /<t[^>]*>([\s\S]*?)<\/t>/g, tm, txt = '';
+      while ((tm = tRe.exec(m[1]))) txt += tm[1];
+      SS_CACHE.push(txt);
+    }
+  }
+  var wbXml = await zip.file('xl/workbook.xml').async('string');
+  var order = (wbXml.match(/<sheet [^>]*\/?>/g) || []).map(function(s){ return { name: (s.match(/name="([^"]+)"/) || [])[1] || '', rid: (s.match(/r:id="([^"]+)"/) || [])[1] || '' }; });
+  var relsXml = await zip.file('xl/_rels/workbook.xml.rels').async('string');
+  function relTarget(rid){ var m = relsXml.match(new RegExp('Id="' + rid + '"[^>]*?Target="([^"]+)"')); return m ? m[1] : null; }
+  var targetSheet = null;
+  for (var oi = 0; oi < order.length; oi++){
+    if (order[oi].name && order[oi].name.toLowerCase() === 'readme') continue;
+    var tgt = relTarget(order[oi].rid); if (!tgt) continue;
+    var path = tgt.charAt(0) === '/' ? 'xl' + tgt : 'xl/' + tgt.replace(/^xl\//, '');
+    if (!zip.file(path)) continue;
+    var sx = await zip.file(path).async('string');
+    if (/\{\{[^}]+\}\}/.test(sx)){ targetSheet = path; break; }
+  }
+  if (!targetSheet) targetSheet = 'xl/worksheets/sheet1.xml';
+  var sheetXml = await zip.file(targetSheet).async('string');
+  var sdMatch = sheetXml.match(/<sheetData>([\s\S]*?)<\/sheetData>/);
+  if (!sdMatch) throw new Error('模板未找到 sheetData');
+  // 列宽
+  var cols = { count: 0, width: {} };
+  var colRe = /<col\b[^>]*\bmin="(\d+)"[^>]*\bmax="(\d+)"[^>]*\bwidth="([\d.]+)"/g, cm;
+  while ((cm = colRe.exec(sheetXml))){
+    var mn = +cm[1], mx = +cm[2], w = +cm[3];
+    for (var c = mn; c <= mx; c++) cols.width[c] = w;
+    if (mx > cols.count) cols.count = mx;
+  }
+  if (!cols.count){ var dm = sheetXml.match(/<dimension[^>]*\bref="([A-Z]+)\d+/); cols.count = dm ? colToNum(dm[1]) : 7; }
+  // 行高
+  var rowH = {};
+  var rhRe = /<row\b[^>]*\br="(\d+)"[^>]*?(?:ht="([\d.]+)")?[^>]*>/g, rhm;
+  while ((rhm = rhRe.exec(sheetXml))) rowH[rhm[1]] = rhm[2] ? rhm[2] : null;
+  // 样式
+  var styleMap = await parseStyles(zip);
+  // 合并单元格
+  var merges = [], mcMatch = sheetXml.match(/<mergeCells[\s\S]*?<\/mergeCells>/);
+  if (mcMatch){
+    var mgRe = /<mergeCell ref="([^"]+)"/g, mmg;
+    while ((mmg = mgRe.exec(mcMatch[0]))){
+      var pr = mmg[1].split(':'), a = pr[0], b = pr[1] || pr[0];
+      merges.push({ sr: parseInt(a.replace(/[A-Z]/g, '')), sc: colToNum(a.replace(/\d+/, '')), er: parseInt(b.replace(/[A-Z]/g, '')), ec: colToNum(b.replace(/\d+/, '')) });
+    }
+  }
+  var primary = {}, covered = {};
+  merges.forEach(function(mg){
+    primary[mg.sc + '_' + mg.sr] = { cs: mg.ec - mg.sc + 1, rs: mg.er - mg.sr + 1 };
+    for (var c = mg.sc; c <= mg.ec; c++) for (var r = mg.sr; r <= mg.er; r++) if (!(c === mg.sc && r === mg.sr)) covered[c + '_' + r] = true;
+  });
+  // 行
+  var rowRe = /<row\b[^>]*>[\s\S]*?<\/row>/g, rm;
+  var rows = [];
+  while ((rm = rowRe.exec(sdMatch[1]))) rows.push(rm[0]);
+  if (!rows.length) throw new Error('模板没有数据行');
+  var dataIdx = -1;
+  rows.forEach(function(rw, idx){
+    if (dataIdx >= 0) return;
+    _parseCells(rw, SS_CACHE).forEach(function(c){
+      if (dataIdx >= 0) return;
+      if (/\{\{\{/.test(c.text)) return;
+      var mm = c.text.match(/\{\{(.+?)\}\}/);
+      if (mm && RECORD_KEYS[mm[1].trim()]) dataIdx = idx;
+    });
+  });
+  if (dataIdx < 0) throw new Error('模板未找到含行级占位符（如 姓名）的记录行');
+  var perPage = 10;
+  var N = recVals.length, P = Math.max(1, Math.ceil(N / perPage));
+  var docVm = Object.assign({}, docVals);
+  if (recVals[0]) for (var dk in recVals[0]) docVm[dk] = recVals[0][dk];
+  var headerRows = rows.slice(0, dataIdx), dataRowXml = rows[dataIdx], footerRows = rows.slice(dataIdx + 1);
+  // 列宽比例（%）
+  var totalW = 0; for (var i = 1; i <= cols.count; i++) totalW += (cols.width[i] || 8);
+  if (!totalW) totalW = cols.count * 8;
+  var colHtml = '<colgroup>';
+  for (var i2 = 1; i2 <= cols.count; i2++) colHtml += '<col style="width:' + ((cols.width[i2] || 8) / totalW * 100).toFixed(2) + '%">';
+  colHtml += '</colgroup>';
+  function emitRow(rw, mode, rec){
+    var cells = _parseCells(rw, SS_CACHE);
+    var r0 = _rowNum(rw);
+    var tr = '<tr' + (rowH[r0] ? ' style="height:' + rowH[r0] + 'pt"' : '') + '>';
+    cells.forEach(function(c){
+      var col = c.ref.replace(/\d+/, '');
+      var cNum = colToNum(col);
+      if (covered[cNum + '_' + r0]) return;
+      var cs = 1, rs2 = 1;
+      if (primary[cNum + '_' + r0]){ cs = primary[cNum + '_' + r0].cs; rs2 = primary[cNum + '_' + r0].rs; }
+      var css = cellCss(styleMap[+c.style] || {});
+      var txt = resolveCell(c.text, rec, docVm, mode);
+      tr += '<td' + (cs > 1 ? ' colspan="' + cs + '"' : '') + (rs2 > 1 ? ' rowspan="' + rs2 + '"' : '') + (css ? ' style="' + css + '"' : '') + '>' + (_xmlEsc(txt) || '&nbsp;') + '</td>';
+    });
+    return tr + '</tr>';
+  }
+  var pagesHtml = '';
+  for (var p = 0; p < P; p++){
+    var html = '<table class="tpl-table">' + colHtml + '<tbody>';
+    headerRows.forEach(function(rw){ html += emitRow(rw, 'static', null); });
+    for (var i = 0; i < perPage; i++){
+      var rec = recVals[p * perPage + i] || null;
+      html += emitRow(dataRowXml, rec ? 'data' : 'blank', rec);
+    }
+    footerRows.forEach(function(rw){ html += emitRow(rw, 'static', null); });
+    html += '</tbody></table>';
+    if (p < P - 1) html += '<div class="pg-break"></div>';
+    pagesHtml += html;
+  }
+  return pagesHtml;
+}
+async function printTemplatePreview(){
+  var box = $('#records');
+  var checked = box.querySelectorAll('.rec-check:checked');
+  if (!checked.length){ await showAlert('请先勾选要打印的记录'); return; }
+  var rs = [];
+  checked.forEach(function(cb){ var i = parseInt(cb.dataset.i, 10); if (records[i]) rs.push(records[i]); });
+  if (!rs.length){ await showAlert('没有可打印的记录'); return; }
+  try { await ensureJszip(); } catch(e){ showAlert(e.message); return; }
+  var data = buildPrintData(rs);
+  var ab;
+  try { ab = await fetchTemplateAb(data.allOt); } catch(e){ return; }
+  var html;
+  try { html = await renderTemplateToHtml(ab, data.recVals, data.docVals); }
+  catch(e){ await showAlert('生成打印视图失败：' + e.message, '模板打印失败'); return; }
+  var pa = $('#printArea'); if (!pa){ pa = document.createElement('div'); pa.id = 'printArea'; document.body.appendChild(pa); }
+  pa.innerHTML = html;
+  document.body.classList.add('printing-template');
+  var cleanup = function(){ document.body.classList.remove('printing-template'); };
+  window.addEventListener('afterprint', cleanup, { once: true });
+  setTimeout(function(){ window.print(); cleanup(); }, 80);
+}
+async function downloadTemplateXlsx(){
+  var box = $('#records');
+  var checked = box.querySelectorAll('.rec-check:checked');
+  if (!checked.length){ await showAlert('请先勾选要打印的记录'); return; }
+  var rs = [];
+  checked.forEach(function(cb){ var i = parseInt(cb.dataset.i, 10); if (records[i]) rs.push(records[i]); });
+  if (!rs.length){ await showAlert('没有可打印的记录'); return; }
+  var data = buildPrintData(rs);
+  var ab;
+  try { ab = await fetchTemplateAb(data.allOt); } catch(e){ return; }
   try { await ensureJszip(); } catch(e){ showAlert(e.message); return; }
   try {
-    await fillTemplateByXml(ab, recVals, docVals, (allOt ? '加班记录_' : '请假记录_') + todayStr() + '.xlsx');
+    await fillTemplateByXml(ab, data.recVals, data.docVals, (data.allOt ? '加班记录_' : '请假记录_') + todayStr() + '.xlsx');
   } catch(e){ await showAlert('生成打印文件失败：' + e.message, '模板打印失败'); return; }
 }
 // 勾选状态变化 → 控制记录相关按钮可用
@@ -4141,5 +4372,6 @@ document.addEventListener('keydown', function(e){
   </div>
 </div>
 
+<div id="printArea"></div>
 </body>
 </html>
