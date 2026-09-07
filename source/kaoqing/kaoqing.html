@@ -395,6 +395,22 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .cfg-line input[type=time]{padding:3px 3px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--bg-surface);color:var(--text);outline:none;font-family:inherit}
 .cfg-line input[type=time]:focus{border-color:var(--accent)}
 .cfg-line .sep{color:var(--text-muted);font-size:.82rem;flex:0 0 auto}
+/* 休假类型配置：两个列表框 + 互移 */
+.lt-cfg-grid{display:flex;align-items:stretch;gap:12px;flex-wrap:wrap}
+.lt-col{display:flex;flex-direction:column;gap:6px;min-width:150px;flex:1 1 150px}
+.lt-col-title{font-size:.78rem;color:var(--text-muted)}
+.lt-list{width:100%;min-height:120px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text);padding:4px;font-family:inherit;font-size:.85rem}
+.lt-btns{justify-content:center;flex-direction:column;min-width:auto;flex:0 0 auto}
+.lt-btns button{padding:5px 10px;font-size:.78rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text);cursor:pointer}
+.lt-btns button:hover{border-color:var(--accent)}
+.lt-add-line{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lt-add-line input[type=text]{flex:1 1 160px;min-width:140px;padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:.82rem;background:var(--bg-surface);color:var(--text);font-family:inherit}
+.lt-add-line button{padding:5px 10px;font-size:.78rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text);cursor:pointer}
+/* 卡片2「其它」弹出菜单 */
+.other-menu{position:absolute;z-index:50;min-width:140px;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:4px;max-height:240px;overflow:auto}
+.other-item{padding:7px 10px;border-radius:7px;cursor:pointer;font-size:.85rem;color:var(--text)}
+.other-item:hover{background:var(--accent-soft)}
+.other-empty{padding:9px 10px;font-size:.8rem;color:var(--text-muted)}
 .cfg-check{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--text);cursor:pointer;margin:2px 0}
 .cfg-check input{width:16px;height:16px;accent-color:var(--accent)}
 .cfg-hint{font-size:.78rem;color:var(--text-muted);line-height:1.5;margin-top:6px}
@@ -649,6 +665,30 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
     </div>
 
     <div class="cfg-section">
+      <div class="cfg-section-title">休假类型配置</div>
+      <div class="cfg-hint">「直接显示」的类型作为按钮出现在卡片2选择类别；「其它菜单」的类型点击「其它」后弹出菜单供选择。两列表可相互切换（选中项后点中间箭头）。</div>
+      <div class="lt-cfg-grid">
+        <div class="lt-col">
+          <div class="lt-col-title">直接显示</div>
+          <select id="cfgLtDirect" class="lt-list" multiple></select>
+        </div>
+        <div class="lt-col lt-btns">
+          <button type="button" id="ltMoveRight">← 移到其它</button>
+          <button type="button" id="ltMoveLeft">移回直接 →</button>
+        </div>
+        <div class="lt-col">
+          <div class="lt-col-title">其它菜单</div>
+          <select id="cfgLtOther" class="lt-list" multiple></select>
+        </div>
+      </div>
+      <div class="lt-add-line">
+        <input type="text" id="cfgLtNew" placeholder="新增休假类型名，回车或点添加">
+        <button type="button" id="ltAddDirect">添加至直接显示</button>
+        <button type="button" id="ltAddOther">添加至其它菜单</button>
+      </div>
+    </div>
+
+    <div class="cfg-section">
       <div class="cfg-section-title">管理密码</div>
       <div class="cfg-hint">用于「审核/批准/删除」。<b>留空 = 不修改</b>，忘记密码只能重设。</div>
 	  <!--用于「审核 / 批准」及删除受保护记录（待提交免密）。密码只在本机计算 SHA-256 哈希后保存，明文不落库（/kaoqing/config 可被公开接口匿名读取）。出于安全不回显原文：留空 = 不修改，忘记密码只能重设。-->
@@ -762,6 +802,23 @@ var CATS = [
   { id:'shijia',   name:'事假',  char:'事', color:'#8b5cf6', mode:'range', tip:'自动计算时数' },
   { id:'qita',     name:'其它',	char:'它', color:'#6b7280', mode:'range', tip:'自动计算时数;请备注说明。' },
 ];
+/* 动态休假类型：名称 → 类别对象。命中 CATS 既有类别（如 调休）复用其原 id 保证历史记录兼容；否则生成 lt- 前缀新 id（一律按请假处理）。 */
+function findCatByName(name){
+  for (var i = 0; i < CATS.length; i++){ if (CATS[i].name === name) return CATS[i]; }
+  return null;
+}
+function makeLeaveCat(name){
+  var base = findCatByName(name);
+  if (base) return base;
+  return { id:'lt-' + name, name:name, char:name.charAt(0), color:'#6b7280', mode:'range', tip:'自动计算时数', isDynamic:true };
+}
+/* 按 catId 查找类别对象：兼顾 CATS 内置与动态 lt- 前缀类型（编辑历史记录时还原 curCat） */
+function findCatById(id){
+  var c = CATS.find(function(x){ return x.id === id; });
+  if (c) return c;
+  if (typeof id === 'string' && id.indexOf('lt-') === 0) return makeLeaveCat(id.slice(3));
+  return null;
+}
 /* 加班类判定：catId==='overtime'（含此前误拆的 ot-* 记录）视为加班类 */
 function isOtCatId(id){
   if (id === 'overtime') return true;
@@ -773,8 +830,9 @@ function isOtCatId(id){
 var LEAVE_CAT_IDS = ['tiaoxiu','nianjia','bingjia','shijia','qita'];
 function isLeaveCat(id){
   if (isOtCatId(id)) return false;                 // 加班永不算请假
+  if (typeof id === 'string' && id.indexOf('lt-') === 0) return true;   // 动态休假类型一律按请假
   if (typeof id === 'string' && LEAVE_CAT_IDS.indexOf(id) >= 0) return true;
-  return false;                                    // 未知类别默认按请假处理（保守）
+  return true;                                     // 未知类别默认按请假处理（保守）
 }
 
 /* 常用说明：不再写死具体文案，但保留「按类别分类」的结构。系统值来自 Waline /kaoqing/config 的
@@ -837,7 +895,8 @@ var PEOPLE_PATH   = '/kaoqing/people';   // 人员数据在 Waline 中存放的�
 var CONFIG_PATH   = '/kaoqing/config';   // 考勤配置（午休扣除）存放路径（写入为一条 JSON 评论）
 var SERIAL_PATH   = '/kaoqing/serial';   // 单据流水号配置（年月+类别 → 已用最大序号），由前端在新建/删除记录时实时写入（带管理员令牌），Waline 中始终仅 1 条
 var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30', presetNotes:{},
-                      pwdReview:'', pwdApprove:'', pwdAdmin:'' };  // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值 + 管理密码哈希(审核/批准/管理员)，页面启动从 Waline 读取覆盖）
+                      leaveTypes:{ direct:['调休','年假','病假','事假'], other:['婚假','产假','陪产假','丧假'] },
+                      pwdReview:'', pwdApprove:'', pwdAdmin:'' };  // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值 + 休假类型 + 管理密码哈希，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
 var GROUP_PRINT_CFG = {};   // 打印设置（按考勤组+类别绑定）：{ [考勤组名]: { ot:{...}, lv:{...} } }，ot=加班 lv=请假；每类含 tplFile/perPage/kaoqingRen/dept1Leader/dept2Leader；随 /kaoqing/config 一并读写
 var cfgGpCur        = '';    // 打印设置面板当前选中的考勤组
@@ -1076,22 +1135,69 @@ function renderPeople(){
 }
 
 /* ---------- 区域二：类别 ---------- */
+function makeCatChip(c){
+  var b = document.createElement('button');
+  var isOn = curCat && curCat.id === c.id;
+  var onCls = isOn ? (' on ' + (isOtCatId(c.id) ? 'c-green' : 'c-orange')) : '';
+  b.className = 'chip' + onCls;
+  b.textContent = c.name;
+  b.addEventListener('click', function(){
+    curCat = (curCat && curCat.id === c.id) ? null : c;   // 再点一次取消
+    if (curCat && isOtCatId(curCat.id)) ensureHolidays(); // 加班：后台懒加载节假日
+    applyView();
+  });
+  return b;
+}
 function renderCats(){
   var box = $('#catGrid');
   box.innerHTML = '';
-  CATS.forEach(function(c){
-    var b = document.createElement('button');
-    var isOn = curCat && curCat.id === c.id;
-    var onCls = isOn ? (' on ' + (isOtCatId(c.id) ? 'c-green' : 'c-orange')) : '';
-    b.className = 'chip' + onCls;
-    b.textContent = c.name;
-    b.addEventListener('click', function(){
-      curCat = (curCat && curCat.id === c.id) ? null : c;   // 再点一次取消
-      if (curCat && isOtCatId(curCat.id)) ensureHolidays(); // 加班：后台懒加载节假日（不弹遮罩，加载处显示旋转圆圈）
-      applyView();
-    });
-    box.appendChild(b);
+  closeOtherMenu();
+  // 加班固定显示（特殊逻辑：国假/双休判定、不扣午休）
+  box.appendChild(makeCatChip(CATS.find(function(c){ return c.id === 'overtime'; }) || CATS[0]));
+  // 直接显示的休假类型（来自设置中「直接显示」列表）
+  (CONFIG.leaveTypes.direct || []).forEach(function(name){
+    box.appendChild(makeCatChip(makeLeaveCat(name)));
   });
+  // 「其它」：点击弹出菜单，列出设置中「其它菜单」列表的类型供选择
+  var otherBtn = document.createElement('button');
+  var otherOn = curCat && curCat.id.indexOf('lt-') === 0 && (CONFIG.leaveTypes.other || []).indexOf(curCat.name) >= 0;
+  otherBtn.className = 'chip' + (otherOn ? ' on c-orange' : '');
+  otherBtn.textContent = '其它';
+  otherBtn.addEventListener('click', function(e){ toggleOtherMenu(e, otherBtn); });
+  box.appendChild(otherBtn);
+}
+/* 卡片2「其它」按钮：弹出/收起休假类型菜单（列出设置中「其它菜单」列表的类型） */
+function toggleOtherMenu(e, btn){
+  e.stopPropagation();
+  var grid = $('#catGrid'); if (!grid) return;
+  var existing = $('#otherMenu');
+  if (existing){ existing.remove(); return; }
+  var menu = document.createElement('div');
+  menu.id = 'otherMenu'; menu.className = 'other-menu';
+  var others = CONFIG.leaveTypes.other || [];
+  if (!others.length){
+    menu.innerHTML = '<div class="other-empty">请在「设置→考勤配置→休假类型配置」中添加类型</div>';
+  } else {
+    others.forEach(function(name){
+      var it = document.createElement('div'); it.className = 'other-item'; it.textContent = name;
+      it.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        curCat = makeLeaveCat(name);
+        menu.remove();
+        applyView();
+      });
+      menu.appendChild(it);
+    });
+  }
+  grid.style.position = 'relative';
+  grid.appendChild(menu);
+  var gr = grid.getBoundingClientRect(), br = btn.getBoundingClientRect();
+  menu.style.left = (br.left - gr.left + grid.scrollLeft) + 'px';
+  menu.style.top  = (br.bottom - gr.top + grid.scrollTop + 4) + 'px';
+  setTimeout(function(){ document.addEventListener('click', closeOtherMenu, { once:true }); }, 0);
+}
+function closeOtherMenu(){
+  var m = $('#otherMenu'); if (m) m.remove();
 }
 
 /* ---------- 视图状态：按「是否选人 / 是否选类别」逐级显示区域，并显示前恢复默认 ---------- */
@@ -2157,6 +2263,12 @@ $('#timeSegs').addEventListener('focusin', function(e){
 $('#cfgBtn').addEventListener('click', openConfig);
 $('#cfgSave').addEventListener('click', saveConfigToWaline);
 $('#cfgClose').addEventListener('click', function(){ $('#cfgMask').hidden = true; });
+// 休假类型两个列表框：互移与新增
+$('#ltMoveRight').addEventListener('click', function(){ ltMove('cfgLtDirect', 'cfgLtOther'); });
+$('#ltMoveLeft').addEventListener('click', function(){ ltMove('cfgLtOther', 'cfgLtDirect'); });
+$('#ltAddDirect').addEventListener('click', function(){ ltAdd('cfgLtDirect'); });
+$('#ltAddOther').addEventListener('click', function(){ ltAdd('cfgLtOther'); });
+$('#cfgLtNew').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); ltAdd('cfgLtDirect'); } });
 $('#cfgGpSel').addEventListener('change', function(){ cfgGpCur = this.value; loadGpCfgIntoForm(); });
 $('#cfgGpCat').addEventListener('change', function(){ cfgGpCat = this.value; loadGpCfgIntoForm(); });
 $('#cfgMask').addEventListener('click', function(e){ if (e.target === $('#cfgMask')) $('#cfgMask').hidden = true; });
@@ -4398,6 +4510,13 @@ async function loadConfig(){
       if (typeof best.obj.pwdReview  === 'string') CONFIG.pwdReview  = best.obj.pwdReview;
       if (typeof best.obj.pwdApprove === 'string') CONFIG.pwdApprove = best.obj.pwdApprove;
       if (typeof best.obj.pwdAdmin   === 'string') CONFIG.pwdAdmin   = best.obj.pwdAdmin;
+      // 休假类型（直接显示 / 其它菜单）：覆盖到内存
+      if (best.obj.leaveTypes && typeof best.obj.leaveTypes === 'object'){
+        CONFIG.leaveTypes = {
+          direct: Array.isArray(best.obj.leaveTypes.direct) ? best.obj.leaveTypes.direct.slice() : (CONFIG.leaveTypes.direct || []),
+          other:  Array.isArray(best.obj.leaveTypes.other)  ? best.obj.leaveTypes.other.slice()  : (CONFIG.leaveTypes.other || [])
+        };
+      }
       // 打印设置（按考勤组绑定）：覆盖到内存（页面其它位置按 curGroup 取用）
       if (best.obj.groupPrint && typeof best.obj.groupPrint === 'object' && !Array.isArray(best.obj.groupPrint)) GROUP_PRINT_CFG = normalizeGpCfg(best.obj.groupPrint);
     }
@@ -4419,6 +4538,40 @@ async function loadSerial(){
   } catch(e){
     console.warn('[kaoqing] 读取单据流水号配置失败（将从当前记录推算）', e && e.message ? e.message : e);
   }
+}
+/* 设置弹窗：休假类型两个列表框（直接显示 / 其它菜单）的填充、互移、新增 */
+function fillLtSelect(selId, arr){
+  var sel = $('#' + selId); if (!sel) return;
+  sel.innerHTML = (arr || []).map(function(n){ return '<option>' + esc(n) + '</option>'; }).join('');
+}
+function selOptsToArr(selId){
+  var sel = $('#' + selId); if (!sel) return [];
+  return [].slice.call(sel.options).map(function(o){ return o.value.trim(); }).filter(function(s){ return s.length; });
+}
+function ltHas(selId, name){
+  var sel = $('#' + selId); if (!sel) return false;
+  return [].some.call(sel.options, function(o){ return o.value === name; });
+}
+function ltMove(srcId, dstId){
+  var src = $('#' + srcId), dst = $('#' + dstId);
+  if (!src || !dst) return;
+  for (var i = src.options.length - 1; i >= 0; i--){
+    if (src.options[i].selected){
+      var n = src.options[i].value;
+      src.remove(i);
+      if (!ltHas(dstId, n)){
+        var o = document.createElement('option'); o.value = n; o.textContent = n; dst.appendChild(o);
+      }
+    }
+  }
+}
+function ltAdd(dstId){
+  var inp = $('#cfgLtNew'); if (!inp) return;
+  var n = inp.value.trim(); if (!n) return;
+  inp.value = '';
+  if (ltHas(dstId, n)) return;
+  var dst = $('#' + dstId); if (!dst) return;
+  var o = document.createElement('option'); o.value = n; o.textContent = n; dst.appendChild(o);
 }
 // 打印设置（按考勤组绑定）面板辅助函数
 function fillPersonSel(selId){
@@ -4461,6 +4614,9 @@ function openConfig(){
     el.value = '';
     el.placeholder = p[1] ? '已设置（留空则不修改）' : '未设置';
   });
+  // 休假类型：把当前配置填充到两个列表框
+  fillLtSelect('cfgLtDirect', CONFIG.leaveTypes.direct);
+  fillLtSelect('cfgLtOther', CONFIG.leaveTypes.other);
   // 打印设置（按考勤组 + 加班/请假 分别绑定）：填充考勤组/类别/人员下拉，并载入当前组当前类别的绑定值
   renderGpSel();
   cfgGpCat = 'ot'; var gcEl = $('#cfgGpCat'); if (gcEl) gcEl.value = cfgGpCat;
@@ -4485,6 +4641,8 @@ async function saveConfigToWaline(){
     approve: pwdApprove ? await pwdHash(pwdApprove) : CONFIG.pwdApprove,
     admin:   pwdAdmin   ? await pwdHash(pwdAdmin)   : CONFIG.pwdAdmin
   };
+  // 休假类型：从两个列表框读取（设置的项即生效，无需逐条提交）
+  var leaveTypes = { direct: selOptsToArr('cfgLtDirect'), other: selOptsToArr('cfgLtOther') };
   // 打印设置（按考勤组 + 加班/请假 分别绑定）：把面板当前考勤组+当前类别的字段写回 GROUP_PRINT_CFG（保留另一类别已有值），再随 payload 一并存入 config
   if (cfgGpCur){
     var prev = GROUP_PRINT_CFG[cfgGpCur] || {};
@@ -4511,6 +4669,7 @@ async function saveConfigToWaline(){
     pwdReview:  pwdNew.review,
     pwdApprove: pwdNew.approve,
     pwdAdmin:   pwdNew.admin,
+    leaveTypes: leaveTypes,
     groupPrint: GROUP_PRINT_CFG
   };
   var user = getWalineUser();
@@ -4538,6 +4697,7 @@ async function saveConfigToWaline(){
     CONFIG.pwdReview   = payload.pwdReview;
     CONFIG.pwdApprove  = payload.pwdApprove;
     CONFIG.pwdAdmin    = payload.pwdAdmin;
+    CONFIG.leaveTypes  = payload.leaveTypes || CONFIG.leaveTypes;
     // 保存后清空输入框并刷新 placeholder（避免误以为还留在表单里 / 反映最新设置状态）
     [['#cfgPwdReview', CONFIG.pwdReview], ['#cfgPwdApprove', CONFIG.pwdApprove], ['#cfgPwdAdmin', CONFIG.pwdAdmin]].forEach(function(p){
       var el = $(p[0]); if (!el) return;
