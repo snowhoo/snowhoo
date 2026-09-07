@@ -2769,11 +2769,13 @@ function buildPrintData(rs){
   rs.forEach(function(r, i){ recVals.push(buildRecordVals(r, i)); });
   return { allOt: allOt, docVals: docVals, recVals: recVals };
 }
+var _tplAbByName = {};   // 模板文件名 -> ArrayBuffer：模板静态，跳过重复网络下载（改模板后刷新页面即重新拉取）
 async function fetchTemplateAb(allOt){
   // 优先用当前考勤组在打印设置里绑定的模板文件；未绑定则按类别（加班/请假）回退到默认模板
   var gp = (GROUP_PRINT_CFG[effGroupKey()]) || {};
   var sub = (allOt ? gp.ot : gp.lv) || {};
   var fname = (sub.tplFile && sub.tplFile.trim()) ? sub.tplFile.trim() : (allOt ? '加班申请单模板.xlsx' : '请假申请单模板.xlsx');
+  if (_tplAbByName[fname]) return _tplAbByName[fname];   // 同模板直接复用已下载字节
   var enc = encodeURIComponent(fname);
   var candidates = ['template/' + enc, 'kaoqing/template/' + enc, '../kaoqing/template/' + enc];
   var tried = [], resp = null;
@@ -2786,7 +2788,9 @@ async function fetchTemplateAb(allOt){
     await showAlert('未找到模板文件：' + fname + '\n已尝试路径：\n' + tried.join('\n') + '\n请把它放到 kaoqing/template/ 目录下（与 kaoqing.html 同级），且页面需通过 http(s) 访问（file:// 直接打开本地文件时浏览器禁止读取模板）。', '模板打印失败');
     throw new Error('no template');
   }
-  return await resp.arrayBuffer();
+  var ab = await resp.arrayBuffer();
+  _tplAbByName[fname] = ab;
+  return ab;
 }
 // ArrayBuffer → base64（分块，避免大文件 String.fromCharCode.apply 爆栈）
 function abToB64(ab){
@@ -2797,22 +2801,31 @@ function abToB64(ab){
 /* 签名图：按姓名到 kaoqing/names/<姓名>.jpg 取图，转成 dataUri 内联进打印页。
    必须预先取回转 base64——若只写 <img src="url"> 就立刻 window.print()，
    浏览器常常还没把图加载完就开始打印，印出来是空白/破图。 */
-// 按姓名批量取签名图 → { 姓名: dataUri }（取不到的姓名不进结果，渲染时留空）
+// 签名图按姓名缓存（dataUri 静态不变，跨打印复用，避免重复下载；无图的姓名也缓存空值，本次会话不再重复探测）
+var _sigCache = {};
+// 按姓名批量取签名图 → { 姓名: dataUri }（取不到的姓名缓存空值，渲染时按 falsy 留空）
 async function fetchNameImages(names){
-  var out = {};
-  for (var i = 0; i < names.length; i++){
-    var enc = encodeURIComponent(names[i] + '.jpg');
+  if (!names || !names.length) return {};
+  // 并发预取所有签名图（不再逐张 await 串行）：多条记录/多人签名时，总耗时约等于最慢一张而非累加
+  var entries = await Promise.all(names.map(async function(name){
+    if (Object.prototype.hasOwnProperty.call(_sigCache, name)) return [name, _sigCache[name]];
+    var enc = encodeURIComponent(name + '.jpg');
     var candidates = ['names/' + enc, 'kaoqing/names/' + enc, '../kaoqing/names/' + enc];
     for (var ci = 0; ci < candidates.length; ci++){
       var cu; try { cu = new URL(candidates[ci], location.href).toString(); } catch(e){ continue; }
       try {
         var r2 = await fetch(cu, { cache: 'no-store' });
         if (!r2.ok) continue;
-        out[names[i]] = 'data:image/jpeg;base64,' + abToB64(await r2.arrayBuffer());
-        break;
+        var dataUri = 'data:image/jpeg;base64,' + abToB64(await r2.arrayBuffer());
+        _sigCache[name] = dataUri;
+        return [name, dataUri];
       } catch(e){ /* 跨域 / 网络错误 → 试下一个候选路径 */ }
     }
-  }
+    _sigCache[name] = null;   // 无签名图：缓存空值，避免后续打印重复探测
+    return null;
+  }));
+  var out = {};
+  entries.forEach(function(e){ if (e) out[e[0]] = e[1]; });
   return out;
 }
 // 记录行的「签名」占位符：取每条记录首位人员的签名
@@ -2989,7 +3002,18 @@ async function buildCellImages(zip){
   } catch(e){ /* 图片解析失败不阻断打印 */ }
   return out;
 }
-async function renderTemplateToHtml(ab, recVals, docVals, signByName){
+// 模板解析结果缓存：xlsx 模板属静态资源，按「内容指纹」缓存已解析模型，
+// 同一模板重复打印时跳过 JSZip.loadAsync 解压与全部 XML 正则解析（这是打印热路径的最大开销）。
+var _tplModelByFp = {};
+function _tplFingerprint(ab){
+  // 轻量 FNV-1a 校验和（模板仅数 KB，开销可忽略）；内容变了指纹即变，自动失效重新解析
+  var bytes = new Uint8Array(ab), h = 0x811c9dc5;
+  for (var i = 0; i < bytes.length; i++){ h ^= bytes[i]; h = (h * 0x01000193) >>> 0; }
+  return h.toString(36) + ':' + bytes.length;
+}
+async function getTemplateModel(ab){
+  var fp = _tplFingerprint(ab);
+  if (_tplModelByFp[fp]) return _tplModelByFp[fp];
   var JSZip = window.JSZip; if (!JSZip) throw new Error('jszip 未加载');
   var zip = await JSZip.loadAsync(ab);
   SS_CACHE = [];
@@ -3058,10 +3082,12 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   var rows = [];
   while ((rm = rowRe.exec(sdMatch[1]))) rows.push(rm[0]);
   if (!rows.length) throw new Error('模板没有数据行');
+  var _rowCache = {};
+  function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: _rowNum(rw) }; return _rowCache[rw]; }
   var dataIdx = -1;
   rows.forEach(function(rw, idx){
     if (dataIdx >= 0) return;
-    _parseCells(rw, SS_CACHE).forEach(function(c){
+    _getRow(rw).cells.forEach(function(c){
       if (dataIdx >= 0) return;
       if (/\{\{\{/.test(c.text)) return;
       var mm = c.text.match(/\{\{(.+?)\}\}/);
@@ -3069,25 +3095,15 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     });
   });
   if (dataIdx < 0) throw new Error('模板未找到含行级占位符（如 姓名）的记录行');
-  var perPage = (PRINT_PER_PAGE > 0) ? PRINT_PER_PAGE : 10;
-  var N = recVals.length, P = Math.max(1, Math.ceil(N / perPage));
-  // 文档级记录键：取「第一位有该字段值的人员」（避免首位人员恰好缺该字段导致表头空白；符合「三括号=文档级取第一位人员」约定）
-  var docVm = Object.assign({}, docVals);
-  recVals.forEach(function(rec){
-    if (!rec) return;
-    for (var dk in rec) if (docVm[dk] == null || docVm[dk] === '') docVm[dk] = rec[dk];
-  });
-  // 固定人员签名：模板里用三括号直接写姓名（例如写 顾晓维）这类「既不是文档级键、也不是记录级键」的写法，
-  // 一律按人名处理，取 names/<姓名>.jpg（放在页眉/页脚就是固定审批人签名，每页都会出现）
+  // 固定人员签名：模板三括号直接写姓名 / 三括号人员签名占位符，解析为姓名（取图统一交由调用方，便于跨打印缓存）
   var fixedNames = [], fnSeen = {};
   rows.forEach(function(rw){
-    _parseCells(rw, SS_CACHE).forEach(function(c){
+    _getRow(rw).cells.forEach(function(c){
       if (!c.text) return;
       var fre = /\{\{\{([^}]+)\}\}\}/g, fm;
       while ((fm = fre.exec(c.text))){
         var k = fm[1].trim();
         if (!k || DOC_KEYS[k] || RECORD_KEYS[k] || fnSeen[k]) continue;
-        // 三括号「人员签名」占位符（登录名 / 考勤人签名 / 一二级部门领导签名）：解析为某个人员真实姓名，再按该姓名取签名图（与固定人员机制一致）
         if (PERSON_PH_KEYS[k]){
           var pn = personPhName(k);
           if (pn && !fnSeen[pn]){ fnSeen[pn] = true; fixedNames.push(pn); }
@@ -3097,7 +3113,33 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       }
     });
   });
-  if (fixedNames.length) signByName = Object.assign({}, signByName || {}, await fetchNameImages(fixedNames));
+  // 记录级签名：模板任意单元格含 签名 才需取每位记录首位人员签名图
+  var needsRecordSig = false;
+  rows.forEach(function(rw){ if (needsRecordSig) return; _getRow(rw).cells.forEach(function(c){ if (/\{\{签名\}\}/.test(c.text || '')){ needsRecordSig = true; } }); });
+  var model = {
+    SS_CACHE: SS_CACHE.slice(), cols: cols, rowH: rowH, styleMap: styleMap, imgByVm: imgByVm,
+    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, fixedNames: fixedNames, needsRecordSig: needsRecordSig
+  };
+  _tplModelByFp[fp] = model;
+  return model;
+}
+async function renderTemplateToHtml(ab, recVals, docVals, signByName){
+  // 复用已解析模板模型（同模板跳过 JSZip 解压 + XML 解析）；签名图已在调用方按模板实际用法取出并传入 signByName
+  var model = await getTemplateModel(ab);
+  SS_CACHE = model.SS_CACHE;
+  var cols = model.cols, rowH = model.rowH, styleMap = model.styleMap, imgByVm = model.imgByVm,
+      primary = model.primary, covered = model.covered, rows = model.rows, dataIdx = model.dataIdx;
+  // 行解析结果缓存：同一行 XML 在收集阶段、各页渲染阶段会被多次 _parseCells，缓存后只解析一次（模板行数固定，渲染循环有界，非无限）
+  var _rowCache = {};
+  function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: _rowNum(rw) }; return _rowCache[rw]; }
+  var perPage = (PRINT_PER_PAGE > 0) ? PRINT_PER_PAGE : 10;
+  var N = recVals.length, P = Math.max(1, Math.ceil(N / perPage));
+  // 文档级记录键：取「第一位有该字段值的人员」
+  var docVm = Object.assign({}, docVals);
+  recVals.forEach(function(rec){
+    if (!rec) return;
+    for (var dk in rec) if (docVm[dk] == null || docVm[dk] === '') docVm[dk] = rec[dk];
+  });
   var headerRows = rows.slice(0, dataIdx), dataRowXml = rows[dataIdx], footerRows = rows.slice(dataIdx + 1);
   // 列宽比例（%）
   var totalW = 0; for (var i = 1; i <= cols.count; i++) totalW += (cols.width[i] || 8);
@@ -3106,8 +3148,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   for (var i2 = 1; i2 <= cols.count; i2++) colHtml += '<col style="width:' + ((cols.width[i2] || 8) / totalW * 100).toFixed(2) + '%">';
   colHtml += '</colgroup>';
   function emitRow(rw, mode, rec){
-    var cells = _parseCells(rw, SS_CACHE);
-    var r0 = _rowNum(rw);
+    var pc = _getRow(rw), cells = pc.cells, r0 = pc.r0;
     var rh = rowH[r0] ? rowH[r0] + 'pt' : '';
     var tr = '<tr' + (rh ? ' style="height:' + rh + '"' : '') + '>';
     cells.forEach(function(c){
@@ -3191,10 +3232,17 @@ async function printRecordsViaTemplate(rs){
     try { await ensurePeopleLoaded(); } catch(e){}
     var data = buildPrintData(rs);
     PRINT_PER_PAGE = ((gpSub().perPage) || 0) | 0;   // 按考勤组+类别配置注入每页条数（0=引擎默认 10）；gpSub() 自动用 buildPrintData 已设的 PRINT_GROUP/PRINT_CAT
-    var signByName = await fetchSignatureImages(data.recVals);   // 按姓名取签名图（内联 dataUri，保证打印时已加载）
     var ab;
     try { ab = await fetchTemplateAb(data.allOt); }
     catch(e){ await showAlert('加载打印模板失败：' + (e && e.message ? e.message : e), '模板打印失败'); return; }
+    // 解析模板（已按内容指纹缓存：同模板跳过 JSZip 解压 + XML 解析）。签名图按模板『实际用到』的占位符取，避免无谓下载
+    var model = await getTemplateModel(ab);
+    var needNames = (model.fixedNames || []).slice();
+    if (model.needsRecordSig){
+      var seen = {};
+      (data.recVals || []).forEach(function(r){ var n = (r && r['签名'] != null) ? String(r['签名']).trim() : ''; if (n && !seen[n]){ seen[n] = true; needNames.push(n); } });
+    }
+    var signByName = needNames.length ? await fetchNameImages(needNames) : {};
     var html;
     try { html = await renderTemplateToHtml(ab, data.recVals, data.docVals, signByName); }
     catch(e){ await showAlert('生成打印视图失败：' + e.message, '模板打印失败'); return; }
