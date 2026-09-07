@@ -3680,7 +3680,32 @@ async function fetchCloudRecord(path, type, attempt){
 var ANON_NICK = '考勤记录';
 var ANON_MAIL = 'kaoqin@example.com';
 
-/* 节假日：从 Waline 读取（公开接口，匿名）。页面打开不加载，点「加班」类别时才由 ensureHolidays() 懒加载：
+/* 把从 Waline 取回的节假日对象写入内存：按 timor.tech 的 wage 字段把放假区间拆成
+   「法定国假(wage=3)」与「调休放假/休息日(wage=2)」两类；调休放假日本质是休息日（双休待遇），
+   不归为「国假」。补班日归 makeup（平时）。成功写入并落缓存返回 true，数据无效返回 false。 */
+function applyHolidayPayload(best){
+  if (!(best && best.obj && best.obj.holidays && best.obj.holidays.length)) return false;
+  holidayOid.oid = best.oid || 0;   // 记住节假日评论 oid：供 syncHolidays 用管理员令牌原地复写
+  var gj = [], rest = [];
+  (best.obj.holidays || []).forEach(function(h){
+    var w = (h && typeof h === 'object') ? h.wage : undefined;
+    var d = (h && typeof h === 'object') ? (h.date || h) : h;
+    if (w === 3) gj.push(d);
+    else if (w === 2) rest.push(d);   // 调休放假 = 休息日 → 双休
+    else gj.push(d);                  // 无 wage 兜底当国假，避免漏判
+  });
+  HOLIDAYS = {
+    year: best.obj.year || HOLIDAYS.year,
+    holidays: gj,
+    rest: rest,
+    makeup: (best.obj.makeup || []).map(function(m){ return (m && typeof m === 'object') ? (m.date || m) : m; })
+  };
+  HOLIDAYS_OK = true;
+  saveHolidayCache();        // 写入缓存（含 year），下次打开页面优先读缓存
+  return true;
+}
+
+/* 节假日：从 Waline 读取（公开接口，匿名）。页面打开不阻塞，由 initHolidays()/ensureHolidays() 触发：
    quiet=true 时不弹全屏遮罩，加载期间由 calcOtType 返回「加载中」，在需要显示加班类别处渲染旋转圆圈。 */
 async function loadHolidays(quiet){
   HOLIDAYS_OK = false;   // 先置未知，读取成功才置 true
@@ -3688,25 +3713,7 @@ async function loadHolidays(quiet){
   try {
     var best = await fetchCloudRecord(HOLIDAY_PATH, 'holiday');
     holidayOid.oid = best ? best.oid : 0;   // 记住节假日评论 oid：供 syncHolidays 用管理员令牌原地复写（不再每次新建一条）
-    if (best && best.obj && best.obj.holidays && best.obj.holidays.length){
-      // 按 timor.tech 的 wage 字段把放假区间拆成「法定国假(wage=3)」与「调休放假/休息日(wage=2)」两类；
-      // 调休放假日本质是休息日（双休待遇），不归为「国假」。补班日归 makeup（平时）。
-      var gj = [], rest = [];
-      (best.obj.holidays || []).forEach(function(h){
-        var w = (h && typeof h === 'object') ? h.wage : undefined;
-        var d = (h && typeof h === 'object') ? (h.date || h) : h;
-        if (w === 3) gj.push(d);
-        else if (w === 2) rest.push(d);   // 调休放假 = 休息日 → 双休
-        else gj.push(d);                  // 无 wage 兜底当国假，避免漏判
-      });
-      HOLIDAYS = {
-        year: best.obj.year || HOLIDAYS.year,
-        holidays: gj,
-        rest: rest,
-        makeup: (best.obj.makeup || []).map(function(m){ return (m && typeof m === 'object') ? (m.date || m) : m; })
-      };
-      HOLIDAYS_OK = true;
-      saveHolidayCache();        // 写入缓存（含 year），下次优先读缓存
+    if (applyHolidayPayload(best)){
       renderHolidayInfo();   // 读取成功：刷新设置菜单里的节假日配置展示
       if (!quiet) cloudToastHide('loadHolidays');
     } else {
@@ -3756,6 +3763,28 @@ async function ensureHolidays(){
   } catch(e){ console.error('[kaoqing] ensureHolidays 失败', e && e.message ? e.message : e); }
   holidaysLoading = false;
   refreshOtViews();                                    // 加载完成：换回真实加班类别
+}
+/* 后台静默刷新节假日（页面打开时用于「有缓存也想跟上库里最新」）：
+   只在读取成功时覆盖并刷新缓存与界面；未配置/异常一律静默保留现有缓存状态，不弹任何提示。 */
+async function syncHolidaysQuiet(){
+  try {
+    var best = await fetchCloudRecord(HOLIDAY_PATH, 'holiday');
+    if (!applyHolidayPayload(best)) return;            // 数据无效 → 保留缓存
+    refresh();            // 预览 / 汇总（加班类别按新节假日重判）
+    renderRecords();      // 记录表「类别」列
+    renderHolidayInfo();  // 菜单里的节假日状态
+  } catch(e){ /* 后台刷新失败：静默，保留已恢复的缓存 */ }
+}
+/* 打开页面的节假日策略（与「人员 / 常用说明」一致：缓存优先，不再纯懒加载）：
+   ① 同步读「本年」缓存 → 命中即 HOLIDAYS_OK=true，菜单状态与加班类别立刻正确，不发请求、不阻塞首屏；
+   ② 无缓存 → 后台静默读 Waline（quiet，不弹遮罩）；
+   ③ 已有缓存 → 再后台静默拉一次库，别人更新过节假日后能自动跟上（失败不影响已显示内容）。
+   注：本函数体内「同步部分」在调用时立即执行，故 init 里可不 await（fire-and-forget）。 */
+async function initHolidays(){
+  var cached = loadHolidayCache();     // 同步、无网络
+  renderHolidayInfo();                 // 菜单里的节假日状态立刻有值（命中缓存即显示，未命中显示未配置）
+  if (cached) await syncHolidaysQuiet();
+  else        await ensureHolidays();  // 无本年缓存 → 读 Waline（quiet）
 }
 /* 读/写/删除过程统一提示：绿「处理中...」，失败=红「读取/写入失败!」。不使用右上角状态标记。
    支持多任务并发：每个操作传 key，互不影响、各自独立显示/消失；不传 key 则复用全局单例 #cloudToast（兼容旧调用）。
@@ -4978,8 +5007,10 @@ document.addEventListener('keydown', function(e){
   refreshSaveBtn();          // 初始：新增模式「添加」(绿)
   $('#companyName').textContent = COMPANY_NAME;
   // 打开页面：人员（优先缓存）、考勤配置、常用说明 立即读取（公开接口，无需登录）；
-  // 节假日 / 记录表 / 归档列表 改为懒加载（详见各 ensure*/lazy* 触发点），打开页面不阻塞、不弹遮罩。
+  // 节假日同样「缓存优先」：先同步恢复本年缓存（菜单状态立即可见），再后台静默读库（详见 initHolidays）；
+  // 记录表 / 归档列表 仍为懒加载（详见各 ensure*/lazy* 触发点），打开页面不阻塞、不弹遮罩。
   try {
+    initHolidays();        // 节假日：同步恢复「本年」缓存 → 菜单状态立即可见；再按需后台静默读 Waline（不阻塞、不弹遮罩）
     // 人员：优先读缓存，读不到才读 Waline（与首屏一致）
     if (!loadPeopleCache()){ await loadPeople(); }
     await loadConfig();
