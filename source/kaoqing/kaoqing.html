@@ -3190,7 +3190,7 @@ async function printRecordsViaTemplate(rs){
     try { await ensureJszip(); } catch(e){ showAlert(e.message); return; }
     try { await ensurePeopleLoaded(); } catch(e){}
     var data = buildPrintData(rs);
-    PRINT_PER_PAGE = ((gpSub(data.allOt).perPage) || 0) | 0;   // 按考勤组+类别配置注入每页条数（0=引擎默认 10）
+    PRINT_PER_PAGE = ((gpSub().perPage) || 0) | 0;   // 按考勤组+类别配置注入每页条数（0=引擎默认 10）；gpSub() 自动用 buildPrintData 已设的 PRINT_GROUP/PRINT_CAT
     var signByName = await fetchSignatureImages(data.recVals);   // 按姓名取签名图（内联 dataUri，保证打印时已加载）
     var ab;
     try { ab = await fetchTemplateAb(data.allOt); }
@@ -3226,7 +3226,7 @@ async function downloadTemplateXlsx(){
   if (!rs.length){ await showAlert('没有可打印的记录'); return; }
   try { await ensurePeopleLoaded(); } catch(e){}
   var data = buildPrintData(rs);
-  PRINT_PER_PAGE = ((gpSub(data.allOt).perPage) || 0) | 0;   // 按考勤组+类别配置注入每页条数（0=引擎默认 10）
+  PRINT_PER_PAGE = ((gpSub().perPage) || 0) | 0;   // 按考勤组+类别配置注入每页条数（0=引擎默认 10）；gpSub() 自动用 buildPrintData 已设的 PRINT_GROUP/PRINT_CAT
   var ab;
   try { ab = await fetchTemplateAb(data.allOt); } catch(e){ return; }
   try { await ensureJszip(); } catch(e){ showAlert(e.message); return; }
