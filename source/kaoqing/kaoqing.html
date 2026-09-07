@@ -2352,8 +2352,9 @@ function parsePH(v){
   s = s.replace(/\{\{([^}]+)\}\}/g,    function(_, k){ res.push({ full: L2 + k + R2, key: k.trim(), level: 'row' }); return ' '; });
   return res;
 }
-/* 核心：把含行级占位符的「数据行」按记录数复制并替换；文档级占位符整表只取一次；保留样式与合并单元格 */
-function fillSheetTemplate(ws, recs, docVals){
+/* 核心：把模板中「记录行」（含行级占位符的首行）复制 perPage 份填每条记录；文档级占位符每页取本页第一位人员；
+   保留原模板的字体/列宽/行高/合并单元格（需在读取与写出时开 cellStyles） */
+function fillSheetTemplate(ws, recs, docVals, perPage){
   var ref = ws['!ref']; if (!ref) return;
   var range = XLSX.utils.decode_range(ref);
   var cells = {};          // "r_c" -> cellObj
@@ -2374,23 +2375,28 @@ function fillSheetTemplate(ws, recs, docVals){
     }
   });
 
-  // 数据行 = 含「行级记录占位符」的行（文档级占位符不会使所在行变成数据行）
-  var dataRows = [];
+  // 记录行：含行级记录占位符的首行即「一条记录的模板行」（本系统每条记录占一行）
+  var recRows = [];
   for (var r = range.s.r; r <= range.e.r; r++){
     var hit = false;
     for (var c = range.s.c; c <= range.e.c; c++){
       if (rowRec[r + '_' + c] && rowRec[r + '_' + c].length){ hit = true; break; }
     }
-    if (hit) dataRows.push(r);
+    if (hit) recRows.push(r);
   }
-  if (!dataRows.length) return;
-  var D = dataRows.length;                  // 每页数据行数（= 模板数据行数量）
-  var totalRows = range.e.r - range.s.r + 1;
+  if (!recRows.length) return;
+  var rTop = recRows[0];                     // 记录模板行
+  if (!perPage || perPage < 1) perPage = 10; // 每页记录数（改这里即可调整，默认 10）
   var N = recs.length;
-  var P = Math.max(1, Math.ceil(N / D));    // 总页数
+  var P = Math.max(1, Math.ceil(N / perPage)); // 总页数
+  var headerH = rTop - range.s.r;            // 记录行上方表头行数
+  var footerH = range.e.r - rTop;           // 记录行下方表尾行数
+  var pageH = headerH + perPage + footerH;   // 每页总行数（每条记录一行）
 
   var out = {};                            // "r_c" -> newCell
-  function copyCell(sr, sc, dr, dc, isDataRow, ri){
+  var rowsOut = {};                        // outRow -> srcRow（用于复制行高）
+  // vm = { doc: 文档级取值池, rec: 本条记录取值(或 null) }
+  function copyCell(sr, sc, dr, dc, vm){
     var src = cells[sr + '_' + sc]; if (!src) return;
     var nc = Object.assign({}, src);
     var phs = phOf[sr + '_' + sc];
@@ -2398,55 +2404,65 @@ function fillSheetTemplate(ws, recs, docVals){
       var txt = String(src.v == null ? '' : src.v);
       phs.forEach(function(p){
         var val;
-        if (p.level === 'doc'){
-          val = (docVm[p.key] != null) ? docVm[p.key] : p.full;
-        } else if (isDataRow && ri < N){
-          val = (recs[ri] && recs[ri][p.key] != null) ? recs[ri][p.key]
-               : (docVals[p.key] != null ? docVals[p.key] : p.full);
-        } else if (isDataRow){
-          val = '';   // 本页数据行未用完 → 清空行级占位符
-        } else {
-          val = (docVm[p.key] != null) ? docVm[p.key] : p.full;
-        }
+        if (p.level === 'doc')   val = (vm.doc != null && vm.doc[p.key] != null) ? vm.doc[p.key] : p.full;
+        else if (vm.rec != null) val = (vm.rec[p.key] != null) ? vm.rec[p.key] : (docVals[p.key] != null ? docVals[p.key] : p.full);
+        else                     val = '';   // 本页数据行未用完 → 清空行级占位符
+        if (val == null) val = '';
         txt = txt.split(p.full).join(String(val));
       });
       nc.t = 's'; nc.v = txt;
       delete nc.f; delete nc.w;
     }
     out[dr + '_' + dc] = nc;
+    rowsOut[dr] = sr;
   }
 
-  // 逐页复制「整张模板」：固定表头/表尾随模板一起复制，只把本页数据行填成记录，未用完清空
+  // 逐页：表头 + 记录行复制 perPage 份 + 表尾；文档级占位符每页取本页第一位人员
   var mergesOut = [];
+  var tmplMerges = ws['!merges'] || [];
+  function shiftMerge(mg, dr0){ return { s: { r: mg.s.r + dr0, c: mg.s.c }, e: { r: mg.e.r + dr0, c: mg.e.c } }; }
   for (var p = 0; p < P; p++){
-    var base = range.s.r + p * totalRows;   // 本页起始行
-    // 文档级取值池：每页独立，记录类键取「本页第一位人员」（多页打印时表头随本页走，而非永远是全局第一条）
+    var pageBase = p * pageH;                       // 本页起始行（相对模板首行）
     var docVm = Object.assign({}, docVals);
-    var ri0 = p * D;
-    if (recs[ri0]) for (var dk in recs[ri0]) docVm[dk] = recs[ri0][dk];
-    for (var r2 = range.s.r; r2 <= range.e.r; r2++){
-      for (var c2 = range.s.c; c2 <= range.e.c; c2++){
-        var di = dataRows.indexOf(r2);
-        copyCell(r2, c2, base + (r2 - range.s.r), c2, di >= 0, di >= 0 ? p * D + di : -1);
-      }
+    var ri0 = p * perPage;
+    if (recs[ri0]) for (var dk in recs[ri0]) docVm[dk] = recs[ri0][dk];   // 本页第一位人员
+    // 表头
+    for (var hr = range.s.r; hr < rTop; hr++){
+      for (var hc = range.s.c; hc <= range.e.c; hc++) copyCell(hr, hc, pageBase + (hr - range.s.r), hc, { doc: docVm, rec: null });
     }
-    if (ws['!merges']){
-      ws['!merges'].forEach(function(mg){
-        mergesOut.push({ s: { r: mg.s.r + base - range.s.r, c: mg.s.c }, e: { r: mg.e.r + base - range.s.r, c: mg.e.c } });
-      });
+    // 数据区：记录模板行复制 perPage 份，逐份填一条记录
+    for (var i = 0; i < perPage; i++){
+      var ri = p * perPage + i;
+      var recVm = (ri < N) ? recs[ri] : null;
+      var dr = pageBase + headerH + i;
+      for (var bc = range.s.c; bc <= range.e.c; bc++) copyCell(rTop, bc, dr, bc, { doc: docVm, rec: recVm });
+      tmplMerges.forEach(function(mg){ if (mg.s.r === rTop && mg.e.r === rTop) mergesOut.push(shiftMerge(mg, dr - rTop)); });
     }
+    // 表尾
+    for (var fr = rTop + 1; fr <= range.e.r; fr++){
+      for (var fc = range.s.c; fc <= range.e.c; fc++) copyCell(fr, fc, pageBase + headerH + perPage + (fr - (rTop + 1)), fc, { doc: docVm, rec: null });
+    }
+    // 表头/表尾合并单元格：每页复制一次
+    tmplMerges.forEach(function(mg){ if (mg.e.r < rTop || mg.s.r > rTop) mergesOut.push(shiftMerge(mg, pageBase - range.s.r)); });
   }
   Object.keys(ws).forEach(function(k){ if (k[0] !== '!') delete ws[k]; });
   Object.keys(out).forEach(function(k){
     var pr = k.split('_'); var rr = +pr[0], cc = +pr[1];
     ws[XLSX.utils.encode_cell({ r: rr, c: cc })] = out[k];
   });
-  ws['!ref'] = XLSX.utils.encode_range({ s: { r: range.s.r, c: range.s.c }, e: { r: range.s.r + P * totalRows - 1, c: range.e.c } });
-  if (ws['!merges'] !== undefined) ws['!merges'] = mergesOut;
-  // 尽力写入打印分页符（社区版 SheetJS 可能忽略，但不影响内容；各页模板已各自完整）
+  ws['!ref'] = XLSX.utils.encode_range({ s: { r: range.s.r, c: range.s.c }, e: { r: range.s.r + P * pageH - 1, c: range.e.c } });
+  ws['!merges'] = mergesOut;
+  // 复制行高：记录模板行的高度应用到复制出的每一行
+  if (ws['!rows']){
+    var newRows = [];
+    Object.keys(rowsOut).forEach(function(drS){ var dr = +drS, sr = rowsOut[dr]; if (ws['!rows'][sr]) newRows[dr] = ws['!rows'][sr]; });
+    ws['!rows'] = newRows;
+  }
+  // 列宽(!cols) 全局保持不变
+  // 尽力写入打印分页符（社区版 SheetJS 可能忽略，但各页模板已各自完整）
   try {
     var brk = { row: [], col: [] };
-    for (var pp = 1; pp < P; pp++) brk.row.push(range.s.r + pp * totalRows - 1);
+    for (var pp = 1; pp < P; pp++) brk.row.push(range.s.r + pp * pageH - 1);
     ws['!breaks'] = brk;
   } catch(e){}
 }
@@ -2484,7 +2500,7 @@ async function printRecordsByTemplate(){
   var ab;
   try { ab = await resp.arrayBuffer(); } catch(e){ await showAlert('读取模板失败：' + e.message, '模板打印失败'); return; }
   var wb;
-  try { wb = XLSX.read(new Uint8Array(ab), { type: 'array' }); }
+  try { wb = XLSX.read(new Uint8Array(ab), { type: 'array', cellStyles: true }); }
   catch(e){ await showAlert('解析模板失败：' + e.message, '模板打印失败'); return; }
   var totalHours = 0;
   rs.forEach(function(r){ if (r.hours != null) totalHours += Number(r.hours) || 0; });
@@ -2503,7 +2519,7 @@ async function printRecordsByTemplate(){
   // 只填充第一个 sheet（模板文件第一个 sheet 即打印模板；readme/图例类放在后面 sheet 不参与）
   var tplWs = wb.Sheets[wb.SheetNames[0]];
   if (tplWs) fillSheetTemplate(tplWs, recVals, docVals);
-  XLSX.writeFile(wb, (allOt ? '加班记录_' : '请假记录_') + todayStr() + '.xlsx');
+  XLSX.writeFile(wb, (allOt ? '加班记录_' : '请假记录_') + todayStr() + '.xlsx', { cellStyles: true });
 }
 // 勾选状态变化 → 控制记录相关按钮可用
 $('#records').addEventListener('change', function(e){
