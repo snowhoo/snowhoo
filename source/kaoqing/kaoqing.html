@@ -399,18 +399,19 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .lt-cfg-grid{display:flex;align-items:stretch;gap:12px;flex-wrap:wrap}
 .lt-col{display:flex;flex-direction:column;gap:6px;min-width:150px;flex:1 1 150px}
 .lt-col-title{font-size:.78rem;color:var(--text-muted)}
-.lt-list{width:100%;min-height:120px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text);padding:4px;font-family:inherit;font-size:.85rem}
-.lt-btns{justify-content:center;flex-direction:column;min-width:auto;flex:0 0 auto}
-.lt-btns button{padding:5px 10px;font-size:.78rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text);cursor:pointer}
-.lt-btns button:hover{border-color:var(--accent)}
+.lt-rows{width:100%;min-height:120px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);padding:4px;overflow:auto;max-height:260px}
+.lt-empty{color:var(--text-muted);font-size:.82rem;padding:10px;text-align:center}
+.lt-row{display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:6px}
+.lt-row:nth-child(odd){background:rgba(128,128,128,.06)}
+.lt-name{flex:1 1 auto;font-size:.85rem;color:var(--text);word-break:break-all}
+.lt-row-act{display:flex;gap:3px;flex:0 0 auto}
+.lt-row-act button{padding:2px 7px;font-size:.82rem;line-height:1.4;border-radius:6px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text);cursor:pointer}
+.lt-row-act button:hover{border-color:var(--accent)}
+.lt-row-act .lt-x{border-color:#f3b4b4;color:#c0392b}
+.lt-row-act .lt-x:hover{border-color:#e74c3c;background:#fdecea}
 .lt-add-line{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .lt-add-line input[type=text]{flex:1 1 160px;min-width:140px;padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:.82rem;background:var(--bg-surface);color:var(--text);font-family:inherit}
 .lt-add-line button{padding:5px 10px;font-size:.78rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text);cursor:pointer}
-.lt-order{display:flex;gap:6px;margin-top:4px}
-.lt-order button{flex:1;padding:4px 8px;font-size:.78rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text);cursor:pointer}
-.lt-order button:hover{border-color:var(--accent)}
-.lt-order .lt-del{border-color:#f3b4b4;color:#c0392b}
-.lt-order .lt-del:hover{border-color:#e74c3c;background:#fdecea}
 /* 卡片2「其它」弹出菜单 */
 .other-menu{position:fixed;z-index:2000;min-width:140px;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:4px;max-height:240px;overflow:auto}
 .other-item{padding:7px 10px;border-radius:7px;cursor:pointer;font-size:.85rem;color:var(--text)}
@@ -671,29 +672,15 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 
     <div class="cfg-section">
       <div class="cfg-section-title">休假类型配置</div>
-      <div class="cfg-hint">「直接显示」的类型作为按钮出现在卡片2选择类别；「其它菜单」的类型点击「其它」后弹出菜单供选择。两列表可相互切换（选中项后点中间箭头）。</div>
+      <div class="cfg-hint">「直接显示」的类型作为按钮出现在卡片2；「其它菜单」的类型点击「其它」弹出菜单供选。每行可：↑↓ 调整顺序、⇄ 在两类间切换、✕ 删除。</div>
       <div class="lt-cfg-grid">
         <div class="lt-col">
           <div class="lt-col-title">直接显示</div>
-          <select id="cfgLtDirect" class="lt-list" multiple></select>
-          <div class="lt-order">
-            <button type="button" id="ltDirUp">↑ 上移</button>
-            <button type="button" id="ltDirDown">↓ 下移</button>
-            <button type="button" id="ltDirDel" class="lt-del">删除</button>
-          </div>
-        </div>
-        <div class="lt-col lt-btns">
-          <button type="button" id="ltMoveRight">← 移到其它</button>
-          <button type="button" id="ltMoveLeft">移回直接 →</button>
+          <div id="ltDirectRows" class="lt-rows"></div>
         </div>
         <div class="lt-col">
           <div class="lt-col-title">其它菜单</div>
-          <select id="cfgLtOther" class="lt-list" multiple></select>
-          <div class="lt-order">
-            <button type="button" id="ltOthUp">↑ 上移</button>
-            <button type="button" id="ltOthDown">↓ 下移</button>
-            <button type="button" id="ltOthDel" class="lt-del">删除</button>
-          </div>
+          <div id="ltOtherRows" class="lt-rows"></div>
         </div>
       </div>
       <div class="lt-add-line">
@@ -2283,17 +2270,9 @@ $('#cfgBtn').addEventListener('click', openConfig);
 $('#cfgSave').addEventListener('click', saveConfigToWaline);
 $('#cfgClose').addEventListener('click', function(){ $('#cfgMask').hidden = true; });
 // 休假类型两个列表框：互移与新增
-$('#ltMoveRight').addEventListener('click', function(){ ltMove('cfgLtDirect', 'cfgLtOther'); });
-$('#ltMoveLeft').addEventListener('click', function(){ ltMove('cfgLtOther', 'cfgLtDirect'); });
-$('#ltAddDirect').addEventListener('click', function(){ ltAdd('cfgLtDirect'); });
-$('#ltAddOther').addEventListener('click', function(){ ltAdd('cfgLtOther'); });
-$('#cfgLtNew').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); ltAdd('cfgLtDirect'); } });
-$('#ltDirUp').addEventListener('click', function(){ ltMoveOrder('cfgLtDirect', -1); });
-$('#ltDirDown').addEventListener('click', function(){ ltMoveOrder('cfgLtDirect', 1); });
-$('#ltOthUp').addEventListener('click', function(){ ltMoveOrder('cfgLtOther', -1); });
-$('#ltOthDown').addEventListener('click', function(){ ltMoveOrder('cfgLtOther', 1); });
-$('#ltDirDel').addEventListener('click', function(){ ltDel('cfgLtDirect'); });
-$('#ltOthDel').addEventListener('click', function(){ ltDel('cfgLtOther'); });
+$('#ltAddDirect').addEventListener('click', function(){ var i = $('#cfgLtNew'); ltAddArr('direct', i ? i.value : ''); if (i) i.value = ''; });
+$('#ltAddOther').addEventListener('click', function(){ var i = $('#cfgLtNew'); ltAddArr('other', i ? i.value : ''); if (i) i.value = ''; });
+$('#cfgLtNew').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); ltAddArr('cfgLtDirect', this.value); this.value = ''; } });
 $('#cfgGpSel').addEventListener('change', function(){ cfgGpCur = this.value; loadGpCfgIntoForm(); });
 $('#cfgGpCat').addEventListener('change', function(){ cfgGpCat = this.value; loadGpCfgIntoForm(); });
 $('#cfgMask').addEventListener('click', function(e){ if (e.target === $('#cfgMask')) $('#cfgMask').hidden = true; });
@@ -4564,81 +4543,58 @@ async function loadSerial(){
     console.warn('[kaoqing] 读取单据流水号配置失败（将从当前记录推算）', e && e.message ? e.message : e);
   }
 }
-/* 设置弹窗：休假类型两个列表框（直接显示 / 其它菜单）的填充、互移、新增 */
-function fillLtSelect(selId, arr){
-  var sel = $('#' + selId); if (!sel) return;
-  // 显式写 value 属性，保证 ltHas/ltMove 按值比较稳定（与原 fillLtSelect 仅靠 textContent 行为一致但更明确）
-  sel.innerHTML = (arr || []).map(function(n){ return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join('');
+/* 休假类型配置：自绘多行列表（替代原 select multiple）。所有操作直接改工作副本 ltWork，保存时才写回 CONFIG.leaveTypes */
+var ltWork = { direct: [], other: [] };
+function mkLtBtn(label, title, onClick, cls){
+  var b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.title = title;
+  if (cls) b.className = cls;
+  b.addEventListener('click', onClick);
+  return b;
 }
-function selOptsToArr(selId){
-  var sel = $('#' + selId); if (!sel) return [];
-  return [].slice.call(sel.options).map(function(o){ return o.value.trim(); }).filter(function(s){ return s.length; });
+function renderLtLists(){
+  renderLtCol('direct', 'ltDirectRows');
+  renderLtCol('other', 'ltOtherRows');
 }
-function ltHas(selId, name){
-  var sel = $('#' + selId); if (!sel) return false;
-  return [].some.call(sel.options, function(o){ return o.value === name; });
-}
-// 从指定 select 删除名为 name 的 option（若存在）；返回是否删除过
-function ltRemove(selId, name){
-  var sel = $('#' + selId); if (!sel) return false;
-  for (var i = sel.options.length - 1; i >= 0; i--){
-    if (sel.options[i].value === name){ sel.remove(i); return true; }
-  }
-  return false;
-}
-function ltMove(srcId, dstId){
-  var src = $('#' + srcId), dst = $('#' + dstId);
-  if (!src || !dst) return;
-  // 按正序收集选中项，保持原相对顺序（避免倒序 append 导致顺序反转的「混乱」）
-  var moved = [];
-  [].slice.call(src.options).forEach(function(o){ if (o.selected) moved.push(o.value); });
-  moved.forEach(function(n){
-    ltRemove(srcId, n);                              // 源里移除（移动语义，不是复制）
-    if (!ltHas(dstId, n)){                            // 目标没有才加，避免两处都有
-      var o = document.createElement('option'); o.value = n; o.textContent = n; dst.appendChild(o);
-    }
+function renderLtCol(which, boxId){
+  var box = $('#' + boxId); if (!box) return;
+  box.innerHTML = '';
+  var arr = ltWork[which];
+  if (!arr.length){ var e = document.createElement('div'); e.className = 'lt-empty'; e.textContent = '（空，可在下方添加）'; box.appendChild(e); return; }
+  arr.forEach(function(name, idx){
+    var row = document.createElement('div'); row.className = 'lt-row';
+    var nm = document.createElement('span'); nm.className = 'lt-name'; nm.textContent = name;
+    var act = document.createElement('span'); act.className = 'lt-row-act';
+    act.appendChild(mkLtBtn('↑', '上移', function(){ ltOrderArr(which, idx, -1); renderLtLists(); }));
+    act.appendChild(mkLtBtn('↓', '下移', function(){ ltOrderArr(which, idx, 1); renderLtLists(); }));
+    act.appendChild(mkLtBtn('⇄', '在两类间切换', function(){ ltSwapArr(which, name); renderLtLists(); }));
+    act.appendChild(mkLtBtn('✕', '删除', function(){ ltDelArr(which, name); renderLtLists(); }, 'lt-x'));
+    row.appendChild(nm); row.appendChild(act);
+    box.appendChild(row);
   });
 }
-function ltAdd(dstId){
-  var inp = $('#cfgLtNew'); if (!inp) return;
-  var n = inp.value.trim(); if (!n) return;
-  inp.value = '';
-  var other = (dstId === 'cfgLtDirect') ? 'cfgLtOther' : 'cfgLtDirect';
-  if (ltHas(dstId, n)){ showAlert('「' + n + '」已在「直接显示」列表中'); return; }
-  var dst = $('#' + dstId); if (!dst) return;
-  if (ltHas(other, n)){                               // 另一列表已存在同名 → 自动移过来（避免两处都有造成混乱）
-    ltRemove(other, n);
-  }
-  var o = document.createElement('option'); o.value = n; o.textContent = n; dst.appendChild(o);
+function ltOrderArr(which, idx, dir){
+  var a = ltWork[which], n = a.length, j = idx + dir;
+  if (j < 0 || j >= n) return;                  // 已到顶/底则不动
+  var t = a[idx]; a[idx] = a[j]; a[j] = t;       // 与相邻项交换（单行操作，直观）
 }
-// 删除指定列表里所有选中的项（从配置 UI 彻底移除，不迁移到另一列表）
-function ltDel(selId){
-  var sel = $('#' + selId); if (!sel) return;
-  var before = sel.options.length;
-  for (var i = sel.options.length - 1; i >= 0; i--){
-    if (sel.options[i].selected) sel.remove(i);
-  }
-  return sel.options.length < before;   // 是否真删除了东西
+function ltSwapArr(from, name){
+  var to = (from === 'direct') ? 'other' : 'direct';
+  if (ltWork[to].indexOf(name) >= 0) return;     // 目标已有同名 → 不去重复制（避免两处同现）
+  ltWork[from] = ltWork[from].filter(function(x){ return x !== name; });
+  ltWork[to].push(name);
 }
-// 列表内排序：把选中的项（连续或不连续）作为「整体」在所在列表内上移/下移一格（dir<0 上移，>0 下移）
-function ltMoveOrder(selId, dir){
-  var sel = $('#' + selId); if (!sel) return;
-  var arr = [].slice.call(sel.options).map(function(o){ return { v:o.value, sel:o.selected }; });
-  var n = arr.length;
-  var selIdx = []; arr.forEach(function(o, i){ if (o.sel) selIdx.push(i); });
-  if (!selIdx.length) return;
-  if (dir < 0){
-    var minSel = selIdx[0];
-    if (minSel === 0) return;                                  // 已到顶
-    var moved = arr.splice(minSel - 1, 1)[0];                  // 取出选中块紧邻前的一个未选中项
-    arr.splice(selIdx[selIdx.length - 1], 0, moved);           // 插到选中块最后一项之前（即块整体上一格，前项被挤到块后）
-  } else {
-    var maxSel = selIdx[selIdx.length - 1];
-    if (maxSel === n - 1) return;                              // 已到底
-    var moved2 = arr.splice(maxSel + 1, 1)[0];                // 取出选中块紧邻后的一个未选中项
-    arr.splice(selIdx[0], 0, moved2);                         // 插到选中块第一项之前（即块整体下一格，后项被挤到块前）
+function ltDelArr(which, name){
+  ltWork[which] = ltWork[which].filter(function(x){ return x !== name; });
+}
+function ltAddArr(which, name){
+  name = (name || '').trim(); if (!name) return;
+  var other = (which === 'direct') ? 'other' : 'direct';
+  if (ltWork[which].indexOf(name) >= 0){ showAlert('「' + name + '」已在「' + (which === 'direct' ? '直接显示' : '其它菜单') + '」列表中'); return; }
+  if (ltWork[other].indexOf(name) >= 0){         // 另一列表已存在同名 → 自动移过来（移动语义，非复制）
+    ltWork[other] = ltWork[other].filter(function(x){ return x !== name; });
   }
-  sel.innerHTML = arr.map(function(o){ return '<option value="' + esc(o.v) + '"' + (o.sel ? ' selected' : '') + '>' + esc(o.v) + '</option>'; }).join('');
+  ltWork[which].push(name);
+  renderLtLists();
 }
 // 打印设置（按考勤组绑定）面板辅助函数
 function fillPersonSel(selId){
@@ -4681,9 +4637,9 @@ function openConfig(){
     el.value = '';
     el.placeholder = p[1] ? '已设置（留空则不修改）' : '未设置';
   });
-  // 休假类型：把当前配置填充到两个列表框
-  fillLtSelect('cfgLtDirect', CONFIG.leaveTypes.direct);
-  fillLtSelect('cfgLtOther', CONFIG.leaveTypes.other);
+  // 休假类型：把当前配置载入工作副本并自绘多行列表（改动仅停留在 ltWork，保存才写回 CONFIG）
+  ltWork = { direct: (CONFIG.leaveTypes.direct || []).slice(), other: (CONFIG.leaveTypes.other || []).slice() };
+  renderLtLists();
   // 打印设置（按考勤组 + 加班/请假 分别绑定）：填充考勤组/类别/人员下拉，并载入当前组当前类别的绑定值
   renderGpSel();
   cfgGpCat = 'ot'; var gcEl = $('#cfgGpCat'); if (gcEl) gcEl.value = cfgGpCat;
@@ -4708,8 +4664,8 @@ async function saveConfigToWaline(){
     approve: pwdApprove ? await pwdHash(pwdApprove) : CONFIG.pwdApprove,
     admin:   pwdAdmin   ? await pwdHash(pwdAdmin)   : CONFIG.pwdAdmin
   };
-  // 休假类型：从两个列表框读取（设置的项即生效，无需逐条提交）
-  var leaveTypes = { direct: selOptsToArr('cfgLtDirect'), other: selOptsToArr('cfgLtOther') };
+  // 休假类型：直接读工作副本（自绘列表的改动已落在 ltWork 上）
+  var leaveTypes = { direct: ltWork.direct.slice(), other: ltWork.other.slice() };
   // 打印设置（按考勤组 + 加班/请假 分别绑定）：把面板当前考勤组+当前类别的字段写回 GROUP_PRINT_CFG（保留另一类别已有值），再随 payload 一并存入 config
   if (cfgGpCur){
     var prev = GROUP_PRINT_CFG[cfgGpCur] || {};
