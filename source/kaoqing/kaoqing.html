@@ -4546,7 +4546,8 @@ async function loadSerial(){
 /* 设置弹窗：休假类型两个列表框（直接显示 / 其它菜单）的填充、互移、新增 */
 function fillLtSelect(selId, arr){
   var sel = $('#' + selId); if (!sel) return;
-  sel.innerHTML = (arr || []).map(function(n){ return '<option>' + esc(n) + '</option>'; }).join('');
+  // 显式写 value 属性，保证 ltHas/ltMove 按值比较稳定（与原 fillLtSelect 仅靠 textContent 行为一致但更明确）
+  sel.innerHTML = (arr || []).map(function(n){ return '<option value="' + esc(n) + '">' + esc(n) + '</option>'; }).join('');
 }
 function selOptsToArr(selId){
   var sel = $('#' + selId); if (!sel) return [];
@@ -4556,25 +4557,37 @@ function ltHas(selId, name){
   var sel = $('#' + selId); if (!sel) return false;
   return [].some.call(sel.options, function(o){ return o.value === name; });
 }
+// 从指定 select 删除名为 name 的 option（若存在）；返回是否删除过
+function ltRemove(selId, name){
+  var sel = $('#' + selId); if (!sel) return false;
+  for (var i = sel.options.length - 1; i >= 0; i--){
+    if (sel.options[i].value === name){ sel.remove(i); return true; }
+  }
+  return false;
+}
 function ltMove(srcId, dstId){
   var src = $('#' + srcId), dst = $('#' + dstId);
   if (!src || !dst) return;
-  for (var i = src.options.length - 1; i >= 0; i--){
-    if (src.options[i].selected){
-      var n = src.options[i].value;
-      src.remove(i);
-      if (!ltHas(dstId, n)){
-        var o = document.createElement('option'); o.value = n; o.textContent = n; dst.appendChild(o);
-      }
+  // 按正序收集选中项，保持原相对顺序（避免倒序 append 导致顺序反转的「混乱」）
+  var moved = [];
+  [].slice.call(src.options).forEach(function(o){ if (o.selected) moved.push(o.value); });
+  moved.forEach(function(n){
+    ltRemove(srcId, n);                              // 源里移除（移动语义，不是复制）
+    if (!ltHas(dstId, n)){                            // 目标没有才加，避免两处都有
+      var o = document.createElement('option'); o.value = n; o.textContent = n; dst.appendChild(o);
     }
-  }
+  });
 }
 function ltAdd(dstId){
   var inp = $('#cfgLtNew'); if (!inp) return;
   var n = inp.value.trim(); if (!n) return;
   inp.value = '';
-  if (ltHas(dstId, n)) return;
+  var other = (dstId === 'cfgLtDirect') ? 'cfgLtOther' : 'cfgLtDirect';
+  if (ltHas(dstId, n)){ showAlert('「' + n + '」已在「直接显示」列表中'); return; }
   var dst = $('#' + dstId); if (!dst) return;
+  if (ltHas(other, n)){                               // 另一列表已存在同名 → 自动移过来（避免两处都有造成混乱）
+    ltRemove(other, n);
+  }
   var o = document.createElement('option'); o.value = n; o.textContent = n; dst.appendChild(o);
 }
 // 打印设置（按考勤组绑定）面板辅助函数
