@@ -2671,11 +2671,19 @@ async function fillTemplateByXml(ab, recVals, docVals, outName){
 // ===== 模板打印：两种出口 =====
 // 1) printTemplatePreview —— 忠于 xlsx 模板排版，渲染成网页后直接调起浏览器打印对话框（可打印 / 另存 PDF）
 // 2) downloadTemplateXlsx —— 原「下载 xlsx」能力保留，用于归档 / 在 Excel 继续编辑
-// 打印 / 导出前确保人员档案已加载：PEOPLE_FULL 为空时补拉一次。
-// 否则 buildRecordVals 按姓名取人员字段（工号/部门/考勤组等）会全部落空，导致三级花括号文档级占位符（如一级部门）取不到值。
+// 打印 / 导出：人员档案**直接去 Waline 拉**，与本地缓存彻底无关——不读缓存，也不写缓存。
+// 原因：页面初始化是「缓存优先」（loadPeopleCache() 命中就不再回 Waline），本地副本可能陈旧
+// （如后补的「一级部门 dept1」没进缓存），而 buildRecordVals 是按姓名从 PEOPLE_FULL 取人员字段的，
+// PEOPLE_FULL 一陈旧，工号/部门/考勤组等全部落空，三级花括号文档级占位符（如一级部门）就取不到值。
 async function ensurePeopleLoaded(){
-  if (PEOPLE_FULL && PEOPLE_FULL.length) return;
-  if (!loadPeopleCache()){ try { await loadPeople(); } catch(e){} }
+  try {
+    var best = await fetchCloudRecord(PEOPLE_PATH, 'people');
+    if (best && best.obj && best.obj.people && best.obj.people.length){
+      peopleOid.oid = best.oid;
+      PEOPLE_FULL = best.obj.people;
+      PEOPLE = PEOPLE_FULL.map(function(p){ return { n:p.name, g:p.group }; });
+    }
+  } catch(e){ /* 拉取失败则沿用内存中已加载的人员数据；本环节不做任何本地缓存读写 */ }
 }
 // 公共：buildPrintData 构造记录 / 文档级占位符值；fetchTemplateAb 拉取模板并给出友好报错
 function buildPrintData(rs){
