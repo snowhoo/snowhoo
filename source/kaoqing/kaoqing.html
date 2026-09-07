@@ -1783,8 +1783,8 @@ function renderRecords(){
     var hoursTxt = '—';
     if (r.mode === 'range'){
       var idx = span.indexOf('共 ');
-      if (idx >= 0){ hoursTxt = span.slice(idx + 2).trim(); span = span.slice(0, idx).replace(/\s+$/, ''); }
-      else if (r.hours != null) hoursTxt = r.hours + ' 小时';
+      if (idx >= 0){ hoursTxt = span.slice(idx + 2).trim().replace(/小时/g, '').trim(); span = span.slice(0, idx).replace(/\s+$/, ''); }
+      else if (r.hours != null) hoursTxt = r.hours;
     }
     var catDisplay = isOt ? (ot + '加班') : (r.catName || '');
     var catCell = (isOt && ot === '加载中')
@@ -2319,20 +2319,44 @@ async function eachChecked(condStatus, nextStatus, opText){
 }
 
 /* 提交并打印：先把勾选的「待提交」记录提交至「待审核」，提交成功（已重新拉取并渲染）后，
-   按记录 id 定位这些刚提交的记录，再走 xlsx 模板打印（与「模板打印」按钮同一套排版） */
+   切换界面到「待审核」视图、自动勾选刚提交的记录，界面逐步渲染，再走 xlsx 模板打印（与「模板打印」按钮同一套排版）。
+   提交后界面不再停留在空的待提交视图，流程（提交→待审核→勾选→打印）全程可见可控。 */
 async function submitAndPrint(){
+  // 1) 跟踪提交的记录：提交前先把当前勾选的「待提交」记录 id 快照下来
   var ids = [];
   $('#records').querySelectorAll('.rec-check:checked').forEach(function(cb){
     var i = parseInt(cb.dataset.i, 10);
     if (records[i] && records[i].status === '待提交') ids.push(records[i].id);
   });
   if (!ids.length){ await showAlert('请先勾选要提交的待提交记录'); return; }
-  await eachChecked('待提交', '待审核', '提交中…');   // 提交并重新拉取（进行中显示圆圈+文案、禁用整表，不弹遮罩）
-  // 提交完成后，从已重新拉取的记录里定位刚提交的记录（状态已变为非待提交），走模板打印
-  var set = {};
-  ids.forEach(function(id){ set[id] = true; });
-  var rs = records.filter(function(r){ return set[r.id] && r.status !== '待提交'; });
-  if (!rs.length){ await showAlert('提交已完成，但未能定位到刚提交的记录，请改用手动「模板打印」'); return; }
+  var idSet = {};
+  ids.forEach(function(id){ idSet[String(id)] = true; });
+
+  // 2) 提交（待提交 → 待审核）；eachChecked 内部会重新拉取 records 并渲染
+  await eachChecked('待提交', '待审核', '提交中…');
+
+  // 3) 切换界面到「待审核」视图，让刚提交的记录可见（否则默认待提交筛选下它们会消失，误以为记录为空）
+  var sf = $('#recStatus');
+  if (sf){ sf.value = '待审核'; }
+  renderRecords();   // 用「待审核」筛选重新渲染表格
+
+  // 4) 自动勾选刚刚提交的记录（按 id 在渲染后的 DOM 中定位行并勾选），同时收集供打印
+  var rs = [];
+  records.forEach(function(r, i){
+    if (idSet[String(r.id)] && r.status === '待审核'){
+      rs.push(r);
+      var cb = $('#records').querySelector('.rec-check[data-i="' + i + '"]');
+      if (cb) cb.checked = true;
+    }
+  });
+  updateRecButtons();   // 勾选变化 → 同步记录相关按钮的可用态
+
+  if (!rs.length){
+    await showAlert('提交已完成，但在「待审核」中未能定位到刚提交的记录，请改用手动「模板打印」');
+    return;
+  }
+
+  // 5) 调用模板打印（与「模板打印」按钮同一套排版）
   await printRecordsViaTemplate(rs);
 }
 // 勾选记录 → 仅「待提交」提交至「待审核」，随后自动走模板打印
