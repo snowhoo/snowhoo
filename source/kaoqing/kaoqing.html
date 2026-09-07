@@ -3676,6 +3676,7 @@ function readPeopleTable(){
 /* xlsx 体积大（~864KB），改为「首次用到时才加载」：打开页面不再阻塞首屏。
    返回 Promise，resolve 后全局 XLSX 可用；缓存加载中的 Promise 避免重复注入。 */
 var _xlsxLoading = null;
+var _jszipLoading = null;
 function ensureXlsx(){
   if (typeof XLSX !== 'undefined') return Promise.resolve();
   if (_xlsxLoading) return _xlsxLoading;
