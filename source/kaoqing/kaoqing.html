@@ -933,8 +933,27 @@ var HOLIDAY_PATH  = '/kaoqing/holidays'; // 节假日数据在 Waline 中存放�
 var PEOPLE_PATH   = '/kaoqing/people';   // 人员数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var CONFIG_PATH   = '/kaoqing/config';   // 考勤配置（午休扣除）存放路径（写入为一条 JSON 评论）
 var SERIAL_PATH   = '/kaoqing/serial';   // 单据流水号配置（年月+类别 → 已用最大序号），由前端在新建/删除记录时实时写入（带管理员令牌），Waline 中始终仅 1 条
+
+/* 休假类型缓存：页面启动先从 localStorage 恢复上次的 leaveTypes，作为「Waline 配置异步加载完成前」的兜底显示，
+   杜绝用户刚打开页面、尚未读到设置配置就打开卡片2 时类别区空白；配置到达后以真实值为准并写回缓存。 */
+var LT_CACHE_KEY = 'kaoqing_leavetypes_cache';
+function loadLeaveTypesCache(){
+  try {
+    var raw = localStorage.getItem(LT_CACHE_KEY);
+    if (raw){
+      var obj = JSON.parse(raw);
+      if (obj && typeof obj === 'object' && Array.isArray(obj.direct) && Array.isArray(obj.other))
+        return { direct: obj.direct.slice(), other: obj.other.slice() };
+    }
+  } catch(e){ /* 缓存损坏忽略，回落空 */ }
+  return { direct: [], other: [] };
+}
+function saveLeaveTypesCache(lt){
+  try { localStorage.setItem(LT_CACHE_KEY, JSON.stringify({ direct:(lt.direct||[]).slice(), other:(lt.other||[]).slice() })); }
+  catch(e){ /* 隐私模式/超额写入失败忽略 */ }
+}
 var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30', presetNotes:{},
-                      leaveTypes:{ direct:[], other:[] },   // 休假类型完全由 Waline /kaoqing/config 驱动；此处不留写死类别，避免「配置未读取前」显示硬编码项（页面启动即异步加载配置覆盖）
+                      leaveTypes: loadLeaveTypesCache(),   // 优先取缓存（上次配置），Waline 配置到达后于 loadConfig 内覆盖并写回缓存
                       pwdReview:'', pwdApprove:'', pwdAdmin:'' };  // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值 + 休假类型 + 管理密码哈希，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
 var GROUP_PRINT_CFG = {};   // 打印设置（按考勤组+类别绑定）：{ [考勤组名]: { ot:{...}, lv:{...} } }，ot=加班 lv=请假；每类含 tplFile/perPage/kaoqingRen/dept1Leader/dept2Leader；随 /kaoqing/config 一并读写
@@ -4653,12 +4672,14 @@ async function loadConfig(){
       if (typeof best.obj.pwdReview  === 'string') CONFIG.pwdReview  = best.obj.pwdReview;
       if (typeof best.obj.pwdApprove === 'string') CONFIG.pwdApprove = best.obj.pwdApprove;
       if (typeof best.obj.pwdAdmin   === 'string') CONFIG.pwdAdmin   = best.obj.pwdAdmin;
-      // 休假类型（直接显示 / 其它菜单）：覆盖到内存
+      // 休假类型（直接显示 / 其它菜单）：覆盖到内存；随后写缓存 + 重渲染类别区（即便用户已提前打开卡片2，也同步成最新配置）
       if (best.obj.leaveTypes && typeof best.obj.leaveTypes === 'object'){
         CONFIG.leaveTypes = {
           direct: Array.isArray(best.obj.leaveTypes.direct) ? best.obj.leaveTypes.direct.slice() : (CONFIG.leaveTypes.direct || []),
           other:  Array.isArray(best.obj.leaveTypes.other)  ? best.obj.leaveTypes.other.slice()  : (CONFIG.leaveTypes.other || [])
         };
+        saveLeaveTypesCache(CONFIG.leaveTypes);
+        renderCats();
       }
       // 打印设置（按考勤组绑定）：覆盖到内存（页面其它位置按 curGroup 取用）
       if (best.obj.groupPrint && typeof best.obj.groupPrint === 'object' && !Array.isArray(best.obj.groupPrint)) GROUP_PRINT_CFG = normalizeGpCfg(best.obj.groupPrint);
