@@ -845,8 +845,11 @@ var cfgGpCur        = '';    // 打印设置面板当前选中的考勤组
 var cfgGpCat        = 'ot';  // 打印设置面板当前编辑的类别：ot=加班 lv=请假
 var PRINT_CAT       = 'ot';  // 当前打印的类别（ot/lv）；buildPrintData 按记录类别设定，供 personPhName 取对应绑定的人员
 var PRINT_PER_PAGE  = 0;    // 当前打印每页条数（0=用引擎默认 10）；打印/导出前按当前考勤组+类别配置注入
+var PRINT_GROUP     = '';    // 当前打印批次记录所属考勤组（buildPrintData 按首位人员反推）；绑定按考勤组取用时优先于此，解决主视图停在「全部」时取不到绑定的问题
+// 绑定按考勤组键名取用：优先用「本次打印记录所属考勤组」；若其无绑定则回退到当前选中的考勤组（curGroup，可能是「全部」）
+function effGroupKey(){ return (PRINT_GROUP && PRINT_GROUP !== GROUPS[0] && GROUP_PRINT_CFG[PRINT_GROUP]) ? PRINT_GROUP : curGroup; }
 // 取当前考勤组在某类别下的打印子配置（cat 缺省按当前打印类别 PRINT_CAT）
-function gpSub(cat){ var g = (GROUP_PRINT_CFG[curGroup] || {}); return (g[(cat || PRINT_CAT)]) || {}; }
+function gpSub(cat){ var g = (GROUP_PRINT_CFG[effGroupKey()] || {}); return (g[(cat || PRINT_CAT)]) || {}; }
 // 兼容旧版扁平结构：groupPrint 原先是 { 组: {tplFile,...} }，现需转成 { 组: { ot:{...}, lv:{...} } }
 function normalizeGpCfg(src){
   var out = {};
@@ -2737,6 +2740,13 @@ async function ensurePeopleLoaded(){
 function buildPrintData(rs){
   var allOt = rs.every(function(r){ return isOtCatId(r.catId); });
   PRINT_CAT = allOt ? 'ot' : 'lv';   // 记录类别决定签名占位符取「加班」还是「请假」绑定
+  // 绑定按考勤组取用：从本次打印记录反推其所属考勤组（取首位有组别的人员的组），主视图停在「全部」也能命中绑定
+  var pg = '';
+  for (var ri = 0; ri < rs.length; ri++){
+    var p0 = firstPersonOf(rs[ri]);
+    if (p0 && p0.group){ pg = p0.group; break; }
+  }
+  PRINT_GROUP = pg || '';
   var totalHours = 0;
   rs.forEach(function(r){ if (r.hours != null) totalHours += Number(r.hours) || 0; });
   var dnow = new Date(), p2 = function(n){ return String(n).padStart(2, '0'); };
@@ -2761,7 +2771,7 @@ function buildPrintData(rs){
 }
 async function fetchTemplateAb(allOt){
   // 优先用当前考勤组在打印设置里绑定的模板文件；未绑定则按类别（加班/请假）回退到默认模板
-  var gp = (curGroup && GROUP_PRINT_CFG[curGroup]) || {};
+  var gp = (GROUP_PRINT_CFG[effGroupKey()]) || {};
   var sub = (allOt ? gp.ot : gp.lv) || {};
   var fname = (sub.tplFile && sub.tplFile.trim()) ? sub.tplFile.trim() : (allOt ? '加班申请单模板.xlsx' : '请假申请单模板.xlsx');
   var enc = encodeURIComponent(fname);
@@ -3109,6 +3119,11 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       var css = cellCss(styleMap[+c.style] || {});
       if (rh) css += (css ? ';' : '') + 'height:' + rh;   // 行高落到 td 才可靠（tr 的 height 浏览器不强制）
       var styleAttr = css ? ' style="' + css + '"' : '';
+      if (mode === 'blank'){
+        // 不足一页的尾部空白行：整格清空（连固定值也清掉），仅保留合并/样式以维持表格网格
+        tr += '<td' + (cs > 1 ? ' colspan="' + cs + '"' : '') + (rs2 > 1 ? ' rowspan="' + rs2 + '"' : '') + styleAttr + '>&nbsp;</td>';
+        return;
+      }
       // 签名占位符（四种写法）：
       //   1) 两括号 / 三括号的「签名」键 —— 按「当前记录首位人员」取签名图
       //   2) 三括号里直接写具体姓名（例如写 顾晓维） —— 固定人员，直接取 names/顾晓维.jpg
