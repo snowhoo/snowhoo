@@ -1229,17 +1229,19 @@ function applyView(){
   if (!showCat)     curCat = null;              // 隐藏「选择类别」→ 取消类别选中
   if (!showContent){                            // 隐藏「考勤内容」→ 归零内容字段
     timeSegs = [ newSeg() ];
-    renderTimeSegs();
   }
 
   $('#secCat').hidden     = !showCat;
   $('#secContent').hidden = !showContent;
 
-  // 请假/其它：单条录入（带至日期），强制 timeSegs 只保留一行（保留已填的起日期，避免切类别时误清）；仅「加班」保持多行
+  // 类别切换时按当前类别归一化行数：请假/其它 → 强制单条（保留首行已填数据）；加班 → 维持多行
+  // 注意：此步只调整 timeSegs 行数，真正的表单重建在下方「无条件」renderTimeSegs() 完成。
   if (curCat && isLeaveCat(curCat.id) && editIndex === null && timeSegs.length !== 1){
     timeSegs = [ timeSegs[0] || newSeg() ];
-    renderTimeSegs();
   }
+  // 无条件重渲染时间录入区：修正「直接选请假仍是加班（旧）布局」——
+  // 旧逻辑仅在「内容隐藏」或「切到请假且行数≠1」时才重建，纯切类别（行数=1）不重渲染，导致 DOM 停留在上一态。
+  renderTimeSegs();
 
   renderCats();
   $('#rangeBlock').hidden = !curCat;
