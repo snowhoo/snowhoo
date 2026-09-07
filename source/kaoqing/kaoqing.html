@@ -440,7 +440,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 /* 模板打印预览：忠于 xlsx 模板排版，调起浏览器打印对话框（可打印 / 另存 PDF） */
 #printArea{display:none}
 #printArea .tpl-table{border-collapse:collapse;width:100%;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000}
-#printArea .tpl-table td{padding:2px 5px;font-size:10pt;vertical-align:middle;word-break:break-word;overflow:hidden}
+#printArea .tpl-table td{padding:2px 5px;font-size:10pt;vertical-align:middle;word-break:break-word;overflow:hidden;box-sizing:border-box}
 #printArea .pg-break{page-break-after:always;height:0;line-height:0;font-size:0}
 @media print{
   body.printing-template > *:not(#printArea){display:none!important}
@@ -2773,7 +2773,7 @@ function cellCss(st){
 function resolveCell(text, rec, docVm, mode){
   if (!text || !/\{\{/.test(text)) return text || '';
   var t = text;
-  t = t.replace(/\{\{\{(.+?)\}\}\}/g, function(_, k){ k = k.trim(); return (docVm && docVm[k] != null) ? String(docVm[k]) : ''; });
+  t = t.replace(/\{\{\{(.+?)\}\}\}/g, function(_, k){ k = k.trim(); return (docVm && docVm[k] != null && docVm[k] !== '') ? String(docVm[k]) : ('{' + '{' + '{' + k + '}' + '}' + '}'); });
   t = t.replace(/\{\{(.+?)\}\}/g, function(_, k){
     k = k.trim();
     if (mode === 'data' && rec && rec[k] != null) return String(rec[k]);
@@ -2825,8 +2825,11 @@ async function renderTemplateToHtml(ab, recVals, docVals){
   if (!cols.count){ var dm = sheetXml.match(/<dimension[^>]*\bref="([A-Z]+)\d+/); cols.count = dm ? colToNum(dm[1]) : 7; }
   // 行高
   var rowH = {};
-  var rhRe = /<row\b[^>]*\br="(\d+)"[^>]*?(?:ht="([\d.]+)")?[^>]*>/g, rhm;
-  while ((rhm = rhRe.exec(sheetXml))) rowH[rhm[1]] = rhm[2] ? rhm[2] : null;
+  var rhRe = /<row\b[^>]*?\br="(\d+)"[^>]*?>/g, rhm;
+  while ((rhm = rhRe.exec(sheetXml))){
+    var htm = rhm[0].match(/\bht="([\d.]+)"/);
+    rowH[rhm[1]] = htm ? htm[1] : null;
+  }
   // 样式
   var styleMap = await parseStyles(zip);
   // 合并单元格
@@ -2873,7 +2876,8 @@ async function renderTemplateToHtml(ab, recVals, docVals){
   function emitRow(rw, mode, rec){
     var cells = _parseCells(rw, SS_CACHE);
     var r0 = _rowNum(rw);
-    var tr = '<tr' + (rowH[r0] ? ' style="height:' + rowH[r0] + 'pt"' : '') + '>';
+    var rh = rowH[r0] ? rowH[r0] + 'pt' : '';
+    var tr = '<tr' + (rh ? ' style="height:' + rh + '"' : '') + '>';
     cells.forEach(function(c){
       var col = c.ref.replace(/\d+/, '');
       var cNum = colToNum(col);
@@ -2881,8 +2885,10 @@ async function renderTemplateToHtml(ab, recVals, docVals){
       var cs = 1, rs2 = 1;
       if (primary[cNum + '_' + r0]){ cs = primary[cNum + '_' + r0].cs; rs2 = primary[cNum + '_' + r0].rs; }
       var css = cellCss(styleMap[+c.style] || {});
+      if (rh) css += (css ? ';' : '') + 'height:' + rh;   // 行高落到 td 才可靠（tr 的 height 浏览器不强制）
+      var styleAttr = css ? ' style="' + css + '"' : '';
       var txt = resolveCell(c.text, rec, docVm, mode);
-      tr += '<td' + (cs > 1 ? ' colspan="' + cs + '"' : '') + (rs2 > 1 ? ' rowspan="' + rs2 + '"' : '') + (css ? ' style="' + css + '"' : '') + '>' + (_xmlEsc(txt) || '&nbsp;') + '</td>';
+      tr += '<td' + (cs > 1 ? ' colspan="' + cs + '"' : '') + (rs2 > 1 ? ' rowspan="' + rs2 + '"' : '') + styleAttr + '>' + (_xmlEsc(txt) || '&nbsp;') + '</td>';
     });
     return tr + '</tr>';
   }
