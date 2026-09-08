@@ -2744,9 +2744,9 @@ function buildRecordVals(r, idx){
     '二级部门': p0 ? (p0.dept2 || '') : '',
     '考勤组': p0 ? (p0.group || '') : '',
     '权限': p0 ? (p0.permission || '') : '',
-    '日期': (r.endDate && r.endDate !== r.date) ? (r.date + ' ~ ' + r.endDate) : (r.date || ''),
-    '起日期': r.date || '',
-    '至日期': (r.endDate && r.endDate !== r.date) ? r.endDate : '',
+    '日期': (r.endDate && r.endDate !== r.date) ? (mdOnly(r.date) + ' ~ ' + mdOnly(r.endDate)) : mdOnly(r.date || ''),
+    '起日期': mdOnly(r.date || ''),
+    '至日期': r.endDate ? mdOnly(r.endDate) : '',   // 加班恒空；请假单日存的是起日期→显示起日期，跨天显示真实至日期；均去年份
     '星期': weekdayOf(r.date),
     '开始': start,
     '结束': end,
@@ -3186,10 +3186,24 @@ function _siToRuns(siXml){
   var tm = siXml.match(/<t[^>]*>([\s\S]*?)<\/t>/);
   return [{ text: tm ? tm[1] : '', rPr: null }];
 }
+// 去除 Excel 数字格式里「不显示」的控制指令：_x 下划线对齐、*x 重复填充、\x 转义(保留 x)；
+// 引号内 "..." 字面量原样保留（如 "kg"）。否则这些指令会被当字面量漏进打印（如 0.00_ 末尾多出下划线）。
+function _stripFmtDirectives(s){
+  var out = '', i = 0;
+  while (i < s.length){
+    var c = s[i];
+    if (c === '"'){ var j = s.indexOf('"', i + 1); if (j < 0){ out += s.slice(i); break; } out += s.slice(i + 1, j); i = j + 1; continue; }
+    if (c === '_' || c === '*'){ i += 2; continue; }                 // 跳过指令符 + 其后的占位字符
+    if (c === '\\'){ out += (s[i + 1] != null) ? s[i + 1] : ''; i += 2; continue; }  // 转义：保留后续字符、丢弃反斜杠
+    out += c; i++;
+  }
+  return out;
+}
 // 数字格式（最佳努力）：小数位/千分位/百分号/正负零分段/日期时间。失败回退 String(v)。
 function _numFmt(v, code){
   if (code == null || code === '' || code === 'General' || code === '0') return String(v);
   var fmt = code.replace(/\[[^\]]*\]/g, '');
+  fmt = _stripFmtDirectives(fmt);
   var secs = fmt.split(';');
   var num = Number(v), neg = num < 0, isNum = !isNaN(num);
   var sec = !isNum ? (secs[3] != null ? secs[3] : secs[0])
