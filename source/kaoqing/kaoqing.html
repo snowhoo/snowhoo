@@ -369,7 +369,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .rec-table .c-idx .doc-prefix.c-green{color:#16a34a}
 .rec-table .c-idx .doc-prefix.c-orange{color:#f97316}
 .rec-table .c-time,.rec-table .c-hours{white-space:nowrap;font-variant-numeric:tabular-nums}
-.rec-table .c-date{white-space:normal;line-height:1.4;font-variant-numeric:tabular-nums}
+.rec-table .c-date{white-space:normal;line-height:1;font-variant-numeric:tabular-nums}
 .rec-table .c-date .date-sep{color:var(--text-muted)}
 .rec-table .c-cat{white-space:nowrap;font-weight:600}
 .rec-table .c-note{white-space:normal}
@@ -1680,8 +1680,8 @@ function refresh(){
         '<span class="pv-n">' + esc(n) + '</span>' +
         '<span class="pv-c ' + catCls + '">' + catHtml + '</span>' +
         '<span class="pv-d">' + ((sg.endDate && sg.endDate !== sg.date)
-            ? (esc(sg.date) + '<br><span class="date-sep">至</span><br>' + esc(sg.endDate))
-            : esc(sg.date || '—')) + '</span>' +
+            ? (esc(mdOnly(sg.date)) + ' <span class="date-sep">-</span> ' + esc(mdOnly(sg.endDate)))
+            : esc(mdOnly(sg.date || '—'))) + '</span>' +
         '<span class="pv-t">' + t + '</span>' +
         '<span class="pv-h">' + hrs + '</span>' +
         (sg.note ? '<span class="pv-note">' + esc(sg.note) + '</span>' : '') +
@@ -1992,13 +1992,19 @@ function syncRecDropsDisabled(busy){
   var _st  = document.getElementById('recStatus'); if (_st)  _st.disabled  = !!busy;
 }
 
-/* 记录表「日期」单元格内容：只显示日期，不含时间。
-   跨天：起日期 / 至 / 至日期（一格内换行）；单日：仅起日期。 */
+/* 日期去年份：YYYY-MM-DD → MM-DD（记录表/预览只显示月日）；空或格式异常原样返回 */
+function mdOnly(d){
+  var s = String(d == null ? '' : d);
+  var m = /^\d{4}-(\d{1,2}-\d{1,2})$/.exec(s);
+  return m ? m[1] : s;
+}
+/* 记录表「日期」单元格内容：只显示月日，不含时间与年份。
+   跨天：起日期 - 至日期（中间用「-」连接，不强制换行，由列宽自然折行）；单日：仅起日期。 */
 function recDateCellHtml(r){
   if (r.endDate && r.endDate !== r.date){
-    return esc(r.date) + '<br><span class="date-sep">至</span><br>' + esc(r.endDate);
+    return esc(mdOnly(r.date)) + ' <span class="date-sep">-</span> ' + esc(mdOnly(r.endDate));
   }
-  return esc(r.date);
+  return esc(mdOnly(r.date));
 }
 
 function renderRecords(){
