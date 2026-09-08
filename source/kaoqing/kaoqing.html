@@ -3921,7 +3921,11 @@ async function printRecordsViaTemplate(rs){
     document.body.classList.add('printing-template');
     var cleanup = function(){ document.body.classList.remove('printing-template'); };
     window.addEventListener('afterprint', cleanup, { once: true });
-    setTimeout(function(){ window.print(); cleanup(); }, 80);
+    // 部分移动端浏览器（如 vivo 自带浏览器）window.print() 不阻塞、实际打印/另存 PDF 的渲染在其返回后才进行；
+    // 若 cleanup 紧跟 print 同步执行，会过早移除 printing-template，导致回退到「列表」打印（@media print 默认块打印主记录表）。
+    // 故仅依赖 afterprint 移除，并加 15s 兜底（避免 afterprint 不触发时样式残留影响后续打印）。
+    setTimeout(function(){ try { window.print(); } catch(e){} }, 80);  // 稍候让模板样式先套用
+    setTimeout(cleanup, 15000);
   } finally {
     hideBusy();
   }
