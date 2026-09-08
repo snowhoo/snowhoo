@@ -2777,13 +2777,14 @@ function fillSheetTemplate(ws, recs, docVals, perPage){
     if (hit) recRows.push(r);
   }
   if (!recRows.length) return;
-  var rTop = recRows[0];                     // 记录模板行
+  var rTop = recRows[0], rEnd = recRows[recRows.length - 1];   // 数据段首/末行（列表式 rTop==rEnd，单据式 rEnd>rTop）
   if (!perPage || perPage < 1) perPage = 10; // 每页记录数（改这里即可调整，默认 10）
   var N = recs.length;
   var P = Math.max(1, Math.ceil(N / perPage)); // 总页数
-  var headerH = rTop - range.s.r;            // 记录行上方表头行数
-  var footerH = range.e.r - rTop;           // 记录行下方表尾行数
-  var pageH = headerH + perPage + footerH;   // 每页总行数（每条记录一行）
+  var headerH = rTop - range.s.r;            // 数据段上方表头行数
+  var footerH = range.e.r - rEnd;           // 数据段下方表尾行数
+  var segH = rEnd - rTop + 1;               // 单条记录占用的数据段行数（列表式=1，单据式>1）
+  var pageH = headerH + segH * perPage + footerH;   // 每页总行数（每条记录占 segH 行）
 
   var out = {};                            // "r_c" -> newCell
   var rowsOut = {};                        // outRow -> srcRow（用于复制行高）
@@ -2822,20 +2823,22 @@ function fillSheetTemplate(ws, recs, docVals, perPage){
     for (var hr = range.s.r; hr < rTop; hr++){
       for (var hc = range.s.c; hc <= range.e.c; hc++) copyCell(hr, hc, pageBase + (hr - range.s.r), hc, { doc: docVm, rec: null });
     }
-    // 数据区：记录模板行复制 perPage 份，逐份填一条记录
+    // 数据段（[rTop..rEnd]）整体作为一条记录的容器，复制 perPage 份，逐份填一条记录
     for (var i = 0; i < perPage; i++){
       var ri = p * perPage + i;
       var recVm = (ri < N) ? recs[ri] : null;
-      var dr = pageBase + headerH + i;
-      for (var bc = range.s.c; bc <= range.e.c; bc++) copyCell(rTop, bc, dr, bc, { doc: docVm, rec: recVm });
-      tmplMerges.forEach(function(mg){ if (mg.s.r === rTop && mg.e.r === rTop) mergesOut.push(shiftMerge(mg, dr - rTop)); });
+      for (var sr = rTop; sr <= rEnd; sr++){
+        var dr = pageBase + headerH + i * segH + (sr - rTop);
+        for (var bc = range.s.c; bc <= range.e.c; bc++) copyCell(sr, bc, dr, bc, { doc: docVm, rec: recVm });
+        tmplMerges.forEach(function(mg){ if (mg.s.r === sr && mg.e.r === sr) mergesOut.push(shiftMerge(mg, dr - sr)); });
+      }
     }
     // 表尾
-    for (var fr = rTop + 1; fr <= range.e.r; fr++){
-      for (var fc = range.s.c; fc <= range.e.c; fc++) copyCell(fr, fc, pageBase + headerH + perPage + (fr - (rTop + 1)), fc, { doc: docVm, rec: null });
+    for (var fr = rEnd + 1; fr <= range.e.r; fr++){
+      for (var fc = range.s.c; fc <= range.e.c; fc++) copyCell(fr, fc, pageBase + headerH + segH * perPage + (fr - (rEnd + 1)), fc, { doc: docVm, rec: null });
     }
-    // 表头/表尾合并单元格：每页复制一次
-    tmplMerges.forEach(function(mg){ if (mg.e.r < rTop || mg.s.r > rTop) mergesOut.push(shiftMerge(mg, pageBase - range.s.r)); });
+    // 表头/表尾合并单元格：每页复制一次（表头合并在数据段之前、表尾合并在数据段之后）
+    tmplMerges.forEach(function(mg){ if (mg.e.r < rTop || mg.s.r > rEnd) mergesOut.push(shiftMerge(mg, pageBase - range.s.r)); });
   }
   Object.keys(ws).forEach(function(k){ if (k[0] !== '!') delete ws[k]; });
   Object.keys(out).forEach(function(k){
@@ -3263,17 +3266,21 @@ async function getTemplateModel(ab){
   if (!rows.length) throw new Error('模板没有数据行');
   var _rowCache = {};
   function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: _rowNum(rw) }; return _rowCache[rw]; }
-  var dataIdx = -1;
+  // 数据段：含行级记录占位符的所有行构成「一条记录的容器」。
+  // 列表式模板（如加班）这些行只有一行 → 退化为原单行记录行模型；
+  // 单据式模板（如请假单）这些行跨多行（姓名/事由/类别/日期/签名各占一行）→ 整段作为一张单，按记录整体展开。
+  var dataStart = -1, dataEnd = -1;
   rows.forEach(function(rw, idx){
-    if (dataIdx >= 0) return;
+    var hit = false;
     _getRow(rw).cells.forEach(function(c){
-      if (dataIdx >= 0) return;
       if (/\{\{\{/.test(c.text)) return;
       var mm = c.text.match(/\{\{(.+?)\}\}/);
-      if (mm && RECORD_KEYS[mm[1].trim()]) dataIdx = idx;
+      if (mm && RECORD_KEYS[mm[1].trim()]) hit = true;
     });
+    if (hit){ if (dataStart < 0) dataStart = idx; dataEnd = idx; }
   });
-  if (dataIdx < 0) throw new Error('模板未找到含行级占位符（如 姓名）的记录行');
+  if (dataStart < 0) throw new Error('模板未找到含行级占位符（如 姓名）的记录行');
+  var dataIdx = dataStart;   // 兼容旧引用（dataIdx 始终保持 = 数据段首行）
   // 固定人员签名：模板三括号直接写姓名 / 三括号人员签名占位符，解析为姓名（取图统一交由调用方，便于跨打印缓存）
   var fixedNames = [], fnSeen = {};
   rows.forEach(function(rw){
@@ -3297,7 +3304,7 @@ async function getTemplateModel(ab){
   rows.forEach(function(rw){ if (needsRecordSig) return; _getRow(rw).cells.forEach(function(c){ if (/\{\{签名\}\}/.test(c.text || '')){ needsRecordSig = true; } }); });
   var model = {
     SS_CACHE: SS_CACHE.slice(), cols: cols, rowH: rowH, styleMap: styleMap, imgByVm: imgByVm,
-    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, fixedNames: fixedNames, needsRecordSig: needsRecordSig
+    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, needsRecordSig: needsRecordSig
   };
   _tplModelByFp[fp] = model;
   return model;
@@ -3307,7 +3314,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   var model = await getTemplateModel(ab);
   SS_CACHE = model.SS_CACHE;
   var cols = model.cols, rowH = model.rowH, styleMap = model.styleMap, imgByVm = model.imgByVm,
-      primary = model.primary, covered = model.covered, rows = model.rows, dataIdx = model.dataIdx;
+      primary = model.primary, covered = model.covered, rows = model.rows, dataIdx = model.dataIdx, dataStart = model.dataStart, dataEnd = model.dataEnd;
   // 行解析结果缓存：同一行 XML 在收集阶段、各页渲染阶段会被多次 _parseCells，缓存后只解析一次（模板行数固定，渲染循环有界，非无限）
   var _rowCache = {};
   function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: _rowNum(rw) }; return _rowCache[rw]; }
@@ -3319,7 +3326,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     if (!rec) return;
     for (var dk in rec) if (docVm[dk] == null || docVm[dk] === '') docVm[dk] = rec[dk];
   });
-  var headerRows = rows.slice(0, dataIdx), dataRowXml = rows[dataIdx], footerRows = rows.slice(dataIdx + 1);
+  var headerRows = rows.slice(0, dataStart), dataRows = rows.slice(dataStart, dataEnd + 1), footerRows = rows.slice(dataEnd + 1);
   // 列宽比例（%）
   var totalW = 0; for (var i = 1; i <= cols.count; i++) totalW += (cols.width[i] || 8);
   if (!totalW) totalW = cols.count * 8;
@@ -3388,9 +3395,10 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   for (var p = 0; p < P; p++){
     var html = '<table class="tpl-table">' + colHtml + '<tbody>';
     headerRows.forEach(function(rw){ html += emitRow(rw, 'static', null); });
+    // 数据段整体作为一条记录的容器，每页重复 perPage 次：列表式段长=1（退化为单行复制），单据式段长>1（整张单展开）
     for (var i = 0; i < perPage; i++){
       var rec = recVals[p * perPage + i] || null;
-      html += emitRow(dataRowXml, rec ? 'data' : 'blank', rec);
+      dataRows.forEach(function(rw){ html += emitRow(rw, rec ? 'data' : 'blank', rec); });
     }
     footerRows.forEach(function(rw){ html += emitRow(rw, 'static', null); });
     html += '</tbody></table>';
