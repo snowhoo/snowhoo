@@ -3045,8 +3045,8 @@ async function fetchSignatureImages(recVals){
 }
 // 读取模板样式表，把 s 索引映射成可用于网页的内联 CSS 片段
 // ===== xlsx 样式/颜色/富文本 解析辅助（模块级，供 parseStyles 与模板单元格解析共用）=====
-// 标准 indexed 调色板（OOXML 默认 64 色），兜底用
-var _IDX = ['000000','FFFFFF','FF0000','00FF00','0000FF','FFFF00','FF00FF','00FFFF','000000','FFFFFF','FF0000','00FF00','0000FF','FFFF00','FF00FF','00FFFF','800000','008000','000080','808000','800080','008080','C0C0C0','808080','9999FF','993366','FFFFCC','CCFFFF','660066','FF8080','0066CC','CCFFFF','000080','FF00FF','FFFF00','00FFFF','800080','800000','008080','0000FF','00CCFF','CCFFFF','CCFFCC','FFFF99','99CCFF','FF99CC','CC99FF','FFCC99','3366FF','33CCCC','99CC00','FFCC00','FF9900','FF6600','666699','969696','003366','339966','003300','333300','993300','993366','333399','333333','003366','339966','003300','333300','993300','993366','333399','333333','003366','339966','003300','333300','993300','993366','333399','333333'];
+// 标准 indexed 调色板（OOXML 默认 64 色，索引 0..63 有效），兜底用
+var _IDX = ['000000','FFFFFF','FF0000','00FF00','0000FF','FFFF00','FF00FF','00FFFF','000000','FFFFFF','FF0000','00FF00','0000FF','FFFF00','FF00FF','00FFFF','800000','008000','000080','808000','800080','008080','C0C0C0','808080','9999FF','993366','FFFFCC','CCFFFF','660066','FF8080','0066CC','CCFFFF','000080','FF00FF','FFFF00','00FFFF','800080','800000','008080','0000FF','00CCFF','CCFFFF','CCFFCC','FFFF99','99CCFF','FF99CC','CC99FF','FFCC99','3366FF','33CCCC','99CC00','FFCC00','FF9900','FF6600','666699','969696','003366','339966','003300','333300','993300','993366','333399','333333'];
 var _THEME = [];
 // 颜色解析：rgb(去 alpha) / theme(查板) / indexed(查表) + tint 亮度调整。返回 6 位 hex（不含 #）或 null。
 // 注意：字体/边框用 <color>，而填充用 <fgColor>/<bgColor>（同样承载 rgb/theme/indexed/tint），都要识别。
@@ -3059,7 +3059,15 @@ function colorOf(block){
   else {
     var _t = (_ct.match(/\btheme="(\d+)"/) || [])[1];
     if (_t != null && _THEME[+_t]) _rgb = _THEME[+_t];
-    else { var _ix = (_ct.match(/\bindexed="(\d+)"/) || [])[1]; if (_ix != null && _IDX[+_ix]) _rgb = _IDX[+_ix]; }
+    else {
+      var _ix = (_ct.match(/\bindexed="(\d+)"/) || [])[1];
+      if (_ix != null){
+        // indexed 只有 0..63 是调色板索引；64 = 系统前景色（「自动」色，实际=黑）、65 = 系统背景色。
+        // Excel 的「自动」边框色就写成 <color indexed="64"/>，查表越界会拿到无关颜色 → 表格线变深蓝。
+        if (+_ix >= 64) return null;
+        if (_IDX[+_ix]) _rgb = _IDX[+_ix];
+      }
+    }
   }
   if (!_rgb) return null;
   var _tint = (_ct.match(/\btint="(-?[\d.]+)"/) || [])[1];
@@ -3557,6 +3565,37 @@ async function getTemplateModel(ab){
   if (!rows.length) throw new Error('模板没有数据行');
   var _rowCache = {};
   function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: +_rowNum(rw) }; return _rowCache[rw]; }
+  /* 合并单元格的「边框并集」——这是请假模板右侧边线丢失的真正原因：
+     模板把右边框画在横向合并区最右端的那个单元格上（例如 K2:L2 的 L2、D3:L3 的 L3、F4:L4 的 L4、J5:L5 的 L5、K6:L6 的 L6），
+     而渲染时合并区只取左上角主单元格（K2/D3/F4/J5/K6）的样式，这些主单元格本身没有右边框 → 整条右边线消失。
+     加班模板正常是因为它的数据行（第3/4行）最右列 H 没被合并，H3/H4 自己就带右边框，能直接渲染出来。
+     修法：按「各条边上的组成单元格」取并集（左边取最左列、右边取最右列、上边取首行、下边取末行），
+     只取模板真实定义过的边线，不凭空加线（不是补画）；主单元格自身有该边线时优先用主单元格的。 */
+  var _cellIdx = {};
+  rows.forEach(function(rw){
+    var _pc = _getRow(rw);
+    _pc.cells.forEach(function(c){ _cellIdx[colToNum((c.ref || '').replace(/\d+/, '')) + '_' + _pc.r0] = c; });
+  });
+  merges.forEach(function(mg){
+    var _pcell = _cellIdx[mg.sc + '_' + mg.sr];
+    var _ownB = (_pcell && styleMap[+_pcell.style]) ? (styleMap[+_pcell.style].border || null) : null;
+    var _u = { left: null, right: null, top: null, bottom: null }, _r, _c, _cc, _b;
+    for (_r = mg.sr; _r <= mg.er; _r++){
+      _cc = _cellIdx[mg.sc + '_' + _r]; if (_cc){ _b = styleMap[+_cc.style]; if (_b && _b.border && _b.border.left && _b.border.left.style && !_u.left) _u.left = _b.border.left; }
+      _cc = _cellIdx[mg.ec + '_' + _r]; if (_cc){ _b = styleMap[+_cc.style]; if (_b && _b.border && _b.border.right && _b.border.right.style && !_u.right) _u.right = _b.border.right; }
+    }
+    for (_c = mg.sc; _c <= mg.ec; _c++){
+      _cc = _cellIdx[_c + '_' + mg.sr]; if (_cc){ _b = styleMap[+_cc.style]; if (_b && _b.border && _b.border.top && _b.border.top.style && !_u.top) _u.top = _b.border.top; }
+      _cc = _cellIdx[_c + '_' + mg.er]; if (_cc){ _b = styleMap[+_cc.style]; if (_b && _b.border && _b.border.bottom && _b.border.bottom.style && !_u.bottom) _u.bottom = _b.border.bottom; }
+    }
+    var _pm = primary[mg.sc + '_' + mg.sr];
+    if (_pm) _pm.border = {
+      left: (_ownB && _ownB.left && _ownB.left.style) ? _ownB.left : _u.left,
+      right: (_ownB && _ownB.right && _ownB.right.style) ? _ownB.right : _u.right,
+      top: (_ownB && _ownB.top && _ownB.top.style) ? _ownB.top : _u.top,
+      bottom: (_ownB && _ownB.bottom && _ownB.bottom.style) ? _ownB.bottom : _u.bottom
+    };
+  });
   // 列数封顶：Excel 常在 <cols> 末尾追加 <col min="13" max="16384" width="9"/> 这类「默认列宽」整段，
   // 会把 cols.count 顶到 16384，导致后续 colgroup 生成上万列、每列宽度≈0.01%、整表被压成一条竖线（预览只见左侧一条边线）。
   // 按「实际内容列范围」封顶：优先 <dimension> 末列，再与单元格实际出现的最大列取大值。
@@ -3649,7 +3688,11 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       if (covered[cNum + '_' + r0]) return;
       var cs = 1, rs2 = 1;
       if (primary[cNum + '_' + r0]){ cs = primary[cNum + '_' + r0].cs; rs2 = primary[cNum + '_' + r0].rs; }
-      var css = cellCss(styleMap[+c.style] || {});
+      // 合并单元格用「各边组成单元格的边框并集」（见 getTemplateModel 中并集计算），非合并单元格仍用自身样式
+      var _st = styleMap[+c.style] || {};
+      var _pmB = (primary[cNum + '_' + r0] || {}).border;
+      if (_pmB) _st = Object.assign({}, _st, { border: _pmB });
+      var css = cellCss(_st);
       if (rh) css += (css ? ';' : '') + 'height:' + rh;   // 行高落到 td 才可靠（tr 的 height 浏览器不强制）
       var csAttr = (cs > 1 ? ' colspan="' + cs + '"' : '') + (rs2 > 1 ? ' rowspan="' + rs2 + '"' : '');
       // 隐藏列：列轨已在 colgroup 标 display:none，此处直接跳过该单元格（保持表格结构一致）
