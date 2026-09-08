@@ -364,10 +364,9 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .rec-table .c-cat{color:var(--accent);white-space:nowrap}
 .rec-table .c-cat.c-green{color:#16a34a}
 .rec-table .c-cat.c-orange{color:#f97316}
-/* 单据号首字母：颜色/字重/字号与「类别」列文字（平时加班=绿、其它请假=橙）保持一致 */
-.rec-table .c-idx .doc-prefix{font-weight:600;font-size:1rem;line-height:1}
-.rec-table .c-idx .doc-prefix.c-green{color:#16a34a}
-.rec-table .c-idx .doc-prefix.c-orange{color:#f97316}
+/* 单据号：整串按类别着色（加班=绿、请假=橙，与「类别」列一致）；首字母不再单独放大 */
+.rec-table .c-idx.c-green{color:#16a34a}
+.rec-table .c-idx.c-orange{color:#f97316}
 .rec-table .c-time,.rec-table .c-hours{white-space:nowrap;font-variant-numeric:tabular-nums}
 .rec-table .c-date{white-space:normal;line-height:1;font-variant-numeric:tabular-nums}
 .rec-table .c-date .date-sep{color:var(--text-muted)}
@@ -2087,9 +2086,7 @@ function renderRecords(){
       }
     }
     var docNoStr = String(r.docNo != null ? r.docNo : (i + 1));
-    var docHtml = docNoStr === '' ? '' :
-      ('<span class="doc-prefix ' + (isOt ? 'c-green' : 'c-orange') + '">' + esc(docNoStr.charAt(0)) + '</span>' + esc(docNoStr.slice(1)));
-    html += '<td class="c-idx">' + docHtml + '</td>' +   // # = 单据号（加班J/请假G，字母前置+YYMM分段，首字母颜色与类别列一致）；旧记录无 docNo 时回退录入序号
+    html += '<td class="c-idx ' + (isOt ? 'c-green' : 'c-orange') + '">' + esc(docNoStr) + '</td>' +   // # = 单据号（加班J/请假G，整串按类别着色：加班绿、请假橙）；旧记录无 docNo 时回退录入序号
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
       '<td class="c-date">' + recDateCellHtml(r) + '</td>' +
       '<td class="c-time">' + esc(fmtSpan(span)) + '</td>' +
