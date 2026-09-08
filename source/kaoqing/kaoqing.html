@@ -2778,12 +2778,10 @@ function fillSheetTemplate(ws, recs, docVals, perPage){
   }
   if (!recRows.length) return;
   var rTop = recRows[0], rEnd = recRows[recRows.length - 1];   // 数据段首/末行（列表式 rTop==rEnd，单据式 rEnd>rTop）
-  if (!perPage || perPage < 1) perPage = 10; // 每页记录数（改这里即可调整，默认 10）
-  var N = recs.length;
-  var P = Math.max(1, Math.ceil(N / perPage)); // 总页数
   var headerH = rTop - range.s.r;            // 数据段上方表头行数
   var footerH = range.e.r - rEnd;           // 数据段下方表尾行数
   var segH = rEnd - rTop + 1;               // 单条记录占用的数据段行数（列表式=1，单据式>1）
+  if (!perPage || perPage < 1) perPage = (segH > 1 ? 1 : 10); // 每页记录数：单据式默认 1（一条记录一张表），列表式默认 10
   var pageH = headerH + segH * perPage + footerH;   // 每页总行数（每条记录占 segH 行）
 
   var out = {};                            // "r_c" -> newCell
@@ -3318,7 +3316,8 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   // 行解析结果缓存：同一行 XML 在收集阶段、各页渲染阶段会被多次 _parseCells，缓存后只解析一次（模板行数固定，渲染循环有界，非无限）
   var _rowCache = {};
   function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: _rowNum(rw) }; return _rowCache[rw]; }
-  var perPage = (PRINT_PER_PAGE > 0) ? PRINT_PER_PAGE : 10;
+  var dataLen = (dataEnd - dataStart + 1);
+  var perPage = (PRINT_PER_PAGE > 0) ? PRINT_PER_PAGE : (dataLen > 1 ? 1 : 10);   // 单据式（数据段>1行）默认 1，列表式默认 10
   var N = recVals.length, P = Math.max(1, Math.ceil(N / perPage));
   // 文档级记录键：取「第一位有该字段值的人员」
   var docVm = Object.assign({}, docVals);
@@ -3417,13 +3416,18 @@ async function printRecordsViaTemplate(rs){
   try {
     try { await ensureJszip(); } catch(e){ showAlert(e.message); return; }
     try { await ensurePeopleLoaded(); } catch(e){}
-    var data = buildPrintData(rs);
-    PRINT_PER_PAGE = ((gpSub().perPage) || 0) | 0;   // 按考勤组+类别配置注入每页条数（0=引擎默认 10）；gpSub() 自动用 buildPrintData 已设的 PRINT_GROUP/PRINT_CAT
+    var data = buildPrintData(rs);   // 内部已按记录设定 PRINT_GROUP / PRINT_CAT，供下方 gpSub() 取用绑定
     var ab;
     try { ab = await fetchTemplateAb(data.allOt); }
     catch(e){ await showAlert('加载打印模板失败：' + (e && e.message ? e.message : e), '模板打印失败'); return; }
     // 解析模板（已按内容指纹缓存：同模板跳过 JSZip 解压 + XML 解析）。签名图按模板『实际用到』的占位符取，避免无谓下载
     var model = await getTemplateModel(ab);
+    // 每页条数：配置优先；未配置时按模板形态自适应
+    //   单据式（数据段跨多行，如请假单）→ 默认 1（一条记录一张表，避免 10 份空骨架撑满整页造成「一片空白」）
+    //   列表式（单行记录行，如加班）→ 默认 10
+    var cfgPP = ((gpSub().perPage) || 0) | 0;
+    var dataLen = (model.dataEnd - model.dataStart + 1);
+    PRINT_PER_PAGE = cfgPP > 0 ? cfgPP : (dataLen > 1 ? 1 : 10);
     var needNames = (model.fixedNames || []).slice();
     if (model.needsRecordSig){
       var seen = {};
