@@ -972,6 +972,19 @@ var PRINT_GROUP     = '';    // 当前打印批次记录所属考勤组（buildP
 function effGroupKey(){ return (PRINT_GROUP && PRINT_GROUP !== GROUPS[0] && GROUP_PRINT_CFG[PRINT_GROUP]) ? PRINT_GROUP : curGroup; }
 // 取当前考勤组在某类别下的打印子配置（cat 缺省按当前打印类别 PRINT_CAT）
 function gpSub(cat){ var g = (GROUP_PRINT_CFG[effGroupKey()] || {}); return (g[(cat || PRINT_CAT)]) || {}; }
+// 解析打印每页条数：优先 (当前组,当前类别)；再回退到「配置面板实际编辑过的组」(cfgGpCur) 的同类别；
+// 最后才是自适应默认（单据式数据段跨多行→1，列表式→10）。
+// 说明：ot/lv 各自独立保存，这里按 PRINT_CAT 精确取对应类别的 perPage；命中 cfgGpCur 可兜底「主视图停在全部、按记录反推不到组」的情况。
+function resolvePerPage(dataLen){
+  var ek = effGroupKey();
+  var g = GROUP_PRINT_CFG[ek];
+  if (g && g[PRINT_CAT] && g[PRINT_CAT].perPage) return g[PRINT_CAT].perPage | 0;
+  if (cfgGpCur && cfgGpCur !== ek){
+    var g2 = GROUP_PRINT_CFG[cfgGpCur];
+    if (g2 && g2[PRINT_CAT] && g2[PRINT_CAT].perPage) return g2[PRINT_CAT].perPage | 0;
+  }
+  return dataLen > 1 ? 1 : 10;
+}
 // 兼容旧版扁平结构：groupPrint 原先是 { 组: {tplFile,...} }，现需转成 { 组: { ot:{...}, lv:{...} } }
 function normalizeGpCfg(src){
   var out = {};
@@ -3422,12 +3435,11 @@ async function printRecordsViaTemplate(rs){
     catch(e){ await showAlert('加载打印模板失败：' + (e && e.message ? e.message : e), '模板打印失败'); return; }
     // 解析模板（已按内容指纹缓存：同模板跳过 JSZip 解压 + XML 解析）。签名图按模板『实际用到』的占位符取，避免无谓下载
     var model = await getTemplateModel(ab);
-    // 每页条数：配置优先；未配置时按模板形态自适应
+    // 每页条数：优先取用户配置（resolvePerPage 已处理 组/类别 匹配与回退），未配置时按模板形态自适应
     //   单据式（数据段跨多行，如请假单）→ 默认 1（一条记录一张表，避免 10 份空骨架撑满整页造成「一片空白」）
     //   列表式（单行记录行，如加班）→ 默认 10
-    var cfgPP = ((gpSub().perPage) || 0) | 0;
     var dataLen = (model.dataEnd - model.dataStart + 1);
-    PRINT_PER_PAGE = cfgPP > 0 ? cfgPP : (dataLen > 1 ? 1 : 10);
+    PRINT_PER_PAGE = resolvePerPage(dataLen);
     var needNames = (model.fixedNames || []).slice();
     if (model.needsRecordSig){
       var seen = {};
@@ -4937,6 +4949,8 @@ async function saveConfigToWaline(){
       dept2Leader: (($('#cfgGpD2') && $('#cfgGpD2').value) || '')
     };
     GROUP_PRINT_CFG[cfgGpCur] = {};
+    // 加班(ot) 与 请假(lv) 的每页条数各自独立（用户可设 加班11 / 请假1）。
+    // 只写当前标签类别，保留另一类别原有配置（含其 perPage）；不再做 ot/lv 共享，避免互相覆盖。
     if (cfgGpCat === 'ot'){ GROUP_PRINT_CFG[cfgGpCur].ot = sub; GROUP_PRINT_CFG[cfgGpCur].lv = otherSub; }
     else                  { GROUP_PRINT_CFG[cfgGpCur].lv = sub; GROUP_PRINT_CFG[cfgGpCur].ot = otherSub; }
   }
