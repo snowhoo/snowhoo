@@ -367,7 +367,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 /* 单据号：整串按类别着色（加班=绿、请假=橙，与「类别」列一致）；首字母不再单独放大 */
 .rec-table .c-idx.c-green{color:#16a34a}
 .rec-table .c-idx.c-orange{color:#f97316}
-.rec-table .c-time,.rec-table .c-hours{font-variant-numeric:tabular-nums;min-width: 56}
+.rec-table .c-time,.rec-table .c-hours{font-variant-numeric:tabular-nums;min-width: 36}
 .rec-table .c-date{font-variant-numeric:tabular-nums;min-width: 56}
 .rec-table .c-date .date-sep{color:var(--text-muted)}
 .rec-table .c-cat{white-space:nowrap;font-weight:600}
@@ -447,7 +447,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
   
 }
 @media (max-width:640px){
-  .pv-row > span{border-left:0;padding-left:0;font-size:.67rem}   /* 小屏预览去掉竖线分隔，改为纯空格 */
+  .pv-row > span{border-left:0;padding-left:0;font-size:.7rem}   /* 小屏预览去掉竖线分隔，改为纯空格 */
 }
 @media print{
   #topbar,.card:not(#secAction){display:none!important}
@@ -792,7 +792,7 @@ var PEOPLE_COLS = [
 ];
 
 /* 类别：统一走时间段（≥0.5 小时），小时数自动计算。
-   加班为单一「加班」类别；具体是「国假加班 / 双休加班 / 平时加班」由系统按记录日期自动判定
+   加班为单一「加班」类别；具体是「国假 / 双休 / 平时」由系统按记录日期自动判定
    （见 calcOtType），不写死在类别里；表格不单列「加班类别」列，直接并入「类别」列显示。 */
 var CATS = [
   { id:'overtime', name:'加班',  char:'加', color:'#f59e0b', mode:'range', tip:'自动判定国假/双休/平时' },
@@ -1015,7 +1015,7 @@ function addDays(a, d){
   return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
 }
 /* 节假日：同样以 Waline（/kaoqing/holidays）为唯一来源，前端不再内置写死的兜底表。
-   页面打开时由 loadHolidays() 拉取；读取失败（未配置/异常）时加班类型按日期判定为「未知」，即「类别」列显示「未知加班」，
+   页面打开时由 loadHolidays() 拉取；读取失败（未配置/异常）时加班类型按日期判定为「未知」，即「类别」列显示「未知」，
    并弹「节假日读取失败」提示，便于一眼看出是不是没读成功。绝不默认算成「平时」以免掩盖问题。 */
 var HOLIDAYS = { year: new Date().getFullYear(), holidays: [], rest: [], makeup: [] };
 var HOLIDAYS_OK = false;   // 节假日是否成功读取；未读取/读取失败→false，calcOtType 返回「未知」以暴露问题
@@ -1670,7 +1670,7 @@ function refresh(){
         var ot = calcOtType(sg.date);                      // 加班类型按本行日期自动判定，并入类别
         catHtml = (ot === '加载中')
           ? '<span class="ot-spin" title="节假日加载中…"></span>'   // 懒加载中：旋转圆圈
-          : esc(ot + '加班');
+          : esc(ot);   // 加班明细类型本身（国假/双休/平时/未知），不再拼「加班」二字
       }
       var t   = (sg.start && sg.end) ? (esc(sg.start) + '-' + esc(sg.end)) : '<span class="warn">未选时段</span>';
       var hrs = segHoursText(sg, curCat.id) || '？？小时';
@@ -1968,7 +1968,7 @@ function recSortValue(i, key){
   if (key === 'cat'){
     var isOt = isOtCatId(r.catId);
     var ot = calcOtType(r.date); if (ot === '未知' && r.otType) ot = r.otType;
-    return isOt ? (ot + '加班') : (r.catName || '');
+    return isOt ? ot : (r.catName || '');   // 加班按明细类型排序（国假/双休/平时），不含「加班」二字
   }
   if (key === 'date')  return r.date || '';
   if (key === 'time')  return (r.detail || '').replace(/^(\d{1,2}:\d{2}).*$/, '$1');  // 取起始时间 HH:MM
@@ -2057,10 +2057,9 @@ function renderRecords(){
   order.forEach(function(i, n){
     var r = records[i];
     var st = r.status || '待提交';
-    var isOt = isOtCatId(r.catId);           // 加班类：具体「国假/双休/平时加班」按日期自动判定，并入「类别」列
+    var isOt = isOtCatId(r.catId);           // 加班类：具体「国假/双休/平时」按日期自动判定，并入「类别」列
     var ot = calcOtType(r.date);             // 加班类型按日期自动判断
     if (ot === '未知' && r.otType) ot = r.otType;   // 节假日未读取时兜底用存储值
-    var catDisplay = isOt ? (ot + '加班') : (r.catName || '');
     var span = r.detail || '';
     var hoursTxt = '—';
     if (r.mode === 'range'){
@@ -2068,7 +2067,7 @@ function renderRecords(){
       if (idx >= 0){ hoursTxt = span.slice(idx + 2).trim().replace(/小时/g, '').trim(); span = span.slice(0, idx).replace(/\s+$/, ''); }
       else if (r.hours != null) hoursTxt = r.hours;
     }
-    var catDisplay = isOt ? (ot + '加班') : (r.catName || '');
+    var catDisplay = isOt ? ot : (r.catName || '');   // 加班：只显示明细类型（国假/双休/平时/未知），不再拼「加班」二字
     var catCell = (isOt && ot === '加载中')
       ? '<span class="ot-spin" title="节假日加载中…"></span>'   // 懒加载中：旋转圆圈
       : esc(catDisplay);
@@ -2691,7 +2690,7 @@ function buildRecordVals(r, idx){
   var isOt = isOtCatId(r.catId);
   var ot = r.otType || calcOtType(r.date);
   if (ot === '未知' && r.otType) ot = r.otType;
-  var catDisplay = isOt ? (ot + '加班') : (r.catName || '');
+  var catDisplay = isOt ? ot : (r.catName || '');   // 加班：只输出明细类型（国假/双休/平时/未知），不再拼「加班」二字
   var span = r.detail || '';
   var start = '', end = '';
   var mm = (span || '').match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
