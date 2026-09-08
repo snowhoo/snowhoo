@@ -361,16 +361,16 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .rec-table .c-check,.rec-table .c-del{width:1%;text-align:center;white-space:nowrap}
 .rec-table .c-idx{width:46px;text-align:center;color:var(--text-muted);font-size: 0.6rem}
 .rec-table .c-who{font-weight:600;white-space:normal;min-width:50px}
-.rec-table .c-cat{color:var(--accent);white-space:nowrap}
-.rec-table .c-cat.c-green{color:#16a34a}
-.rec-table .c-cat.c-orange{color:#f97316}
+.rec-table .c-cat{white-space:nowrap}
+.rec-table .c-cat.c-green{}
+.rec-table .c-cat.c-orange{}
 /* 单据号：整串按类别着色（加班=绿、请假=橙，与「类别」列一致）；首字母不再单独放大 */
 .rec-table .c-idx.c-green{color:#16a34a}
 .rec-table .c-idx.c-orange{color:#f97316}
 .rec-table .c-time,.rec-table .c-hours{font-variant-numeric:tabular-nums;min-width: 36}
 .rec-table .c-date{font-variant-numeric:tabular-nums;min-width: 56}
 .rec-table .c-date .date-sep{color:var(--text-muted)}
-.rec-table .c-cat{white-space:nowrap;font-weight:600}
+.rec-table .c-cat{white-space:nowrap}
 .rec-table .c-note{white-space:normal}
 .rec-table .c-status{white-space:nowrap}
 .rec-table .muted{color:var(--text-muted)}
@@ -1637,10 +1637,11 @@ function currentAmountText(){
   return parts.length ? parts.join(' ; ') : '（未选时间段）';
 }
 
-/* 时间段显示归一化：无论存储是 08:00-17:00 还是 08:00 - 17:00，统一显示为「HH:MM-HH:MM」（无空格，多段以 ; 分隔），保证表格对齐 */
+/* 时间段显示归一化：无论存储是 08:00-17:00 还是 08:00 - 17:00，统一显示为「HH:MM - HH:MM」
+   （短横前后各一个空格，与「日期」列 MM-DD - MM-DD 的观感一致；多段以 ; 分隔）。仅用于显示，不改变存储格式。 */
 function fmtSpan(raw){
   if (!raw) return '';
-  return String(raw).replace(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/g, '$1-$2');
+  return String(raw).replace(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/g, '$1 - $2');
 }
 
 function rangeOK(){
@@ -1672,7 +1673,7 @@ function refresh(){
           ? '<span class="ot-spin" title="节假日加载中…"></span>'   // 懒加载中：旋转圆圈
           : esc(ot);   // 加班明细类型本身（国假/双休/平时/未知），不再拼「加班」二字
       }
-      var t   = (sg.start && sg.end) ? (esc(sg.start) + '-' + esc(sg.end)) : '<span class="warn">未选时段</span>';
+      var t   = (sg.start && sg.end) ? (esc(sg.start) + ' - ' + esc(sg.end)) : '<span class="warn">未选时段</span>';   // 短横前后带空格，与记录表一致
       var hrs = segHoursText(sg, curCat.id) || '？？小时';
       rows.push('<div class="pv-row">' +
         '<span class="pv-i">' + String(idx).padStart(2, '0') + '</span>' +
