@@ -3288,21 +3288,25 @@ async function parseStyles(zip){
   }
   return map;
 }
-// Excel 边框样式 → CSS：线宽/线型尽量忠于模板（thin/medium/thick/double/dashed…）；颜色取模板 rgb（去前两位 alpha）
+/* Excel 边框样式 → CSS：线型/线宽/颜色都忠于模板。
+   线宽用 **pt**（Excel 线宽的原生单位、打印时为物理尺寸）而非 px：
+   px 在打印缩放/高 dpi 下会被压成同一档「细线」（1px 与 2px 印出来几乎一样粗），
+   pt 是绝对长度，1pt:2pt:3pt 在纸上分别约 0.35mm / 0.7mm / 1.06mm，粗细差异稳定可分辨。
+   比例沿用 Excel 的 hair:thin:medium:thick ≈ 0.5:1:2:3。 */
 function _borderCss(sd, b){
   if (!b || !b.style) return '';
   var col = b.color ? ('#' + (b.color.length > 6 ? b.color.slice(2) : b.color)) : '#000';
-  var w = '1px', t = 'solid';
+  var w = '1pt', t = 'solid';
   switch (b.style){
-    case 'hair': w = '0.5px'; break;
-    case 'thin': w = '1px'; break;
-    case 'medium': w = '2px'; break;
-    case 'thick': w = '3px'; break;
+    case 'hair': w = '0.5pt'; break;
+    case 'thin': w = '1pt'; break;
+    case 'medium': w = '2pt'; break;
+    case 'thick': w = '3pt'; break;
     case 'dotted': t = 'dotted'; break;
-    case 'double': w = '3px'; t = 'double'; break;
+    case 'double': w = '3pt'; t = 'double'; break;
     case 'dashed': case 'dashDot': case 'dashDotDot': case 'slantDashDot': t = 'dashed'; break;
-    case 'mediumDashed': case 'mediumDashDot': case 'mediumDashDotDot': w = '2px'; t = 'dashed'; break;
-    default: w = '1px';
+    case 'mediumDashed': case 'mediumDashDot': case 'mediumDashDotDot': w = '2pt'; t = 'dashed'; break;
+    default: w = '1pt';
   }
   return 'border-' + sd + ':' + w + ' ' + t + ' ' + col;
 }
