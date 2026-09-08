@@ -4849,6 +4849,21 @@ function loadGpCfgIntoForm(){
   var d1 = $('#cfgGpD1');      if (d1) d1.value = g.dept1Leader || '';
   var d2 = $('#cfgGpD2');      if (d2) d2.value = g.dept2Leader || '';
 }
+// 打印模板文件建议：取消写死两项，动态汇总「两个默认 + 配置里出现过的所有模板名」。
+// 注：静态站点无法枚举服务器模板目录，故新文件仍需手动把文件名敲进文本框（且与 kaoqing/template/ 内实际文件名一致）。
+function refreshTplList(){
+  var dl = document.getElementById('cfgTplList'); if (!dl) return;
+  var set = {};
+  ['加班申请单模板.xlsx','请假申请单模板.xlsx'].forEach(function(n){ set[n] = 1; });
+  Object.keys(GROUP_PRINT_CFG).forEach(function(g){
+    var o = GROUP_PRINT_CFG[g] || {};
+    ['ot','lv'].forEach(function(c){ var t = o[c] && o[c].tplFile; if (t && t.trim()) set[t.trim()] = 1; });
+  });
+  var cur = ($('#cfgGpTpl') && $('#cfgGpTpl').value || '').trim(); if (cur) set[cur] = 1;
+  var html = '';
+  Object.keys(set).forEach(function(n){ html += '<option value="' + esc(n) + '"></option>'; });
+  dl.innerHTML = html;
+}
 function openConfig(){
   closeSettings();
   $('#cfgDeductLunch').checked = CONFIG.deductLunch;
@@ -4876,6 +4891,7 @@ function openConfig(){
   cfgGpCat = 'ot'; var gcEl = $('#cfgGpCat'); if (gcEl) gcEl.value = cfgGpCat;
   fillPersonSel('cfgGpKqRen'); fillPersonSel('cfgGpD1'); fillPersonSel('cfgGpD2');
   loadGpCfgIntoForm();
+  refreshTplList();
   $('#cfgMask').hidden = false;
 }
 async function saveConfigToWaline(){
@@ -4958,6 +4974,7 @@ async function saveConfigToWaline(){
       el.value = '';
       el.placeholder = p[1] ? '已设置（留空则不修改）' : '未设置';
     });
+    refreshTplList();   // 把本次刚输入的模板名纳入下拉建议，下次打开直接可选
     cloudToastHide('saveCfg');
     var pwdMsg = ['审核', '批准', '管理员'].map(function(n, k){
       return n + (k === 0 ? CONFIG.pwdReview : (k === 1 ? CONFIG.pwdApprove : CONFIG.pwdAdmin) ? '已设置' : '未设置');
