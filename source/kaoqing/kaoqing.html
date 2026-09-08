@@ -3277,6 +3277,15 @@ async function getTemplateModel(ab){
   if (!rows.length) throw new Error('模板没有数据行');
   var _rowCache = {};
   function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: _rowNum(rw) }; return _rowCache[rw]; }
+  // 列数封顶：Excel 常在 <cols> 末尾追加 <col min="13" max="16384" width="9"/> 这类「默认列宽」整段，
+  // 会把 cols.count 顶到 16384，导致后续 colgroup 生成上万列、每列宽度≈0.01%、整表被压成一条竖线（预览只见左侧一条边线）。
+  // 按「实际内容列范围」封顶：优先 <dimension> 末列，再与单元格实际出现的最大列取大值。
+  var _dimEnd = (sheetXml.match(/<dimension[^>]*\bref="[A-Z]*\d*:?([A-Z]+)\d*"/) || [])[1] || '';
+  var _cellMaxCol = 0;
+  rows.forEach(function(rw){ _getRow(rw).cells.forEach(function(c){ var cn = colToNum((c.ref || '').replace(/\d+/, '')); if (cn > _cellMaxCol) _cellMaxCol = cn; }); });
+  var _cap = _dimEnd ? colToNum(_dimEnd) : 0;
+  if (_cellMaxCol > _cap) _cap = _cellMaxCol;
+  if (_cap && cols.count > _cap) cols.count = _cap;
   // 数据段：含行级记录占位符的所有行构成「一条记录的容器」。
   // 列表式模板（如加班）这些行只有一行 → 退化为原单行记录行模型；
   // 单据式模板（如请假单）这些行跨多行（姓名/事由/类别/日期/签名各占一行）→ 整段作为一张单，按记录整体展开。
