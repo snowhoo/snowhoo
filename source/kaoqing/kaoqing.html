@@ -481,7 +481,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
   body.printing-template > *:not(#printArea){display:none!important}
   body.printing-template #printArea{display:block!important;width:100%;margin:0;padding:0}
   /* 不锁定纸张尺寸/方向：交由打印对话框选择（选「横向」即可旋转）。若固定 size:A4 会把方向锁死成纵向、忽略对话框的横向选择 */
-  @page{margin:10mm}
+  /* @page 的 margin 改由模板 pageMargins 在打印时动态注入（见 printRecordsViaTemplate），此处不写死，避免覆盖用户在打印对话框选的边距 */
 }
 </style>
 </head>
@@ -3073,6 +3073,24 @@ async function parseStyles(zip){
   }
   return map;
 }
+// Excel 边框样式 → CSS：线宽/线型尽量忠于模板（thin/medium/thick/double/dashed…）；颜色取模板 rgb（去前两位 alpha）
+function _borderCss(sd, b){
+  if (!b || !b.style) return '';
+  var col = b.color ? ('#' + b.color.slice(2)) : '#000';
+  var w = '1px', t = 'solid';
+  switch (b.style){
+    case 'hair': w = '0.5px'; break;
+    case 'thin': w = '1px'; break;
+    case 'medium': w = '2px'; break;
+    case 'thick': w = '3px'; break;
+    case 'dotted': t = 'dotted'; break;
+    case 'double': w = '3px'; t = 'double'; break;
+    case 'dashed': case 'dashDot': case 'dashDotDot': case 'slantDashDot': t = 'dashed'; break;
+    case 'mediumDashed': case 'mediumDashDot': case 'mediumDashDotDot': w = '2px'; t = 'dashed'; break;
+    default: w = '1px';
+  }
+  return 'border-' + sd + ':' + w + ' ' + t + ' ' + col;
+}
 function cellCss(st){
   var css = [];
   if (st.font){
@@ -3093,8 +3111,8 @@ function cellCss(st){
   }
   if (st.border){
     ['left','right','top','bottom'].forEach(function(sd){
-      var b = st.border[sd];
-      if (b && b.style){ var col = b.color ? ('#' + b.color.slice(2)) : '#000'; css.push('border-' + sd + ':1px solid ' + col); }
+      var bc = _borderCss(sd, st.border[sd]);
+      if (bc) css.push(bc);
     });
   }
   return css.join(';');
@@ -3236,6 +3254,14 @@ async function getTemplateModel(ab){
   var sheetXml = await zip.file(targetSheet).async('string');
   var sdMatch = sheetXml.match(/<sheetData>([\s\S]*?)<\/sheetData>/);
   if (!sdMatch) throw new Error('模板未找到 sheetData');
+  // 页面边距（pageMargins，单位 inch）：忠于模板，打印时注入 @page margin（见 printRecordsViaTemplate）
+  var pmTag = sheetXml.match(/<pageMargins\b[^>]*\/?>/);
+  var pageMargins = null;
+  if (pmTag){
+    var _pa = pmTag[0];
+    var _gp = function(k){ var m = _pa.match(new RegExp(k + '="([\\d.]+)"')); return m ? parseFloat(m[1]) : 0; };
+    pageMargins = { left: _gp('left'), right: _gp('right'), top: _gp('top'), bottom: _gp('bottom') };
+  }
   // 列宽
   var cols = { count: 0, width: {} };
   var colRe = /<col\b[^>]*\bmin="(\d+)"[^>]*\bmax="(\d+)"[^>]*\bwidth="([\d.]+)"/g, cm;
@@ -3276,7 +3302,7 @@ async function getTemplateModel(ab){
   while ((rm = rowRe.exec(sdMatch[1]))) rows.push(rm[0]);
   if (!rows.length) throw new Error('模板没有数据行');
   var _rowCache = {};
-  function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: _rowNum(rw) }; return _rowCache[rw]; }
+  function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: +_rowNum(rw) }; return _rowCache[rw]; }
   // 列数封顶：Excel 常在 <cols> 末尾追加 <col min="13" max="16384" width="9"/> 这类「默认列宽」整段，
   // 会把 cols.count 顶到 16384，导致后续 colgroup 生成上万列、每列宽度≈0.01%、整表被压成一条竖线（预览只见左侧一条边线）。
   // 按「实际内容列范围」封顶：优先 <dimension> 末列，再与单元格实际出现的最大列取大值。
@@ -3324,7 +3350,7 @@ async function getTemplateModel(ab){
   rows.forEach(function(rw){ if (needsRecordSig) return; _getRow(rw).cells.forEach(function(c){ if (/\{\{签名\}\}/.test(c.text || '')){ needsRecordSig = true; } }); });
   var model = {
     SS_CACHE: SS_CACHE.slice(), cols: cols, rowH: rowH, styleMap: styleMap, imgByVm: imgByVm,
-    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, needsRecordSig: needsRecordSig
+    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, needsRecordSig: needsRecordSig, pageMargins: pageMargins
   };
   _tplModelByFp[fp] = model;
   return model;
@@ -3337,7 +3363,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       primary = model.primary, covered = model.covered, rows = model.rows, dataIdx = model.dataIdx, dataStart = model.dataStart, dataEnd = model.dataEnd;
   // 行解析结果缓存：同一行 XML 在收集阶段、各页渲染阶段会被多次 _parseCells，缓存后只解析一次（模板行数固定，渲染循环有界，非无限）
   var _rowCache = {};
-  function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: _rowNum(rw) }; return _rowCache[rw]; }
+  function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: +_rowNum(rw) }; return _rowCache[rw]; }
   var dataLen = (dataEnd - dataStart + 1);
   var perPage = (PRINT_PER_PAGE > 0) ? PRINT_PER_PAGE : (dataLen > 1 ? 1 : 10);   // 单据式（数据段>1行）默认 1，列表式默认 10
   var N = recVals.length, P = Math.max(1, Math.ceil(N / perPage));
@@ -3348,6 +3374,8 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     for (var dk in rec) if (docVm[dk] == null || docVm[dk] === '') docVm[dk] = rec[dk];
   });
   var headerRows = rows.slice(0, dataStart), dataRows = rows.slice(dataStart, dataEnd + 1), footerRows = rows.slice(dataEnd + 1);
+  var lastColNum = cols.count;                                        // 最右列（用于补右侧外框线）
+  var lastRowNum = _getRow(rows[rows.length - 1]).r0;                 // 最后一行（用于补底部外框线）
   // 列宽比例（%）
   var totalW = 0; for (var i = 1; i <= cols.count; i++) totalW += (cols.width[i] || 8);
   if (!totalW) totalW = cols.count * 8;
@@ -3365,6 +3393,28 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       var cs = 1, rs2 = 1;
       if (primary[cNum + '_' + r0]){ cs = primary[cNum + '_' + r0].cs; rs2 = primary[cNum + '_' + r0].rs; }
       var css = cellCss(styleMap[+c.style] || {});
+      // 外框闭合：模板边框画法常只画 left/top/bottom，最右列右侧、最后一行底部缺线 → 补上（线宽以同行/同列已有边为准，保证外框连贯）
+      // 注意用「视觉边缘」判断：合并单元格的 c.ref 是起始列，须用 起始列+跨列数-1 才落到最右列；行同理
+      var _edgeCol = cNum + (cs > 1 ? cs : 1) - 1;
+      var _edgeRow = r0 + (rs2 > 1 ? rs2 : 1) - 1;
+      if (_edgeCol === lastColNum && !/border-right:/.test(css)){
+        var _lb = css.match(/border-left:([^;]+)/);
+        css += (css ? ';' : '') + 'border-right:' + (_lb ? _lb[1] : '1px solid #000');
+      }
+      // 外框闭合：仅当该单元格本身已有任一外框线时，才补齐缺失的「最右列右侧 / 最后一行底部」边线
+      // （线宽/线型取该单元格已有的对应内缘边，保证外框连贯；无边框模板不会被强行加框）。
+      // 注：r0/cNum 须为数字，否则字符串拼接会让 _edgeRow 计算错误（已用 +_rowNum 修正）。
+      var _hasBorder = /border-(left|right|top|bottom):/.test(css);
+      if (_hasBorder){
+        if (_edgeCol === lastColNum && !/border-right:/.test(css)){
+          var _lb = css.match(/border-left:([^;]+)/);
+          css += (css ? ';' : '') + 'border-right:' + (_lb ? _lb[1] : '1px solid #000');
+        }
+        if (_edgeRow === lastRowNum && !/border-bottom:/.test(css)){
+          var _tb = css.match(/border-top:([^;]+)/);
+          css += (css ? ';' : '') + 'border-bottom:' + (_tb ? _tb[1] : '1px solid #000');
+        }
+      }
       if (rh) css += (css ? ';' : '') + 'height:' + rh;   // 行高落到 td 才可靠（tr 的 height 浏览器不强制）
       var styleAttr = css ? ' style="' + css + '"' : '';
       if (mode === 'blank'){
@@ -3444,6 +3494,16 @@ async function printRecordsViaTemplate(rs){
     catch(e){ await showAlert('加载打印模板失败：' + (e && e.message ? e.message : e), '模板打印失败'); return; }
     // 解析模板（已按内容指纹缓存：同模板跳过 JSZip 解压 + XML 解析）。签名图按模板『实际用到』的占位符取，避免无谓下载
     var model = await getTemplateModel(ab);
+    // 忠于模板的页边距：用模板 pageMargins 注入 @page margin。覆盖静态默认，且不再硬写 10mm 去覆盖用户在打印对话框里选的边距。
+    // 每次都重置 #tplPageMargins：有 pageMargins 用模板值，没有则清空（避免沿用上一次其它模板残留的边距）。
+    var _pmEl = document.getElementById('tplPageMargins');
+    if (!_pmEl){ _pmEl = document.createElement('style'); _pmEl.id = 'tplPageMargins'; document.head.appendChild(_pmEl); }
+    if (model.pageMargins){
+      var _pm = model.pageMargins;
+      _pmEl.textContent = '@page{margin:' + (_pm.top||0) + 'in ' + (_pm.right||0) + 'in ' + (_pm.bottom||0) + 'in ' + (_pm.left||0) + 'in}';
+    } else {
+      _pmEl.textContent = '';
+    }
     // 每页条数：优先取用户配置（resolvePerPage 已处理 组/类别 匹配与回退），未配置时按模板形态自适应
     //   单据式（数据段跨多行，如请假单）→ 默认 1（一条记录一张表，避免 10 份空骨架撑满整页造成「一片空白」）
     //   列表式（单行记录行，如加班）→ 默认 10
