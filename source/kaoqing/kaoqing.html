@@ -223,6 +223,8 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .time-row .fTime{flex:0 0 auto;width:64px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600;text-align:center;color:var(--text);cursor:pointer;font-family:inherit}
 .time-row .fTime:disabled{opacity:.5;cursor:not-allowed}
 .time-row .sep{color:var(--text-muted);font-size:.82rem;white-space:nowrap}
+/* 换行占位（仅请假行渲染，置于「整天」之后）：大屏不显示；小屏占满整行强制其后内容另起一行 */
+.time-row .row-break{display:none}
 .time-row .fSegNote{flex:1 1 140px;min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;max-width:260px;}
 .time-row .segHours{flex:0 0 auto;width:0px;text-align:right;font-size:0rem;font-weight:600;white-space:nowrap;color:var(--text-secondary)}
 .seg-actions{margin-left:auto}   /* ± 按钮固定推到行尾 */
@@ -445,7 +447,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
   .time-row{gap:5px;flex-wrap:wrap}
   .time-row .fDate{width:115px}
   .time-row .fSegNote{flex:1 1 100%;max-width: 250px}   /* 窄屏备注占满整行，避免挤压时段控件 */
-  
+  .time-row .row-break{display:block;flex-basis:100%;height:0}   /* 窄屏：请假行「整天」之后换行，起日期另起一行 */
 }
 @media (max-width:640px){
   .pv-row > span{border-left:0;padding-left:0;font-size:.7rem}   /* 小屏预览去掉竖线分隔，改为纯空格 */
@@ -1341,15 +1343,19 @@ function renderTimeSegs(){
     var isMulti = !!seg.endDate;
     var de = document.createElement('input'); de.type = 'date'; de.className = 'fEndDate'; de.value = seg.endDate || ''; de.title = '至日期（多天时填写，空=单日）'; de.style.display = isMulti ? '' : 'none';
     var e = document.createElement('input'); e.type = 'text'; e.className = 'fTime fEnd'; e.readOnly = true; e.placeholder = '至时间'; e.value = seg.end || ''; e.disabled = !!seg.allDay; e.title = '至时间（点此选择）';
-    var dl = document.createElement('span'); dl.className = 'sep endDateSep'; dl.textContent = isMulti ? '至' : '-';     // 多天：起 至 至日期；单日：起 - 至（同日）
-    var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '-';   // 加班：同日 起-止 分隔
+    var dl = document.createElement('span'); dl.className = 'sep endDateSep'; dl.textContent = isMulti ? '至' : '~';     // 多天：起 至 至日期；单日：起 ~ 至（同日）
+    var sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '~';   // 加班：同日 起~止 分隔
     var h = document.createElement('span'); h.className = 'segHours'; h.textContent = segHoursText(seg) || '？？小时';
     var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
+
+    // 换行占位：仅请假行插入，位于「整天」之后（大屏隐藏，小屏由 CSS 撑成整行 → 起日期另起一行）
+    var brk = document.createElement('span'); brk.className = 'row-break'; brk.setAttribute('aria-hidden', 'true');
 
     if (isLeave){
       // 请假：统一一行，不区分单日/跨天 = 多天 + 整天 + 起日期 起时间 [至/跨天分隔] 至日期 至时间 + 备注
       row.appendChild(mdWrap);     // 多天：默认不勾选；勾选才显示「至日期」填写框
       row.appendChild(adWrap);
+      row.appendChild(brk);
       row.appendChild(d); row.appendChild(s);
       row.appendChild(dl);
       row.appendChild(de); row.appendChild(e);
@@ -1638,11 +1644,11 @@ function currentAmountText(){
   return parts.length ? parts.join(' ; ') : '（未选时间段）';
 }
 
-/* 时间段显示归一化：无论存储是 08:00-17:00 还是 08:00 - 17:00，统一显示为「HH:MM - HH:MM」
-   （短横前后各一个空格，与「日期」列 MM-DD - MM-DD 的观感一致；多段以 ; 分隔）。仅用于显示，不改变存储格式。 */
+/* 时间段显示/打印归一化：无论存储是 08:00-17:00 还是 08:00 ~ 17:00，统一归一为「HH:MM ~ HH:MM」
+   （~ 前后各一个空格，与「日期」列 MM-DD ~ MM-DD 的观感一致；多段以 ; 分隔）。仅用于显示/打印，不改变存储格式。 */
 function fmtSpan(raw){
   if (!raw) return '';
-  return String(raw).replace(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/g, '$1 - $2');
+  return String(raw).replace(/(\d{1,2}:\d{2})\s*[-~～]\s*(\d{1,2}:\d{2})/g, '$1 ~ $2');
 }
 
 function rangeOK(){
@@ -1674,14 +1680,14 @@ function refresh(){
           ? '<span class="ot-spin" title="节假日加载中…"></span>'   // 懒加载中：旋转圆圈
           : esc(ot);   // 加班明细类型本身（国假/双休/平时/未知），不再拼「加班」二字
       }
-      var t   = (sg.start && sg.end) ? (esc(sg.start) + ' - ' + esc(sg.end)) : '<span class="warn">未选时段</span>';   // 短横前后带空格，与记录表一致
+      var t   = (sg.start && sg.end) ? (esc(sg.start) + ' ~ ' + esc(sg.end)) : '<span class="warn">未选时段</span>';   // ~ 前后带空格，与记录表一致
       var hrs = segHoursText(sg, curCat.id) || '？？小时';
       rows.push('<div class="pv-row">' +
         '<span class="pv-i">' + String(idx).padStart(2, '0') + '</span>' +
         '<span class="pv-n">' + esc(n) + '</span>' +
         '<span class="pv-c ' + catCls + '">' + catHtml + '</span>' +
         '<span class="pv-d">' + ((sg.endDate && sg.endDate !== sg.date)
-            ? (esc(mdOnly(sg.date)) + ' <span class="date-sep">-</span> ' + esc(mdOnly(sg.endDate)))
+            ? (esc(mdOnly(sg.date)) + ' <span class="date-sep">~</span> ' + esc(mdOnly(sg.endDate)))
             : esc(mdOnly(sg.date || '—'))) + '</span>' +
         '<span class="pv-t">' + t + '</span>' +
         '<span class="pv-h">' + hrs + '</span>' +
@@ -2000,10 +2006,10 @@ function mdOnly(d){
   return m ? m[1] : s;
 }
 /* 记录表「日期」单元格内容：只显示月日，不含时间与年份。
-   跨天：起日期 - 至日期（中间用「-」连接，不强制换行，由列宽自然折行）；单日：仅起日期。 */
+   跨天：起日期 ~ 至日期（中间用「~」连接，不强制换行，由列宽自然折行）；单日：仅起日期。 */
 function recDateCellHtml(r){
   if (r.endDate && r.endDate !== r.date){
-    return esc(mdOnly(r.date)) + ' <span class="date-sep">-</span> ' + esc(mdOnly(r.endDate));
+    return esc(mdOnly(r.date)) + ' <span class="date-sep">~</span> ' + esc(mdOnly(r.endDate));
   }
   return esc(mdOnly(r.date));
 }
@@ -2679,7 +2685,7 @@ function weekdayOf(date){
   var w = new Date(date + 'T00:00:00').getDay();
   return ['周日','周一','周二','周三','周四','周五','周六'][w];
 }
-var RECORD_KEYS = { '序号':1,'单据号':1,'姓名':1,'工号':1,'性别':1,'手机号':1,'一级部门':1,'二级部门':1,'考勤组':1,'权限':1,'日期':1,'星期':1,'开始':1,'结束':1,'时段':1,'小时':1,'说明':1,'状态':1,'类别':1,'加班类型':1,'签名':1 };
+var RECORD_KEYS = { '序号':1,'单据号':1,'姓名':1,'工号':1,'性别':1,'手机号':1,'一级部门':1,'二级部门':1,'考勤组':1,'权限':1,'日期':1,'起日期':1,'至日期':1,'星期':1,'开始':1,'结束':1,'时段':1,'小时':1,'说明':1,'状态':1,'类别':1,'加班类型':1,'签名':1 };
 var DOC_KEYS = { '打印日期':1,'打印时间':1,'总条数':1,'总小时':1,'当前组别':1,'当前类别':1,'当前状态':1,'考勤人':1,'一级部门领导':1,'二级部门领导':1 };
 function isRecKey(k){ return !!RECORD_KEYS[k]; }
 function firstPersonOf(rec){
@@ -2713,10 +2719,12 @@ function buildRecordVals(r, idx){
     '考勤组': p0 ? (p0.group || '') : '',
     '权限': p0 ? (p0.permission || '') : '',
     '日期': (r.endDate && r.endDate !== r.date) ? (r.date + ' ~ ' + r.endDate) : (r.date || ''),
+    '起日期': r.date || '',
+    '至日期': (r.endDate && r.endDate !== r.date) ? r.endDate : '',
     '星期': weekdayOf(r.date),
     '开始': start,
     '结束': end,
-    '时段': span,
+    '时段': fmtSpan(span),
     '小时': (r.hours == null) ? '' : r.hours,
     '说明': r.note || '',
     '状态': r.status || '待提交',
