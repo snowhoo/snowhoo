@@ -2907,12 +2907,12 @@ function _parseCells(rw, ss){
     var styleM = attrs.match(/\bs="(\d+)"/); var style = styleM ? styleM[1] : '0';
     var typeM = attrs.match(/\bt="([^"]*)"/); var type = typeM ? typeM[1] : '';
     var vmM = attrs.match(/\bvm="(\d+)"/);    var vm = vmM ? vmM[1] : '';   // 单元格内嵌图片标记（见 buildCellImages）
-    var text = '';
-    if (type === 'inlineStr'){ var tM = inner.match(/<t[^>]*>([\s\S]*?)<\/t>/); text = tM ? tM[1] : ''; }
-    else if (type === 's'){ var vM = inner.match(/<v>(\d+)<\/v>/); text = vM ? (ss[+vM[1]] || '') : ''; }
-    else { var vM2 = inner.match(/<v>([\s\S]*?)<\/v>/); text = vM2 ? vM2[1] : ''; }
+    var text = '', runs = null, num = null;
+    if (type === 'inlineStr'){ runs = _siToRuns(inner); text = runs.map(function(r){ return r.text; }).join(''); }
+    else if (type === 's'){ var vM = inner.match(/<v>(\d+)<\/v>/); var ssObj = vM ? ss[+vM[1]] : null; text = ssObj ? ssObj.plain : ''; runs = ssObj ? ssObj.runs : null; }
+    else { var vM2 = inner.match(/<v>([\s\S]*?)<\/v>/); text = vM2 ? vM2[1] : ''; if (vM2 && /^-?[\d.]+$/.test(vM2[1].trim())) num = parseFloat(vM2[1]); }
     var raw = refM ? m[0] : m[0].replace(/^<c\b/, '<c r="' + ref + '"');   // 把推断出的 r 补回 raw
-    cells.push({ ref: ref, style: style, type: type, raw: raw, text: text, vm: vm });
+    cells.push({ ref: ref, style: style, type: type, raw: raw, text: text, vm: vm, runs: runs, num: num });
   }
   return cells;
 }
@@ -3044,31 +3044,204 @@ async function fetchSignatureImages(recVals){
   return fetchNameImages(names);
 }
 // 读取模板样式表，把 s 索引映射成可用于网页的内联 CSS 片段
+// ===== xlsx 样式/颜色/富文本 解析辅助（模块级，供 parseStyles 与模板单元格解析共用）=====
+// 标准 indexed 调色板（OOXML 默认 64 色），兜底用
+var _IDX = ['000000','FFFFFF','FF0000','00FF00','0000FF','FFFF00','FF00FF','00FFFF','000000','FFFFFF','FF0000','00FF00','0000FF','FFFF00','FF00FF','00FFFF','800000','008000','000080','808000','800080','008080','C0C0C0','808080','9999FF','993366','FFFFCC','CCFFFF','660066','FF8080','0066CC','CCFFFF','000080','FF00FF','FFFF00','00FFFF','800080','800000','008080','0000FF','00CCFF','CCFFFF','CCFFCC','FFFF99','99CCFF','FF99CC','CC99FF','FFCC99','3366FF','33CCCC','99CC00','FFCC00','FF9900','FF6600','666699','969696','003366','339966','003300','333300','993300','993366','333399','333333','003366','339966','003300','333300','993300','993366','333399','333333','003366','339966','003300','333300','993300','993366','333399','333333'];
+var _THEME = [];
+// 颜色解析：rgb(去 alpha) / theme(查板) / indexed(查表) + tint 亮度调整。返回 6 位 hex（不含 #）或 null。
+// 注意：字体/边框用 <color>，而填充用 <fgColor>/<bgColor>（同样承载 rgb/theme/indexed/tint），都要识别。
+function colorOf(block){
+  if (!block) return null;
+  var _ct = (block.match(/<(?:color|fgColor|bgColor)\b[^>]*>/) || [])[0];
+  if (!_ct) return null;
+  var _rgb = (_ct.match(/\brgb="([^"]+)"/) || [])[1];
+  if (_rgb){ _rgb = _rgb.length >= 8 ? _rgb.slice(2) : _rgb; }
+  else {
+    var _t = (_ct.match(/\btheme="(\d+)"/) || [])[1];
+    if (_t != null && _THEME[+_t]) _rgb = _THEME[+_t];
+    else { var _ix = (_ct.match(/\bindexed="(\d+)"/) || [])[1]; if (_ix != null && _IDX[+_ix]) _rgb = _IDX[+_ix]; }
+  }
+  if (!_rgb) return null;
+  var _tint = (_ct.match(/\btint="(-?[\d.]+)"/) || [])[1];
+  if (_tint != null && parseFloat(_tint) !== 0) _rgb = _applyTint(_rgb, parseFloat(_tint));
+  return _rgb;
+}
+function _toHex(n){ n = Math.max(0, Math.min(255, Math.round(n))); var s = n.toString(16); return s.length === 1 ? '0' + s : s; }
+function _rgbToHsl(r, g, b){
+  r /= 255; g /= 255; b /= 255;
+  var max = Math.max(r, g, b), min = Math.min(r, g, b), h = 0, s = 0, l = (max + min) / 2;
+  if (max !== min){ var d = max - min; s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max){ case r: h = (g - b) / d + (g < b ? 6 : 0); break; case g: h = (b - r) / d + 2; break; default: h = (r - g) / d + 4; }
+    h /= 6; }
+  return { h: h, s: s, l: l };
+}
+function _hslToRgb(h, s, l){
+  var r, g, b;
+  if (s === 0){ r = g = b = l; }
+  else {
+    var hue2 = function(p, q, t){ if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1/6) return p + (q - p) * 6 * t; if (t < 1/2) return q; if (t < 2/3) return p + (q - p) * (2/3 - t) * 6; return p; };
+    var q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+    r = hue2(p, q, h + 1/3); g = hue2(p, q, h); b = hue2(p, q, h - 1/3);
+  }
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+// Excel tint：在 HSL 亮度上调整（tint<0 变暗，tint>0 变亮）
+function _applyTint(hex, tint){
+  var r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
+  var hsl = _rgbToHsl(r, g, b); var L = hsl.l;
+  hsl.l = tint < 0 ? L * (1 + tint) : L + (1 - L) * tint;
+  if (hsl.l < 0) hsl.l = 0; if (hsl.l > 1) hsl.l = 1;
+  var rgb2 = _hslToRgb(hsl.h, hsl.s, hsl.l);
+  return _toHex(rgb2[0]) + _toHex(rgb2[1]) + _toHex(rgb2[2]);
+}
+// 富文本 run 的内联 rPr → 字体属性对象（与 fonts[] 同结构）
+function _rprToFont(rpr){
+  var _u = (rpr.match(/<u\b([^>]*)\/?>/) || [])[1] || '';
+  return {
+    bold: /<b\b/.test(rpr),
+    italic: /<i\b/.test(rpr),
+    strike: /<strike\b/.test(rpr),
+    underline: /<u\b/.test(rpr) ? (((_u.match(/\bval="([^"]+)"/) || [])[1]) || 'single') : null,
+    vertAlign: ((rpr.match(/<vertAlign\b[^>]*\bval="([^"]+)"/) || [])[1]) || null,
+    size: ((rpr.match(/<sz\b[^>]*\bval="([\d.]+)"/) || [])[1]) || null,
+    name: ((rpr.match(/<rFont\b[^>]*\bval="([^"]+)"/) || [])[1]) || null,
+    color: colorOf(rpr)
+  };
+}
+// 共享字符串 / 内联字符串 → run 数组 [{text, rPr}] ；无 run 时退化为单 run（rPr=null）
+function _siToRuns(siXml){
+  if (siXml.indexOf('<r>') >= 0 || siXml.indexOf('<r ') >= 0){
+    var runs = [], rRe = /<r\b[^>]*>([\s\S]*?)<\/r>/g, rm;
+    while ((rm = rRe.exec(siXml))){
+      var inner = rm[1];
+      var rpr = (inner.match(/<rPr\b[^>]*>([\s\S]*?)<\/rPr>/) || [])[1] || null;
+      var t = (inner.match(/<t[^>]*>([\s\S]*?)<\/t>/) || [])[1] || '';
+      runs.push({ text: t, rPr: rpr ? _rprToFont(rpr) : null });
+    }
+    if (runs.length) return runs;
+  }
+  var tm = siXml.match(/<t[^>]*>([\s\S]*?)<\/t>/);
+  return [{ text: tm ? tm[1] : '', rPr: null }];
+}
+// 数字格式（最佳努力）：小数位/千分位/百分号/正负零分段/日期时间。失败回退 String(v)。
+function _numFmt(v, code){
+  if (code == null || code === '' || code === 'General' || code === '0') return String(v);
+  var fmt = code.replace(/\[[^\]]*\]/g, '');
+  var secs = fmt.split(';');
+  var num = Number(v), neg = num < 0, isNum = !isNaN(num);
+  var sec = !isNum ? (secs[3] != null ? secs[3] : secs[0])
+            : num > 0 ? secs[0]
+            : num < 0 ? (secs[1] != null ? secs[1] : secs[0])
+            : (secs[2] != null ? secs[2] : secs[0]);
+  if (sec == null) sec = 'General';
+  if (/[yYmMdDsShH]/.test(sec)){ try { return _fmtDate(num, sec); } catch(e){ return String(v); } }
+  var work = Math.abs(num);
+  var pct = /%/.test(sec);
+  if (pct) work = work * 100;
+  var dec = (sec.match(/[#.0]+\.([#0]+)/) || [])[1];
+  var decN = dec ? dec.length : 0;
+  var hasThou = /,/.test(sec) && /[#0]/.test(sec.replace(/%|\./g, ''));
+  var out = work.toFixed(decN);
+  if (hasThou){ var pp = out.split('.'); pp[0] = pp[0].replace(/\B(?=(\d{3})+(?!\d))/g, ','); out = pp.join('.'); }
+  // 把数字掩码替换为格式化结果，保留引号内字面量（如 "kg"）与 % 等字符
+  var mask = sec.match(/[0#][0#.,]*/);
+  var result = mask ? (sec.slice(0, mask.index) + out + sec.slice(mask.index + mask[0].length)) : out;
+  if (neg && result.indexOf('-') < 0) result = '-' + result;
+  return result;
+}
+function _fmtDate(serial, sec){
+  var ep = Date.UTC(1899, 11, 30);
+  var d = new Date(ep + serial * 86400000);
+  var p2 = function(n){ return String(n).padStart(2, '0'); };
+  var MON = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var MON3 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var Y = d.getUTCFullYear(), M = d.getUTCMonth() + 1, D = d.getUTCDate(), H = d.getUTCHours(), Mi = d.getUTCMinutes(), S = d.getUTCSeconds();
+  var hasTime = /[hH]/.test(sec);
+  sec = sec.replace(/yyyy|YYYY/g, Y).replace(/yy|YY/g, String(Y).slice(-2));
+  sec = sec.replace(/dd|DD/g, p2(D)).replace(/\bd\b/g, D);
+  if (!hasTime) sec = sec.replace(/mm/g, p2(M)).replace(/m/g, M);   // 无时间上下文：m 视作「月」
+  sec = sec.replace(/MMMM/g, MON[M - 1]).replace(/MMM/g, MON3[M - 1]).replace(/MM/g, p2(M)).replace(/M/g, M);
+  if (hasTime){
+    sec = sec.replace(/HH/g, p2(H)).replace(/hh/g, p2(H % 12 || 12)).replace(/mm/g, p2(Mi)).replace(/ss|SS/g, p2(S)).replace(/H/g, H).replace(/h/g, H % 12 || 12).replace(/m/g, Mi).replace(/s/g, S);
+  }
+  return sec;
+}
+// 富文本 run 的字体属性 → 内联 CSS（用于 <span> 包裹）
+function _fontCss(fo){
+  if (!fo) return '';
+  var css = [];
+  if (fo.bold) css.push('font-weight:bold');
+  if (fo.italic) css.push('font-style:italic');
+  if (fo.size) css.push('font-size:' + fo.size + 'pt');
+  if (fo.name) css.push("font-family:'" + fo.name + "',sans-serif");
+  if (fo.color) css.push('color:#' + fo.color);
+  if (fo.underline) css.push('text-decoration:underline');
+  if (fo.strike) css.push('text-decoration:line-through');
+  if (fo.underline === 'double') css.push('text-decoration-style:double');
+  if (fo.vertAlign === 'subscript') css.push('vertical-align:sub;font-size:smaller');
+  else if (fo.vertAlign === 'superscript') css.push('vertical-align:super;font-size:smaller');
+  return css.join(';');
+}
 async function parseStyles(zip){
   var map = [];
   if (!zip.file('xl/styles.xml')) return map;
   var xml = await zip.file('xl/styles.xml').async('string');
+
+  // 主题色板（写入模块级 _THEME，供 colorOf 使用；顺序 dk1,lt1,dk2,lt2,accent1..6,hlink,folHlink → 索引 0..11）
+  _THEME = [];
+  if (zip.file('xl/theme/theme1.xml')){
+    try {
+      var _th = await zip.file('xl/theme/theme1.xml').async('string');
+      var _cs = (_th.match(/<a:clrScheme\b[^>]*>([\s\S]*?)<\/a:clrScheme>/) || [])[1] || '';
+      var _tags = ['dk1','lt1','dk2','lt2','accent1','accent2','accent3','accent4','accent5','accent6','hlink','folHlink'];
+      for (var _ti = 0; _ti < _tags.length; _ti++){
+        var _tm = _cs.match(new RegExp('<a:' + _tags[_ti] + '>([\\s\\S]*?)</a:' + _tags[_ti] + '>'));
+        var _col = null;
+        if (_tm){
+          var _inner = _tm[1];
+          var _sys = (_inner.match(/<a:sysClr\b[^>]*\blastClr="([^"]+)"/) || [])[1];
+          var _srgb = (_inner.match(/<a:srgbClr\b[^>]*\bval="([^"]+)"/) || [])[1];
+          _col = _sys || _srgb || null;
+        }
+        _THEME[_ti] = _col;
+      }
+    } catch(e){ _THEME = []; }
+  }
   var fonts = [], fontRe = /<font>([\s\S]*?)<\/font>/g, fm;
   while ((fm = fontRe.exec(xml))){
+    var _fb = fm[1];
+    var _u = (_fb.match(/<u\b([^>]*)\/?>/) || [])[1] || '';
     fonts.push({
-      bold: /<b\b/.test(fm[1]),
-      size: (fm[1].match(/<sz\b[^>]*\bval="([\d.]+)"/) || [])[1] || '11',
-      name: (fm[1].match(/<name\b[^>]*\bval="([^"]+)"/) || [])[1] || 'Calibri',
-      color: (fm[1].match(/<color\b[^>]*\brgb="([^"]+)"/) || [])[1] || null
+      bold: /<b\b/.test(_fb),
+      italic: /<i\b/.test(_fb),
+      strike: /<strike\b/.test(_fb),
+      outline: /<outline\b/.test(_fb),
+      shadow: /<shadow\b/.test(_fb),
+      underline: /<u\b/.test(_fb) ? (((_u.match(/\bval="([^"]+)"/) || [])[1]) || 'single') : null,
+      vertAlign: ((_fb.match(/<vertAlign\b[^>]*\bval="([^"]+)"/) || [])[1]) || null,
+      size: ((_fb.match(/<sz\b[^>]*\bval="([\d.]+)"/) || [])[1]) || '11',
+      name: ((_fb.match(/<name\b[^>]*\bval="([^"]+)"/) || [])[1]) || 'Calibri',
+      color: colorOf(_fb)
     });
   }
   var fills = [], fillRe = /<fill>([\s\S]*?)<\/fill>/g, flm;
   while ((flm = fillRe.exec(xml))){
-    var solid = flm[1].match(/<patternFill\b[^>]*\bpatternType="solid"[^>]*>([\s\S]*?)<\/patternFill>/);
-    fills.push(solid ? ((solid[1].match(/<fgColor\b[^>]*\brgb="([^"]+)"/) || [])[1] || null) : null);
+    var _pf = flm[1].match(/<patternFill\b[^>]*\bpatternType="([^"]+)"[^>]*>([\s\S]*?)<\/patternFill>/);
+    if (_pf && _pf[1] === 'solid') fills.push(colorOf(_pf[2]));
+    else fills.push(null);   // 非 solid 图案（gray125 等默认）按「无填充」处理
   }
   function sideOf(block, tag){
-    var sm = block.match(new RegExp('<' + tag + '\\b[^>]*?style="([^"]+)"'));
-    var cm = block.match(new RegExp('<' + tag + '\\b[^>]*?<color[^>]*?rgb="([^"]+)"'));
-    return { style: sm ? sm[1] : null, color: cm ? cm[1] : null };
+    var _full = (block.match(new RegExp('<' + tag + '\\b([\\s\\S]*?)(?:/>|</' + tag + '>)')) || [])[0] || '';
+    var _sm = _full.match(/\bstyle="([^"]+)"/);
+    var _cm = _full.match(/<color\b[^>]*?\/?>/);
+    return { style: _sm ? _sm[1] : null, color: _cm ? colorOf(_cm[0]) : null };
   }
   var borders = [], bordRe = /<border>([\s\S]*?)<\/border>/g, bm;
-  while ((bm = bordRe.exec(xml))) borders.push({ left: sideOf(bm[1], 'left'), right: sideOf(bm[1], 'right'), top: sideOf(bm[1], 'top'), bottom: sideOf(bm[1], 'bottom') });
+  while ((bm = bordRe.exec(xml))) borders.push({ left: sideOf(bm[1], 'left'), right: sideOf(bm[1], 'right'), top: sideOf(bm[1], 'top'), bottom: sideOf(bm[1], 'bottom'), diagonal: sideOf(bm[1], 'diagonal'), diagonalUp: /diagonalUp="1"/.test(bm[1]), diagonalDown: /diagonalDown="1"/.test(bm[1]) });
+  // 自定义数字格式（numFmtId → formatCode）
+  var numFmts = {};
+  var nfM = xml.match(/<numFmts\b[^>]*>([\s\S]*?)<\/numFmts>/);
+  if (nfM){ var nfRe = /<numFmt\b[^>]*\bnumFmtId="(\d+)"[^>]*\bformatCode="([^"]*)"/g, nm; while ((nm = nfRe.exec(nfM[1]))) numFmts[+nm[1]] = nm[2]; }
   var xm = xml.match(/<cellXfs\b[^>]*>([\s\S]*?)<\/cellXfs>/);
   if (xm){
     var xfRe = /<xf\b([\s\S]*?)(?:\/>|<\/xf>)/g, xim;
@@ -3078,10 +3251,31 @@ async function parseStyles(zip){
       var fontId = (a.match(/\bfontId="(\d+)"/) || [])[1] || '0';
       var fillId = (a.match(/\bfillId="(\d+)"/) || [])[1] || '0';
       var borderId = (a.match(/\bborderId="(\d+)"/) || [])[1] || '0';
-      var alM = full.match(/<alignment\b([^>]*?)\/?>/);
+      var numFmtId = (a.match(/\bnumFmtId="(\d+)"/) || [])[1] || '0';
+      // apply* 标志：属性存在且为 "0"/false 时该样式不应用（忠实还原 Excel 行为，避免误上色/误加框）
+      var applyFont = (a.match(/\bapplyFont="([^"]+)"/) || [])[1];
+      var applyFill = (a.match(/\bapplyFill="([^"]+)"/) || [])[1];
+      var applyBorder = (a.match(/\bapplyBorder="([^"]+)"/) || [])[1];
+      var applyAlignment = (a.match(/\bapplyAlignment="([^"]+)"/) || [])[1];
+      var font = (applyFont === '0') ? null : (fonts[+fontId] || fonts[0]);
+      var fill = (applyFill === '0') ? null : (fills[+fillId] || null);
+      var border = (applyBorder === '0') ? null : (borders[+borderId] || null);
       var align = null;
-      if (alM) align = { h: (alM[1].match(/\bhorizontal="([^"]+)"/) || [])[1] || null, v: (alM[1].match(/\bvertical="([^"]+)"/) || [])[1] || null, wrap: /\bwrapText="1"/.test(alM[1]) };
-      map.push({ font: fonts[+fontId] || fonts[0], fill: fills[+fillId] || null, border: borders[+borderId] || null, align: align });
+      var alM = full.match(/<alignment\b([^>]*?)\/?>/);
+      if (alM && applyAlignment !== '0'){
+        var _a = alM[1];
+        var _rot = (alM[1].match(/\btextRotation="(\d+)"/) || [])[1];
+        var _ind = (alM[1].match(/\bindent="([\d.]+)"/) || [])[1];
+        align = {
+          h: ((_a.match(/\bhorizontal="([^"]+)"/) || [])[1]) || null,
+          v: ((_a.match(/\bvertical="([^"]+)"/) || [])[1]) || null,
+          wrap: /\bwrapText="1"/.test(_a),
+          rotate: _rot != null ? +_rot : null,
+          indent: _ind != null ? +_ind : null,
+          shrink: /\bshrinkToFit="1"/.test(_a)
+        };
+      }
+      map.push({ font: font, fill: fill, border: border, align: align, numFmtId: +numFmtId, numFmt: numFmts[+numFmtId] || null });
     }
   }
   return map;
@@ -3089,7 +3283,7 @@ async function parseStyles(zip){
 // Excel 边框样式 → CSS：线宽/线型尽量忠于模板（thin/medium/thick/double/dashed…）；颜色取模板 rgb（去前两位 alpha）
 function _borderCss(sd, b){
   if (!b || !b.style) return '';
-  var col = b.color ? ('#' + b.color.slice(2)) : '#000';
+  var col = b.color ? ('#' + (b.color.length > 6 ? b.color.slice(2) : b.color)) : '#000';
   var w = '1px', t = 'solid';
   switch (b.style){
     case 'hair': w = '0.5px'; break;
@@ -3107,20 +3301,46 @@ function _borderCss(sd, b){
 function cellCss(st){
   var css = [];
   if (st.font){
-    if (st.font.bold) css.push('font-weight:bold');
-    if (st.font.size) css.push('font-size:' + st.font.size + 'pt');
-    if (st.font.name) css.push("font-family:'" + st.font.name + "',sans-serif");
-    if (st.font.color) css.push('color:#' + st.font.color.slice(2));
+    var f = st.font;
+    if (f.bold) css.push('font-weight:bold');
+    if (f.italic) css.push('font-style:italic');
+    if (f.size) css.push('font-size:' + f.size + 'pt');
+    if (f.name) css.push("font-family:'" + f.name + "',sans-serif");
+    // 颜色现已忠实解析（rgb/theme/indexed + tint）→ 直接上色。纯白字落在无底色（透明）单元格会不可见，
+    // 多为模板误用「主题白」，按黑字兜底，避免整段文字消失（有底色时仍保留白字）。
+    if (f.color && !(f.color === 'FFFFFF' && !st.fill)) css.push('color:#' + f.color);
+    if (f.outline) css.push('outline:1px solid #000');
+    if (f.shadow) css.push('text-shadow:1px 1px 0 #888');
+    var _td = [];
+    if (f.underline) _td.push('underline');
+    if (f.strike) _td.push('line-through');
+    if (_td.length) css.push('text-decoration:' + _td.join(' '));
+    if (f.underline === 'double') css.push('text-decoration-style:double');
+    if (f.vertAlign === 'subscript') css.push('vertical-align:sub;font-size:smaller');
+    else if (f.vertAlign === 'superscript') css.push('vertical-align:super;font-size:smaller');
   }
-  if (st.fill) css.push('background:#' + st.fill.slice(2));
+  if (st.fill) css.push('background:#' + st.fill);
   if (st.align){
-    if (st.align.h === 'center') css.push('text-align:center');
-    else if (st.align.h === 'right') css.push('text-align:right');
-    else if (st.align.h === 'left') css.push('text-align:left');
-    if (st.align.v === 'center') css.push('vertical-align:middle');
-    else if (st.align.v === 'top') css.push('vertical-align:top');
-    else if (st.align.v === 'bottom') css.push('vertical-align:bottom');
-    if (st.align.wrap) css.push('white-space:normal');
+    var al = st.align;
+    // 水平对齐：center/centerContinuous 居中；right 右；left/justify 左；distributed/fill 两端/分散
+    if (al.h === 'center' || al.h === 'centerContinuous') css.push('text-align:center');
+    else if (al.h === 'right') css.push('text-align:right');
+    else if (al.h === 'left' || al.h === 'justify') css.push('text-align:left');
+    else if (al.h === 'distributed' || al.h === 'fill') css.push('text-align:justify');
+    // 垂直对齐：center 居中；top/bottom；justify/distributed 居中
+    if (al.v === 'center') css.push('vertical-align:middle');
+    else if (al.v === 'top') css.push('vertical-align:top');
+    else if (al.v === 'bottom') css.push('vertical-align:bottom');
+    else if (al.v === 'justify' || al.v === 'distributed') css.push('vertical-align:middle');
+    if (al.wrap) css.push('white-space:normal;word-break:break-word');
+    if (al.rotate){
+      var _rot = (al.rotate === 255) ? 90 : al.rotate;   // 255 = 垂直文本
+      // Excel 正角度为逆时针；CSS 正角度为顺时针，取负对齐视觉方向
+      css.push('transform:rotate(' + (-_rot) + 'deg)');
+      css.push('transform-origin:center');
+    }
+    if (al.indent) css.push('padding-left:' + (al.indent * 0.5) + 'em');
+    if (al.shrink) css.push('white-space:nowrap');
   }
   if (st.border){
     ['left','right','top','bottom'].forEach(function(sd){
@@ -3245,9 +3465,8 @@ async function getTemplateModel(ab){
     var sxml = await zip.file('xl/sharedStrings.xml').async('string');
     var siRe = /<si>([\s\S]*?)<\/si>/g, m;
     while ((m = siRe.exec(sxml))){
-      var tRe = /<t[^>]*>([\s\S]*?)<\/t>/g, tm, txt = '';
-      while ((tm = tRe.exec(m[1]))) txt += tm[1];
-      SS_CACHE.push(txt);
+      var runs = _siToRuns(m[1]);
+      SS_CACHE.push({ runs: runs, plain: runs.map(function(r){ return r.text; }).join('') });
     }
   }
   var wbXml = await zip.file('xl/workbook.xml').async('string');
@@ -3273,7 +3492,19 @@ async function getTemplateModel(ab){
   if (pmTag){
     var _pa = pmTag[0];
     var _gp = function(k){ var m = _pa.match(new RegExp(k + '="([\\d.]+)"')); return m ? parseFloat(m[1]) : 0; };
-    pageMargins = { left: _gp('left'), right: _gp('right'), top: _gp('top'), bottom: _gp('bottom') };
+    pageMargins = { left: _gp('left'), right: _gp('right'), top: _gp('top'), bottom: _gp('bottom'), header: _gp('header'), footer: _gp('footer') };
+  }
+  // 页面方向 / 缩放（pageSetup）：忠于模板；orientation=landscape 时打印时注入 @page{size:landscape}（见 printRecordsViaTemplate）
+  var psTag = sheetXml.match(/<pageSetup\b[^>]*\/?>/);
+  var pageSetup = null;
+  if (psTag){
+    var _ps = psTag[0];
+    pageSetup = {
+      orientation: (_ps.match(/\borientation="([^"]+)"/) || [])[1] || null,
+      fitToWidth: (_ps.match(/\bfitToWidth="(\d+)"/) || [])[1] || null,
+      fitToHeight: (_ps.match(/\bfitToHeight="(\d+)"/) || [])[1] || null,
+      scale: (_ps.match(/\bscale="(\d+)"/) || [])[1] || null
+    };
   }
   // 列宽
   var cols = { count: 0, width: {} };
@@ -3290,6 +3521,16 @@ async function getTemplateModel(ab){
   while ((rhm = rhRe.exec(sheetXml))){
     var htm = rhm[0].match(/\bht="([\d.]+)"/);
     rowH[rhm[1]] = htm ? htm[1] : null;
+  }
+  // 隐藏列 / 隐藏行：忠实还原 Excel 隐藏状态（渲染时以 display:none 处理，保留合并坐标不偏移）
+  var hiddenCols = {}, hiddenRows = {};
+  var colRe2 = /<col\b[^>]*\bmin="(\d+)"[^>]*\bmax="(\d+)"[^>]*/g, cm2;
+  while ((cm2 = colRe2.exec(sheetXml))){
+    if (/hidden="1"/.test(cm2[0])){ var _mn = +cm2[1], _mx = +cm2[2]; for (var _c = _mn; _c <= _mx; _c++) hiddenCols[_c] = true; }
+  }
+  var rhRe2 = /<row\b[^>]*?\br="(\d+)"[^>]*?>/g, rhm2;
+  while ((rhm2 = rhRe2.exec(sheetXml))){
+    if (/\bhidden="1"|\bcollapsed="1"/.test(rhm2[0])) hiddenRows[+rhm2[1]] = true;
   }
   // 样式
   var styleMap = await parseStyles(zip);
@@ -3363,7 +3604,7 @@ async function getTemplateModel(ab){
   rows.forEach(function(rw){ if (needsRecordSig) return; _getRow(rw).cells.forEach(function(c){ if (/\{\{签名\}\}/.test(c.text || '')){ needsRecordSig = true; } }); });
   var model = {
     SS_CACHE: SS_CACHE.slice(), cols: cols, rowH: rowH, styleMap: styleMap, imgByVm: imgByVm,
-    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, needsRecordSig: needsRecordSig, pageMargins: pageMargins
+    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, needsRecordSig: needsRecordSig, pageMargins: pageMargins, pageSetup: pageSetup, hiddenCols: hiddenCols, hiddenRows: hiddenRows
   };
   _tplModelByFp[fp] = model;
   return model;
@@ -3373,7 +3614,8 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   var model = await getTemplateModel(ab);
   SS_CACHE = model.SS_CACHE;
   var cols = model.cols, rowH = model.rowH, styleMap = model.styleMap, imgByVm = model.imgByVm,
-      primary = model.primary, covered = model.covered, rows = model.rows, dataIdx = model.dataIdx, dataStart = model.dataStart, dataEnd = model.dataEnd;
+      primary = model.primary, covered = model.covered, rows = model.rows, dataIdx = model.dataIdx, dataStart = model.dataStart, dataEnd = model.dataEnd,
+      hiddenCols = model.hiddenCols, hiddenRows = model.hiddenRows;
   // 行解析结果缓存：同一行 XML 在收集阶段、各页渲染阶段会被多次 _parseCells，缓存后只解析一次（模板行数固定，渲染循环有界，非无限）
   var _rowCache = {};
   function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: +_rowNum(rw) }; return _rowCache[rw]; }
@@ -3391,10 +3633,14 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   var totalW = 0; for (var i = 1; i <= cols.count; i++) totalW += (cols.width[i] || 8);
   if (!totalW) totalW = cols.count * 8;
   var colHtml = '<colgroup>';
-  for (var i2 = 1; i2 <= cols.count; i2++) colHtml += '<col style="width:' + ((cols.width[i2] || 8) / totalW * 100).toFixed(2) + '%">';
+  for (var i2 = 1; i2 <= cols.count; i2++){
+    var _hc = hiddenCols[i2] ? 'display:none;' : '';
+    colHtml += '<col style="' + _hc + 'width:' + ((cols.width[i2] || 8) / totalW * 100).toFixed(2) + '%">';
+  }
   colHtml += '</colgroup>';
   function emitRow(rw, mode, rec){
     var pc = _getRow(rw), cells = pc.cells, r0 = pc.r0;
+    if (hiddenRows[r0]) return '';   // 隐藏行：整行不渲染（保留表格结构，仅不显示）
     var rh = rowH[r0] ? rowH[r0] + 'pt' : '';
     var tr = '<tr' + (rh ? ' style="height:' + rh + '"' : '') + '>';
     cells.forEach(function(c){
@@ -3405,10 +3651,13 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       if (primary[cNum + '_' + r0]){ cs = primary[cNum + '_' + r0].cs; rs2 = primary[cNum + '_' + r0].rs; }
       var css = cellCss(styleMap[+c.style] || {});
       if (rh) css += (css ? ';' : '') + 'height:' + rh;   // 行高落到 td 才可靠（tr 的 height 浏览器不强制）
+      var csAttr = (cs > 1 ? ' colspan="' + cs + '"' : '') + (rs2 > 1 ? ' rowspan="' + rs2 + '"' : '');
+      // 隐藏列：列轨已在 colgroup 标 display:none，此处直接跳过该单元格（保持表格结构一致）
+      if (hiddenCols[cNum]){ return; }
       var styleAttr = css ? ' style="' + css + '"' : '';
       if (mode === 'blank'){
         // 不足一页的尾部空白行：整格清空（连固定值也清掉），仅保留合并/样式以维持表格网格
-        tr += '<td' + (cs > 1 ? ' colspan="' + cs + '"' : '') + (rs2 > 1 ? ' rowspan="' + rs2 + '"' : '') + styleAttr + '>&nbsp;</td>';
+        tr += '<td' + csAttr + styleAttr + '>&nbsp;</td>';
         return;
       }
       // 签名占位符（四种写法）：
@@ -3421,33 +3670,55 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       // 做法：先把占位符换成「哨兵 + 姓名 + 哨兵」，等占位符解析与 XML 转义之后再换回 <img>，
       // 这样「签名：」这类前缀不会被丢掉；找不到签名图时留空（不显示姓名、也不显示破图）
       var SIG = '\u0001';
-      var srcTxt = c.text;
-      var needSign = (mode !== 'blank') && signByName && /\{\{签名\}\}/.test(srcTxt);
-      if (needSign){
-        var sName = String((rec && rec['签名'] != null) ? rec['签名'] : (docVm['签名'] || '')).trim();
-        srcTxt = srcTxt.split(/\{\{\{签名\}\}\}/).join(SIG + sName + SIG).split(/\{\{签名\}\}/).join(SIG + sName + SIG);
-      }
-      if ((mode !== 'blank') && signByName && /\{\{\{/.test(srcTxt)){
-        srcTxt = srcTxt.replace(/\{\{\{([^}]+)\}\}\}/g, function(all, k){
-          k = k.trim();
-          if (DOC_KEYS[k] || RECORD_KEYS[k]) return all;      // 文档级 / 记录级键 → 交回原有解析
-          // 三括号「人员签名」占位符（登录名/考勤人/一二级部门领导）：解析为人员姓名再取签名图；未取到姓名则留空
-          if (PERSON_PH_KEYS[k]){ var pn = personPhName(k); return pn ? SIG + pn + SIG : ''; }
-          return SIG + k + SIG;                               // 其余一律按「固定人员姓名」取签名图
+      // 对单段文本做「签名哨兵替换 + 三括号人员占位符替换 + 占位符解析 + 转义」
+      function buildInner(text){
+        var t = text;
+        if (signByName && /\{\{签名\}\}/.test(t)){
+          var sName = String((rec && rec['签名'] != null) ? rec['签名'] : (docVm['签名'] || '')).trim();
+          t = t.split(/\{\{\{签名\}\}\}/).join(SIG + sName + SIG).split(/\{\{签名\}\}/).join(SIG + sName + SIG);
+        }
+        if (signByName && /\{\{\{/.test(t)){
+          t = t.replace(/\{\{\{([^}]+)\}\}\}/g, function(all, k){
+            k = k.trim();
+            if (DOC_KEYS[k] || RECORD_KEYS[k]) return all;      // 文档级 / 记录级键 → 交回原有解析
+            if (PERSON_PH_KEYS[k]){ var pn = personPhName(k); return pn ? SIG + pn + SIG : ''; }
+            return SIG + k + SIG;                               // 其余一律按「固定人员姓名」取签名图
+          });
+        }
+        var resolved = resolveCell(t, rec, docVm, mode);
+        var e = _xmlEsc(resolved);
+        e = e.replace(/\u0001([^\u0001]*)\u0001/g, function(_, n){
+          var u = signByName ? (signByName[String(n).trim()] || '') : '';
+          return u ? '<img src="' + u + '" style="max-width:100%;max-height:' + (rh || '40pt') + '">' : '';
         });
+        return e;
       }
-      var txt = resolveCell(srcTxt, rec, docVm, mode);
-      var out = _xmlEsc(txt);
-      out = out.replace(/\u0001([^\u0001]*)\u0001/g, function(_, n){
-        var u = signByName ? (signByName[String(n).trim()] || '') : '';
-        return u ? '<img src="' + u + '" style="max-width:100%;max-height:' + (rh || '40pt') + '">' : '';
-      });
+      var html;
+      if (c.runs && c.runs.some(function(r){ return r.rPr; })){
+        // 富文本 run：逐段解析占位符并包裹各自字体样式
+        html = c.runs.map(function(run){
+          var re = buildInner(run.text);
+          if (run.rPr){ var rs = _fontCss(run.rPr); if (rs) re = '<span style="' + rs + '">' + re + '</span>'; }
+          return re;
+        }).join('');
+      } else {
+        html = buildInner(c.text || '');
+      }
+      // 数字格式（最佳努力）：静态数值单元格，或占位符替换为数值的字段，套用模板 numFmt
+      var _st = styleMap[+c.style] || {};
+      if (_st.numFmt){
+        try {
+          var _plain = html.replace(/<[^>]+>/g, '');
+          var _sv = (c.num != null) ? c.num : (/-?[\d.]+/.test(_plain) ? parseFloat(_plain) : NaN);
+          if (!isNaN(_sv)) html = _xmlEsc(_numFmt(_sv, _st.numFmt));
+        } catch(e){ /* 数字格式失败不影响其它渲染 */ }
+      }
       // 单元格内嵌图片：有 vm 且解析到图片时渲染 <img>（空白行不渲染，与整格清空保持一致）
-      var imgSrc = (mode !== 'blank' && c.vm && imgByVm[c.vm]) ? imgByVm[c.vm] : '';
+      var imgSrc = (c.vm && imgByVm[c.vm]) ? imgByVm[c.vm] : '';
       var inner = imgSrc
         ? '<img src="' + imgSrc + '" style="max-width:100%;max-height:' + (rh || '40pt') + '">'
-        : (out || '&nbsp;');
-      tr += '<td' + (cs > 1 ? ' colspan="' + cs + '"' : '') + (rs2 > 1 ? ' rowspan="' + rs2 + '"' : '') + styleAttr + '>' + inner + '</td>';
+        : (html || '&nbsp;');
+      tr += '<td' + csAttr + styleAttr + '>' + inner + '</td>';
     });
     return tr + '</tr>';
   }
@@ -3484,7 +3755,7 @@ async function printRecordsViaTemplate(rs){
     var groups = [];
     if (otRs.length) groups.push({ allOt: true,  rs: otRs });
     if (lvRs.length) groups.push({ allOt: false, rs: lvRs });
-    var htmlParts = [], chosenPM = null;
+    var htmlParts = [], chosenPM = null, chosenPS = null;
     for (var gi = 0; gi < groups.length; gi++){
       var g = groups[gi];
       var data = buildPrintData(g.rs);   // 内部按本组记录设定 PRINT_GROUP / PRINT_CAT，供下方 gpSub()/resolvePerPage 取用绑定
@@ -3495,6 +3766,7 @@ async function printRecordsViaTemplate(rs){
       var dataLen = (model.dataEnd - model.dataStart + 1);
       PRINT_PER_PAGE = resolvePerPage(dataLen);  // 每页条数：按本组「考勤组+类别」配置取，未配置按模板形态自适应
       if (!chosenPM && model.pageMargins) chosenPM = model.pageMargins;   // 多模板边距不一致时只能取其一（建议各模板边距保持一致）
+      if (!chosenPS && model.pageSetup) chosenPS = model.pageSetup;       // 页面方向/缩放：取首个可用组（浏览器 @page 限制，一次打印只能套用其一）
       var needNames = (model.fixedNames || []).slice();
       if (model.needsRecordSig){
         var seen = {};
@@ -3506,14 +3778,15 @@ async function printRecordsViaTemplate(rs){
       catch(e){ await showAlert('生成打印视图失败：' + e.message, '模板打印失败'); return; }
       htmlParts.push(html);
     }
-    // 忠于模板的页边距：用首个可用组的模板 pageMargins 注入 @page margin；每次重置，避免沿用上一次其它模板残留边距
+    // 忠于模板的页边距与页面方向：用首个可用组的模板 pageMargins / pageSetup 注入 @page；每次重置，避免沿用上一次其它模板残留设置
     var _pmEl = document.getElementById('tplPageMargins');
     if (!_pmEl){ _pmEl = document.createElement('style'); _pmEl.id = 'tplPageMargins'; document.head.appendChild(_pmEl); }
+    var _pmParts = [];
     if (chosenPM){
-      _pmEl.textContent = '@page{margin:' + (chosenPM.top||0) + 'in ' + (chosenPM.right||0) + 'in ' + (chosenPM.bottom||0) + 'in ' + (chosenPM.left||0) + 'in}';
-    } else {
-      _pmEl.textContent = '';
+      _pmParts.push('margin:' + (chosenPM.top||0) + 'in ' + (chosenPM.right||0) + 'in ' + (chosenPM.bottom||0) + 'in ' + (chosenPM.left||0) + 'in');
     }
+    if (chosenPS && chosenPS.orientation === 'landscape') _pmParts.push('size:landscape');
+    _pmEl.textContent = _pmParts.length ? '@page{' + _pmParts.join(';') + '}' : '';
     // 多组（加班+请假）之间强制分页，各组用自身模板与单页条数独立成段
     var fullHtml = htmlParts.map(function(h, i){ return (i > 0 ? '<div class="grp-break"></div>' : '') + h; }).join('');
     var pa = $('#printArea'); if (!pa){ pa = document.createElement('div'); pa.id = 'printArea'; document.body.appendChild(pa); }
