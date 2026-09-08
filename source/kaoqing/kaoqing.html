@@ -2980,23 +2980,31 @@ var _tplPending = {};    // 模板文件名 -> 进行中的 Promise：预热与�
 // 按文件名取模板字节（预热与正式打印共用；命中缓存直接复用，跳过网络）
 // quiet=true：取不到时不弹窗（预热用，避免"某个默认模板不存在"打扰用户），只抛错由调用方静默忽略
 async function fetchTemplateByName(fname, quiet){
-  if (_tplAbByName[fname]) return _tplAbByName[fname];   // 同模板直接复用已下载字节
+  // 命中页内缓存且内容指纹一致 → 直接返字节（指纹一致意味着文件没改，连网络都不用走）
+  if (_tplAbByName[fname] && _tplAbByName[fname].ab) return _tplAbByName[fname].ab;
   if (_tplPending[fname]) return _tplPending[fname];     // 已有进行中的下载 → 复用，不重复发请求
   var p = (async function(){
+    var cached = _tplAbByName[fname];        // { ab, fp } —— fp 为内容指纹，用于判断文件是否变过
     var enc = encodeURIComponent(fname);
     var candidates = ['template/' + enc, 'kaoqing/template/' + enc, '../kaoqing/template/' + enc];
     var tried = [], resp = null;
     for (var ci = 0; ci < candidates.length; ci++){
       var cu; try { cu = new URL(candidates[ci], location.href).toString(); } catch(e){ continue; }
       tried.push(cu);
-      try { var r = await fetch(cu, { cache: 'no-store' }); if (r.ok){ resp = r; break; } } catch(e){ /* 跨域 / 网络错误 → 试下一个候选 */ }
+      // 走 HTTP 缓存（不再 no-store）：未变更时浏览器回放本地缓存（极快），变更才回新内容
+      try { var r = await fetch(cu); if (r.ok){ resp = r; break; } } catch(e){ /* 跨域 / 网络错误 → 试下一个候选 */ }
     }
     if (!resp){
+      if (cached && cached.ab) return cached.ab;          // 网络异常但有旧缓存 → 先用旧的，不打断打印
       if (!quiet) await showAlert('未找到模板文件：' + fname + '\n已尝试路径：\n' + tried.join('\n') + '\n请把它放到 kaoqing/template/ 目录下（与 kaoqing.html 同级），且页面需通过 http(s) 访问（file:// 直接打开本地文件时浏览器禁止读取模板）。', '模板打印失败');
       throw new Error('no template');
     }
     var ab = await resp.arrayBuffer();
-    _tplAbByName[fname] = ab;
+    // 真实内容指纹比对（用户要求「缓存和实际文件 md5 比较」）：比对下载字节与已缓存字节的指纹，
+    // 一致则视为未改 → 跳过后续解析直接复用；不一致（模板被改）则更新缓存并触发重新解析。
+    var fp = _tplFingerprint(ab);
+    if (cached && cached.fp && cached.fp === fp) return cached.ab;
+    _tplAbByName[fname] = { ab: ab, fp: fp };
     return ab;
   })();
   _tplPending[fname] = p;
@@ -3042,26 +3050,35 @@ function abToB64(ab){
   for (var i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
   return btoa(bin);
 }
+/* 内容比对采用「真实字节指纹」而非 HTTP 头 ETag：模板/签名图无论是否走 HTTP 缓存，
+   一律下载字节后用 _tplFingerprint（见下方模板解析处，FNV-1a 内容校验和，效果等同 md5 比对）算指纹，
+   与页内已缓存指纹一致即视为未改、直接复用解析结果；不一致（文件被改）则更新缓存并重新解析。
+   这样既吃到 HTTP 缓存的速度，又靠真实内容比对杜绝「改了不刷新」。 */
 /* 签名图：按姓名到 kaoqing/names/<姓名>.jpg 取图，转成 dataUri 内联进打印页。
    必须预先取回转 base64——若只写 <img src="url"> 就立刻 window.print()，
    浏览器常常还没把图加载完就开始打印，印出来是空白/破图。 */
-// 签名图按姓名缓存（dataUri 静态不变，跨打印复用，避免重复下载；无图的姓名也缓存空值，本次会话不再重复探测）
+// 签名图按姓名缓存：值为 { uri, tag }（tag=版本标识，用于发现文件被换过），或 null（已知无图，不再探测）
 var _sigCache = {};
 // 按姓名批量取签名图 → { 姓名: dataUri }（取不到的姓名缓存空值，渲染时按 falsy 留空）
 async function fetchNameImages(names){
   if (!names || !names.length) return {};
   // 并发预取所有签名图（不再逐张 await 串行）：多条记录/多人签名时，总耗时约等于最慢一张而非累加
   var entries = await Promise.all(names.map(async function(name){
-    if (Object.prototype.hasOwnProperty.call(_sigCache, name)) return [name, _sigCache[name]];
+    var known = Object.prototype.hasOwnProperty.call(_sigCache, name);
+    var cached = _sigCache[name];
+    if (known && cached === null) return null;      // 已知该姓名没有签名图 → 不再重复探测
     var enc = encodeURIComponent(name + '.jpg');
     var candidates = ['names/' + enc, 'kaoqing/names/' + enc, '../kaoqing/names/' + enc];
     for (var ci = 0; ci < candidates.length; ci++){
       var cu; try { cu = new URL(candidates[ci], location.href).toString(); } catch(e){ continue; }
       try {
-        var r2 = await fetch(cu, { cache: 'no-store' });
+        var r2 = await fetch(cu);                   // 走 HTTP 缓存：未变更时浏览器回放本地缓存（极快），变更才回新内容
         if (!r2.ok) continue;
-        var dataUri = 'data:image/jpeg;base64,' + abToB64(await r2.arrayBuffer());
-        _sigCache[name] = dataUri;
+        var ab = await r2.arrayBuffer();
+        var fp = _tplFingerprint(ab);
+        if (known && cached && cached.fp && cached.fp === fp) return [name, cached.uri];   // 内容未变 → 复用已转码的 dataUri
+        var dataUri = 'data:image/jpeg;base64,' + abToB64(ab);
+        _sigCache[name] = { uri: dataUri, fp: fp };
         return [name, dataUri];
       } catch(e){ /* 跨域 / 网络错误 → 试下一个候选路径 */ }
     }
