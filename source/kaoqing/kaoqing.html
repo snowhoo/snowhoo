@@ -475,7 +475,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 /* 模板打印预览：忠于 xlsx 模板排版，调起浏览器打印对话框（可打印 / 另存 PDF） */
 #printArea{display:none}
 #printArea .tpl-table{border-collapse:collapse;width:100%;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000}
-#printArea .tpl-table td{padding:2px 5px;font-size:10pt;vertical-align:middle;word-break:break-word;overflow:hidden;box-sizing:border-box}
+#printArea .tpl-table td{padding:2px 5px;font-size:10pt;vertical-align:middle;word-break:break-word;overflow:visible;box-sizing:border-box}
 #printArea .pg-break{page-break-after:always;height:0;line-height:0;font-size:0}
 #printArea .grp-break{page-break-before:always;height:0;line-height:0;font-size:0}
 @media print{
@@ -3417,7 +3417,7 @@ function cellCss(st){
     else if (al.v === 'top') css.push('vertical-align:top');
     else if (al.v === 'bottom') css.push('vertical-align:bottom');
     else if (al.v === 'justify' || al.v === 'distributed') css.push('vertical-align:middle');
-    if (al.wrap) css.push('white-space:normal;word-break:break-word');
+    // white-space（自动换行）不再在此输出，统一由 emitRow 的 _cellWhiteSpace 依据 Excel wrapText/shrinkToFit + 单元格文本决定，避免与默认 td 样式冲突
     if (al.rotate){
       var _rot = (al.rotate === 255) ? 90 : al.rotate;   // 255 = 垂直文本
       // Excel 正角度为逆时针；CSS 正角度为顺时针，取负对齐视觉方向
@@ -3425,7 +3425,7 @@ function cellCss(st){
       css.push('transform-origin:center');
     }
     if (al.indent) css.push('padding-left:' + (al.indent * 0.5) + 'em');
-    if (al.shrink) css.push('white-space:nowrap');
+    // shrinkToFit（缩小字体填充）与「不自动换行」等价，其 white-space 同样交由 _cellWhiteSpace 处理
   }
   if (st.border){
     ['left','right','top','bottom'].forEach(function(sd){
@@ -3434,6 +3434,17 @@ function cellCss(st){
     });
   }
   return css.join(';');
+}
+// 单元格 white-space 决策（统一、忠实还原 Excel 的「自动换行」开关，与默认 td 样式解耦）：
+//   - 自动换行 开(wrapText=1)：普通文本 normal 自动折行；含手动换行(Alt+Enter)/前置空格/连续空格 → pre-wrap（保留手动换行且自动折行）
+//   - 自动换行 关(shrinkToFit 同)：Excel 行为＝文字不折行，超出单元格宽度后溢出（向右延伸；相邻有内容/填充的格会把它盖住=截断，相邻空则延伸，见 emitRow 的 z-index 挡板）
+//        含手动换行/特殊空白 → pre（保留手动换行与空格、但不自动折行）；普通文本 → nowrap
+//   注意：pre/nowrap 同时关掉 word-break，避免长单词被强行拆断（那等于又自动换行）。绝不针对具体单元格。
+function _cellWhiteSpace(al, text){
+  var hasNl = /[\n\r]/.test(text || '');
+  var hasSp = /^\s|\s$/.test(text || '') || /\s{2,}/.test(text || '');
+  var wrapOn = !!(al && al.wrap) && !(al && al.shrink);   // shrinkToFit 视为不自动换行
+  return (wrapOn ? (hasNl || hasSp ? 'pre-wrap' : 'normal') : (hasNl || hasSp ? 'pre' : 'nowrap'));
 }
 function resolveCell(text, rec, docVm, mode){
   if (!text || !/\{\{/.test(text)) return text || '';
@@ -3782,6 +3793,20 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
         tr += '<td' + csAttr + styleAttr + '>&nbsp;</td>';
         return;
       }
+      // 忠实还原单元格「自动换行」开关（Excel wrapText）与手动换行/前置空格（HTML 默认会折叠空白并自动折行）：
+      //   wrapText=开 → 含手动换行/特殊空白用 pre-wrap、否则 normal（自动折行）；
+      //   wrapText=关(或 shrinkToFit) → 不自动折行、超出宽度溢出，含手动换行/特殊空白用 pre、否则 nowrap。
+      // 这是通用决策（_cellWhiteSpace），不针对具体单元格；换任何模板都生效。
+      var _ws = _cellWhiteSpace(_st.align, c.text || '');
+      css += (css ? ';' : '') + 'white-space:' + _ws;
+      if (_ws === 'nowrap' || _ws === 'pre') css += ';word-break:normal;overflow-wrap:normal';
+      // 还原 Excel「不自动换行的溢出」规则：td 设 overflow:visible → 溢出文字默认向右延伸。
+      // 但 HTML 表格单元格的「内容」绘制层级在「背景」之上，溢出文字会盖在右侧有底色的相邻格上、不会被遮，
+      // 所以要让「右侧相邻有内容/填充」的格子成为裁切挡板：给有填充或有文字的格子加 position:relative;z-index:1，
+      // 使其整格（背景+边框+内容）绘制层级高于左侧溢出文字 → 把溢出盖住（呈现 Excel 的截断）；
+      // 右侧相邻为空（无填充无文字）则不加挡板 → 溢出文字透出（呈现 Excel 的延伸）。按 DOM 顺序(左→右)成对生效，通用、不针对单元格。
+      if ((_st.fill) || ((c.text || '').trim() !== '')) css += ';position:relative;z-index:1';
+      styleAttr = ' style="' + css + '"';
       // 签名占位符（四种写法）：
       //   1) 两括号 / 三括号的「签名」键 —— 按「当前记录首位人员」取签名图
       //   2) 三括号里直接写具体姓名（例如写 顾晓维） —— 固定人员，直接取 names/顾晓维.jpg
