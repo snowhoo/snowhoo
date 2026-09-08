@@ -481,6 +481,8 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 @media print{
   body.printing-template > *:not(#printArea){display:none!important}
   body.printing-template #printArea{display:block!important;width:100%;margin:0;padding:0}
+  /* 打印模板时强制白底：body 背景(--bg:#f4f5f9 浅灰)在隐藏其它内容后仍会露在页边距区域，导致打印页带浅灰绿底色 */
+  html, body.printing-template{background:#fff!important}
   /* 不锁定纸张尺寸/方向：交由打印对话框选择（选「横向」即可旋转）。若固定 size:A4 会把方向锁死成纵向、忽略对话框的横向选择 */
   /* @page 的 margin 改由模板 pageMargins 在打印时动态注入（见 printRecordsViaTemplate），此处不写死，避免覆盖用户在打印对话框选的边距 */
 }
@@ -3695,8 +3697,11 @@ async function getTemplateModel(ab){
   });
   if (dataStart < 0) throw new Error('模板未找到含行级占位符（如 姓名）的记录行');
   var dataIdx = dataStart;   // 兼容旧引用（dataIdx 始终保持 = 数据段首行）
-  // 固定人员签名：模板三括号直接写姓名 / 三括号人员签名占位符，解析为姓名（取图统一交由调用方，便于跨打印缓存）
-  var fixedNames = [], fnSeen = {};
+  // 固定人员签名：模板三括号直接写姓名 / 三括号人员签名占位符。
+  // 注意：这里只收集「原始键」，不在此刻解析成姓名——因为 personPhName 依赖全局 PRINT_GROUP/PRINT_CAT，
+  // 而本函数会按模板内容指纹缓存（预热时可能全局组还没设对）。若此刻就解析并缓存，正式打印命中缓存会用错/空的姓名，签名图取不到。
+  // 姓名解析改到打印时（printRecordsViaTemplate 按当前组/类别实时 personPhName），模板怎么换、设置怎么改都稳。
+  var fixedNames = [], fixedPhKeys = [], fnSeen = {};
   rows.forEach(function(rw){
     _getRow(rw).cells.forEach(function(c){
       if (!c.text) return;
@@ -3705,11 +3710,10 @@ async function getTemplateModel(ab){
         var k = fm[1].trim();
         if (!k || DOC_KEYS[k] || RECORD_KEYS[k] || fnSeen[k]) continue;
         if (PERSON_PH_KEYS[k]){
-          var pn = personPhName(k);
-          if (pn && !fnSeen[pn]){ fnSeen[pn] = true; fixedNames.push(pn); }
+          if (!fnSeen['KEY:' + k]){ fnSeen['KEY:' + k] = true; fixedPhKeys.push(k); }   // 仅记原始键，姓名留待打印时按当前组/类别解析
           continue;
         }
-        fnSeen[k] = true; fixedNames.push(k);
+        fnSeen[k] = true; fixedNames.push(k);   // 直接写死的姓名（如 顾晓维）立刻取图，无需解析
       }
     });
   });
@@ -3718,7 +3722,7 @@ async function getTemplateModel(ab){
   rows.forEach(function(rw){ if (needsRecordSig) return; _getRow(rw).cells.forEach(function(c){ if (/\{\{签名\}\}/.test(c.text || '')){ needsRecordSig = true; } }); });
   var model = {
     SS_CACHE: SS_CACHE.slice(), cols: cols, rowH: rowH, styleMap: styleMap, imgByVm: imgByVm,
-    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, needsRecordSig: needsRecordSig, pageMargins: pageMargins, pageSetup: pageSetup, hiddenCols: hiddenCols, hiddenRows: hiddenRows
+    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, fixedPhKeys: fixedPhKeys, needsRecordSig: needsRecordSig, pageMargins: pageMargins, pageSetup: pageSetup, hiddenCols: hiddenCols, hiddenRows: hiddenRows
   };
   _tplModelByFp[fp] = model;
   return model;
@@ -3799,7 +3803,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
           t = t.replace(/\{\{\{([^}]+)\}\}\}/g, function(all, k){
             k = k.trim();
             if (DOC_KEYS[k] || RECORD_KEYS[k]) return all;      // 文档级 / 记录级键 → 交回原有解析
-            if (PERSON_PH_KEYS[k]){ var pn = personPhName(k); return pn ? SIG + pn + SIG : ''; }
+            if (PERSON_PH_KEYS[k]){ var pn = personPhName(k); return pn ? SIG + pn + SIG : (SIG + k + SIG); }   // 绑定缺失时回退显示占位符键名（便于核对），不再静默空白
             return SIG + k + SIG;                               // 其余一律按「固定人员姓名」取签名图
           });
         }
@@ -3807,7 +3811,10 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
         var e = _xmlEsc(resolved);
         e = e.replace(/\u0001([^\u0001]*)\u0001/g, function(_, n){
           var u = signByName ? (signByName[String(n).trim()] || '') : '';
-          return u ? '<img src="' + u + '" style="max-width:100%;max-height:' + (rh || '40pt') + '">' : '';
+          if (u) return '<img src="' + u + '" style="max-width:100%;max-height:' + (rh || '40pt') + '">';
+          // 缺签名图：退而显示姓名文字（便于核对绑定是否生效、以及补 names/<姓名>.jpg），不再留空
+          var nt = String(n).trim();
+          return nt ? '<span style="font-size:10pt">' + _xmlEsc(nt) + '</span>' : '';
         });
         return e;
       }
@@ -3906,7 +3913,13 @@ async function printRecordsViaTemplate(rs){
       PRINT_PER_PAGE = resolvePerPage(dataLen);  // 每页条数：按本组「考勤组+类别」配置取，未配置按模板形态自适应
       if (!chosenPM && model.pageMargins) chosenPM = model.pageMargins;   // 多模板边距不一致时只能取其一（建议各模板边距保持一致）
       if (!chosenPS && model.pageSetup) chosenPS = model.pageSetup;       // 页面方向/缩放：取首个可用组（浏览器 @page 限制，一次打印只能套用其一）
+      // 解析签名姓名：fixedNames（直接写死的姓名）原样取图；fixedPhKeys（考勤人/部门领导等动态占位符）
+      // 此刻按当前 PRINT_GROUP/PRINT_CAT 调 personPhName 解析——不在模板解析时缓存，避免预热用错全局组导致签名图漏取。
       var needNames = (model.fixedNames || []).slice();
+      (model.fixedPhKeys || []).forEach(function(k){
+        var n = personPhName(k);
+        if (n && needNames.indexOf(n) < 0) needNames.push(n);
+      });
       if (model.needsRecordSig){
         var seen = {};
         (data.recVals || []).forEach(function(r){ var n = (r && r['签名'] != null) ? String(r['签名']).trim() : ''; if (n && !seen[n]){ seen[n] = true; needNames.push(n); } });
@@ -4138,11 +4151,18 @@ function currentLoginNick(){
 var PERSON_PH_KEYS = { '登录名':1, '考勤人签名':1, '一级部门领导签名':1, '二级部门领导签名':1 };
 function personPhName(k){
   if (k === '登录名') return currentLoginNick();
-  var g = gpSub();   // 当前考勤组 + 当前打印类别（加班/请假）的子配置
-  if (k === '考勤人签名')          return g.kaoqingRen  || '';
-  if (k === '一级部门领导签名')     return g.dept1Leader || '';
-  if (k === '二级部门领导签名')     return g.dept2Leader || '';
-  return '';
+  var ek = effGroupKey();   // 当前考勤组（由打印记录反推，主视图停在「全部」也能命中）
+  // 考勤人 / 一二级部门领导通常加班、请假是同一人：先取当前类别绑定，缺则跨类别（ot<->lv）兜底，
+  // 避免「只在请假页签绑了人、打印加班单」时整格空白。模板换/设置改均不影响。
+  var other = (PRINT_CAT === 'ot') ? 'lv' : 'ot';
+  function _val(cat){
+    var g = (GROUP_PRINT_CFG[ek] || {})[cat] || {};
+    if (k === '考勤人签名')          return g.kaoqingRen  || '';
+    if (k === '一级部门领导签名')     return g.dept1Leader || '';
+    if (k === '二级部门领导签名')     return g.dept2Leader || '';
+    return '';
+  }
+  return _val(PRINT_CAT) || _val(other) || '';
 }
 /* 健壮解析：去除 Waline 管理后台可能的 HTML/markdown 污染，定位 JSON 大括号并解析 */
 function robustParse(raw){
