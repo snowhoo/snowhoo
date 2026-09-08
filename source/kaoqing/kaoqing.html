@@ -477,6 +477,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 #printArea .tpl-table{border-collapse:collapse;width:100%;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000}
 #printArea .tpl-table td{padding:2px 5px;font-size:10pt;vertical-align:middle;word-break:break-word;overflow:hidden;box-sizing:border-box}
 #printArea .pg-break{page-break-after:always;height:0;line-height:0;font-size:0}
+#printArea .grp-break{page-break-before:always;height:0;line-height:0;font-size:0}
 @media print{
   body.printing-template > *:not(#printArea){display:none!important}
   body.printing-template #printArea{display:block!important;width:100%;margin:0;padding:0}
@@ -998,7 +999,12 @@ function normalizeGpCfg(src){
 }
 /* 一行 = 一条完整记录段：起日期 / 至日期(请假跨天用，空=单日) / 整天 / 起止时间 / 备注事由。
    注意：仅「加班」每「行」是独立记录；请假/其它改为单条录入，至日期在同一行内表达跨天。 */
-function newSeg(date){ return { date: date || todayStr(), endDate:'', allDay:false, start:'', end:'', note:'' }; }
+function newSeg(date){ return { date: date || todayStr(), endDate:'', multi:false, allDay:false, start:'', end:'', note:'' }; }
+// 至日期落库值：加班 → 恒空；请假单日(multi=false) → 存起日期（便于数据对齐，打印仍按单日隐藏）；请假跨天(multi=true) → 存至日期
+function segEndDate(sg, catId){
+  if (isOtCatId(catId)) return '';
+  return (sg && sg.multi) ? (sg.endDate || sg.date) : (sg ? sg.date : '');
+}
 var timeSegs      = [ newSeg() ];
 var focusedSegNoteIdx = 0;       // 当前聚焦的「备注事由」所在行号（常用说明只填该行）
 var COMPANY_NAME  = '苏州晶讯科技股份有限公司';   // ← 顶栏公司名称（按需改成贵司名称）
@@ -1344,7 +1350,7 @@ function renderTimeSegs(){
     row.setAttribute('data-i', String(i));
 
     var mdWrap = document.createElement('label'); mdWrap.className = 'all-day'; mdWrap.title = '勾选后显示「至日期」填写框；勾选并填写即跨天请假';
-    var md = document.createElement('input'); md.type = 'checkbox'; md.className = 'multiDayChk'; md.checked = !!seg.endDate;
+    var md = document.createElement('input'); md.type = 'checkbox'; md.className = 'multiDayChk'; md.checked = !!seg.multi;
     mdWrap.appendChild(md); mdWrap.appendChild(document.createTextNode('多天'));
 
     var adWrap = document.createElement('label'); adWrap.className = 'all-day'; adWrap.title = '整天=每日起止均为配置的上班时段（跨天则每天都按整天算）';
@@ -1353,7 +1359,7 @@ function renderTimeSegs(){
 
     var d = document.createElement('input'); d.type = 'date'; d.className = 'fDate'; d.value = seg.date || todayStr(); d.title = '起日期';
     var s = document.createElement('input'); s.type = 'text'; s.className = 'fTime fStart'; s.readOnly = true; s.placeholder = '起时间'; s.value = seg.start || ''; s.disabled = !!seg.allDay; s.title = '起时间（点此选择）';
-    var isMulti = !!seg.endDate;
+    var isMulti = !!seg.multi;
     var de = document.createElement('input'); de.type = 'date'; de.className = 'fEndDate'; de.value = seg.endDate || ''; de.title = '至日期（多天时填写，空=单日）'; de.style.display = isMulti ? '' : 'none';
     var e = document.createElement('input'); e.type = 'text'; e.className = 'fTime fEnd'; e.readOnly = true; e.placeholder = '至时间'; e.value = seg.end || ''; e.disabled = !!seg.allDay; e.title = '至时间（点此选择）';
     var dl = document.createElement('span'); dl.className = 'sep endDateSep'; dl.textContent = isMulti ? '至' : '~';     // 多天：起 至 至日期；单日：起 ~ 至（同日）
@@ -1404,7 +1410,7 @@ function addTimeSeg(){
   if (editIndex !== null) return;   // 修改模式禁止新增行（修改只能单行）
   if (timeSegs.length >= 5) return;
   var last = timeSegs[timeSegs.length - 1];
-  timeSegs.push({ date: last.date, allDay: last.allDay, start: last.start, end: last.end, note: last.note });   // 完全复制上一行（日期/整天/时段/备注）
+  timeSegs.push({ date: last.date, allDay: last.allDay, start: last.start, end: last.end, note: last.note, endDate: '', multi: false });   // 完全复制上一行（日期/整天/时段/备注）；加班无至日期
   renderTimeSegs(); updateRange();
 }
 function delTimeSeg(i){
@@ -2169,7 +2175,7 @@ async function submit(){
       id:      genRecId(),
       docNo:   '',   // 不预占号：最终单据号在「流水号锁」内取（见下方 add 块），写库后随回读显示
       date:    sg.date,
-      endDate: sg.endDate || '',   // 请假/其它跨天：至日期（空=单日）；仅加班恒空
+      endDate: segEndDate(sg, curCat.id),   // 请假单日存起日期(便于数据对齐)、跨天存至日期；加班恒空
       otType:  calcOtType(sg.date),   // 按日期自动判定：国假 / 双休 / 平时（节假日未读取→未知）
       catId:   curCat.id,
       catName: curCat.name,
@@ -2242,7 +2248,7 @@ async function submit(){
       id: (old && old.id) || genRecId(),
       oid: (old && old.oid) || null,     // 带原评论 oid：edit 时直接 PUT 原地覆盖（不再新建事件评论）
       docNo: (old && old.docNo) || '',   // 修改沿用原单据号，不重新编号；原记录无号时不预占（回读后显示）
-      date: f.date, endDate: f.endDate || '', otType: calcOtType(f.date),   // 按日期自动判定加班类型；endDate 随请假跨天带回
+      date: f.date, endDate: segEndDate(f, curCat.id), otType: calcOtType(f.date),   // 按日期自动判定加班类型；请假单日存起日期/跨天存至日期
       catId: curCat.id, catName: curCat.name, color: curCat.color, mode: curCat.mode,
       people: old.people,
       detail: f.start + '-' + f.end,
@@ -2384,7 +2390,7 @@ function startEdit(i){
     if (!sg.date) sg.date = r.date || todayStr();
     sg.allDay = (sg.start === CONFIG.workStart && sg.end === CONFIG.workEnd);   // 恰为上班时段 → 视为整天
     if (k === 0 && !sg.note && r.note) sg.note = r.note;   // 旧整条备注归到第一行
-    if (k === 0 && r.endDate) sg.endDate = r.endDate;       // 回填至日期（请假跨天）；其它记录 endDate 恒空
+    if (k === 0 && r.endDate){ sg.endDate = r.endDate; sg.multi = (r.endDate !== r.date); }   // 回填至日期；跨天(endDate≠起日期)才勾选「多天」，单日(endDate=起日期)按单日处理、界面隐藏至日期
   });
   renderTimeSegs();
   renderGroups();
@@ -2422,10 +2428,17 @@ $('#timeSegs').addEventListener('change', function(e){
   if (el.classList.contains('fDate')){ seg.date = el.value; refresh(); return; }
   else if (el.classList.contains('fEndDate')){ seg.endDate = el.value; refresh(); return; }   // 至日期：空=单日
   else if (el.classList.contains('multiDayChk')){
-    if (!el.checked) seg.endDate = '';   // 取消勾选 → 清空终日期（视为单日）
+    if (el.checked){
+      seg.multi = true;
+      // 勾选「多天」→ 显示至日期填写框，默认填当天日期供修改（需求：不要留空）
+      if (!seg.endDate || seg.endDate === seg.date) seg.endDate = todayStr();
+    } else {
+      seg.multi = false;
+      seg.endDate = '';   // 取消勾选 → 视为单日（保存时 endDate 取 起日期，便于数据对齐）
+    }
     var deEl = row.querySelector('.fEndDate');
     var dlEl = row.querySelector('.endDateSep');
-    if (deEl){ deEl.style.display = el.checked ? '' : 'none'; if (!el.checked) deEl.value = ''; }
+    if (deEl){ deEl.style.display = el.checked ? '' : 'none'; if (el.checked) deEl.value = seg.endDate; else deEl.value = ''; }
     if (dlEl) dlEl.textContent = el.checked ? '至' : '-';
     refresh();
     return;
@@ -2948,8 +2961,8 @@ function buildPrintData(rs){
     '打印时间': p2(dnow.getHours()) + ':' + p2(dnow.getMinutes()),
     '总条数': rs.length,
     '总小时': Math.round(totalHours * 100) / 100,
-    '当前组别': curGroup || '',
-    '当前类别': (curCat && curCat.name) || '',
+    '当前组别': PRINT_GROUP || curGroup || '',
+    '当前类别': allOt ? '加班' : '请假',
     '当前状态': (($('#recStatus') && $('#recStatus').value) || ''),
     // 人员签名占位符（登录名/考勤人/一二级部门领导）的姓名文本：xlsx 下载路径按文档级占位符原样显示姓名；
     // 打印路径由签名图机制（PERSON_PH_KEYS）优先处理，此处值不影响。
@@ -3374,8 +3387,6 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     for (var dk in rec) if (docVm[dk] == null || docVm[dk] === '') docVm[dk] = rec[dk];
   });
   var headerRows = rows.slice(0, dataStart), dataRows = rows.slice(dataStart, dataEnd + 1), footerRows = rows.slice(dataEnd + 1);
-  var lastColNum = cols.count;                                        // 最右列（用于补右侧外框线）
-  var lastRowNum = _getRow(rows[rows.length - 1]).r0;                 // 最后一行（用于补底部外框线）
   // 列宽比例（%）
   var totalW = 0; for (var i = 1; i <= cols.count; i++) totalW += (cols.width[i] || 8);
   if (!totalW) totalW = cols.count * 8;
@@ -3393,28 +3404,6 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       var cs = 1, rs2 = 1;
       if (primary[cNum + '_' + r0]){ cs = primary[cNum + '_' + r0].cs; rs2 = primary[cNum + '_' + r0].rs; }
       var css = cellCss(styleMap[+c.style] || {});
-      // 外框闭合：模板边框画法常只画 left/top/bottom，最右列右侧、最后一行底部缺线 → 补上（线宽以同行/同列已有边为准，保证外框连贯）
-      // 注意用「视觉边缘」判断：合并单元格的 c.ref 是起始列，须用 起始列+跨列数-1 才落到最右列；行同理
-      var _edgeCol = cNum + (cs > 1 ? cs : 1) - 1;
-      var _edgeRow = r0 + (rs2 > 1 ? rs2 : 1) - 1;
-      if (_edgeCol === lastColNum && !/border-right:/.test(css)){
-        var _lb = css.match(/border-left:([^;]+)/);
-        css += (css ? ';' : '') + 'border-right:' + (_lb ? _lb[1] : '1px solid #000');
-      }
-      // 外框闭合：仅当该单元格本身已有任一外框线时，才补齐缺失的「最右列右侧 / 最后一行底部」边线
-      // （线宽/线型取该单元格已有的对应内缘边，保证外框连贯；无边框模板不会被强行加框）。
-      // 注：r0/cNum 须为数字，否则字符串拼接会让 _edgeRow 计算错误（已用 +_rowNum 修正）。
-      var _hasBorder = /border-(left|right|top|bottom):/.test(css);
-      if (_hasBorder){
-        if (_edgeCol === lastColNum && !/border-right:/.test(css)){
-          var _lb = css.match(/border-left:([^;]+)/);
-          css += (css ? ';' : '') + 'border-right:' + (_lb ? _lb[1] : '1px solid #000');
-        }
-        if (_edgeRow === lastRowNum && !/border-bottom:/.test(css)){
-          var _tb = css.match(/border-top:([^;]+)/);
-          css += (css ? ';' : '') + 'border-bottom:' + (_tb ? _tb[1] : '1px solid #000');
-        }
-      }
       if (rh) css += (css ? ';' : '') + 'height:' + rh;   // 行高落到 td 才可靠（tr 的 height 浏览器不强制）
       var styleAttr = css ? ' style="' + css + '"' : '';
       if (mode === 'blank'){
@@ -3488,38 +3477,47 @@ async function printRecordsViaTemplate(rs){
   try {
     try { await ensureJszip(); } catch(e){ showAlert(e.message); return; }
     try { await ensurePeopleLoaded(); } catch(e){}
-    var data = buildPrintData(rs);   // 内部已按记录设定 PRINT_GROUP / PRINT_CAT，供下方 gpSub() 取用绑定
-    var ab;
-    try { ab = await fetchTemplateAb(data.allOt); }
-    catch(e){ await showAlert('加载打印模板失败：' + (e && e.message ? e.message : e), '模板打印失败'); return; }
-    // 解析模板（已按内容指纹缓存：同模板跳过 JSZip 解压 + XML 解析）。签名图按模板『实际用到』的占位符取，避免无谓下载
-    var model = await getTemplateModel(ab);
-    // 忠于模板的页边距：用模板 pageMargins 注入 @page margin。覆盖静态默认，且不再硬写 10mm 去覆盖用户在打印对话框里选的边距。
-    // 每次都重置 #tplPageMargins：有 pageMargins 用模板值，没有则清空（避免沿用上一次其它模板残留的边距）。
+    /* 一起打印加班 + 请假时，按类别分组：加班(isOtCatId)走加班模板、请假类走请假模板，
+       各自取绑定模板与单页条数（PRINT_CAT/PRINT_GROUP 由 buildPrintData 按本组记录设定），互不干扰。 */
+    var otRs = [], lvRs = [];
+    rs.forEach(function(r){ (isOtCatId(r.catId) ? otRs : lvRs).push(r); });
+    var groups = [];
+    if (otRs.length) groups.push({ allOt: true,  rs: otRs });
+    if (lvRs.length) groups.push({ allOt: false, rs: lvRs });
+    var htmlParts = [], chosenPM = null;
+    for (var gi = 0; gi < groups.length; gi++){
+      var g = groups[gi];
+      var data = buildPrintData(g.rs);   // 内部按本组记录设定 PRINT_GROUP / PRINT_CAT，供下方 gpSub()/resolvePerPage 取用绑定
+      var ab;
+      try { ab = await fetchTemplateAb(data.allOt); }
+      catch(e){ await showAlert('加载打印模板失败：' + (e && e.message ? e.message : e), '模板打印失败'); return; }
+      var model = await getTemplateModel(ab);   // 同模板按内容指纹缓存，跳过重复解压/解析
+      var dataLen = (model.dataEnd - model.dataStart + 1);
+      PRINT_PER_PAGE = resolvePerPage(dataLen);  // 每页条数：按本组「考勤组+类别」配置取，未配置按模板形态自适应
+      if (!chosenPM && model.pageMargins) chosenPM = model.pageMargins;   // 多模板边距不一致时只能取其一（建议各模板边距保持一致）
+      var needNames = (model.fixedNames || []).slice();
+      if (model.needsRecordSig){
+        var seen = {};
+        (data.recVals || []).forEach(function(r){ var n = (r && r['签名'] != null) ? String(r['签名']).trim() : ''; if (n && !seen[n]){ seen[n] = true; needNames.push(n); } });
+      }
+      var signByName = needNames.length ? await fetchNameImages(needNames) : {};
+      var html;
+      try { html = await renderTemplateToHtml(ab, data.recVals, data.docVals, signByName); }
+      catch(e){ await showAlert('生成打印视图失败：' + e.message, '模板打印失败'); return; }
+      htmlParts.push(html);
+    }
+    // 忠于模板的页边距：用首个可用组的模板 pageMargins 注入 @page margin；每次重置，避免沿用上一次其它模板残留边距
     var _pmEl = document.getElementById('tplPageMargins');
     if (!_pmEl){ _pmEl = document.createElement('style'); _pmEl.id = 'tplPageMargins'; document.head.appendChild(_pmEl); }
-    if (model.pageMargins){
-      var _pm = model.pageMargins;
-      _pmEl.textContent = '@page{margin:' + (_pm.top||0) + 'in ' + (_pm.right||0) + 'in ' + (_pm.bottom||0) + 'in ' + (_pm.left||0) + 'in}';
+    if (chosenPM){
+      _pmEl.textContent = '@page{margin:' + (chosenPM.top||0) + 'in ' + (chosenPM.right||0) + 'in ' + (chosenPM.bottom||0) + 'in ' + (chosenPM.left||0) + 'in}';
     } else {
       _pmEl.textContent = '';
     }
-    // 每页条数：优先取用户配置（resolvePerPage 已处理 组/类别 匹配与回退），未配置时按模板形态自适应
-    //   单据式（数据段跨多行，如请假单）→ 默认 1（一条记录一张表，避免 10 份空骨架撑满整页造成「一片空白」）
-    //   列表式（单行记录行，如加班）→ 默认 10
-    var dataLen = (model.dataEnd - model.dataStart + 1);
-    PRINT_PER_PAGE = resolvePerPage(dataLen);
-    var needNames = (model.fixedNames || []).slice();
-    if (model.needsRecordSig){
-      var seen = {};
-      (data.recVals || []).forEach(function(r){ var n = (r && r['签名'] != null) ? String(r['签名']).trim() : ''; if (n && !seen[n]){ seen[n] = true; needNames.push(n); } });
-    }
-    var signByName = needNames.length ? await fetchNameImages(needNames) : {};
-    var html;
-    try { html = await renderTemplateToHtml(ab, data.recVals, data.docVals, signByName); }
-    catch(e){ await showAlert('生成打印视图失败：' + e.message, '模板打印失败'); return; }
+    // 多组（加班+请假）之间强制分页，各组用自身模板与单页条数独立成段
+    var fullHtml = htmlParts.map(function(h, i){ return (i > 0 ? '<div class="grp-break"></div>' : '') + h; }).join('');
     var pa = $('#printArea'); if (!pa){ pa = document.createElement('div'); pa.id = 'printArea'; document.body.appendChild(pa); }
-    pa.innerHTML = html;
+    pa.innerHTML = fullHtml;
     document.body.classList.add('printing-template');
     var cleanup = function(){ document.body.classList.remove('printing-template'); };
     window.addEventListener('afterprint', cleanup, { once: true });
