@@ -3292,21 +3292,23 @@ async function parseStyles(zip){
    线宽用 **pt**（Excel 线宽的原生单位、打印时为物理尺寸）而非 px：
    px 在打印缩放/高 dpi 下会被压成同一档「细线」（1px 与 2px 印出来几乎一样粗），
    pt 是绝对长度，1pt:2pt:3pt 在纸上分别约 0.35mm / 0.7mm / 1.06mm，粗细差异稳定可分辨。
-   比例沿用 Excel 的 hair:thin:medium:thick ≈ 0.5:1:2:3。 */
+   线宽取值：hair 0.25 / thin 0.5 / medium 2 / thick 3（pt）。
+   thin 取 0.5pt（纸上约 0.18mm）才接近 Excel 原表格那条极细的网格线；
+   medium 取 2pt 与 thin 拉开 4 倍差距，避免两者在打印预览缩放下被压成同一档「细线」。 */
 function _borderCss(sd, b){
   if (!b || !b.style) return '';
   var col = b.color ? ('#' + (b.color.length > 6 ? b.color.slice(2) : b.color)) : '#000';
-  var w = '1pt', t = 'solid';
+  var w = '0.5pt', t = 'solid';
   switch (b.style){
-    case 'hair': w = '0.5pt'; break;
-    case 'thin': w = '1pt'; break;
+    case 'hair': w = '0.25pt'; break;
+    case 'thin': w = '0.5pt'; break;
     case 'medium': w = '2pt'; break;
     case 'thick': w = '3pt'; break;
     case 'dotted': t = 'dotted'; break;
     case 'double': w = '3pt'; t = 'double'; break;
     case 'dashed': case 'dashDot': case 'dashDotDot': case 'slantDashDot': t = 'dashed'; break;
     case 'mediumDashed': case 'mediumDashDot': case 'mediumDashDotDot': w = '2pt'; t = 'dashed'; break;
-    default: w = '1pt';
+    default: w = '0.5pt';
   }
   return 'border-' + sd + ':' + w + ' ' + t + ' ' + col;
 }
