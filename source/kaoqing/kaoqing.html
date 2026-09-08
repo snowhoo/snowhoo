@@ -2976,27 +2976,65 @@ function buildPrintData(rs){
   return { allOt: allOt, docVals: docVals, recVals: recVals };
 }
 var _tplAbByName = {};   // 模板文件名 -> ArrayBuffer：模板静态，跳过重复网络下载（改模板后刷新页面即重新拉取）
+var _tplPending = {};    // 模板文件名 -> 进行中的 Promise：预热与打印撞车时共享同一次下载，避免重复请求
+// 按文件名取模板字节（预热与正式打印共用；命中缓存直接复用，跳过网络）
+// quiet=true：取不到时不弹窗（预热用，避免"某个默认模板不存在"打扰用户），只抛错由调用方静默忽略
+async function fetchTemplateByName(fname, quiet){
+  if (_tplAbByName[fname]) return _tplAbByName[fname];   // 同模板直接复用已下载字节
+  if (_tplPending[fname]) return _tplPending[fname];     // 已有进行中的下载 → 复用，不重复发请求
+  var p = (async function(){
+    var enc = encodeURIComponent(fname);
+    var candidates = ['template/' + enc, 'kaoqing/template/' + enc, '../kaoqing/template/' + enc];
+    var tried = [], resp = null;
+    for (var ci = 0; ci < candidates.length; ci++){
+      var cu; try { cu = new URL(candidates[ci], location.href).toString(); } catch(e){ continue; }
+      tried.push(cu);
+      try { var r = await fetch(cu, { cache: 'no-store' }); if (r.ok){ resp = r; break; } } catch(e){ /* 跨域 / 网络错误 → 试下一个候选 */ }
+    }
+    if (!resp){
+      if (!quiet) await showAlert('未找到模板文件：' + fname + '\n已尝试路径：\n' + tried.join('\n') + '\n请把它放到 kaoqing/template/ 目录下（与 kaoqing.html 同级），且页面需通过 http(s) 访问（file:// 直接打开本地文件时浏览器禁止读取模板）。', '模板打印失败');
+      throw new Error('no template');
+    }
+    var ab = await resp.arrayBuffer();
+    _tplAbByName[fname] = ab;
+    return ab;
+  })();
+  _tplPending[fname] = p;
+  try { return await p; } finally { delete _tplPending[fname]; }
+}
 async function fetchTemplateAb(allOt){
   // 优先用当前考勤组在打印设置里绑定的模板文件；未绑定则按类别（加班/请假）回退到默认模板
   var gp = (GROUP_PRINT_CFG[effGroupKey()]) || {};
   var sub = (allOt ? gp.ot : gp.lv) || {};
   var fname = (sub.tplFile && sub.tplFile.trim()) ? sub.tplFile.trim() : (allOt ? '加班申请单模板.xlsx' : '请假申请单模板.xlsx');
-  if (_tplAbByName[fname]) return _tplAbByName[fname];   // 同模板直接复用已下载字节
-  var enc = encodeURIComponent(fname);
-  var candidates = ['template/' + enc, 'kaoqing/template/' + enc, '../kaoqing/template/' + enc];
-  var tried = [], resp = null;
-  for (var ci = 0; ci < candidates.length; ci++){
-    var cu; try { cu = new URL(candidates[ci], location.href).toString(); } catch(e){ continue; }
-    tried.push(cu);
-    try { var r = await fetch(cu, { cache: 'no-store' }); if (r.ok){ resp = r; break; } } catch(e){ /* 跨域 / 网络错误 → 试下一个候选 */ }
+  return fetchTemplateByName(fname);
+}
+/* 打印预热：页面初始化完成后在空闲时后台把「模板字节 + 解析结果 + 常用签名图」提前备好，
+   这样点打印时只剩渲染，等待时间大幅缩短。全部 fire-and-forget，失败静默忽略（不影响主流程）。 */
+async function warmupPrintAssets(){
+  try { await ensureJszip(); } catch(e){ return; }        // jszip 未就绪则后续无从谈起
+  var names = [];
+  try {
+    var gp = GROUP_PRINT_CFG[effGroupKey()] || {};
+    ['ot', 'lv'].forEach(function(k){
+      var f = ((gp[k] || {}).tplFile || '').trim();
+      if (f && names.indexOf(f) < 0) names.push(f);
+    });
+  } catch(e){}
+  ['加班申请单模板.xlsx', '请假申请单模板.xlsx'].forEach(function(f){ if (names.indexOf(f) < 0) names.push(f); });
+  for (var i = 0; i < names.length; i++){
+    try { await getTemplateModel(await fetchTemplateByName(names[i], true)); } catch(e){ /* 模板缺失/解析失败：静默，等真正打印时再报错 */ }
   }
-  if (!resp){
-    await showAlert('未找到模板文件：' + fname + '\n已尝试路径：\n' + tried.join('\n') + '\n请把它放到 kaoqing/template/ 目录下（与 kaoqing.html 同级），且页面需通过 http(s) 访问（file:// 直接打开本地文件时浏览器禁止读取模板）。', '模板打印失败');
-    throw new Error('no template');
-  }
-  var ab = await resp.arrayBuffer();
-  _tplAbByName[fname] = ab;
-  return ab;
+  // 常用签名图：打印设置里绑定的考勤人/一二级部门领导 + 当前登录人（这几张几乎每次打印都要用）
+  try {
+    var wn = [], gp2 = GROUP_PRINT_CFG[effGroupKey()] || {};
+    ['ot', 'lv'].forEach(function(k){
+      var s = gp2[k] || {};
+      [s.kaoqingRen, s.dept1Leader, s.dept2Leader].forEach(function(n){ if (n && wn.indexOf(n) < 0) wn.push(n); });
+    });
+    var me = currentLoginNick(); if (me && wn.indexOf(me) < 0) wn.push(me);
+    if (wn.length) await fetchNameImages(wn);
+  } catch(e){}
 }
 // ArrayBuffer → base64（分块，避免大文件 String.fromCharCode.apply 爆栈）
 function abToB64(ab){
@@ -3795,8 +3833,17 @@ async function printRecordsViaTemplate(rs){
   if (!rs || !rs.length){ await showAlert('没有可打印的记录'); return; }
   showBusy('模板打印准备中…');
   try {
+    // 加速：人员档案（Waline 网络往返）与 jszip / 模板字节下载并发进行，省掉一次串行 RTT
+    var peopleP = ensurePeopleLoaded().catch(function(){});
     try { await ensureJszip(); } catch(e){ showAlert(e.message); return; }
-    try { await ensurePeopleLoaded(); } catch(e){}
+    try {
+      // 预先取本次大概率用到的两个模板字节（命中预热缓存时为 0 耗时；未命中也只是提前发起下载）
+      var gp0 = GROUP_PRINT_CFG[effGroupKey()] || {};
+      var dn = ['加班申请单模板.xlsx', '请假申请单模板.xlsx'];
+      ['ot', 'lv'].forEach(function(k, i){ var f = ((gp0[k] || {}).tplFile || '').trim(); if (f) dn[i] = f; });
+      await Promise.all(dn.map(function(f){ return fetchTemplateByName(f, true).catch(function(){}); }));
+    } catch(e){}
+    await peopleP;   // buildPrintData 依赖 PEOPLE_FULL（按姓名取工号/部门等），必须在此之前完成
     /* 一起打印加班 + 请假时，按类别分组：加班(isOtCatId)走加班模板、请假类走请假模板，
        各自取绑定模板与单页条数（PRINT_CAT/PRINT_GROUP 由 buildPrintData 按本组记录设定），互不干扰。 */
     var otRs = [], lvRs = [];
@@ -5466,6 +5513,8 @@ document.addEventListener('keydown', function(e){
   // 归档列表不在打开时加载；用户点开「数据选择」下拉框时才由 lazyLoadArchiveMonths 读取
   // 用户登录态检测改为懒加载：不 await、不阻塞其它加载/渲染，置于微任务中于空闲时执行
   Promise.resolve().then(checkLogin);
+  // 打印预热：空闲时后台备好模板（字节+解析结果）与常用签名图，让首次点打印也几乎无等待（失败静默）
+  setTimeout(function(){ warmupPrintAssets(); }, 1200);
   initWalineEarly();         // 初始化 Waline 组件（严格参照 APP.html：挂载 #walineLoginMount，由 onLogin 回写登录态）
 })();
 </script>
