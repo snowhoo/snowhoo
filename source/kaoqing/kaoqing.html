@@ -3814,11 +3814,23 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       var html;
       if (c.runs && c.runs.some(function(r){ return r.rPr; })){
         // 富文本 run：逐段解析占位符并包裹各自字体样式
-        html = c.runs.map(function(run){
-          var re = buildInner(run.text);
-          if (run.rPr){ var rs = _fontCss(run.rPr); if (rs) re = '<span style="' + rs + '">' + re + '</span>'; }
-          return re;
-        }).join('');
+        // 但 Excel 常把「三括号人员签名占位符」拆成多个 run（如 左三括号 / 考勤人签名 / 右三括号 各带不同字体），
+        // 逐 run 无法匹配到完整三括号标记 → 签名图不渲染。检测到「整格拼接后有完整占位符、但没有任何单个 run 含完整占位符」时，
+        // 改为对整格文本做一次替换（占位符通常整格就是一个签名图，整格套用首个 run 样式即可，字体样式对图片无意义）。
+        var _full = c.runs.map(function(r){ return r.text || ''; }).join('');
+        var _fullTok = /\{\{\{[^}]*\}\}\}/.test(_full) || /\{\{[^}]+?\}\}/.test(_full);
+        var _runTok = c.runs.some(function(r){ return /\{\{\{[^}]*\}\}\}/.test(r.text || '') || /\{\{[^}]+?\}\}/.test(r.text || ''); });
+        if (_fullTok && !_runTok){
+          var re2 = buildInner(_full);
+          var rs0 = (c.runs[0] && c.runs[0].rPr) ? _fontCss(c.runs[0].rPr) : '';
+          html = rs0 ? '<span style="' + rs0 + '">' + re2 + '</span>' : re2;
+        } else {
+          html = c.runs.map(function(run){
+            var re = buildInner(run.text);
+            if (run.rPr){ var rs = _fontCss(run.rPr); if (rs) re = '<span style="' + rs + '">' + re + '</span>'; }
+            return re;
+          }).join('');
+        }
       } else {
         html = buildInner(c.text || '');
       }
