@@ -2841,7 +2841,7 @@ function buildRecordVals(r, idx){
     '开始': start,
     '结束': end,
     '时段': fmtSpan(span),
-    '小时': (r.hours == null) ? '' : r.hours,
+    '小时': (r.hours == null) ? '' : (function(){ var h = Math.round(Number(r.hours) * 10) / 10; return (h % 1 === 0) ? String(h) : h.toFixed(1); })(),
     '说明': r.note || '',
     '状态': r.status || '待提交',
     '类别': catDisplay,
