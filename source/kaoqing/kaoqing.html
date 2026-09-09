@@ -3708,12 +3708,22 @@ async function getTemplateModel(ab){
     if (mx > cols.count) cols.count = mx;
   }
   if (!cols.count){ var dm = sheetXml.match(/<dimension[^>]*\bref="([A-Z]+)\d+/); cols.count = dm ? colToNum(dm[1]) : 7; }
-  // 行高
+  // 行高：Excel 的 ht 以「点(pt)」为单位（无后缀）；但 LibreOffice / WPS 另存为 xlsx 时会写成厘米（如 ht="0.79cm"）。
+  // 若原样当成 pt 用，0.79 会被当 0.79pt（≈1px）→ 空白行高度几乎不可见（即“空行高度没识别”）。
+  // 故按可选单位后缀换算成 pt：cm*28.3465 / mm*2.83465 / in*72 / 无后缀或 pt 原值。
+  function htToPt(v, unit){
+    v = parseFloat(v) || 0;
+    if (!unit || unit === 'pt') return v;
+    if (unit === 'cm') return v * 28.3465;
+    if (unit === 'mm') return v * 2.83465;
+    if (unit === 'in') return v * 72;
+    return v;
+  }
   var rowH = {};
   var rhRe = /<row\b[^>]*?\br="(\d+)"[^>]*?>/g, rhm;
   while ((rhm = rhRe.exec(sheetXml))){
-    var htm = rhm[0].match(/\bht="([\d.]+)"/);
-    rowH[rhm[1]] = htm ? htm[1] : null;
+    var htm = rhm[0].match(/\bht="([\d.]+)(cm|mm|in|pt)?"/);
+    rowH[rhm[1]] = htm ? htToPt(htm[1], htm[2]) : null;
   }
   // 隐藏列 / 隐藏行：忠实还原 Excel 隐藏状态（渲染时以 display:none 处理，保留合并坐标不偏移）
   var hiddenCols = {}, hiddenRows = {};
@@ -3894,6 +3904,11 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       if (_pmB) _st = Object.assign({}, _st, { border: _pmB });
       var css = cellCss(_st);
       if (rh) css += (css ? ';' : '') + 'height:' + rh;   // 行高落到 td 才可靠（tr 的 height 浏览器不强制）
+      // 空单元格（模板里本身无文字）：inner 会被强制填 &nbsp;（见下方 html||'&nbsp;'），而该单元格常带较大 font-size，
+      // &nbsp; 行盒高度可能高于设定的 height；若 td 为 overflow:visible（为「Excel 溢出延伸」所设），单元格会被这行盒撑大、设定行高失效
+      // —— 即「空白行高度没识别」。故空单元格改用 overflow:hidden：裁掉自身 &nbsp; 行盒、强制按设定高度渲染。
+      // 不影响「Excel 溢出延伸」：那是相邻有内容的源单元格 overflow:visible 把自己的字画到本格之上，本格自身 overflow:hidden 只裁自身内容、不裁邻格画来的字。通用、不针对单元格。
+      if (!((c.text || '').trim())) css += ';overflow:hidden';
       var csAttr = (cs > 1 ? ' colspan="' + cs + '"' : '') + (rs2 > 1 ? ' rowspan="' + rs2 + '"' : '');
       // 隐藏列：列轨已在 colgroup 标 display:none，此处直接跳过该单元格（保持表格结构一致）
       if (hiddenCols[cNum]){ return; }
