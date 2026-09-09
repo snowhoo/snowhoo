@@ -4111,10 +4111,8 @@ async function printRecordsViaTemplate(rs){
       if (stitch) anyStitch = true;
       var partHtml = '';
       if (stitch){
-        // A5 横版模板 → 上下拼到一张 A4 竖版：每个 A5 用 width:100% 页框（随对话框边距自适应），
-        // 内容在页框内居中；缩放系数 k 不再在此写死，而由下方「注入 innerHTML 后」按页框实际尺寸与模板自然尺寸
-        // 做等比包含(contain)计算（见 applyA5Scale），保证两模板边距表现一致、且左/右/上/下对称。
-        // 模板 pageMargins 写入 .tpl-margin 的 padding，内容被页边距正确内缩（不再贴左上角）。
+        // A5 横版模板 → 上下拼到一张 A4 竖版：每页=已固化的 A5 页面(.a5-page，固定 148.5mm 高)，两页堆叠拼满 297mm A4。
+        // 模板 pageMargins 已作为 .tpl-margin padding 内缩内容（上方统一处理）；此处仅把固化好的 A5 页面原样放进半页格，不做居中/缩放。
         for (var s = 0; s < pages.length; s += 2){
           var c1 = pages[s], c2 = pages[s + 1] || '';
           partHtml += '<div class="a4-sheet">'
@@ -4123,7 +4121,8 @@ async function printRecordsViaTemplate(rs){
             + '</div>';
         }
       } else {
-        pages.forEach(function(pg, idx){ partHtml += '<div class="tpl-margin"' + pmAttr + '>' + pg + '</div>' + (idx < pages.length - 1 ? '<div class="pg-break"></div>' : ''); });
+        // 单页打印：同样先固化为 A5 页面(.a5-page)，与拼接模式共用同一渲染单元，仅不包 .a4-sheet
+        pages.forEach(function(pg, idx){ partHtml += '<div class="a5-page"><div class="tpl-scale"><div class="tpl-margin"' + pmAttr + '>' + pg + '</div></div></div>' + (idx < pages.length - 1 ? '<div class="pg-break"></div>' : ''); });
       }
       htmlParts.push(partHtml);
     }
@@ -4138,22 +4137,20 @@ async function printRecordsViaTemplate(rs){
     pa.innerHTML = fullHtml;
     // A5拼接A4（方案1）：两 A5 半页各固定 148.5mm、上下堆叠拼满 297mm A4，第二页从正中(148.5mm)起、与上一页打印位置无关；
     // 模板 pageMargins 已在上方作为 .tpl-margin padding 参与绘制（左/右/上/下内缩），A4 页边距=0；本处缩放仅「超界时收缩(k<=1)」，不放大不居中。
-    if (anyStitch){
-      // 方案1：模板边距已作为 .tpl-margin padding 内缩内容；此处缩放仅用于「内容超出可打印区时按比例收缩(k<=1)」，
-      // 基准是可打印区(.tpl-margin 扣除 padding 后的内容盒)，而非整个 A5 页框；不放大、不居中、transform-origin 左上 —— 忠实于模板边距设定。
-      var _margins = pa.querySelectorAll('.a5-page .tpl-margin');
-      for (var _i = 0; _i < _margins.length; _i++){
-        var _m = _margins[_i], _sc = _m.querySelector('.tpl-scale');
-        if (!_sc) continue;
-        var _cs = getComputedStyle(_m);
-        var _padL = parseFloat(_cs.paddingLeft) || 0, _padR = parseFloat(_cs.paddingRight) || 0;
-        var _padT = parseFloat(_cs.paddingTop) || 0, _padB = parseFloat(_cs.paddingBottom) || 0;
-        var _availW = _m.clientWidth - _padL - _padR;
-        var _availH = _m.clientHeight - _padT - _padB;
-        var _nw = _sc.offsetWidth, _nh = _sc.offsetHeight;
-        var _k = (_nw && _nh) ? Math.min(1, _availW / _nw, _availH / _nh) : 1;   // 仅收缩，不放大、不居中
-        _sc.style.transform = 'scale(' + _k.toFixed(4) + ')';
-      }
+    // 方案1：所有已固化的 A5 页面(.a5-page)统一做一次「超界收缩(k<=1)」——基准是 .tpl-margin 扣除 padding 后的可打印内容盒，
+    // 不放大、不居中、transform-origin 左上；模板边距已作为 padding 参与绘制，故此处仅防溢出、不改动版式。拼接/单页两模式共用此路径。
+    var _margins = pa.querySelectorAll('.a5-page .tpl-margin');
+    for (var _i = 0; _i < _margins.length; _i++){
+      var _m = _margins[_i], _sc = _m.querySelector('.tpl-scale');
+      if (!_sc) continue;
+      var _cs = getComputedStyle(_m);
+      var _padL = parseFloat(_cs.paddingLeft) || 0, _padR = parseFloat(_cs.paddingRight) || 0;
+      var _padT = parseFloat(_cs.paddingTop) || 0, _padB = parseFloat(_cs.paddingBottom) || 0;
+      var _availW = _m.clientWidth - _padL - _padR;
+      var _availH = _m.clientHeight - _padT - _padB;
+      var _nw = _sc.offsetWidth, _nh = _sc.offsetHeight;
+      var _k = (_nw && _nh) ? Math.min(1, _availW / _nw, _availH / _nh) : 1;   // 仅收缩，不放大、不居中
+      _sc.style.transform = 'scale(' + _k.toFixed(4) + ')';
     }
     document.body.classList.add('printing-template');
     var cleanup = function(){ document.body.classList.remove('printing-template'); };
