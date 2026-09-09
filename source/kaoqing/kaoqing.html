@@ -3793,10 +3793,10 @@ async function getTemplateModel(ab){
       merges.push({ sr: parseInt(a.replace(/[A-Z]/g, '')), sc: colToNum(a.replace(/\d+/, '')), er: parseInt(b.replace(/[A-Z]/g, '')), ec: colToNum(b.replace(/\d+/, '')) });
     }
   }
-  var primary = {}, covered = {}, coverOwner = {};
+  var primary = {}, covered = {};
   merges.forEach(function(mg){
     primary[mg.sc + '_' + mg.sr] = { cs: mg.ec - mg.sc + 1, rs: mg.er - mg.sr + 1 };
-    for (var c = mg.sc; c <= mg.ec; c++) for (var r = mg.sr; r <= mg.er; r++) if (!(c === mg.sc && r === mg.sr)){ covered[c + '_' + r] = true; coverOwner[c + '_' + r] = mg.sc + '_' + mg.sr; }
+    for (var c = mg.sc; c <= mg.ec; c++) for (var r = mg.sr; r <= mg.er; r++) if (!(c === mg.sc && r === mg.sr)){ covered[c + '_' + r] = true; }
   });
   // 行：同时匹配 Excel 对「仅调过行高、无单元格的空白行」写的「自闭合 <row .../>」与「成对 <row>...</row>」。
   // 自闭合分支必须放前面优先匹配，否则成对分支会把自闭合行的 /> 当本行结束、一路吞并到下一行的 </row>（误合并两行）。
@@ -3807,46 +3807,30 @@ async function getTemplateModel(ab){
   if (!rows.length) throw new Error('模板没有数据行');
   var _rowCache = {};
   function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: +_rowNum(rw) }; return _rowCache[rw]; }
-  /* 合并单元格的「边框并集」——这是请假模板边线丢失（尤其合并区上/左边）的真正原因。
-     模板把某条边画在「相邻单元格」上很常见：例如 D7:F7 的上边线实际存于 D6.bottom、左边线存于 C7.right，而 D7 自身无 top/left；
-     又如横向合并区最右端的右边框画在最右格（K2:L2 的 L2 等）。若只取合并区「自身组成单元格」的边框，这些边就取不到 → 整条边消失。
-     修法：先按「各边组成单元格」取并集（左取最左列、右取最右列、上取首行、下取末行），再「回看跨每条边的相邻格」
-     （左邻 right / 右邻 left / 上邻 bottom / 下邻 top）补全，只取模板真实定义过的边线（不是补画）；主单元格自身有该边线时优先用主单元格的。
-     合并区因此得到完整的四面边框；配合下方 collapse 模式，相邻格边线自动合并取较粗者，无需单独去重。 */
+  /* 合并单元格的「边框并集」——忠实还原 Excel 把合并区边框分散存储在「各组成单元格」上的事实。
+     做法：遍历合并矩形内的每一个组成单元格，收集它们各自样式上的 left/right/top/bottom，合并成主格(primary)的边框；
+     主单元格自身有该边线时优先用主单元格的。
+     不回看相邻格、不凭空加线：模板里某条线没定义（如两个相邻空单元格之间），就如实不画——这正是「忠实模板」。
+     配合下方 separate 模式的去重(cellSpan)，相邻格共享边线只画一次(不会变粗成 2px)。 */
   var _cellIdx = {};
   rows.forEach(function(rw){
     var _pc = _getRow(rw);
     _pc.cells.forEach(function(c){ _cellIdx[colToNum((c.ref || '').replace(/\d+/, '')) + '_' + _pc.r0] = c; });
   });
-  // 取某单元格的「有效边框」：直接单元格取其样式边框；被合并覆盖的单元格取其合并主格的样式边框（用于并集回看相邻格）
-  function _cellBorderAt(c, r){
-    var k = c + '_' + r;
-    if (_cellIdx[k]){ var s = styleMap[+_cellIdx[k].style]; return (s && s.border) ? s.border : null; }
-    var pk = coverOwner[k];
-    if (pk && _cellIdx[pk]){ var s2 = styleMap[+_cellIdx[pk].style]; return (s2 && s2.border) ? s2.border : null; }
-    return null;
-  }
   merges.forEach(function(mg){
     var _pcell = _cellIdx[mg.sc + '_' + mg.sr];
     var _ownB = (_pcell && styleMap[+_pcell.style]) ? (styleMap[+_pcell.style].border || null) : null;
-    var _u = { left: null, right: null, top: null, bottom: null }, _r, _c, _cc, _b;
-    // 自身组成单元格各边（左取最左列、右取最右列、上取首行、下取末行）
-    for (_r = mg.sr; _r <= mg.er; _r++){
-      _cc = _cellIdx[mg.sc + '_' + _r]; if (_cc){ _b = styleMap[+_cc.style]; if (_b && _b.border && _b.border.left && _b.border.left.style && !_u.left) _u.left = _b.border.left; }
-      _cc = _cellIdx[mg.ec + '_' + _r]; if (_cc){ _b = styleMap[+_cc.style]; if (_b && _b.border && _b.border.right && _b.border.right.style && !_u.right) _u.right = _b.border.right; }
-    }
-    for (_c = mg.sc; _c <= mg.ec; _c++){
-      _cc = _cellIdx[_c + '_' + mg.sr]; if (_cc){ _b = styleMap[+_cc.style]; if (_b && _b.border && _b.border.top && _b.border.top.style && !_u.top) _u.top = _b.border.top; }
-      _cc = _cellIdx[_c + '_' + mg.er]; if (_cc){ _b = styleMap[+_cc.style]; if (_b && _b.border && _b.border.bottom && _b.border.bottom.style && !_u.bottom) _u.bottom = _b.border.bottom; }
-    }
-    // 跨每条边的相邻格：Excel 常把边线存在相邻格上（D7:F7 上边在 D6.bottom、左边在 C7.right；D7 自身无 top/left）→ 回看补全
-    for (_r = mg.sr; _r <= mg.er; _r++){
-      _b = _cellBorderAt(mg.sc - 1, _r); if (_b && _b.right && _b.right.style && !_u.left) _u.left = _b.right;
-      _b = _cellBorderAt(mg.ec + 1, _r); if (_b && _b.left && _b.left.style && !_u.right) _u.right = _b.left;
-    }
-    for (_c = mg.sc; _c <= mg.ec; _c++){
-      _b = _cellBorderAt(_c, mg.sr - 1); if (_b && _b.bottom && _b.bottom.style && !_u.top) _u.top = _b.bottom;
-      _b = _cellBorderAt(_c, mg.er + 1); if (_b && _b.top && _b.top.style && !_u.bottom) _u.bottom = _b.top;
+    var _u = { left: null, right: null, top: null, bottom: null };
+    // 合并区全部组成单元格边框并集（含主格）
+    for (var r = mg.sr; r <= mg.er; r++){
+      for (var c = mg.sc; c <= mg.ec; c++){
+        var _cc = _cellIdx[c + '_' + r]; if (!_cc) continue;
+        var _b = styleMap[+_cc.style]; if (!_b || !_b.border) continue;
+        if (_b.border.left   && _b.border.left.style   && !_u.left)   _u.left = _b.border.left;
+        if (_b.border.right  && _b.border.right.style  && !_u.right)  _u.right = _b.border.right;
+        if (_b.border.top    && _b.border.top.style    && !_u.top)    _u.top = _b.border.top;
+        if (_b.border.bottom && _b.border.bottom.style && !_u.bottom) _u.bottom = _b.border.bottom;
+      }
     }
     var _pm = primary[mg.sc + '_' + mg.sr];
     if (_pm) _pm.border = {
