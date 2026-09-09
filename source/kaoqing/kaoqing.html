@@ -487,11 +487,10 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
   .time-picker .tp-preview{flex:1;text-align:right;font-size:1.15rem;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
 /* 模板打印预览：忠于 xlsx 模板排版，调起浏览器打印对话框（可打印 / 另存 PDF） */
 #printArea{display:none}
-/* 边框用「separate + border-spacing:0」而非 collapse：collapse 在合并单元格(colspan/rowspan)上会丢失
-   top/left/right 边框只留 bottom（Chrome 已知渲染缺陷），导致合并密集的请假单预览几乎无框。
-   separate 下每格独立绘边，合并单元外框才会完整；相邻 1px 边会叠成 2px，故另做「每条网格线只归一侧绘制」去重
-   （见 getTemplateModel 的 cellSpan.draw + emitRow），细线仍 1px、且不影响未合并的加班单外观。 */
-#printArea .tpl-table{border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000;margin:0}
+/* 边框用 border-collapse:collapse（HTML 表格原生边框模型，打印分页时边框正确、外框不被裁剪）。
+   合并密集的请假单此前用 separate 时，合并单元边线会被吞/打印分页处变粗；现改 collapse + 合并单元「完整并集」
+   （见 getTemplateModel 的 primary.border：回看相邻格补全四面），相邻格共享边线由浏览器自动合并取较粗者，无需单独去重。 */
+#printArea .tpl-table{border-collapse:collapse;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000;margin:0}
 /* 纵向 padding 归零 + line-height:1：td 的「行盒」= 字号×行高，若再加上纵向 padding 就会超过模板设定行高，
    使每一行都被撑高（模板设 12pt 却渲染成 ~14.7pt）→ 整页总高大于模板 → 触发超界等比收缩、宽度被连坐缩小。
    纵向留白改由 vertical-align:middle 在行高内居中，效果与 Excel 一致。横向 padding 保留 5px 贴近 Excel 单元格边距。 */
@@ -3793,10 +3792,10 @@ async function getTemplateModel(ab){
       merges.push({ sr: parseInt(a.replace(/[A-Z]/g, '')), sc: colToNum(a.replace(/\d+/, '')), er: parseInt(b.replace(/[A-Z]/g, '')), ec: colToNum(b.replace(/\d+/, '')) });
     }
   }
-  var primary = {}, covered = {};
+  var primary = {}, covered = {}, coverOwner = {};
   merges.forEach(function(mg){
     primary[mg.sc + '_' + mg.sr] = { cs: mg.ec - mg.sc + 1, rs: mg.er - mg.sr + 1 };
-    for (var c = mg.sc; c <= mg.ec; c++) for (var r = mg.sr; r <= mg.er; r++) if (!(c === mg.sc && r === mg.sr)) covered[c + '_' + r] = true;
+    for (var c = mg.sc; c <= mg.ec; c++) for (var r = mg.sr; r <= mg.er; r++) if (!(c === mg.sc && r === mg.sr)){ covered[c + '_' + r] = true; coverOwner[c + '_' + r] = mg.sc + '_' + mg.sr; }
   });
   // 行：同时匹配 Excel 对「仅调过行高、无单元格的空白行」写的「自闭合 <row .../>」与「成对 <row>...</row>」。
   // 自闭合分支必须放前面优先匹配，否则成对分支会把自闭合行的 /> 当本行结束、一路吞并到下一行的 </row>（误合并两行）。
@@ -3807,21 +3806,30 @@ async function getTemplateModel(ab){
   if (!rows.length) throw new Error('模板没有数据行');
   var _rowCache = {};
   function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: +_rowNum(rw) }; return _rowCache[rw]; }
-  /* 合并单元格的「边框并集」——这是请假模板右侧边线丢失的真正原因：
-     模板把右边框画在横向合并区最右端的那个单元格上（例如 K2:L2 的 L2、D3:L3 的 L3、F4:L4 的 L4、J5:L5 的 L5、K6:L6 的 L6），
-     而渲染时合并区只取左上角主单元格（K2/D3/F4/J5/K6）的样式，这些主单元格本身没有右边框 → 整条右边线消失。
-     加班模板正常是因为它的数据行（第3/4行）最右列 H 没被合并，H3/H4 自己就带右边框，能直接渲染出来。
-     修法：按「各条边上的组成单元格」取并集（左边取最左列、右边取最右列、上边取首行、下边取末行），
-     只取模板真实定义过的边线，不凭空加线（不是补画）；主单元格自身有该边线时优先用主单元格的。 */
+  /* 合并单元格的「边框并集」——这是请假模板边线丢失（尤其合并区上/左边）的真正原因。
+     模板把某条边画在「相邻单元格」上很常见：例如 D7:F7 的上边线实际存于 D6.bottom、左边线存于 C7.right，而 D7 自身无 top/left；
+     又如横向合并区最右端的右边框画在最右格（K2:L2 的 L2 等）。若只取合并区「自身组成单元格」的边框，这些边就取不到 → 整条边消失。
+     修法：先按「各边组成单元格」取并集（左取最左列、右取最右列、上取首行、下取末行），再「回看跨每条边的相邻格」
+     （左邻 right / 右邻 left / 上邻 bottom / 下邻 top）补全，只取模板真实定义过的边线（不是补画）；主单元格自身有该边线时优先用主单元格的。
+     合并区因此得到完整的四面边框；配合下方 collapse 模式，相邻格边线自动合并取较粗者，无需单独去重。 */
   var _cellIdx = {};
   rows.forEach(function(rw){
     var _pc = _getRow(rw);
     _pc.cells.forEach(function(c){ _cellIdx[colToNum((c.ref || '').replace(/\d+/, '')) + '_' + _pc.r0] = c; });
   });
+  // 取某单元格的「有效边框」：直接单元格取其样式边框；被合并覆盖的单元格取其合并主格的样式边框（用于并集回看相邻格）
+  function _cellBorderAt(c, r){
+    var k = c + '_' + r;
+    if (_cellIdx[k]){ var s = styleMap[+_cellIdx[k].style]; return (s && s.border) ? s.border : null; }
+    var pk = coverOwner[k];
+    if (pk && _cellIdx[pk]){ var s2 = styleMap[+_cellIdx[pk].style]; return (s2 && s2.border) ? s2.border : null; }
+    return null;
+  }
   merges.forEach(function(mg){
     var _pcell = _cellIdx[mg.sc + '_' + mg.sr];
     var _ownB = (_pcell && styleMap[+_pcell.style]) ? (styleMap[+_pcell.style].border || null) : null;
     var _u = { left: null, right: null, top: null, bottom: null }, _r, _c, _cc, _b;
+    // 自身组成单元格各边（左取最左列、右取最右列、上取首行、下取末行）
     for (_r = mg.sr; _r <= mg.er; _r++){
       _cc = _cellIdx[mg.sc + '_' + _r]; if (_cc){ _b = styleMap[+_cc.style]; if (_b && _b.border && _b.border.left && _b.border.left.style && !_u.left) _u.left = _b.border.left; }
       _cc = _cellIdx[mg.ec + '_' + _r]; if (_cc){ _b = styleMap[+_cc.style]; if (_b && _b.border && _b.border.right && _b.border.right.style && !_u.right) _u.right = _b.border.right; }
@@ -3829,6 +3837,15 @@ async function getTemplateModel(ab){
     for (_c = mg.sc; _c <= mg.ec; _c++){
       _cc = _cellIdx[_c + '_' + mg.sr]; if (_cc){ _b = styleMap[+_cc.style]; if (_b && _b.border && _b.border.top && _b.border.top.style && !_u.top) _u.top = _b.border.top; }
       _cc = _cellIdx[_c + '_' + mg.er]; if (_cc){ _b = styleMap[+_cc.style]; if (_b && _b.border && _b.border.bottom && _b.border.bottom.style && !_u.bottom) _u.bottom = _b.border.bottom; }
+    }
+    // 跨每条边的相邻格：Excel 常把边线存在相邻格上（D7:F7 上边在 D6.bottom、左边在 C7.right；D7 自身无 top/left）→ 回看补全
+    for (_r = mg.sr; _r <= mg.er; _r++){
+      _b = _cellBorderAt(mg.sc - 1, _r); if (_b && _b.right && _b.right.style && !_u.left) _u.left = _b.right;
+      _b = _cellBorderAt(mg.ec + 1, _r); if (_b && _b.left && _b.left.style && !_u.right) _u.right = _b.left;
+    }
+    for (_c = mg.sc; _c <= mg.ec; _c++){
+      _b = _cellBorderAt(_c, mg.sr - 1); if (_b && _b.bottom && _b.bottom.style && !_u.top) _u.top = _b.bottom;
+      _b = _cellBorderAt(_c, mg.er + 1); if (_b && _b.top && _b.top.style && !_u.bottom) _u.bottom = _b.top;
     }
     var _pm = primary[mg.sc + '_' + mg.sr];
     if (_pm) _pm.border = {
@@ -3847,60 +3864,8 @@ async function getTemplateModel(ab){
   var _cap = _dimEnd ? colToNum(_dimEnd) : 0;
   if (_cellMaxCol > _cap) _cap = _cellMaxCol;
   if (_cap && cols.count > _cap) cols.count = _cap;
-  // 边框去重（配合上方 separate 模式）：separate 下每格独立绘边，相邻两格的 1px 边会叠成 2px，
-  // 且合并单元边框需四面齐全。规则：每条网格线只归「右侧/下侧」那格绘制（左/顶线由右侧/下侧格画，
-  // 右/底线由自身画当且仅当无右侧/下侧拥有者），保证细线仍为 1px、合并区外框完整、未合并单格(如加班数据行)外观不变。
-  var cellSpan = {}, _maxRow = 0;
-  rows.forEach(function(rw){ var r0 = _getRow(rw).r0; if (r0 > _maxRow) _maxRow = r0; });
-  var _grid = [];
-  function _g(r, c){ return (_grid[r] && _grid[r][c]) || null; }
-  function _setG(r, c, v){ if (!_grid[r]) _grid[r] = []; _grid[r][c] = v; }
-  // 铺 grid：每个渲染格(主格/单格)占据其 span 全部位置，存 {sc,ec,sr,er,bdr}
-  rows.forEach(function(rw){
-    var pc = _getRow(rw), r0 = pc.r0;
-    pc.cells.forEach(function(c){
-      var cNum = colToNum((c.ref || '').replace(/\d+/, ''));
-      if (covered[cNum + '_' + r0]) return;
-      var sp = primary[cNum + '_' + r0];
-      var sc = cNum, ec = cNum, sr = r0, er = r0, bdr = (styleMap[+c.style] || {}).border || null;
-      if (sp){ ec = cNum + sp.cs - 1; er = r0 + sp.rs - 1; bdr = sp.border || null; }
-      for (var rr = sr; rr <= er; rr++) for (var cc = sc; cc <= ec; cc++) _setG(rr, cc, { sc:sc, ec:ec, sr:sr, er:er, bdr:bdr });
-    });
-  });
-  // 算每个渲染格实际绘制的 4 边
-  rows.forEach(function(rw){
-    var pc = _getRow(rw), r0 = pc.r0;
-    pc.cells.forEach(function(c){
-      var cNum = colToNum((c.ref || '').replace(/\d+/, ''));
-      if (covered[cNum + '_' + r0]) return;
-      var slot = _g(r0, cNum); if (!slot) return;
-      var bdr = slot.bdr || {}, cs = slot.ec - slot.sc + 1, rs = slot.er - slot.sr + 1;
-      var isPrimary = !!(primary[cNum + '_' + r0]);   // 合并单元（主格）
-      var draw;
-      if (isPrimary){
-        // 合并单元：4 边全部绘制（边框来自自身各边并集，忠实 Excel 合并区整框）。
-        // 关键：绝不能因「下方/右侧某格带顶/左边」就抑制整条 right/bottom —— 否则宽合并区(如 D6:M6)会被
-        // 同排另一合并区(J7:M7)的顶边连累，导致本区下方(部门经理/综合人事 上方)整条线丢失。
-        // 相邻非合并格会按下方规则抑制自己那侧、只由本合并格画，故不重复；仅与「相邻合并格」共享的边可能轻微叠线(2px)，可忽略。
-        draw = { left: !!bdr.left, right: !!bdr.right, top: !!bdr.top, bottom: !!bdr.bottom };
-      } else {
-        // 非合并单格：右/底线仅在「右侧/下方无拥有者(带对应边线)」时才画，避免 separate 下相邻 1px 叠成 2px
-        // 右侧拥有者 = 右侧起始列=ec+1 且「带左边框」的格；仅当它真带左边框才算它拥有这条竖线
-        var rightNb = false;
-        if (slot.ec < cols.count) for (var rr = slot.sr; rr <= slot.er; rr++){ var _rnb = _g(rr, slot.ec + 1); if (_rnb && _rnb.bdr && _rnb.bdr.left){ rightNb = true; break; } }
-        // 下方拥有者 = 下方起始行=er+1 且「带顶边框」的格；同理仅当它真带顶边框才算拥有这条横线
-        var botNb = false;
-        if (slot.er < _maxRow) for (var cc = slot.sc; cc <= slot.ec; cc++){ var _bnb = _g(slot.er + 1, cc); if (_bnb && _bnb.bdr && _bnb.bdr.top){ botNb = true; break; } }
-        draw = {
-          left: !!bdr.left,                          // 本格即右侧拥有者，左线归本格，有则画
-          top: !!bdr.top,                            // 本格即下侧拥有者，顶线归本格，有则画
-          right: !!bdr.right && !rightNb,            // 仅当右侧无拥有者(到边界/空列)才画右线
-          bottom: !!bdr.bottom && !botNb             // 仅当下方无拥有者才画底线
-        };
-      }
-      cellSpan[cNum + '_' + r0] = { cs: cs, rs: rs, bdr: bdr, draw: draw };
-    });
-  });
+  // 边框去重逻辑已移除：改用 border-collapse:collapse（见下方 CSS），相邻格共享边线由浏览器自动合并取较粗者，
+  // 无需单独去重；合并单元边框由上方 primary.border（已补全四面、回看相邻格）直接给出，emitRow 直接采用。
   // 数据段：含行级记录占位符的所有行构成「一条记录的容器」。
   // 列表式模板（如加班）这些行只有一行 → 退化为原单行记录行模型；
   // 单据式模板（如请假单）这些行跨多行（姓名/事由/类别/日期/签名各占一行）→ 整段作为一张单，按记录整体展开。
@@ -3941,7 +3906,7 @@ async function getTemplateModel(ab){
   rows.forEach(function(rw){ if (needsRecordSig) return; _getRow(rw).cells.forEach(function(c){ if (/\{\{签名\}\}/.test(c.text || '')){ needsRecordSig = true; } }); });
   var model = {
     SS_CACHE: SS_CACHE.slice(), cols: cols, rowH: rowH, styleMap: styleMap, imgByVm: imgByVm,
-    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, fixedPhKeys: fixedPhKeys, needsRecordSig: needsRecordSig, pageMargins: pageMargins, pageSetup: pageSetup, hiddenCols: hiddenCols, hiddenRows: hiddenRows, defaultFont: defaultFont, cellSpan: cellSpan
+    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, fixedPhKeys: fixedPhKeys, needsRecordSig: needsRecordSig, pageMargins: pageMargins, pageSetup: pageSetup, hiddenCols: hiddenCols, hiddenRows: hiddenRows, defaultFont: defaultFont
   };
   _tplModelByFp[fp] = model;
   return model;
@@ -3984,7 +3949,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   SS_CACHE = model.SS_CACHE;
   var cols = model.cols, rowH = model.rowH, styleMap = model.styleMap, imgByVm = model.imgByVm,
       primary = model.primary, covered = model.covered, rows = model.rows, dataIdx = model.dataIdx, dataStart = model.dataStart, dataEnd = model.dataEnd,
-      hiddenCols = model.hiddenCols, hiddenRows = model.hiddenRows, defaultFont = model.defaultFont, cellSpan = model.cellSpan;
+      hiddenCols = model.hiddenCols, hiddenRows = model.hiddenRows, defaultFont = model.defaultFont;
   // 行解析结果缓存：同一行 XML 在收集阶段、各页渲染阶段会被多次 _parseCells，缓存后只解析一次（模板行数固定，渲染循环有界，非无限）
   var _rowCache = {};
   function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: +_rowNum(rw) }; return _rowCache[rw]; }
@@ -4036,17 +4001,11 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       if (covered[cNum + '_' + r0]) return;
       var cs = 1, rs2 = 1;
       if (primary[cNum + '_' + r0]){ cs = primary[cNum + '_' + r0].cs; rs2 = primary[cNum + '_' + r0].rs; }
-      // 边框：合并单元取「各边组成单元格的并集」(primary.border)；再用 cellSpan.draw 去重，避免 separate 下相邻 1px 叠成 2px
+      // 边框：合并单元取其「完整并集」(primary.border，已含四面、回看过相邻格)；用 border-collapse:collapse 时，
+      // 相邻格共享边线由浏览器自动合并取较粗者，无需单独去重。非合并单元格用自身样式边框。
       var _st = styleMap[+c.style] || {};
-      var _sp = cellSpan[cNum + '_' + r0];
-      if (_sp && _sp.bdr){
-        var _d = _sp.draw, _b = _sp.bdr, _nb = {};
-        if (_d.left && _b.left) _nb.left = _b.left;
-        if (_d.right && _b.right) _nb.right = _b.right;
-        if (_d.top && _b.top) _nb.top = _b.top;
-        if (_d.bottom && _b.bottom) _nb.bottom = _b.bottom;
-        _st = Object.assign({}, _st, { border: _nb });
-      }
+      var _pm = primary[cNum + '_' + r0];
+      if (_pm && _pm.border){ _st = Object.assign({}, _st, { border: _pm.border }); }
       var css = cellCss(_st);
       if (rh) css += (css ? ';' : '') + 'height:' + rh;   // 行高落到 td 才可靠（tr 的 height 浏览器不强制）
       // 空单元格（模板里本身无文字）：inner 会被强制填 &nbsp;（见下方 html||'&nbsp;'），而该单元格常带较大 font-size，
