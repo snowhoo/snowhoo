@@ -223,7 +223,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 }
 .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
 /* 各时间段行：弹性布局（flex），元素按 日期/整天/起/至/止/小时/备注/± 顺序流动，窄屏自动折行 */
-.time-row .fDate,.time-row .fEndDate{flex:0 0 auto;width:120px;padding:3px 3px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600;font-family: inherit}
+.time-row .fDate,.time-row .fEndDate{flex:0 0 auto;width:115px;padding:3px 3px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600;font-family: inherit}
 .time-row .all-day{display:inline-flex;align-items:center;gap:3px;font-size:.82rem;color:var(--text-secondary);cursor:pointer;min-width:56px;font-weight:600}
 .time-row .all-day input{width:14px;height:14px;accent-color:var(--accent)}
 #rangeBlock{flex:1 1 300px}
@@ -231,12 +231,12 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 #rowNote input{min-width:80px}
 .time-segs{flex:1;display:flex;flex-direction:column;gap:8px;min-width:180px}
 .time-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:100%}
-.time-row .fTime{flex:0 0 auto;width:64px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600;text-align:center;color:var(--text);cursor:pointer;font-family:inherit}
+.time-row .fTime{flex:0 0 auto;width:52px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;font-weight:600;text-align:center;color:var(--text);cursor:pointer;font-family:inherit}
 .time-row .fTime:disabled{opacity:.5;cursor:not-allowed}
 .time-row .sep{color:var(--text-muted);font-size:.82rem;white-space:nowrap}
 /* 换行占位（仅请假行渲染，置于「整天」之后）：大屏不显示；小屏占满整行强制其后内容另起一行 */
 .time-row .row-break{display:none}
-.time-row .fSegNote{flex:1 1 140px;min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;max-width:260px;}
+.time-row .fSegNote{flex:1 1 120px;min-width:0;padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;background:transparent;}
 .time-row .segHours{flex:0 0 auto;width:0px;text-align:right;font-size:0rem;font-weight:600;white-space:nowrap;color:var(--text-secondary)}
 .seg-actions{margin-left:auto}   /* ± 按钮固定推到行尾 */
 .seg-act{border:none;background:var(--accent-soft);color:var(--accent);cursor:pointer;
@@ -456,10 +456,11 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
   .tb-company{font-size:1rem}
   .time-segs{overflow-x:auto}
   .time-row{gap:5px;flex-wrap:wrap}
-  .time-row .fDate{width:130px}
-  .time-row .fEndDate{width:130px}
+  .time-row .fDate{width:150px}
+  .time-row .fEndDate{width:150px}
   .time-row .fSegNote{flex:1 1 100%;max-width: 250px}   /* 窄屏备注占满整行，避免挤压时段控件 */
   .time-row .row-break{display:block;flex-basis:100%;height:0}   /* 窄屏：请假行「整天」之后换行，起日期另起一行 */
+  .time-row .fTime {width: 64px}
 }
 @media (max-width:640px){
   .pv-row > span{border-left:0;padding-left:0;font-size:.7rem}   /* 小屏预览去掉竖线分隔，改为纯空格 */
