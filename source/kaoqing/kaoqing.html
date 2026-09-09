@@ -106,16 +106,14 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .modal-actions .btn-ok:hover{filter:brightness(.95)}
 .modal-actions .btn-cancel{background:transparent;border:1px solid var(--border);color:var(--text)}
 .modal-actions .btn-cancel:hover{background:var(--bg)}
-/* 请假单「代理人」录入块 + 选择弹窗 */
-.proxy-block{display:flex;align-items:center;gap:12px;margin-top:10px}
-.proxy-block[hidden]{display:none}
-.proxy-label{font-size:.8rem;color:var(--text-muted);min-width:48px}
-.proxy-btn{padding:8px 14px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:.9rem;cursor:pointer;text-align:left;min-width:200px}
-.proxy-btn:hover{border-color:var(--accent)}
+/* 请假单「代理人」行内选择按钮 + 选择弹窗 */
+.proxy-inline-btn{padding:6px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:.9rem;cursor:pointer;white-space:nowrap}
+.proxy-inline-btn:hover{border-color:var(--accent)}
+.proxy-inline-btn[hidden]{display:none}
 .proxy-group-hint{font-size:.72rem;font-weight:400;color:var(--text-muted);margin-left:8px}
-.proxy-modal{width:min(320px,90vw)}
-.proxy-list{display:flex;flex-direction:column;gap:6px;margin:6px 0 14px;max-height:60vh;overflow-y:auto}
-.proxy-item{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:.92rem;cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between}
+.proxy-modal{width:min(360px,92vw)}
+.proxy-list{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin:6px 0 14px;max-height:60vh;overflow-y:auto}
+.proxy-item{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:.92rem;cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;width:100%}
 .proxy-item:hover{border-color:var(--accent);background:var(--bg-surface)}
 .proxy-item.on{border-color:var(--accent);color:var(--accent);font-weight:600}
 .proxy-item .pi-pos{font-size:.72rem;color:var(--text-muted);font-weight:400}
@@ -587,12 +585,8 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
           <!-- 每行 = 一条完整记录：日期 | 整天 | 起 | 至 | 止 | 备注事由 | 本行小时 | +/−（最多 5 行） -->
           <div class="sub-row" id="rangeBlock" hidden>
             <div class="time-segs" id="timeSegs"></div>
-          </div>
-
-          <!-- 请假单「代理人」：录入界面置于整体末尾；点击弹出框从当前考勤组别人员中选择；不选则保存为空 -->
-          <div class="sub-row proxy-block" id="proxyBlock" hidden>
-            <label class="proxy-label" for="proxyBtn">代理人</label>
-            <button type="button" id="proxyBtn" class="proxy-btn">选择代理人（可选）</button>
+            <!-- 请假单「代理人」：行内置于「整天」之后；点击弹出框从当前考勤组别人员中选择；不选则保存为空 -->
+            <button type="button" id="proxyBtn" class="proxy-inline-btn" hidden>选择代理人（可选）</button>
           </div>
 
         </div>
@@ -1369,6 +1363,8 @@ function applyView(){
    请假/其它：单条录入，一行含 起日期 + 至日期（空=单日）+ 整天 + 起止时间 + 小时 + 备注，不显示增删按钮。 */
 function renderTimeSegs(){
   var box = $('#timeSegs'); if (!box) return;
+  var _pbOut = document.getElementById('proxyBtn');
+  if (_pbOut && box.parentNode) box.parentNode.insertBefore(_pbOut, box.nextSibling);  // 先移出 timeSegs，避免被清空时游离
   box.innerHTML = '';
   var isLeave = curCat && isLeaveCat(curCat.id);   // 请假 → 单条 + 至日期
   timeSegs.forEach(function(seg, i){
@@ -1401,6 +1397,8 @@ function renderTimeSegs(){
       // 请假：统一一行，不区分单日/跨天 = 多天 + 整天 + 起日期 起时间 [至/跨天分隔] 至日期 至时间 + 备注
       row.appendChild(mdWrap);     // 多天：默认不勾选；勾选才显示「至日期」填写框
       row.appendChild(adWrap);
+      var _pb = document.getElementById('proxyBtn');   // 代理人：行内置于「整天」之后
+      if (_pb){ _pb.hidden = false; _pb.textContent = curProxy ? curProxy : '选择代理人（可选）'; row.appendChild(_pb); }
       row.appendChild(brk);
       row.appendChild(d); row.appendChild(s);
       row.appendChild(dl);
@@ -1448,12 +1446,11 @@ function proxyCandidates(){
 }
 /* 代理人录入块：仅请假显示；刷新已选名称 */
 function renderProxyBlock(){
-  var block = $('#proxyBlock'); if (!block) return;
+  var btn = $('#proxyBtn'); if (!btn) return;
   var show = !!(curCat && isLeaveCat(curCat.id));
-  block.hidden = !show;
+  btn.hidden = !show;
   if (!show) return;
-  var btn = $('#proxyBtn');
-  if (btn) btn.textContent = curProxy ? curProxy : '选择代理人（可选）';
+  btn.textContent = curProxy ? curProxy : '选择代理人（可选）';
 }
 /* 打开代理人选择弹窗：列出候选人员（含岗位职别），点击即选中并关闭 */
 function openProxyModal(){
