@@ -487,17 +487,22 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
   .time-picker .tp-preview{flex:1;text-align:right;font-size:1.15rem;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
 /* 模板打印预览：忠于 xlsx 模板排版，调起浏览器打印对话框（可打印 / 另存 PDF） */
 #printArea{display:none}
-#printArea .tpl-table{border-collapse:collapse;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000;margin:0 auto}
+#printArea .tpl-table{border-collapse:collapse;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000;margin:0}
 #printArea .tpl-table td{padding:2px 5px;font-size:10pt;vertical-align:middle;word-break:break-word;overflow:visible;box-sizing:border-box}
 #printArea .pg-break{page-break-after:always;height:0;line-height:0;font-size:0}
 #printArea .grp-break{page-break-before:always;height:0;line-height:0;font-size:0}
-/* A5 拼接 A4：一张 A4 竖版 = 上下两个 A5 横版页框(各 210×148.5mm，恰好拼满 297mm)。
-   每个 A5 用「固定页框」，两模板都按同一页框等比缩放 → 边距表现完全一致（模板自身页面边距被整体保留，不会一个满版一个留白）。
-   scale 由 JS 基于固定 A5 页框计算（正常 A5 模板 k≈1）；transform-origin 左上，缩放后仍贴页框左上、忠于模板版式。 */
-#printArea .a4-sheet{width:210mm;height:297mm;box-sizing:border-box;padding:0;margin:0 auto;page-break-after:always;overflow:hidden;background:#fff}
+/* A5 拼接 A4：一张 A4 竖版 = 上下两个 A5 横版页框（各 148.5mm 高，两页恰好拼满 297mm A4）。
+   每个 A5 页框 width:100%（随打印对话框边距自适应，加边距不会把整页压缩），内容在其中水平+垂直居中；
+   缩放系数 k 由 JS 按「页框实际尺寸 ÷ 模板自然尺寸」做等比包含(contain)计算（不裁剪、不变形），
+   故左/右/上/下边距始终对称，绝不会出现「贴左边/贴顶边、另一侧大量留白」的错位（即旧版 transform-origin:top-left + 表格左对齐所致）。 */
+#printArea .a4-sheet{width:100%;height:297mm;box-sizing:border-box;padding:0;margin:0 auto;page-break-after:always;overflow:hidden;background:#fff}
 #printArea .a4-sheet:last-child{page-break-after:auto}
-#printArea .a5-page{width:210mm;height:148.5mm;overflow:hidden}
-#printArea .a5-page .tpl-table{margin:0}
+/* A5 横版半页：固定 148.5mm 高、上下堆叠恰好拼满 297mm A4；不 flex 居中、内容靠顶、第二页从正中(148.5mm)起，与上一页打印位置无关 */
+#printArea .a5-page{width:100%;height:148.5mm;box-sizing:border-box;overflow:hidden}
+#printArea .a5-page .tpl-margin{box-sizing:border-box;width:100%;height:100%}
+/* 模板 pageMargins 作为内容内边距(左/右/上/下)写入 .tpl-margin padding，忠实还原 Excel 打印边距（方案1：边距参与绘制，A4 页边距=0） */
+#printArea .tpl-margin{box-sizing:border-box}
+/* 缩放仅「内容超出可打印区时按比例收缩(k<=1)」，不放大、不居中，保持模板边距忠于原设定 */
 #printArea .tpl-scale{transform-origin:top left}
 @media print{
   body.printing-template > *:not(#printArea){display:none!important}
@@ -505,7 +510,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
   /* 打印模板时强制白底：body 背景(--bg:#f4f5f9 浅灰)在隐藏其它内容后仍会露在页边距区域，导致打印页带浅灰绿底色 */
   html, body.printing-template{background:#fff!important}
   /* 不锁定纸张尺寸/方向：交由打印对话框选择（选「横向」即可旋转）。若固定 size:A4 会把方向锁死成纵向、忽略对话框的横向选择 */
-  /* @page 的 margin 改由模板 pageMargins 在打印时动态注入（见 printRecordsViaTemplate），此处不写死，避免覆盖用户在打印对话框选的边距 */
+  /* 模板 pageMargins 不注入 @page（避免覆盖打印对话框选的边距）；改为作为「内容内边距」写在每页 .tpl-margin 的 padding 上（见 printRecordsViaTemplate），忠实还原 Excel 页面边距。@page 仅锁 A5拼接A4 时的 A4 竖版、无边距（见下方注入）。 */
 }
 </style>
 </head>
@@ -4038,7 +4043,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   var naturalHpt = 0;
   rows.forEach(function(rw){ var r0 = +_rowNum(rw); if (!hiddenRows[r0]) naturalHpt += (rowH[r0] ? parseFloat(rowH[r0]) : 0); });
   var naturalHpx = naturalHpt * 96 / 72;
-  return { pages: pages, naturalW: totalPx, naturalH: naturalHpx };
+  return { pages: pages, naturalW: totalPx, naturalH: naturalHpx, pageMargins: model.pageMargins };
 }
 // 全屏加载遮罩：模板打印准备期间显示，拦截所有点击，防止误操作（z-index 低于 modal-mask，使错误弹窗仍可见）
 function showBusy(text){ var m=$('#busyMask'); if(!m) return; var t=$('#busyText'); if(t && text) t.textContent=text; m.hidden=false; }
@@ -4094,31 +4099,36 @@ async function printRecordsViaTemplate(rs){
       try { rTpl = await renderTemplateToHtml(ab, data.recVals, data.docVals, signByName); }
       catch(e){ await showAlert('生成打印视图失败：' + e.message, '模板打印失败'); return; }
       var pages = rTpl.pages;
+      // 模板页面边距（pageMargins，单位 inch）→ 作为「内容内边距(padding)」应用到每一页，忠实还原 Excel 打印边距。
+      // 此前该值只被解析读取却从未参与渲染（chosenPM 收集后从未使用），导致内容贴在页框左上角、显得「左/上=0、右侧大量留白」——
+      // 那 28.5mm 实为模板左+右页边距(各1.5cm)，并非内容小于页面。现把页边距写入 padding，左/右/上/下均按模板设定。
+      var pm = rTpl.pageMargins || null;
+      var pmStyle = '';
+      if (pm) pmStyle = 'padding:' + (pm.top * 96).toFixed(1) + 'px ' + (pm.right * 96).toFixed(1) + 'px ' + (pm.bottom * 96).toFixed(1) + 'px ' + (pm.left * 96).toFixed(1) + 'px';
+      var pmAttr = pmStyle ? ' style="' + pmStyle + '"' : '';
       // A5拼接A4 为整组版式开关：读「当前组」下 加班/请假 任一类别开启即整组两类别共用同一套 2-up 规则（避免「一个带边距一个满版」看似不同规则的错位）
       var stitch = !!(gpSub('ot').stitch || gpSub('lv').stitch);
       if (stitch) anyStitch = true;
       var partHtml = '';
       if (stitch){
-        // A5 横版模板 → 上下拼到一张 A4 竖版：每个 A5 用固定 210×148.5mm 页框，两模板都按「同一固定页框」等比缩放
-        // —— 关键：缩放系数 k 基于固定 A5 页框（而非各自表格尺寸）计算，故加班/请假两模板边距表现完全一致
-        //    （模板自身的页面边距被整体保留，不会一个满版、一个留白）；仅当模板真实尺寸超过 A5 页框时才缩小(k<1)避免溢出。
-        var A5_W_MM = 210, A5_H_MM = 148.5;                    // A5 横版物理尺寸
-        var a5Wpx = A5_W_MM / 25.4 * 96, a5Hpx = A5_H_MM / 25.4 * 96;
-        var k = Math.min(1, a5Wpx / (rTpl.naturalW || a5Wpx), a5Hpx / (rTpl.naturalH || a5Hpx));
+        // A5 横版模板 → 上下拼到一张 A4 竖版：每个 A5 用 width:100% 页框（随对话框边距自适应），
+        // 内容在页框内居中；缩放系数 k 不再在此写死，而由下方「注入 innerHTML 后」按页框实际尺寸与模板自然尺寸
+        // 做等比包含(contain)计算（见 applyA5Scale），保证两模板边距表现一致、且左/右/上/下对称。
+        // 模板 pageMargins 写入 .tpl-margin 的 padding，内容被页边距正确内缩（不再贴左上角）。
         for (var s = 0; s < pages.length; s += 2){
           var c1 = pages[s], c2 = pages[s + 1] || '';
           partHtml += '<div class="a4-sheet">'
-            + '<div class="a5-page"><div class="tpl-scale" style="transform:scale(' + k.toFixed(4) + ')">' + c1 + '</div></div>'
-            + (c2 ? '<div class="a5-page"><div class="tpl-scale" style="transform:scale(' + k.toFixed(4) + ')">' + c2 + '</div></div>' : '')
+            + '<div class="a5-page"><div class="tpl-scale"><div class="tpl-margin"' + pmAttr + '>' + c1 + '</div></div></div>'
+            + (c2 ? '<div class="a5-page"><div class="tpl-scale"><div class="tpl-margin"' + pmAttr + '>' + c2 + '</div></div></div>' : '')
             + '</div>';
         }
       } else {
-        pages.forEach(function(pg, idx){ partHtml += pg + (idx < pages.length - 1 ? '<div class="pg-break"></div>' : ''); });
+        pages.forEach(function(pg, idx){ partHtml += '<div class="tpl-margin"' + pmAttr + '>' + pg + '</div>' + (idx < pages.length - 1 ? '<div class="pg-break"></div>' : ''); });
       }
       htmlParts.push(partHtml);
     }
-    // 页边距与页面方向：A5拼接A4 时锁死 A4 竖版、无边距（具体的 上10/下4/左右0 由 .a4-sheet 内边距控制，整页2-up 布局已把模板等比缩放填满）；
-    // 否则仅清掉 @page 边距、交打印对话框控制（不再注入模板自身 pageMargins，避免覆盖用户在对话框选的边距）。
+    // 页边距与页面方向（方案1）：A5拼接A4 时锁死 A4 竖版、@page margin:0（A4 页边距直接为0，不画 A4 边距）；
+    // 模板自身的 pageMargins 已在上方作为各 A5 页的 .tpl-margin padding 参与绘制。非拼接模式同样 @page margin:0 + 模板边距内缩，保持单一规则。
     var _pmEl = document.getElementById('tplPageMargins');
     if (!_pmEl){ _pmEl = document.createElement('style'); _pmEl.id = 'tplPageMargins'; document.head.appendChild(_pmEl); }
     _pmEl.textContent = anyStitch ? '@page{ size:A4 portrait; margin:0 }' : '@page{ margin:0 }';
@@ -4126,6 +4136,25 @@ async function printRecordsViaTemplate(rs){
     var fullHtml = htmlParts.map(function(h, i){ return (i > 0 ? '<div class="grp-break"></div>' : '') + h; }).join('');
     var pa = $('#printArea'); if (!pa){ pa = document.createElement('div'); pa.id = 'printArea'; document.body.appendChild(pa); }
     pa.innerHTML = fullHtml;
+    // A5拼接A4（方案1）：两 A5 半页各固定 148.5mm、上下堆叠拼满 297mm A4，第二页从正中(148.5mm)起、与上一页打印位置无关；
+    // 模板 pageMargins 已在上方作为 .tpl-margin padding 参与绘制（左/右/上/下内缩），A4 页边距=0；本处缩放仅「超界时收缩(k<=1)」，不放大不居中。
+    if (anyStitch){
+      // 方案1：模板边距已作为 .tpl-margin padding 内缩内容；此处缩放仅用于「内容超出可打印区时按比例收缩(k<=1)」，
+      // 基准是可打印区(.tpl-margin 扣除 padding 后的内容盒)，而非整个 A5 页框；不放大、不居中、transform-origin 左上 —— 忠实于模板边距设定。
+      var _margins = pa.querySelectorAll('.a5-page .tpl-margin');
+      for (var _i = 0; _i < _margins.length; _i++){
+        var _m = _margins[_i], _sc = _m.querySelector('.tpl-scale');
+        if (!_sc) continue;
+        var _cs = getComputedStyle(_m);
+        var _padL = parseFloat(_cs.paddingLeft) || 0, _padR = parseFloat(_cs.paddingRight) || 0;
+        var _padT = parseFloat(_cs.paddingTop) || 0, _padB = parseFloat(_cs.paddingBottom) || 0;
+        var _availW = _m.clientWidth - _padL - _padR;
+        var _availH = _m.clientHeight - _padT - _padB;
+        var _nw = _sc.offsetWidth, _nh = _sc.offsetHeight;
+        var _k = (_nw && _nh) ? Math.min(1, _availW / _nw, _availH / _nh) : 1;   // 仅收缩，不放大、不居中
+        _sc.style.transform = 'scale(' + _k.toFixed(4) + ')';
+      }
+    }
     document.body.classList.add('printing-template');
     var cleanup = function(){ document.body.classList.remove('printing-template'); };
     window.addEventListener('afterprint', cleanup, { once: true });
