@@ -487,7 +487,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
   .time-picker .tp-preview{flex:1;text-align:right;font-size:1.15rem;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
 /* 模板打印预览：忠于 xlsx 模板排版，调起浏览器打印对话框（可打印 / 另存 PDF） */
 #printArea{display:none}
-#printArea .tpl-table{border-collapse:collapse;width:100%;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000}
+#printArea .tpl-table{border-collapse:collapse;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000;margin:0 auto}
 #printArea .tpl-table td{padding:2px 5px;font-size:10pt;vertical-align:middle;word-break:break-word;overflow:visible;box-sizing:border-box}
 #printArea .pg-break{page-break-after:always;height:0;line-height:0;font-size:0}
 #printArea .grp-break{page-break-before:always;height:0;line-height:0;font-size:0}
@@ -3460,19 +3460,25 @@ async function parseStyles(zip){
 function _borderCss(sd, b){
   if (!b || !b.style) return '';
   var col = b.color ? ('#' + (b.color.length > 6 ? b.color.slice(2) : b.color)) : '#000';
-  var w = '0.5pt', t = 'solid';
+  var pt = 0.5, t = 'solid';
   switch (b.style){
-    case 'hair': w = '0.25pt'; break;
-    case 'thin': w = '0.5pt'; break;
-    case 'medium': w = '2pt'; break;
-    case 'thick': w = '3pt'; break;
+    case 'hair': pt = 0.25; break;
+    case 'thin': pt = 0.5; break;
+    case 'medium': pt = 2; break;
+    case 'thick': pt = 3; break;
     case 'dotted': t = 'dotted'; break;
-    case 'double': w = '3pt'; t = 'double'; break;
+    case 'double': pt = 3; t = 'double'; break;
     case 'dashed': case 'dashDot': case 'dashDotDot': case 'slantDashDot': t = 'dashed'; break;
-    case 'mediumDashed': case 'mediumDashDot': case 'mediumDashDotDot': w = '2pt'; t = 'dashed'; break;
-    default: w = '0.5pt';
+    case 'mediumDashed': case 'mediumDashDot': case 'mediumDashDotDot': pt = 2; t = 'dashed'; break;
+    default: pt = 0.5;
   }
-  return 'border-' + sd + ':' + w + ' ' + t + ' ' + col;
+  // 1px 兜底（纯 px 钳底，非 max()）：屏幕上 hair(0.25pt≈0.33px)/thin(0.5pt≈0.67px) 这类极细线会被浏览器当作 sub-pixel 吞掉，
+  // 表现为「表格线被压缩到看不见」。这里把模板 pt 值换算成像素并强制 ≥1px，保证任何线都可见；
+  // medium(2pt→2.67px)/thick(3pt→4px) 仍按真实 pt 换算，粗细层次不丢。
+  // 用纯 px 而非 max(1px,Npt)：避免个别老旧打印/浏览器环境不支持 CSS max() 时整条 border 声明失效（那会比「细线看不见」更糟）。
+  var px = Math.max(1, pt * 96 / 72);
+  px = (Math.round(px * 100) / 100).toString();
+  return 'border-' + sd + ':' + px + 'px ' + t + ' ' + col;
 }
 function cellCss(st){
   var css = [];
@@ -3851,13 +3857,17 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     for (var dk in rec) if (docVm[dk] == null || docVm[dk] === '') docVm[dk] = rec[dk];
   });
   var headerRows = rows.slice(0, dataStart), dataRows = rows.slice(dataStart, dataEnd + 1), footerRows = rows.slice(dataEnd + 1);
-  // 列宽比例（%）
-  var totalW = 0; for (var i = 1; i <= cols.count; i++) totalW += (cols.width[i] || 8);
-  if (!totalW) totalW = cols.count * 8;
+  // 列宽：用 Excel 的「字符宽度→像素」公式换算成 pt/px 绝对宽度（非百分比），使表格按模板真实比例还原。
+  // 关键点：此前 col 用百分比、表格又强制 width:100%，导致「宽」被归一化铺满整页、而「行高」是固定的 pt —— 宽高各自缩放、比例失真，
+  // 浏览器「适合页面」按整页等比缩放时只对高度生效。改为按模板真实尺寸渲染后，浏览器 fit-to-page 才会像 Excel 那样「高/宽/内容等比缩放」。
+  function _colPx(w){ return Math.round((256 * (w || 8) + Math.round(128 / 7)) / 256 * 7); }   // Excel 列宽(char)→像素 的标准换算
+  var totalPx = 0;
+  for (var i = 1; i <= cols.count; i++) if (!hiddenCols[i]) totalPx += _colPx(cols.width[i] || 8);
+  if (!totalPx) totalPx = cols.count * _colPx(8);
   var colHtml = '<colgroup>';
   for (var i2 = 1; i2 <= cols.count; i2++){
     var _hc = hiddenCols[i2] ? 'display:none;' : '';
-    colHtml += '<col style="' + _hc + 'width:' + ((cols.width[i2] || 8) / totalW * 100).toFixed(2) + '%">';
+    colHtml += '<col style="' + _hc + 'width:' + _colPx(cols.width[i2] || 8) + 'px">';
   }
   colHtml += '</colgroup>';
   function emitRow(rw, mode, rec){
@@ -3986,7 +3996,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   }
   var pagesHtml = '';
   for (var p = 0; p < P; p++){
-    var html = '<table class="tpl-table">' + colHtml + '<tbody>';
+    var html = '<table class="tpl-table" style="width:' + totalPx + 'px">' + colHtml + '<tbody>';
     headerRows.forEach(function(rw){ html += emitRow(rw, 'static', null); });
     // 数据段整体作为一条记录的容器，每页重复 perPage 次：列表式段长=1（退化为单行复制），单据式段长>1（整张单展开）
     for (var i = 0; i < perPage; i++){
