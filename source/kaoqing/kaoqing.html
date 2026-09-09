@@ -1455,6 +1455,13 @@ function renderProxyBlock(){
 /* 打开代理人选择弹窗：列出候选人员（含岗位职别），点击即选中并关闭 */
 function openProxyModal(){
   var list = $('#proxyList'); if (!list) return;
+  var modal = $('#proxyModal'); if (modal && !modal._bound){   // 懒绑定关闭事件（脚本在 modal 之前执行，init 时元素尚不存在）
+    var close = function(){ modal.hidden = true; };
+    var clear = $('#proxyClear'); if (clear) clear.addEventListener('click', function(){ curProxy = ''; renderProxyBlock(); close(); });
+    var x = $('#proxyClose'); if (x) x.addEventListener('click', close);
+    modal.addEventListener('click', function(e){ if (e.target === modal) close(); });   // 点遮罩关闭
+    modal._bound = true;
+  }
   var cands = proxyCandidates();
   var hint = $('#proxyGroupHint');
   var grp = (cands.length && cands[0].group) ? cands[0].group : '';
@@ -2480,15 +2487,11 @@ $('#groupSel').addEventListener('change', function(){
   curGroup = this.value;
   renderPeople(); applyView();    // 已选人员跨组别保留，重算视图
 });
-/* 代理人弹窗：打开 / 选中 / 清除 / 关闭 / 点遮罩关闭 */
+/* 代理人弹窗：仅绑定「打开」（按钮静态，init 即可绑）；关闭/清除/点遮罩改在打开时绑定
+   —— 因 #proxyModal 标记位于 <script> 之后，init 时取不到该元素，若在 init 绑关闭事件会失败（能打开却关不掉） */
 (function bindProxyModal(){
-  var btn = $('#proxyBtn'), modal = $('#proxyModal');
+  var btn = $('#proxyBtn');
   if (btn) btn.addEventListener('click', function(){ openProxyModal(); });
-  if (!modal) return;
-  var close = function(){ modal.hidden = true; };
-  var clear = $('#proxyClear'); if (clear) clear.addEventListener('click', function(){ curProxy = ''; renderProxyBlock(); close(); });
-  var x = $('#proxyClose'); if (x) x.addEventListener('click', close);
-  modal.addEventListener('click', function(e){ if (e.target === modal) close(); });   // 点遮罩关闭
 })();
 $('#selAll').addEventListener('click', function(){
   peopleOfGroup().forEach(function(p){ selPeople.add(p.n); });
