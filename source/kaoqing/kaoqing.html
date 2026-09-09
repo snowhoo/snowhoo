@@ -3875,18 +3875,29 @@ async function getTemplateModel(ab){
       if (covered[cNum + '_' + r0]) return;
       var slot = _g(r0, cNum); if (!slot) return;
       var bdr = slot.bdr || {}, cs = slot.ec - slot.sc + 1, rs = slot.er - slot.sr + 1;
-      // 右侧拥有者 = 右侧起始列=ec+1 且「带左边框」的格(含被其合并覆盖者)；仅当它真带左边框才算它拥有这条竖线
-      var rightNb = false;
-      if (slot.ec < cols.count) for (var rr = slot.sr; rr <= slot.er; rr++){ var _rnb = _g(rr, slot.ec + 1); if (_rnb && _rnb.bdr && _rnb.bdr.left){ rightNb = true; break; } }
-      // 下方拥有者 = 下方起始行=er+1 且「带顶边框」的格；同理仅当它真带顶边框才算拥有这条横线
-      var botNb = false;
-      if (slot.er < _maxRow) for (var cc = slot.sc; cc <= slot.ec; cc++){ var _bnb = _g(slot.er + 1, cc); if (_bnb && _bnb.bdr && _bnb.bdr.top){ botNb = true; break; } }
-      var draw = {
-        left: !!bdr.left,                            // 本格即右侧拥有者，左线归本格，有则画
-        top: !!bdr.top,                              // 本格即下侧拥有者，顶线归本格，有则画
-        right: !!bdr.right && !rightNb,              // 仅当右侧无拥有者(到边界/空列)才画右线
-        bottom: !!bdr.bottom && !botNb               // 仅当下方无拥有者才画底线
-      };
+      var isPrimary = !!(primary[cNum + '_' + r0]);   // 合并单元（主格）
+      var draw;
+      if (isPrimary){
+        // 合并单元：4 边全部绘制（边框来自自身各边并集，忠实 Excel 合并区整框）。
+        // 关键：绝不能因「下方/右侧某格带顶/左边」就抑制整条 right/bottom —— 否则宽合并区(如 D6:M6)会被
+        // 同排另一合并区(J7:M7)的顶边连累，导致本区下方(部门经理/综合人事 上方)整条线丢失。
+        // 相邻非合并格会按下方规则抑制自己那侧、只由本合并格画，故不重复；仅与「相邻合并格」共享的边可能轻微叠线(2px)，可忽略。
+        draw = { left: !!bdr.left, right: !!bdr.right, top: !!bdr.top, bottom: !!bdr.bottom };
+      } else {
+        // 非合并单格：右/底线仅在「右侧/下方无拥有者(带对应边线)」时才画，避免 separate 下相邻 1px 叠成 2px
+        // 右侧拥有者 = 右侧起始列=ec+1 且「带左边框」的格；仅当它真带左边框才算它拥有这条竖线
+        var rightNb = false;
+        if (slot.ec < cols.count) for (var rr = slot.sr; rr <= slot.er; rr++){ var _rnb = _g(rr, slot.ec + 1); if (_rnb && _rnb.bdr && _rnb.bdr.left){ rightNb = true; break; } }
+        // 下方拥有者 = 下方起始行=er+1 且「带顶边框」的格；同理仅当它真带顶边框才算拥有这条横线
+        var botNb = false;
+        if (slot.er < _maxRow) for (var cc = slot.sc; cc <= slot.ec; cc++){ var _bnb = _g(slot.er + 1, cc); if (_bnb && _bnb.bdr && _bnb.bdr.top){ botNb = true; break; } }
+        draw = {
+          left: !!bdr.left,                          // 本格即右侧拥有者，左线归本格，有则画
+          top: !!bdr.top,                            // 本格即下侧拥有者，顶线归本格，有则画
+          right: !!bdr.right && !rightNb,            // 仅当右侧无拥有者(到边界/空列)才画右线
+          bottom: !!bdr.bottom && !botNb             // 仅当下方无拥有者才画底线
+        };
+      }
       cellSpan[cNum + '_' + r0] = { cs: cs, rs: rs, bdr: bdr, draw: draw };
     });
   });
