@@ -1399,7 +1399,7 @@ function renderTimeSegs(){
       row.appendChild(mdWrap);     // 多天：默认不勾选；勾选才显示「至日期」填写框
       row.appendChild(adWrap);
       var _pb = document.getElementById('proxyBtn');   // 代理人：行内置于「整天」之后
-      if (_pb){ _pb.hidden = false; _pb.textContent = curProxy ? curProxy : '选择代理人（可选）'; row.appendChild(_pb); }
+      if (_pb){ _pb.hidden = false; _pb.textContent = curProxy ? curProxy : '可选代理人'; row.appendChild(_pb); }
       row.appendChild(brk);
       row.appendChild(d); row.appendChild(s);
       row.appendChild(dl);
@@ -1451,7 +1451,7 @@ function renderProxyBlock(){
   var show = !!(curCat && isLeaveCat(curCat.id));
   btn.hidden = !show;
   if (!show) return;
-  btn.textContent = curProxy ? curProxy : '选择代理人（可选）';
+  btn.textContent = curProxy ? curProxy : '可选代理人';
 }
 /* 打开代理人选择弹窗：列出候选人员（含岗位职别），点击即选中并关闭 */
 function openProxyModal(){
