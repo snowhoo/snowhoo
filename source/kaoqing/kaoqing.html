@@ -491,11 +491,14 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 #printArea .tpl-table td{padding:2px 5px;font-size:10pt;vertical-align:middle;word-break:break-word;overflow:visible;box-sizing:border-box}
 #printArea .pg-break{page-break-after:always;height:0;line-height:0;font-size:0}
 #printArea .grp-break{page-break-before:always;height:0;line-height:0;font-size:0}
-/* A5 拼接 A4：每物理页 = 一张 A4 竖版，上下两个 A5 横版单元格；.tpl-scale 内部按等比缩放填满（由 JS 计算 scale 值） */
-#printArea .a4-sheet{width:210mm;height:297mm;box-sizing:border-box;padding:10mm 0 4mm 0;margin:0 auto;page-break-after:always;overflow:hidden;background:#fff}
+/* A5 拼接 A4：一张 A4 竖版 = 上下两个 A5 横版页框(各 210×148.5mm，恰好拼满 297mm)。
+   每个 A5 用「固定页框」，两模板都按同一页框等比缩放 → 边距表现完全一致（模板自身页面边距被整体保留，不会一个满版一个留白）。
+   scale 由 JS 基于固定 A5 页框计算（正常 A5 模板 k≈1）；transform-origin 左上，缩放后仍贴页框左上、忠于模板版式。 */
+#printArea .a4-sheet{width:210mm;height:297mm;box-sizing:border-box;padding:0;margin:0 auto;page-break-after:always;overflow:hidden;background:#fff}
 #printArea .a4-sheet:last-child{page-break-after:auto}
-#printArea .a5-cell{width:210mm;height:141.5mm;display:flex;align-items:flex-start;justify-content:center;overflow:hidden}
-#printArea .tpl-scale{transform-origin:top center}
+#printArea .a5-page{width:210mm;height:148.5mm;overflow:hidden}
+#printArea .a5-page .tpl-table{margin:0}
+#printArea .tpl-scale{transform-origin:top left}
 @media print{
   body.printing-template > *:not(#printArea){display:none!important}
   body.printing-template #printArea{display:block!important;width:100%;margin:0;padding:0}
@@ -4091,20 +4094,22 @@ async function printRecordsViaTemplate(rs){
       try { rTpl = await renderTemplateToHtml(ab, data.recVals, data.docVals, signByName); }
       catch(e){ await showAlert('生成打印视图失败：' + e.message, '模板打印失败'); return; }
       var pages = rTpl.pages;
-      var stitch = !!gpSub().stitch;   // 当前考勤组+类别是否开启「A5拼接A4」
+      // A5拼接A4 为整组版式开关：读「当前组」下 加班/请假 任一类别开启即整组两类别共用同一套 2-up 规则（避免「一个带边距一个满版」看似不同规则的错位）
+      var stitch = !!(gpSub('ot').stitch || gpSub('lv').stitch);
       if (stitch) anyStitch = true;
       var partHtml = '';
       if (stitch){
-        // A5 横版模板 → 上下拼到一张 A4 竖版：每物理页含两个 A5 单元格，按等比缩放填满（仿 Excel 整页缩放，不变形）
-        var CELL_W_MM = 210, PAD_T = 10, PAD_B = 4;          // 上10 下4 边距（左右0），与用户原手动设置一致
-        var CELL_H_MM = (297 - PAD_T - PAD_B) / 2;            // 两页均分剩余高度
-        var cellWpx = CELL_W_MM / 25.4 * 96, cellHpx = CELL_H_MM / 25.4 * 96;
-        var k = Math.min(cellWpx / (rTpl.naturalW || cellWpx), cellHpx / (rTpl.naturalH || cellHpx));
+        // A5 横版模板 → 上下拼到一张 A4 竖版：每个 A5 用固定 210×148.5mm 页框，两模板都按「同一固定页框」等比缩放
+        // —— 关键：缩放系数 k 基于固定 A5 页框（而非各自表格尺寸）计算，故加班/请假两模板边距表现完全一致
+        //    （模板自身的页面边距被整体保留，不会一个满版、一个留白）；仅当模板真实尺寸超过 A5 页框时才缩小(k<1)避免溢出。
+        var A5_W_MM = 210, A5_H_MM = 148.5;                    // A5 横版物理尺寸
+        var a5Wpx = A5_W_MM / 25.4 * 96, a5Hpx = A5_H_MM / 25.4 * 96;
+        var k = Math.min(1, a5Wpx / (rTpl.naturalW || a5Wpx), a5Hpx / (rTpl.naturalH || a5Hpx));
         for (var s = 0; s < pages.length; s += 2){
           var c1 = pages[s], c2 = pages[s + 1] || '';
           partHtml += '<div class="a4-sheet">'
-            + '<div class="a5-cell"><div class="tpl-scale" style="transform:scale(' + k.toFixed(4) + ')">' + c1 + '</div></div>'
-            + (c2 ? '<div class="a5-cell"><div class="tpl-scale" style="transform:scale(' + k.toFixed(4) + ')">' + c2 + '</div></div>' : '')
+            + '<div class="a5-page"><div class="tpl-scale" style="transform:scale(' + k.toFixed(4) + ')">' + c1 + '</div></div>'
+            + (c2 ? '<div class="a5-page"><div class="tpl-scale" style="transform:scale(' + k.toFixed(4) + ')">' + c2 + '</div></div>' : '')
             + '</div>';
         }
       } else {
@@ -5624,19 +5629,20 @@ async function saveConfigToWaline(){
   if (cfgGpCur){
     var prev = GROUP_PRINT_CFG[cfgGpCur] || {};
     var otherSub = cfgGpCat === 'ot' ? (prev.lv || {}) : (prev.ot || {});
+    var stVal = !!($('#cfgGpStitch') && $('#cfgGpStitch').checked);   // A5拼接A4：整张打印版式开关，两类别共用同一套规则
     var sub = {
       tplFile:     (($('#cfgGpTpl') && $('#cfgGpTpl').value) || '').trim(),
       perPage:     Math.max(1, parseInt((($('#cfgGpPerPage') && $('#cfgGpPerPage').value) || '10'), 10) || 10),
-      stitch:      !!($('#cfgGpStitch') && $('#cfgGpStitch').checked),
+      stitch:      stVal,
       kaoqingRen:  (($('#cfgGpKqRen') && $('#cfgGpKqRen').value) || ''),
       dept1Leader: (($('#cfgGpD1') && $('#cfgGpD1').value) || ''),
       dept2Leader: (($('#cfgGpD2') && $('#cfgGpD2').value) || '')
     };
-    GROUP_PRINT_CFG[cfgGpCur] = {};
-    // 加班(ot) 与 请假(lv) 的每页条数各自独立（用户可设 加班11 / 请假1）。
-    // 只写当前标签类别，保留另一类别原有配置（含其 perPage）；不再做 ot/lv 共享，避免互相覆盖。
-    if (cfgGpCat === 'ot'){ GROUP_PRINT_CFG[cfgGpCur].ot = sub; GROUP_PRINT_CFG[cfgGpCur].lv = otherSub; }
-    else                  { GROUP_PRINT_CFG[cfgGpCur].lv = sub; GROUP_PRINT_CFG[cfgGpCur].ot = otherSub; }
+    // 写当前类别：完整 sub（含 stitch）；另一类别：仅同步 stitch（A5拼接A4 是整组版式开关，两类别同一套规则），保留其 tplFile/perPage/人员
+    var saved = {};
+    saved[cfgGpCat] = sub;
+    saved[cfgGpCat === 'ot' ? 'lv' : 'ot'] = Object.assign({}, otherSub, { stitch: stVal });
+    GROUP_PRINT_CFG[cfgGpCur] = saved;
   }
   var payload = {
     v: 1, type: 'config',
