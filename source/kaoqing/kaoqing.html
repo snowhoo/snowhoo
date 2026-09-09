@@ -2799,7 +2799,7 @@ function weekdayOf(date){
   return ['周日','周一','周二','周三','周四','周五','周六'][w];
 }
 var RECORD_KEYS = { '序号':1,'单据号':1,'姓名':1,'工号':1,'性别':1,'手机号':1,'一级部门':1,'二级部门':1,'考勤组':1,'权限':1,'岗位职别':1,'日期':1,'起日期':1,'至日期':1,'星期':1,'开始':1,'结束':1,'时段':1,'小时':1,'说明':1,'状态':1,'类别':1,'加班类型':1,'签名':1,'代理人':1 };
-var DOC_KEYS = { '打印日期':1,'打印时间':1,'总条数':1,'总小时':1,'当前组别':1,'当前类别':1,'当前状态':1,'考勤人':1,'一级部门领导':1,'二级部门领导':1 };
+var DOC_KEYS = { '打印日期':1,'打印时间':1,'总条数':1,'总小时':1,'当前组别':1,'当前类别':1,'当前状态':1,'考勤人':1,'一级部门领导':1,'二级部门领导':1,'岗位职别':1 };
 function isRecKey(k){ return !!RECORD_KEYS[k]; }
 function firstPersonOf(rec){
   if (!rec || !rec.people || !rec.people.length) return null;
@@ -3042,6 +3042,7 @@ function buildPrintData(rs){
     if (p0 && p0.group){ pg = p0.group; break; }
   }
   PRINT_GROUP = pg || '';
+  var firstP = firstPersonOf(rs[0]) || null;   // 文档级人员字段（姓名/工号/部门/岗位职别）取首位人员的属性
   var totalHours = 0;
   rs.forEach(function(r){ if (r.hours != null) totalHours += Number(r.hours) || 0; });
   var dnow = new Date(), p2 = function(n){ return String(n).padStart(2, '0'); };
@@ -3058,7 +3059,8 @@ function buildPrintData(rs){
     '登录名': currentLoginNick(),
     '考勤人': (gpSub().kaoqingRen || ''),
     '一级部门领导': (gpSub().dept1Leader || ''),
-    '二级部门领导': (gpSub().dept2Leader || '')
+    '二级部门领导': (gpSub().dept2Leader || ''),
+    '岗位职别': firstP ? (firstP.position || '') : ''   // 文档级人员字段：取首位人员岗位职别
   };
   var recVals = [];
   rs.forEach(function(r, i){ recVals.push(buildRecordVals(r, i)); });
