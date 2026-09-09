@@ -3679,7 +3679,7 @@ async function getTemplateModel(ab){
   var sheetXml = await zip.file(targetSheet).async('string');
   var sdMatch = sheetXml.match(/<sheetData>([\s\S]*?)<\/sheetData>/);
   if (!sdMatch) throw new Error('模板未找到 sheetData');
-  // 页面边距（pageMargins，单位 inch）：忠于模板，打印时注入 @page margin（见 printRecordsViaTemplate）
+  // 页面边距（pageMargins，单位 inch）：仅解析读取、供参考；不再注入 @page margin（交由打印对话框控制，见 printRecordsViaTemplate）
   var pmTag = sheetXml.match(/<pageMargins\b[^>]*\/?>/);
   var pageMargins = null;
   if (pmTag){
@@ -3687,7 +3687,7 @@ async function getTemplateModel(ab){
     var _gp = function(k){ var m = _pa.match(new RegExp(k + '="([\\d.]+)"')); return m ? parseFloat(m[1]) : 0; };
     pageMargins = { left: _gp('left'), right: _gp('right'), top: _gp('top'), bottom: _gp('bottom'), header: _gp('header'), footer: _gp('footer') };
   }
-  // 页面方向 / 缩放（pageSetup）：忠于模板；orientation=landscape 时打印时注入 @page{size:landscape}（见 printRecordsViaTemplate）
+  // 页面方向 / 缩放（pageSetup）：仅解析读取、供参考；不再注入 @page size（交由打印对话框控制，见 printRecordsViaTemplate）
   var psTag = sheetXml.match(/<pageSetup\b[^>]*\/?>/);
   var pageSetup = null;
   if (psTag){
@@ -4080,15 +4080,13 @@ async function printRecordsViaTemplate(rs){
       catch(e){ await showAlert('生成打印视图失败：' + e.message, '模板打印失败'); return; }
       htmlParts.push(html);
     }
-    // 忠于模板的页边距与页面方向：用首个可用组的模板 pageMargins / pageSetup 注入 @page；每次重置，避免沿用上一次其它模板残留设置
+    // 页边距与页面方向完全交由「打印对话框」控制：不再向 @page 注入模板的 pageMargins / pageSetup。
+    // 原因：模板里的 left/right≈0.59in 一旦写成 @page{margin:...} 会覆盖用户在打印对话框选的边距，
+    // 导致「绘制内容内部还有一圈边距、内容撑不满、甚至因横向/纵向与对话框冲突而被浏览器整体缩放（页面被缩小）」。
+    // 去掉注入后，对话框里的边距与纵向/横向才真正生效，内容按所选页面填满、不再被额外内边距挤压。
     var _pmEl = document.getElementById('tplPageMargins');
     if (!_pmEl){ _pmEl = document.createElement('style'); _pmEl.id = 'tplPageMargins'; document.head.appendChild(_pmEl); }
-    var _pmParts = [];
-    if (chosenPM){
-      _pmParts.push('margin:' + (chosenPM.top||0) + 'in ' + (chosenPM.right||0) + 'in ' + (chosenPM.bottom||0) + 'in ' + (chosenPM.left||0) + 'in');
-    }
-    if (chosenPS && chosenPS.orientation === 'landscape') _pmParts.push('size:landscape');
-    _pmEl.textContent = _pmParts.length ? '@page{' + _pmParts.join(';') + '}' : '';
+    _pmEl.textContent = '';
     // 多组（加班+请假）之间强制分页，各组用自身模板与单页条数独立成段
     var fullHtml = htmlParts.map(function(h, i){ return (i > 0 ? '<div class="grp-break"></div>' : '') + h; }).join('');
     var pa = $('#printArea'); if (!pa){ pa = document.createElement('div'); pa.id = 'printArea'; document.body.appendChild(pa); }
