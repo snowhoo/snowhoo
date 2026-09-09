@@ -106,6 +106,19 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .modal-actions .btn-ok:hover{filter:brightness(.95)}
 .modal-actions .btn-cancel{background:transparent;border:1px solid var(--border);color:var(--text)}
 .modal-actions .btn-cancel:hover{background:var(--bg)}
+/* 请假单「代理人」录入块 + 选择弹窗 */
+.proxy-block{display:flex;align-items:center;gap:12px;margin-top:10px}
+.proxy-block[hidden]{display:none}
+.proxy-label{font-size:.8rem;color:var(--text-muted);min-width:48px}
+.proxy-btn{padding:8px 14px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:.9rem;cursor:pointer;text-align:left;min-width:200px}
+.proxy-btn:hover{border-color:var(--accent)}
+.proxy-group-hint{font-size:.72rem;font-weight:400;color:var(--text-muted);margin-left:8px}
+.proxy-modal{width:min(320px,90vw)}
+.proxy-list{display:flex;flex-direction:column;gap:6px;margin:6px 0 14px;max-height:60vh;overflow-y:auto}
+.proxy-item{padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:.92rem;cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between}
+.proxy-item:hover{border-color:var(--accent);background:var(--bg-surface)}
+.proxy-item.on{border-color:var(--accent);color:var(--accent);font-weight:600}
+.proxy-item .pi-pos{font-size:.72rem;color:var(--text-muted);font-weight:400}
 /* 读/写过程自定义弹窗提示：读=蓝、写=绿、失败=红（已弃用右上角状态） */
 .cloud-toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:2000;max-width:80vw;padding:10px 18px;border-radius:10px;font-size:.86rem;color:#fff;background:#444;box-shadow:0 6px 20px rgba(0,0,0,.22);opacity:1;transition:opacity .25s}
 .cloud-toast[hidden]{display:none}
@@ -576,6 +589,12 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
             <div class="time-segs" id="timeSegs"></div>
           </div>
 
+          <!-- 请假单「代理人」：录入界面置于整体末尾；点击弹出框从当前考勤组别人员中选择；不选则保存为空 -->
+          <div class="sub-row proxy-block" id="proxyBlock" hidden>
+            <label class="proxy-label" for="proxyBtn">代理人</label>
+            <button type="button" id="proxyBtn" class="proxy-btn">选择代理人（可选）</button>
+          </div>
+
         </div>
 
         <!-- 常用说明：标签列表，点击即追加填入备注事由；每条内联「+」、列表末尾内联「+」弹菜单「系统值 / 自定义」；每条可 × 删除（增删仅写缓存） -->
@@ -794,7 +813,8 @@ var PEOPLE_COLS = [
   { key:'dept1',      label:'一级部门' },
   { key:'dept2',      label:'二级部门' },
   { key:'group',      label:'考勤组' },
-  { key:'permission', label:'权限' }
+  { key:'permission', label:'权限' },
+  { key:'position',   label:'岗位职别' }
 ];
 
 /* 类别：统一走时间段（≥0.5 小时），小时数自动计算。
@@ -1019,6 +1039,7 @@ var curCat    = null;
 var records   = [];
 var editIndex = null;   // 修改模式：正在编辑的记录下标（null=新增模式）
 var viewMode   = 'edit';   // 'edit'=未归档(Waline 可改删)；'view'=归档(R2 只读，不能修改/删除)
+var curProxy   = '';       // 请假单「代理人」：表单级选择（仅请假有效），保存时写入记录；不选则为空
 var sortState  = { key: 'idx', dir: 'desc' };   // 表格表头排序状态：默认按「#号(docNo)」从新到旧；key=列标识，dir=asc/desc（点一次正序、再点反序）
 
 function $(s){ return document.querySelector(s); }
@@ -1310,7 +1331,10 @@ function applyView(){
   if (!showCat)     curCat = null;              // 隐藏「选择类别」→ 取消类别选中
   if (!showContent){                            // 隐藏「考勤内容」→ 归零内容字段
     timeSegs = [ newSeg() ];
+    curProxy = '';                              // 归零代理人选择
   }
+  // 代理人仅请假有效：切到「加班/其它」或退出内容区时清空选择（编辑请假单会在 startEdit 内重新载入）
+  if (!(curCat && isLeaveCat(curCat.id))) curProxy = '';
 
   $('#secCat').hidden     = !showCat;
   $('#secContent').hidden = !showContent;
@@ -1323,6 +1347,7 @@ function applyView(){
   // 无条件重渲染时间录入区：修正「直接选请假仍是加班（旧）布局」——
   // 旧逻辑仅在「内容隐藏」或「切到请假且行数≠1」时才重建，纯切类别（行数=1）不重渲染，导致 DOM 停留在上一态。
   renderTimeSegs();
+  renderProxyBlock();          // 请假单：显示/隐藏「代理人」录入块并刷新已选名称
 
   renderCats();
   $('#rangeBlock').hidden = !curCat;
@@ -1407,6 +1432,50 @@ function renderTimeSegs(){
     row.appendChild(acts);
     box.appendChild(row);
   });
+}
+/* 代理人候选：当前考勤组别人员（取所选人员组别；无则取当前组别筛选；仍无则全部） */
+function proxyCandidates(){
+  var grp = null;
+  Array.from(selPeople).some(function(n){
+    for (var i = 0; i < PEOPLE_FULL.length; i++){
+      if (PEOPLE_FULL[i].name === n && PEOPLE_FULL[i].group){ grp = PEOPLE_FULL[i].group; return true; }
+    }
+    return false;
+  });
+  if (!grp && curGroup && curGroup !== GROUPS[0]) grp = curGroup;
+  if (grp) return PEOPLE_FULL.filter(function(p){ return p.group === grp; });
+  return PEOPLE_FULL.slice();
+}
+/* 代理人录入块：仅请假显示；刷新已选名称 */
+function renderProxyBlock(){
+  var block = $('#proxyBlock'); if (!block) return;
+  var show = !!(curCat && isLeaveCat(curCat.id));
+  block.hidden = !show;
+  if (!show) return;
+  var btn = $('#proxyBtn');
+  if (btn) btn.textContent = curProxy ? curProxy : '选择代理人（可选）';
+}
+/* 打开代理人选择弹窗：列出候选人员（含岗位职别），点击即选中并关闭 */
+function openProxyModal(){
+  var list = $('#proxyList'); if (!list) return;
+  var cands = proxyCandidates();
+  var hint = $('#proxyGroupHint');
+  var grp = (cands.length && cands[0].group) ? cands[0].group : '';
+  if (hint) hint.textContent = grp ? ('（' + grp + '）') : '';
+  list.innerHTML = '';
+  cands.forEach(function(p){
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'proxy-item' + (p.name === curProxy ? ' on' : '');
+    b.setAttribute('data-name', p.name);
+    b.innerHTML = '<span>' + escHtml(p.name) + '</span>' + (p.position ? '<span class="pi-pos">' + escHtml(p.position) + '</span>' : '');
+    b.addEventListener('click', function(){
+      curProxy = p.name;
+      renderProxyBlock();
+      $('#proxyModal').hidden = true;
+    });
+    list.appendChild(b);
+  });
+  $('#proxyModal').hidden = false;
 }
 function addTimeSeg(){
   if (editIndex !== null) return;   // 修改模式禁止新增行（修改只能单行）
@@ -1716,6 +1785,9 @@ function refresh(){
         '</div>');
     });
   });
+  if (curProxy && isLeaveCat(curCat.id)){
+    rows.push('<div class="pv-row"><span class="pv-note">代理人：' + esc(curProxy) + '</span></div>');
+  }
   $('#summary').innerHTML = rows.length ? rows.join('') : '<div class="pv-empty">暂无待保存内容</div>';
 }
 
@@ -2187,6 +2259,7 @@ async function submit(){
       detail:  sg.start + '-' + sg.end,
       hours:   Math.round((segHoursMin(sg, curCat.id) / 60) * 100) / 100,
       note:    sg.note || '',
+      proxy:   (isLeaveCat(curCat.id) ? curProxy : ''),   // 代理人仅请假有效；不选则空
       status:  '待提交',
       ts:      Date.now()
     };
@@ -2256,6 +2329,7 @@ async function submit(){
       detail: f.start + '-' + f.end,
       hours:  Math.round((segHoursMin(f, curCat.id) / 60) * 100) / 100,
       note:   f.note || '',
+      proxy:  (isLeaveCat(curCat.id) ? curProxy : ''),   // 代理人仅请假有效
       status: old.status,
       ts:     old.ts
     };
@@ -2296,7 +2370,7 @@ async function submit(){
       id: rec.id, _pending: true, docNo: '',
       people: rec.people, date: rec.date, endDate: rec.endDate || '', otType: rec.otType, catId: rec.catId,
       catName: rec.catName, color: rec.color, mode: rec.mode, detail: rec.detail,
-      hours: rec.hours, note: rec.note, status: '待提交', ts: rec.ts
+      hours: rec.hours, note: rec.note, proxy: rec.proxy || '', status: '待提交', ts: rec.ts
     };
     records.unshift(ph);
     procMap[rec.id] = '保存中…';
@@ -2386,6 +2460,7 @@ function startEdit(i){
   $('#groupSel').value = curGroup;
   selPeople = new Set(r.people);
   curCat = findCatById(r.catId) || null;        // findCatById 兼顾客服动态 lt- 类型（即使该类型已从设置中删除，也能按 catId 还原 curCat，保证历史记录可编辑）
+  curProxy = r.proxy || '';                      // 回填代理人（仅请假记录有值；编辑请假单时 renderProxyBlock 会显示已选）
   timeSegs = parseDetail(r.detail);
   if (!timeSegs.length) timeSegs = [ newSeg(r.date) ];
   timeSegs.forEach(function(sg, k){
@@ -2408,6 +2483,16 @@ $('#groupSel').addEventListener('change', function(){
   curGroup = this.value;
   renderPeople(); applyView();    // 已选人员跨组别保留，重算视图
 });
+/* 代理人弹窗：打开 / 选中 / 清除 / 关闭 / 点遮罩关闭 */
+(function bindProxyModal(){
+  var btn = $('#proxyBtn'), modal = $('#proxyModal');
+  if (btn) btn.addEventListener('click', function(){ openProxyModal(); });
+  if (!modal) return;
+  var close = function(){ modal.hidden = true; };
+  var clear = $('#proxyClear'); if (clear) clear.addEventListener('click', function(){ curProxy = ''; renderProxyBlock(); close(); });
+  var x = $('#proxyClose'); if (x) x.addEventListener('click', close);
+  modal.addEventListener('click', function(e){ if (e.target === modal) close(); });   // 点遮罩关闭
+})();
 $('#selAll').addEventListener('click', function(){
   peopleOfGroup().forEach(function(p){ selPeople.add(p.n); });
   renderPeople(); applyView();
@@ -2713,7 +2798,7 @@ function weekdayOf(date){
   var w = new Date(date + 'T00:00:00').getDay();
   return ['周日','周一','周二','周三','周四','周五','周六'][w];
 }
-var RECORD_KEYS = { '序号':1,'单据号':1,'姓名':1,'工号':1,'性别':1,'手机号':1,'一级部门':1,'二级部门':1,'考勤组':1,'权限':1,'日期':1,'起日期':1,'至日期':1,'星期':1,'开始':1,'结束':1,'时段':1,'小时':1,'说明':1,'状态':1,'类别':1,'加班类型':1,'签名':1 };
+var RECORD_KEYS = { '序号':1,'单据号':1,'姓名':1,'工号':1,'性别':1,'手机号':1,'一级部门':1,'二级部门':1,'考勤组':1,'权限':1,'岗位职别':1,'日期':1,'起日期':1,'至日期':1,'星期':1,'开始':1,'结束':1,'时段':1,'小时':1,'说明':1,'状态':1,'类别':1,'加班类型':1,'签名':1,'代理人':1 };
 var DOC_KEYS = { '打印日期':1,'打印时间':1,'总条数':1,'总小时':1,'当前组别':1,'当前类别':1,'当前状态':1,'考勤人':1,'一级部门领导':1,'二级部门领导':1 };
 function isRecKey(k){ return !!RECORD_KEYS[k]; }
 function firstPersonOf(rec){
@@ -2746,6 +2831,7 @@ function buildRecordVals(r, idx){
     '二级部门': p0 ? (p0.dept2 || '') : '',
     '考勤组': p0 ? (p0.group || '') : '',
     '权限': p0 ? (p0.permission || '') : '',
+    '岗位职别': p0 ? (p0.position || '') : '',
     '日期': (r.endDate && r.endDate !== r.date) ? (mdOnly(r.date) + ' ~ ' + mdOnly(r.endDate)) : mdOnly(r.date || ''),
     '起日期': mdOnly(r.date || ''),
     '至日期': r.endDate ? mdOnly(r.endDate) : '',   // 加班恒空；请假单日存的是起日期→显示起日期，跨天显示真实至日期；均去年份
@@ -2757,7 +2843,8 @@ function buildRecordVals(r, idx){
     '说明': r.note || '',
     '状态': r.status || '待提交',
     '类别': catDisplay,
-    '加班类型': isOt ? ot : ''
+    '加班类型': isOt ? ot : '',
+    '代理人': r.proxy || ''
   };
 }
 // 占位符约定：三层花括号(文档级) 与 两层花括号(行级)。
@@ -5114,7 +5201,7 @@ async function exportPeopleXlsx(){
   var rows = [PEOPLE_COLS.map(function(c){ return c.label; })];
   list.forEach(function(p){ rows.push(PEOPLE_COLS.map(function(c){ return p[c.key] || ''; })); });
   var ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wch:8},{wch:12},{wch:6},{wch:14},{wch:14},{wch:14},{wch:14},{wch:10}];
+  ws['!cols'] = [{wch:8},{wch:12},{wch:6},{wch:14},{wch:14},{wch:14},{wch:14},{wch:10},{wch:14}];
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '人员');
   XLSX.writeFile(wb, '考勤人员_' + todayStr() + '.xlsx');
@@ -5128,7 +5215,8 @@ var PEOPLE_ALIAS = {
   '一级部门':4, '部门':4, '一级':4,
   '二级部门':5, '班组':5, '二级':5, '分组':5,
   '考勤组':6, '组别':6, '考勤组别':6,
-  '权限':7, '角色':7
+  '权限':7, '角色':7,
+  '岗位职别':8, '职别':8, '岗位':8
 };
 async function importPeopleXlsx(file){
   try { await ensureXlsx(); } catch(e){ showAlert(e.message); return; }
@@ -5622,6 +5710,18 @@ document.addEventListener('keydown', function(e){
     <div class="modal-actions">
       <button type="button" class="btn-cancel" id="modalCancel">取消</button>
       <button type="button" class="btn-ok" id="modalOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 代理人选择弹窗：列出当前考勤组别人员；点击选中、关闭即保存 choice；不选「不指定」则留空 -->
+<div class="modal-mask" id="proxyModal" hidden>
+  <div class="modal proxy-modal" role="dialog" aria-modal="true">
+    <div class="modal-title">选择代理人<span class="proxy-group-hint" id="proxyGroupHint"></span></div>
+    <div class="proxy-list" id="proxyList"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel" id="proxyClear">不指定</button>
+      <button type="button" class="btn-ok" id="proxyClose">关闭</button>
     </div>
   </div>
 </div>
