@@ -491,6 +491,11 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 #printArea .tpl-table td{padding:2px 5px;font-size:10pt;vertical-align:middle;word-break:break-word;overflow:visible;box-sizing:border-box}
 #printArea .pg-break{page-break-after:always;height:0;line-height:0;font-size:0}
 #printArea .grp-break{page-break-before:always;height:0;line-height:0;font-size:0}
+/* A5 拼接 A4：每物理页 = 一张 A4 竖版，上下两个 A5 横版单元格；.tpl-scale 内部按等比缩放填满（由 JS 计算 scale 值） */
+#printArea .a4-sheet{width:210mm;height:297mm;box-sizing:border-box;padding:10mm 0 4mm 0;margin:0 auto;page-break-after:always;overflow:hidden;background:#fff}
+#printArea .a4-sheet:last-child{page-break-after:auto}
+#printArea .a5-cell{width:210mm;height:141.5mm;display:flex;align-items:flex-start;justify-content:center;overflow:hidden}
+#printArea .tpl-scale{transform-origin:top center}
 @media print{
   body.printing-template > *:not(#printArea){display:none!important}
   body.printing-template #printArea{display:block!important;width:100%;margin:0;padding:0}
@@ -753,6 +758,10 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
       <div class="cfg-line">
         <span class="cfg-label">每页条数</span>
         <input type="number" id="cfgGpPerPage" min="1" max="50" value="10">
+      </div>
+      <div class="cfg-line">
+        <span class="cfg-label">A5拼接A4</span>
+        <label class="cfg-switch"><input type="checkbox" id="cfgGpStitch"> 一张A4竖版打2页（模板须为A5横版）</label>
       </div>
       <div class="cfg-line">
         <span class="cfg-label">考勤人</span>
@@ -4009,7 +4018,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     });
     return tr + '</tr>';
   }
-  var pagesHtml = '';
+  var pages = [];
   for (var p = 0; p < P; p++){
     var html = '<table class="tpl-table" style="width:' + totalPx + 'px">' + colHtml + '<tbody>';
     headerRows.forEach(function(rw){ html += emitRow(rw, 'static', null); });
@@ -4020,10 +4029,13 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     }
     footerRows.forEach(function(rw){ html += emitRow(rw, 'static', null); });
     html += '</tbody></table>';
-    if (p < P - 1) html += '<div class="pg-break"></div>';
-    pagesHtml += html;
+    pages.push(html);
   }
-  return pagesHtml;
+  // 自然高度（各可见行 pt 求和）换算成 px：供「A5拼接A4」2-up 布局按等比缩放把模板填满 A5 单元格（仿 Excel 整页缩放）
+  var naturalHpt = 0;
+  rows.forEach(function(rw){ var r0 = +_rowNum(rw); if (!hiddenRows[r0]) naturalHpt += (rowH[r0] ? parseFloat(rowH[r0]) : 0); });
+  var naturalHpx = naturalHpt * 96 / 72;
+  return { pages: pages, naturalW: totalPx, naturalH: naturalHpx };
 }
 // 全屏加载遮罩：模板打印准备期间显示，拦截所有点击，防止误操作（z-index 低于 modal-mask，使错误弹窗仍可见）
 function showBusy(text){ var m=$('#busyMask'); if(!m) return; var t=$('#busyText'); if(t && text) t.textContent=text; m.hidden=false; }
@@ -4051,7 +4063,7 @@ async function printRecordsViaTemplate(rs){
     var groups = [];
     if (otRs.length) groups.push({ allOt: true,  rs: otRs });
     if (lvRs.length) groups.push({ allOt: false, rs: lvRs });
-    var htmlParts = [], chosenPM = null, chosenPS = null;
+    var htmlParts = [], chosenPM = null, chosenPS = null, anyStitch = false;
     for (var gi = 0; gi < groups.length; gi++){
       var g = groups[gi];
       var data = buildPrintData(g.rs);   // 内部按本组记录设定 PRINT_GROUP / PRINT_CAT，供下方 gpSub()/resolvePerPage 取用绑定
@@ -4075,18 +4087,36 @@ async function printRecordsViaTemplate(rs){
         (data.recVals || []).forEach(function(r){ var n = (r && r['签名'] != null) ? String(r['签名']).trim() : ''; if (n && !seen[n]){ seen[n] = true; needNames.push(n); } });
       }
       var signByName = needNames.length ? await fetchNameImages(needNames) : {};
-      var html;
-      try { html = await renderTemplateToHtml(ab, data.recVals, data.docVals, signByName); }
+      var rTpl;
+      try { rTpl = await renderTemplateToHtml(ab, data.recVals, data.docVals, signByName); }
       catch(e){ await showAlert('生成打印视图失败：' + e.message, '模板打印失败'); return; }
-      htmlParts.push(html);
+      var pages = rTpl.pages;
+      var stitch = !!gpSub().stitch;   // 当前考勤组+类别是否开启「A5拼接A4」
+      if (stitch) anyStitch = true;
+      var partHtml = '';
+      if (stitch){
+        // A5 横版模板 → 上下拼到一张 A4 竖版：每物理页含两个 A5 单元格，按等比缩放填满（仿 Excel 整页缩放，不变形）
+        var CELL_W_MM = 210, PAD_T = 10, PAD_B = 4;          // 上10 下4 边距（左右0），与用户原手动设置一致
+        var CELL_H_MM = (297 - PAD_T - PAD_B) / 2;            // 两页均分剩余高度
+        var cellWpx = CELL_W_MM / 25.4 * 96, cellHpx = CELL_H_MM / 25.4 * 96;
+        var k = Math.min(cellWpx / (rTpl.naturalW || cellWpx), cellHpx / (rTpl.naturalH || cellHpx));
+        for (var s = 0; s < pages.length; s += 2){
+          var c1 = pages[s], c2 = pages[s + 1] || '';
+          partHtml += '<div class="a4-sheet">'
+            + '<div class="a5-cell"><div class="tpl-scale" style="transform:scale(' + k.toFixed(4) + ')">' + c1 + '</div></div>'
+            + (c2 ? '<div class="a5-cell"><div class="tpl-scale" style="transform:scale(' + k.toFixed(4) + ')">' + c2 + '</div></div>' : '')
+            + '</div>';
+        }
+      } else {
+        pages.forEach(function(pg, idx){ partHtml += pg + (idx < pages.length - 1 ? '<div class="pg-break"></div>' : ''); });
+      }
+      htmlParts.push(partHtml);
     }
-    // 页边距与页面方向完全交由「打印对话框」控制：不再向 @page 注入模板的 pageMargins / pageSetup。
-    // 原因：模板里的 left/right≈0.59in 一旦写成 @page{margin:...} 会覆盖用户在打印对话框选的边距，
-    // 导致「绘制内容内部还有一圈边距、内容撑不满、甚至因横向/纵向与对话框冲突而被浏览器整体缩放（页面被缩小）」。
-    // 去掉注入后，对话框里的边距与纵向/横向才真正生效，内容按所选页面填满、不再被额外内边距挤压。
+    // 页边距与页面方向：A5拼接A4 时锁死 A4 竖版、无边距（具体的 上10/下4/左右0 由 .a4-sheet 内边距控制，整页2-up 布局已把模板等比缩放填满）；
+    // 否则仅清掉 @page 边距、交打印对话框控制（不再注入模板自身 pageMargins，避免覆盖用户在对话框选的边距）。
     var _pmEl = document.getElementById('tplPageMargins');
     if (!_pmEl){ _pmEl = document.createElement('style'); _pmEl.id = 'tplPageMargins'; document.head.appendChild(_pmEl); }
-    _pmEl.textContent = '';
+    _pmEl.textContent = anyStitch ? '@page{ size:A4 portrait; margin:0 }' : '@page{ margin:0 }';
     // 多组（加班+请假）之间强制分页，各组用自身模板与单页条数独立成段
     var fullHtml = htmlParts.map(function(h, i){ return (i > 0 ? '<div class="grp-break"></div>' : '') + h; }).join('');
     var pa = $('#printArea'); if (!pa){ pa = document.createElement('div'); pa.id = 'printArea'; document.body.appendChild(pa); }
@@ -5521,6 +5551,7 @@ function loadGpCfgIntoForm(){
   var g = (GROUP_PRINT_CFG[cfgGpCur] || {})[cfgGpCat] || {};
   var t = $('#cfgGpTpl');      if (t)  t.value  = g.tplFile || '';
   var pp = $('#cfgGpPerPage'); if (pp) pp.value = g.perPage || 10;
+  var st = $('#cfgGpStitch'); if (st) st.checked = !!g.stitch;
   var r = $('#cfgGpKqRen');    if (r)  r.value  = g.kaoqingRen || '';
   var d1 = $('#cfgGpD1');      if (d1) d1.value = g.dept1Leader || '';
   var d2 = $('#cfgGpD2');      if (d2) d2.value = g.dept2Leader || '';
@@ -5596,6 +5627,7 @@ async function saveConfigToWaline(){
     var sub = {
       tplFile:     (($('#cfgGpTpl') && $('#cfgGpTpl').value) || '').trim(),
       perPage:     Math.max(1, parseInt((($('#cfgGpPerPage') && $('#cfgGpPerPage').value) || '10'), 10) || 10),
+      stitch:      !!($('#cfgGpStitch') && $('#cfgGpStitch').checked),
       kaoqingRen:  (($('#cfgGpKqRen') && $('#cfgGpKqRen').value) || ''),
       dept1Leader: (($('#cfgGpD1') && $('#cfgGpD1').value) || ''),
       dept2Leader: (($('#cfgGpD2') && $('#cfgGpD2').value) || '')
