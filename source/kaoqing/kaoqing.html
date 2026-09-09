@@ -107,7 +107,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .modal-actions .btn-cancel{background:transparent;border:1px solid var(--border);color:var(--text)}
 .modal-actions .btn-cancel:hover{background:var(--bg)}
 /* 请假单「代理人」行内选择按钮 + 选择弹窗 */
-.proxy-inline-btn{padding:0px 10px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:.9rem;cursor:pointer;white-space:nowrap}
+.proxy-inline-btn{padding:0px 10px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:.82rem;cursor:pointer;white-space:nowrap}
 .proxy-inline-btn:hover{border-color:var(--accent)}
 .proxy-inline-btn[hidden]{display:none}
 .proxy-group-hint{font-size:.72rem;font-weight:400;color:var(--text-muted);margin-left:8px}
@@ -458,9 +458,9 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
   .time-row{gap:5px;flex-wrap:wrap}
   .time-row .fDate{width:150px}
   .time-row .fEndDate{width:150px}
-  .time-row .fSegNote{flex:1 1 100%;max-width: 250px}   /* 窄屏备注占满整行，避免挤压时段控件 */
+  .time-row .fSegNote{flex:1 1 100%}   /* 窄屏备注占满整行，避免挤压时段控件 */
   .time-row .row-break{display:block;flex-basis:100%;height:0}   /* 窄屏：请假行「整天」之后换行，起日期另起一行 */
-  .time-row .fTime {width: 64px}
+  .time-row .fTime {width: 72px}
 }
 @media (max-width:640px){
   .pv-row > span{border-left:0;padding-left:0;font-size:.7rem}   /* 小屏预览去掉竖线分隔，改为纯空格 */
