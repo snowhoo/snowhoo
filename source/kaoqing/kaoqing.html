@@ -3737,8 +3737,10 @@ async function getTemplateModel(ab){
     primary[mg.sc + '_' + mg.sr] = { cs: mg.ec - mg.sc + 1, rs: mg.er - mg.sr + 1 };
     for (var c = mg.sc; c <= mg.ec; c++) for (var r = mg.sr; r <= mg.er; r++) if (!(c === mg.sc && r === mg.sr)) covered[c + '_' + r] = true;
   });
-  // 行
-  var rowRe = /<row\b[^>]*>[\s\S]*?<\/row>/g, rm;
+  // 行：同时匹配 Excel 对「仅调过行高、无单元格的空白行」写的「自闭合 <row .../>」与「成对 <row>...</row>」。
+  // 自闭合分支必须放前面优先匹配，否则成对分支会把自闭合行的 /> 当本行结束、一路吞并到下一行的 </row>（误合并两行）。
+  // 漏掉自闭合行会导致模板中的留白/间距行（其行高）不被还原（这正是“中间调整过行高的空白行，行高没识别”的根因）。
+  var rowRe = /<row\b[^>]*?\/>|<row\b[^>]*>[\s\S]*?<\/row>/g, rm;
   var rows = [];
   while ((rm = rowRe.exec(sdMatch[1]))) rows.push(rm[0]);
   if (!rows.length) throw new Error('模板没有数据行');
@@ -3863,6 +3865,13 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     if (hiddenRows[r0]) return '';   // 隐藏行：整行不渲染（保留表格结构，仅不显示）
     var rh = rowH[r0] ? rowH[r0] + 'pt' : '';
     var tr = '<tr' + (rh ? ' style="height:' + rh + '"' : '') + '>';
+    if (!cells.length){
+      // 模板中「调整过行高但无内容的空白行」：Excel 以自闭合 <row .../> 存储（无 <c> 单元格），
+      // 需补一个跨全列的空格撑起行高，否则该行不渲染、模板的留白/间距丢失。通用处理，不针对具体模板、不补画。
+      var _cs = cols.count ? ' colspan="' + cols.count + '"' : '';
+      var _s = rh ? ' style="height:' + rh + '"' : '';
+      return tr + '<td' + _cs + _s + '>&nbsp;</td></tr>';
+    }
     cells.forEach(function(c){
       var col = c.ref.replace(/\d+/, '');
       var cNum = colToNum(col);
