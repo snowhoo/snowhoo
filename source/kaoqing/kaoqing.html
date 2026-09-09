@@ -3752,6 +3752,25 @@ async function getTemplateModel(ab){
   while ((rhm2 = rhRe2.exec(sheetXml))){
     if (/\bhidden="1"|\bcollapsed="1"/.test(rhm2[0])) hiddenRows[+rhm2[1]] = true;
   }
+  // 默认字体：Excel 的「列宽」单位是默认字体下数字 0 的像素宽（不是固定 7px，7px 只是 Calibri 11 的值）。
+  // 本例两模板默认字体不同：加班=等线11（数字宽 7.7px→Excel 取 7）、请假=宋体12（8.0px→取 8）。
+  // 若写死 7px，请假模板每一列都会被画窄 12.5%，13 列累计窄约 23mm —— 即「页宽明显小于 A5」的真因。
+  var defaultFont = { name: '', size: 11 };
+  try {
+    if (zip.file('xl/styles.xml')){
+      var _stx = await zip.file('xl/styles.xml').async('string');
+      var _fs = _stx.match(/<fonts\b[^>]*>([\s\S]*?)<\/fonts>/);
+      if (_fs){
+        var _f0 = _fs[1].match(/<font\b[^>]*>[\s\S]*?<\/font>|<font\b[^>]*\/>/);
+        if (_f0){
+          var _fn = _f0[0].match(/<name\s+val="([^"]+)"/);
+          var _fz = _f0[0].match(/<sz\s+val="([\d.]+)"/);
+          if (_fn) defaultFont.name = _fn[1];
+          if (_fz) defaultFont.size = parseFloat(_fz[1]) || 11;
+        }
+      }
+    }
+  } catch(e){}
   // 样式
   var styleMap = await parseStyles(zip);
   // 单元格内嵌图片（vm="N" → xl/media/*），按 vm 序号取 dataUri
@@ -3859,10 +3878,40 @@ async function getTemplateModel(ab){
   rows.forEach(function(rw){ if (needsRecordSig) return; _getRow(rw).cells.forEach(function(c){ if (/\{\{签名\}\}/.test(c.text || '')){ needsRecordSig = true; } }); });
   var model = {
     SS_CACHE: SS_CACHE.slice(), cols: cols, rowH: rowH, styleMap: styleMap, imgByVm: imgByVm,
-    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, fixedPhKeys: fixedPhKeys, needsRecordSig: needsRecordSig, pageMargins: pageMargins, pageSetup: pageSetup, hiddenCols: hiddenCols, hiddenRows: hiddenRows
+    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, fixedPhKeys: fixedPhKeys, needsRecordSig: needsRecordSig, pageMargins: pageMargins, pageSetup: pageSetup, hiddenCols: hiddenCols, hiddenRows: hiddenRows, defaultFont: defaultFont
   };
   _tplModelByFp[fp] = model;
   return model;
+}
+// Excel 列宽单位 = 默认字体下数字的像素宽，Excel 按整像素取整（Calibri11 实测 7.5→用 7；宋体12 实测 8.0→用 8；等线11 实测 7.7→用 7）。
+// 各模板默认字体不同，必须用 Canvas 实测，绝不能写死 7px —— 否则非 Calibri 模板的每一列都会被画窄（列越多、累计越明显）。
+var _digitPxCache = {};
+function defaultDigitPx(fnt){
+  var name = (fnt && fnt.name) || '', size = (fnt && fnt.size) || 11;
+  if (!name) return 7;
+  var key = name + '|' + size;
+  if (_digitPxCache[key] != null) return _digitPxCache[key];
+  var d = 0;
+  try {
+    var cv = document.createElement('canvas');
+    var ctx = cv.getContext && cv.getContext('2d');
+    if (ctx){
+      // 用 10 倍字号测量再除以 10：小字号下浏览器/字体 hinting 会把字宽取整（如 等线11 的 7.7px 会被量成 8px），
+      // 放大 10 倍后取整误差被摊薄，才能拿到真实字宽（等线11=7.7、宋体12=8.0）。
+      var _big = Math.max(1, size) * 10;
+      ctx.font = _big + 'pt "' + name + '"';
+      var _applied = String(ctx.font || '');
+      // 字体名非法时浏览器会保留默认 '10px sans-serif'，此时测量值无意义 → 丢弃、走兜底
+      if (!/10px sans-serif/.test(_applied)){
+        var m = 0;
+        for (var i = 0; i <= 9; i++){ var w = ctx.measureText(String(i)).width / 10; if (w > m) m = w; }
+        if (m > 0) d = Math.floor(m);   // Excel 取整
+      }
+    }
+  } catch(e){}
+  if (!(d >= 4 && d <= 24)) d = 7;      // 兜底：Calibri 11 的数字宽
+  _digitPxCache[key] = d;
+  return d;
 }
 async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   // 复用已解析模板模型（同模板跳过 JSZip 解压 + XML 解析）；签名图已在调用方按模板实际用法取出并传入 signByName
@@ -3870,7 +3919,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   SS_CACHE = model.SS_CACHE;
   var cols = model.cols, rowH = model.rowH, styleMap = model.styleMap, imgByVm = model.imgByVm,
       primary = model.primary, covered = model.covered, rows = model.rows, dataIdx = model.dataIdx, dataStart = model.dataStart, dataEnd = model.dataEnd,
-      hiddenCols = model.hiddenCols, hiddenRows = model.hiddenRows;
+      hiddenCols = model.hiddenCols, hiddenRows = model.hiddenRows, defaultFont = model.defaultFont;
   // 行解析结果缓存：同一行 XML 在收集阶段、各页渲染阶段会被多次 _parseCells，缓存后只解析一次（模板行数固定，渲染循环有界，非无限）
   var _rowCache = {};
   function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: +_rowNum(rw) }; return _rowCache[rw]; }
@@ -3887,7 +3936,11 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   // 列宽：用 Excel 的「字符宽度→像素」公式换算成 pt/px 绝对宽度（非百分比），使表格按模板真实比例还原。
   // 关键点：此前 col 用百分比、表格又强制 width:100%，导致「宽」被归一化铺满整页、而「行高」是固定的 pt —— 宽高各自缩放、比例失真，
   // 浏览器「适合页面」按整页等比缩放时只对高度生效。改为按模板真实尺寸渲染后，浏览器 fit-to-page 才会像 Excel 那样「高/宽/内容等比缩放」。
-  function _colPx(w){ return Math.round((256 * (w || 8) + Math.round(128 / 7)) / 256 * 7); }   // Excel 列宽(char)→像素 的标准换算
+  // Excel 的列宽单位是「默认字体下数字 0 的像素宽」，绝非固定 7px（7px 只是 Calibri 11 的值）。
+  // 实测本例：加班默认字体 等线11 → 7px；请假 宋体12 → 8px。
+  // 旧代码写死 7px 并按 (256w+18)/256*7 折算：加班凑巧接近正确，请假则每列窄 12.5%、13 列累计窄约 23mm（页宽明显小于 A5 的真因）。
+  var _DIGIT_PX = defaultDigitPx(defaultFont);
+  function _colPx(w){ return Math.round((w || 8) * _DIGIT_PX); }
   var totalPx = 0;
   for (var i = 1; i <= cols.count; i++) if (!hiddenCols[i]) totalPx += _colPx(cols.width[i] || 8);
   if (!totalPx) totalPx = cols.count * _colPx(8);
