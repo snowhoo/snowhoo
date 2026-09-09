@@ -3492,11 +3492,12 @@ function _borderCss(sd, b){
     case 'mediumDashed': case 'mediumDashDot': case 'mediumDashDotDot': pt = 2; t = 'dashed'; break;
     default: pt = 0.5;
   }
-  // 1px 兜底（纯 px 钳底，非 max()）：屏幕上 hair(0.25pt≈0.33px)/thin(0.5pt≈0.67px) 这类极细线会被浏览器当作 sub-pixel 吞掉，
-  // 表现为「表格线被压缩到看不见」。这里把模板 pt 值换算成像素并强制 ≥1px，保证任何线都可见；
-  // medium(2pt→2.67px)/thick(3pt→4px) 仍按真实 pt 换算，粗细层次不丢。
+  // 1.5px 兜底（纯 px 钳底，非 max()）：hair(0.25pt≈0.33px)/thin(0.5pt≈0.67px) 这类极细线会被浏览器当作 sub-pixel 吞掉，
+  // 表现为「表格线被压缩到看不见」。原先兜到 1px≈0.265mm 属发丝级：纸上打印正常，但**打印预览与导出的 PDF 在常规
+  // 视图下同样看不见**（需放大数倍才现形）——故把下限提到 1.5px(≈0.4mm)，预览与 PDF 常规视图下都能看到。
+  // medium(2pt→2.67px)/thick(3pt→4px) 仍按真实 pt 换算，粗细层次不丢（1.5 < 2.67 < 4 仍有明显区分）。
   // 用纯 px 而非 max(1px,Npt)：避免个别老旧打印/浏览器环境不支持 CSS max() 时整条 border 声明失效（那会比「细线看不见」更糟）。
-  var px = Math.max(1, pt * 96 / 72);
+  var px = Math.max(1.5, pt * 96 / 72);
   px = (Math.round(px * 100) / 100).toString();
   return 'border-' + sd + ':' + px + 'px ' + t + ' ' + col;
 }
