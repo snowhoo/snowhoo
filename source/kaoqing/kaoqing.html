@@ -3930,7 +3930,7 @@ async function getTemplateModel(ab){
   rows.forEach(function(rw){ if (needsRecordSig) return; _getRow(rw).cells.forEach(function(c){ if (/\{\{签名\}\}/.test(c.text || '')){ needsRecordSig = true; } }); });
   var model = {
     SS_CACHE: SS_CACHE.slice(), cols: cols, rowH: rowH, styleMap: styleMap, imgByVm: imgByVm,
-    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, fixedPhKeys: fixedPhKeys, needsRecordSig: needsRecordSig, pageMargins: pageMargins, pageSetup: pageSetup, hiddenCols: hiddenCols, hiddenRows: hiddenRows, defaultFont: defaultFont
+    primary: primary, covered: covered, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, fixedPhKeys: fixedPhKeys, needsRecordSig: needsRecordSig, pageMargins: pageMargins, pageSetup: pageSetup, hiddenCols: hiddenCols, hiddenRows: hiddenRows, defaultFont: defaultFont, cellSpan: cellSpan
   };
   _tplModelByFp[fp] = model;
   return model;
@@ -3973,7 +3973,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   SS_CACHE = model.SS_CACHE;
   var cols = model.cols, rowH = model.rowH, styleMap = model.styleMap, imgByVm = model.imgByVm,
       primary = model.primary, covered = model.covered, rows = model.rows, dataIdx = model.dataIdx, dataStart = model.dataStart, dataEnd = model.dataEnd,
-      hiddenCols = model.hiddenCols, hiddenRows = model.hiddenRows, defaultFont = model.defaultFont;
+      hiddenCols = model.hiddenCols, hiddenRows = model.hiddenRows, defaultFont = model.defaultFont, cellSpan = model.cellSpan;
   // 行解析结果缓存：同一行 XML 在收集阶段、各页渲染阶段会被多次 _parseCells，缓存后只解析一次（模板行数固定，渲染循环有界，非无限）
   var _rowCache = {};
   function _getRow(rw){ if (!_rowCache[rw]) _rowCache[rw] = { cells: _parseCells(rw, SS_CACHE), r0: +_rowNum(rw) }; return _rowCache[rw]; }
