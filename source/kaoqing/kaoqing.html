@@ -488,7 +488,10 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 /* 模板打印预览：忠于 xlsx 模板排版，调起浏览器打印对话框（可打印 / 另存 PDF） */
 #printArea{display:none}
 #printArea .tpl-table{border-collapse:collapse;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000;margin:0}
-#printArea .tpl-table td{padding:2px 5px;font-size:10pt;vertical-align:middle;word-break:break-word;overflow:visible;box-sizing:border-box}
+/* 纵向 padding 归零 + line-height:1：td 的「行盒」= 字号×行高，若再加上纵向 padding 就会超过模板设定行高，
+   使每一行都被撑高（模板设 12pt 却渲染成 ~14.7pt）→ 整页总高大于模板 → 触发超界等比收缩、宽度被连坐缩小。
+   纵向留白改由 vertical-align:middle 在行高内居中，效果与 Excel 一致。横向 padding 保留 5px 贴近 Excel 单元格边距。 */
+#printArea .tpl-table td{padding:0 5px;line-height:1;font-size:10pt;vertical-align:middle;word-break:break-word;overflow:visible;box-sizing:border-box}
 #printArea .pg-break{page-break-after:always;height:0;line-height:0;font-size:0}
 #printArea .grp-break{page-break-before:always;height:0;line-height:0;font-size:0}
 /* A5 拼接 A4：一张 A4 竖版 = 上下两个 A5 横版页框（各 148.5mm 高，两页恰好拼满 297mm A4）。
@@ -3883,8 +3886,10 @@ async function getTemplateModel(ab){
   _tplModelByFp[fp] = model;
   return model;
 }
-// Excel 列宽单位 = 默认字体下数字的像素宽，Excel 按整像素取整（Calibri11 实测 7.5→用 7；宋体12 实测 8.0→用 8；等线11 实测 7.7→用 7）。
+// Excel 列宽单位 = 默认字体下数字的真实像素宽（宋体12=8.000、等线11=7.700），**不做取整**。
 // 各模板默认字体不同，必须用 Canvas 实测，绝不能写死 7px —— 否则非 Calibri 模板的每一列都会被画窄（列越多、累计越明显）。
+// 曾经误加 Math.floor：等线11 的 7.700 被压成 7，加班 8 列合计 618px=163.7mm，比可打印宽 180mm **少 16.3mm**
+// （正是用户报的"宽少约15mm"）；而取真实值 7.700 时 88.375×7.7=680.5px=180.3mm 正好铺满。故一律用实测原值。
 var _digitPxCache = {};
 function defaultDigitPx(fnt){
   var name = (fnt && fnt.name) || '', size = (fnt && fnt.size) || 11;
@@ -3905,7 +3910,7 @@ function defaultDigitPx(fnt){
       if (!/10px sans-serif/.test(_applied)){
         var m = 0;
         for (var i = 0; i <= 9; i++){ var w = ctx.measureText(String(i)).width / 10; if (w > m) m = w; }
-        if (m > 0) d = Math.floor(m);   // Excel 取整
+        if (m > 0) d = m;   // 取真实字宽，**不取整**（取整会把等线11 的 7.700 压成 7 → 加班少 16.3mm）
       }
     }
   } catch(e){}
@@ -3959,7 +3964,10 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       // 模板中「调整过行高但无内容的空白行」：Excel 以自闭合 <row .../> 存储（无 <c> 单元格），
       // 需补一个跨全列的空格撑起行高，否则该行不渲染、模板的留白/间距丢失。通用处理，不针对具体模板、不补画。
       var _cs = cols.count ? ' colspan="' + cols.count + '"' : '';
-      var _s = rh ? ' style="height:' + rh + '"' : '';
+      // 这个 &nbsp; 若按正常 font-size/line-height 渲染，其「行盒」会高于模板设定行高（模板设 12pt 会渲染成 ~14.7pt），
+      // 空白行被撑高 → 整页总高大于模板真实高度 → 触发超界等比收缩、宽度被连坐缩小（此前「宽少 15mm」的连锁反应）。
+      // 故把行盒清零并裁剪，强制该行严格按模板行高渲染（纯占位空行，无内容，清零不影响版式）。
+      var _s = ' style="' + (rh ? 'height:' + rh + ';' : '') + 'overflow:hidden;padding:0;line-height:0;font-size:0"';
       return tr + '<td' + _cs + _s + '>&nbsp;</td></tr>';
     }
     cells.forEach(function(c){
