@@ -364,6 +364,13 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
   background:rgba(239,68,68,.12);color:#ef4444;font-size:.85rem;font-weight:600;font-family:inherit;
 }
 .btn-rec-del:disabled{opacity:.45;cursor:not-allowed}
+.btn-rec-archive{
+  padding:8px 18px;border:1px solid transparent;border-radius:10px;cursor:pointer;
+  background:#2563eb;color:#fff;font-size:.85rem;font-weight:600;font-family:inherit;
+}
+.btn-rec-archive:hover{background:#1d4ed8}
+.btn-rec-archive:disabled{opacity:.6;cursor:not-allowed;background:#2563eb}
+.btn-rec-archive.is-busy{background:#94a3b8;cursor:not-allowed}
 .rec-table{width:100%;border-collapse:collapse;font-size:.8rem}
 .rec-table th,.rec-table td{border:1px solid var(--border);padding:5px 4px;vertical-align:middle}
 .rec-table th{background:var(--bg-surface);color:var(--text-secondary);font-weight:600;text-align:left}
@@ -400,6 +407,17 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .st-sh{background:rgba(59,130,246,.15);color:#3b82f6}
 .st-sp{background:rgba(245,158,11,.15);color:#f59e0b}
 .st-ok{background:rgba(34,197,94,.15);color:#22c55e}
+.st-arc{background:rgba(59,130,246,.15);color:#3b82f6}
+.btn-rec-restore{background:rgba(59,130,246,.15);color:#3b82f6;border:1px solid rgba(59,130,246,.4)}
+.btn-rec-restore:hover{background:rgba(59,130,246,.25)}
+/* 恢复「已归档」记录时的状态选择菜单 */
+.restore-mask{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:3000}
+.restore-menu{background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:18px;min-width:230px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.restore-title{font-weight:600;margin-bottom:12px;color:var(--text)}
+.restore-opts{display:flex;flex-direction:column;gap:8px}
+.restore-opts button{font-family:inherit;font-size:.92rem;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text);cursor:pointer}
+.restore-opts button:hover{background:var(--border)}
+.restore-cancel{margin-top:12px;width:100%;font-family:inherit;font-size:.9rem;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer}
 .rec-del{border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:.9rem;padding:0 4px}
 .rec-actions{display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
 .rec-edit{border:none;background:transparent;color:var(--accent);cursor:pointer;font-size:.82rem;padding:0 4px;display:inline-flex;align-items:center}
@@ -639,13 +657,16 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
             <option value="待审核">待审核</option>
             <option value="待批准">待批准</option>
             <option value="完成">完成</option>
+            <option value="已归档">已归档</option>
           </select>
           <span class="rec-count" id="recCount">共 0 条</span>
           <button id="delRecordsBtn" class="btn-rec-del" hidden>删选</button>
+          <button id="restoreBtn" class="btn-rec-restore" hidden>恢复选中</button>
           <button id="submitRecordsBtn" class="btn-rec-submit" hidden>提交并打印</button>
           <button id="reviewBtn" class="btn-rec-action" hidden>审核</button>
           <button id="approveBtn" class="btn-rec-action" hidden>批准</button>
           <button id="printBtn" class="btn-rec-action" hidden>模板打印</button>
+          <button id="archiveBtn" class="btn-rec-archive" hidden>归档并汇总</button>
         </div>
         <div class="records" id="records">
           <p class="empty">暂无记录</p>
@@ -1056,7 +1077,10 @@ var COMPANY_NAME  = '苏州晶讯科技股份有限公司';   // ← 顶栏公�
 var selPeople = new Set();
 var curGroup  = GROUPS[0];
 var curCat    = null;
-var records   = [];
+var records   = [];   // 当前状态视图（状态分路径后，仅含当前筛选状态的记录，供渲染）
+var recordsAll = [];   // 全状态累积缓存（按 id 合并）：供跨状态冲突检测 / 提交后定位，不直接渲染
+var archiveReqPending = false;   // 是否存在待处理的「归档并汇总」请求（控制 #archiveBtn 禁用态）
+var _archivePoll = null;          // 归档请求态轮询句柄（禁用期间每 60s 回读，后端删除请求后自动恢复）
 var editIndex = null;   // 修改模式：正在编辑的记录下标（null=新增模式）
 var viewMode   = 'edit';   // 'edit'=未归档(Waline 可改删)；'view'=归档(R2 只读，不能修改/删除)
 var curProxy   = '';       // 请假单「代理人」：表单级选择（仅请假有效），保存时写入记录；不选则为空
@@ -1705,8 +1729,8 @@ function findExistingConflict(saveSegs, peopleNames, excludeId){
     var n = daysBetween(ns.date, ed);
     for (var d = 0; d <= n; d++) expNew.push({ date: addDays(ns.date, d), start: ns.start, end: ns.end });
   });
-  for (var ri = 0; ri < records.length; ri++){
-    var rec = records[ri];
+  for (var ri = 0; ri < recordsAll.length; ri++){
+    var rec = recordsAll[ri];
     if (!rec || !rec.id) continue;
     if (excludeId && rec.id === excludeId) continue;            // 修改自身，跳过
     if (!rec.people || !rec.people.length) continue;
@@ -2087,7 +2111,7 @@ function esc(s){
   });
 }
 
-var STATUS_CLASS = { '待提交':'st-tj', '待审核':'st-sh', '待批准':'st-sp', '待审批':'st-sp', '完成':'st-ok' };
+var STATUS_CLASS = { '待提交':'st-tj', '待审核':'st-sh', '待批准':'st-sp', '待审批':'st-sp', '完成':'st-ok', '已归档':'st-arc' };
 
 /* 表头排序：取某条记录在指定列上的「可比较值」。i 为 records 数组下标（即录入顺序）。
    idx=录入序；who=人员首名；cat=显示类别；date=业务日期；time=起始时间；hours=数值；status/note=文本 */
@@ -2224,7 +2248,13 @@ function renderRecords(){
       '<td class="c-cat ' + (isOt ? 'c-green' : 'c-orange') + '">' + catCell + '</td>' +
       '<td class="c-status"><span class="rec-status ' + (STATUS_CLASS[st] || 'st-tj') + '">' + st + '</span></td>' +
       '<td class="c-note">' + note + '</td>';
-    if (editable) html += '<td class="c-del"><span class="rec-actions"><button class="rec-edit" data-i="' + i + '" title="修改" aria-label="修改"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><button class="rec-del" data-i="' + i + '" title="删除">✕</button></span></td>';
+    if (editable){
+      if (st === '已归档'){
+        html += '<td class="c-del"><span class="rec-actions"><button class="rec-restore" data-i="' + i + '" title="恢复" aria-label="恢复">↺</button><button class="rec-del" data-i="' + i + '" title="删除">✕</button></span></td>';
+      } else {
+        html += '<td class="c-del"><span class="rec-actions"><button class="rec-edit" data-i="' + i + '" title="修改" aria-label="修改"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button><button class="rec-del" data-i="' + i + '" title="删除">✕</button></span></td>';
+      }
+    }
     html += '</tr>';
   });
   html += '</tbody></table>';
@@ -2268,10 +2298,9 @@ async function submit(){
      否则空白行会插进归档/其它状态表里、且单据号也基于错误的数据集。 */
   var wasView = (viewMode === 'view');
   setViewMode('edit');
-  if (wasView){ await syncRecords(); }   // 从归档切回需重新拉未归档（records 才正确；同步保留进行中占位）
   var rsEl = $('#recStatus');
-  if (rsEl){ rsEl.hidden = false; rsEl.value = '待提交'; }   // 强制切到「待提交」筛选，使空白行可见
-  renderRecords();
+  if (rsEl){ rsEl.hidden = false; rsEl.value = '待提交'; }   // 先切下拉框到「待提交」（状态分路径后，syncRecords 按此值拉取）
+  await syncRecords();   // 重新拉未归档（下拉框已为待提交 → 拉待提交；同步保留进行中占位；非归档视图也走此确保表格为待提交）
 
   /* 每一行 = 一条独立记录：日期 / 时段 / 小时 / 备注 全部取自该行；加班类型按本行日期自动判定 */
   function mkRec(name, sg){
@@ -2470,7 +2499,7 @@ async function syncRecords(){
     await loadRecordsFromWaline(true);
     writeQueue.forEach(function(it){
       if (procMap[it.rec.id] === '写入失败') return;
-      var exists = records.some(function(r){ return r.id === it.rec.id; });
+      var exists = recordsAll.some(function(r){ return r.id === it.rec.id; });
       if (!exists) records.unshift(it.ph);
     });
     renderRecords();           // 此刻仍 disabled（readingBack=true）
@@ -2626,6 +2655,11 @@ function updateRecButtons(){
     el.hidden = !show;          // 不满足条件 → 隐藏
     el.disabled = !show;        // 满足条件 → 显示且可点
   }
+  // 归档并汇总按钮：仅未归档视图 + 当前状态为「完成」时可见；不依赖记录选中。
+  // 禁用态(归档汇总中…)由 archiveReqPending 控制，这里只管「是否显示」。
+  var curStatus = ($('#recStatus') && $('#recStatus').value) || '待提交';
+  var archiveBtn = $('#archiveBtn');
+  if (archiveBtn){ archiveBtn.hidden = !(viewMode !== 'view' && curStatus === '完成'); }
   if (viewMode === 'view'){                   // 归档(R2) 只读：全部动作按钮隐藏
     toggleBtn('#submitRecordsBtn', false);
     toggleBtn('#reviewBtn', false);
@@ -2636,7 +2670,7 @@ function updateRecButtons(){
   }
   var box = $('#records');
   var checked = box.querySelectorAll('.rec-check:checked');
-  if (!checked.length){                       // 未勾选任何记录 → 全部隐藏
+  if (!checked.length){                       // 未勾选任何记录 → 其余动作按钮隐藏（归档并汇总已显示，不受影响）
     toggleBtn('#submitRecordsBtn', false);
     toggleBtn('#reviewBtn', false);
     toggleBtn('#approveBtn', false);
@@ -2648,6 +2682,7 @@ function updateRecButtons(){
   var hasReviewed = false;    // 待审核（审核用）
   var hasApproved = false;    // 待批准（批准用）
   var hasPrintable = false;   // 非待提交（可打印）
+  var hasArchived = false;    // 已归档（可恢复）
   checked.forEach(function(cb){
     var r = records[parseInt(cb.dataset.i, 10)];
     if (!r) return;
@@ -2655,12 +2690,14 @@ function updateRecButtons(){
     else { hasPrintable = true; }
     if (r.status === '待审核') hasReviewed = true;
     if (r.status === '待批准') hasApproved = true;
+    if (r.status === '已归档') hasArchived = true;
   });
   toggleBtn('#submitRecordsBtn', hasPending);
   toggleBtn('#reviewBtn', hasReviewed);
   toggleBtn('#approveBtn', hasApproved);
   toggleBtn('#printBtn', hasPrintable);
   toggleBtn('#delRecordsBtn', true);          // 已勾选至少一条 → 显示「删选」
+  toggleBtn('#restoreBtn', hasArchived);      // 勾选中含「已归档」→ 显示「恢复选中」
 }
 /* 自定义弹窗：替代原生 prompt/alert */
 function showModal(opts){
@@ -2703,6 +2740,27 @@ function showAlert(message, title){
 }
 function askText(title, placeholder){
   return showModal({ title: title, input: placeholder || '', okText: '确定', cancelText: '取消' });
+}
+/* 恢复「已归档」记录时，弹出状态选择菜单；返回选中的目标状态字符串，取消返回 null */
+function askRestoreStatus(){
+  return new Promise(function(resolve){
+    var RESTORE_OPTS = ['待提交', '待审核', '待批准', '完成'];
+    var mask = document.createElement('div');
+    mask.className = 'restore-mask';
+    var h = '<div class="restore-menu"><div class="restore-title">恢复到哪个状态</div><div class="restore-opts">';
+    RESTORE_OPTS.forEach(function(s){ h += '<button data-st="' + s + '">' + s + '</button>'; });
+    h += '</div><button class="restore-cancel">取消</button></div>';
+    mask.innerHTML = h;
+    document.body.appendChild(mask);
+    function close(v){ mask.remove(); document.removeEventListener('keydown', onKey); resolve(v); }
+    function onKey(e){ if (e.key === 'Escape') close(null); }
+    mask.addEventListener('click', function(e){ if (e.target === mask) close(null); });
+    mask.querySelectorAll('.restore-opts button').forEach(function(b){
+      b.addEventListener('click', function(){ close(b.getAttribute('data-st')); });
+    });
+    mask.querySelector('.restore-cancel').addEventListener('click', function(){ close(null); });
+    document.addEventListener('keydown', onKey);
+  });
 }
 /* 角色密码校验：审核 / 批准（自定义弹窗）。密码取 Waline 配置中的哈希，未配置则直接拒绝并引导去设置 */
 async function confirmRole(role){
@@ -2780,9 +2838,10 @@ async function submitAndPrint(){
   // 2) 提交（待提交 → 待审核）；eachChecked 内部会重新拉取 records 并渲染
   await eachChecked('待提交', '待审核', '提交中…');
 
-  // 3) 切换界面到「待审核」视图，让刚提交的记录可见（否则默认待提交筛选下它们会消失，误以为记录为空）
+  // 3) 切换界面到「待审核」视图，让刚提交的记录可见（状态分路径后必须重新拉取该状态记录才能看到）
   var sf = $('#recStatus');
   if (sf){ sf.value = '待审核'; }
+  await loadRecordsFromWaline(true);   // 重新拉取「待审核」状态记录（覆盖 records）
   renderRecords();   // 用「待审核」筛选重新渲染表格
 
   // 4) 自动勾选刚刚提交的记录（按 id 在渲染后的 DOM 中定位行并勾选），同时收集供打印
@@ -4325,6 +4384,21 @@ $('#records').addEventListener('dblclick', async function(e){
 });
 // 记录删除（列表动态生成 → 委托）：待提交免密，其余按密码层级
 $('#records').addEventListener('click', async function(e){
+    var rt = e.target.closest('.rec-restore');
+    if (rt){
+      var ir = parseInt(rt.dataset.i, 10);
+      var rr = records[ir];
+      if (!rr) return;
+      var st = await askRestoreStatus();
+      if (!st) return;
+      procMap[rr.id] = '恢复中…'; renderRecords();
+      try {
+        var okR = await postRecordOp('edit', Object.assign({}, rr, { status: st }));
+        if (okR){ await syncRecords(); procMap = {}; renderRecords(); }
+        else { procMap = {}; renderRecords(); cloudToast('error', '恢复失败', 'restore'); }
+      } catch(e){ procMap = {}; renderRecords(); cloudToast('error', '恢复失败', 'restore'); }
+      return;
+    }
   // 修改（权限控制与删除一致）
   var bEdit = e.target.closest('.rec-edit');
   if (bEdit){
@@ -4419,6 +4493,26 @@ $('#delRecordsBtn').addEventListener('click', async function(){
     procMap = {}; renderRecords(); cloudToast('error', '批量删除失败', 'del');
     console.error('[kaoqing] 批量删除失败', e && e.message ? e.message : e);
   }
+});
+// 批量恢复「已归档」记录：收集勾选的已归档记录 → 弹菜单选目标状态 → 批量原地复写为该状态
+$('#restoreBtn').addEventListener('click', async function(){
+  var cbs = $('#records').querySelectorAll('.rec-check:checked');
+  var targets = [];
+  cbs.forEach(function(cb){
+    var i = parseInt(cb.dataset.i, 10);
+    if (records[i] && records[i].status === '已归档') targets.push(records[i]);
+  });
+  if (!targets.length) return;
+  var st = await askRestoreStatus();
+  if (!st) return;
+  targets.forEach(function(r){ procMap[r.id] = '恢复中…'; });
+  renderRecords();
+  try {
+    var tasks = targets.map(function(r){ return postRecordOp('edit', Object.assign({}, r, { status: st })); });
+    var res = await Promise.all(tasks);
+    if (res.every(function(b){ return b; })){ await syncRecords(); procMap = {}; renderRecords(); }
+    else { procMap = {}; renderRecords(); cloudToast('error', '部分恢复失败', 'restore'); }
+  } catch(e){ procMap = {}; renderRecords(); cloudToast('error', '批量恢复失败', 'restore'); }
 });
 
 /* ---------- Waline 读写：读取为匿名公开 GET（8s 超时 + 健壮解析）。
@@ -4714,6 +4808,15 @@ function cloudToastError(text, key){
    读取时拉取该 path 全部评论 → 解析为事件 → 按 id 回放成当前二维表；旧整包格式(type=='records')按 leg_<oid>_<i> 兼容迁移。
    匿名无法改/删旧评论，故"修改/删除"都追加一条新事件，由回放(同 id 取最后)与后端 --cleanup 压实处理。 */
 var RECORDS_PATH = '/kaoqing/records';
+var ARCHIVE_REQ_PATH = '/kaoqing/archive-request';   // 前端「归档并汇总」按钮写入的请求通道（后端 _C_request.py 读取）
+/* 记录按状态分路径存储：每条新记录存到 /kaoqing/records/<状态>（postRecordOp 落地），便于归档脚本精确按路径操作。
+   读取性能：Waline 管理员列表接口(type=list)忽略 url 参数、返回整个实例，无法按 url 服务端筛选；
+   故前端先按 url 前缀排除其它项目（廉价），再按评论内嵌 rec.status 筛选当前状态，只有当前状态的事件才回放/渲染。
+   这样打开/刷新/切换状态都只处理当前状态数据（旧整包 /kaoqing/records 无子路径的记录按内嵌 status 兼容显示）。 */
+var RECORD_STATUSES = ['待提交', '待审核', '待批准', '完成', '已归档'];
+var RECORD_STATUSES_ALL = RECORD_STATUSES.concat(['待审批']);   // 兼容旧别名「待审批」
+function recPathOf(status){ return RECORDS_PATH + '/' + (status || '待提交'); }
+function commentUrlOf(c){ try { return decodeURIComponent(c.url || ''); } catch(e){ return c.url || ''; } }
 
 /* 历史归档只读查看：从 R2 公开桶读取（复用 books 同桶，暴露只读地址，无害）。归档写入由后端 kaoqing_archiver.py 定时任务完成，前端不发起归档请求。 */
 var ARCHIVE_R2_BASE = 'https://pub-d583e3093dc1438882b43509c1571302.r2.dev/';
@@ -4885,35 +4988,77 @@ async function tokenDeleteComment(oid){
 }
 async function postRecordOp(op, rec){
   if (!CLOUD_BASE) return false;
-  if (WALINE_ADMIN_TOKEN){
-    if (op === 'del') return rec.oid ? await tokenDeleteComment(rec.oid) : false;
-    var body = {
-      comment: JSON.stringify({ op: op, id: rec.id, rec: (op === 'del' ? null : rec) }),
-      url: RECORDS_PATH, nick: ANON_NICK, mail: ANON_MAIL, link: '', ua: navigator.userAgent
-    };
-    try {
-      var res = await walineSaveRecord(rec.oid || null, body, WALINE_ADMIN_TOKEN);
-      return res && res.oid ? res : false;   // 成功：返回带 oid 的对象（truthy）；失败：false
-    } catch(e){ return false; }
+  if (op === 'del') return rec.oid ? await tokenDeleteComment(rec.oid) : false;
+  if (!WALINE_ADMIN_TOKEN){
+    // 无管理员令牌：不再退回「匿名追加事件」——匿名写入拿不到 oid，之后 edit/del 无法定位原评论，
+    // 会把数据模型打回「事件流」且无法再原地改删，故明确失败并提示，而不是默默写成匿名脏数据。
+    console.error('[kaoqing] 未配置管理员令牌，拒绝匿名写入考勤记录（op=' + op + '）');
+    return false;
   }
-  // 无管理员令牌：不再退回「匿名追加事件」——匿名写入拿不到 oid，之后 edit/del 无法定位原评论，
-  // 会把数据模型打回「事件流」且无法再原地改删，故明确失败并提示，而不是默默写成匿名脏数据。
-  console.error('[kaoqing] 未配置管理员令牌，拒绝匿名写入考勤记录（op=' + op + '）');
-  return false;
+  var path = recPathOf(rec.status);   // 记录物理存到「状态对应路径」，读取只拉该路径
+  var body = {
+    comment: JSON.stringify({ op: op, id: rec.id, rec: rec }),
+    url: path, nick: ANON_NICK, mail: ANON_MAIL, link: '', ua: navigator.userAgent
+  };
+  try {
+    // 强制「删除旧 + 新建到正确状态路径」落地：不依赖 Waline PUT 是否支持改 url（实测 type=list 忽略 url）。
+    // replay 按 id 去重、新建同 id 高 oid 覆盖旧评论，路径切换不会产生重复记录。
+    var res = await walineSaveRecord(null, body, WALINE_ADMIN_TOKEN);   // 始终 POST 新建（oid=null → 走新建分支）
+    var newOid = res && res.oid;
+    if (rec.oid && newOid && String(rec.oid) !== String(newOid)){
+      try { await tokenDeleteComment(rec.oid); }   // 清掉旧路径上的旧评论（残留无害：replay 按 id 去重）
+      catch(e){ /* 旧评论残留不影响正确性 */ }
+    }
+    return newOid ? { oid: newOid } : false;        // 成功：返回带 oid 的对象（truthy）；失败：false
+  } catch(e){ return false; }
 }
 
-/* 读取：以 Waline 为唯一来源（无 localStorage 兜底）。拉取全量评论 → 回放成当前二维表。 */
+/* 全状态缓存合并：把本次拉取到的当前状态记录并入 recordsAll（按 id 去重，取较新 oid）。
+   供跨状态冲突检测(findExistingConflict)与提交后定位(submitAndPrint)使用。 */
+function mergeRecordsAll(cur){
+  var byId = {};
+  recordsAll.forEach(function(r){ if (r && r.id) byId[r.id] = r; });
+  cur.forEach(function(r){
+    if (!r || !r.id) return;
+    var old = byId[r.id];
+    if (!old || (r.oid && (!old.oid || r.oid >= old.oid))) byId[r.id] = r;
+  });
+  recordsAll = Object.keys(byId).map(function(k){ return byId[k]; });
+}
+/* 读取：以 Waline 为唯一来源（无 localStorage 兜底）。拉取全实例评论 → 仅回放「当前状态路径」的记录 → 渲染。
+   状态分路径后，每次打开/刷新/切换状态都只处理当前状态的记录（降低回放与渲染成本）。 */
 async function loadRecordsFromWaline(quiet){
+  if (viewMode === 'view') return;   // 归档(R2)只读视图：不加载 Waline 数据（避免覆盖 R2 视图）
   if (quiet){
     recordsLoading = true; renderRecords();   // 懒加载：不弹遮罩，先在「该状态下暂无记录」位置显示旋转圆圈
   } else {
     cloudToast('read', '处理中：读取考勤记录...', 'loadRecords');
   }
   try {
+    // 当前状态筛选：未归档视图取下拉框值（默认待提交）；归档(R2)视图不走此函数
+    var sf = ($('#recStatus') && $('#recStatus').value) || '待提交';
+    // Waline 管理员列表忽略 url 参数、返回整个实例；先按 url 前缀排除其它项目（廉价字符串判断），
+    // 再按评论内嵌 rec.status 筛选当前状态（兼容旧整包 /kaoqing/records 无子路径的记录），
+    // 只有当前状态的事件才进入回放 → 大幅降低回放/渲染成本。
     var all = await fetchAllComments(RECORDS_PATH);
     var events = [];
-    for (var i = 0; i < all.length; i++){ events = events.concat(parseCommentToEvents(all[i])); }
-    records = replayEvents(events);
+    var hasArchiveReq = false;     // 是否存在待处理的「归档并汇总」请求（同一次拉取内顺带检测）
+    for (var i = 0; i < all.length; i++){
+      var c = all[i];
+      var u = commentUrlOf(c);
+      if (u === ARCHIVE_REQ_PATH){ hasArchiveReq = true; continue; }   // 归档请求通道：仅标记，不参与记录渲染
+      if (u !== RECORDS_PATH && u.indexOf(RECORDS_PATH + '/') !== 0) continue;   // 非考勤记录（含其它项目），跳过
+      var evs = parseCommentToEvents(c);
+      if (!evs.length) continue;
+      var st = null;
+      for (var k = evs.length - 1; k >= 0; k--){ if (evs[k].rec && evs[k].rec.status){ st = evs[k].rec.status; break; } }
+      if (sf !== 'all' && st !== sf) continue;   // 按记录自身状态筛选（兼容旧整包无子路径）
+      events = events.concat(evs);
+    }
+    var cur = replayEvents(events);
+    records = cur;                 // 当前状态视图（供渲染）
+    mergeRecordsAll(cur);          // 累积进全状态缓存（供跨状态冲突检测/提交后定位）
+    refreshArchiveBtn(hasArchiveReq);   // 同步「归档并汇总」按钮态（有请求→归档汇总中…禁用）
     if (quiet) recordsLoading = false;
     renderRecords();
     if (!quiet) cloudToastHide('loadRecords');
@@ -4924,7 +5069,56 @@ async function loadRecordsFromWaline(quiet){
   }
 }
 
-/* 归档下拉（合并原区域五卡片）：从 R2 index.json 填充「归档记录」选项；「未归档记录」固定为第一项(value=waline)。归档写入由后端 kaoqing_archiver.py 定时任务完成，前端不发起。 */
+/* ===================== 归档并汇总（管理员，不依赖选中） =====================
+   流程：管理员点「归档并汇总」→ 在 Waline /kaoqing/archive-request 写一条请求 →
+   后端 _C_request.py（由 Windows 计划任务在每月最后一天 9:00 起每小时触发）读取请求 →
+   运行 _1a2m3w4s.bat（归档→建表→写表→发邮件）→ 成功后删除该请求记录。
+   前端按钮态由「请求是否存在」驱动：有请求 → 显示「归档汇总中…」且禁用；无 → 「归档并汇总」可点。*/
+async function confirmAdmin(){
+  if (!CONFIG.pwdAdmin){ await showAlert('尚未配置管理员密码。\n请到右上角「设置 → 考勤配置 → 管理密码」中设置后重试。'); return false; }
+  var pwd = await askPassword('请输入管理员密码');
+  if (pwd === null) return false;                       // 取消
+  if (!(await pwdMatch(pwd, CONFIG.pwdAdmin))){ await showAlert('密码错误'); return false; }
+  return true;
+}
+async function postArchiveRequest(){
+  if (!CLOUD_BASE || !WALINE_ADMIN_TOKEN) return false;
+  var id = 'ar-' + Date.now();
+  var body = {
+    comment: JSON.stringify({ op: 'archive-request', id: id,
+      rec: { type: 'archive-request', status: '请求中', reqAt: new Date().toISOString() } }),
+    url: ARCHIVE_REQ_PATH, nick: ANON_NICK, mail: ANON_MAIL, link: '', ua: navigator.userAgent
+  };
+  try {
+    var res = await walineSaveRecord(null, body, WALINE_ADMIN_TOKEN);   // 始终 POST 新建（oid=null）
+    return !!(res && res.oid);
+  } catch(e){ console.error('[kaoqing] postArchiveRequest 失败', e && e.message ? e.message : e); return false; }
+}
+async function checkArchiveReq(){
+  if (!CLOUD_BASE) return false;
+  try {
+    var all = await fetchAllComments(RECORDS_PATH);
+    for (var i = 0; i < all.length; i++){ if (commentUrlOf(all[i]) === ARCHIVE_REQ_PATH) return true; }
+    return false;
+  } catch(e){ return false; }
+}
+function refreshArchiveBtn(pending){
+  var b = $('#archiveBtn'); if (!b) return;
+  archiveReqPending = !!pending;
+  if (archiveReqPending){ b.textContent = '归档汇总中…'; b.disabled = true; b.classList.add('is-busy'); startArchivePoll(); }
+  else { b.textContent = '归档并汇总'; b.disabled = false; b.classList.remove('is-busy'); stopArchivePoll(); }
+  updateRecButtons();   // 同步可见性（仅完成状态且未归档视图才显示）
+}
+function startArchivePoll(){
+  if (_archivePoll) return;
+  _archivePoll = setInterval(async function(){
+    var p = await checkArchiveReq();
+    if (!p) refreshArchiveBtn(false);   // 后端已删除请求 → 恢复可点
+  }, 60000);
+}
+function stopArchivePoll(){ if (_archivePoll){ clearInterval(_archivePoll); _archivePoll = null; } }
+
+
 async function loadArchiveMonths(quiet){
   if (!quiet) cloudToast('read', '处理中：读取归档列表...', 'loadArchive');
   try {
@@ -5870,7 +6064,19 @@ async function lazyLoadArchiveMonths(){
 $('#recSource').addEventListener('mousedown', lazyLoadArchiveMonths);   // 鼠标点开下拉框即触发
 $('#recSource').addEventListener('focus', lazyLoadArchiveMonths);        // 键盘聚焦（Tab）亦可触发
 /* 状态筛选：切换后按状态重渲染记录表 */
-$('#recStatus').addEventListener('change', function(){ renderRecords(); });
+$('#recStatus').addEventListener('change', function(){ loadRecordsFromWaline(true); });   // 切换状态：按新状态重新读取（只拉该状态路径）
+/* 归档并汇总：管理员专属、不依赖选中。点击 → 写 Waline 请求 → 回读 → 按钮置「归档汇总中…」禁用 */
+$('#archiveBtn').addEventListener('click', async function(){
+  if (archiveReqPending) return;                       // 已在处理中，忽略重复点击
+  if (!await confirmAdmin()) return;                   // 仅管理员密码可继续
+  cloudToast('read', '正在提交归档汇总请求...', 'archiveReq');
+  var ok = await postArchiveRequest();
+  if (!ok){ cloudToast('error', '归档请求写入失败', 'archiveReq'); return; }
+  var pending = await checkArchiveReq();               // 回读请求状态
+  refreshArchiveBtn(pending);
+  if (pending) cloudToast('ok', '已提交归档汇总请求，将在每月最后一天的计划任务中执行', 'archiveReq');
+  else cloudToast('error', '归档请求写入后未读回，请重试', 'archiveReq');
+});
 $('#peopleSync').addEventListener('click', savePeopleToWaline);
 $('#peopleAddRow').addEventListener('click', addPeopleRow);
 $('#peopleExport').addEventListener('click', exportPeopleXlsx);

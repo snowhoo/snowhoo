@@ -8,6 +8,8 @@ M_NewM.py —— 「出勤状况汇总表」新增月份表工具
     python M_NewM.py 2027-02 2027-03         一次创建多个月（按参数顺序追加）
     python M_NewM.py 2027-01 --force         该月已存在时重建（按节假日配置重算第 4 行/标题/年度累计）
     python M_NewM.py 2027-03 --tpl 2026-12   指定用哪张表现有表当模板（默认取最后一张非本月表）
+    python M_NewM.py --from-archive         根据「本次归档清单」自动判断：只建工作簿里没有对应表的月份，已有则跳过（默认只读 _archive_this_run.json）
+    python M_NewM.py --from-archive-all      按 R2 全部归档判断建表（逃生口，补建历史表用）
 
 它会自动完成：
     1. 按真实日历排第 4 行的 P(平时) / S(双休) / G(国假) / #(该月不存在此日)
@@ -36,7 +38,7 @@ except Exception:
     pass
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-XLSX = os.path.join(HERE, '出勤状况汇总表.xlsx')
+XLSX = os.path.join(HERE, '_出勤状况汇总表.xlsx')
 BACKUP_DIR = os.path.join(HERE, '_备份')          # 下划线开头，Hexo 不会发布
 
 # =====================================================================
@@ -301,19 +303,45 @@ def report_sheet(items, sheetfile, y, m):
     print('    数据区      : %s' % ('空表 ✓' if not ne else '有残留 %s' % ne[:5]))
 
 
+# ============================== R2 归档发现 ==============================
+def discover_archive_months(names):
+    """扫描 R2 归档目录(kaoqing-archive/)，返回「工作簿中尚无对应表」的月份列表(升序)。
+
+    仅依赖 R2 凭证(复用 D:/hexo/hexo-bot/books/r2_config.json)。"""
+    sys.path.insert(0, r"D:\hexo\hexo-bot\books")
+    try:
+        import upload_r2
+    except Exception as e:
+        print("[ERR] 无法导入 upload_r2（R2 模块）：%s" % e)
+        return []
+    cfg = upload_r2.load_config()
+    miss = [k for k in ("account_id", "access_key", "secret_key", "bucket") if not cfg.get(k)]
+    if miss:
+        print("[ERR] 缺少 R2 配置: %s（请检查 D:/hexo/hexo-bot/books/r2_config.json）" % ",".join(miss))
+        return []
+    try:
+        keys = upload_r2.list_objects(cfg, prefix="kaoqing-archive/")
+    except Exception as e:
+        print("[ERR] 列举 R2 归档失败: %s" % e)
+        return []
+    months = set()
+    for k in keys:
+        m = re.match(r"kaoqing-archive/(\d{4}-\d{2})(_\d+)?\.json$", k)
+        if m:
+            months.add(m.group(1))
+    return sorted(mm for mm in months if mm not in names)
+
+
 # ============================== 主流程 ==============================
 def main(argv):
     args = [a for a in argv[1:] if not a.startswith('--')]
     force = '--force' in argv
+    from_archive = '--from-archive' in argv
     tpl_name = None
     if '--tpl' in argv:
         i = argv.index('--tpl')
         if i + 1 < len(argv):
             tpl_name = argv[i + 1]
-
-    if not args:
-        print(__doc__)
-        return 1
 
     if not os.path.exists(XLSX):
         print('找不到汇总表：%s' % XLSX)
@@ -322,17 +350,50 @@ def main(argv):
         print('汇总表被占用（Excel 打开中），请先关闭后重跑。')
         return 1
 
-    os.makedirs(BACKUP_DIR, exist_ok=True)
-    bak = os.path.join(BACKUP_DIR, '出勤状况汇总表_%s.xlsx' % datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
-    shutil.copy2(XLSX, bak)
-    print('已备份 → %s' % bak)
-
     items = read_zip(XLSX)
     rd = lambda n: items[n].decode('utf-8', 'replace')
     wb = rd('xl/workbook.xml')
     sheets = re.findall(r'<sheet name="([^"]*)" sheetId="(\d+)" r:id="(rId\d+)"', wb)
     names = [s[0] for s in sheets]
     print('现有表：%s' % '、'.join(names))
+
+    # --from-archive：认「本次归档清单」建表，只建工作簿里还没有对应表的月份
+    #   （默认只读 _archive_this_run.json；--from-archive-all 才扫 R2 全部归档，作补建历史表用）
+    if from_archive:
+        if '--from-archive-all' in argv:
+            disc = discover_archive_months(names)
+            src = 'R2 全部归档'
+        else:
+            man = os.path.join(HERE, '_archive_this_run.json')
+            if not os.path.exists(man):
+                print('[from-archive] 找不到本次归档清单 %s（本次可能未运行 _archiver.py）。' % man)
+                print('        如需按 R2 全部归档建表，请加 --from-archive-all 重新运行。')
+                return 0
+            try:
+                _mdata = json.load(open(man, encoding='utf-8'))
+            except Exception as e:
+                print('[ERR] 读取本次归档清单失败: %s' % e)
+                return 1
+            _months = _mdata.get('months') or []
+            if not _months:
+                print('[from-archive] 本次归档清单为空（_archiver.py 未归档任何文件），无新表可建。')
+                return 0
+            disc = [m for m in _months if m not in names]
+            src = '本次归档清单'
+        if not disc:
+            print('[from-archive] %s中无需要新建的月份，未改动文件。' % src)
+            return 0
+        args = disc
+        print('[from-archive] 将根据%s新建：%s' % (src, '、'.join(args)))
+
+    if not args:
+        print(__doc__)
+        return 1
+
+    os.makedirs(BACKUP_DIR, exist_ok=True)
+    bak = os.path.join(BACKUP_DIR, '出勤状况汇总表_%s.xlsx' % datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
+    shutil.copy2(XLSX, bak)
+    print('已备份 → %s' % bak)
 
     wbrels = rd('xl/_rels/workbook.xml.rels')
     rel_map = dict((mm.group(1), mm.group(2)) for mm in re.finditer(r'Id="(rId\d+)"[^>]*Target="([^"]*)"', wbrels))

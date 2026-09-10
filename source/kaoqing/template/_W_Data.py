@@ -3,11 +3,23 @@
 """
 _W_Data.py —— 把 kaoqing 的记录写进「出勤状况汇总表」
 
+设计约定（用户明确定的，别改）：
+    ① 表格的字体、边框、数字格式全部是「固化」的，脚本**只填数据，不碰任何格式**
+       —— 已存在的格子一律保留它原来的 s（样式索引），只替换内容。
+    ② 唯一要管的排版只有一件事：
+         加班 → 该日格上下两行**合并**（值写在主格/上行）
+         请假 → 该日格上下两行**不合并**（上行假别字、下行负数）
+    ③ 只有「请假拆合并后凭空多出来的下行格」是新建的，此时沿用表内同列数据行的
+       既有样式（不是新造格式）。
+
 用法：
     python _W_Data.py                 写入当前「待审核」的记录
     python _W_Data.py --dry-run       只算不写，打印将要写入的明细（强烈建议先跑这个）
     python _W_Data.py --status 已审核  指定状态（默认 待审核）
     python _W_Data.py --month 2026-09 只处理某个月
+    python _W_Data.py --r2           从 R2 读取「本次 _archiver.py 归档的文件」并写入汇总表
+                                    （默认只读 _archive_this_run.json 清单；本次未归档任何文件则跳过）
+    python _W_Data.py --r2-all       从 R2 读取「全部」归档文件（含历史，补写/调试用）
 
 写入规则（与汇总表现有手工填法一致）：
     加班 → 该日格上下两行合并，写正数小时（如 8.5）
@@ -38,8 +50,11 @@ except Exception:
     pass
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-XLSX = os.path.join(HERE, '出勤状况汇总表.xlsx')
+XLSX = os.path.join(HERE, '_出勤状况汇总表.xlsx')
 BACKUP_DIR = os.path.join(HERE, '_备份')
+# 本次归档清单：由 _archiver.py 在每次真正归档后写出，记录「本轮实际归档的 R2 文件」。
+# _W_Data.py --r2 默认只读这里列出的文件，确保只写本次归档、不写历史遗留归档。
+ARCHIVE_MANIFEST = os.path.join(HERE, '_archive_this_run.json')
 
 # Waline（与 kaoqing.html 同源；令牌按页内的混淆算法还原，不落明文）
 WALINE_SERVER = 'https://waline.snowhoo.net'
@@ -159,6 +174,51 @@ def load_records(status='待审核'):
     return [r for r in latest.values() if (not status or r.get('status') == status)]
 
 
+def load_records_r2(keys=None):
+    """从 R2 归档读取已归档记录。
+
+    keys=None → 列举全部 kaoqing-archive/<ym>.json 及后补 <ym>_NN.json（旧行为，--r2-all 用）。
+    keys 给定 → 只读取这些相对 key（来自本次归档清单 _archive_this_run.json，确保只写「本次」归档）。
+
+    返回记录 dict 列表(按 id 去重)，失败返回 None。归档里的记录 status 均为「完成」。"""
+    sys.path.insert(0, r"D:\hexo\hexo-bot\books")
+    try:
+        import upload_r2
+    except Exception as e:
+        print("[ERR] 无法导入 upload_r2（R2 模块）：%s" % e)
+        return None
+    cfg = upload_r2.load_config()
+    miss = [k for k in ("account_id", "access_key", "secret_key", "bucket") if not cfg.get(k)]
+    if miss:
+        print("[ERR] 缺少 R2 配置: %s（请检查 D:/hexo/hexo-bot/books/r2_config.json）" % ",".join(miss))
+        return None
+    try:
+        if keys is None:
+            keys = upload_r2.list_objects(cfg, prefix="kaoqing-archive/")
+    except Exception as e:
+        print("[ERR] 列举 R2 归档失败: %s" % e)
+        return None
+    recs, seen = [], set()
+    for k in sorted(keys):
+        m = re.match(r"kaoqing-archive/(\d{4}-\d{2})(_\d+)?\.json$", k)
+        if not m:
+            continue
+        try:
+            raw = upload_r2.get_object(cfg, k)
+            d = json.loads(raw.decode("utf-8"))
+            for r in (d.get("records") or []):
+                rid = r.get("id")
+                if rid in seen:
+                    continue
+                seen.add(rid)
+                recs.append(r)
+        except Exception as e:
+            print("[WARN] 读取归档 %s 失败: %s" % (k, e))
+    nfiles = len([k for k in keys if re.match(r"kaoqing-archive/(\d{4}-\d{2})(_\d+)?\.json$", k)])
+    print("[INFO] R2 归档共 %d 个文件 → 解析得 %d 条记录" % (nfiles, len(recs)))
+    return recs
+
+
 # ============================== 工作表读写 ==============================
 ROW_RE = re.compile(r'<row\b[^>]*r="(\d+)"[^>]*>([\s\S]*?)</row>')
 CELL_RE = re.compile(r'<c r="([A-Z]+\d+)"[^>]*?/>|<c r="([A-Z]+\d+)"[^>]*?>[\s\S]*?</c>')
@@ -178,10 +238,16 @@ def cells_of(xml):
 
 
 def row_style_map(xml, day_cols):
-    """为日列准备样式后备：按列号取该列上已有格子的样式（同列同底色/边框）。"""
+    """为日列准备样式后备：只从「数据行 5..30」取同列已有格子的样式。
+       ⚠️ 绝不能扫全表：行 1~4 是标题/表头，样式是「等线 24 加粗」之类，
+       取到就会把写入的格子变巨型加粗字（还会因字太大放不下而被 Excel 四舍五入显示）。"""
     m = {}
     for ref, (c, st, hasv, _t) in cells_of(xml).items():
-        if st and c in day_cols and c not in m:
+        mm = re.match(r'[A-Z]+(\d+)', ref)
+        if not mm:
+            continue
+        r = int(mm.group(1))
+        if 5 <= r <= 30 and st and c in day_cols and c not in m:
             m[c] = st
     return m
 
@@ -222,16 +288,91 @@ def existing_merges(x):
     return set(re.findall(r'ref="([^"]+)"', m.group(1))) if m else set()
 
 
+_DOWN_CACHE = {}
+
+
+def pick_down_style(styles_xml, up_style):
+    """请假拆合并后要新建的「下行格」样式：同底色、11 号字、只要 left+right。
+       理由（用户定的）：两格之间的横线不需要画；底边由下方那格的 top 提供。
+       表里本来就有这类固化样式，直接取用，不新造。"""
+    if up_style is None:
+        return None
+    if up_style in _DOWN_CACHE:
+        return _DOWN_CACHE[up_style]
+    m = re.search(r'<borders[^>]*>([\s\S]*?)</borders>', styles_xml)
+    bds = re.findall(r'<border\b[^>]*?>[\s\S]*?</border>|<border\b[^>]*/>', m.group(1)) if m else []
+    xl = re.findall(r'<xf\b[^>]*?(?:/>|>[\s\S]*?</xf>)',
+                    re.search(r'<cellXfs[^>]*>([\s\S]*?)</cellXfs>', styles_xml).group(1))
+    fonts = re.findall(r'<font>[\s\S]*?</font>', styles_xml)
+
+    def gi(t, k):
+        mm = re.search(k + r'="(\d+)"', t)
+        return int(mm.group(1)) if mm else 0
+
+    def sides(d):
+        return tuple(s for s in ('left', 'right', 'top', 'bottom')
+                     if re.search(r'<%s\b[^>]*style=' % s, d))
+
+    res = up_style
+    try:
+        fill = gi(xl[int(up_style)], 'fillId')
+        for i, t in enumerate(xl):
+            if gi(t, 'fillId') != fill:
+                continue
+            if sides(bds[gi(t, 'borderId')]) not in (('left', 'right'), ('right', 'left')):
+                continue
+            f = fonts[gi(t, 'fontId')]
+            if (re.findall(r'<sz val="(\d+)"', f) or [''])[0] != '11':
+                continue
+            res = str(i)
+            break
+    except Exception:
+        pass
+    _DOWN_CACHE[up_style] = res
+    return res
+
+
 # ============================== 主流程 ==============================
 def main(argv):
     dry = '--dry-run' in argv
+    from_r2 = '--r2' in argv
     status = '待审核'
     if '--status' in argv:
         status = argv[argv.index('--status') + 1]
     only_month = argv[argv.index('--month') + 1] if '--month' in argv else None
 
-    print('读取 Waline「%s」记录…' % status)
-    recs = load_records(status)
+    if from_r2:
+        r2_all = '--r2-all' in argv
+        if r2_all:
+            # 逃生口：读取 R2 全部归档（含历史），用于首次全量补写/调试
+            print('读取 R2 归档记录（全部，--r2-all）…')
+            recs = load_records_r2()
+        else:
+            # 默认：只读「本次 _archiver.py 归档清单」，没归档任何文件就安全跳过
+            if not os.path.exists(ARCHIVE_MANIFEST):
+                print('[SKIP] 找不到本次归档清单 %s（本次可能未运行 _archiver.py）。' % ARCHIVE_MANIFEST)
+                print('        如需补写历史全部归档，请加 --r2-all 重新运行。')
+                return 0
+            try:
+                _mdata = json.load(open(ARCHIVE_MANIFEST, encoding='utf-8'))
+            except Exception as e:
+                print('[ERR] 读取本次归档清单失败: %s' % e)
+                return 1
+            _files = _mdata.get('files') or []
+            if not _files:
+                print('[SKIP] 本次归档清单为空（_archiver.py 未归档任何文件），不写汇总表。')
+                return 0
+            print('读取本次归档清单中的 %d 个文件 %s …' % (len(_files), _files))
+            recs = load_records_r2(keys=_files)
+        if recs is None:
+            return 1
+        # R2 归档里都是「完成」的记录；未显式指定 --status 时不过滤
+        if '--status' not in argv:
+            status = None
+        recs = [r for r in recs if (not status or r.get('status') == status)]
+    else:
+        print('读取 Waline「%s」记录…' % status)
+        recs = load_records(status)
     print('共 %d 条' % len(recs))
     if not recs:
         print('没有符合条件的记录。')
@@ -246,6 +387,7 @@ def main(argv):
 
     items = read_zip(XLSX)
     rd = lambda n: items[n].decode('utf-8', 'replace')
+    stx = rd('xl/styles.xml')
     wb = rd('xl/workbook.xml')
     sheets = re.findall(r'<sheet name="([^"]*)"[^>]*r:id="(rId\d+)"', wb)
     rel_map = dict((mm.group(1), mm.group(2)) for mm in
@@ -350,7 +492,8 @@ def main(argv):
                     del_merge.append('%s:%s' % (ref1, ref2))
                 x = set_cell_in(x, rows, ref1,
                                 '<is><t>%s</t></is>' % mark, st, inline=True)
-                x = set_cell_in(x, rows, ref2, '<v>%s</v>' % (-abs(val)), st)
+                x = set_cell_in(x, rows, ref2, '<v>%s</v>' % (-abs(val)),
+                                pick_down_style(stx, st))
                 report.append('%s %s %s日 %s %sh → %s=%s / %s=%s' %
                               (month, name_of(who, row), val_day(col), mark, val, ref1, mark, ref2, -abs(val)))
 
@@ -437,8 +580,16 @@ def set_cell_in(x, rows, ref, val_xml, style, inline=False):
     else:
         target = '<c r="%s"%s%s>%s</c>' % (ref, ' s="%s"' % style if style else '', attr_inline, val_xml)
     if re.search(r'<c r="%s"' % ref, inner):
+        # 格子已存在：保留它原来的 s（字体/边框/数字格式都不动），只换内容
+        def _repl(mm):
+            old = mm.group(0)
+            sm = re.search(r's="(\d+)"', old)
+            st2 = sm.group(1) if sm else style
+            if val_xml == '':
+                return '<c r="%s"%s/>' % (ref, ' s="%s"' % st2 if st2 else '')
+            return '<c r="%s"%s%s>%s</c>' % (ref, ' s="%s"' % st2 if st2 else '', attr_inline, val_xml)
         newinner = re.sub(r'<c r="%s"[^>]*?/>|<c r="%s"[^>]*?>[\s\S]*?</c>' % (ref, ref),
-                          lambda mm: target, inner, count=1)
+                          _repl, inner, count=1)
     else:
         newinner = rebuild_row(inner, target, colnum(re.match(r'([A-Z]+)', ref).group(1)))
     newrow = m.group(0).replace(inner, newinner)
