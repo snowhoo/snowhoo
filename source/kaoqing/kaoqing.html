@@ -1080,7 +1080,6 @@ var curCat    = null;
 var records   = [];   // 当前状态视图（状态分路径后，仅含当前筛选状态的记录，供渲染）
 var recordsAll = [];   // 全状态累积缓存（按 id 合并）：供跨状态冲突检测 / 提交后定位，不直接渲染
 var archiveReqPending = false;   // 是否存在待处理的「归档并汇总」请求（控制 #archiveBtn 禁用态）
-var _archivePoll = null;          // 归档请求态轮询句柄（禁用期间每 60s 回读，后端删除请求后自动恢复）
 var editIndex = null;   // 修改模式：正在编辑的记录下标（null=新增模式）
 var viewMode   = 'edit';   // 'edit'=未归档(Waline 可改删)；'view'=归档(R2 只读，不能修改/删除)
 var curProxy   = '';       // 请假单「代理人」：表单级选择（仅请假有效），保存时写入记录；不选则为空
@@ -2294,13 +2293,15 @@ function setFormBusy(busy){ /* no-op：禁用态由 renderRecords 统一管理 *
 async function submit(){
   if (!selPeople.size || !curCat || !rangeOK()) return;
 
-  /* Bug1 修复：保存时若处于归档视图或其它状态筛选下，先切回「未归档 + 待提交」再插入空白行，
-     否则空白行会插进归档/其它状态表里、且单据号也基于错误的数据集。 */
-  var wasView = (viewMode === 'view');
+  /* 新增模式：新记录状态恒为「待提交」，先把下拉框切到「待提交」并重新拉取，确保表格处于待提交视图、空白行正确插入。
+     修改模式：务必保持当前状态视图不变——否则下方 records[editIndex] 会因 records 被重建而指向错误记录，
+     导致编辑写成一条新的「待提交」记录、原记录纹丝不动（表现即「修改没生效」）。 */
   setViewMode('edit');
-  var rsEl = $('#recStatus');
-  if (rsEl){ rsEl.hidden = false; rsEl.value = '待提交'; }   // 先切下拉框到「待提交」（状态分路径后，syncRecords 按此值拉取）
-  await syncRecords();   // 重新拉未归档（下拉框已为待提交 → 拉待提交；同步保留进行中占位；非归档视图也走此确保表格为待提交）
+  if (editIndex === null){
+    var rsEl = $('#recStatus');
+    if (rsEl){ rsEl.hidden = false; rsEl.value = '待提交'; }   // 新增才切到待提交（状态分路径后 syncRecords 按此值拉取）
+    await syncRecords();   // 重新拉未归档（下拉框已为待提交 → 拉待提交；同步保留进行中占位）
+  }
 
   /* 每一行 = 一条独立记录：日期 / 时段 / 小时 / 备注 全部取自该行；加班类型按本行日期自动判定 */
   function mkRec(name, sg){
@@ -2394,11 +2395,8 @@ async function submit(){
     };
     var extra = [];
     for (var e2 = 1; e2 < segs.length; e2++) extra.push(mkRec((old.people && old.people[0]) || '', segs[e2]));
-    editIndex = null;
-    refreshSaveBtn();
-    selPeople.clear(); renderPeople();
-    curCat = null; applyView();        // 保存后整体归位（UI 状态，与数据无关）
-    // 修改进行中：在对应记录勾选框位置显示旋转圆圈 + 文案，并禁用整张记录表（不弹全屏遮罩）
+    // 修改进行中：在对应记录勾选框位置显示旋转圆圈 + 文案，并禁用整张记录表（不弹全屏遮罩）。
+    // 注意：表单先保持原样（不提前清空），等写库成功后再整体归位到默认界面；失败则保留内容便于重试。
     procMap[updated.id] = '修改中…';
     renderRecords();
     setFormBusy(true);
@@ -2406,8 +2404,16 @@ async function submit(){
       var ok = await postRecordOp('edit', updated);
       if (ok && ok.oid) updated.oid = ok.oid;
       for (var e3 = 0; e3 < extra.length; e3++){ if (!await postRecordOp('add', extra[e3])) ok = false; }
-      if (ok){ await syncRecords(); procMap = {}; renderRecords(); }
-      else { procMap = {}; renderRecords(); cloudToast('error', '数据写入失败', 'edit'); }
+      if (ok){
+        // 保存成功 → 整体归位到默认界面（清空人员/类别/内容，回到「添加」绿按钮），再回读刷新表格
+        editIndex = null; refreshSaveBtn();
+        selPeople.clear(); renderPeople();
+        curCat = null; applyView();
+        await syncRecords(); procMap = {}; renderRecords();
+        cloudToast('ok', '修改已保存', 'edit');
+      } else {
+        procMap = {}; renderRecords(); cloudToast('error', '数据写入失败，请重试', 'edit');
+      }
     } catch(e){
       procMap = {}; renderRecords(); cloudToast('error', '修改失败', 'edit');
       console.error('[kaoqing] edit 失败', e && e.message ? e.message : e);
@@ -5105,18 +5111,12 @@ async function checkArchiveReq(){
 function refreshArchiveBtn(pending){
   var b = $('#archiveBtn'); if (!b) return;
   archiveReqPending = !!pending;
-  if (archiveReqPending){ b.textContent = '归档汇总中…'; b.disabled = true; b.classList.add('is-busy'); startArchivePoll(); }
-  else { b.textContent = '归档并汇总'; b.disabled = false; b.classList.remove('is-busy'); stopArchivePoll(); }
+  // 不轮询：按钮态由每次「按状态读取」(loadRecordsFromWaline) 顺带回读刷新；
+  // 后端删除请求后，下次切换/刷新状态即恢复可点。禁用期间手动刷新或切状态即可同步。
+  if (archiveReqPending){ b.textContent = '归档汇总中…'; b.disabled = true; b.classList.add('is-busy'); }
+  else { b.textContent = '归档并汇总'; b.disabled = false; b.classList.remove('is-busy'); }
   updateRecButtons();   // 同步可见性（仅完成状态且未归档视图才显示）
 }
-function startArchivePoll(){
-  if (_archivePoll) return;
-  _archivePoll = setInterval(async function(){
-    var p = await checkArchiveReq();
-    if (!p) refreshArchiveBtn(false);   // 后端已删除请求 → 恢复可点
-  }, 60000);
-}
-function stopArchivePoll(){ if (_archivePoll){ clearInterval(_archivePoll); _archivePoll = null; } }
 
 
 async function loadArchiveMonths(quiet){
