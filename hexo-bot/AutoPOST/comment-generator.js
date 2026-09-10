@@ -219,6 +219,14 @@ async function fetchText(u, timeoutMs = 6000) {
   }
 }
 
+// 标题是否"像资源文件名"（20260525-2230-001.js / 2023011310311301.md 之类）
+// 这类不能当文章标题喂给模型，否则会被当成代码/技术文，生成跑题评论
+function isResourceLike(t) {
+  const s = String(t || '').trim().toLowerCase();
+  if (!s) return true;
+  return /\.(js|mjs|json|md|html?|css|txt|xml)$/.test(s) || /^\d{8}-\d{4}-\d{3}$/.test(s);
+}
+
 // ============== 抓文章上下文（标题/摘要/分类）==============
 // task: { url, title?, category?, page? }
 async function fetchArticleContext(task) {
@@ -241,6 +249,31 @@ async function fetchArticleContext(task) {
           if (art && art.title) title = art.title;
         }
       }
+    } else if (/yedu_p\.html\?a=/.test(url)) {
+      // 夜读：文章在 yedu_data/<文件名> 里，文件名本身是 *.js，
+      // 必须取里面的真实中文标题，否则会把 "20260908-2203-001.js" 当标题交给模型
+      const m = url.match(/a=([^&]+)/);
+      const file = m ? decodeURIComponent(m[1]) : '';
+      if (file) {
+        const txt = await fetchText('https://snowhoo.net/js/sevencolor/1/yedu_data/' + encodeURIComponent(file));
+        const s = txt.indexOf('{'), e2 = txt.lastIndexOf('}');
+        if (s >= 0 && e2 > s) {
+          try {
+            const art = JSON.parse(txt.slice(s, e2 + 1));
+            if (art && art.title) title = String(art.title);
+          } catch (err) { /* 解析失败则沿用原 title，下方兜底会过滤掉 */ }
+        }
+      }
+    } else if (/reader\.html\?a=/.test(url)) {
+      // 小红故事：文章本体在 /_posts/<文件名>，YAML front-matter 里有 title:
+      const m = url.match(/a=([^&]+)/);
+      const file = m ? decodeURIComponent(m[1]) : '';
+      if (file) {
+        const md = await fetchText('https://snowhoo.net/_posts/' + encodeURIComponent(file));
+        const fm = md.match(/---\r?\n([\s\S]*?)\r?\n---/);   // 首个 --- 块（文件可能带 BOM，故不锚行首）
+        const tm = fm && fm[1].match(/^title:\s*(.+)$/m);
+        if (tm) title = tm[1].trim().replace(/^['"]|['"]$/g, '');
+      }
     } else if (/\/20\d{2}\/\d{2}\/\d{2}\//.test(url) || /\.html?$/.test(url)) {
       // 博客文章：抓页面标题 + meta 描述
       const full = 'https://snowhoo.net' + (url.startsWith('/') ? url : '/' + url);
@@ -253,6 +286,10 @@ async function fetchArticleContext(task) {
   } catch (e) {
     // 抓取失败不影响生成，降级用已有 title/category
   }
+
+  // 兜底：标题仍是资源文件名（*.js / *.md）时不要喂给模型，只留分类
+  // ——此前出现过把 .js 当代码、生成「代码也能当睡前故事？」这类跑题评论
+  if (isResourceLike(title)) title = '';
 
   return { title, content, category };
 }

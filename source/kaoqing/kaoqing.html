@@ -11,6 +11,7 @@ layout: false
   --accent-soft:rgba(217,217,217,.23);
   --bg:#f4f5f9;
   --bg-surface:#fff;
+  --bg-soft:#eef0f5;        /* 记录表卡片底灰（与上方录入卡片的白底区分；比 #secAction .card-head 的 #e9ecf1 略浅，保留头部色带层次） */
   --text:#1f2233;
   --text-secondary:#4b5162;
   --text-muted:#8b90a0;
@@ -77,6 +78,8 @@ body{
 /* ============ 区域卡片 ============ */
 .wrap{max-width:760px;margin:0 auto;padding:5px 5px;display:flex;flex-direction:column;gap:5px}
 .card{background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+/* 记录表卡片：底灰，与上方 3 个录入卡片（白底）做视觉区分 */
+#secAction{background:var(--bg-soft)}
 .card-head{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;padding:5px 10px;border-bottom:1px solid var(--border);background-color:var(--accent-soft)}
 .card-head .idx{
   width:22px;height:22px;flex:0 0 22px;border-radius:50%;
@@ -485,7 +488,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 }
 @media print{
   #topbar,.card:not(#secAction){display:none!important}
-  #secAction{box-shadow:none;border:none;margin:0}
+  #secAction{box-shadow:none;border:none;margin:0;background:var(--bg-surface)}   /* 打印时恢复白底（避免底灰被打印出来费墨/影响观感） */
   .rec-toolbar{display:none!important}
   .rec-table th.c-check,.rec-table td.c-check,.rec-table .c-del{display:none!important}
 }
