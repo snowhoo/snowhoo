@@ -176,6 +176,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 }
 .gsel:focus{border-color:var(--accent)}
 .card-head .gsel{margin-left:auto}
+.gsel:disabled{background:#ececec;color:#999;cursor:not-allowed;opacity:.85}  /* 修改模式：组别锁定 */
 
 .chips{display:flex;flex-wrap:wrap;gap:10px}
 .chip{
@@ -186,6 +187,8 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 }
 .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .chip.disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+/* 修改模式：类别/组别逐项锁定（避免改类别导致 docNo 前缀与类别不匹配、串行号错乱） */
+.chip.locked{opacity:.55;cursor:not-allowed;pointer-events:none;background:#ececec;color:#999;border-color:#ddd}
 /* 类别选中双色：加班=绿，其它=橙 */
 .chip.on.c-green{background:#16a34a;border-color:#16a34a;color:#fff}
 .chip.on.c-orange{background:#f97316;border-color:#f97316;color:#fff}
@@ -901,6 +904,13 @@ function isLeaveCat(id){
   if (typeof id === 'string' && LEAVE_CAT_IDS.indexOf(id) >= 0) return true;
   return true;                                     // 未知类别默认按请假处理（保守）
 }
+/* 修改模式：当前正在编辑的记录是否为「请假类」。决定类别锁定粒度——
+   请假单允许在请假类型间切换（事假↔病假…），但加班单的类别完全冻结（不能改成任何其它类别）。 */
+function editIsLeave(){
+  if (editIndex === null) return false;
+  var r = records[editIndex];
+  return !!(r && isLeaveCat(r.catId));
+}
 
 /* 常用说明：不再写死具体文案，但保留「按类别分类」的结构。系统值来自 Waline /kaoqing/config 的
    presetNotes（按类别 id 分组的对象，由设置面板维护、全端共享）；展示用 PRESET_CACHE 按类别缓存
@@ -1247,6 +1257,7 @@ function renderGroups(){
     sel.appendChild(o);
   });
   sel.value = curGroup;
+  sel.disabled = (editIndex !== null);   // 修改模式：组别锁定，禁止切换（人员已锁，组别一并锁，避免误切到其它组）
 }
 
 function peopleOfGroup(){
@@ -1318,8 +1329,23 @@ function makeCatChip(c){
   var isOn = curCat && curCat.id === c.id;
   var onCls = isOn ? (' on ' + (isOtCatId(c.id) ? 'c-green' : 'c-orange')) : '';
   b.className = 'chip' + onCls;
+  // 修改模式类别锁定粒度：
+  //  - 加班类别（overtime）：任何修改都锁定 —— 不能把记录改成加班（docNo 前缀 J 与串行号规则不同）
+  //  - 正在改「加班单」时：所有请假类别也锁定（加班单类型完全冻结）
+  //  - 正在改「请假单」时：请假类别不锁，允许在请假类型间切换（仍改不成加班，前缀 G 不变、流水号不受影响）
+  var lockThis = false;
+  if (editIndex !== null){
+    if (isOtCatId(c.id)) lockThis = true;
+    else if (!editIsLeave()) lockThis = true;
+  }
+  if (lockThis){ b.classList.add('locked'); b.disabled = true; }
   b.textContent = c.name;
   b.addEventListener('click', function(){
+    if (editIndex !== null){
+      if (isOtCatId(c.id)) return;            // 修改模式：加班类别不可点（任何记录都不能改成加班）
+      if (!editIsLeave()) return;             // 正在改加班单：请假类别也不可点
+      // 正在改请假单：允许切换请假类型（不含加班），docNo 前缀 G 不变、串行号不受影响
+    }
     curCat = (curCat && curCat.id === c.id) ? null : c;   // 再点一次取消
     if (curCat && isOtCatId(curCat.id)) ensureHolidays(); // 加班：后台懒加载节假日
     applyView();
@@ -1330,6 +1356,8 @@ function renderCats(){
   var box = $('#catGrid');
   box.innerHTML = '';
   closeOtherMenu();
+  // 注意：类别锁定改为「逐芯片」粒度（见 makeCatChip），不再整体锁定网格——
+  // 改请假单时请假类型芯片仍可选，网格不可整块 disable，否则会连请假类型一起锁死。
   // 加班固定显示（特殊逻辑：国假/双休判定、不扣午休）
   box.appendChild(makeCatChip(CATS.find(function(c){ return c.id === 'overtime'; }) || CATS[0]));
   // 直接显示的休假类型（来自设置中「直接显示」列表）
@@ -1341,11 +1369,14 @@ function renderCats(){
   var otherOn = curCat && curCat.id.indexOf('lt-') === 0 && (CONFIG.leaveTypes.other || []).indexOf(curCat.name) >= 0;
   otherBtn.className = 'chip' + (otherOn ? ' on c-orange' : '');
   otherBtn.textContent = '其它';
+  // 修改模式：仅在「改加班单」时锁定「其它」（不能改成任何请假类型）；改请假单时放开（可选其它请假类型）
+  if (editIndex !== null && !editIsLeave()){ otherBtn.classList.add('locked'); otherBtn.disabled = true; }
   otherBtn.addEventListener('click', function(e){ toggleOtherMenu(e, otherBtn); });
   box.appendChild(otherBtn);
 }
 /* 卡片2「其它」按钮：弹出/收起休假类型菜单（列出设置中「其它菜单」列表的类型） */
 function toggleOtherMenu(e, btn){
+  if (editIndex !== null && !editIsLeave()) return;   // 修改模式：改加班单时类别锁定，不展开「其它」菜单；改请假单时允许选其它请假类型
   e.stopPropagation();
   var grid = $('#catGrid'); if (!grid) return;
   var existing = $('#otherMenu');
@@ -2296,6 +2327,7 @@ function refreshSaveBtn(){
 /* 取消：恢复初始界面（新增/修改共用）—— 清空人员、类别、内容，退出修改模式 */
 function resetForm(){
   editIndex = null;
+  renderGroups();          // 退出锁定态 → 组别下拉重新可切换
   selPeople.clear();
   curCat = null;
   renderPeople();          // 退出锁定态 → 恢复完整人员卡片 + 「同步」卡片
@@ -2423,6 +2455,7 @@ async function submit(){
       if (ok){
         // 保存成功 → 整体归位到默认界面（清空人员/类别/内容，回到「添加」绿按钮），再回读刷新表格
         editIndex = null; refreshSaveBtn();
+        renderGroups();          // 组别下拉重新可切换（退出锁定态）
         selPeople.clear(); renderPeople();
         curCat = null; applyView();
         await syncRecords(); procMap = {}; renderRecords();
@@ -2539,7 +2572,11 @@ function startEdit(i){
   var r = records[i];
   if (!r) return;
   editIndex = i;
-  curGroup = GROUPS[0];                       // 切到「全部」保证原人员可见
+  // 组别：锁定到本记录人员所属组（找不到则回退「全部」）。人员已锁，组别一并锁——修改模式整组不可切。
+  var firstP = (r.people && r.people[0]) || '';
+  var recGrp = '';
+  for (var gi = 0; gi < PEOPLE.length; gi++){ if (PEOPLE[gi].n === firstP){ recGrp = PEOPLE[gi].g; break; } }
+  curGroup = recGrp || GROUPS[0];
   $('#groupSel').value = curGroup;
   selPeople = new Set(r.people);
   curCat = findCatById(r.catId) || null;        // findCatById 兼顾客服动态 lt- 类型（即使该类型已从设置中删除，也能按 catId 还原 curCat，保证历史记录可编辑）
@@ -2565,6 +2602,7 @@ function startEdit(i){
 
 /* ---------- 事件 ---------- */
 $('#groupSel').addEventListener('change', function(){
+  if (editIndex !== null) return;   // 修改模式：组别锁定，忽略切换
   curGroup = this.value;
   renderPeople(); applyView();    // 已选人员跨组别保留，重算视图
 });
