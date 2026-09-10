@@ -2415,7 +2415,7 @@ async function submit(){
         selPeople.clear(); renderPeople();
         curCat = null; applyView();
         await syncRecords(); procMap = {}; renderRecords();
-        cloudToast('ok', '修改已保存', 'edit');
+        cloudToastHide('edit');   // 保存成功：不弹提示（界面归位即可表明已保存），仅清理可能残留的提示
       } else {
         procMap = {}; renderRecords(); cloudToast('error', '数据写入失败，请重试', 'edit');
       }
@@ -2544,8 +2544,10 @@ function startEdit(i){
   renderPeople();
   applyView();                               // 选人+选类别 → 显示区域2/3 并填好内容
   refreshSaveBtn();                          // 进入修改模式：按钮变「修改」(橙)
-  var sc = $('#secContent');
-  if (sc && sc.scrollIntoView) sc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // 进入修改：页面滚到最顶部（人员/类别/内容三个区域都在页面上方，滚到顶即可完整看到表单）。
+  // 原先用 scrollIntoView(#secContent) 只把「内容」区滚到视口顶部 —— 会被 sticky 顶栏遮住，且停在页面中段而非顶部。
+  try { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  catch(e){ window.scrollTo(0, 0); }   // 老浏览器不支持对象参数时的兜底
 }
 
 /* ---------- 事件 ---------- */
@@ -4777,7 +4779,8 @@ function _ctStackEl(){
   return _ctStack;
 }
 function cloudToast(kind, text, key){
-  if (kind === 'read' || kind === 'write') kind = 'ok';   // 处理中 = 轻量绿条（不再遮罩）
+  var procKind = (kind === 'read' || kind === 'write');   // 处理中：保持到操作完成/失败时显式隐藏（不自动消失）
+  if (procKind) kind = 'ok';   // 处理中 = 轻量绿条（不再遮罩）
   if (key){
     var m = _ctMap[key] || (_ctMap[key] = { el: null, timer: null });
     if (!m.el){ m.el = document.createElement('div'); _ctStackEl().appendChild(m.el); }
@@ -4792,6 +4795,8 @@ function cloudToast(kind, text, key){
     } else {
       m.el.title = '';
       m.el.onclick = null;
+      // 成功/确认类提示：3 秒后自动消失（原先非 error 提示没有定时器，会一直留在界面不消失）
+      if (!procKind) m.timer = setTimeout(function(){ cloudToastHide(key); }, 3000);
     }
     return m;
   }

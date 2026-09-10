@@ -80,6 +80,15 @@ function isEligibleArticle(locDecoded) {
   return false;
 }
 
+// 后端资源一律过滤：只看「路径部分」（去掉 ?a=xxx 查询与 # 锚点）再判扩展名。
+// 这样 /app_n/yedu_p.html?a=20260908-2203-001.js 这类前端文章页会被保留（路径是 .html），
+// 而 /js/.../data.js、/app_n/btg.json 这类真实资源文件才会被过滤掉。
+function isBackendResource(u) {
+  const s = String(u || '').trim();
+  const pathOnly = s.split(/[?#]/)[0];
+  return NON_HTML_EXT.some(ext => pathOnly.toLowerCase().endsWith(ext));
+}
+
 // 归一化匹配键：小写、去协议+域名、去首尾斜杠、去 .html 后缀
 function normalizeKey(s) {
   return s.toLowerCase()
@@ -370,6 +379,12 @@ async function runAutoPoster() {
   }
   pool = pool.concat(pageLevelFiltered);
   console.log('[AutoPoster] 页面级(去重后)候选 ' + pageLevelFiltered.length + ' 篇');
+
+  const beforeJs = pool.length;
+  pool = pool.filter(a => !isBackendResource(a.url));
+  if (pool.length !== beforeJs) {
+    console.log('[AutoPoster] 已过滤后端资源地址 ' + (beforeJs - pool.length) + ' 条');
+  }
 
   if (pool.length < 1) {
     console.log('[AutoPoster] 候选池为空，跳过');
