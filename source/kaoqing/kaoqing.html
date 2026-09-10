@@ -1067,6 +1067,19 @@ function segEndDate(sg, catId){
   if (isOtCatId(catId)) return '';
   return (sg && sg.multi) ? (sg.endDate || sg.date) : (sg ? sg.date : '');
 }
+/* 加班多天 → 展开为「每日独立段」：多天(同起止时段、连续日期)在录入界面表现为一行，提交/预览展开为逐日单条记录
+   （endDate 恒空，与存档单条一致）。请假类跨天为「单条跨天记录」，不展开（沿用 segEndDate 的跨天存储）。 */
+function expandSegDays(sg, catId){
+  var cid = (catId != null) ? catId : (curCat ? curCat.id : null);
+  if (isOtCatId(cid) && sg.multi && sg.endDate && sg.endDate >= sg.date && daysBetween(sg.date, sg.endDate) > 0){
+    var span = daysBetween(sg.date, sg.endDate), out = [];
+    for (var d = 0; d <= span; d++){
+      out.push({ date: addDays(sg.date, d), endDate: '', multi: false, allDay: sg.allDay, start: sg.start, end: sg.end, note: sg.note });
+    }
+    return out;
+  }
+  return [sg];
+}
 var timeSegs      = [ newSeg() ];
 var focusedSegNoteIdx = 0;       // 当前聚焦的「备注事由」所在行号（常用说明只填该行）
 var COMPANY_NAME  = '苏州晶讯科技股份有限公司';   // ← 顶栏公司名称（按需改成贵司名称）
@@ -1425,7 +1438,7 @@ function renderTimeSegs(){
     row.className = 'time-row';
     row.setAttribute('data-i', String(i));
 
-    var mdWrap = document.createElement('label'); mdWrap.className = 'all-day'; mdWrap.title = '勾选后显示「至日期」填写框；勾选并填写即跨天请假';
+    var mdWrap = document.createElement('label'); mdWrap.className = 'all-day'; mdWrap.title = '勾选后显示「至日期」填写框：用于录入连续多天（请假跨天 / 加班逐日同时间段）';
     var md = document.createElement('input'); md.type = 'checkbox'; md.className = 'multiDayChk'; md.checked = !!seg.multi;
     mdWrap.appendChild(md); mdWrap.appendChild(document.createTextNode('多天'));
 
@@ -1458,9 +1471,11 @@ function renderTimeSegs(){
       row.appendChild(de); row.appendChild(e);
       row.appendChild(h); row.appendChild(note);
     } else {
-      // 加班：起日期 + 整天 + 起时间 - 止时间 + 小时 + 备注（可多行）
-      row.appendChild(d); row.appendChild(adWrap);
-      row.appendChild(s); row.appendChild(sep); row.appendChild(e);
+      // 加班：多天(勾选展开至日期) + 整天(移到最前) + 起日期 + 起时间 ~ 至时间 + 至日期(多天时显示) + 小时 + 备注（每行=一条记录；多天展开为逐日多条）
+      row.appendChild(mdWrap); row.appendChild(adWrap);   // 多天(前) + 整天(移到最前)
+      row.appendChild(d);                                 // 起日期
+      row.appendChild(s); row.appendChild(sep); row.appendChild(e);   // 起时间 ~ 至时间
+      row.appendChild(de);                                // 至日期（多天时显示；提交展开为逐日单条）
       row.appendChild(h); row.appendChild(note);
     }
 
@@ -1676,7 +1691,7 @@ function findRuleConflict(segs, catId){
   if (!isLeave && !isOt) return null;                       // 其它类别不校验这两条规则
   for (var i = 0; i < segs.length; i++){
     var sg = segs[i];
-    var ed = (isLeave && sg.endDate && sg.endDate >= sg.date) ? sg.endDate : sg.date;
+    var ed = ((isLeave || isOt) && sg.endDate && sg.endDate >= sg.date) ? sg.endDate : sg.date;   // 加班多天：按至日期逐日校验
     var nDays = daysBetween(sg.date, ed);
     for (var d = 0; d <= nDays; d++){
       var date = addDays(sg.date, d);
@@ -1709,13 +1724,16 @@ function findOrderConflict(segs){
   }
   return null;
 }
-/* 多行日期时间冲突检测：同一天出现重叠时间段即冲突（不同日期不冲突，独立行本就可不同）。返回 {i,j} 或 null */
+/* 多行日期时间冲突检测：同一天出现重叠时间段即冲突（不同日期不冲突，独立行本就可不同）。返回 {i,j} 或 null。
+   加班多天：把每行展开为逐日段后再比对，避免两条多天记录在重叠日撞段（行号回映原始行）。 */
 function findTimeConflict(){
   var comp = timeSegs.filter(segComplete);
-  for (var i = 0; i < comp.length; i++){
-    for (var j = i + 1; j < comp.length; j++){
-      if (comp[i].date !== comp[j].date) continue;
-      if (segsOverlap(comp[i], comp[j])) return { i: i, j: j };
+  var exp = [];
+  comp.forEach(function(sg, ri){ expandSegDays(sg).forEach(function(dsg){ exp.push({ i: ri, date: dsg.date, start: dsg.start, end: dsg.end }); }); });
+  for (var a = 0; a < exp.length; a++){
+    for (var b = a + 1; b < exp.length; b++){
+      if (exp[a].date !== exp[b].date) continue;
+      if (segsOverlap(exp[a], exp[b])) return { i: exp[a].i, j: exp[b].i };
     }
   }
   return null;
@@ -1807,27 +1825,30 @@ function refresh(){
   var rows = [], idx = 0;
   Array.from(selPeople).forEach(function(n){
     timeSegs.forEach(function(sg){
-      idx++;
-      var catHtml = esc(curCat.name);
-      if (isOtCatId(curCat.id)){
-        var ot = calcOtType(sg.date);                      // 加班类型按本行日期自动判定，并入类别
-        catHtml = (ot === '加载中')
-          ? '<span class="ot-spin" title="节假日加载中…"></span>'   // 懒加载中：旋转圆圈
-          : esc(ot);   // 加班明细类型本身（国假/双休/平时/未知），不再拼「加班」二字
-      }
-      var t   = (sg.start && sg.end) ? (esc(sg.start) + ' ~ ' + esc(sg.end)) : '<span class="warn">未选时段</span>';   // ~ 前后带空格，与记录表一致
-      var hrs = segHoursText(sg, curCat.id) || '？？小时';
-      rows.push('<div class="pv-row">' +
-        '<span class="pv-i">' + String(idx).padStart(2, '0') + '</span>' +
-        '<span class="pv-n">' + esc(n) + '</span>' +
-        '<span class="pv-c ' + catCls + '">' + catHtml + '</span>' +
-        '<span class="pv-d">' + ((sg.endDate && sg.endDate !== sg.date)
-            ? (esc(mdOnly(sg.date)) + ' <span class="date-sep">~</span> ' + esc(mdOnly(sg.endDate)))
-            : esc(mdOnly(sg.date || '—'))) + '</span>' +
-        '<span class="pv-t">' + t + '</span>' +
-        '<span class="pv-h">' + hrs + '</span>' +
-        (sg.note ? '<span class="pv-note">' + esc(sg.note) + '</span>' : '') +
+      expandSegDays(sg).forEach(function(dsg){   // 加班多天 → 逐日单条预览（与存档一致）；请假跨天保持单条
+        idx++;
+        var catHtml = esc(curCat.name);
+        if (isOtCatId(curCat.id)){
+          var ot = calcOtType(dsg.date);                      // 加班类型按本行日期自动判定，并入类别
+          catHtml = (ot === '加载中')
+            ? '<span class="ot-spin" title="节假日加载中…"></span>'   // 懒加载中：旋转圆圈
+            : esc(ot);   // 加班明细类型本身（国假/双休/平时/未知），不再拼「加班」二字
+        }
+        var t   = (dsg.start && dsg.end) ? (esc(dsg.start) + ' ~ ' + esc(dsg.end)) : '<span class="warn">未选时段</span>';   // ~ 前后带空格，与记录表一致
+        var hrs = segHoursText(dsg, curCat.id) || '？？小时';
+        var dTxt = (dsg.endDate && dsg.endDate !== dsg.date)
+            ? (esc(mdOnly(dsg.date)) + ' <span class="date-sep">~</span> ' + esc(mdOnly(dsg.endDate)))
+            : esc(mdOnly(dsg.date || '—'));
+        rows.push('<div class="pv-row">' +
+          '<span class="pv-i">' + String(idx).padStart(2, '0') + '</span>' +
+          '<span class="pv-n">' + esc(n) + '</span>' +
+          '<span class="pv-c ' + catCls + '">' + catHtml + '</span>' +
+          '<span class="pv-d">' + dTxt + '</span>' +
+          '<span class="pv-t">' + t + '</span>' +
+          '<span class="pv-h">' + hrs + '</span>' +
+          (dsg.note ? '<span class="pv-note">' + esc(dsg.note) + '</span>' : '') +
         '</div>');
+      });
     });
   });
   if (curProxy && isLeaveCat(curCat.id)){
@@ -2414,10 +2435,12 @@ async function submit(){
     return;
   }
 
-  /* 每人 × 每行 = 一条记录，各自独立 id */
+  /* 每人 × 每行 = 一条记录，各自独立 id；加班多天 → 一行展开为逐日单条（预览/存档均按单条） */
   var newRecs = [];
   Array.from(selPeople).forEach(function(name){
-    segs.forEach(function(sg){ newRecs.push(mkRec(name, sg)); });
+    segs.forEach(function(sg){
+      expandSegDays(sg).forEach(function(dsg){ newRecs.push(mkRec(name, dsg)); });
+    });
   });
 
   /* 本地队列模式：立即把数据（除未确定的#号外）全部插入表格占位 → 后台异步顺序写库 → 页面立即恢复初始、可继续添加。
