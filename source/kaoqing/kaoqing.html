@@ -1471,11 +1471,14 @@ function renderTimeSegs(){
       row.appendChild(de); row.appendChild(e);
       row.appendChild(h); row.appendChild(note);
     } else {
-      // 加班：多天(勾选展开至日期) + 整天(移到最前) + 起日期 + 起时间 ~ 至时间 + 至日期(多天时显示) + 小时 + 备注（每行=一条记录；多天展开为逐日多条）
+      // 加班：多天(前) + 整天(最前) + 起日期 [至] 至日期 + 起时间 ~ 至时间 + 小时 + 备注
+      // 至日期 与「至」分隔符 仅在勾选多天时显示；每行=一条记录，多天展开为逐日多条
+      var dsep = document.createElement('span'); dsep.className = 'sep dateToSep'; dsep.textContent = '至'; dsep.style.display = isMulti ? '' : 'none';
       row.appendChild(mdWrap); row.appendChild(adWrap);   // 多天(前) + 整天(移到最前)
       row.appendChild(d);                                 // 起日期
+      row.appendChild(dsep);                              // 至（仅多天时显示）
+      row.appendChild(de);                                // 至日期（仅多天时显示；提交展开为逐日单条）
       row.appendChild(s); row.appendChild(sep); row.appendChild(e);   // 起时间 ~ 至时间
-      row.appendChild(de);                                // 至日期（多天时显示；提交展开为逐日单条）
       row.appendChild(h); row.appendChild(note);
     }
 
@@ -2603,8 +2606,10 @@ $('#timeSegs').addEventListener('change', function(e){
     }
     var deEl = row.querySelector('.fEndDate');
     var dlEl = row.querySelector('.endDateSep');
+    var dsepEl = row.querySelector('.dateToSep');
     if (deEl){ deEl.style.display = el.checked ? '' : 'none'; if (el.checked) deEl.value = seg.endDate; else deEl.value = ''; }
     if (dlEl) dlEl.textContent = el.checked ? '至' : '-';
+    if (dsepEl) dsepEl.style.display = el.checked ? '' : 'none';   // 加班：起/至日期之间的「至」随多天同步
     refresh();
     return;
   }
