@@ -72,7 +72,7 @@ function deriveCategory(articleUrl) {
   if (/节|假|日/.test(url)) return 'holiday';
   if (/四季|春天|夏日|秋风|冬雪|山川|河流|草木|花开|叶落|风景/.test(url)) return 'nature';
   if (/年|历史|岁月|时光|年代|那些年|那年/.test(url)) return 'history';
-  if (/书|读后|读《|·《|读书|阅读/.test(url)) return 'book';
+  if (/books?\.html|书架|书|读后|读《|·《|读书|阅读/.test(url)) return 'book';
   return 'generic';
 }
 
@@ -227,6 +227,28 @@ function isResourceLike(t) {
   return /\.(js|mjs|json|md|html?|css|txt|xml)$/.test(s) || /^\d{8}-\d{4}-\d{3}$/.test(s);
 }
 
+// ===== 书架：从本地爬虫产物随机抽一本书（书名 / 作者 / 简介）=====
+// 数据源 ../books/data/index_cat_0..6.json（共 1 万+ 本，带中文 intro）
+// 与 R2 同源；读本地更快、不依赖网络。整页没有单一"文章"，随机抽一本即可。
+const BOOKS_DATA_DIR = path.join(__dirname, '..', 'books', 'data');
+function pickRandomBook() {
+  try {
+    const files = fs.readdirSync(BOOKS_DATA_DIR).filter(f => /^index_cat_\d+\.json$/i.test(f));
+    if (!files.length) return null;
+    const f = files[Math.floor(Math.random() * files.length)];
+    const list = JSON.parse(fs.readFileSync(path.join(BOOKS_DATA_DIR, f), 'utf-8'));
+    if (!Array.isArray(list) || !list.length) return null;
+    const b = list[Math.floor(Math.random() * list.length)];
+    if (!b || !b.title) return null;
+    return {
+      title: '《' + b.title + '》' + (b.author ? '（' + b.author + '）' : ''),
+      intro: String(b.intro || '').replace(/\s+/g, ' ').trim().slice(0, 50)
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
 // ============== 抓文章上下文（标题/摘要/分类）==============
 // task: { url, title?, category?, page? }
 async function fetchArticleContext(task) {
@@ -236,7 +258,11 @@ async function fetchArticleContext(task) {
   let content = '';
 
   try {
-    if (/zjsz_p\.html\?a=/.test(url)) {
+    if (/books\.html/.test(url)) {
+      // 书架：整页没有单一"文章"，随机抽一本书，用书名 + 简介当上下文
+      const bk = pickRandomBook();
+      if (bk) { title = bk.title; content = bk.intro; }
+    } else if (/zjsz_p\.html\?a=/.test(url)) {
       // 从 data.js 按 msgid 取真实中文标题
       const m = url.match(/a=([^&]+)/);
       const msgid = m ? decodeURIComponent(m[1]) : '';
