@@ -997,7 +997,7 @@ function _tk_deobf(){
   for (var i = 0; i < bin.length; i++) s += String.fromCharCode(bin.charCodeAt(i) ^ _TK_SEED.charCodeAt(i % _TK_SEED.length));
   return s.split('').reverse().join('');
 }
-var WALINE_ADMIN_TOKEN = _tk_deobf(); // 以 type=list 接口读取「含 spam」的全部评论（匿名写入可能被误判 spam，公开接口会过滤掉导致不显示）
+var WALINE_ADMIN_TOKEN = _tk_deobf(); // 管理员令牌：写入以管理员账号落库（评论即 approved，不会被 Akismet 判 spam，path= 读取也不会被过滤丢数据）；读取走 GET ?path= 并带此令牌鉴权
 var WALINE_OAUTH  = 'github'; // 登录方式：github / google / qq / weibo（取决于服务端开启的 OAuth 提供方）
 var HOLIDAY_PATH  = '/kaoqing/holidays'; // 节假日数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var PEOPLE_PATH   = '/kaoqing/people';   // 人员数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
@@ -1079,6 +1079,11 @@ var curGroup  = GROUPS[0];
 var curCat    = null;
 var records   = [];   // 当前状态视图（状态分路径后，仅含当前筛选状态的记录，供渲染）
 var recordsAll = [];   // 全状态累积缓存（按 id 合并）：供跨状态冲突检测 / 提交后定位，不直接渲染
+var bySub = {};        // 各状态子路径拉取结果：status -> records[]（服务端已按 path 过滤）
+var byBare = [];       // 旧格式裸路径 /kaoqing/records 记录（兼容迁移前数据，按 rec.status 归位）
+var statusReady = {};  // 各状态是否已预热完成（true=可本地切换秒显；false/undefined=切换时仍显示加载中）
+var statusLoadingNow = {};   // 各状态是否在途拉取（防重入）
+var warmupPromise = null;    // 当前预热轮次的 Promise（复用同一轮，避免重复全量拉）
 var archiveReqPending = false;   // 是否存在待处理的「归档并汇总」请求（控制 #archiveBtn 禁用态）
 var editIndex = null;   // 修改模式：正在编辑的记录下标（null=新增模式）
 var viewMode   = 'edit';   // 'edit'=未归档(Waline 可改删)；'view'=归档(R2 只读，不能修改/删除)
@@ -2502,7 +2507,7 @@ async function pumpWriteQueue(){
 async function syncRecords(){
   readingBack = true;          // 回读期间保持表格禁用
   try {
-    await loadRecordsFromWaline(true);
+    await loadRecordsFromWaline(true, true);
     writeQueue.forEach(function(it){
       if (procMap[it.rec.id] === '写入失败') return;
       var exists = recordsAll.some(function(r){ return r.id === it.rec.id; });
@@ -2847,7 +2852,7 @@ async function submitAndPrint(){
   // 3) 切换界面到「待审核」视图，让刚提交的记录可见（状态分路径后必须重新拉取该状态记录才能看到）
   var sf = $('#recStatus');
   if (sf){ sf.value = '待审核'; }
-  await loadRecordsFromWaline(true);   // 重新拉取「待审核」状态记录（覆盖 records）
+  await loadRecordsFromWaline(true, true);   // 重新拉取「待审核」状态记录（覆盖 records）
   renderRecords();   // 用「待审核」筛选重新渲染表格
 
   // 4) 自动勾选刚刚提交的记录（按 id 在渲染后的 DOM 中定位行并勾选），同时收集供打印
@@ -4533,7 +4538,7 @@ function onWalineLogin(user){
   applyUser(user);
   // 数据已匿名预读，登录后再拉一次保证最新（参照 APP.html 登录后同步云端）
   // 人员：优先读缓存，缓存读不到才读 Waline（缓存里可长按删除/拖动排序，想恢复点末尾「同步」）
-  if (!loadPeopleCache()){ loadPeople(); } loadHolidays(); loadRecordsFromWaline(true);
+  if (!loadPeopleCache()){ loadPeople(); } loadHolidays(); loadRecordsFromWaline(true, true);
   // 登录成功：自动关闭登录弹窗（避免遗留空白窗口）
   if (loginWin && !loginWin.closed){ try { loginWin.close(); } catch(e){} }
   loginWin = null;
@@ -4815,10 +4820,10 @@ function cloudToastError(text, key){
    匿名无法改/删旧评论，故"修改/删除"都追加一条新事件，由回放(同 id 取最后)与后端 --cleanup 压实处理。 */
 var RECORDS_PATH = '/kaoqing/records';
 var ARCHIVE_REQ_PATH = '/kaoqing/archive-request';   // 前端「归档并汇总」按钮写入的请求通道（后端 _C_request.py 读取）
-/* 记录按状态分路径存储：每条新记录存到 /kaoqing/records/<状态>（postRecordOp 落地），便于归档脚本精确按路径操作。
-   读取性能：Waline 管理员列表接口(type=list)忽略 url 参数、返回整个实例，无法按 url 服务端筛选；
-   故前端先按 url 前缀排除其它项目（廉价），再按评论内嵌 rec.status 筛选当前状态，只有当前状态的事件才回放/渲染。
-   这样打开/刷新/切换状态都只处理当前状态数据（旧整包 /kaoqing/records 无子路径的记录按内嵌 status 兼容显示）。 */
+/* 记录按状态分路径存储：每条新记录存到 /kaoqing/records/<状态>（postRecordOp 落地）。
+   读取利用 Waline 客户端列表接口 GET ?path=<状态路径> 的「服务端按路径过滤」能力：前端按状态并发拉取各自路径，
+   服务端只回传该状态记录（不再像 type=list 那样返回整个实例），随记录积累也不会越来越慢、服务器消耗恒定。
+   旧整包 /kaoqing/records 裸路径记录由 fetchBare() 兼容读取，按内嵌 rec.status 归位。 */
 var RECORD_STATUSES = ['待提交', '待审核', '待批准', '完成', '已归档'];
 var RECORD_STATUSES_ALL = RECORD_STATUSES.concat(['待审批']);   // 兼容旧别名「待审批」
 function recPathOf(status){ return RECORDS_PATH + '/' + (status || '待提交'); }
@@ -4920,15 +4925,16 @@ async function fetchJsonWithRetry(url, attempt, fetchOpts){
   }
 }
 
-/* 分页拉取某 path 下全部 Waline 评论（含 approved/waiting/spam）。
-   必须用管理员列表接口 type=list + Authorization: Bearer 管理员令牌：
-   匿名写入可能被 Waline/Akismet 误判为 spam，公开接口(GET ?path=)会过滤 spam 导致前端不显示；
-   故强制走管理员接口读取全部状态，保证即便被标 spam 也能回放显示、不丢数据。 */
+/* 分页拉取某 path 下全部 Waline 评论（按 path 服务端过滤，分页 pageSize 上限 100）。
+   改用客户端列表接口 GET ?path=<path>（服务端按文章路径过滤），替代原先 type=list 全实例返回：
+   type=list 忽略 url、返回整个 Waline 实例（含其它项目），随记录积累体积与服务器消耗线性增长，不可取。
+   带管理员 Bearer 令牌读取：本系统所有写入均用管理员令牌（postRecordOp 拒绝匿名写），评论落库即 approved，
+   不会被 Akismet 判 spam，path= 过滤不会丢数据；匿名写入早被禁，故无需 type=list 的"全量含 spam"语义。 */
 async function fetchAllComments(path){
   var out = []; var page = 1;
   var authHdr = WALINE_ADMIN_TOKEN ? { 'Authorization': 'Bearer ' + WALINE_ADMIN_TOKEN } : null;
   while (true){
-    var url = CLOUD_BASE + '/api/comment?type=list&url=' + encodeURIComponent(path) + '&page=' + page + '&pageSize=100';
+    var url = CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(path) + '&page=' + page + '&pageSize=100';
     var resp = await fetchJsonWithRetry(url, 1, authHdr ? { headers: authHdr } : null);
     var dd = (resp.data && resp.data.data) || [];
     if (!dd.length) break;
@@ -5019,60 +5025,82 @@ async function postRecordOp(op, rec){
   } catch(e){ return false; }
 }
 
-/* 全状态缓存合并：把本次拉取到的当前状态记录并入 recordsAll（按 id 去重，取较新 oid）。
-   供跨状态冲突检测(findExistingConflict)与提交后定位(submitAndPrint)使用。 */
-function mergeRecordsAll(cur){
-  var byId = {};
-  recordsAll.forEach(function(r){ if (r && r.id) byId[r.id] = r; });
-  cur.forEach(function(r){
-    if (!r || !r.id) return;
-    var old = byId[r.id];
-    if (!old || (r.oid && (!old.oid || r.oid >= old.oid))) byId[r.id] = r;
-  });
-  recordsAll = Object.keys(byId).map(function(k){ return byId[k]; });
+/* 读取：以 Waline 为唯一来源（无 localStorage 兜底）。
+   预热策略（懒加载 + 并发）：打开 / 刷新时同步发起「各状态路径」的读取请求，服务端按 path 过滤只回传该状态记录；
+   当前状态请求完毕即解锁记录表并渲染（用户立即可交互），其余状态后台继续预热；
+   切换到一个尚未预热完的状态时，保持「加载中…」直到该状态就绪（onStatusReady 解锁渲染），不显示陈旧/空数据。
+   写库 / 提交 / 删除后由 syncRecords → loadRecordsFromWaline(true, true) 强制重新预热（复用同一轮，避免重复全量拉）。 */
+function onStatusReady(st){
+  var cs = ($('#recStatus') && $('#recStatus').value) || '待提交';
+  if (st === cs && recordsLoading){ recordsLoading = false; applyStatusFilter(); }
 }
-/* 读取：以 Waline 为唯一来源（无 localStorage 兜底）。拉取全实例评论 → 仅回放「当前状态路径」的记录 → 渲染。
-   状态分路径后，每次打开/刷新/切换状态都只处理当前状态的记录（降低回放与渲染成本）。 */
-async function loadRecordsFromWaline(quiet){
-  if (viewMode === 'view') return;   // 归档(R2)只读视图：不加载 Waline 数据（避免覆盖 R2 视图）
-  if (quiet){
-    recordsLoading = true; renderRecords();   // 懒加载：不弹遮罩，先在「该状态下暂无记录」位置显示旋转圆圈
-  } else {
-    cloudToast('read', '处理中：读取考勤记录...', 'loadRecords');
+function rebuildRecordsAll(){
+  var out = byBare.slice();
+  RECORD_STATUSES.forEach(function(s){ if (bySub[s]) out = out.concat(bySub[s]); });
+  // 按 id 去重（保留后者；bySub 在 byBare 之后，故子路径记录优先于裸路径残留）
+  var seen = {}, dedup = [];
+  for (var i = out.length - 1; i >= 0; i--){
+    var r = out[i];
+    if (!r || !r.id){ dedup.unshift(r); continue; }
+    if (seen[r.id]) continue;
+    seen[r.id] = 1; dedup.unshift(r);
   }
+  recordsAll = dedup;
+}
+/* 拉取某状态子路径记录（服务端已按 path 过滤），回放进 bySub[st]，标记就绪 */
+async function fetchStatus(st){
+  if (statusLoadingNow[st]) return;
+  statusLoadingNow[st] = true;
   try {
-    // 当前状态筛选：未归档视图取下拉框值（默认待提交）；归档(R2)视图不走此函数
-    var sf = ($('#recStatus') && $('#recStatus').value) || '待提交';
-    // Waline 管理员列表忽略 url 参数、返回整个实例；先按 url 前缀排除其它项目（廉价字符串判断），
-    // 再按评论内嵌 rec.status 筛选当前状态（兼容旧整包 /kaoqing/records 无子路径的记录），
-    // 只有当前状态的事件才进入回放 → 大幅降低回放/渲染成本。
-    var all = await fetchAllComments(RECORDS_PATH);
-    var events = [];
-    var hasArchiveReq = false;     // 是否存在待处理的「归档并汇总」请求（同一次拉取内顺带检测）
-    for (var i = 0; i < all.length; i++){
-      var c = all[i];
-      var u = commentUrlOf(c);
-      if (u === ARCHIVE_REQ_PATH){ hasArchiveReq = true; continue; }   // 归档请求通道：仅标记，不参与记录渲染
-      if (u !== RECORDS_PATH && u.indexOf(RECORDS_PATH + '/') !== 0) continue;   // 非考勤记录（含其它项目），跳过
-      var evs = parseCommentToEvents(c);
-      if (!evs.length) continue;
-      var st = null;
-      for (var k = evs.length - 1; k >= 0; k--){ if (evs[k].rec && evs[k].rec.status){ st = evs[k].rec.status; break; } }
-      if (sf !== 'all' && st !== sf) continue;   // 按记录自身状态筛选（兼容旧整包无子路径）
-      events = events.concat(evs);
-    }
-    var cur = replayEvents(events);
-    records = cur;                 // 当前状态视图（供渲染）
-    mergeRecordsAll(cur);          // 累积进全状态缓存（供跨状态冲突检测/提交后定位）
-    refreshArchiveBtn(hasArchiveReq);   // 同步「归档并汇总」按钮态（有请求→归档汇总中…禁用）
-    if (quiet) recordsLoading = false;
-    renderRecords();
-    if (!quiet) cloudToastHide('loadRecords');
+    var arr = await fetchAllComments(recPathOf(st));
+    var evs = [];
+    for (var i = 0; i < arr.length; i++){ var e = parseCommentToEvents(arr[i]); if (e.length) evs = evs.concat(e); }
+    bySub[st] = replayEvents(evs);
+    rebuildRecordsAll();
+    statusReady[st] = true;
   } catch(e){
-    if (quiet){ recordsLoading = false; renderRecords(); cloudToast('error', '考勤记录读取失败', 'loadRecords'); }
-    else { cloudToastError('考勤记录读取失败!', 'loadRecords'); }
-    console.error('[kaoqing] loadRecordsFromWaline 失败', e && e.message ? e.message : e);
-  }
+    statusReady[st] = false;     // 失败：保留旧缓存（若有），不阻塞其它状态
+    throw e;
+  } finally { statusLoadingNow[st] = false; }
+}
+/* 兼容旧格式裸路径 /kaoqing/records：服务端按 path 精确过滤，回放进 byBare，按 rec.status 归位并标记对应状态就绪 */
+async function fetchBare(){
+  try {
+    var arr = await fetchAllComments(RECORDS_PATH);
+    var evs = [];
+    for (var i = 0; i < arr.length; i++){ var e = parseCommentToEvents(arr[i]); if (e.length) evs = evs.concat(e); }
+    byBare = replayEvents(evs);
+    rebuildRecordsAll();
+    byBare.forEach(function(r){ if (r && r.status) statusReady[r.status] = true; });
+  } catch(e){ /* 裸路径读取失败不阻塞 */ }
+}
+/* 读取归档并汇总请求通道（服务端按 path 过滤，返回非空即有请求） */
+async function fetchArchiveReq(){
+  try { var arr = await fetchAllComments(ARCHIVE_REQ_PATH); return arr.length > 0; }
+  catch(e){ return false; }
+}
+async function loadRecordsFromWaline(quiet, force){
+  if (viewMode === 'view') return;          // 归档(R2)只读视图：不加载 Waline 数据
+  if (warmupPromise && !force) return warmupPromise;   // 预热进行中：复用同一轮（不重复全量拉）
+  if (warmupPromise && force) warmupPromise = null;    // 强制刷新（如写库后）：丢弃旧轮次引用，启动新轮次
+  if (quiet){ recordsLoading = true; renderRecords(); }   // 懒加载：不弹遮罩，先在「该状态下暂无记录」位置显示旋转圆圈
+  else cloudToast('read', '处理中：读取考勤记录...', 'loadRecords');
+  // 同步发起各状态路径读取（服务端按 path 过滤）；当前状态就绪即解锁渲染，其余后台继续
+  var tasks = RECORD_STATUSES.map(function(st){
+    return fetchStatus(st).then(function(){ onStatusReady(st); }, function(){ onStatusReady(st); });
+  });
+  tasks.push(fetchBare());                    // 兼容旧裸路径（后台，不阻塞当前状态）
+  tasks.push(fetchArchiveReq().then(function(has){ refreshArchiveBtn(has); }, function(){ refreshArchiveBtn(false); }));
+  var p = Promise.allSettled(tasks).then(function(){
+    if (warmupPromise === p) warmupPromise = null;
+    var cs = ($('#recStatus') && $('#recStatus').value) || '待提交';
+    if (cs === 'all' || statusReady[cs]){ recordsLoading = false; applyStatusFilter(); }   // 最终用并集最新数据补齐当前视图
+    var curFail = cs !== 'all' && statusReady[cs] === false;
+    if (curFail) cloudToast('error', '考勤记录读取失败', 'loadRecords');
+    else if (!quiet) cloudToastHide('loadRecords');
+  });
+  warmupPromise = p;
+  return p;
 }
 
 /* ===================== 归档并汇总（管理员，不依赖选中） =====================
@@ -5101,12 +5129,7 @@ async function postArchiveRequest(){
   } catch(e){ console.error('[kaoqing] postArchiveRequest 失败', e && e.message ? e.message : e); return false; }
 }
 async function checkArchiveReq(){
-  if (!CLOUD_BASE) return false;
-  try {
-    var all = await fetchAllComments(RECORDS_PATH);
-    for (var i = 0; i < all.length; i++){ if (commentUrlOf(all[i]) === ARCHIVE_REQ_PATH) return true; }
-    return false;
-  } catch(e){ return false; }
+  try { return await fetchArchiveReq(); } catch(e){ return false; }
 }
 function refreshArchiveBtn(pending){
   var b = $('#archiveBtn'); if (!b) return;
@@ -6063,8 +6086,18 @@ async function lazyLoadArchiveMonths(){
 }
 $('#recSource').addEventListener('mousedown', lazyLoadArchiveMonths);   // 鼠标点开下拉框即触发
 $('#recSource').addEventListener('focus', lazyLoadArchiveMonths);        // 键盘聚焦（Tab）亦可触发
-/* 状态筛选：切换后按状态重渲染记录表 */
-$('#recStatus').addEventListener('change', function(){ loadRecordsFromWaline(true); });   // 切换状态：按新状态重新读取（只拉该状态路径）
+/* 状态筛选：切换后本地过滤已预热（按需 per-status path= 拉取）的 recordsAll，未预热的状态继续显示加载中、待其就绪由 onStatusReady 解锁 */
+function applyStatusFilter(){
+  if (viewMode === 'view') return;            // 归档(R2)视图不处理 Waline 记录
+  var sf = ($('#recStatus') && $('#recStatus').value) || '待提交';
+  records = (sf === 'all') ? recordsAll.slice() : recordsAll.filter(function(r){ return r.status === sf; });
+  renderRecords();
+}
+$('#recStatus').addEventListener('change', function(){
+  var sf = this.value;
+  if (sf === 'all' || statusReady[sf]){ applyStatusFilter(); }   // 已预热：本地过滤秒显，不重拉
+  else { recordsLoading = true; renderRecords(); loadRecordsFromWaline(true); }   // 未预热：保持加载态，该状态就绪后由 onStatusReady 解锁渲染
+});
 /* 归档并汇总：管理员专属、不依赖选中。点击 → 写 Waline 请求 → 回读 → 按钮置「归档汇总中…」禁用 */
 $('#archiveBtn').addEventListener('click', async function(){
   if (archiveReqPending) return;                       // 已在处理中，忽略重复点击
