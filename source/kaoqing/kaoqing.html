@@ -916,7 +916,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
       <div class="cfg-section-title">打印合并（相邻行内容相同）</div>
       <div class="cfg-hint">用于<b>列表式模板</b>（如加班单，一页打多条）。勾选启用后，相邻记录同一字段内容相同时纵向合并成一个格（真合并，合并区内不画内部横线）。<b>单据式模板</b>（请假单，一页一张单）不适用。</div>
       <label class="cfg-check"><input type="checkbox" id="cfgMergeOn">启用相邻行相同内容合并</label>
-      <div class="cfg-hint">每列可选四种：<b>不合并</b>（永不合并）／<b>按值自适应合</b>（原「最小合并」：只有「本列 + 它左边所有参与合并的列」都连续相同才合并，内层绝不跨外层）／<b>最小合并</b>（严格：只看参与合并的列——<b>已忽略设了「不合并」的列</b>——整行所有参与列都连续相同才合并，任意一列不同则当前列也不合）／<b>全合并</b>（只看本列自己是否连续相同，可跨过其它列的分界——适合「说明」这类长文本）。</div>
+      <div class="cfg-hint">每列可选四种：<b>不合并</b>（永不合并）／<b>按值自适应合</b>（嵌套顺序跟随「多级排序级别」——谁排序在前谁越外层、越优先合并；min 列只受「排序级别更高（或同级更靠左）的其它 min 列」约束，full 列不参与约束，内层绝不跨外层）／<b>最小合并</b>（严格：只看参与合并的列——<b>已忽略设了「不合并」的列</b>——整行所有参与列都连续相同才合并，任意一列不同则当前列也不合）／<b>全合并</b>（只看本列自己是否连续相同，可跨过其它列的分界——适合「说明」这类长文本）。<br><b>关键：</b>「按值自适应合」的嵌套层级由「记录表排序」决定——先到排序区设好级别，再回本区给列选模式，分组才按你的意图走。</div>
       <div id="cfgMergeRows"></div>
       <div class="cfg-sub">模板写死的固定值列（无记录字段，如某列固定写「自愿」）：按列的固定文本匹配，命中才参与合并，并取下方配置的模式。</div>
       <div id="cfgFixedRows"></div>
@@ -1153,7 +1153,7 @@ var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', w
                       leaveTypes: loadLeaveTypesCache(),   // 优先取缓存（上次配置），Waline 配置到达后于 loadConfig 内覆盖并写回缓存
                       sigCfg: { on:false, bottom:5, right:5, len:5, hgt:5, rot:5, layer:'below' },   // 签名配置：on=独立绘制开关；bottom/right=上下/左右随机 ±px；len/hgt=在「计算出的尺寸」上再 ±%；rot=旋转 ±°；layer=below 表格之下 / above 表格之上
                       sortCfg: [{ key:'date', dir:'asc' }],   // 记录表默认多级排序（下标=层级，0=1级）；前端改过排序会写本机缓存，缓存优先于此配置
-                      mergeCfg: { on:false, cols:{ '日期':'min', '时段':'min', '小时':'min', '说明':'full' } },   // 打印「相邻行相同内容合并」：on=开关；cols[字段] = 'min'最小合并 / 'full'全合并（仅列表式模板，如加班单）
+                      mergeCfg: { on:false, cols:{ '日期':'min', '时段':'min', '小时':'min', '说明':'full' } },   // 打印「相邻行相同内容合并」：on=开关；cols[字段] = 'min'按值自适应合 / 'same'最小合并 / 'full'全合并（仅列表式模板，如加班单）
                       pwdReview:'', pwdApprove:'', pwdAdmin:'' };  // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值 + 休假类型 + 签名配置 + 管理密码哈希，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
 var configLoaded  = false;  // ⚠ 配置是否「已成功从云端读取到真实值」：仅当 fetchCloudRecord 拿到 best.obj（或确认无配置记录=首次运行）才置真；读取异常保持 false → 保存时拦截，绝不让内置默认值覆盖线上真实配置
@@ -4459,9 +4459,12 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     return tr + '</tr>';
   }
   /* ---------- 相邻相同内容合并（列表式模板） ----------
-     规则：参与合并的列按「列号从左到右」形成层次，第 k 列有两种模式——
-       min（最小合并）：只有「它自己 + 它左边所有参与合并的列」都连续相同时才合并（内层绝不跨外层）；
-       full（全合并） ：只看它自己是否连续相同（可跨过其它列的分界，适合"备注说明"这类长文本）。
+     三种模式（每列可配）：
+       min（按值自适应合）：嵌套顺序跟随「多级排序级别」——谁排序在前（CONFIG.sortCfg 下标越小）谁越外层、越优先合并；同级/未排序则按列号左→右兜底。
+                            min 列只受「排序级别更高（或同级更靠左）的其它 min 列」约束，full 列不参与约束（内层绝不跨外层）。
+                            这正是多级排序的本意：排序级别即合并分组优先级。
+       same（最小合并）   ：严格合取——只看「参与列中除 full 外的列」（已忽略设了「不合并」的列），整行所有参与列都连续相同才合并，任意一列不同则当前列也不合。
+       full（全合并）     ：只看本列自己是否连续相同，可跨过其它列的分界，适合「说明」这类长文本。
      只在有记录的行之间合并：不跨到尾部空白行、不跨页（每页是独立 <table>，本就天然不跨）。 */
   function mergeModeOf(fieldKey){
     var mc = CONFIG.mergeCfg;
@@ -4597,7 +4600,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
           return a - b;                              // 同级 / 都未排序：左→右兜底
         });
       })();
-      // 最小合并（严格 same）的约束列：所有参与列中「除 full 外」的列（enabled 已天然忽略不合并列），即 min + same 列（写死固定值列默认 full，不卡 same）
+      // 最小合并（严格 same）的约束列：所有参与列中「除 full 外」的列（enabled 已天然忽略不合并列），即 min + same 列（含配置成 min/same 的固定值列，仅配置成 full 的固定值列不卡 same）
       var strictOrder = enabled.filter(function(cn){ return modeOfCn(cn) !== 'full'; });
       // 逐实例的该列 HTML
       function valAt(inst, cn){
@@ -4758,6 +4761,21 @@ async function printRecordsViaTemplate(rs){
     await peopleP;   // buildPrintData 依赖 PEOPLE_FULL（按姓名取工号/部门等），必须在此之前完成
     /* 一起打印加班 + 请假时，按类别分组：加班(isOtCatId)走加班模板、请假类走请假模板，
        各自取绑定模板与单页条数（PRINT_CAT/PRINT_GROUP 由 buildPrintData 按本组记录设定），互不干扰。 */
+    // 需求①：打印合并永远参考「后台设置的排序」(CONFIG.sortCfg)，不参考前端临时排序/本机缓存(getSortCfg)，防止前端乱排污染打印。
+    //   在分组前对 rs 整体重排——基线为「录入顺序」(records.indexOf)，叠加后台排序级别；ot/lv 各自取有序子集即可。
+    //   后台无排序时也强制回录入顺序，彻底隔离前端临时排序对打印的影响。
+    var _cfgSort = (CONFIG.sortCfg || []).slice();
+    var _rsIdx = rs.map(function(r){ return { r: r, i: records.indexOf(r) }; });
+    _rsIdx.sort(function(a, b){
+      for (var li = 0; li < _cfgSort.length; li++){
+        var lv = _cfgSort[li]; if (!lv || !lv.key) continue;
+        var va = recSortValue(a.i, lv.key), vb = recSortValue(b.i, lv.key);
+        var c = (typeof va === 'number' && typeof vb === 'number') ? (va - vb) : String(va).localeCompare(String(vb), 'zh');
+        if (c !== 0) return (lv.dir === 'desc') ? -c : c;
+      }
+      return a.i - b.i;   // 后台无排序或同值：保持录入顺序（不受前端临时排序影响）
+    });
+    rs = _rsIdx.map(function(x){ return x.r; });
     var otRs = [], lvRs = [];
     rs.forEach(function(r){ (isOtCatId(r.catId) ? otRs : lvRs).push(r); });
     var groups = [];
@@ -4983,20 +5001,36 @@ $('#records').addEventListener('click', async function(e){
 function closeSortMenu(){
   var m = $('#sortMenu'); if (m) m.remove();
 }
+/* 恢复排序默认值：用「后台配置」(CONFIG.sortCfg) 覆盖前端临时排序与本机缓存，记录表显示与打印都回到后台设定 */
+function resetSortToConfigDefault(){
+  sortCfg = normalizeSortCfg(CONFIG.sortCfg || []) || [];
+  if (sortCfg.length) saveSortCache(sortCfg); else { try { localStorage.removeItem(SORT_CACHE_KEY); } catch(e){} }
+  closeSortMenu();
+  renderRecords();
+}
 function openSortMenu(btn, key){
   closeSortMenu();
   var cfg = getSortCfg(), curLv = sortLevelOf(key);
+  // 固定值列（模板写死列，如『自愿』）不参与记录表排序，仅在合并嵌套里起作用；
+  //   为免在排序菜单里显示它让人误以为能排记录表，隐藏其占用的级别行，其余级别圈号自动递进。
+  var fixedNames = [];
+  if (CONFIG.mergeCfg && CONFIG.mergeCfg.fixedCols){
+    CONFIG.mergeCfg.fixedCols.forEach(function(x){ if (x && x.name && fixedNames.indexOf(x.name) < 0) fixedNames.push(x.name); });
+  }
   var menu = document.createElement('div');
   menu.id = 'sortMenu'; menu.className = 'sort-menu';
+  var dispLv = 0;   // 重排后的连续圈号（跳过固定列行后）
   for (var i = 1; i <= SORT_COLS.length; i++){
-    (function(lv){
+    var occ = cfg[i - 1];
+    if (occ && fixedNames.indexOf(occ.key) >= 0) continue;   // 固定列占用的级别行不显示
+    dispLv++;
+    (function(realLv, dLv){
       var it = document.createElement('div');
-      it.className = 'sort-item' + (curLv === lv ? ' on' : '');
-      var occ = cfg[lv - 1];
-      it.textContent = SORT_CIRC[lv] + '　' + (occ ? (colLabel(occ.key) + ' ' + (occ.dir === 'desc' ? '▼' : '▲')) : '（未设置）');
-      it.addEventListener('click', function(ev){ ev.stopPropagation(); setSortLevel(key, lv); });
+      it.className = 'sort-item' + (curLv === realLv ? ' on' : '');
+      it.textContent = SORT_CIRC[dLv] + '　' + (occ ? (colLabel(occ.key) + ' ' + (occ.dir === 'desc' ? '▼' : '▲')) : '（未设置）');
+      it.addEventListener('click', function(ev){ ev.stopPropagation(); setSortLevel(key, realLv); });
       menu.appendChild(it);
-    })(i);
+    })(i, dispLv);
   }
   if (curLv){
     var clr = document.createElement('div');
@@ -5005,6 +5039,12 @@ function openSortMenu(btn, key){
     clr.addEventListener('click', function(ev){ ev.stopPropagation(); clearSortKey(key); });
     menu.appendChild(clr);
   }
+  // 恢复排序默认值：以「后台配置」覆盖前端临时排序/本机缓存，记录表与打印都回到后台设定
+  var def = document.createElement('div');
+  def.className = 'sort-item reset';
+  def.textContent = '恢复排序默认值';
+  def.addEventListener('click', function(ev){ ev.stopPropagation(); resetSortToConfigDefault(); });
+  menu.appendChild(def);
   document.body.appendChild(menu);
   var br = btn.getBoundingClientRect();
   var estH = Math.min(320, SORT_COLS.length * 30 + (curLv ? 34 : 0) + 8);
