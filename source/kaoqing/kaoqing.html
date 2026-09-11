@@ -1255,6 +1255,11 @@ function normalizeSortCfg(v){
   if (!v || typeof v !== 'object') return null;
   var arr = Array.isArray(v) ? v : (v.levels || []);
   if (!Array.isArray(arr)) return null;
+  // 固定值列（模板写死列，如表头『自愿』）也可作为排序键——让固定值列能参与排序，从而驱动「按值自适应合(min)」的嵌套层级
+  var _fcNames = [];
+  if (CONFIG.mergeCfg && CONFIG.mergeCfg.fixedCols){
+    CONFIG.mergeCfg.fixedCols.forEach(function(x){ if (x && x.name && _fcNames.indexOf(x.name) < 0) _fcNames.push(x.name); });
+  }
   var out = [], used = {};
   for (var i = 0; i < arr.length && out.length < SORT_COLS.length; i++){
     var it = arr[i]; if (!it) continue;
@@ -1262,6 +1267,7 @@ function normalizeSortCfg(v){
     if (!k || used[k]) continue;
     var okKey = false;
     for (var j = 0; j < SORT_COLS.length; j++) if (SORT_COLS[j][0] === k) okKey = true;
+    if (!okKey) for (var f = 0; f < _fcNames.length; f++) if (_fcNames[f] === k) { okKey = true; break; }
     if (!okKey) continue;
     used[k] = 1;
     out.push({ key:k, dir: (it && it.dir === 'desc') ? 'desc' : 'asc' });
@@ -2949,6 +2955,7 @@ $('#cfgFixedAdd').addEventListener('click', function(){
   if (mergeWork.fixedCols.some(function(x){ return x.name === nm; })){ showAlert('已存在同名固定列：' + nm); return; }
   mergeWork.fixedCols.push({ name: nm, mode: (md === 'min' || md === 'full' || md === 'same') ? md : '' });
   renderFixedRows();
+  renderSortCfgRows();   // 固定列变化 → 刷新排序区候选（让新固定列可作为排序键）
   var inp = $('#cfgFixedAddName'); if (inp) inp.value = '';
 });
 $('#cfgFixedRows').addEventListener('click', function(e){
@@ -2957,6 +2964,7 @@ $('#cfgFixedRows').addEventListener('click', function(e){
   var nm = btn.getAttribute('data-name');
   mergeWork.fixedCols = (mergeWork.fixedCols || []).filter(function(x){ return x.name !== nm; });
   renderFixedRows();
+  renderSortCfgRows();   // 固定列变化 → 刷新排序区候选
 });
 // 休假类型两个列表框：互移与新增
 $('#ltAddDirect').addEventListener('click', function(){ var i = $('#cfgLtNew'); ltAddArr('direct', i ? i.value : ''); if (i) i.value = ''; });
@@ -4485,6 +4493,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     //   例：数据行 G4 写死『√』，注册『自愿』即命中第 G 列 → 该列所有数据行合并。
     //   旧逻辑是拿数据格文本（√）对注册名（自愿）匹配，永远对不上 → 固定列怎么配都不合并。
     var fixedColByNum = {};   // { cNum: mode }
+    var fixedNameByNum = {};  // { cNum: name } —— 供 _lv 反查固定列的排序级别
     (function(){
       if (!mcOn || !CONFIG.mergeCfg || !CONFIG.mergeCfg.fixedCols) return;
       var ar = CONFIG.mergeCfg.fixedCols.filter(function(x){ return x && x.name && (x.mode === 'min' || x.mode === 'full' || x.mode === 'same'); });
@@ -4502,7 +4511,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       ar.forEach(function(x){
         var nt = _cellPlainText({ text: x.name });
         Object.keys(headCols).forEach(function(k){
-          if (headCols[k] === nt) fixedColByNum[k] = x.mode;
+          if (headCols[k] === nt){ fixedColByNum[k] = x.mode; fixedNameByNum[k] = x.name; }
         });
       });
     })();
@@ -4566,15 +4575,20 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       //   full 列不参与约束；min 列只受「排序级别更高（或同级且更靠左）的 min 列」约束，天然不跨外层。
       //   这正是当初引入多级排序的本意：排序级别即合并分组优先级。
       var minOrder = enabled.filter(function(cn){ return modeOfCn(cn) === 'min'; });
-      // 按排序级别重排 min 列：排序在前的列越优先（越外层）；未参与排序的 min 列（含固定列）排最后，同级按列号左→右兜底。
+      // 按排序级别重排 min 列：排序在前的列越优先（越外层）；未参与排序的 min 列（含未配排序的固定列）排最后，同级按列号左→右兜底。
       (function(){
         var _sc = (CONFIG.sortCfg || []);
         function _lv(cn){
           var fk = fmap2[cn];                       // 字段键（中文），固定列无字段
-          if (!fk) return Infinity;                  // 固定列：不参与排序 → 最低优先级
-          var sk = MERGE_FIELD_TO_SORT[fk];
-          if (!sk) return Infinity;
-          for (var s = 0; s < _sc.length; s++) if (_sc[s].key === sk) return s;
+          if (fk){
+            var sk = MERGE_FIELD_TO_SORT[fk];
+            if (sk){ for (var s = 0; s < _sc.length; s++) if (_sc[s].key === sk) return s; }
+            return Infinity;
+          }
+          // 固定值列（模板写死列）：若用户在排序里给它配了层级，则按其表头名在 sortCfg 里的级别定级；
+          //   这样固定列配置「按值自适应合(min)」时能成为外层（优先合并），而非永远垫底（只能退化为全合并/最小合并）。
+          var fn = fixedNameByNum[cn];
+          if (fn){ for (var s2 = 0; s2 < _sc.length; s2++) if (_sc[s2].key === fn) return s2; }
           return Infinity;
         }
         minOrder.sort(function(a, b){
@@ -6629,6 +6643,16 @@ function readSigCfgForm(){
 var sortWork = [];   // 工作副本（改动先落这里，保存才写回 CONFIG）
 function renderSortCfgRows(){
   var box = $('#cfgSortRows'); if (!box) return;
+  // 固定值列（合并面板里注册的工作副本）也作为排序键候选，让其在「按值自适应合(min)」里能定嵌套层级
+  var _fc = (mergeWork && mergeWork.fixedCols) ? mergeWork.fixedCols.filter(function(x){ return x && x.name; }) : [];
+  function _keyOpts(selKey){
+    return SORT_COLS.map(function(c){
+      return '<option value="' + c[0] + '"' + (c[0] === selKey ? ' selected' : '') + '>' + c[1] + '</option>';
+    }).join('')
+    + _fc.map(function(x){
+      return '<option value="' + x.name + '"' + (x.name === selKey ? ' selected' : '') + '>' + x.name + '（固定列）</option>';
+    }).join('');
+  }
   var html = '';
   for (var i = 1; i <= SORT_COLS.length; i++){
     var lv = sortWork[i - 1] || { key:'', dir:'asc' };
@@ -6636,9 +6660,7 @@ function renderSortCfgRows(){
       + '<span class="cfg-label">' + SORT_CIRC[i] + ' 级</span>'
       + '<select class="cfg-sort-key" data-lv="' + i + '">'
       + '<option value="">（不使用）</option>'
-      + SORT_COLS.map(function(c){
-          return '<option value="' + c[0] + '"' + (c[0] === lv.key ? ' selected' : '') + '>' + c[1] + '</option>';
-        }).join('')
+      + _keyOpts(lv.key)
       + '</select>'
       + '<select class="cfg-sort-dir" data-lv="' + i + '">'
       + '<option value="asc"' + (lv.dir !== 'desc' ? ' selected' : '') + '>升序</option>'
