@@ -461,9 +461,14 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .lt-add-line button{padding:5px 10px;font-size:.78rem;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);color:var(--text);cursor:pointer}
 /* 卡片2「其它」弹出菜单 */
 .other-menu{position:fixed;z-index:2000;min-width:140px;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:4px;max-height:240px;overflow:auto}
-.other-item{padding:7px 10px;border-radius:7px;cursor:pointer;font-size:.85rem;color:var(--text)}
+.other-item{padding:7px 10px;border-radius:7px;cursor:pointer;font-size:.85rem;color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:8px}
 .other-item:hover{background:var(--accent-soft)}
+.other-item.on,.other-item.on:hover{background:var(--accent);color:#fff;font-weight:600}   /* 当前选中项高亮 */
+.other-item .ok{font-size:.75rem;opacity:.9}
 .other-empty{padding:9px 10px;font-size:.8rem;color:var(--text-muted)}
+/* 「其它」下拉按钮：标签 + ▾ 下拉箭头（下拉菜单式样） */
+.chip.chip-other{display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.other-caret{font-size:.68rem;line-height:1;opacity:.9}
 .cfg-check{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--text);cursor:pointer;margin:2px 0}
 .cfg-check input{width:16px;height:16px;accent-color:var(--accent)}
 .cfg-hint{font-size:.78rem;color:var(--text-muted);line-height:1.5;margin-top:6px}
@@ -1382,17 +1387,29 @@ function renderCats(){
   (CONFIG.leaveTypes.direct || []).forEach(function(name){
     box.appendChild(makeCatChip(makeLeaveCat(name)));
   });
-  // 「其它」：点击弹出菜单，列出设置中「其它菜单」列表的类型供选择
+  // 「其它」：下拉选择（标签 + ▾ 箭头），列出设置中「其它菜单」列表的类型供选择。
+  // ⚠ 选中判定按「名称是否在其它列表里」，不能只看 id 是否 lt- 前缀：
+  //   makeLeaveCat() 对命中 CATS 内置类别的名称（如 调休）会返回内置对象（id=tiaoxiu，非 lt- 前缀），
+  //   旧写法 `curCat.id.indexOf('lt-')===0` 会把这类选中漏判 → 其它按钮不高亮（原来那个 bug）。
+  var otherList = CONFIG.leaveTypes.other || [];
+  var otherSel  = (curCat && otherList.indexOf(curCat.name) >= 0) ? curCat.name : '';
   var otherBtn = document.createElement('button');
-  var otherOn = curCat && curCat.id.indexOf('lt-') === 0 && (CONFIG.leaveTypes.other || []).indexOf(curCat.name) >= 0;
-  otherBtn.className = 'chip' + (otherOn ? ' on c-orange' : '');
-  otherBtn.textContent = '其它';
+  otherBtn.className = 'chip chip-other' + (otherSel ? ' on c-orange' : '');
+  var otherLbl = document.createElement('span');
+  otherLbl.className = 'other-label';
+  otherLbl.textContent = otherSel || '其它';     // 选中后直接显示所选类型名，一眼看出选了哪个
+  var otherCaret = document.createElement('span');
+  otherCaret.className = 'other-caret';
+  otherCaret.textContent = '▾';
+  otherBtn.appendChild(otherLbl);
+  otherBtn.appendChild(otherCaret);
+  otherBtn.title = otherSel ? ('其它休假类型（当前：' + otherSel + '）') : '其它休假类型（点击下拉选择）';
   // 修改模式：仅在「改加班单」时锁定「其它」（不能改成任何请假类型）；改请假单时放开（可选其它请假类型）
   if (editIndex !== null && !editIsLeave()){ otherBtn.classList.add('locked'); otherBtn.disabled = true; }
   otherBtn.addEventListener('click', function(e){ toggleOtherMenu(e, otherBtn); });
   box.appendChild(otherBtn);
 }
-/* 卡片2「其它」按钮：弹出/收起休假类型菜单（列出设置中「其它菜单」列表的类型） */
+/* 卡片2「其它」下拉按钮：弹出/收起休假类型菜单（列出设置中「其它菜单」列表的类型，当前选中项高亮 + ✓） */
 function toggleOtherMenu(e, btn){
   if (editIndex !== null && !editIsLeave()) return;   // 修改模式：改加班单时类别锁定，不展开「其它」菜单；改请假单时允许选其它请假类型
   e.stopPropagation();
@@ -1406,7 +1423,13 @@ function toggleOtherMenu(e, btn){
     menu.innerHTML = '<div class="other-empty">请在「设置→考勤配置→休假类型配置」中添加类型</div>';
   } else {
     others.forEach(function(name){
-      var it = document.createElement('div'); it.className = 'other-item'; it.textContent = name;
+      // 当前选中的那一项高亮（末尾加 ✓），打开菜单即可看出选的是哪个
+      var isSel = !!(curCat && curCat.name === name);
+      var it = document.createElement('div');
+      it.className = 'other-item' + (isSel ? ' on' : '');
+      var itLbl = document.createElement('span'); itLbl.textContent = name;
+      it.appendChild(itLbl);
+      if (isSel){ var ok = document.createElement('span'); ok.className = 'ok'; ok.textContent = '✓'; it.appendChild(ok); }
       it.addEventListener('click', function(ev){
         ev.stopPropagation();
         curCat = makeLeaveCat(name);
