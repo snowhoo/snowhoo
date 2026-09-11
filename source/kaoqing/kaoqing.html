@@ -6366,12 +6366,15 @@ async function loadConfig(){
       }
       // 打印合并（相邻行相同内容）
       if (best.obj.mergeCfg && typeof best.obj.mergeCfg === 'object'){
-        var _mc = { on: !!best.obj.mergeCfg.on, cols: {} };
+        var _mc = { on: !!best.obj.mergeCfg.on, cols: {}, fixedCols: [] };
         var _mcs = best.obj.mergeCfg.cols || {};
         Object.keys(_mcs).forEach(function(k){
           var v = _mcs[k];
-          if (v === 'min' || v === 'full') _mc.cols[k] = v;
+          if (v === 'min' || v === 'full' || v === 'same') _mc.cols[k] = v;
         });
+        var _mcf = best.obj.mergeCfg.fixedCols || [];
+        _mc.fixedCols = _mcf.filter(function(x){ return x && x.name && (x.mode === 'min' || x.mode === 'full' || x.mode === 'same'); })
+                           .map(function(x){ return { name: x.name, mode: x.mode }; });
         CONFIG.mergeCfg = _mc;
       }
       configLoaded = true;   // ⚠ 已成功读到真实配置值：允许保存（保存以 CONFIG 为基底，不会写默认）
