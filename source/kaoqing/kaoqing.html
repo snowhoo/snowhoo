@@ -5109,13 +5109,13 @@ function setSortLevel(key, lv){
   var rest = getSortCfg().filter(function(x){ return x.key !== key; });
   var dir = (wasLv === lv && wasDir === 'asc') ? 'desc' : 'asc';
   rest.splice(Math.min(lv - 1, rest.length), 0, { key:key, dir:dir });
-  applySortCfg(rest);
-  if (_sortMenuBtn) openSortMenu(_sortMenuBtn, key);   // 重绘菜单刷新高亮，便于继续设其它级别
+  applySortCfg(rest);          // 内部已 renderRecords 重排记录表
+  closeSortMenu();             // 选完即关：避免重绘菜单导致定位跳动
 }
 /* 取消某列的排序 */
 function clearSortKey(key){
   applySortCfg(getSortCfg().filter(function(x){ return x.key !== key; }));
-  if (_sortMenuBtn) openSortMenu(_sortMenuBtn, key);   // 重绘菜单刷新高亮
+  closeSortMenu();
 }
 // 表头点击 → 弹出层级菜单
 $('#records').addEventListener('click', function(e){
