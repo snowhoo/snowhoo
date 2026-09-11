@@ -543,8 +543,10 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 #printArea .tpl-margin{box-sizing:border-box}
 /* 缩放仅「内容超出可打印区时按比例收缩(k<=1)」，不放大、不居中，保持模板边距忠于原设定 */
 #printArea .tpl-scale{transform-origin:top left;position:relative}   /* position:relative —— 供签名独立绘制时作为绝对定位的锚点容器 */
-/* 签名独立绘制：格内 .sig-src 不可见但占位；.sig-overlay 是画完数据后叠加的真实签名（带随机偏移/缩放/旋转） */
-#printArea .sig-overlay{position:absolute;pointer-events:none;z-index:50}
+/* 签名独立绘制：格内 .sig-src 不可见但占位；.sig-overlay 是画完数据后叠加的真实签名（带随机偏移/缩放/旋转）。
+   z-index:-1 = **画在表格之下** —— 表格的线框/文字盖在签名上面，像"在印好的表单上手写签名"，
+   避免签名图（尤其 jpg 的白底）把表格盖住。.tpl-scale 有 transform → 已是层叠上下文，负值不会跑到页面背景后面。 */
+#printArea .sig-overlay{position:absolute;pointer-events:none;z-index:-1}
 @media print{
   body.printing-template > *:not(#printArea){display:none!important}
   body.printing-template #printArea{display:block!important;width:100%;margin:0;padding:0}
@@ -3262,7 +3264,7 @@ function abToB64(ab){
    一律下载字节后用 _tplFingerprint（见下方模板解析处，FNV-1a 内容校验和，效果等同 md5 比对）算指纹，
    与页内已缓存指纹一致即视为未改、直接复用解析结果；不一致（文件被改）则更新缓存并重新解析。
    这样既吃到 HTTP 缓存的速度，又靠真实内容比对杜绝「改了不刷新」。 */
-/* 签名图：按姓名到 kaoqing/names/<姓名>.jpg 取图，转成 dataUri 内联进打印页。
+/* 签名图：按姓名到 kaoqing/names/<姓名>.png 取图，无 png 则回退 .jpg（透明底优先），转成 dataUri 内联进打印页。
    必须预先取回转 base64——若只写 <img src="url"> 就立刻 window.print()，
    浏览器常常还没把图加载完就开始打印，印出来是空白/破图。 */
 // 签名图按姓名缓存：值为 { uri, tag }（tag=版本标识，用于发现文件被换过），或 null（已知无图，不再探测）
@@ -3275,17 +3277,24 @@ async function fetchNameImages(names){
     var known = Object.prototype.hasOwnProperty.call(_sigCache, name);
     var cached = _sigCache[name];
     if (known && cached === null) return null;      // 已知该姓名没有签名图 → 不再重复探测
-    var enc = encodeURIComponent(name + '.jpg');
-    var candidates = ['names/' + enc, 'kaoqing/names/' + enc, '../kaoqing/names/' + enc];
+    // 签名图格式：**png 优先，无 png 再回退 jpg**（png 支持透明底，签名叠在表格下时不会糊掉表格线/文字）。
+    // 每个候选目录内先试 .png 再试 .jpg；mime 必须与实际格式一致，否则部分浏览器不认图。
+    var encPng = encodeURIComponent(name + '.png');
+    var encJpg = encodeURIComponent(name + '.jpg');
+    var candidates = [];
+    ['names/', 'kaoqing/names/', '../kaoqing/names/'].forEach(function(d){
+      candidates.push([d + encPng, 'image/png']);
+      candidates.push([d + encJpg, 'image/jpeg']);
+    });
     for (var ci = 0; ci < candidates.length; ci++){
-      var cu; try { cu = new URL(candidates[ci], location.href).toString(); } catch(e){ continue; }
+      var cu; try { cu = new URL(candidates[ci][0], location.href).toString(); } catch(e){ continue; }
       try {
         var r2 = await fetch(cu);                   // 走 HTTP 缓存：未变更时浏览器回放本地缓存（极快），变更才回新内容
         if (!r2.ok) continue;
         var ab = await r2.arrayBuffer();
         var fp = _tplFingerprint(ab);
         if (known && cached && cached.fp && cached.fp === fp) return [name, cached.uri];   // 内容未变 → 复用已转码的 dataUri
-        var dataUri = 'data:image/jpeg;base64,' + abToB64(ab);
+        var dataUri = 'data:' + candidates[ci][1] + ';base64,' + abToB64(ab);
         _sigCache[name] = { uri: dataUri, fp: fp };
         return [name, dataUri];
       } catch(e){ /* 跨域 / 网络错误 → 试下一个候选路径 */ }
