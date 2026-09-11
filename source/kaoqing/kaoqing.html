@@ -542,7 +542,13 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 /* 模板 pageMargins 作为内容内边距(左/右/上/下)写入 .tpl-margin padding，忠实还原 Excel 打印边距（方案1：边距参与绘制，A4 页边距=0） */
 #printArea .tpl-margin{box-sizing:border-box}
 /* 缩放仅「内容超出可打印区时按比例收缩(k<=1)」，不放大、不居中，保持模板边距忠于原设定 */
-#printArea .tpl-scale{transform-origin:top left;position:relative}   /* position:relative —— 供签名独立绘制时作为绝对定位的锚点容器 */
+/* position:relative —— 供签名独立绘制时作为绝对定位的锚点容器。
+   ⚠ isolation:isolate 必须保留：它强制 .tpl-scale 成为「层叠上下文」。
+   原本指望 transform 来建立层叠上下文，但超界收缩循环里的 `_m.querySelector('.tpl-scale')` 取的是
+   .tpl-margin 的**后代**，而 .tpl-scale 是它的**父元素** → 永远取 null → transform 从未被设置
+   （这也是「超界收缩一直空转」的真正原因）。没有层叠上下文时，签名浮层的 z-index:-1 会逃到更外层，
+   被 .a4-sheet / body 的白色背景盖住 → 签名完全看不见。 */
+#printArea .tpl-scale{transform-origin:top left;position:relative;isolation:isolate}
 /* 签名独立绘制：格内 .sig-src 不可见但占位；.sig-overlay 是画完数据后叠加的真实签名（带随机偏移/缩放/旋转）。
    z-index 由「签名层级」配置在绘制时写入：-1=表格之下（表格线框/文字压在签名上，配透明底 png 最佳）、50=表格之上。
    用负层级时，.tpl-scale 有 transform → 已是层叠上下文，负值只会退到它自己的背景之后，不会跑到页面背景后面。 */
