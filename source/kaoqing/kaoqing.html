@@ -484,6 +484,16 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .cfg-check{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--text);cursor:pointer;margin:2px 0}
 .cfg-check input{width:16px;height:16px;accent-color:var(--accent)}
 .cfg-hint{font-size:.78rem;color:var(--text-muted);line-height:1.5;margin-top:6px}
+.cfg-sub{font-size:.82rem;color:var(--text-secondary);margin:14px 0 6px;font-weight:600}
+.cfg-add-line{display:flex;align-items:center;gap:8px;margin:8px 0 4px;flex-wrap:wrap}
+.cfg-fixed-name{width:160px;padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--bg-surface);color:var(--text);outline:none;font-family:inherit}
+.cfg-fixed-name:focus{border-color:var(--accent)}
+.cfg-fixed-mode,.cfg-merge-mode{padding:4px 6px;border:1px solid var(--border);border-radius:8px;font-size:.82rem;background:var(--bg-surface);color:var(--text);outline:none;font-family:inherit}
+.cfg-fixed-line{display:flex;align-items:center;gap:10px;margin:8px 0}
+.cfg-fixed-line .cfg-label{min-width:62px;font-size:.85rem;color:var(--text-secondary)}
+.cfg-empty{font-size:.8rem;color:var(--text-muted);margin:6px 0;font-style:italic}
+.btn-mini{padding:4px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text);font-size:.82rem;cursor:pointer;font-family:inherit}
+.btn-mini:hover{border-color:var(--accent);color:var(--accent)}
 .cfg-textarea{
   width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);border-radius:8px;
   font-size:.85rem;font-family:inherit;background:var(--bg-surface);color:var(--text);outline:none;resize:vertical;line-height:1.5;
@@ -908,6 +918,18 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
       <label class="cfg-check"><input type="checkbox" id="cfgMergeOn">启用相邻行相同内容合并</label>
       <div class="cfg-hint">每列可选四种：<b>不合并</b>（永不合并）／<b>按值自适应合</b>（原「最小合并」：只有「本列 + 它左边所有参与合并的列」都连续相同才合并，内层绝不跨外层）／<b>最小合并</b>（严格：只看参与合并的列——<b>已忽略设了「不合并」的列</b>——整行所有参与列都连续相同才合并，任意一列不同则当前列也不合）／<b>全合并</b>（只看本列自己是否连续相同，可跨过其它列的分界——适合「说明」这类长文本）。</div>
       <div id="cfgMergeRows"></div>
+      <div class="cfg-sub">模板写死的固定值列（无记录字段，如某列固定写「自愿」）：按列的固定文本匹配，命中才参与合并，并取下方配置的模式。</div>
+      <div id="cfgFixedRows"></div>
+      <div class="cfg-add-line">
+        <input type="text" id="cfgFixedAddName" class="cfg-fixed-name" placeholder="输入固定列名，如 自愿">
+        <select id="cfgFixedAddMode" class="cfg-fixed-mode">
+          <option value="">不合并</option>
+          <option value="min">按值自适应合</option>
+          <option value="same">最小合并</option>
+          <option value="full">全合并</option>
+        </select>
+        <button type="button" class="btn-mini" id="cfgFixedAdd">添加</button>
+      </div>
     </div>
 
     <div class="modal-actions">
@@ -2918,6 +2940,24 @@ $('#timeSegs').addEventListener('focusin', function(e){
 $('#cfgBtn').addEventListener('click', openConfig);
 $('#cfgSave').addEventListener('click', saveConfigToWaline);
 $('#cfgClose').addEventListener('click', function(){ $('#cfgMask').hidden = true; });
+// 打印合并：手动添加/删除「模板写死固定列」（按列固定文本匹配，可配置合并模式）
+$('#cfgFixedAdd').addEventListener('click', function(){
+  var nm = ($('#cfgFixedAddName') ? $('#cfgFixedAddName').value : '').trim();
+  var md = $('#cfgFixedAddMode') ? $('#cfgFixedAddMode').value : '';
+  if (!nm){ showAlert('请先输入固定列名'); return; }
+  mergeWork.fixedCols = mergeWork.fixedCols || [];
+  if (mergeWork.fixedCols.some(function(x){ return x.name === nm; })){ showAlert('已存在同名固定列：' + nm); return; }
+  mergeWork.fixedCols.push({ name: nm, mode: (md === 'min' || md === 'full' || md === 'same') ? md : '' });
+  renderFixedRows();
+  var inp = $('#cfgFixedAddName'); if (inp) inp.value = '';
+});
+$('#cfgFixedRows').addEventListener('click', function(e){
+  var btn = e.target.closest && e.target.closest('.cfg-fixed-del');
+  if (!btn) return;
+  var nm = btn.getAttribute('data-name');
+  mergeWork.fixedCols = (mergeWork.fixedCols || []).filter(function(x){ return x.name !== nm; });
+  renderFixedRows();
+});
 // 休假类型两个列表框：互移与新增
 $('#ltAddDirect').addEventListener('click', function(){ var i = $('#cfgLtNew'); ltAddArr('direct', i ? i.value : ''); if (i) i.value = ''; });
 $('#ltAddOther').addEventListener('click', function(){ var i = $('#cfgLtNew'); ltAddArr('other', i ? i.value : ''); if (i) i.value = ''; });
@@ -4433,7 +4473,27 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     var res = [];                    // res[i] = { cNum: n }
     for (var i = 0; i < perPage; i++) res.push({});
     var anyField = false;
-    var mcOn = !!(CONFIG.mergeCfg && CONFIG.mergeCfg.on);   // 合并总开关：写死固定值列在开启时默认「全合并」参与
+    var mcOn = !!(CONFIG.mergeCfg && CONFIG.mergeCfg.on);   // 合并总开关
+    // 模板写死的固定值列（无记录字段）：从配置 fixedCols 按「列的固定文本」匹配，命中才参与合并、且用其配置模式（不再默认全合并）
+    var fixedArr = (CONFIG.mergeCfg && CONFIG.mergeCfg.fixedCols)
+      ? CONFIG.mergeCfg.fixedCols.filter(function(x){ return x && x.name && (x.mode === 'min' || x.mode === 'full' || x.mode === 'same'); })
+      : [];
+    function _cellPlainText(c){
+      if (!c) return '';
+      var t = c.text || '';
+      if (c.runs && c.runs.length) t = c.runs.map(function(r){ return r.text || ''; }).join('');
+      return t.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    }
+    function _fixedModeOf(d3, cn){
+      if (!mcOn || !fixedArr.length) return '';
+      var c = cellMapByDr[d3] && cellMapByDr[d3][cn];
+      var txt = _cellPlainText(c);
+      if (!txt) return '';
+      for (var z = 0; z < fixedArr.length; z++){
+        if (_cellPlainText({ text: fixedArr[z].name }) === txt) return fixedArr[z].mode;
+      }
+      return '';
+    }
     // 先探测本页是否有任何列需要合并
     var fieldsByDr = [];             // fieldsByDr[d][cNum] = 字段名 或 ''
     var cellMapByDr = [];            // cellMapByDr[d] = { cNum: cell对象 }
@@ -4447,10 +4507,13 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
         var f = cellField(c);
         if (f) fmap[cn] = f;
         cmap[cn] = c;
-        if (f && mergeModeOf(f)) anyField = true;
-        else if (!f && mcOn) anyField = true;   // 模板写死的固定值列：合并开启时也要参与合并（如某列固定写「自愿」）
       });
       fieldsByDr.push(fmap); cellMapByDr.push(cmap);
+      Object.keys(cmap).forEach(function(k){
+        var cn = parseInt(k, 10);
+        if (fmap[cn]){ if (mergeModeOf(fmap[cn])) anyField = true; }
+        else if (_fixedModeOf(d, cn)) anyField = true;   // 命中注册固定列 → 参与合并
+      });
     }
     if (!anyField) return res;
     // 渲染所有实例的单元格（纵向比较用）
@@ -4469,11 +4532,11 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     // 逐个「模板数据行」、逐列计算合并区间
     for (var d3 = 0; d3 < dataRows.length; d3++){
       var fmap2 = fieldsByDr[d3];
-      // 某列的合并模式：有字段且配置了模式→用配置；模板写死的固定值列（无字段）→合并开启时默认「全合并」（自身合且不卡其它列）
+      // 某列的合并模式：有字段且配置了模式→用配置；模板写死的固定值列（无字段）→按「列固定文本」匹配 fixedCols，命中用其配置模式，否则不参与
       function modeOfCn(cn){
         var fk = fmap2[cn];
         if (fk) return mergeModeOf(fk);
-        return mcOn ? 'full' : '';
+        return _fixedModeOf(d3, cn);
       }
       // 参与合并的列，按列号升序（左→右）即层次顺序
       var enabled = [];
@@ -6504,9 +6567,9 @@ async function openConfig(){
   });
   safeCfgBlock('打印合并', function(){
     var mg = CONFIG.mergeCfg || {};
-    mergeWork = { on: !!mg.on, cols: Object.assign({}, mg.cols || {}) };
+    mergeWork = { on: !!mg.on, cols: Object.assign({}, mg.cols || {}), fixedCols: ((mg.fixedCols || []).map(function(x){ return { name: x.name, mode: x.mode }; })) };
     var mo = $('#cfgMergeOn'); if (mo) mo.checked = !!mergeWork.on;
-    renderMergeRows();
+    renderMergeRows(); renderFixedRows();
   });
   cfgPanelReady = true;   // 完整回填成功 → 保存时可信任表单值
 }
@@ -6572,7 +6635,7 @@ function readSortCfgForm(){
 }
 /* ---------- 打印合并（相邻行相同内容）面板 ---------- */
 var MERGE_FIELDS = ['姓名','日期','时段','小时','说明','类别','单据号'];   // 可参与合并的记录字段（列表式模板常见字段）
-var mergeWork = { on:false, cols:{} };
+var mergeWork = { on:false, cols:{}, fixedCols:[] };
 function renderMergeRows(){
   var box = $('#cfgMergeRows'); if (!box) return;
   var html = '';
@@ -6590,6 +6653,26 @@ function renderMergeRows(){
   });
   box.innerHTML = html;
 }
+function renderFixedRows(){
+  var box = $('#cfgFixedRows'); if (!box) return;
+  var html = '';
+  (mergeWork.fixedCols || []).forEach(function(it){
+    var v = it.mode || '';
+    var nm = (it.name || '').replace(/"/g, '&quot;');
+    html += '<div class="cfg-fixed-line" data-name="' + nm + '">'
+      + '<span class="cfg-label">' + (it.name || '') + '</span>'
+      + '<select class="cfg-fixed-mode" data-name="' + nm + '">'
+      + '<option value=""' + (v === '' ? ' selected' : '') + '>不合并</option>'
+      + '<option value="min"' + (v === 'min' ? ' selected' : '') + '>按值自适应合</option>'
+      + '<option value="same"' + (v === 'same' ? ' selected' : '') + '>最小合并</option>'
+      + '<option value="full"' + (v === 'full' ? ' selected' : '') + '>全合并</option>'
+      + '</select>'
+      + '<button type="button" class="btn-mini cfg-fixed-del" data-name="' + nm + '">删除</button>'
+      + '</div>';
+  });
+  if (!html) html = '<div class="cfg-empty">（尚未添加固定列）</div>';
+  box.innerHTML = html;
+}
 function syncMergeWork(){
   var cols = {};
   document.querySelectorAll('#cfgMergeRows .cfg-merge-mode').forEach(function(sel){
@@ -6597,13 +6680,22 @@ function syncMergeWork(){
     if (v === 'min' || v === 'full' || v === 'same') cols[f] = v;
   });
   mergeWork.cols = cols;
+  var fc = [];
+  document.querySelectorAll('#cfgFixedRows .cfg-fixed-mode').forEach(function(sel){
+    var name = sel.getAttribute('data-name'), v = sel.value;
+    if (name) fc.push({ name: name, mode: (v === 'min' || v === 'full' || v === 'same') ? v : '' });
+  });
+  mergeWork.fixedCols = fc;
   mergeWork.on = !!($('#cfgMergeOn') && $('#cfgMergeOn').checked);
 }
 function readMergeCfgForm(){
   var box = $('#cfgMergeRows');
-  if (!box || !box.querySelector('.cfg-merge-mode')) return { on:!!(CONFIG.mergeCfg && CONFIG.mergeCfg.on), cols:Object.assign({}, (CONFIG.mergeCfg && CONFIG.mergeCfg.cols) || {}) };
+  if (!box || !box.querySelector('.cfg-merge-mode')){
+    var fc0 = (CONFIG.mergeCfg && CONFIG.mergeCfg.fixedCols) || [];
+    return { on:!!(CONFIG.mergeCfg && CONFIG.mergeCfg.on), cols:Object.assign({}, (CONFIG.mergeCfg && CONFIG.mergeCfg.cols) || {}), fixedCols: fc0.map(function(x){ return { name:x.name, mode:x.mode }; }) };
+  }
   syncMergeWork();
-  return { on:!!mergeWork.on, cols:Object.assign({}, mergeWork.cols) };
+  return { on:!!mergeWork.on, cols:Object.assign({}, mergeWork.cols), fixedCols: (mergeWork.fixedCols || []).map(function(x){ return { name:x.name, mode:x.mode }; }) };
 }
 async function saveConfigToWaline(){
   if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
