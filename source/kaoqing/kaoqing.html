@@ -4562,10 +4562,27 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       });
       enabled.sort(function(a, b){ return a - b; });
       if (!enabled.length) continue;
-      // min 模式的「左侧约束列」只算 min 列本身：full 列不参与约束（full 列可跨过其它列，
-      //   若把它也算进左侧约束，会让左侧的 full 列（如姓名）卡死右侧所有 min 列 → 最小合并整片失效）。
-      // 故单独抽出 minOrder（仅含 min 列，按列号升序），min 列只受「左侧所有 min 列」约束，天然不跨外层。
+      // min 模式（按值自适应合）：嵌套顺序按「多级排序级别」而非物理左→右——谁排序在前（sortCfg 下标越小）谁越外层、越优先合并。
+      //   full 列不参与约束；min 列只受「排序级别更高（或同级且更靠左）的 min 列」约束，天然不跨外层。
+      //   这正是当初引入多级排序的本意：排序级别即合并分组优先级。
       var minOrder = enabled.filter(function(cn){ return modeOfCn(cn) === 'min'; });
+      // 按排序级别重排 min 列：排序在前的列越优先（越外层）；未参与排序的 min 列（含固定列）排最后，同级按列号左→右兜底。
+      (function(){
+        var _sc = (CONFIG.sortCfg || []);
+        function _lv(cn){
+          var fk = fmap2[cn];                       // 字段键（中文），固定列无字段
+          if (!fk) return Infinity;                  // 固定列：不参与排序 → 最低优先级
+          var sk = MERGE_FIELD_TO_SORT[fk];
+          if (!sk) return Infinity;
+          for (var s = 0; s < _sc.length; s++) if (_sc[s].key === sk) return s;
+          return Infinity;
+        }
+        minOrder.sort(function(a, b){
+          var la = _lv(a), lb = _lv(b);
+          if (la !== lb) return la - lb;
+          return a - b;                              // 同级 / 都未排序：左→右兜底
+        });
+      })();
       // 最小合并（严格 same）的约束列：所有参与列中「除 full 外」的列（enabled 已天然忽略不合并列），即 min + same 列（写死固定值列默认 full，不卡 same）
       var strictOrder = enabled.filter(function(cn){ return modeOfCn(cn) !== 'full'; });
       // 逐实例的该列 HTML
@@ -4587,7 +4604,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
             if (mode === 'full'){
               brk = (valAt(j, cn) !== valAt(j - 1, cn));
             } else if (mode === 'min'){
-              // 按值自适应合（原「最小合并」）：仅受「左侧所有 min 列」约束，full 列不参与
+              // 按值自适应合：仅受「排序级别更高（或同级更靠左）的 min 列」约束，full 列不参与
               var mi = minOrder.indexOf(cn);
               for (var q2 = 0; q2 <= mi; q2++){
                 if (valAt(j, minOrder[q2]) !== valAt(j - 1, minOrder[q2])){ brk = true; break; }
@@ -6653,6 +6670,9 @@ function readSortCfgForm(){
 }
 /* ---------- 打印合并（相邻行相同内容）面板 ---------- */
 var MERGE_FIELDS = ['姓名','日期','时段','小时','说明','类别','单据号'];   // 可参与合并的记录字段（列表式模板常见字段）
+// 中文字段键 → 多级排序短键（与 SORT_COLS 对齐；姓名↔who、单据号↔idx 是特例）。
+// 用途：让「按值自适应合(min)」的嵌套顺序跟随排序级别，而非物理左→右。
+var MERGE_FIELD_TO_SORT = { '姓名':'who', '日期':'date', '时段':'time', '小时':'hours', '说明':'note', '类别':'cat', '单据号':'idx' };
 var mergeWork = { on:false, cols:{}, fixedCols:[] };
 function renderMergeRows(){
   var box = $('#cfgMergeRows'); if (!box) return;
