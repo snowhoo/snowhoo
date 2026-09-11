@@ -4449,13 +4449,23 @@ async function printRecordsViaTemplate(rs){
     // 再实测每个占位签名(.sig-src)在本页的位置，按配置做「每次打印随机」的偏移/缩放/旋转，叠加到 .tpl-scale 上
     // （不进 td，避免被 z-index:1 的格子盖住）。失败则把占位图恢复可见 → 自动退回原来的单元格内嵌显示。
     if (CONFIG.sigCfg && CONFIG.sigCfg.on){
-      try { await waitImagesReady(pa); } catch(e){}
+      // ⚠ 关键：#printArea 平时是 display:none —— 隐藏元素的 getBoundingClientRect() 全为 0，
+      //    直接测量量不到任何签名位置（表现就是「开关开了却没效果」，并自动退回内嵌显示）。
+      //    故测量前把它临时切成「参与布局但不可见、且移出屏幕」的状态，画完立刻还原原内联样式。
+      //    用 visibility:hidden（而非保持 display:none）是因为它仍生成布局盒，坐标才量得到。
+      var _oldStyle = pa.getAttribute('style') || '';
+      pa.style.cssText = (_oldStyle ? _oldStyle + ';' : '')
+        + 'display:block;visibility:hidden;position:absolute;left:-10000px;top:0;width:210mm';
       try {
+        try { await waitImagesReady(pa); } catch(e){}
         var _drew = drawSignatures(pa);
+        if (_drew) console.log('[kaoqing] 签名独立绘制：' + _drew + ' 个');
         if (!_drew){ showSigSrc(pa); }   // 一个都没画出来（异常）→ 恢复内嵌显示，保证签名不丢
       } catch(e){
         console.warn('[kaoqing] 签名独立绘制失败，回退内嵌显示', e && e.message ? e.message : e);
         showSigSrc(pa);
+      } finally {
+        if (_oldStyle) pa.setAttribute('style', _oldStyle); else pa.removeAttribute('style');
       }
     }
     document.body.classList.add('printing-template');
