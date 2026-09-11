@@ -189,7 +189,9 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .chip.disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
 /* 修改模式：类别/组别逐项锁定（避免改类别导致 docNo 前缀与类别不匹配、串行号错乱） */
 .chip.locked{opacity:.55;cursor:not-allowed;pointer-events:none;background:#ececec;color:#999;border-color:#ddd}
-/* 类别选中双色：加班=绿，其它=橙 */
+/* 类别选中双色（2026-09-11 用户自行改色）：加班=深紫 #430764、请假=深绿 #0c491e。
+   刻意避开「添加=绿 #16a34a / 修改=橙 #f97316」的按钮色，避免两者混淆。
+   ⚠ 类名 c-green / c-orange 只是历史命名（原为绿/橙），为兼容沿用，与实际颜色已无关，勿按名猜色。 */
 .chip.on.c-green{background:#4307649e;border-color:#43076400;color:#fff}
 .chip.on.c-orange{background:#0c491e9e;border-color:#0c491e00;color:#fff}
 /* 人员卡片编辑态（长按进入）：右上角 × 从缓存删除 / 拖动调整顺序 */
@@ -311,6 +313,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .pv-i{flex:0 0 0em;color:var(--text-muted);font-variant-numeric:tabular-nums}
 .pv-n{flex:0 0 3.5em;color:var(--text);font-weight:600;white-space:nowrap}
 .pv-c{color:var(--accent)}
+/* 待保存预览的类别色：加班=深紫、请假=深绿（与类别芯片一致；pv-green/pv-orange 同为历史命名） */
 .pv-c.pv-green{color:#4307649e}
 .pv-c.pv-orange{color:#0c491e9c}
 .pv-d,.pv-t,.pv-h{color:var(--text-secondary);font-variant-numeric:tabular-nums}
@@ -391,7 +394,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .rec-table .c-cat{white-space:nowrap}
 .rec-table .c-cat.c-green{}
 .rec-table .c-cat.c-orange{}
-/* 单据号：整串按类别着色（加班=绿、请假=橙，与「类别」列一致）；首字母不再单独放大 */
+/* 单据号：整串按类别着色（加班=深紫、请假=深绿，与「类别」列一致）；首字母不再单独放大 */
 .rec-table .c-idx.c-green{color:#430764}
 .rec-table .c-idx.c-orange{color:#0c491e}
 .rec-table .c-time,.rec-table .c-hours{font-variant-numeric:tabular-nums;min-width: 36}
@@ -1341,6 +1344,7 @@ function renderPeople(){
 function makeCatChip(c){
   var b = document.createElement('button');
   var isOn = curCat && curCat.id === c.id;
+  // 类别色：加班 → c-green（深紫）、请假 → c-orange（深绿）。类名是历史命名，不代表实际颜色，见 CSS 注释
   var onCls = isOn ? (' on ' + (isOtCatId(c.id) ? 'c-green' : 'c-orange')) : '';
   b.className = 'chip' + onCls;
   // 修改模式类别锁定粒度：
@@ -1872,7 +1876,7 @@ function refresh(){
   }
 
   /* 预览：分条 —— 每人 × 每行 = 一条记录（序号 | 姓名 | 类别 | 日期 | 时段 | 本行小时 | 说明） */
-  var catCls = isOtCatId(curCat.id) ? 'pv-green' : 'pv-orange';
+  var catCls = isOtCatId(curCat.id) ? 'pv-green' : 'pv-orange';   // 加班=深紫 / 请假=深绿（类名历史命名，见 CSS）
   var rows = [], idx = 0;
   Array.from(selPeople).forEach(function(n){
     timeSegs.forEach(function(sg){
@@ -2303,7 +2307,7 @@ function renderRecords(){
       }
     }
     var docNoStr = String(r.docNo != null ? r.docNo : (i + 1));
-    html += '<td class="c-idx ' + (isOt ? 'c-green' : 'c-orange') + '">' + esc(docNoStr) + '</td>' +   // # = 单据号（加班J/请假G，整串按类别着色：加班绿、请假橙）；旧记录无 docNo 时回退录入序号
+    html += '<td class="c-idx ' + (isOt ? 'c-green' : 'c-orange') + '">' + esc(docNoStr) + '</td>' +   // # = 单据号（加班J/请假G，整串按类别着色：加班=深紫、请假=深绿；c-green/c-orange 为历史类名，不代表颜色）；旧记录无 docNo 时回退录入序号
       '<td class="c-who">' + r.people.map(esc).join('、') + '</td>' +
       '<td class="c-date">' + recDateCellHtml(r) + '</td>' +
       '<td class="c-time">' + esc(fmtSpan(span)) + '</td>' +
