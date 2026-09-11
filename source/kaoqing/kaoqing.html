@@ -5035,8 +5035,17 @@ $('#records').addEventListener('click', async function(e){
 });
 /* ---------- 表头排序：点击弹出「层级菜单」（①…⑧，1 级优先级最高） ----------
    选中某级 → 该列移到该层级；若该列本就在此级 → 切换升/降。菜单末尾可取消该列排序。 */
+var _sortMenuBtn = null;   // 记录弹出排序菜单时所在的表头按钮，便于改完排序后重绘刷新高亮
 function closeSortMenu(){
   var m = $('#sortMenu'); if (m) m.remove();
+  _sortMenuBtn = null;
+  document.removeEventListener('click', _sortMenuOutsideClick);   // 一并移除外部点击关闭监听，避免残留监听器秒删下次重开的菜单
+}
+/* 点击菜单外部任意处关闭；菜单内部点击由各 item 的 stopPropagation 拦截不会触发；点别的表头由 openSortMenu 接管重绘 */
+function _sortMenuOutsideClick(e){
+  if (e.target.closest && e.target.closest('#sortMenu')) return;
+  if (e.target.closest && e.target.closest('th[data-sort]')) return;   // 点其它表头：不在此关，交给 openSortMenu 重绘
+  closeSortMenu();
 }
 /* 恢复排序默认值：用「后台配置」(CONFIG.sortCfg) 覆盖前端临时排序与本机缓存，记录表显示与打印都回到后台设定 */
 function resetSortToConfigDefault(){
@@ -5047,6 +5056,7 @@ function resetSortToConfigDefault(){
 }
 function openSortMenu(btn, key){
   closeSortMenu();
+  _sortMenuBtn = btn;
   var cfg = getSortCfg(), curLv = sortLevelOf(key);
   // 固定值列（模板写死列，如『自愿』）不参与记录表排序，仅在合并嵌套里起作用；
   //   为免在排序菜单里显示它让人误以为能排记录表，隐藏其占用的级别行，其余级别圈号自动递进。
@@ -5091,7 +5101,7 @@ function openSortMenu(btn, key){
   if (top + estH > window.innerHeight) top = Math.max(8, br.top - estH - 4);
   menu.style.left = left + 'px';
   menu.style.top  = top + 'px';
-  setTimeout(function(){ document.addEventListener('click', closeSortMenu, { once:true }); }, 0);
+  setTimeout(function(){ document.addEventListener('click', _sortMenuOutsideClick); }, 0);
 }
 /* 把某列设为第 lv 级（原本就在该级 → 切换升/降） */
 function setSortLevel(key, lv){
@@ -5100,10 +5110,12 @@ function setSortLevel(key, lv){
   var dir = (wasLv === lv && wasDir === 'asc') ? 'desc' : 'asc';
   rest.splice(Math.min(lv - 1, rest.length), 0, { key:key, dir:dir });
   applySortCfg(rest);
+  if (_sortMenuBtn) openSortMenu(_sortMenuBtn, key);   // 重绘菜单刷新高亮，便于继续设其它级别
 }
 /* 取消某列的排序 */
 function clearSortKey(key){
   applySortCfg(getSortCfg().filter(function(x){ return x.key !== key; }));
+  if (_sortMenuBtn) openSortMenu(_sortMenuBtn, key);   // 重绘菜单刷新高亮
 }
 // 表头点击 → 弹出层级菜单
 $('#records').addEventListener('click', function(e){
