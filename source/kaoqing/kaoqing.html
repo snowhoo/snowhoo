@@ -204,10 +204,13 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .chip.person.dragging{opacity:.5;cursor:grabbing}
 /* 末尾「同步」卡片：与人员卡片同尺寸，连击从 Waline 同步 */
 .chip-sync{border-style:dashed;color:var(--text-muted);font-weight:500}
-/* 修改模式：锁定人员（不可改）—— 仅显示当前记录人员，灰色禁止 */
-.chip.person.locked{opacity:.55;cursor:not-allowed;background:#ececec;color:#999;border-color:#ddd}
+/* 修改模式：锁定人员（不可改）—— 与「考勤类型」锁定同款：全部人员照常显示并灰化禁用 */
+.chip.person.locked,.chip-sync.locked{opacity:.55;cursor:not-allowed;pointer-events:none;background:#ececec;color:#999;border-color:#ddd}
+/* 本记录人员照旧高亮（on），只是禁用交互 —— 让修改时能一眼看出这条记录是谁的 */
+.chip.person.on.locked{opacity:1;background:var(--accent);border-color:var(--accent);color:#fff}
 .head-actions{display:flex;align-items:center;gap:12px}
 .link{border:none;background:transparent;color:var(--accent);font-size:.82rem;cursor:pointer;padding:0}
+.link:disabled{color:#bbb;cursor:not-allowed}   /* 修改模式：人员锁定 →「全选 / 清空」一并禁用 */
 .people-empty{color:var(--text-muted);font-size:.82rem;margin:0}
 
 /* ---- 区域二：类别（复用 .chips / .chip，与人员选择同款式样） ---- */
@@ -480,7 +483,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
   .time-row .fDate{width:150px}
   .time-row .fEndDate{width:150px}
   .time-row .fSegNote{flex:1 1 100%}   /* 窄屏备注占满整行，避免挤压时段控件 */
-  .time-row .row-break{display:block;flex-basis:100%;height:0}   /* 窄屏：请假行「整天」之后换行，起日期另起一行 */
+  .time-row .row-break{display:block;flex-basis:100%;height:0}   /* 窄屏：请假/加班行均「整天」之后换行，起日期另起一行 */
   .time-row .fTime {width: 72px}
 }
 @media (max-width:640px){
@@ -628,7 +631,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
           <!-- 每行 = 一条完整记录：日期 | 整天 | 起 | 至 | 止 | 备注事由 | 本行小时 | +/−（最多 5 行） -->
           <div class="sub-row" id="rangeBlock" hidden>
             <div class="time-segs" id="timeSegs"></div>
-            <!-- 请假单「代理人」：行内置于「整天」之后；点击弹出框从当前考勤组别人员中选择；不选则保存为空 -->
+            <!-- 请假单「代理人」：行内置于「备注事由」之前；点击弹出框从当前考勤组别人员中选择；不选则保存为空 -->
             <button type="button" id="proxyBtn" class="proxy-inline-btn" hidden>可选代理人</button>
           </div>
 
@@ -1108,6 +1111,7 @@ var statusLoadingNow = {};   // 各状态是否在途拉取（防重入）
 var warmupPromise = null;    // 当前预热轮次的 Promise（复用同一轮，避免重复全量拉）
 var archiveReqPending = false;   // 是否存在待处理的「归档并汇总」请求（控制 #archiveBtn 禁用态）
 var editIndex = null;   // 修改模式：正在编辑的记录下标（null=新增模式）
+var editGroupBak = null;  // 修改模式：进入修改前的考勤组别（退出修改时还原，保证返回后视图与进入前完全一致）
 var viewMode   = 'edit';   // 'edit'=未归档(Waline 可改删)；'view'=归档(R2 只读，不能修改/删除)
 var curProxy   = '';       // 请假单「代理人」：表单级选择（仅请假有效），保存时写入记录；不选则为空
 var sortState  = { key: 'idx', dir: 'desc' };   // 表格表头排序状态：默认按「#号(docNo)」从新到旧；key=列标识，dir=asc/desc（点一次正序、再点反序）
@@ -1270,57 +1274,67 @@ function renderPeople(){
   var list = peopleOfGroup();
   box.innerHTML = '';
   box.classList.toggle('people-edit', peopleEdit);     // 编辑态（× / 拖动）在重渲染后保持
-  // 修改模式：人员不可改 → 仅渲染当前记录的姓名（灰色禁止），隐藏其它人员与末尾「同步」卡片
-  if (editIndex !== null){
-    var locked = (records[editIndex] && records[editIndex].people) || [];
-    if (!locked.length){
-      box.innerHTML = '<p class="people-empty">（修改模式：该记录无人员）</p>';
-    } else {
-      locked.forEach(function(n){
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'chip person locked';
-        b.textContent = n;
-        b.disabled = true;
-        box.appendChild(b);
-      });
-    }
-    return;
+  // 修改模式：人员锁定 —— 方式与「考勤类型」锁定保持一致：
+  //   · 不隐藏任何人员，整组照常全部显示；
+  //   · 本记录人员（selPeople）仍高亮 on；
+  //   · 全部人员芯片禁用（.locked：灰化 + 禁止点击），末尾「同步」卡片与「全选/清空」一并禁用。
+  var lockAll = (editIndex !== null);
+  // 显示人员以「当前缓存（peopleOfGroup()）」为准，正常情况下一个都不补。
+  // 唯一例外：本记录人员不在当前列表里（跨组 / 已从人员表删除），才把他单独追加到末尾，保证可见且高亮。
+  // ⚠ 这里只往本地 list 副本追加（peopleOfGroup() 返回的是 slice()/filter() 的新数组），
+  //   绝不回写 PEOPLE / PEOPLE_FULL / localStorage 人员缓存 —— 修改结束返回后，原先的人员显示不受任何影响。
+  if (lockAll){
+    var have = {};
+    list.forEach(function(p){ have[p.n] = 1; });
+    ((records[editIndex] && records[editIndex].people) || []).forEach(function(n){
+      if (!have[n]){ list.push({ n: n }); have[n] = 1; }   // 仅补「当前列表里没有」的本记录人员
+    });
   }
   if (!list.length){
-    box.innerHTML = '<p class="people-empty">该组别暂无人员</p>';
+    box.innerHTML = lockAll
+      ? '<p class="people-empty">（修改模式：该记录无人员）</p>'
+      : '<p class="people-empty">该组别暂无人员</p>';
   } else {
     list.forEach(function(p){
       var b = document.createElement('button');
       b.type = 'button';
-      b.className = 'chip person' + (selPeople.has(p.n) ? ' on' : '');
+      b.className = 'chip person' + (selPeople.has(p.n) ? ' on' : '') + (lockAll ? ' locked' : '');
       b.setAttribute('data-name', p.n);
       b.textContent = p.n;
-      var x = document.createElement('span');           // 右上角 ×：仅编辑态显示，点击从缓存删除
-      x.className = 'chip-del';
-      x.textContent = '×';
-      x.title = '从缓存中删除';
-      b.appendChild(x);
-      b.addEventListener('click', function(){
-        if (peopleEdit) return;                         // 编辑态：点卡片本体不切换选中
-        if (selPeople.has(p.n)) selPeople.delete(p.n); else selPeople.add(p.n);
-        renderPeople();
-        applyView();
-      });
-      x.addEventListener('click', function(e){
-        e.stopPropagation();
-        deletePersonFromCache(p.n);
-      });
+      if (lockAll){
+        b.disabled = true;                              // 修改模式：禁用（与考勤类型 .chip.locked 同款表现）
+      } else {
+        var x = document.createElement('span');         // 右上角 ×：仅编辑态显示，点击从缓存删除
+        x.className = 'chip-del';
+        x.textContent = '×';
+        x.title = '从缓存中删除';
+        b.appendChild(x);
+        b.addEventListener('click', function(){
+          if (peopleEdit) return;                       // 编辑态：点卡片本体不切换选中
+          if (selPeople.has(p.n)) selPeople.delete(p.n); else selPeople.add(p.n);
+          renderPeople();
+          applyView();
+        });
+        x.addEventListener('click', function(e){
+          e.stopPropagation();
+          deletePersonFromCache(p.n);
+        });
+      }
       box.appendChild(b);
     });
   }
-  // 所有人员卡片之后：同尺寸「同步」卡片，连击从 Waline 同步人员到缓存
+  // 所有人员卡片之后：同尺寸「同步」卡片，连击从 Waline 同步人员到缓存（修改模式一并禁用）
   var sync = document.createElement('button');
   sync.type = 'button';
-  sync.className = 'chip chip-sync';
+  sync.className = 'chip chip-sync' + (lockAll ? ' locked' : '');
   sync.textContent = '同步';
   sync.title = '连击（快速点两次）从 Waline 同步人员到缓存';
+  sync.disabled = lockAll;
   box.appendChild(sync);
+  // 「全选 / 清空」随人员锁定一并禁用：否则修改模式下会把无关人员点成高亮，与锁定语义冲突
+  var sa = $('#selAll'), sn = $('#selNone');
+  if (sa) sa.disabled = lockAll;
+  if (sn) sn.disabled = lockAll;
 }
 
 /* ---------- 区域二：类别 ---------- */
@@ -1487,25 +1501,28 @@ function renderTimeSegs(){
     var h = document.createElement('span'); h.className = 'segHours'; h.textContent = segHoursText(seg) || '？？小时';
     var note = document.createElement('input'); note.type = 'text'; note.className = 'fSegNote'; note.placeholder = '备注事由…'; note.value = seg.note || '';
 
-    // 换行占位：仅请假行插入，位于「整天」之后（大屏隐藏，小屏由 CSS 撑成整行 → 起日期另起一行）
+    // 换行占位：请假 / 加班行都插入，位于「整天」之后
+    // （大屏 .row-break 隐藏 → 一行排完不变；小屏由 CSS 撑成整行 → 起日期另起一行）
     var brk = document.createElement('span'); brk.className = 'row-break'; brk.setAttribute('aria-hidden', 'true');
 
     if (isLeave){
-      // 请假：统一一行，不区分单日/跨天 = 多天 + 整天 + 起日期 起时间 [至/跨天分隔] 至日期 至时间 + 备注
+      // 请假：统一一行，不区分单日/跨天 = 多天 + 整天 + 起日期 起时间 [至/跨天分隔] 至日期 至时间 + 代理人 + 备注
       row.appendChild(mdWrap);     // 多天：默认不勾选；勾选才显示「至日期」填写框
       row.appendChild(adWrap);
-      var _pb = document.getElementById('proxyBtn');   // 代理人：行内置于「整天」之后
-      if (_pb){ _pb.hidden = false; _pb.textContent = curProxy ? curProxy : '可选代理人'; row.appendChild(_pb); }
       row.appendChild(brk);
       row.appendChild(d); row.appendChild(s);
       row.appendChild(dl);
       row.appendChild(de); row.appendChild(e);
-      row.appendChild(h); row.appendChild(note);
+      row.appendChild(h);
+      var _pb = document.getElementById('proxyBtn');   // 代理人：置于「备注事由」之前
+      if (_pb){ _pb.hidden = false; _pb.textContent = curProxy ? curProxy : '可选代理人'; row.appendChild(_pb); }
+      row.appendChild(note);
     } else {
       // 加班：多天(前) + 整天(最前) + 起日期 [至] 至日期 + 起时间 ~ 至时间 + 小时 + 备注
       // 至日期 与「至」分隔符 仅在勾选多天时显示；每行=一条记录，多天展开为逐日多条
       var dsep = document.createElement('span'); dsep.className = 'sep dateToSep'; dsep.textContent = '至'; dsep.style.display = isMulti ? '' : 'none';
       row.appendChild(mdWrap); row.appendChild(adWrap);   // 多天(前) + 整天(移到最前)
+      row.appendChild(brk);                               // 换行占位：小屏「整天」之后换行（大屏隐藏，不受影响）
       row.appendChild(d);                                 // 起日期
       row.appendChild(dsep);                              // 至（仅多天时显示）
       row.appendChild(de);                                // 至日期（仅多天时显示；提交展开为逐日单条）
@@ -2324,9 +2341,17 @@ function refreshSaveBtn(){
   }
   document.body.classList.toggle('edit-mode', edit);   // 步骤圈字：添加=绿 / 修改=橙
 }
+/* 退出修改：还原进入修改前的考勤组别（修改期间组别随人员一并锁定，退出后回到进入前的视图）。
+   原组别已不存在（人员被删空导致组别消失）时回退「全部」。无备份（新增模式）则不动。 */
+function restoreEditGroup(){
+  if (editGroupBak === null) return;
+  curGroup = (GROUPS.indexOf(editGroupBak) >= 0) ? editGroupBak : GROUPS[0];
+  editGroupBak = null;
+}
 /* 取消：恢复初始界面（新增/修改共用）—— 清空人员、类别、内容，退出修改模式 */
 function resetForm(){
   editIndex = null;
+  restoreEditGroup();      // 还原进入修改前的组别
   renderGroups();          // 退出锁定态 → 组别下拉重新可切换
   selPeople.clear();
   curCat = null;
@@ -2455,6 +2480,7 @@ async function submit(){
       if (ok){
         // 保存成功 → 整体归位到默认界面（清空人员/类别/内容，回到「添加」绿按钮），再回读刷新表格
         editIndex = null; refreshSaveBtn();
+        restoreEditGroup();      // 还原进入修改前的组别（返回后视图与进入前一致）
         renderGroups();          // 组别下拉重新可切换（退出锁定态）
         selPeople.clear(); renderPeople();
         curCat = null; applyView();
@@ -2571,6 +2597,8 @@ async function syncRecords(){
 function startEdit(i){
   var r = records[i];
   if (!r) return;
+  // 首次进入修改才备份组别；修改途中再点另一条记录时不覆盖，保证最终还原的是「进入修改前」的组别
+  if (editIndex === null) editGroupBak = curGroup;
   editIndex = i;
   // 组别：锁定到本记录人员所属组（找不到则回退「全部」）。人员已锁，组别一并锁——修改模式整组不可切。
   var firstP = (r.people && r.people[0]) || '';
@@ -2613,10 +2641,12 @@ $('#groupSel').addEventListener('change', function(){
   if (btn) btn.addEventListener('click', function(){ openProxyModal(); });
 })();
 $('#selAll').addEventListener('click', function(){
+  if (editIndex !== null) return;   // 修改模式：人员锁定，不允许改选
   peopleOfGroup().forEach(function(p){ selPeople.add(p.n); });
   renderPeople(); applyView();
 });
 $('#selNone').addEventListener('click', function(){
+  if (editIndex !== null) return;   // 修改模式：人员锁定，不允许清空
   peopleOfGroup().forEach(function(p){ selPeople.delete(p.n); });
   renderPeople(); applyView();
 });
