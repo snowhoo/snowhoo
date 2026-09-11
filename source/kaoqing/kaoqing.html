@@ -466,6 +466,12 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .other-item.on,.other-item.on:hover{background:#0c491e9e;color:#fff;font-weight:600}   /* 当前选中项高亮 */
 .other-item .ok{font-size:.75rem;opacity:.9}
 .other-empty{padding:9px 10px;font-size:.8rem;color:var(--text-muted)}
+/* 记录表表头「排序层级」菜单：①…⑧，1 级优先级最高 */
+.sort-menu{position:fixed;z-index:2000;min-width:170px;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:4px;max-height:320px;overflow:auto}
+.sort-item{padding:6px 10px;border-radius:7px;cursor:pointer;font-size:.85rem;color:var(--text);white-space:nowrap}
+.sort-item:hover{background:var(--accent-soft)}
+.sort-item.on,.sort-item.on:hover{background:var(--accent);color:#fff;font-weight:600}
+.sort-item.clear{margin-top:4px;border-top:1px solid var(--border);border-radius:0 0 7px 7px;color:var(--text-muted)}
 /* 「其它」下拉按钮：标签 + ▾ 下拉箭头（下拉菜单式样） */
 .chip.chip-other{display:inline-flex;align-items:center;justify-content:center;gap:5px}
 .other-caret{font-size:.68rem;line-height:1;opacity:.9}
@@ -879,6 +885,21 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
       <div class="cfg-hint">取不到 names/&lt;姓名&gt;.jpg 时按原逻辑处理（显示姓名文字或不显示），不参与独立绘制。</div>
     </div>
 
+    <div class="cfg-section">
+      <div class="cfg-section-title">记录表默认排序</div>
+      <div class="cfg-hint">设置记录表的<b>默认多级排序</b>：<b>① 优先级最高</b>，依次递减（只有前面几级完全相同时才用下一级比）。同一列只能出现在一个层级。留空 = 不使用该级。</div>
+      <div class="cfg-hint">说明：前端在记录表上改过排序后会写入<b>本机缓存</b>，<b>下次打开以缓存优先</b>；只有<b>没有缓存</b>时才按这里的配置排序。</div>
+      <div id="cfgSortRows"></div>
+    </div>
+
+    <div class="cfg-section">
+      <div class="cfg-section-title">打印合并（相邻行内容相同）</div>
+      <div class="cfg-hint">用于<b>列表式模板</b>（如加班单，一页打多条）。勾选启用后，相邻记录同一字段内容相同时纵向合并成一个格（真合并，合并区内不画内部横线）。<b>单据式模板</b>（请假单，一页一张单）不适用。</div>
+      <label class="cfg-check"><input type="checkbox" id="cfgMergeOn">启用相邻行相同内容合并</label>
+      <div class="cfg-hint">每列可选三种：<b>不合并</b>／<b>最小合并</b>（只有「本列 + 它左边所有参与合并的列」都连续相同才合并，内层绝不跨外层）／<b>全合并</b>（只看本列自己是否连续相同，可跨过其它列的分界 —— 适合「说明」这类长文本）。</div>
+      <div id="cfgMergeRows"></div>
+    </div>
+
     <div class="modal-actions">
       <button type="button" class="btn-cancel" id="cfgClose">关闭</button>
       <button type="button" class="btn-ok" id="cfgSave">保存</button>
@@ -1097,6 +1118,8 @@ function saveLeaveTypesCache(lt){
 var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30', presetNotes:{},
                       leaveTypes: loadLeaveTypesCache(),   // 优先取缓存（上次配置），Waline 配置到达后于 loadConfig 内覆盖并写回缓存
                       sigCfg: { on:false, bottom:5, right:5, len:5, hgt:5, rot:5, layer:'below' },   // 签名配置：on=独立绘制开关；bottom/right=上下/左右随机 ±px；len/hgt=在「计算出的尺寸」上再 ±%；rot=旋转 ±°；layer=below 表格之下 / above 表格之上
+                      sortCfg: [{ key:'date', dir:'asc' }],   // 记录表默认多级排序（下标=层级，0=1级）；前端改过排序会写本机缓存，缓存优先于此配置
+                      mergeCfg: { on:false, cols:{ '日期':'min', '时段':'min', '小时':'min', '说明':'full' } },   // 打印「相邻行相同内容合并」：on=开关；cols[字段] = 'min'最小合并 / 'full'全合并（仅列表式模板，如加班单）
                       pwdReview:'', pwdApprove:'', pwdAdmin:'' };  // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值 + 休假类型 + 签名配置 + 管理密码哈希，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
 var GROUP_PRINT_CFG = {};   // 打印设置（按考勤组+类别绑定）：{ [考勤组名]: { ot:{...}, lv:{...} } }，ot=加班 lv=请假；每类含 tplFile/perPage/kaoqingRen/dept1Leader/dept2Leader；随 /kaoqing/config 一并读写
@@ -1175,7 +1198,76 @@ var editIndex = null;   // 修改模式：正在编辑的记录下标（null=新
 var editGroupBak = null;  // 修改模式：进入修改前的考勤组别（退出修改时还原，保证返回后视图与进入前完全一致）
 var viewMode   = 'edit';   // 'edit'=未归档(Waline 可改删)；'view'=归档(R2 只读，不能修改/删除)
 var curProxy   = '';       // 请假单「代理人」：表单级选择（仅请假有效），保存时写入记录；不选则为空
-var sortState  = { key: 'idx', dir: 'desc' };   // 表格表头排序状态：默认按「#号(docNo)」从新到旧；key=列标识，dir=asc/desc（点一次正序、再点反序）
+/* ---------- 记录表：多级排序 ----------
+   可排序列（顺序即表头顺序）：# / 人员 / 日期 / 时段 / 小时 / 类别 / 状态 / 说明，共 8 列 → 排序层级也最多 8 级。
+   排序规格 sortCfg = [{key,dir}, ...]，**下标即层级**（0 = 1 级，优先级最高）；越靠后的列在前面都相同时才参与比较。
+   来源优先级：① 本机缓存（前端改过排序就写这里）→ ② 考勤配置 CONFIG.sortCfg（管理员在设置里配的默认）。
+   两者都没配到（例如配置被清空）→ 不排序，按录入顺序展示（不再另设内置兜底：既然有了层级配置，默认就该由配置说了算）。 */
+var SORT_COLS = [
+  ['idx','#'], ['who','人员'], ['date','日期'],
+  ['time','时段'], ['hours','小时'], ['cat','类别'], ['status','状态'], ['note','说明']
+];
+var SORT_CIRC = ['','①','②','③','④','⑤','⑥','⑦','⑧'];   // 层级圈号（下标=层级）
+var SORT_CACHE_KEY = 'kaoqing_sort_cache';
+var sortCfg = null;   // 运行时生效的多级排序（null → 由 resolveSortCfg() 按上述优先级决定）
+
+function colLabel(key){
+  for (var i = 0; i < SORT_COLS.length; i++) if (SORT_COLS[i][0] === key) return SORT_COLS[i][1];
+  return key;
+}
+/* 规范化：只保留合法列、去重、最多 8 级 */
+function normalizeSortCfg(v){
+  if (!v || typeof v !== 'object') return null;
+  var arr = Array.isArray(v) ? v : (v.levels || []);
+  if (!Array.isArray(arr)) return null;
+  var out = [], used = {};
+  for (var i = 0; i < arr.length && out.length < SORT_COLS.length; i++){
+    var it = arr[i]; if (!it) continue;
+    var k = (typeof it === 'string') ? it : it.key;
+    if (!k || used[k]) continue;
+    var okKey = false;
+    for (var j = 0; j < SORT_COLS.length; j++) if (SORT_COLS[j][0] === k) okKey = true;
+    if (!okKey) continue;
+    used[k] = 1;
+    out.push({ key:k, dir: (it && it.dir === 'desc') ? 'desc' : 'asc' });
+  }
+  return out;
+}
+function loadSortCache(){
+  try {
+    var s = localStorage.getItem(SORT_CACHE_KEY);
+    if (s === null || s === undefined) return null;
+    return normalizeSortCfg(JSON.parse(s)) || [];
+  } catch(e){ return null; }
+}
+function saveSortCache(cfg){
+  try { localStorage.setItem(SORT_CACHE_KEY, JSON.stringify(cfg || [])); } catch(e){ /* 隐私模式/超额忽略 */ }
+}
+function resolveSortCfg(){
+  var c = loadSortCache();
+  if (c) return c;                                    // ① 本机缓存（即使为空数组也表示"显式不排序"）
+  return (CONFIG.sortCfg || []).slice();              // ② 配置里的层级排序（默认值见 CONFIG.sortCfg，不再另设内置兜底）
+}
+function getSortCfg(){ if (!sortCfg) sortCfg = resolveSortCfg(); return sortCfg; }
+/* 取某列当前所处层级（1 起，0=未参与排序）与其方向 */
+function sortLevelOf(key){
+  var cfg = getSortCfg();
+  for (var i = 0; i < cfg.length; i++) if (cfg[i].key === key) return i + 1;
+  return 0;
+}
+function sortDirOf(key){
+  var cfg = getSortCfg();
+  for (var i = 0; i < cfg.length; i++) if (cfg[i].key === key) return cfg[i].dir;
+  return 'asc';
+}
+/* 应用新排序（同时写入本机缓存 → 下次打开缓存优先）。
+   若被清空：本次会话按录入顺序显示，但**清掉缓存**，下次打开自动回到「配置 / 内置默认」，不会卡在"无排序"。 */
+function applySortCfg(cfg){
+  sortCfg = normalizeSortCfg(cfg) || [];
+  if (sortCfg.length) saveSortCache(sortCfg);
+  else { try { localStorage.removeItem(SORT_CACHE_KEY); } catch(e){} }
+  renderRecords();
+}
 
 function $(s){ return document.querySelector(s); }
 function todayStr(){
@@ -2327,28 +2419,31 @@ function renderRecords(){
   var busy = recBusyNow();   // 状态变更进行中 / 队列正在消费(_pumping) / 回读进行中 → 整表 + 两个下拉框禁用
   var html = '<table class="rec-table' + (busy ? ' rec-disabled' : '') + '"><thead><tr>';
   if (editable) html += '<th class="c-check"><input type="checkbox" id="recCheckAll" class="rec-check-all" title="全选 / 取消全选"></th>';
-  // 可点击排序的表头：点击正序→再点反序；当前排序列高亮并显示 ▲/▼
-  var heads = [
-    ['idx','#'], ['who','人员'], ['date','日期'],
-    ['time','时段'], ['hours','小时'], ['cat','类别'], ['status','状态'], ['note','说明']
-  ];
+  // 可点击排序的表头：点击弹出「层级菜单」（①…⑧）设置该列的排序层级；参与排序的列显示 圈号+升/降
+  var heads = SORT_COLS;
+  var _cfg = getSortCfg();
   heads.forEach(function(h){
     var key = h[0], label = h[1], cls = 'th-sort', ind = '';
-    if (sortState.key === key){ cls += ' active'; ind = (sortState.dir === 'asc' ? ' ▲' : ' ▼'); }
-    html += '<th class="' + cls + '" data-sort="' + key + '" title="点击排序">' + label + ind + '</th>';
+    var lv = sortLevelOf(key);
+    if (lv){ cls += ' active'; ind = ' ' + SORT_CIRC[lv] + (sortDirOf(key) === 'desc' ? '▼' : '▲'); }
+    html += '<th class="' + cls + '" data-sort="' + key + '" title="点击设置排序层级（' + (_cfg.length ? '当前 ' + _cfg.length + ' 级' : '未设置') + '）">' + label + ind + '</th>';
   });
   if (editable) html += '<th class="c-del"></th>';
   html += '</tr></thead><tbody>';
-  // 排序：按 sortState（默认「#号」从新到旧）；同值保持稳定（按录入顺序 a-b）
+  // 排序：多级（sortCfg 下标即层级，越靠前优先级越高）；全部层级都同值时保持录入顺序（a-b）
   var order = idxs.slice();
   order.sort(function(a, b){
-    var va = recSortValue(a, sortState.key);
-    var vb = recSortValue(b, sortState.key);
-    var c = 0;
-    if (typeof va === 'number' && typeof vb === 'number') c = va - vb;
-    else c = String(va).localeCompare(String(vb), 'zh');
-    if (c === 0) c = a - b;                       // 同值：保持原录入相对顺序
-    return sortState.dir === 'asc' ? c : -c;
+    var cfg = getSortCfg();
+    for (var li = 0; li < cfg.length; li++){
+      var lv = cfg[li]; if (!lv || !lv.key) continue;
+      var va = recSortValue(a, lv.key);
+      var vb = recSortValue(b, lv.key);
+      var c = 0;
+      if (typeof va === 'number' && typeof vb === 'number') c = va - vb;
+      else c = String(va).localeCompare(String(vb), 'zh');
+      if (c !== 0) return (lv.dir === 'desc') ? -c : c;
+    }
+    return a - b;                                 // 同值：保持原录入相对顺序
   });
   order = order.filter(function(i){ return records[i]._pending; })          // 进行中占位记录置顶显示其加载圆圈（插在最前面，而非后边）
         .concat(order.filter(function(i){ return !records[i]._pending; }));
@@ -4134,7 +4229,10 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     colHtml += '<col style="' + _hc + 'width:' + _colPx(cols.width[i2] || 8) + 'px">';
   }
   colHtml += '</colgroup>';
-  function emitRow(rw, mode, rec){
+  /* collect：可选，收集本行每个已输出单元格的 {cNum, html}（供「相邻相同内容合并」纵向比较用；
+     比较渲染后的 HTML 而非字段值 —— 一格可能含多个占位符、还有数字格式与转义，只有比最终 HTML 才准）。
+     spans：可选，{cNum: n} —— n>1 表示本格合并 n 行（输出 rowspan）；n<=0 表示本格被上方合并区覆盖、不输出。 */
+  function emitRow(rw, mode, rec, collect, spans){
     var pc = _getRow(rw), cells = pc.cells, r0 = pc.r0;
     if (hiddenRows[r0]) return '';   // 隐藏行：整行不渲染（保留表格结构，仅不显示）
     var rh = rowH[r0] ? rowH[r0] + 'pt' : '';
@@ -4177,6 +4275,9 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       var csAttr = (cs > 1 ? ' colspan="' + cs + '"' : '') + (rs2 > 1 ? ' rowspan="' + rs2 + '"' : '');
       // 隐藏列：列轨已在 colgroup 标 display:none，此处直接跳过该单元格（保持表格结构一致）
       if (hiddenCols[cNum]){ return; }
+      // 相邻相同内容合并：<0 = 被上方合并区覆盖 → 不输出该格；>1 = 本格纵向合并 n 行
+      var _mspan = (spans && spans[cNum] != null) ? spans[cNum] : 1;
+      if (_mspan <= 0) return;
       var styleAttr = css ? ' style="' + css + '"' : '';
       if (mode === 'blank'){
         // 不足一页的尾部空白行：整格清空（连固定值也清掉），仅保留合并/样式以维持表格网格
@@ -4270,7 +4371,13 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
         try {
           var _plain = html.replace(/<[^>]+>/g, '');
           var _sv = (c.num != null) ? c.num : (/-?[\d.]+/.test(_plain) ? parseFloat(_plain) : NaN);
-          if (!isNaN(_sv)) html = _xmlEsc(_numFmt(_sv, _st.numFmt));
+          if (!isNaN(_sv)){
+            var _f = _numFmt(_sv, _st.numFmt);
+            // 「时数」特例：模板该格常设 0.00 类数值格式，会把 8 / 8.5 印成 8.00 / 8.50。
+            // 需求是不要两位小数、去掉尾零 → 套用格式后再规整一次（8.00→8、8.50→8.5、8.25 保持 8.25）。
+            if (/\{\{小时\}\}/.test(c.text || '')) _f = _f.replace(/(\.\d*?)0+(?![0-9])/, '$1').replace(/\.(?![0-9])/, '');
+            html = _xmlEsc(_f);
+          }
         } catch(e){ /* 数字格式失败不影响其它渲染 */ }
       }
       // 单元格内嵌图片：有 vm 且解析到图片时渲染 <img>（空白行不渲染，与整格清空保持一致）
@@ -4278,18 +4385,124 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       var inner = imgSrc
         ? '<img src="' + imgSrc + '" style="max-width:100%;max-height:' + (rh || '40pt') + '">'
         : (html || '&nbsp;');
-      tr += '<td' + csAttr + styleAttr + '>' + inner + '</td>';
+      tr += '<td' + csAttr + ((_mspan > 1 && rs2 <= 1) ? ' rowspan="' + _mspan + '"' : '') + styleAttr + '>' + inner + '</td>';
+      if (collect) collect.push({ cNum: cNum, html: inner });
     });
     return tr + '</tr>';
+  }
+  /* ---------- 相邻相同内容合并（列表式模板） ----------
+     规则：参与合并的列按「列号从左到右」形成层次，第 k 列有两种模式——
+       min（最小合并）：只有「它自己 + 它左边所有参与合并的列」都连续相同时才合并（内层绝不跨外层）；
+       full（全合并） ：只看它自己是否连续相同（可跨过其它列的分界，适合"备注说明"这类长文本）。
+     只在有记录的行之间合并：不跨到尾部空白行、不跨页（每页是独立 <table>，本就天然不跨）。 */
+  function mergeModeOf(fieldKey){
+    var mc = CONFIG.mergeCfg;
+    if (!mc || !mc.on || !mc.cols) return '';
+    var m = mc.cols[fieldKey];
+    return (m === 'min' || m === 'full') ? m : '';
+  }
+  /* 取单元格对应的记录字段（用于查合并配置）：取格内第一个「两括号行级记录键」，如 姓名的行级占位符 → '姓名' */
+  function cellField(c){
+    var t = c.text || '';
+    if (c.runs) t = c.runs.map(function(r){ return r.text || ''; }).join('');
+    var mm = t.match(/\{\{([^}]+)\}\}/);
+    return mm ? mm[1].trim() : '';
+  }
+  /* 计算本页每个数据实例的合并跨度：spans[i][cNum] = n(>1 合并 n 行) / 0(被覆盖，不输出) */
+  function computeMergeSpans(p){
+    var res = [];                    // res[i] = { cNum: n }
+    for (var i = 0; i < perPage; i++) res.push({});
+    var anyField = false;
+    // 先探测本页是否有任何列需要合并
+    var fieldsByDr = [];             // fieldsByDr[d][cNum] = 字段名 或 ''
+    var cellMapByDr = [];            // cellMapByDr[d] = { cNum: cell对象 }
+    for (var d = 0; d < dataRows.length; d++){
+      var pc = _getRow(dataRows[d]);
+      var fmap = {}, cmap = {};
+      pc.cells.forEach(function(c){
+        var cn = colToNum(c.ref.replace(/\d+/, ''));
+        if (covered[cn + '_' + pc.r0]) return;
+        if (hiddenCols[cn]) return;
+        var f = cellField(c);
+        if (f) fmap[cn] = f;
+        cmap[cn] = c;
+        if (f && mergeModeOf(f)) anyField = true;
+      });
+      fieldsByDr.push(fmap); cellMapByDr.push(cmap);
+    }
+    if (!anyField) return res;
+    // 渲染所有实例的单元格（纵向比较用）
+    var cells = [];                  // cells[i][d] = [{cNum, html}]
+    for (var i2 = 0; i2 < perPage; i2++){
+      var rec = recVals[p * perPage + i2] || null;
+      if (!rec){ cells.push(null); continue; }
+      var arr = [];
+      for (var d2 = 0; d2 < dataRows.length; d2++){
+        var col = [];
+        emitRow(dataRows[d2], 'data', rec, col, null);
+        arr.push(col);
+      }
+      cells.push(arr);
+    }
+    // 逐个「模板数据行」、逐列计算合并区间
+    for (var d3 = 0; d3 < dataRows.length; d3++){
+      var fmap2 = fieldsByDr[d3];
+      // 参与合并的列，按列号升序（左→右）即层次顺序
+      var enabled = [];
+      Object.keys(fmap2).forEach(function(k){
+        var cn = parseInt(k, 10);
+        if (fmap2[cn] && mergeModeOf(fmap2[cn])) enabled.push(cn);
+      });
+      enabled.sort(function(a, b){ return a - b; });
+      if (!enabled.length) continue;
+      // 逐实例的该列 HTML
+      function valAt(inst, cn){
+        if (!cells[inst] || !cells[inst][d3]) return null;
+        var list = cells[inst][d3];
+        for (var q = 0; q < list.length; q++) if (list[q].cNum === cn) return list[q].html;
+        return null;
+      }
+      enabled.forEach(function(cn, k){
+        var mode = mergeModeOf(fmap2[cn]);
+        var i3 = 0;
+        while (i3 < perPage){
+          if (!cells[i3]){ i3++; continue; }               // 空白行：不参与合并
+          var runLen = 1;
+          var j = i3 + 1;
+          while (j < perPage && cells[j]){
+            var brk = false;
+            if (mode === 'full'){
+              brk = (valAt(j, cn) !== valAt(j - 1, cn));
+            } else {
+              for (var q2 = 0; q2 <= k; q2++){
+                if (valAt(j, enabled[q2]) !== valAt(j - 1, enabled[q2])){ brk = true; break; }
+              }
+            }
+            if (brk) break;
+            runLen++; j++;
+          }
+          if (runLen > 1){
+            res[i3][cn] = runLen;
+            for (var t2 = i3 + 1; t2 < i3 + runLen; t2++) res[t2][cn] = 0;
+          }
+          i3 = j;
+        }
+      });
+    }
+    return res;
   }
   var pages = [];
   for (var p = 0; p < P; p++){
     var html = '<table class="tpl-table" style="width:' + totalPx + 'px">' + colHtml + '<tbody>';
     headerRows.forEach(function(rw){ html += emitRow(rw, 'static', null); });
+    // 相邻相同内容合并：先按本页数据算出每格的合并跨度（页内计算 → 天然不跨页）
+    // 合并只用于「列表式」模板（数据段仅 1 行、每页重复 N 条）；单据式（数据段多行=一张单）不参与，避免跨单乱合
+    var _canMerge = !!(CONFIG.mergeCfg && CONFIG.mergeCfg.on) && perPage > 0 && dataRows.length === 1;
+    var _spans = _canMerge ? computeMergeSpans(p) : null;
     // 数据段整体作为一条记录的容器，每页重复 perPage 次：列表式段长=1（退化为单行复制），单据式段长>1（整张单展开）
     for (var i = 0; i < perPage; i++){
       var rec = recVals[p * perPage + i] || null;
-      dataRows.forEach(function(rw){ html += emitRow(rw, rec ? 'data' : 'blank', rec); });
+      dataRows.forEach(function(rw){ html += emitRow(rw, rec ? 'data' : 'blank', rec, null, _spans ? _spans[i] : null); });
     }
     footerRows.forEach(function(rw){ html += emitRow(rw, 'static', null); });
     html += '</tbody></table>';
@@ -4614,14 +4827,61 @@ $('#records').addEventListener('click', async function(e){
     console.error('[kaoqing] 删除后复读失败', e && e.message ? e.message : e);
   }
 });
-// 表头点击排序：点一次正序(asc)、再点同列反序(desc)；切换列则重置为 asc
+/* ---------- 表头排序：点击弹出「层级菜单」（①…⑧，1 级优先级最高） ----------
+   选中某级 → 该列移到该层级；若该列本就在此级 → 切换升/降。菜单末尾可取消该列排序。 */
+function closeSortMenu(){
+  var m = $('#sortMenu'); if (m) m.remove();
+}
+function openSortMenu(btn, key){
+  closeSortMenu();
+  var cfg = getSortCfg(), curLv = sortLevelOf(key);
+  var menu = document.createElement('div');
+  menu.id = 'sortMenu'; menu.className = 'sort-menu';
+  for (var i = 1; i <= SORT_COLS.length; i++){
+    (function(lv){
+      var it = document.createElement('div');
+      it.className = 'sort-item' + (curLv === lv ? ' on' : '');
+      var occ = cfg[lv - 1];
+      it.textContent = SORT_CIRC[lv] + '　' + (occ ? (colLabel(occ.key) + ' ' + (occ.dir === 'desc' ? '▼' : '▲')) : '（未设置）');
+      it.addEventListener('click', function(ev){ ev.stopPropagation(); setSortLevel(key, lv); });
+      menu.appendChild(it);
+    })(i);
+  }
+  if (curLv){
+    var clr = document.createElement('div');
+    clr.className = 'sort-item clear';
+    clr.textContent = '取消「' + colLabel(key) + '」的排序';
+    clr.addEventListener('click', function(ev){ ev.stopPropagation(); clearSortKey(key); });
+    menu.appendChild(clr);
+  }
+  document.body.appendChild(menu);
+  var br = btn.getBoundingClientRect();
+  var estH = Math.min(320, SORT_COLS.length * 30 + (curLv ? 34 : 0) + 8);
+  var left = Math.max(8, br.left);
+  if (left + 170 > window.innerWidth) left = window.innerWidth - 170;
+  var top = br.bottom + 4;
+  if (top + estH > window.innerHeight) top = Math.max(8, br.top - estH - 4);
+  menu.style.left = left + 'px';
+  menu.style.top  = top + 'px';
+  setTimeout(function(){ document.addEventListener('click', closeSortMenu, { once:true }); }, 0);
+}
+/* 把某列设为第 lv 级（原本就在该级 → 切换升/降） */
+function setSortLevel(key, lv){
+  var wasLv = sortLevelOf(key), wasDir = sortDirOf(key);
+  var rest = getSortCfg().filter(function(x){ return x.key !== key; });
+  var dir = (wasLv === lv && wasDir === 'asc') ? 'desc' : 'asc';
+  rest.splice(Math.min(lv - 1, rest.length), 0, { key:key, dir:dir });
+  applySortCfg(rest);
+}
+/* 取消某列的排序 */
+function clearSortKey(key){
+  applySortCfg(getSortCfg().filter(function(x){ return x.key !== key; }));
+}
+// 表头点击 → 弹出层级菜单
 $('#records').addEventListener('click', function(e){
   var th = e.target.closest('th[data-sort]');
   if (!th) return;
-  var key = th.getAttribute('data-sort');
-  if (sortState.key === key){ sortState.dir = (sortState.dir === 'asc' ? 'desc' : 'asc'); }
-  else { sortState.key = key; sortState.dir = 'asc'; }
-  renderRecords();
+  openSortMenu(th, th.getAttribute('data-sort'));
 });
 // 批量删除选中：含受保护状态(非待提交)需一次性密码；删前统一再确认
 $('#delRecordsBtn').addEventListener('click', async function(){
@@ -5993,6 +6253,22 @@ async function loadConfig(){
         _d.layer = (_s.layer === 'above') ? 'above' : 'below';
         CONFIG.sigCfg = _d;
       }
+      // 记录表默认排序（多级）：无本机缓存时才生效 —— 缓存优先，配置文件仅作默认值
+      var _sc2 = normalizeSortCfg(best.obj.sortCfg);
+      if (_sc2){
+        CONFIG.sortCfg = _sc2;
+        if (!loadSortCache()){ sortCfg = null; }   // 置空 → 下次取值重新按「缓存 → 配置」解析
+      }
+      // 打印合并（相邻行相同内容）
+      if (best.obj.mergeCfg && typeof best.obj.mergeCfg === 'object'){
+        var _mc = { on: !!best.obj.mergeCfg.on, cols: {} };
+        var _mcs = best.obj.mergeCfg.cols || {};
+        Object.keys(_mcs).forEach(function(k){
+          var v = _mcs[k];
+          if (v === 'min' || v === 'full') _mc.cols[k] = v;
+        });
+        CONFIG.mergeCfg = _mc;
+      }
     }
   } catch(e){
     console.warn('[kaoqing] 读取考勤配置失败（使用默认）', e && e.message ? e.message : e);
@@ -6143,6 +6419,14 @@ function openConfig(){
     var v = (p[2] === undefined || p[2] === null) ? 5 : p[2];
     if (p[1] === 'checked') el.checked = !!v; else el.value = v;
   });
+  // 记录表默认排序：载入配置到工作副本并自绘 8 行「① 级 / 列 / 升降」
+  sortWork = (CONFIG.sortCfg || []).slice();
+  renderSortCfgRows();
+  // 打印合并：载入配置到工作副本并自绘每个字段的「不合并/最小合并/全合并」
+  var mg = CONFIG.mergeCfg || {};
+  mergeWork = { on: !!mg.on, cols: Object.assign({}, mg.cols || {}) };
+  var mo = $('#cfgMergeOn'); if (mo) mo.checked = !!mergeWork.on;
+  renderMergeRows();
   $('#cfgMask').hidden = false;
 }
 /* 读取「签名配置」表单 → { on, bottom, right, len, hgt, rot }（幅度取绝对值，非法/缺失回落 5） */
@@ -6161,6 +6445,83 @@ function readSigCfgForm(){
     rot:    num('#cfgSigRot', 5),
     layer:  (($('#cfgSigLayer') && $('#cfgSigLayer').value) === 'above') ? 'above' : 'below'
   };
+}
+/* ---------- 记录表默认排序（多级）面板 ---------- */
+var sortWork = [];   // 工作副本（改动先落这里，保存才写回 CONFIG）
+function renderSortCfgRows(){
+  var box = $('#cfgSortRows'); if (!box) return;
+  var html = '';
+  for (var i = 1; i <= SORT_COLS.length; i++){
+    var lv = sortWork[i - 1] || { key:'', dir:'asc' };
+    html += '<div class="cfg-line">'
+      + '<span class="cfg-label">' + SORT_CIRC[i] + ' 级</span>'
+      + '<select class="cfg-sort-key" data-lv="' + i + '">'
+      + '<option value="">（不使用）</option>'
+      + SORT_COLS.map(function(c){
+          return '<option value="' + c[0] + '"' + (c[0] === lv.key ? ' selected' : '') + '>' + c[1] + '</option>';
+        }).join('')
+      + '</select>'
+      + '<select class="cfg-sort-dir" data-lv="' + i + '">'
+      + '<option value="asc"' + (lv.dir !== 'desc' ? ' selected' : '') + '>升序</option>'
+      + '<option value="desc"' + (lv.dir === 'desc' ? ' selected' : '') + '>降序</option>'
+      + '</select>'
+      + '</div>';
+  }
+  box.innerHTML = html;
+  box.querySelectorAll('.cfg-sort-key').forEach(function(sel){
+    sel.addEventListener('change', function(){ syncSortWork(); renderSortCfgRows(); });   // 重绘以反映「同一列只能占一级」的去重结果
+  });
+}
+/* 按当前下拉状态重算工作副本（去重：同一列只保留靠前那一级） */
+function syncSortWork(){
+  var out = [];
+  document.querySelectorAll('#cfgSortRows .cfg-sort-key').forEach(function(sel){
+    var k = sel.value; if (!k) return;
+    var lv = sel.getAttribute('data-lv');
+    var d = document.querySelector('#cfgSortRows .cfg-sort-dir[data-lv="' + lv + '"]');
+    out.push({ key:k, dir:(d && d.value === 'desc') ? 'desc' : 'asc' });
+  });
+  sortWork = normalizeSortCfg(out) || [];
+}
+function readSortCfgForm(){
+  var box = $('#cfgSortRows');
+  if (!box || !box.querySelector('.cfg-sort-key')) return (CONFIG.sortCfg || []).slice();   // 面板没渲染过 → 保持原值
+  syncSortWork();
+  return sortWork.slice();
+}
+/* ---------- 打印合并（相邻行相同内容）面板 ---------- */
+var MERGE_FIELDS = ['姓名','日期','时段','小时','说明','类别','单据号'];   // 可参与合并的记录字段（列表式模板常见字段）
+var mergeWork = { on:false, cols:{} };
+function renderMergeRows(){
+  var box = $('#cfgMergeRows'); if (!box) return;
+  var html = '';
+  MERGE_FIELDS.forEach(function(f){
+    var v = mergeWork.cols[f] || '';
+    html += '<div class="cfg-line">'
+      + '<span class="cfg-label">' + f + '</span>'
+      + '<select class="cfg-merge-mode" data-f="' + f + '">'
+      + '<option value=""' + (v === '' ? ' selected' : '') + '>不合并</option>'
+      + '<option value="min"' + (v === 'min' ? ' selected' : '') + '>最小合并</option>'
+      + '<option value="full"' + (v === 'full' ? ' selected' : '') + '>全合并</option>'
+      + '</select>'
+      + '</div>';
+  });
+  box.innerHTML = html;
+}
+function syncMergeWork(){
+  var cols = {};
+  document.querySelectorAll('#cfgMergeRows .cfg-merge-mode').forEach(function(sel){
+    var f = sel.getAttribute('data-f'), v = sel.value;
+    if (v === 'min' || v === 'full') cols[f] = v;
+  });
+  mergeWork.cols = cols;
+  mergeWork.on = !!($('#cfgMergeOn') && $('#cfgMergeOn').checked);
+}
+function readMergeCfgForm(){
+  var box = $('#cfgMergeRows');
+  if (!box || !box.querySelector('.cfg-merge-mode')) return { on:!!(CONFIG.mergeCfg && CONFIG.mergeCfg.on), cols:Object.assign({}, (CONFIG.mergeCfg && CONFIG.mergeCfg.cols) || {}) };
+  syncMergeWork();
+  return { on:!!mergeWork.on, cols:Object.assign({}, mergeWork.cols) };
 }
 async function saveConfigToWaline(){
   if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
@@ -6213,7 +6574,9 @@ async function saveConfigToWaline(){
     pwdAdmin:   pwdNew.admin,
     leaveTypes: leaveTypes,
     groupPrint: GROUP_PRINT_CFG,
-    sigCfg: readSigCfgForm()
+    sigCfg: readSigCfgForm(),
+    sortCfg: readSortCfgForm(),
+    mergeCfg: readMergeCfgForm()
   };
   var user = getWalineUser();
   var token = WALINE_ADMIN_TOKEN || walineToken(user);
@@ -6242,6 +6605,9 @@ async function saveConfigToWaline(){
     CONFIG.pwdAdmin    = payload.pwdAdmin;
     CONFIG.leaveTypes  = payload.leaveTypes || CONFIG.leaveTypes;
     CONFIG.sigCfg      = payload.sigCfg;
+    CONFIG.sortCfg     = payload.sortCfg;
+    CONFIG.mergeCfg    = payload.mergeCfg;
+    if (!loadSortCache()) sortCfg = null;   // 无本机缓存 → 置空，下次取值重新解析，让新默认立刻生效
     // 保存后清空输入框并刷新 placeholder（避免误以为还留在表单里 / 反映最新设置状态）
     [['#cfgPwdReview', CONFIG.pwdReview], ['#cfgPwdApprove', CONFIG.pwdApprove], ['#cfgPwdAdmin', CONFIG.pwdAdmin]].forEach(function(p){
       var el = $(p[0]); if (!el) return;
