@@ -544,9 +544,9 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 /* 缩放仅「内容超出可打印区时按比例收缩(k<=1)」，不放大、不居中，保持模板边距忠于原设定 */
 #printArea .tpl-scale{transform-origin:top left;position:relative}   /* position:relative —— 供签名独立绘制时作为绝对定位的锚点容器 */
 /* 签名独立绘制：格内 .sig-src 不可见但占位；.sig-overlay 是画完数据后叠加的真实签名（带随机偏移/缩放/旋转）。
-   z-index:-1 = **画在表格之下** —— 表格的线框/文字盖在签名上面，像"在印好的表单上手写签名"，
-   避免签名图（尤其 jpg 的白底）把表格盖住。.tpl-scale 有 transform → 已是层叠上下文，负值不会跑到页面背景后面。 */
-#printArea .sig-overlay{position:absolute;pointer-events:none;z-index:-1}
+   z-index 由「签名层级」配置在绘制时写入：-1=表格之下（表格线框/文字压在签名上，配透明底 png 最佳）、50=表格之上。
+   用负层级时，.tpl-scale 有 transform → 已是层叠上下文，负值只会退到它自己的背景之后，不会跑到页面背景后面。 */
+#printArea .sig-overlay{position:absolute;pointer-events:none}
 @media print{
   body.printing-template > *:not(#printArea){display:none!important}
   body.printing-template #printArea{display:block!important;width:100%;margin:0;padding:0}
@@ -863,6 +863,13 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
         <input type="number" id="cfgSigRot" min="0" step="1" value="5">
         <span class="sep">± °</span>
       </div>
+      <div class="cfg-line">
+        <span class="cfg-label">签名层级</span>
+        <select id="cfgSigLayer">
+          <option value="below">表格之下（表格线/文字压在签名上，配透明底 png）</option>
+          <option value="above">表格之上（签名盖在表格上）</option>
+        </select>
+      </div>
       <div class="cfg-hint">取不到 names/&lt;姓名&gt;.jpg 时按原逻辑处理（显示姓名文字或不显示），不参与独立绘制。</div>
     </div>
 
@@ -1083,7 +1090,7 @@ function saveLeaveTypesCache(lt){
 }
 var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30', presetNotes:{},
                       leaveTypes: loadLeaveTypesCache(),   // 优先取缓存（上次配置），Waline 配置到达后于 loadConfig 内覆盖并写回缓存
-                      sigCfg: { on:false, bottom:5, right:5, len:5, hgt:5, rot:5 },   // 签名配置：on=独立绘制开关；bottom/right=上下/左右随机 ±px；len/hgt=在「计算出的尺寸」上再 ±%；rot=旋转 ±°
+                      sigCfg: { on:false, bottom:5, right:5, len:5, hgt:5, rot:5, layer:'below' },   // 签名配置：on=独立绘制开关；bottom/right=上下/左右随机 ±px；len/hgt=在「计算出的尺寸」上再 ±%；rot=旋转 ±°；layer=below 表格之下 / above 表格之上
                       pwdReview:'', pwdApprove:'', pwdAdmin:'' };  // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值 + 休假类型 + 签名配置 + 管理密码哈希，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
 var GROUP_PRINT_CFG = {};   // 打印设置（按考勤组+类别绑定）：{ [考勤组名]: { ot:{...}, lv:{...} } }，ot=加班 lv=请假；每类含 tplFile/perPage/kaoqingRen/dept1Leader/dept2Leader；随 /kaoqing/config 一并读写
@@ -3264,6 +3271,15 @@ function abToB64(ab){
    一律下载字节后用 _tplFingerprint（见下方模板解析处，FNV-1a 内容校验和，效果等同 md5 比对）算指纹，
    与页内已缓存指纹一致即视为未改、直接复用解析结果；不一致（文件被改）则更新缓存并重新解析。
    这样既吃到 HTTP 缓存的速度，又靠真实内容比对杜绝「改了不刷新」。 */
+/* 校验字节确实是图片（按文件头魔数）：png=89 50 4E 47，jpg=FF D8 FF。
+   用途：静态托管常对「不存在的文件」返回 200 + HTML 页面，不校验就会生成损坏的 dataUri（签名不显示）。 */
+function _isImageBytes(ab, mime){
+  if (!ab || ab.byteLength < 4) return false;
+  var b = new Uint8Array(ab);
+  if (mime === 'image/png')  return b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47;
+  if (mime === 'image/jpeg') return b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF;
+  return false;
+}
 /* 签名图：按姓名到 kaoqing/names/<姓名>.png 取图，无 png 则回退 .jpg（透明底优先），转成 dataUri 内联进打印页。
    必须预先取回转 base64——若只写 <img src="url"> 就立刻 window.print()，
    浏览器常常还没把图加载完就开始打印，印出来是空白/破图。 */
@@ -3292,6 +3308,9 @@ async function fetchNameImages(names){
         var r2 = await fetch(cu);                   // 走 HTTP 缓存：未变更时浏览器回放本地缓存（极快），变更才回新内容
         if (!r2.ok) continue;
         var ab = await r2.arrayBuffer();
+        // ⚠ 必须校验文件头：部分静态托管对「不存在的文件」返回 200 + HTML 错误页，
+        //    若不校验就会把 HTML 当成图片转 dataUri → 图片损坏 → 签名整张不显示。
+        if (!_isImageBytes(ab, candidates[ci][1])) continue;
         var fp = _tplFingerprint(ab);
         if (known && cached && cached.fp && cached.fp === fp) return [name, cached.uri];   // 内容未变 → 复用已转码的 dataUri
         var dataUri = 'data:' + candidates[ci][1] + ';base64,' + abToB64(ab);
@@ -4320,6 +4339,8 @@ function drawSignatures(pa){
       img.style.width  = (w * (1 + rnd(aLen) / 100)).toFixed(2) + 'px';    // 在「计算出的宽度」上叠加 ±%
       img.style.height = (h * (1 + rnd(aHgt) / 100)).toFixed(2) + 'px';    // 在「计算出的高度」上叠加 ±%
       img.style.transform = 'rotate(' + rnd(aRot).toFixed(2) + 'deg)';
+      // 层级：below=画在表格之下（表格线框/文字压在签名上，配透明底 png 最佳）；above=画在表格之上
+      img.style.zIndex = (cfg.layer === 'above') ? '50' : '-1';
       sc.appendChild(img);
       drew++;
     }
@@ -5958,11 +5979,12 @@ async function loadConfig(){
       if (best.obj.groupPrint && typeof best.obj.groupPrint === 'object' && !Array.isArray(best.obj.groupPrint)) GROUP_PRINT_CFG = normalizeGpCfg(best.obj.groupPrint);
       // 签名配置（独立绘制 + 随机微调）：逐字段合并，缺省项保留默认值
       if (best.obj.sigCfg && typeof best.obj.sigCfg === 'object'){
-        var _s = best.obj.sigCfg, _d = { on:false, bottom:5, right:5, len:5, hgt:5, rot:5 };
+        var _s = best.obj.sigCfg, _d = { on:false, bottom:5, right:5, len:5, hgt:5, rot:5, layer:'below' };
         ['bottom','right','len','hgt','rot'].forEach(function(k){
           var n = parseFloat(_s[k]); _d[k] = isNaN(n) ? _d[k] : Math.abs(n);
         });
         _d.on = !!_s.on;
+        _d.layer = (_s.layer === 'above') ? 'above' : 'below';
         CONFIG.sigCfg = _d;
       }
     }
@@ -6108,7 +6130,8 @@ function openConfig(){
   // 签名配置（打印时独立绘制 + 随机微调）
   var sg = CONFIG.sigCfg || {};
   var sgSet = [['#cfgSigOn', 'checked', !!sg.on], ['#cfgSigBottom', 'value', sg.bottom], ['#cfgSigRight', 'value', sg.right],
-               ['#cfgSigLen', 'value', sg.len], ['#cfgSigHgt', 'value', sg.hgt], ['#cfgSigRot', 'value', sg.rot]];
+               ['#cfgSigLen', 'value', sg.len], ['#cfgSigHgt', 'value', sg.hgt], ['#cfgSigRot', 'value', sg.rot],
+               ['#cfgSigLayer', 'value', (sg.layer === 'above') ? 'above' : 'below']];
   sgSet.forEach(function(p){
     var el = $(p[0]); if (!el) return;
     var v = (p[2] === undefined || p[2] === null) ? 5 : p[2];
@@ -6129,7 +6152,8 @@ function readSigCfgForm(){
     right:  num('#cfgSigRight', 5),
     len:    num('#cfgSigLen', 5),
     hgt:    num('#cfgSigHgt', 5),
-    rot:    num('#cfgSigRot', 5)
+    rot:    num('#cfgSigRot', 5),
+    layer:  (($('#cfgSigLayer') && $('#cfgSigLayer').value) === 'above') ? 'above' : 'below'
   };
 }
 async function saveConfigToWaline(){
