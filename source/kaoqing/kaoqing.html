@@ -542,7 +542,9 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 /* 模板 pageMargins 作为内容内边距(左/右/上/下)写入 .tpl-margin padding，忠实还原 Excel 打印边距（方案1：边距参与绘制，A4 页边距=0） */
 #printArea .tpl-margin{box-sizing:border-box}
 /* 缩放仅「内容超出可打印区时按比例收缩(k<=1)」，不放大、不居中，保持模板边距忠于原设定 */
-#printArea .tpl-scale{transform-origin:top left}
+#printArea .tpl-scale{transform-origin:top left;position:relative}   /* position:relative —— 供签名独立绘制时作为绝对定位的锚点容器 */
+/* 签名独立绘制：格内 .sig-src 不可见但占位；.sig-overlay 是画完数据后叠加的真实签名（带随机偏移/缩放/旋转） */
+#printArea .sig-overlay{position:absolute;pointer-events:none;z-index:50}
 @media print{
   body.printing-template > *:not(#printArea){display:none!important}
   body.printing-template #printArea{display:block!important;width:100%;margin:0;padding:0}
@@ -827,6 +829,41 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
       </div>
     </div>
 
+    <div class="cfg-section">
+      <div class="cfg-section-title">签名配置（打印时独立绘制）</div>
+      <div class="cfg-hint">开启后，签名不再嵌在表格单元格里：先把表格全部画完，再按占位符算出的页面位置<b>单独叠加绘制</b>签名，并按下面的幅度做<b>每次打印随机</b>微调（更接近手写效果）。签名压线、略微超出表格边界属正常，不做裁剪约束。关闭则回到原来的「单元格内嵌」方式。</div>
+      <div class="cfg-line">
+        <span class="cfg-label">独立绘制签名</span>
+        <label class="cfg-switch"><input type="checkbox" id="cfgSigOn"> 绘制完其它数据后再单独画签名</label>
+      </div>
+      <div class="cfg-line">
+        <span class="cfg-label">下边距随机</span>
+        <input type="number" id="cfgSigBottom" min="0" step="1" value="5">
+        <span class="sep">± px（上下方向偏移）</span>
+      </div>
+      <div class="cfg-line">
+        <span class="cfg-label">右边距随机</span>
+        <input type="number" id="cfgSigRight" min="0" step="1" value="5">
+        <span class="sep">± px（左右方向偏移）</span>
+      </div>
+      <div class="cfg-line">
+        <span class="cfg-label">长度随机</span>
+        <input type="number" id="cfgSigLen" min="0" step="1" value="5">
+        <span class="sep">± %（叠加在计算出的宽度上）</span>
+      </div>
+      <div class="cfg-line">
+        <span class="cfg-label">高度随机</span>
+        <input type="number" id="cfgSigHgt" min="0" step="1" value="5">
+        <span class="sep">± %（叠加在计算出的高度上）</span>
+      </div>
+      <div class="cfg-line">
+        <span class="cfg-label">旋转随机</span>
+        <input type="number" id="cfgSigRot" min="0" step="1" value="5">
+        <span class="sep">± °</span>
+      </div>
+      <div class="cfg-hint">取不到 names/&lt;姓名&gt;.jpg 时按原逻辑处理（显示姓名文字或不显示），不参与独立绘制。</div>
+    </div>
+
     <div class="modal-actions">
       <button type="button" class="btn-cancel" id="cfgClose">关闭</button>
       <button type="button" class="btn-ok" id="cfgSave">保存</button>
@@ -1044,7 +1081,8 @@ function saveLeaveTypesCache(lt){
 }
 var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', workStart:'08:30', workEnd:'17:30', presetNotes:{},
                       leaveTypes: loadLeaveTypesCache(),   // 优先取缓存（上次配置），Waline 配置到达后于 loadConfig 内覆盖并写回缓存
-                      pwdReview:'', pwdApprove:'', pwdAdmin:'' };  // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值 + 休假类型 + 管理密码哈希，页面启动从 Waline 读取覆盖）
+                      sigCfg: { on:false, bottom:5, right:5, len:5, hgt:5, rot:5 },   // 签名配置：on=独立绘制开关；bottom/right=上下/左右随机 ±px；len/hgt=在「计算出的尺寸」上再 ±%；rot=旋转 ±°
+                      pwdReview:'', pwdApprove:'', pwdAdmin:'' };  // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值 + 休假类型 + 签名配置 + 管理密码哈希，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
 var GROUP_PRINT_CFG = {};   // 打印设置（按考勤组+类别绑定）：{ [考勤组名]: { ot:{...}, lv:{...} } }，ot=加班 lv=请假；每类含 tplFile/perPage/kaoqingRen/dept1Leader/dept2Leader；随 /kaoqing/config 一并读写
 var cfgGpCur        = '';    // 打印设置面板当前选中的考勤组
@@ -4025,6 +4063,8 @@ function defaultDigitPx(fnt){
 }
 async function renderTemplateToHtml(ab, recVals, docVals, signByName){
   // 复用已解析模板模型（同模板跳过 JSZip 解压 + XML 解析）；签名图已在调用方按模板实际用法取出并传入 signByName
+  // 签名独立绘制开关：开启后格内只留「不可见但占位」的同尺寸签名图，真正的签名由 drawSignatures() 在整页画完后叠加
+  var sigOverlayOn = !!(CONFIG.sigCfg && CONFIG.sigCfg.on);
   var model = await getTemplateModel(ab);
   SS_CACHE = model.SS_CACHE;
   var cols = model.cols, rowH = model.rowH, styleMap = model.styleMap, imgByVm = model.imgByVm,
@@ -4152,7 +4192,15 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
         var e = _xmlEsc(resolved);
         e = e.replace(/\u0001([^\u0001]*)\u0001/g, function(_, n){
           var u = signByName ? (signByName[String(n).trim()] || '') : '';
-          if (u) return '<img src="' + u + '" style="max-width:100%;max-height:' + (rh || '40pt') + '">';
+          if (u){
+            // 独立绘制模式：格内放一张 visibility:hidden 的同尺寸图 —— 尺寸/位置与内嵌时完全一致，
+            // 但不可见；等整页画完后由 drawSignatures() 实测它的位置，再叠加真正（带随机微调）的签名。
+            // 用 visibility:hidden 而非 display:none，是为了保留占位，防止同行文字（如「签名：」前缀）位移。
+            if (sigOverlayOn){
+              return '<img class="sig-src" src="' + u + '" style="max-width:100%;max-height:' + (rh || '40pt') + ';visibility:hidden">';
+            }
+            return '<img src="' + u + '" style="max-width:100%;max-height:' + (rh || '40pt') + '">';
+          }
           // 缺签名图：退而显示姓名文字（便于核对绑定是否生效、以及补 names/<姓名>.jpg），不再留空
           var nt = String(n).trim();
           return nt ? '<span style="font-size:10pt">' + _xmlEsc(nt) + '</span>' : '';
@@ -4223,6 +4271,76 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
 function showBusy(text){ var m=$('#busyMask'); if(!m) return; var t=$('#busyText'); if(t && text) t.textContent=text; m.hidden=false; }
 function hideBusy(){ var m=$('#busyMask'); if(m) m.hidden=true; }
 // 模板打印核心：传入记录数组，忠于 xlsx 模板排版渲染成网页后调起浏览器打印对话框（可打印 / 另存 PDF）
+/* ---------- 签名独立绘制（打印时） ----------
+   前提：CONFIG.sigCfg.on 开启时，renderTemplateToHtml 已在格内放了 visibility:hidden 的占位签名图 img.sig-src
+   （尺寸/位置与内嵌时完全一致，仅不可见）。本函数在「表格画完 + 超界缩放 k 套用 + 图片解码完成」之后执行：
+     1) 实测每个占位图相对本页缩放层 .tpl-scale 的布局坐标（getBoundingClientRect 是缩放后坐标，需 ÷k 还原；
+        该层 transform-origin:top left，故 (子rect - 层rect)/k 即未缩放布局偏移）；
+     2) 按 CONFIG.sigCfg 的幅度做「每次打印随机」微调：上下/左右 ±px、宽高 ±%（叠加在计算出的尺寸上）、旋转 ±°；
+     3) 真实签名 img 绝对定位叠加到 .tpl-scale 末尾 —— 挂在缩放层内会自动跟随 scale(k)，
+        且作为缩放层的子元素、z-index 高于格子的 1，不会被右侧/下方格子遮挡。
+   ⚠ 不做任何「限制在表格内」的裁剪：签名压线、略微超出表格边界属预期效果（更接近真实手写）。
+   返回 true=至少画出一张；false=一个都没画（调用方据此恢复内嵌显示）。 */
+function drawSignatures(pa){
+  var cfg = CONFIG.sigCfg || {};
+  if (!cfg.on || !pa) return false;
+  function amp(v, d){ var n = parseFloat(v); return isNaN(n) ? d : Math.abs(n); }
+  var aBottom = amp(cfg.bottom, 5), aRight = amp(cfg.right, 5), aLen = amp(cfg.len, 5), aHgt = amp(cfg.hgt, 5), aRot = amp(cfg.rot, 5);
+  function rnd(a){ return (Math.random() * 2 - 1) * a; }      // 每次打印随机：[-a, +a]
+  var drew = 0;
+  var scales = pa.querySelectorAll('.tpl-scale');
+  for (var i = 0; i < scales.length; i++){
+    var sc = scales[i];
+    var k = parseFloat(sc.dataset && sc.dataset.k);
+    if (!k || isNaN(k)) k = 1;
+    var sr = sc.getBoundingClientRect();
+    var srcs = sc.querySelectorAll('img.sig-src');
+    for (var j = 0; j < srcs.length; j++){
+      var s = srcs[j];
+      var r = s.getBoundingClientRect();
+      if (!r.width || !r.height) continue;                    // 没量到尺寸 → 跳过（异常兜底）
+      var left = (r.left - sr.left) / k;                      // 换算回未缩放布局坐标
+      var top  = (r.top  - sr.top ) / k;
+      var w    = r.width  / k, h = r.height / k;
+      var img = document.createElement('img');
+      img.className = 'sig-overlay';
+      img.src = s.getAttribute('src') || '';
+      img.alt = '';
+      img.style.left   = (left + rnd(aRight)).toFixed(2) + 'px';   // 左右随机偏移
+      img.style.top    = (top  + rnd(aBottom)).toFixed(2) + 'px';  // 上下随机偏移
+      img.style.width  = (w * (1 + rnd(aLen) / 100)).toFixed(2) + 'px';    // 在「计算出的宽度」上叠加 ±%
+      img.style.height = (h * (1 + rnd(aHgt) / 100)).toFixed(2) + 'px';    // 在「计算出的高度」上叠加 ±%
+      img.style.transform = 'rotate(' + rnd(aRot).toFixed(2) + 'deg)';
+      sc.appendChild(img);
+      drew++;
+    }
+  }
+  return drew > 0;
+}
+/* 兜底：把格内不可见的占位签名恢复可见 → 退回「单元格内嵌」显示，保证签名不会整个丢失 */
+function showSigSrc(pa){
+  if (!pa) return;
+  var ss = pa.querySelectorAll('img.sig-src');
+  for (var i = 0; i < ss.length; i++) ss[i].style.visibility = 'visible';
+}
+/* 等打印区里的图片解码完成（含格内占位签名）：未解码时 img 的 rect 为 0，实测位置会失败。
+   带 3 秒超时兜底，避免个别图片永远不 load 时把打印卡死。 */
+function waitImagesReady(root){
+  if (!root) return Promise.resolve();
+  var imgs = root.querySelectorAll('img'), pend = [];
+  for (var i = 0; i < imgs.length; i++){ if (!imgs[i].complete) pend.push(imgs[i]); }
+  if (!pend.length) return Promise.resolve();
+  var waited = pend.map(function(im){
+    return new Promise(function(res){
+      im.addEventListener('load', res, { once: true });
+      im.addEventListener('error', res, { once: true });
+    });
+  });
+  return Promise.race([
+    Promise.all(waited),
+    new Promise(function(res){ setTimeout(res, 3000); })
+  ]);
+}
 async function printRecordsViaTemplate(rs){
   if (!rs || !rs.length){ await showAlert('没有可打印的记录'); return; }
   showBusy('模板打印准备中…');
@@ -4325,6 +4443,20 @@ async function printRecordsViaTemplate(rs){
       var _nw = _sc.offsetWidth, _nh = _sc.offsetHeight;
       var _k = (_nw && _nh) ? Math.min(1, _availW / _nw, _availH / _nh) : 1;   // 仅收缩，不放大、不居中
       _sc.style.transform = 'scale(' + _k.toFixed(4) + ')';
+      _sc.dataset.k = _k.toFixed(4);   // 记录缩放比：签名独立绘制时用它把实测坐标换算回未缩放的布局坐标
+    }
+    // 签名独立绘制：表格已全部画完、缩放也已套用 → 等所有图片（含格内不可见的占位签名）解码完成、拿到真实尺寸后，
+    // 再实测每个占位签名(.sig-src)在本页的位置，按配置做「每次打印随机」的偏移/缩放/旋转，叠加到 .tpl-scale 上
+    // （不进 td，避免被 z-index:1 的格子盖住）。失败则把占位图恢复可见 → 自动退回原来的单元格内嵌显示。
+    if (CONFIG.sigCfg && CONFIG.sigCfg.on){
+      try { await waitImagesReady(pa); } catch(e){}
+      try {
+        var _drew = drawSignatures(pa);
+        if (!_drew){ showSigSrc(pa); }   // 一个都没画出来（异常）→ 恢复内嵌显示，保证签名不丢
+      } catch(e){
+        console.warn('[kaoqing] 签名独立绘制失败，回退内嵌显示', e && e.message ? e.message : e);
+        showSigSrc(pa);
+      }
     }
     document.body.classList.add('printing-template');
     var cleanup = function(){ document.body.classList.remove('printing-template'); };
@@ -5805,6 +5937,15 @@ async function loadConfig(){
       }
       // 打印设置（按考勤组绑定）：覆盖到内存（页面其它位置按 curGroup 取用）
       if (best.obj.groupPrint && typeof best.obj.groupPrint === 'object' && !Array.isArray(best.obj.groupPrint)) GROUP_PRINT_CFG = normalizeGpCfg(best.obj.groupPrint);
+      // 签名配置（独立绘制 + 随机微调）：逐字段合并，缺省项保留默认值
+      if (best.obj.sigCfg && typeof best.obj.sigCfg === 'object'){
+        var _s = best.obj.sigCfg, _d = { on:false, bottom:5, right:5, len:5, hgt:5, rot:5 };
+        ['bottom','right','len','hgt','rot'].forEach(function(k){
+          var n = parseFloat(_s[k]); _d[k] = isNaN(n) ? _d[k] : Math.abs(n);
+        });
+        _d.on = !!_s.on;
+        CONFIG.sigCfg = _d;
+      }
     }
   } catch(e){
     console.warn('[kaoqing] 读取考勤配置失败（使用默认）', e && e.message ? e.message : e);
@@ -5945,7 +6086,32 @@ function openConfig(){
   fillPersonSel('cfgGpKqRen'); fillPersonSel('cfgGpD1'); fillPersonSel('cfgGpD2');
   loadGpCfgIntoForm();
   refreshTplList();
+  // 签名配置（打印时独立绘制 + 随机微调）
+  var sg = CONFIG.sigCfg || {};
+  var sgSet = [['#cfgSigOn', 'checked', !!sg.on], ['#cfgSigBottom', 'value', sg.bottom], ['#cfgSigRight', 'value', sg.right],
+               ['#cfgSigLen', 'value', sg.len], ['#cfgSigHgt', 'value', sg.hgt], ['#cfgSigRot', 'value', sg.rot]];
+  sgSet.forEach(function(p){
+    var el = $(p[0]); if (!el) return;
+    var v = (p[2] === undefined || p[2] === null) ? 5 : p[2];
+    if (p[1] === 'checked') el.checked = !!v; else el.value = v;
+  });
   $('#cfgMask').hidden = false;
+}
+/* 读取「签名配置」表单 → { on, bottom, right, len, hgt, rot }（幅度取绝对值，非法/缺失回落 5） */
+function readSigCfgForm(){
+  function num(id, d){
+    var el = $(id); if (!el) return d;
+    var n = parseFloat(el.value);
+    return isNaN(n) ? d : Math.abs(n);
+  }
+  return {
+    on:     !!($('#cfgSigOn') && $('#cfgSigOn').checked),
+    bottom: num('#cfgSigBottom', 5),
+    right:  num('#cfgSigRight', 5),
+    len:    num('#cfgSigLen', 5),
+    hgt:    num('#cfgSigHgt', 5),
+    rot:    num('#cfgSigRot', 5)
+  };
 }
 async function saveConfigToWaline(){
   if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
@@ -5997,7 +6163,8 @@ async function saveConfigToWaline(){
     pwdApprove: pwdNew.approve,
     pwdAdmin:   pwdNew.admin,
     leaveTypes: leaveTypes,
-    groupPrint: GROUP_PRINT_CFG
+    groupPrint: GROUP_PRINT_CFG,
+    sigCfg: readSigCfgForm()
   };
   var user = getWalineUser();
   var token = WALINE_ADMIN_TOKEN || walineToken(user);
@@ -6025,6 +6192,7 @@ async function saveConfigToWaline(){
     CONFIG.pwdApprove  = payload.pwdApprove;
     CONFIG.pwdAdmin    = payload.pwdAdmin;
     CONFIG.leaveTypes  = payload.leaveTypes || CONFIG.leaveTypes;
+    CONFIG.sigCfg      = payload.sigCfg;
     // 保存后清空输入框并刷新 placeholder（避免误以为还留在表单里 / 反映最新设置状态）
     [['#cfgPwdReview', CONFIG.pwdReview], ['#cfgPwdApprove', CONFIG.pwdApprove], ['#cfgPwdAdmin', CONFIG.pwdAdmin]].forEach(function(p){
       var el = $(p[0]); if (!el) return;
