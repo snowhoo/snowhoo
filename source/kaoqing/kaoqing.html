@@ -4474,25 +4474,40 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     for (var i = 0; i < perPage; i++) res.push({});
     var anyField = false;
     var mcOn = !!(CONFIG.mergeCfg && CONFIG.mergeCfg.on);   // 合并总开关
-    // 模板写死的固定值列（无记录字段）：从配置 fixedCols 按「列的固定文本」匹配，命中才参与合并、且用其配置模式（不再默认全合并）
-    var fixedArr = (CONFIG.mergeCfg && CONFIG.mergeCfg.fixedCols)
-      ? CONFIG.mergeCfg.fixedCols.filter(function(x){ return x && x.name && (x.mode === 'min' || x.mode === 'full' || x.mode === 'same'); })
-      : [];
     function _cellPlainText(c){
       if (!c) return '';
       var t = c.text || '';
       if (c.runs && c.runs.length) t = c.runs.map(function(r){ return r.text || ''; }).join('');
       return t.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
     }
+    // 模板写死的固定值列（无记录字段）：用户按「表头文本」注册（如加班模板 G3=『自愿』），
+    //   渲染时扫描表头行解析出对应列号，再让该列的数据行参与合并（用配置模式）。
+    //   例：数据行 G4 写死『√』，注册『自愿』即命中第 G 列 → 该列所有数据行合并。
+    //   旧逻辑是拿数据格文本（√）对注册名（自愿）匹配，永远对不上 → 固定列怎么配都不合并。
+    var fixedColByNum = {};   // { cNum: mode }
+    (function(){
+      if (!mcOn || !CONFIG.mergeCfg || !CONFIG.mergeCfg.fixedCols) return;
+      var ar = CONFIG.mergeCfg.fixedCols.filter(function(x){ return x && x.name && (x.mode === 'min' || x.mode === 'full' || x.mode === 'same'); });
+      if (!ar.length) return;
+      var headCols = {};   // { cNum: plainText }
+      (headerRows || []).forEach(function(rw){
+        var pc = _getRow(rw);
+        pc.cells.forEach(function(c){
+          var cn = colToNum(c.ref.replace(/\d+/, ''));
+          if (hiddenCols[cn]) return;
+          var t = _cellPlainText(c);
+          if (t) headCols[cn] = t;
+        });
+      });
+      ar.forEach(function(x){
+        var nt = _cellPlainText({ text: x.name });
+        Object.keys(headCols).forEach(function(k){
+          if (headCols[k] === nt) fixedColByNum[k] = x.mode;
+        });
+      });
+    })();
     function _fixedModeOf(d3, cn){
-      if (!mcOn || !fixedArr.length) return '';
-      var c = cellMapByDr[d3] && cellMapByDr[d3][cn];
-      var txt = _cellPlainText(c);
-      if (!txt) return '';
-      for (var z = 0; z < fixedArr.length; z++){
-        if (_cellPlainText({ text: fixedArr[z].name }) === txt) return fixedArr[z].mode;
-      }
-      return '';
+      return fixedColByNum[cn] || '';
     }
     // 先探测本页是否有任何列需要合并
     var fieldsByDr = [];             // fieldsByDr[d][cNum] = 字段名 或 ''
@@ -4532,7 +4547,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     // 逐个「模板数据行」、逐列计算合并区间
     for (var d3 = 0; d3 < dataRows.length; d3++){
       var fmap2 = fieldsByDr[d3];
-      // 某列的合并模式：有字段且配置了模式→用配置；模板写死的固定值列（无字段）→按「列固定文本」匹配 fixedCols，命中用其配置模式，否则不参与
+      // 某列的合并模式：有字段且配置了模式→用配置；模板写死的固定值列（无字段）→按表头解析出的列号查 fixedCols，命中用其配置模式，否则不参与
       function modeOfCn(cn){
         var fk = fmap2[cn];
         if (fk) return mergeModeOf(fk);
