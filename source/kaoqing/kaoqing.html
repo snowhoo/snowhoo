@@ -434,7 +434,13 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .rec-edit svg{width:14px;height:14px;display:block}
 .empty{color:var(--text-muted);font-size:.82rem;text-align:center;margin:6px 0}
 /* 考勤配置弹窗 */
-.modal-config{width:min(580px,94vw)}
+.modal-config{width:min(580px,94vw);position:relative}
+/* 配置面板「从 Waline 重新载入」时的转圈遮罩：覆盖在面板内容之上，禁止在读取完成前操作/误存 */
+.cfg-loading{position:absolute;inset:0;background:var(--bg-surface);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:5}
+.cfg-loading[hidden]{display:none}
+.cfg-spinner{width:38px;height:38px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:cfgSpin .8s linear infinite}
+@keyframes cfgSpin{to{transform:rotate(360deg)}}
+.cfg-loading-text{font-size:.9rem;color:var(--text-muted)}
 .cfg-section{margin:14px 0;padding:13px 15px;border:1px solid var(--border);border-radius:10px;background:var(--bg)}
 .cfg-section-title{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:10px;letter-spacing:.03em}
 .cfg-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0}
@@ -732,6 +738,10 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 <div class="modal-mask" id="cfgMask" hidden>
   <div class="modal modal-config" role="dialog" aria-modal="true">
     <div class="modal-title">考勤配置</div>
+    <div id="cfgLoading" class="cfg-loading" hidden>
+      <div class="cfg-spinner"></div>
+      <div class="cfg-loading-text">载入配置中…</div>
+    </div>
  <div class="cfg-section">
       <div class="cfg-section-title">午休扣除</div>
       <label class="cfg-check"><input type="checkbox" id="cfgDeductLunch">请假午休扣除</label>
@@ -2364,7 +2374,14 @@ function recSortValue(i, key){
     return isOt ? ot : (r.catName || '');   // 加班按明细类型排序（国假/双休/平时），不含「加班」二字
   }
   if (key === 'date')  return r.date || '';
-  if (key === 'time')  return (r.detail || '').replace(/^(\d{1,2}:\d{2}).*$/, '$1');  // 取起始时间 HH:MM
+  if (key === 'time'){
+    // 时段排序键：用「起始分钟数×10000 + 结束分钟数」的数值，而非仅抽起始时间做字符串比较。
+    // ① 同起始、不同结束（如 09:00-12:00 与 09:00-18:00）也能排出先后；② 单/双位小时（8:00 vs 09:00）按数值而非字典序，不会排反。
+    var _sp = parseDetail(r.detail || '');
+    if (!_sp.length) return -1;                 // 无时段：排最前（与 hours 的 -1 约定一致）
+    function _min(t){ var p = String(t).split(':'); return ((parseInt(p[0], 10) || 0) * 60) + (parseInt(p[1], 10) || 0); }
+    return _min(_sp[0].start) * 10000 + _min(_sp[0].end);
+  }
   if (key === 'hours') return (r.hours == null) ? -1 : Number(r.hours);
   if (key === 'status')return r.status || '';
   if (key === 'note')  return r.note || '';
@@ -4458,6 +4475,10 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       });
       enabled.sort(function(a, b){ return a - b; });
       if (!enabled.length) continue;
+      // min 模式的「左侧约束列」只算 min 列本身：full 列不参与约束（full 列可跨过其它列，
+      //   若把它也算进左侧约束，会让左侧的 full 列（如姓名）卡死右侧所有 min 列 → 最小合并整片失效）。
+      // 故单独抽出 minOrder（仅含 min 列，按列号升序），min 列只受「左侧所有 min 列」约束，天然不跨外层。
+      var minOrder = enabled.filter(function(cn){ return mergeModeOf(fmap2[cn]) === 'min'; });
       // 逐实例的该列 HTML
       function valAt(inst, cn){
         if (!cells[inst] || !cells[inst][d3]) return null;
@@ -4477,8 +4498,10 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
             if (mode === 'full'){
               brk = (valAt(j, cn) !== valAt(j - 1, cn));
             } else {
-              for (var q2 = 0; q2 <= k; q2++){
-                if (valAt(j, enabled[q2]) !== valAt(j - 1, enabled[q2])){ brk = true; break; }
+              // 最小合并：仅受「左侧所有 min 列」约束（minOrder 中本列自身及其左侧），full 列不参与
+              var mi = minOrder.indexOf(cn);
+              for (var q2 = 0; q2 <= mi; q2++){
+                if (valAt(j, minOrder[q2]) !== valAt(j - 1, minOrder[q2])){ brk = true; break; }
               }
             }
             if (brk) break;
@@ -6398,8 +6421,21 @@ function safeCfgBlock(label, fn){
   catch(e){ console.error('[openConfig] 区块「' + label + '」回填失败（已隔离，不影响其它区块）:', e); }
 }
 var cfgPanelReady = false;   // openConfig 完整回填成功后置 true；保存时若面板未成功打开，所有字段回退 CONFIG 现有值，绝不读 HTML 默认
-function openConfig(){
+async function openConfig(){
   closeSettings();
+  var _mask = $('#cfgMask'), _loading = $('#cfgLoading');
+  _mask.hidden = false;                    // 先显示面板
+  if (_loading) _loading.hidden = false;   // 转圈 + 「载入配置中…」：读取完成前禁止操作/误存
+  // ⚠ 绝对不读内存缓存：每次打开都强制从 Waline 重新拉取真实配置（loadConfig 直接 fetchCloudRecord，无 localStorage 兜底）
+  try { await loadConfig(); } catch(e){ /* loadConfig 内部已把 configLoaded 置 false */ }
+  if (_loading) _loading.hidden = true;    // 读取完成（成功/失败都先收起转圈）
+  if (configLoaded === false){
+    // 读失败：绝不让内存默认值覆盖线上真实配置 → 不打开编辑
+    showAlert('配置从云端读取失败，为避免覆盖为默认值，本次未打开编辑。\n请检查网络后重试。');
+    _mask.hidden = true;
+    cfgPanelReady = false;
+    return;
+  }
   safeCfgBlock('午休/班次', function(){
     $('#cfgDeductLunch').checked = !!CONFIG.deductLunch;
     $('#cfgLunchStart').value = CONFIG.lunchStart || '';
@@ -6456,7 +6492,6 @@ function openConfig(){
     var mo = $('#cfgMergeOn'); if (mo) mo.checked = !!mergeWork.on;
     renderMergeRows();
   });
-  $('#cfgMask').hidden = false;
   cfgPanelReady = true;   // 完整回填成功 → 保存时可信任表单值
 }
 /* 读取「签名配置」表单 → { on, bottom, right, len, hgt, rot }（幅度取绝对值，非法/缺失回落 5） */
