@@ -694,7 +694,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
       <div class="card-body">
         <div class="rec-toolbar">
           <span class="rec-source-wrap">
-            <select id="recSource" class="rec-source"><option value="waline">未归档记录</option></select>
+            <select id="recSource" class="rec-source"><option value="waline:all">未归档（全部）</option></select>
             <span id="recSourceSpin" class="rec-source-spin" hidden><span class="ot-spin" title="归档列表加载中…"></span></span>
           </span>
           <select id="recStatus" class="rec-status-sel" title="按状态筛选记录">
@@ -1233,6 +1233,11 @@ var editIndex = null;   // 修改模式：正在编辑的记录下标（null=新
 var editGroupBak = null;  // 修改模式：进入修改前的考勤组别（退出修改时还原，保证返回后视图与进入前完全一致）
 var viewMode   = 'edit';   // 'edit'=未归档(Waline 可改删)；'view'=归档(R2 只读，不能修改/删除)
 var curProxy   = '';       // 请假单「代理人」：表单级选择（仅请假有效），保存时写入记录；不选则为空
+/* 未归档月份筛选（2026-09-12 增强）：下拉框「未归档」侧按数据动态列出月份，默认当前月，便于按月筛选归档而不误伤它月。
+   walineMonthFilter = null → 未归档（全部）；'YYYY-MM' → 具体月份。仅未归档视图生效（归档 R2 视图不应用）。 */
+var walineMonthFilter = null;
+var walineMonthsInitialized = false;   // 首屏是否已按「默认当前月」定过一次选中项
+var archiveMonthsData = null;          // 已加载的归档月份清单（loadArchiveMonths 写入，供下拉框重建）
 /* ---------- 记录表：多级排序 ----------
    可排序列（顺序即表头顺序）：# / 人员 / 日期 / 时段 / 小时 / 类别 / 状态 / 说明，共 8 列 → 排序层级也最多 8 级。
    排序规格 sortCfg = [{key,dir}, ...]，**下标即层级**（0 = 1 级，优先级最高）；越靠后的列在前面都相同时才参与比较。
@@ -2435,6 +2440,26 @@ function mdOnly(d){
   var m = /^\d{4}-(\d{1,2}-\d{1,2})$/.exec(s);
   return m ? m[1] : s;
 }
+/* 记录所属月份键 'YYYY-MM'（取自起始日期 r.date）。跨天记录只按起始日归月。 */
+function recMonthKey(r){
+  var d = (r && r.date) || '';
+  var m = /^(\d{4}-\d{2})-\d{1,2}$/.exec(String(d));
+  return m ? m[1] : '';
+}
+/* 当前年月的 'YYYY-MM' 键 */
+function curMonthKey(){
+  var d = new Date();
+  var m = d.getMonth() + 1;
+  return d.getFullYear() + '-' + (m < 10 ? '0' + m : m);
+}
+/* 月份下拉显示文案：当前年只显「X月」，跨年显「YYYY年X月」，保持与用户示例「未归档（9月）」一致 */
+function monthLabelShort(ym){
+  var p = /^(\d{4})-(\d{2})$/.exec(ym || '');
+  if (!p) return ym || '';
+  var label = (parseInt(p[2], 10)) + '月';
+  if (p[1] !== String(new Date().getFullYear())) label = p[1] + '年' + label;
+  return label;
+}
 /* 记录表「日期」单元格内容：只显示月日，不含时间与年份。
    跨天：起日期 ~ 至日期（中间用「~」连接，不强制换行，由列宽自然折行）；单日：仅起日期。 */
 function recDateCellHtml(r){
@@ -2450,6 +2475,10 @@ function renderRecords(){
   var sf = (viewMode === 'view') ? 'all' : (($('#recStatus') && $('#recStatus').value) || '待提交');
   var idxs = records.map(function(r, i){ return i; });
   if (sf !== 'all') idxs = idxs.filter(function(i){ return (records[i].status || '待提交') === sf; });
+  // 未归档月份筛选（仅未归档视图生效）：walineMonthFilter=null 表示「未归档（全部）」，否则只显示该月记录
+  if (viewMode === 'edit' && walineMonthFilter){
+    idxs = idxs.filter(function(i){ return recMonthKey(records[i]) === walineMonthFilter; });
+  }
   // 进行中的占位(空白)记录：无论当前筛选都强制显示，用于承载「保存中…」旋转圆圈
   records.forEach(function(r, i){ if (r._pending && idxs.indexOf(i) < 0) idxs.push(i); });
   $('#recCount').textContent = '共 ' + idxs.length + ' 条';   // 归档/未归档 统一只显示「共 N 条」，不再额外标注「归档记录（xxx）」
@@ -2741,7 +2770,15 @@ async function submit(){
     procMap[rec.id] = '保存中…';
     writeQueue.push({ rec: rec, ph: ph });
   });
-  renderRecords();
+  // 新增后自动切月：若当前正按某具体月筛选且不含本次新增月 → 跳到新增月，防止新增后找不到记录（全部视图则记录本就可见，不动）
+  var addMk = {};
+  newRecs.forEach(function(r){ var k = recMonthKey(r); if (k) addMk[k] = 1; });
+  var addMonths = Object.keys(addMk);
+  if (walineMonthFilter && addMonths.length && addMonths.indexOf(walineMonthFilter) < 0){
+    rebuildRecSourceOptions({ jumpToMonth: addMonths[0] });
+  } else {
+    renderRecords();
+  }
   selPeople.clear();
   resetForm();             // 恢复初始：清空人员/类别/内容，回到「添加」绿按钮，可继续添加
   pumpWriteQueue();        // 后台异步写库（fire-and-forget，不阻塞继续添加）
@@ -5704,6 +5741,7 @@ async function loadRecordsFromWaline(quiet, force){
     if (warmupPromise === p) warmupPromise = null;
     var cs = ($('#recStatus') && $('#recStatus').value) || '待提交';
     if (cs === 'all' || statusReady[cs]){ recordsLoading = false; applyStatusFilter(); }   // 最终用并集最新数据补齐当前视图
+    rebuildRecSourceOptions();   // 重建「数据选择」下拉框（未归档月份分组 + 默认当前月），并刷新表格
     var curFail = cs !== 'all' && statusReady[cs] === false;
     if (curFail) cloudToast('error', '考勤记录读取失败', 'loadRecords');
     else if (!quiet) cloudToastHide('loadRecords');
@@ -5751,29 +5789,79 @@ function refreshArchiveBtn(pending){
 }
 
 
+/* 重建「数据选择」下拉框：未归档（Waline）分组含 未归档（全部）+ 各月份；已归档（R2）分组含归档文件。
+   opts.jumpToMonth：新增记录后强制切到该月（防止新增后找不到记录）；
+   opts.preserveVal：重建前记下的值，优先还原（设置 .value 不触发 change，不会误切视图）。
+   月份清单取自 recordsAll（已落库）＋ records 中的进行中/失败占位（刚新增、尚未入 recordsAll）。 */
+function rebuildRecSourceOptions(opts){
+  opts = opts || {};
+  var sel = $('#recSource'); if (!sel) return;
+  var preserve = (opts.preserveVal != null) ? opts.preserveVal
+              : (sel.value && sel.value !== 'waline' ? sel.value : 'waline:all');
+
+  // 1) 收集未归档数据中的月份键
+  var monthSet = {};
+  (recordsAll || []).forEach(function(r){ var k = recMonthKey(r); if (k) monthSet[k] = 1; });
+  (records || []).forEach(function(r){ if (r && (r._pending || r._failed)){ var k = recMonthKey(r); if (k) monthSet[k] = 1; } });
+  var months = Object.keys(monthSet).sort().reverse();   // 新→旧
+
+  // 2) 决定选中项
+  var want;
+  if (opts.jumpToMonth){                                   // 新增后：跳到新增月
+    want = 'waline:' + opts.jumpToMonth;
+  } else if (!walineMonthsInitialized && (!preserve || preserve === 'waline' || preserve.indexOf('waline:') === 0)){
+    // 首屏默认：当前月优先（便于按月筛选归档不误伤它月），无当月数据则全部；仅在未归档视图态下生效
+    var cy = curMonthKey();
+    want = monthSet[cy] ? ('waline:' + cy) : 'waline:all';
+    walineMonthsInitialized = true;
+  } else if (preserve && (preserve === 'waline' || preserve.indexOf('waline:') === 0)){
+    var mk = (preserve === 'waline') ? 'all' : preserve.slice(7);
+    if (mk === 'all' || months.indexOf(mk) >= 0) want = (mk === 'all' ? 'waline:all' : 'waline:' + mk);
+    else want = (monthSet[curMonthKey()] ? ('waline:' + curMonthKey()) : 'waline:all');   // 当前月消失 → 回退
+  } else if (preserve && preserve !== 'waline'){            // 归档项：原样保留
+    want = preserve;
+  } else if (!walineMonthsInitialized){                     // 首屏（归档视图态）兜底
+    var cy2 = curMonthKey();
+    want = monthSet[cy2] ? ('waline:' + cy2) : 'waline:all';
+    walineMonthsInitialized = true;
+  } else {
+    want = (monthSet[curMonthKey()] ? ('waline:' + curMonthKey()) : 'waline:all');
+  }
+
+  // 3) 构建 DOM
+  sel.innerHTML = '';
+  var g1 = document.createElement('optgroup'); g1.label = '未归档（Waline）';
+  g1.appendChild(new Option('未归档（全部）', 'waline:all'));
+  months.forEach(function(ym){ g1.appendChild(new Option('未归档（' + monthLabelShort(ym) + '）', 'waline:' + ym)); });
+  sel.appendChild(g1);
+
+  if (archiveMonthsData){
+    var g2 = document.createElement('optgroup'); g2.label = '已归档（R2）';
+    archiveMonthsData.forEach(function(m){
+      (m.files || []).forEach(function(f){
+        var nm = (f.name || '').replace(/\.json$/i, '');   // 2026-08.json → 2026-08；2026-08_01.json → 2026-08_01
+        g2.appendChild(new Option(nm + '(' + (f.count || 0) + ')', f.key));   // 直接显示「2026-08(1)」
+      });
+    });
+    sel.appendChild(g2);
+  }
+
+  // 4) 设置选中项并同步 walineMonthFilter + 刷新表格
+  var okNow = Array.prototype.some.call(sel.options, function(op){ return op.value === want; });
+  if (!okNow) want = (preserve && preserve !== 'waline' && preserve.indexOf('waline:') !== 0) ? preserve : 'waline:all';
+  var ok2 = Array.prototype.some.call(sel.options, function(op){ return op.value === want; });
+  sel.value = ok2 ? want : 'waline:all';
+  walineMonthFilter = (sel.value === 'waline:all' || sel.value === 'waline') ? null : sel.value.slice(7);
+  if (viewMode === 'edit') renderRecords();   // 归档视图由 loadArchive 负责渲染，这里不抢
+}
 async function loadArchiveMonths(quiet){
   if (!quiet) cloudToast('read', '处理中：读取归档列表...', 'loadArchive');
   try {
     var resp = await fetch(ARCHIVE_R2_BASE + ARCHIVE_PREFIX + 'index.json?t=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) throw new Error('index ' + resp.status);
     var data = await resp.json();
-    var months = (data && data.months) || [];
-    var sel = $('#recSource');
-    var prevVal = sel.value;                        // 重建选项前记住当前选中项，重建后还原（避免下拉框选中项被重置到「未归档记录」）
-    sel.innerHTML = '<option value="waline">未归档记录</option>';
-    months.forEach(function(m){
-      (m.files || []).forEach(function(f){
-        var o = document.createElement('option');
-        o.value = f.key;
-        var nm = (f.name || '').replace(/\.json$/i, '');   // 2026-08.json → 2026-08；2026-08_01.json → 2026-08_01
-        o.textContent = nm + '(' + (f.count || 0) + ')';     // 直接显示「2026-08(1)」「2026-08_01(1)」
-        sel.appendChild(o);
-      });
-    });
-    if (prevVal && prevVal !== 'waline'){           // 还原到原先选中的归档文件（设置 .value 不触发 change 事件，不会误切换视图）
-      var stillThere = Array.prototype.some.call(sel.options, function(op){ return op.value === prevVal; });
-      if (stillThere) sel.value = prevVal;
-    }
+    archiveMonthsData = (data && data.months) || [];
+    rebuildRecSourceOptions({ preserveVal: (($('#recSource') || {}).value || 'waline:all') });   // 重建（含未归档月份分组），还原原选中项
     if (!quiet) cloudToastHide('loadArchive');
     return true;
   } catch(e){
@@ -6917,8 +7005,12 @@ async function saveConfigToWaline(){
 }
 /* 归档下拉：切换 未归档记录(Waline) / 归档记录(R2 只读) */
 $('#recSource').addEventListener('change', function(){
-  if (this.value === 'waline'){ switchToWaline(); }
-  else { switchToArchive(this.value); }
+  var v = this.value;
+  if (v === 'waline' || v.indexOf('waline:') === 0){          // 未归档（全部 / 某月）
+    walineMonthFilter = (v === 'waline' || v === 'waline:all') ? null : v.slice(7);
+    if (viewMode === 'view'){ switchToWaline(); }              // 从归档退回未归档：重新拉 Waline
+    else { renderRecords(); }                                  // 仅切换月份筛选，无需重拉
+  } else { switchToArchive(v); }                               // 已归档（R2）只读
 });
 /* 归档列表懒加载：页面打开不加载，仅在用户点开「数据选择」下拉框时才读 R2 index.json（不弹遮罩） */
 var archiveMonthsLoaded = false;
