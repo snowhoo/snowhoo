@@ -4433,6 +4433,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     var res = [];                    // res[i] = { cNum: n }
     for (var i = 0; i < perPage; i++) res.push({});
     var anyField = false;
+    var mcOn = !!(CONFIG.mergeCfg && CONFIG.mergeCfg.on);   // 合并总开关：写死固定值列在开启时默认「全合并」参与
     // 先探测本页是否有任何列需要合并
     var fieldsByDr = [];             // fieldsByDr[d][cNum] = 字段名 或 ''
     var cellMapByDr = [];            // cellMapByDr[d] = { cNum: cell对象 }
@@ -4447,6 +4448,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
         if (f) fmap[cn] = f;
         cmap[cn] = c;
         if (f && mergeModeOf(f)) anyField = true;
+        else if (!f && mcOn) anyField = true;   // 模板写死的固定值列：合并开启时也要参与合并（如某列固定写「自愿」）
       });
       fieldsByDr.push(fmap); cellMapByDr.push(cmap);
     }
@@ -4467,20 +4469,27 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     // 逐个「模板数据行」、逐列计算合并区间
     for (var d3 = 0; d3 < dataRows.length; d3++){
       var fmap2 = fieldsByDr[d3];
+      // 某列的合并模式：有字段且配置了模式→用配置；模板写死的固定值列（无字段）→合并开启时默认「全合并」（自身合且不卡其它列）
+      function modeOfCn(cn){
+        var fk = fmap2[cn];
+        if (fk) return mergeModeOf(fk);
+        return mcOn ? 'full' : '';
+      }
       // 参与合并的列，按列号升序（左→右）即层次顺序
       var enabled = [];
-      Object.keys(fmap2).forEach(function(k){
+      Object.keys(cellMapByDr[d3]).forEach(function(k){   // 遍历数据段所有列（含模板写死的固定值列），而非仅占位符字段列
         var cn = parseInt(k, 10);
-        if (fmap2[cn] && mergeModeOf(fmap2[cn])) enabled.push(cn);
+        var m = modeOfCn(cn);
+        if (m) enabled.push(cn);
       });
       enabled.sort(function(a, b){ return a - b; });
       if (!enabled.length) continue;
       // min 模式的「左侧约束列」只算 min 列本身：full 列不参与约束（full 列可跨过其它列，
       //   若把它也算进左侧约束，会让左侧的 full 列（如姓名）卡死右侧所有 min 列 → 最小合并整片失效）。
       // 故单独抽出 minOrder（仅含 min 列，按列号升序），min 列只受「左侧所有 min 列」约束，天然不跨外层。
-      var minOrder = enabled.filter(function(cn){ return mergeModeOf(fmap2[cn]) === 'min'; });
-      // 最小合并（严格 same）的约束列：所有参与列中「除 full 外」的列（enabled 已天然忽略不合并列），即 min + same 列
-      var strictOrder = enabled.filter(function(cn){ return mergeModeOf(fmap2[cn]) !== 'full'; });
+      var minOrder = enabled.filter(function(cn){ return modeOfCn(cn) === 'min'; });
+      // 最小合并（严格 same）的约束列：所有参与列中「除 full 外」的列（enabled 已天然忽略不合并列），即 min + same 列（写死固定值列默认 full，不卡 same）
+      var strictOrder = enabled.filter(function(cn){ return modeOfCn(cn) !== 'full'; });
       // 逐实例的该列 HTML
       function valAt(inst, cn){
         if (!cells[inst] || !cells[inst][d3]) return null;
@@ -4489,7 +4498,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
         return null;
       }
       enabled.forEach(function(cn, k){
-        var mode = mergeModeOf(fmap2[cn]);
+        var mode = modeOfCn(cn);
         var i3 = 0;
         while (i3 < perPage){
           if (!cells[i3]){ i3++; continue; }               // 空白行：不参与合并
