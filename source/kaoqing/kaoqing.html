@@ -906,7 +906,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
       <div class="cfg-section-title">打印合并（相邻行内容相同）</div>
       <div class="cfg-hint">用于<b>列表式模板</b>（如加班单，一页打多条）。勾选启用后，相邻记录同一字段内容相同时纵向合并成一个格（真合并，合并区内不画内部横线）。<b>单据式模板</b>（请假单，一页一张单）不适用。</div>
       <label class="cfg-check"><input type="checkbox" id="cfgMergeOn">启用相邻行相同内容合并</label>
-      <div class="cfg-hint">每列可选三种：<b>不合并</b>／<b>最小合并</b>（只有「本列 + 它左边所有参与合并的列」都连续相同才合并，内层绝不跨外层）／<b>全合并</b>（只看本列自己是否连续相同，可跨过其它列的分界 —— 适合「说明」这类长文本）。</div>
+      <div class="cfg-hint">每列可选四种：<b>不合并</b>（永不合并）／<b>按值自适应合</b>（原「最小合并」：只有「本列 + 它左边所有参与合并的列」都连续相同才合并，内层绝不跨外层）／<b>最小合并</b>（严格：只看参与合并的列——<b>已忽略设了「不合并」的列</b>——整行所有参与列都连续相同才合并，任意一列不同则当前列也不合）／<b>全合并</b>（只看本列自己是否连续相同，可跨过其它列的分界——适合「说明」这类长文本）。</div>
       <div id="cfgMergeRows"></div>
     </div>
 
@@ -4419,7 +4419,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
     var mc = CONFIG.mergeCfg;
     if (!mc || !mc.on || !mc.cols) return '';
     var m = mc.cols[fieldKey];
-    return (m === 'min' || m === 'full') ? m : '';
+    return (m === 'min' || m === 'full' || m === 'same') ? m : '';
   }
   /* 取单元格对应的记录字段（用于查合并配置）：取格内第一个「两括号行级记录键」，如 姓名的行级占位符 → '姓名' */
   function cellField(c){
@@ -4479,6 +4479,8 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       //   若把它也算进左侧约束，会让左侧的 full 列（如姓名）卡死右侧所有 min 列 → 最小合并整片失效）。
       // 故单独抽出 minOrder（仅含 min 列，按列号升序），min 列只受「左侧所有 min 列」约束，天然不跨外层。
       var minOrder = enabled.filter(function(cn){ return mergeModeOf(fmap2[cn]) === 'min'; });
+      // 最小合并（严格 same）的约束列：所有参与列中「除 full 外」的列（enabled 已天然忽略不合并列），即 min + same 列
+      var strictOrder = enabled.filter(function(cn){ return mergeModeOf(fmap2[cn]) !== 'full'; });
       // 逐实例的该列 HTML
       function valAt(inst, cn){
         if (!cells[inst] || !cells[inst][d3]) return null;
@@ -4497,11 +4499,16 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
             var brk = false;
             if (mode === 'full'){
               brk = (valAt(j, cn) !== valAt(j - 1, cn));
-            } else {
-              // 最小合并：仅受「左侧所有 min 列」约束（minOrder 中本列自身及其左侧），full 列不参与
+            } else if (mode === 'min'){
+              // 按值自适应合（原「最小合并」）：仅受「左侧所有 min 列」约束，full 列不参与
               var mi = minOrder.indexOf(cn);
               for (var q2 = 0; q2 <= mi; q2++){
                 if (valAt(j, minOrder[q2]) !== valAt(j - 1, minOrder[q2])){ brk = true; break; }
+              }
+            } else {
+              // 最小合并（严格 same）：只看 strictOrder（参与列中除 full 外，已忽略不合并列）；任意一列不同 → 当前列也不合（整行全同才合）
+              for (var q3 = 0; q3 < strictOrder.length; q3++){
+                if (valAt(j, strictOrder[q3]) !== valAt(j - 1, strictOrder[q3])){ brk = true; break; }
               }
             }
             if (brk) break;
@@ -6566,7 +6573,8 @@ function renderMergeRows(){
       + '<span class="cfg-label">' + f + '</span>'
       + '<select class="cfg-merge-mode" data-f="' + f + '">'
       + '<option value=""' + (v === '' ? ' selected' : '') + '>不合并</option>'
-      + '<option value="min"' + (v === 'min' ? ' selected' : '') + '>最小合并</option>'
+      + '<option value="min"' + (v === 'min' ? ' selected' : '') + '>按值自适应合</option>'
+      + '<option value="same"' + (v === 'same' ? ' selected' : '') + '>最小合并</option>'
       + '<option value="full"' + (v === 'full' ? ' selected' : '') + '>全合并</option>'
       + '</select>'
       + '</div>';
@@ -6577,7 +6585,7 @@ function syncMergeWork(){
   var cols = {};
   document.querySelectorAll('#cfgMergeRows .cfg-merge-mode').forEach(function(sel){
     var f = sel.getAttribute('data-f'), v = sel.value;
-    if (v === 'min' || v === 'full') cols[f] = v;
+    if (v === 'min' || v === 'full' || v === 'same') cols[f] = v;
   });
   mergeWork.cols = cols;
   mergeWork.on = !!($('#cfgMergeOn') && $('#cfgMergeOn').checked);
