@@ -1019,7 +1019,9 @@ function getAllPresetCats(){
   }
   push('加班', 'overtime');
   push('其它', 'qita');
-  (CONFIG.leaveTypes.direct || []).concat(CONFIG.leaveTypes.other || []).forEach(function(nm){
+  // ⚠ 容错：CONFIG.leaveTypes 可能为 undefined（加载时序/旧数据），此处若直接 .direct 会抛错，进而使调用方 openConfig 中断、后续所有字段不回填。
+  var _lt = (CONFIG.leaveTypes && typeof CONFIG.leaveTypes === 'object') ? CONFIG.leaveTypes : {};
+  (_lt.direct || []).concat(_lt.other || []).forEach(function(nm){
     push(nm, presetCatIdOf(nm));
   });
   return out;
@@ -1122,6 +1124,7 @@ var CONFIG        = { deductLunch:false, lunchStart:'12:00', lunchEnd:'13:00', w
                       mergeCfg: { on:false, cols:{ '日期':'min', '时段':'min', '小时':'min', '说明':'full' } },   // 打印「相邻行相同内容合并」：on=开关；cols[字段] = 'min'最小合并 / 'full'全合并（仅列表式模板，如加班单）
                       pwdReview:'', pwdApprove:'', pwdAdmin:'' };  // 考勤配置（午休扣除 + 正常上班时间 + 常用说明系统值 + 休假类型 + 签名配置 + 管理密码哈希，页面启动从 Waline 读取覆盖）
 var configOid     = null;                // 配置记录在 Waline 中的 oid（原地复写用）
+var configLoaded  = false;  // ⚠ 配置是否「已成功从云端读取到真实值」：仅当 fetchCloudRecord 拿到 best.obj（或确认无配置记录=首次运行）才置真；读取异常保持 false → 保存时拦截，绝不让内置默认值覆盖线上真实配置
 var GROUP_PRINT_CFG = {};   // 打印设置（按考勤组+类别绑定）：{ [考勤组名]: { ot:{...}, lv:{...} } }，ot=加班 lv=请假；每类含 tplFile/perPage/kaoqingRen/dept1Leader/dept2Leader；随 /kaoqing/config 一并读写
 var cfgGpCur        = '';    // 打印设置面板当前选中的考勤组
 var cfgGpCat        = 'ot';  // 打印设置面板当前编辑的类别：ot=加班 lv=请假
@@ -6269,9 +6272,14 @@ async function loadConfig(){
         });
         CONFIG.mergeCfg = _mc;
       }
+      configLoaded = true;   // ⚠ 已成功读到真实配置值：允许保存（保存以 CONFIG 为基底，不会写默认）
+    } else {
+      // 配置记录不存在（首次运行 / 记录暂无 obj）：没有可覆盖的真实值，允许正常把默认值初始化写入
+      configLoaded = true;
     }
   } catch(e){
     console.warn('[kaoqing] 读取考勤配置失败（使用默认）', e && e.message ? e.message : e);
+    configLoaded = false;   // ⚠ 读失败：禁止保存拿内置默认值去覆盖线上真实配置（见 saveConfigToWaline 拦截）
   }
 }
 /* 单据流水号配置：从 Waline（/kaoqing/serial，单条 type:'serial' 评论）读取 counters。
@@ -6381,53 +6389,75 @@ function refreshTplList(){
   Object.keys(set).forEach(function(n){ html += '<option value="' + esc(n) + '"></option>'; });
   dl.innerHTML = html;
 }
+/* 安全执行单个配置区块：任一块异常都绝不中断其它区块的回填。
+   ⚠ 这是「配置被整片冲成默认」的根因所在——旧版 openConfig 顺序执行，任一区块（如常用说明依赖 CONFIG.leaveTypes）抛错，
+   后续所有勾选框/输入框就不回填、停在 HTML 默认态，保存时被写死进 Waline（无历史→永久丢）。
+   改为每区块独立隔离后，任何异常都只影响那一块，其余字段仍被正确填成当前值。 */
+function safeCfgBlock(label, fn){
+  try { fn(); }
+  catch(e){ console.error('[openConfig] 区块「' + label + '」回填失败（已隔离，不影响其它区块）:', e); }
+}
+var cfgPanelReady = false;   // openConfig 完整回填成功后置 true；保存时若面板未成功打开，所有字段回退 CONFIG 现有值，绝不读 HTML 默认
 function openConfig(){
   closeSettings();
-  $('#cfgDeductLunch').checked = CONFIG.deductLunch;
-  $('#cfgLunchStart').value = CONFIG.lunchStart;
-  $('#cfgLunchEnd').value   = CONFIG.lunchEnd;
-  $('#cfgWorkStart').value  = CONFIG.workStart;
-  $('#cfgWorkEnd').value    = CONFIG.workEnd;
-  // 常用说明：先按当前休假类型配置动态生成「每类别一行」textarea，再回填各自系统值
-  renderPresetCfgGrid();
-  document.querySelectorAll('#cfgPresetNotes .cfg-pn').forEach(function(ta){
-    var cat = ta.getAttribute('data-cat');
-    ta.value = (((CONFIG.presetNotes || {})[cat]) || []).join('\n');
+  safeCfgBlock('午休/班次', function(){
+    $('#cfgDeductLunch').checked = !!CONFIG.deductLunch;
+    $('#cfgLunchStart').value = CONFIG.lunchStart || '';
+    $('#cfgLunchEnd').value   = CONFIG.lunchEnd   || '';
+    $('#cfgWorkStart').value  = CONFIG.workStart  || '';
+    $('#cfgWorkEnd').value    = CONFIG.workEnd    || '';
   });
-  // 管理密码：不回显原文，仅用 placeholder 反映「已设置 / 未设置」，留空 = 不修改
-  [['#cfgPwdReview', CONFIG.pwdReview], ['#cfgPwdApprove', CONFIG.pwdApprove], ['#cfgPwdAdmin', CONFIG.pwdAdmin]].forEach(function(p){
-    var el = $(p[0]); if (!el) return;
-    el.value = '';
-    el.placeholder = p[1] ? '已设置（留空则不修改）' : '未设置';
+  safeCfgBlock('常用说明', function(){
+    renderPresetCfgGrid();
+    document.querySelectorAll('#cfgPresetNotes .cfg-pn').forEach(function(ta){
+      var cat = ta.getAttribute('data-cat');
+      ta.value = (((CONFIG.presetNotes || {})[cat]) || []).join('\n');
+    });
   });
-  // 休假类型：把当前配置载入工作副本并自绘多行列表（改动仅停留在 ltWork，保存才写回 CONFIG）
-  ltWork = { direct: (CONFIG.leaveTypes.direct || []).slice(), other: (CONFIG.leaveTypes.other || []).slice() };
-  renderLtLists();
-  // 打印设置（按考勤组 + 加班/请假 分别绑定）：填充考勤组/类别/人员下拉，并载入当前组当前类别的绑定值
-  renderGpSel();
-  cfgGpCat = 'ot'; var gcEl = $('#cfgGpCat'); if (gcEl) gcEl.value = cfgGpCat;
-  fillPersonSel('cfgGpKqRen'); fillPersonSel('cfgGpD1'); fillPersonSel('cfgGpD2');
-  loadGpCfgIntoForm();
-  refreshTplList();
-  // 签名配置（打印时独立绘制 + 随机微调）
-  var sg = CONFIG.sigCfg || {};
-  var sgSet = [['#cfgSigOn', 'checked', !!sg.on], ['#cfgSigBottom', 'value', sg.bottom], ['#cfgSigRight', 'value', sg.right],
-               ['#cfgSigLen', 'value', sg.len], ['#cfgSigHgt', 'value', sg.hgt], ['#cfgSigRot', 'value', sg.rot],
-               ['#cfgSigLayer', 'value', (sg.layer === 'above') ? 'above' : 'below']];
-  sgSet.forEach(function(p){
-    var el = $(p[0]); if (!el) return;
-    var v = (p[2] === undefined || p[2] === null) ? 5 : p[2];
-    if (p[1] === 'checked') el.checked = !!v; else el.value = v;
+  safeCfgBlock('管理密码', function(){
+    [['#cfgPwdReview', CONFIG.pwdReview], ['#cfgPwdApprove', CONFIG.pwdApprove], ['#cfgPwdAdmin', CONFIG.pwdAdmin]].forEach(function(p){
+      var el = $(p[0]); if (!el) return;
+      el.value = '';
+      el.placeholder = p[1] ? '已设置（留空则不修改）' : '未设置';
+    });
   });
-  // 记录表默认排序：载入配置到工作副本并自绘 8 行「① 级 / 列 / 升降」
-  sortWork = (CONFIG.sortCfg || []).slice();
-  renderSortCfgRows();
-  // 打印合并：载入配置到工作副本并自绘每个字段的「不合并/最小合并/全合并」
-  var mg = CONFIG.mergeCfg || {};
-  mergeWork = { on: !!mg.on, cols: Object.assign({}, mg.cols || {}) };
-  var mo = $('#cfgMergeOn'); if (mo) mo.checked = !!mergeWork.on;
-  renderMergeRows();
+  safeCfgBlock('休假类型', function(){
+    ltWork = {
+      direct: ((CONFIG.leaveTypes && CONFIG.leaveTypes.direct) || []).slice(),
+      other:  ((CONFIG.leaveTypes && CONFIG.leaveTypes.other)  || []).slice()
+    };
+    renderLtLists();
+  });
+  safeCfgBlock('打印设置', function(){
+    renderGpSel();
+    cfgGpCat = 'ot'; var gcEl = $('#cfgGpCat'); if (gcEl) gcEl.value = cfgGpCat;
+    fillPersonSel('cfgGpKqRen'); fillPersonSel('cfgGpD1'); fillPersonSel('cfgGpD2');
+    loadGpCfgIntoForm();
+    refreshTplList();
+  });
+  safeCfgBlock('签名配置', function(){
+    var sg = CONFIG.sigCfg || {};
+    var sgSet = [['#cfgSigOn', 'checked', !!sg.on], ['#cfgSigBottom', 'value', sg.bottom], ['#cfgSigRight', 'value', sg.right],
+                 ['#cfgSigLen', 'value', sg.len], ['#cfgSigHgt', 'value', sg.hgt], ['#cfgSigRot', 'value', sg.rot],
+                 ['#cfgSigLayer', 'value', (sg.layer === 'above') ? 'above' : 'below']];
+    sgSet.forEach(function(p){
+      var el = $(p[0]); if (!el) return;
+      var v = (p[2] === undefined || p[2] === null) ? 5 : p[2];
+      if (p[1] === 'checked') el.checked = !!v; else el.value = v;
+    });
+  });
+  safeCfgBlock('记录表排序', function(){
+    sortWork = (CONFIG.sortCfg || []).slice();
+    renderSortCfgRows();
+  });
+  safeCfgBlock('打印合并', function(){
+    var mg = CONFIG.mergeCfg || {};
+    mergeWork = { on: !!mg.on, cols: Object.assign({}, mg.cols || {}) };
+    var mo = $('#cfgMergeOn'); if (mo) mo.checked = !!mergeWork.on;
+    renderMergeRows();
+  });
   $('#cfgMask').hidden = false;
+  cfgPanelReady = true;   // 完整回填成功 → 保存时可信任表单值
 }
 /* 读取「签名配置」表单 → { on, bottom, right, len, hgt, rot }（幅度取绝对值，非法/缺失回落 5） */
 function readSigCfgForm(){
@@ -6525,6 +6555,13 @@ function readMergeCfgForm(){
 }
 async function saveConfigToWaline(){
   if (!CLOUD_BASE){ showAlert('请先在脚本顶部配置 WALINE_SERVER'); return; }
+  // ⚠ 配置读取失败时（configLoaded=false）拦截保存：此时 CONFIG 仍是内置默认、configOid 为 null，
+  //    若放行会把「默认 + 本次改动」写进云端覆盖真实配置（且会 POST 新建记录、旧记录删不掉）。
+  //    这正是「读取异常 → 保存冲成默认」这条丢配置路径，必须挡在保存之前。
+  if (configLoaded === false){
+    showAlert('配置尚未从云端成功加载（读取失败），此时保存会用内置默认值覆盖线上已有的真实配置，已阻止本次保存。\n请刷新页面或检查网络/CORS 后重试。');
+    return;
+  }
   // 常用说明：按类别分别读取各 textarea → { catId: [字符串] }
   var presetRaw = {};
   document.querySelectorAll('#cfgPresetNotes .cfg-pn').forEach(function(ta){
@@ -6540,10 +6577,11 @@ async function saveConfigToWaline(){
     approve: pwdApprove ? await pwdHash(pwdApprove) : CONFIG.pwdApprove,
     admin:   pwdAdmin   ? await pwdHash(pwdAdmin)   : CONFIG.pwdAdmin
   };
-  // 休假类型：直接读工作副本（自绘列表的改动已落在 ltWork 上）
-  var leaveTypes = { direct: ltWork.direct.slice(), other: ltWork.other.slice() };
+  // 休假类型：直接读工作副本（自绘列表的改动已落在 ltWork 上）；ltWork 异常时退回已加载配置，避免覆盖
+  var leaveTypes = (ltWork && ltWork.direct) ? { direct: ltWork.direct.slice(), other: ltWork.other.slice() } : CONFIG.leaveTypes;
   // 打印设置（按考勤组 + 加班/请假 分别绑定）：把面板当前考勤组+当前类别的字段写回 GROUP_PRINT_CFG（保留另一类别已有值），再随 payload 一并存入 config
-  if (cfgGpCur){
+  // ⚠ 仅当面板已完整打开（cfgPanelReady）才用表单值覆盖；否则保留 GROUP_PRINT_CFG 现有值（loadConfig 已正确加载），绝不被 HTML 默认覆盖
+  if (cfgGpCur && cfgPanelReady){
     var prev = GROUP_PRINT_CFG[cfgGpCur] || {};
     var otherSub = cfgGpCat === 'ot' ? (prev.lv || {}) : (prev.ot || {});
     var stVal = !!($('#cfgGpStitch') && $('#cfgGpStitch').checked);   // A5拼接A4：整张打印版式开关，两类别共用同一套规则
@@ -6561,23 +6599,31 @@ async function saveConfigToWaline(){
     saved[cfgGpCat === 'ot' ? 'lv' : 'ot'] = Object.assign({}, otherSub, { stitch: stVal });
     GROUP_PRINT_CFG[cfgGpCur] = saved;
   }
-  var payload = {
+  // ⚠ 非破坏性保存：以「已加载的 CONFIG」为基底（= 库里现有值），只把表单里真实存在且可读取的字段覆盖上去。
+  //    任一字段的输入框缺失 / 为空，都保留库里现有值，绝不被字面默认或 unchecked 冲掉。
+  //    这样无论以后加多少新配置、怎么保存，都不会再把已开启的勾选框 / 已设的数值冲成默认。
+  var base = (typeof CONFIG === 'object' && CONFIG) ? JSON.parse(JSON.stringify(CONFIG)) : {};
+  var payload = Object.assign(base, {
     v: 1, type: 'config',
-    deductLunch: $('#cfgDeductLunch').checked,
-    lunchStart: $('#cfgLunchStart').value || '12:00',
-    lunchEnd:   $('#cfgLunchEnd').value   || '13:00',
-    workStart:  $('#cfgWorkStart').value  || '08:30',
-    workEnd:    $('#cfgWorkEnd').value    || '17:30',
-    presetNotes: presetRaw,
+    // ⚠ 勾选框：仅当面板已完整打开（cfgPanelReady）才读表单当前值；否则回退「库里现有值」，绝不读 HTML 默认 false 把已开启的勾选框冲掉
+    deductLunch: (cfgPanelReady && $('#cfgDeductLunch')) ? $('#cfgDeductLunch').checked : (base.deductLunch || false),
+    // 数值：仅当面板已打开且表单有值才用表单值；否则回退库里现有值，绝不读 HTML 写死的默认（如 value="12:00"）
+    lunchStart:  (cfgPanelReady && $('#cfgLunchStart') && $('#cfgLunchStart').value)  ? $('#cfgLunchStart').value  : (base.lunchStart  || '12:00'),
+    lunchEnd:    (cfgPanelReady && $('#cfgLunchEnd')   && $('#cfgLunchEnd').value)    ? $('#cfgLunchEnd').value    : (base.lunchEnd    || '13:00'),
+    workStart:   (cfgPanelReady && $('#cfgWorkStart')  && $('#cfgWorkStart').value)   ? $('#cfgWorkStart').value   : (base.workStart   || '08:30'),
+    workEnd:     (cfgPanelReady && $('#cfgWorkEnd')    && $('#cfgWorkEnd').value)     ? $('#cfgWorkEnd').value     : (base.workEnd     || '17:30'),
+    // 常用说明：仅当面板已打开且说明区真正渲染过才用表单值；否则保留库里现有 presetNotes，避免空对象冲掉已存说明
+    presetNotes: (cfgPanelReady && document.querySelector('#cfgPresetNotes .cfg-pn')) ? presetRaw : (base.presetNotes || {}),
     pwdReview:  pwdNew.review,
     pwdApprove: pwdNew.approve,
     pwdAdmin:   pwdNew.admin,
     leaveTypes: leaveTypes,
     groupPrint: GROUP_PRINT_CFG,
-    sigCfg: readSigCfgForm(),
-    sortCfg: readSortCfgForm(),
-    mergeCfg: readMergeCfgForm()
-  };
+    // 签名 / 排序 / 合并：仅当面板已完整打开才读表单覆盖；否则回退「库里现有值」，绝不因表单未填而写成默认/关闭
+    sigCfg:  cfgPanelReady ? readSigCfgForm()  : (base.sigCfg  || CONFIG.sigCfg  || { on:false }),
+    sortCfg: cfgPanelReady ? readSortCfgForm() : (base.sortCfg || CONFIG.sortCfg || []),
+    mergeCfg: cfgPanelReady ? readMergeCfgForm() : (base.mergeCfg || CONFIG.mergeCfg || { on:false, cols:{} })
+  });
   var user = getWalineUser();
   var token = WALINE_ADMIN_TOKEN || walineToken(user);
   if (!token){
