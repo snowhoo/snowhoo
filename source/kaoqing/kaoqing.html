@@ -551,7 +551,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
    （Chrome 经典 bug，表现为「除底边外全丢」「第二页上边线独存」），故必须用 separate 才能把合并单元四面都画全。
    separate 下相邻两格的 1px 边会叠成 2px，故另做「每条网格线只归一侧绘制」去重（见 getTemplateModel 的 cellSpan），
    细线仍 1px、合并单元外框完整、未合并的加班单外观不变。合并区边框来自「各边组成单元格+相邻格」的完整并集(primary.border)。 */
-#printArea .tpl-table{border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000;margin:0;max-width:100%}
+#printArea .tpl-table{border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000;margin:0}
 /* 纵向 padding 归零 + line-height:1：td 的「行盒」= 字号×行高，若再加上纵向 padding 就会超过模板设定行高，
    使每一行都被撑高（模板设 12pt 却渲染成 ~14.7pt）→ 整页总高大于模板 → 触发超界等比收缩、宽度被连坐缩小。
    纵向留白改由 vertical-align:middle 在行高内居中，效果与 Excel 一致。横向 padding 保留 5px 贴近 Excel 单元格边距。 */
@@ -585,7 +585,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
   body.printing-template > *:not(#printArea){display:none!important}
   body.printing-template #printArea{display:block!important;width:100%;margin:0;padding:0}
   /* 打印模板时强制白底：body 背景(--bg:#f4f5f9 浅灰)在隐藏其它内容后仍会露在页边距区域，导致打印页带浅灰绿底色 */
-  html, body.printing-template{background:#fff!important;margin:0;padding:0}
+  html, body.printing-template{background:#fff!important}
   /* 不锁定纸张尺寸/方向：交由打印对话框选择（选「横向」即可旋转）。若固定 size:A4 会把方向锁死成纵向、忽略对话框的横向选择 */
   /* 模板 pageMargins 不注入 @page（避免覆盖打印对话框选的边距）；改为作为「内容内边距」写在每页 .tpl-margin 的 padding 上（见 printRecordsViaTemplate），忠实还原 Excel 页面边距。@page 仅锁 A5拼接A4 时的 A4 竖版、无边距（见下方注入）。 */
 }
@@ -4934,12 +4934,9 @@ async function printRecordsViaTemplate(rs){
       // 模板页面边距（pageMargins，单位 inch）→ 作为「内容内边距(padding)」应用到每一页，忠实还原 Excel 打印边距。
       // 此前该值只被解析读取却从未参与渲染（chosenPM 收集后从未使用），导致内容贴在页框左上角、显得「左/上=0、右侧大量留白」——
       // 那 28.5mm 实为模板左+右页边距(各1.5cm)，并非内容小于页面。现把页边距写入 padding，左/右/上/下均按模板设定。
-      // 模板 pageMargins（Excel 页边距，单位 inch）→ 作为「页面框 .a5-page 的内边距」注入（见下方 _pmEl），
-      // 而非套在 .tpl-margin 上：若套在 .tpl-margin，收缩循环(4979)测到的 _nw(.tpl-scale 宽) 恒 > _availW(内容盒) → _k<1，
-      // 会把整页连边距一起缩小且左对齐留白；移到外层 .a5-page 后 .tpl-margin 零内边距 → _k=1 保持惰性（符合「不靠自动收缩」），
-      // 边距由 .a5-page padding 提供，表格靠 max-width:100% 自适应到内容盒宽 → 桌面/手机均不溢出、左右边距都在。
       var pm = rTpl.pageMargins || null;
       var pmStyle = '';
+      if (pm) pmStyle = 'padding:' + (pm.top * 96).toFixed(1) + 'px ' + (pm.right * 96).toFixed(1) + 'px ' + (pm.bottom * 96).toFixed(1) + 'px ' + (pm.left * 96).toFixed(1) + 'px';
       var pmAttr = pmStyle ? ' style="' + pmStyle + '"' : '';
       // A5拼接A4 为整组版式开关：读「当前组」下 加班/请假 任一类别开启即整组两类别共用同一套 2-up 规则（避免「一个带边距一个满版」看似不同规则的错位）
       var stitch = !!(gpSub('ot').stitch || gpSub('lv').stitch);
@@ -4965,11 +4962,7 @@ async function printRecordsViaTemplate(rs){
     // 模板自身的 pageMargins 已在上方作为各 A5 页的 .tpl-margin padding 参与绘制。非拼接模式同样 @page margin:0 + 模板边距内缩，保持单一规则。
     var _pmEl = document.getElementById('tplPageMargins');
     if (!_pmEl){ _pmEl = document.createElement('style'); _pmEl.id = 'tplPageMargins'; document.head.appendChild(_pmEl); }
-    // 边距：@page 强制 margin:0（整纸可打印），模板自身的 pageMargins 改为「页面框 .a5-page 的内边距」注入，
-    // 这样左/右/上/下边距始终按模板设定、且收缩循环测 .tpl-margin 时其零内边距 → _k=1 不缩放。1inch=25.4mm。
-    var _pmCss = '';
-    if (pm) _pmCss = '\n#printArea .a5-page{ padding:' + (pm.top * 25.4).toFixed(1) + 'mm ' + (pm.right * 25.4).toFixed(1) + 'mm ' + (pm.bottom * 25.4).toFixed(1) + 'mm ' + (pm.left * 25.4).toFixed(1) + 'mm }';
-    _pmEl.textContent = (anyStitch ? '@page{ size:A4 portrait; margin:0 }' : '@page{ margin:0 }') + _pmCss;
+    _pmEl.textContent = anyStitch ? '@page{ size:A4 portrait; margin:0 }' : '@page{ margin:0 }';
     // 多组（加班+请假）之间强制分页，各组用自身模板与单页条数独立成段
     var fullHtml = htmlParts.map(function(h, i){ return (i > 0 ? '<div class="grp-break"></div>' : '') + h; }).join('');
     var pa = $('#printArea'); if (!pa){ pa = document.createElement('div'); pa.id = 'printArea'; document.body.appendChild(pa); }
@@ -4978,10 +4971,6 @@ async function printRecordsViaTemplate(rs){
     // 模板 pageMargins 已在上方作为 .tpl-margin padding 参与绘制（左/右/上/下内缩），A4 页边距=0；本处缩放仅「超界时收缩(k<=1)」，不放大不居中。
     // 方案1：所有已固化的 A5 页面(.a5-page)统一做一次「超界收缩(k<=1)」——基准是 .tpl-margin 扣除 padding 后的可打印内容盒，
     // 不放大、不居中、transform-origin 左上；模板边距已作为 padding 参与绘制，故此处仅防溢出、不改动版式。拼接/单页两模式共用此路径。
-    // ⚠ 收缩必须在 #printArea 可见、且宽度=纸张(210mm) 时测量：display:none 下 clientWidth/offsetWidth 全为 0 → _k 误算成 1（不收缩），
-    //   手机端可打印区窄于整纸 → 右边溢出（Windows 可打印区≈整纸故不显）。故先临时切「参与布局但不可见、移出屏幕、宽=210mm」再测量，测完还原。
-    var _paOld = pa.getAttribute('style') || '';
-    pa.style.cssText = (_paOld ? _paOld + ';' : '') + 'display:block;visibility:hidden;position:absolute;left:-10000px;top:0;width:210mm';
     var _margins = pa.querySelectorAll('.a5-page .tpl-margin');
     for (var _i = 0; _i < _margins.length; _i++){
       var _m = _margins[_i], _sc = _m.querySelector('.tpl-scale');
@@ -4992,12 +4981,10 @@ async function printRecordsViaTemplate(rs){
       var _availW = _m.clientWidth - _padL - _padR;
       var _availH = _m.clientHeight - _padT - _padB;
       var _nw = _sc.offsetWidth, _nh = _sc.offsetHeight;
-      // 仅收缩、不放大、不居中；内容宽/高未超过可用区(含 0.5px 浮点容差)则不缩放，保 Windows 满纸
-      var _k = (_nw && _nh) ? ((_availW >= _nw - 0.5 && _availH >= _nh - 0.5) ? 1 : Math.min(1, _availW / _nw, _availH / _nh)) : 1;
+      var _k = (_nw && _nh) ? Math.min(1, _availW / _nw, _availH / _nh) : 1;   // 仅收缩，不放大、不居中
       _sc.style.transform = 'scale(' + _k.toFixed(4) + ')';
       _sc.dataset.k = _k.toFixed(4);   // 记录缩放比：签名独立绘制时用它把实测坐标换算回未缩放的布局坐标
     }
-    if (_paOld) pa.setAttribute('style', _paOld); else pa.removeAttribute('style');
     // 签名独立绘制：表格已全部画完、缩放也已套用 → 等所有图片（含格内不可见的占位签名）解码完成、拿到真实尺寸后，
     // 再实测每个占位签名(.sig-src)在本页的位置，按配置做「每次打印随机」的偏移/缩放/旋转，叠加到 .tpl-scale 上
     // （不进 td，避免被 z-index:1 的格子盖住）。失败则把占位图恢复可见 → 自动退回原来的单元格内嵌显示。
