@@ -551,7 +551,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
    （Chrome 经典 bug，表现为「除底边外全丢」「第二页上边线独存」），故必须用 separate 才能把合并单元四面都画全。
    separate 下相邻两格的 1px 边会叠成 2px，故另做「每条网格线只归一侧绘制」去重（见 getTemplateModel 的 cellSpan），
    细线仍 1px、合并单元外框完整、未合并的加班单外观不变。合并区边框来自「各边组成单元格+相邻格」的完整并集(primary.border)。 */
-#printArea .tpl-table{border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000;margin:0}
+#printArea .tpl-table{border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:'Microsoft YaHei','SimSun',sans-serif;color:#000;margin:0;max-width:100%}
 /* 纵向 padding 归零 + line-height:1：td 的「行盒」= 字号×行高，若再加上纵向 padding 就会超过模板设定行高，
    使每一行都被撑高（模板设 12pt 却渲染成 ~14.7pt）→ 整页总高大于模板 → 触发超界等比收缩、宽度被连坐缩小。
    纵向留白改由 vertical-align:middle 在行高内居中，效果与 Excel 一致。横向 padding 保留 5px 贴近 Excel 单元格边距。 */
@@ -4934,9 +4934,10 @@ async function printRecordsViaTemplate(rs){
       // 模板页面边距（pageMargins，单位 inch）→ 作为「内容内边距(padding)」应用到每一页，忠实还原 Excel 打印边距。
       // 此前该值只被解析读取却从未参与渲染（chosenPM 收集后从未使用），导致内容贴在页框左上角、显得「左/上=0、右侧大量留白」——
       // 那 28.5mm 实为模板左+右页边距(各1.5cm)，并非内容小于页面。现把页边距写入 padding，左/右/上/下均按模板设定。
+      // 模板 pageMargins（Excel 页边距）不再作为 .tpl-margin 内边距应用：此前固定宽表格会盖住该内边距、从未视觉生效；
+      // 现表格改由 max-width:100% 自适应可打印区，若再套内边距会把「桌面满版」也内缩变形。故此处留空（pm 仍解析备用）。
       var pm = rTpl.pageMargins || null;
       var pmStyle = '';
-      if (pm) pmStyle = 'padding:' + (pm.top * 96).toFixed(1) + 'px ' + (pm.right * 96).toFixed(1) + 'px ' + (pm.bottom * 96).toFixed(1) + 'px ' + (pm.left * 96).toFixed(1) + 'px';
       var pmAttr = pmStyle ? ' style="' + pmStyle + '"' : '';
       // A5拼接A4 为整组版式开关：读「当前组」下 加班/请假 任一类别开启即整组两类别共用同一套 2-up 规则（避免「一个带边距一个满版」看似不同规则的错位）
       var stitch = !!(gpSub('ot').stitch || gpSub('lv').stitch);
