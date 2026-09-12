@@ -585,7 +585,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
   body.printing-template > *:not(#printArea){display:none!important}
   body.printing-template #printArea{display:block!important;width:100%;margin:0;padding:0}
   /* 打印模板时强制白底：body 背景(--bg:#f4f5f9 浅灰)在隐藏其它内容后仍会露在页边距区域，导致打印页带浅灰绿底色 */
-  html, body.printing-template{background:#fff!important}
+  html, body.printing-template{background:#fff!important;margin:0;padding:0}
   /* 不锁定纸张尺寸/方向：交由打印对话框选择（选「横向」即可旋转）。若固定 size:A4 会把方向锁死成纵向、忽略对话框的横向选择 */
   /* 模板 pageMargins 不注入 @page（避免覆盖打印对话框选的边距）；改为作为「内容内边距」写在每页 .tpl-margin 的 padding 上（见 printRecordsViaTemplate），忠实还原 Excel 页面边距。@page 仅锁 A5拼接A4 时的 A4 竖版、无边距（见下方注入）。 */
 }
@@ -4767,7 +4767,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName, logoUri){
   }
   var pages = [];
   for (var p = 0; p < P; p++){
-    var html = '<table class="tpl-table" style="width:100%">' + colHtml + '<tbody>';
+    var html = '<table class="tpl-table" style="width:' + totalPx + 'px">' + colHtml + '<tbody>';
     headerRows.forEach(function(rw){ html += emitRow(rw, 'static', null); });
     // 相邻相同内容合并：先按本页数据算出每格的合并跨度（页内计算 → 天然不跨页）
     // 合并只用于「列表式」模板（数据段仅 1 行、每页重复 N 条）；单据式（数据段多行=一张单）不参与，避免跨单乱合
@@ -4971,6 +4971,10 @@ async function printRecordsViaTemplate(rs){
     // 模板 pageMargins 已在上方作为 .tpl-margin padding 参与绘制（左/右/上/下内缩），A4 页边距=0；本处缩放仅「超界时收缩(k<=1)」，不放大不居中。
     // 方案1：所有已固化的 A5 页面(.a5-page)统一做一次「超界收缩(k<=1)」——基准是 .tpl-margin 扣除 padding 后的可打印内容盒，
     // 不放大、不居中、transform-origin 左上；模板边距已作为 padding 参与绘制，故此处仅防溢出、不改动版式。拼接/单页两模式共用此路径。
+    // ⚠ 收缩必须在 #printArea 可见、且宽度=纸张(210mm) 时测量：display:none 下 clientWidth/offsetWidth 全为 0 → _k 误算成 1（不收缩），
+    //   手机端可打印区窄于整纸 → 右边溢出（Windows 可打印区≈整纸故不显）。故先临时切「参与布局但不可见、移出屏幕、宽=210mm」再测量，测完还原。
+    var _paOld = pa.getAttribute('style') || '';
+    pa.style.cssText = (_paOld ? _paOld + ';' : '') + 'display:block;visibility:hidden;position:absolute;left:-10000px;top:0;width:210mm';
     var _margins = pa.querySelectorAll('.a5-page .tpl-margin');
     for (var _i = 0; _i < _margins.length; _i++){
       var _m = _margins[_i], _sc = _m.querySelector('.tpl-scale');
@@ -4981,10 +4985,12 @@ async function printRecordsViaTemplate(rs){
       var _availW = _m.clientWidth - _padL - _padR;
       var _availH = _m.clientHeight - _padT - _padB;
       var _nw = _sc.offsetWidth, _nh = _sc.offsetHeight;
-      var _k = (_nw && _nh) ? Math.min(1, _availW / _nw, _availH / _nh) : 1;   // 仅收缩，不放大、不居中
+      // 仅收缩、不放大、不居中；内容宽/高未超过可用区(含 0.5px 浮点容差)则不缩放，保 Windows 满纸
+      var _k = (_nw && _nh) ? ((_availW >= _nw - 0.5 && _availH >= _nh - 0.5) ? 1 : Math.min(1, _availW / _nw, _availH / _nh)) : 1;
       _sc.style.transform = 'scale(' + _k.toFixed(4) + ')';
       _sc.dataset.k = _k.toFixed(4);   // 记录缩放比：签名独立绘制时用它把实测坐标换算回未缩放的布局坐标
     }
+    if (_paOld) pa.setAttribute('style', _paOld); else pa.removeAttribute('style');
     // 签名独立绘制：表格已全部画完、缩放也已套用 → 等所有图片（含格内不可见的占位签名）解码完成、拿到真实尺寸后，
     // 再实测每个占位签名(.sig-src)在本页的位置，按配置做「每次打印随机」的偏移/缩放/旋转，叠加到 .tpl-scale 上
     // （不进 td，避免被 z-index:1 的格子盖住）。失败则把占位图恢复可见 → 自动退回原来的单元格内嵌显示。
