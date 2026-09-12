@@ -1260,11 +1260,16 @@ function normalizeSortCfg(v){
   if (!v || typeof v !== 'object') return null;
   var arr = Array.isArray(v) ? v : (v.levels || []);
   if (!Array.isArray(arr)) return null;
-  // 固定值列（模板写死列，如表头『自愿』）也可作为排序键——让固定值列能参与排序，从而驱动「按值自适应合(min)」的嵌套层级
+  // 固定值列（模板写死列，如表头『自愿』）也可作为排序键——让固定值列能参与排序，从而驱动「按值自适应合(min)」的嵌套层级。
+  //   两个来源都要算：① 已加载配置 CONFIG.mergeCfg.fixedCols；② 设置面板正在编辑的工作副本 mergeWork.fixedCols
+  //   （用户刚新增、尚未保存的固定列也必须能立刻被选为排序键，否则会被静默丢弃）。
   var _fcNames = [];
-  if (CONFIG.mergeCfg && CONFIG.mergeCfg.fixedCols){
-    CONFIG.mergeCfg.fixedCols.forEach(function(x){ if (x && x.name && _fcNames.indexOf(x.name) < 0) _fcNames.push(x.name); });
+  function _accFcNames(list){
+    if (!list || !list.length) return;
+    list.forEach(function(x){ if (x && x.name && _fcNames.indexOf(x.name) < 0) _fcNames.push(x.name); });
   }
+  if (CONFIG.mergeCfg) _accFcNames(CONFIG.mergeCfg.fixedCols);
+  if (typeof mergeWork !== 'undefined' && mergeWork) _accFcNames(mergeWork.fixedCols);
   var out = [], used = {};
   for (var i = 0; i < arr.length && out.length < SORT_COLS.length; i++){
     var it = arr[i]; if (!it) continue;
@@ -6544,12 +6549,10 @@ async function loadConfig(){
         _d.layer = (_s.layer === 'above') ? 'above' : 'below';
         CONFIG.sigCfg = _d;
       }
-      // 记录表默认排序（多级）：无本机缓存时才生效 —— 缓存优先，配置文件仅作默认值
-      var _sc2 = normalizeSortCfg(best.obj.sortCfg);
-      if (_sc2){
-        CONFIG.sortCfg = _sc2;
-        if (!loadSortCache()){ sortCfg = null; }   // 置空 → 下次取值重新按「缓存 → 配置」解析
-      }
+      // ⚠ 顺序铁律：必须先解析「打印合并」把 CONFIG.mergeCfg.fixedCols 落进内存，再解析「记录表排序」。
+      //    normalizeSortCfg 会用 CONFIG.mergeCfg.fixedCols 校验「固定值列」能否作为排序键；
+      //    若先解析排序（此刻 fixedCols 还是默认空）→ 固定列排序键被静默丢弃 → 刷新后 CONFIG.sortCfg 丢级，
+      //    打印「按值自适应合(min)」的嵌套层级随之失效（这就是「刷新后打印不生效、进一次设置后又生效」的根因）。
       // 打印合并（相邻行相同内容）
       if (best.obj.mergeCfg && typeof best.obj.mergeCfg === 'object'){
         var _mc = { on: !!best.obj.mergeCfg.on, cols: {}, fixedCols: [] };
@@ -6563,6 +6566,12 @@ async function loadConfig(){
                            .map(function(x){ return { name: x.name, mode: x.mode }; });
         CONFIG.mergeCfg = _mc;
       }
+      // 记录表默认排序（多级）：无本机缓存时才生效 —— 缓存优先，配置文件仅作默认值
+      var _sc2 = normalizeSortCfg(best.obj.sortCfg);
+      if (_sc2) CONFIG.sortCfg = _sc2;
+      // 配置（含 fixedCols）已就位 → 丢弃首屏渲染时用「默认空 fixedCols」解析出的排序记忆值，
+      //   让下次取值重新按「本机缓存 → 配置」解析，避免固定列排序键被旧值丢弃后长期不生效。
+      sortCfg = null;
       configLoaded = true;   // ⚠ 已成功读到真实配置值：允许保存（保存以 CONFIG 为基底，不会写默认）
     } else {
       // 配置记录不存在（首次运行 / 记录暂无 obj）：没有可覆盖的真实值，允许正常把默认值初始化写入
@@ -6750,15 +6759,18 @@ async function openConfig(){
       if (p[1] === 'checked') el.checked = !!v; else el.value = v;
     });
   });
-  safeCfgBlock('记录表排序', function(){
-    sortWork = (CONFIG.sortCfg || []).slice();
-    renderSortCfgRows();
-  });
+  // ⚠ 顺序铁律：先渲染「打印合并」把 mergeWork.fixedCols 填好，再渲染「记录表排序」。
+  //    renderSortCfgRows 的排序键候选来自 mergeWork.fixedCols；若顺序颠倒，固定列还没有 <option>，
+  //    已被选中的固定列会显示成「（不使用）」，此时一保存就把该排序级写没（丢配置）。
   safeCfgBlock('打印合并', function(){
     var mg = CONFIG.mergeCfg || {};
     mergeWork = { on: !!mg.on, cols: Object.assign({}, mg.cols || {}), fixedCols: ((mg.fixedCols || []).map(function(x){ return { name: x.name, mode: x.mode }; })) };
     var mo = $('#cfgMergeOn'); if (mo) mo.checked = !!mergeWork.on;
     renderMergeRows(); renderFixedRows();
+  });
+  safeCfgBlock('记录表排序', function(){
+    sortWork = (CONFIG.sortCfg || []).slice();
+    renderSortCfgRows();
   });
   cfgPanelReady = true;   // 完整回填成功 → 保存时可信任表单值
 }
