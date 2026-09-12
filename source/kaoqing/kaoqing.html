@@ -4767,7 +4767,7 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName, logoUri){
   }
   var pages = [];
   for (var p = 0; p < P; p++){
-    var html = '<table class="tpl-table" style="width:' + totalPx + 'px">' + colHtml + '<tbody>';
+    var html = '<table class="tpl-table" style="width:100%">' + colHtml + '<tbody>';
     headerRows.forEach(function(rw){ html += emitRow(rw, 'static', null); });
     // 相邻相同内容合并：先按本页数据算出每格的合并跨度（页内计算 → 天然不跨页）
     // 合并只用于「列表式」模板（数据段仅 1 行、每页重复 N 条）；单据式（数据段多行=一张单）不参与，避免跨单乱合
