@@ -140,6 +140,12 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 .people-table .muted{color:var(--text-muted)}
 /* 人员配置：工具栏 + 可编辑单元格 */
 .people-toolbar{display:flex;gap:8px;margin:10px 0 4px}
+/* 基础信息（弹窗内：公司名称 / 负责人 / logo） */
+.bi-line{display:flex;align-items:center;gap:10px;margin:8px 0}
+.bi-line .bi-label{font-size:.85rem;color:var(--text-secondary);min-width:74px;flex:0 0 auto}
+.bi-line input{flex:1;min-width:0;padding:5px 8px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:var(--bg-surface);color:var(--text);outline:none;font-family:inherit}
+.bi-line input:focus{border-color:var(--accent)}
+.bi-line .bi-preview{flex:0 0 auto;height:26px;width:auto;max-width:90px;object-fit:contain;border:1px solid var(--border);border-radius:6px;background:var(--bg-surface)}
 .pt-btn{padding:6px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;
   background:var(--bg-surface);color:var(--text-secondary);font-size:.8rem;font-family:inherit}
 .pt-btn:hover{background:var(--bg)}
@@ -601,7 +607,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 
   <header id="topbar">
     <div class="tb-left">
-      <img src="logo.png" alt="logo" class="tb-logo" onerror="this.style.display='none'">
+      <img src="logo.png" alt="logo" class="tb-logo" id="tbLogo" onerror="this.style.display='none'">
     </div>
     <div class="tb-center">考勤登记</div>
     <div class="tb-right">
@@ -614,7 +620,7 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
         </button>
         <div class="settings-menu" id="settingsMenu" hidden>
           <button class="settings-item" id="syncHolidayBtn">从 timor.tech API 获取节假日</button>
-          <button class="settings-item" id="peopleConfigBtn">人员管理</button>
+          <button class="settings-item" id="peopleConfigBtn">基础信息管理</button>
           <button class="settings-item" id="cfgBtn">考勤配置（上班时间设置）</button>
           <div class="settings-sep"></div>
           <div id="holidayInfo" class="settings-info" hidden></div>
@@ -728,8 +734,25 @@ body.edit-mode .idx{background:#fff;color:#f97316;border: 1px solid var(--warn)}
 <!-- 人员配置弹窗（增删改 Waline 中的人员，支持 xlsx 导入导出） -->
 <div class="modal-mask" id="peopleMask" hidden>
   <div class="modal people-modal" role="dialog" aria-modal="true">
-    <div class="modal-title">人员配置</div>
-    <div class="modal-msg">表格内可直接点击单元格修改；也可导出 xlsx 在 Excel 里批量编辑后再导入。改完点「保存」。</div>
+    <div class="modal-title">基础信息管理</div>
+    <div class="modal-msg">基础信息（公司名称 / 负责人 / logo）与人员表一起保存；人员表格内可直接点击单元格修改，也可导出 xlsx 批量编辑后再导入。</div>
+    <div class="cfg-section">
+      <div class="cfg-section-title">基础信息</div>
+      <div class="bi-line">
+        <span class="bi-label">公司名称</span>
+        <input type="text" id="biCompany" placeholder="显示在页面尾部（留空则用内置默认）" autocomplete="off">
+      </div>
+      <div class="bi-line">
+        <span class="bi-label">负责人</span>
+        <input type="text" id="biLeader" placeholder="姓名（签名图需 names/&lt;姓名&gt;.png 或 .jpg）" autocomplete="off">
+      </div>
+      <div class="bi-line">
+        <span class="bi-label">logo</span>
+        <input type="text" id="biLogo" placeholder="文件名/路径，如 logo.png" autocomplete="off">
+        <img class="bi-preview" id="biLogoPreview" alt="" onerror="this.style.display='none'">
+      </div>
+      <div class="cfg-hint">打印模板可用占位符：&#123;&#123;&#123;公司名称&#125;&#125;&#125;（文字）、&#123;&#123;&#123;负责人&#125;&#125;&#125;（姓名文字）、&#123;&#123;&#123;负责人签名&#125;&#125;&#125;（签名图）、&#123;&#123;&#123;logo&#125;&#125;&#125;（图片，放在哪格就画在哪格）。</div>
+    </div>
     <div class="people-toolbar">
       <button type="button" class="pt-btn" id="peopleAddRow">+ 新增一行</button>
       <button type="button" class="pt-btn" id="peopleExport">导出 xlsx</button>
@@ -1129,6 +1152,12 @@ var WALINE_ADMIN_TOKEN = _tk_deobf(); // 管理员令牌：写入以管理员账
 var HOLIDAY_PATH  = '/kaoqing/holidays'; // 节假日数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var PEOPLE_PATH   = '/kaoqing/people';   // 人员数据在 Waline 中存放的隐藏路径（写入为一条 JSON 评论）
 var CONFIG_PATH   = '/kaoqing/config';   // 考勤配置（午休扣除）存放路径（写入为一条 JSON 评论）
+/* 基础信息（公司名称 / 负责人 / logo）：随「基础信息管理」弹窗与人员一起写进 PEOPLE_PATH 那条记录（payload.baseInfo），
+   三处都用得上 —— ① 页面尾部公司名；② 顶栏 logo；③ 打印模板占位符（公司名称 / 负责人 / 负责人签名 / logo）。
+   单独用一个 localStorage key 缓存（不动现有 people 数组缓存结构，旧缓存不受影响）。 */
+var BASE_INFO = { companyName:'', leaderName:'', logoFile:'' };
+var BASE_CACHE_KEY = 'kaoqing_base_cache';
+var DEFAULT_LOGO_FILE = 'logo.png';   // 未配置时的 logo（= 顶栏原本写死的那个文件）
 var SERIAL_PATH   = '/kaoqing/serial';   // 单据流水号配置（年月+类别 → 已用最大序号），由前端在新建/删除记录时实时写入（带管理员令牌），Waline 中始终仅 1 条
 
 /* 休假类型缓存：页面启动先从 localStorage 恢复上次的 leaveTypes，作为「Waline 配置异步加载完成前」的兜底显示，
@@ -3265,7 +3294,9 @@ function weekdayOf(date){
   return ['周日','周一','周二','周三','周四','周五','周六'][w];
 }
 var RECORD_KEYS = { '序号':1,'单据号':1,'姓名':1,'工号':1,'性别':1,'手机号':1,'一级部门':1,'二级部门':1,'考勤组':1,'权限':1,'岗位职别':1,'日期':1,'起日期':1,'至日期':1,'星期':1,'开始':1,'结束':1,'时段':1,'小时':1,'说明':1,'状态':1,'类别':1,'加班类型':1,'签名':1,'代理人':1 };
-var DOC_KEYS = { '打印日期':1,'打印时间':1,'总条数':1,'总小时':1,'当前组别':1,'当前类别':1,'当前状态':1,'考勤人':1,'一级部门领导':1,'二级部门领导':1,'岗位职别':1 };
+// 文档级键：三括号占位符有值即替换为文字；不含「签名」后缀 → 不取签名图。
+// 「公司名称 / 负责人」来自「基础信息管理」弹窗（BASE_INFO），随人员记录一起保存。
+var DOC_KEYS = { '打印日期':1,'打印时间':1,'总条数':1,'总小时':1,'当前组别':1,'当前类别':1,'当前状态':1,'考勤人':1,'一级部门领导':1,'二级部门领导':1,'岗位职别':1,'公司名称':1,'负责人':1 };
 function isRecKey(k){ return !!RECORD_KEYS[k]; }
 function firstPersonOf(rec){
   if (!rec || !rec.people || !rec.people.length) return null;
@@ -3397,7 +3428,11 @@ function buildPrintData(rs){
     '考勤人': (gpSub().kaoqingRen || ''),
     '一级部门领导': (gpSub().dept1Leader || ''),
     '二级部门领导': (gpSub().dept2Leader || ''),
-    '岗位职别': firstP ? (firstP.position || '') : ''   // 文档级人员字段：取首位人员岗位职别
+    '岗位职别': firstP ? (firstP.position || '') : '',   // 文档级人员字段：取首位人员岗位职别
+    // 基础信息（「基础信息管理」弹窗）：公司名称未配置时回落内置默认，页面尾部显示什么、打印就印什么。
+    // 「负责人」为姓名文字；其签名图走三括号「负责人签名」（PERSON_PH_KEYS，按姓名取 names/<姓名>.png|jpg）。
+    '公司名称': BASE_INFO.companyName || COMPANY_NAME,
+    '负责人': BASE_INFO.leaderName || ''
   };
   var recVals = [];
   rs.forEach(function(r, i){ recVals.push(buildRecordVals(r, i)); });
@@ -3535,6 +3570,24 @@ async function fetchNameImages(names){
   var out = {};
   entries.forEach(function(e){ if (e) out[e[0]] = e[1]; });
   return out;
+}
+/* 通用取图（按文件名/路径，如 logo 的 logo.png）：按文件头魔数判定 png/jpg，转 dataUri 内联进打印页。
+   与签名图同理——必须预取转 base64；只写 <img src="url"> 就立刻 window.print()，浏览器常来不及加载，印出来是空白/破图。 */
+var _assetCache = {};   // 路径 -> dataUri（'' = 已知取不到，不再重复请求；保存新路径时删除该键以重试）
+async function fetchAssetImage(path){
+  path = String(path || '').trim();
+  if (!path) return '';
+  if (Object.prototype.hasOwnProperty.call(_assetCache, path)) return _assetCache[path];
+  var url; try { url = new URL(path, location.href).toString(); } catch(e){ return (_assetCache[path] = ''); }
+  try {
+    var r = await fetch(url);
+    if (!r.ok) return (_assetCache[path] = '');
+    var ab = await r.arrayBuffer();
+    // ⚠ 静态托管对「不存在的文件」常返回 200 + HTML 错误页 → 必须校验文件头魔数，否则会把 HTML 当图片转 dataUri
+    var mime = _isImageBytes(ab, 'image/png') ? 'image/png' : (_isImageBytes(ab, 'image/jpeg') ? 'image/jpeg' : '');
+    if (!mime) return (_assetCache[path] = '');
+    return (_assetCache[path] = 'data:' + mime + ';base64,' + abToB64(ab));
+  } catch(e){ return (_assetCache[path] = ''); }
 }
 // 记录行的「签名」占位符：取每条记录首位人员的签名
 async function fetchSignatureImages(recVals){
@@ -4250,6 +4303,7 @@ async function getTemplateModel(ab){
       while ((fm = fre.exec(c.text))){
         var k = fm[1].trim();
         if (!k || DOC_KEYS[k] || RECORD_KEYS[k] || fnSeen[k]) continue;
+        if (k.toLowerCase() === 'logo') continue;   // logo 是图片占位符：不按人员姓名去 names/ 取图（由打印时的 LOGO 通道处理）
         if (PERSON_PH_KEYS[k]){
           if (!fnSeen['KEY:' + k]){ fnSeen['KEY:' + k] = true; fixedPhKeys.push(k); }   // 仅记原始键，姓名留待打印时按当前组/类别解析
           continue;
@@ -4261,9 +4315,12 @@ async function getTemplateModel(ab){
   // 记录级签名：模板任意单元格含 签名 才需取每位记录首位人员签名图
   var needsRecordSig = false;
   rows.forEach(function(rw){ if (needsRecordSig) return; _getRow(rw).cells.forEach(function(c){ if (/\{\{签名\}\}/.test(c.text || '')){ needsRecordSig = true; } }); });
+  // logo 图占位符（三括号 logo）：模板用到才在打印前去取 logo 图（避免没用到的模板白跑一次请求）
+  var needsLogo = false;
+  rows.forEach(function(rw){ if (needsLogo) return; _getRow(rw).cells.forEach(function(c){ if (/\{\{\{\s*logo\s*\}\}\}/i.test(c.text || '')) needsLogo = true; }); });
   var model = {
     SS_CACHE: SS_CACHE.slice(), cols: cols, rowH: rowH, styleMap: styleMap, imgByVm: imgByVm,
-    primary: primary, covered: covered, cellSpan: cellSpan, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, fixedPhKeys: fixedPhKeys, needsRecordSig: needsRecordSig, pageMargins: pageMargins, pageSetup: pageSetup, hiddenCols: hiddenCols, hiddenRows: hiddenRows, defaultFont: defaultFont
+    primary: primary, covered: covered, cellSpan: cellSpan, rows: rows, dataIdx: dataIdx, dataStart: dataStart, dataEnd: dataEnd, fixedNames: fixedNames, fixedPhKeys: fixedPhKeys, needsRecordSig: needsRecordSig, needsLogo: needsLogo, pageMargins: pageMargins, pageSetup: pageSetup, hiddenCols: hiddenCols, hiddenRows: hiddenRows, defaultFont: defaultFont
   };
   _tplModelByFp[fp] = model;
   return model;
@@ -4300,8 +4357,9 @@ function defaultDigitPx(fnt){
   _digitPxCache[key] = d;
   return d;
 }
-async function renderTemplateToHtml(ab, recVals, docVals, signByName){
+async function renderTemplateToHtml(ab, recVals, docVals, signByName, logoUri){
   // 复用已解析模板模型（同模板跳过 JSZip 解压 + XML 解析）；签名图已在调用方按模板实际用法取出并传入 signByName
+  // logoUri：三括号 logo 占位符要内联的 logo dataUri（模板没用到则为空串）——直接内联，不走签名「独立绘制」通道。
   // 签名独立绘制开关：开启后格内只留「不可见但占位」的同尺寸签名图，真正的签名由 drawSignatures() 在整页画完后叠加
   var sigOverlayOn = !!(CONFIG.sigCfg && CONFIG.sigCfg.on);
   var model = await getTemplateModel(ab);
@@ -4412,15 +4470,30 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
       //   1) 两括号 / 三括号的「签名」键 —— 按「当前记录首位人员」取签名图
       //   2) 三括号里直接写具体姓名（例如写 顾晓维） —— 固定人员，直接取 names/顾晓维.jpg
       //   3) 三括号「登录名」 —— 解析为当前登录人昵称，再按该昵称取 names/<昵称>.jpg
-      //   4) 三括号「考勤人签名 / 一级部门领导签名 / 二级部门领导签名」 —— 解析为打印设置里按考勤组+类别绑定的人员姓名，再取签名图
-      //      （注意：不带「签名」后缀的 考勤人 / 一级部门领导 / 二级部门领导 属文档级键，只打印姓名文字，不取图）
+      //   4) 三括号「考勤人签名 / 一级部门领导签名 / 二级部门领导签名 / 负责人签名」 —— 解析为某位人员的真实姓名，再取签名图
+      //      （注意：不带「签名」后缀的 考勤人 / 一级部门领导 / 二级部门领导 / 负责人 属文档级键，只打印姓名文字，不取图）
       //      以上 3/4 均由 PERSON_PH_KEYS / personPhName 统一处理；未取得姓名时留空（不显示姓名、也不显示破图）
+      // 另：三括号「logo」= logo 图片占位符（基础信息里的 logo），不走人员/签名通道，单独用 \u0002 哨兵承载。
       // 做法：先把占位符换成「哨兵 + 姓名 + 哨兵」，等占位符解析与 XML 转义之后再换回 <img>，
       // 这样「签名：」这类前缀不会被丢掉；找不到签名图时留空（不显示姓名、也不显示破图）
       var SIG = '\u0001';
+      var LOGOTOK = '\u0002';   // logo 图片哨兵：与签名哨兵分开，避免与人员姓名冲突
+      // logo 图片可用高度：本格纵向跨越的行高之和（Excel rowspan 与「相邻相同内容合并」都算上）。
+      //   必须限高：图片不限高会按原始尺寸撑高所在行，直接把模板版式顶变形。拿不到行高就退回本行高。
+      var logoH = rh;
+      (function(){
+        var span = Math.max(1, rs2 || 1, _mspan || 1);
+        if (span <= 1) return;
+        var sum = 0;
+        for (var _k = 0; _k < span; _k++){ var _hh = parseFloat(rowH[r0 + _k]); if (_hh) sum += _hh; }
+        if (sum > 0) logoH = sum + 'pt';
+      })();
       // 对单段文本做「签名哨兵替换 + 三括号人员占位符替换 + 占位符解析 + 转义」
       function buildInner(text){
         var t = text;
+        // logo 图占位符（先于人员分支处理）：无论这次有没有取到图，都要换成哨兵，
+        // 否则会落到「按固定人员姓名取图」分支、把字面量 logo 印在格子里。未取到图 → 最终替换为空串。
+        if (/\{\{\{\s*logo\s*\}\}\}/i.test(t)) t = t.replace(/\{\{\{\s*logo\s*\}\}\}/gi, LOGOTOK);
         if (signByName && /\{\{签名\}\}/.test(t)){
           var sName = String((rec && rec['签名'] != null) ? rec['签名'] : (docVm['签名'] || '')).trim();
           t = t.split(/\{\{\{签名\}\}\}/).join(SIG + sName + SIG).split(/\{\{签名\}\}/).join(SIG + sName + SIG);
@@ -4450,6 +4523,11 @@ async function renderTemplateToHtml(ab, recVals, docVals, signByName){
           var nt = String(n).trim();
           return nt ? '<span style="font-size:10pt">' + _xmlEsc(nt) + '</span>' : '';
         });
+        // logo 哨兵 → 内联成图片（限高 = 本格纵向跨越的行高之和，见上方 logoH；不限高会把模板行撑变形）。
+        //   未取到 logo 图 → 替换为空串，格子里什么都不画，而不是印出字面量 logo。
+        if (e.indexOf(LOGOTOK) >= 0){
+          e = e.split(LOGOTOK).join(logoUri ? ('<img class="logo-src" src="' + logoUri + '" style="max-width:100%;max-height:' + (logoH || '40pt') + '">') : '');
+        }
         return e;
       }
       var html;
@@ -4847,8 +4925,10 @@ async function printRecordsViaTemplate(rs){
         (data.recVals || []).forEach(function(r){ var n = (r && r['签名'] != null) ? String(r['签名']).trim() : ''; if (n && !seen[n]){ seen[n] = true; needNames.push(n); } });
       }
       var signByName = needNames.length ? await fetchNameImages(needNames) : {};
+      // logo 图占位符：模板用到三括号 logo 才去取图（未配置时回落默认 logo.png）；命中缓存时为 0 耗时
+      var logoUri = model.needsLogo ? await fetchAssetImage(BASE_INFO.logoFile || DEFAULT_LOGO_FILE) : '';
       var rTpl;
-      try { rTpl = await renderTemplateToHtml(ab, data.recVals, data.docVals, signByName); }
+      try { rTpl = await renderTemplateToHtml(ab, data.recVals, data.docVals, signByName, logoUri); }
       catch(e){ await showAlert('生成打印视图失败：' + e.message, '模板打印失败'); return; }
       var pages = rTpl.pages;
       // 模板页面边距（pageMargins，单位 inch）→ 作为「内容内边距(padding)」应用到每一页，忠实还原 Excel 打印边距。
@@ -5246,12 +5326,13 @@ function currentLoginNick(){
 }
 // 三括号「人员签名」占位符：登录名 / 考勤人 / 一级部门领导 / 二级部门领导。
 // 均解析为某个人员的真实姓名，再按该姓名取 names/<姓名>.jpg 签名图（与固定人员机制一致）。
-// 三括号「人员签名」占位符（取签名图）：登录名 / 考勤人签名 / 一级部门领导签名 / 二级部门领导签名。
-// 注意区分：不带「签名」后缀的 考勤人/一级部门领导/二级部门领导 已归入文档级键（DOC_KEYS），只打印姓名文字，不取图。
-// 取值来源：登录名=当前登录昵称；其余=打印设置里按考勤组+类别绑定的人员姓名（gpSub()）。
-var PERSON_PH_KEYS = { '登录名':1, '考勤人签名':1, '一级部门领导签名':1, '二级部门领导签名':1 };
+// 三括号「人员签名」占位符（取签名图）：登录名 / 考勤人签名 / 一级部门领导签名 / 二级部门领导签名 / 负责人签名。
+// 注意区分：不带「签名」后缀的 考勤人/一级部门领导/二级部门领导/负责人 已归入文档级键（DOC_KEYS），只打印姓名文字，不取图。
+// 取值来源：登录名=当前登录昵称；负责人签名=「基础信息管理」里的负责人姓名；其余=打印设置里按考勤组+类别绑定的人员姓名（gpSub()）。
+var PERSON_PH_KEYS = { '登录名':1, '考勤人签名':1, '一级部门领导签名':1, '二级部门领导签名':1, '负责人签名':1 };
 function personPhName(k){
   if (k === '登录名') return currentLoginNick();
+  if (k === '负责人签名') return (BASE_INFO && BASE_INFO.leaderName) || '';   // 基础信息里的负责人（手填姓名）→ 按姓名取签名图
   var ek = effGroupKey();   // 当前考勤组（由打印记录反推，主视图停在「全部」也能命中）
   // 考勤人 / 一二级部门领导通常加班、请假是同一人：先取当前类别绑定，缺则跨类别（ot<->lv）兜底，
   // 避免「只在请假页签绑了人、打印加班单」时整格空白。模板换/设置改均不影响。
@@ -6125,6 +6206,8 @@ async function loadPeople(){
       cloudToastError('人员读取失败!', 'loadPeople');
       console.warn('[kaoqing] 未读取到人员数据（未配置或读取异常）');
     }
+    // 基础信息（公司名称/负责人/logo）：与人员条数无关，people 为空时也要读取并回填页面
+    if (best && best.obj) applyBaseInfoFrom(best.obj);
   } catch(e){
     cloudToastError('人员读取失败!', 'loadPeople');
     console.error('[kaoqing] loadPeople 失败', e && e.message ? e.message : e);
@@ -6147,6 +6230,67 @@ function loadPeopleCache(){
     rebuildGroups(); renderGroups(); renderPeople(); applyView();
     return true;
   } catch(e){ return false; }
+}
+/* ---------- 基础信息（公司名称 / 负责人 / logo）：规范化 / 缓存 / 回填页面 / 表单读写 ----------
+   来源：PEOPLE_PATH 那条记录的 obj.baseInfo（与人员同一条记录、同一个「保存」按钮，一次写入）。
+   用途：① 页面尾部公司名；② 顶栏 logo；③ 打印模板占位符。 */
+function normalizeBaseInfo(o){
+  o = o || {};
+  return {
+    companyName: String(o.companyName || '').trim(),
+    leaderName:  String(o.leaderName  || '').trim(),
+    logoFile:    String(o.logoFile    || '').trim()
+  };
+}
+function saveBaseInfoCache(){
+  try { localStorage.setItem(BASE_CACHE_KEY, JSON.stringify(BASE_INFO)); } catch(e){}
+}
+/* 从缓存恢复基础信息（同步、不联网）→ 页面首屏即可显示公司名/logo；无缓存返回 false */
+function loadBaseInfoCache(){
+  try {
+    var raw = localStorage.getItem(BASE_CACHE_KEY);
+    if (!raw) return false;
+    BASE_INFO = normalizeBaseInfo(JSON.parse(raw));
+    applyBaseInfoToPage();
+    return true;
+  } catch(e){ return false; }
+}
+/* 从 Waline 记录里取 baseInfo（people 为空也要读）：更新内存 + 写缓存 + 回填页面 */
+function applyBaseInfoFrom(obj){
+  if (!obj || !obj.baseInfo || typeof obj.baseInfo !== 'object') return;
+  BASE_INFO = normalizeBaseInfo(obj.baseInfo);
+  saveBaseInfoCache();
+  applyBaseInfoToPage();
+}
+/* 回填页面：尾部公司名 + 顶栏 logo（未配置时用内置默认，保持与改造前一致） */
+function applyBaseInfoToPage(){
+  var cnEl = $('#companyName');
+  if (cnEl) cnEl.textContent = BASE_INFO.companyName || COMPANY_NAME;
+  var lg = $('#tbLogo');
+  if (lg){
+    var f = BASE_INFO.logoFile || DEFAULT_LOGO_FILE;
+    lg.style.display = '';                       // 上次 onerror 可能隐藏过；配置变了要给它重试
+    if (lg.getAttribute('src') !== f) lg.src = f;
+  }
+}
+/* 读弹窗表单（保存时用） */
+function readBaseInfoForm(){
+  function g(id){ var el = $(id); return el ? String(el.value || '').trim() : ''; }
+  return { companyName: g('#biCompany'), leaderName: g('#biLeader'), logoFile: g('#biLogo') };
+}
+/* 用当前 BASE_INFO 回填弹窗表单（打开弹窗时用） */
+function fillBaseInfoForm(){
+  function set(id, v){ var el = $(id); if (el) el.value = v || ''; }
+  set('#biCompany', BASE_INFO.companyName);
+  set('#biLeader',  BASE_INFO.leaderName);
+  set('#biLogo',    BASE_INFO.logoFile);
+  refreshLogoPreview();
+}
+/* logo 预览小图：填了路径才显示（验证路径是否可取图）；空则隐藏，避免空 src 请求页面本身 */
+function refreshLogoPreview(){
+  var pv = $('#biLogoPreview'); if (!pv) return;
+  var f = String(($('#biLogo') && $('#biLogo').value) || BASE_INFO.logoFile || '').trim();
+  if (f){ pv.style.display = ''; pv.src = f; } else { pv.style.display = 'none'; pv.removeAttribute('src'); }
 }
 /* 手动从 Waline 同步人员到缓存（「同步」卡片连击触发） */
 async function syncPeopleFromWaline(){
@@ -6461,7 +6605,9 @@ async function savePeopleToWaline(){
     showAlert('未配置管理员令牌且未登录，无法保存。\n请先点右上角「登录」，或在脚本中配置 WALINE_ADMIN_TOKEN。');
     return;
   }
-  var payload = { v: 1, type: 'people', updatedAt: Date.now(), people: list };
+  // 基础信息（公司名称/负责人/logo）与人员同一条记录一次写入，避免两次写库产生两份配置
+  var baseInfo = readBaseInfoForm();
+  var payload = { v: 1, type: 'people', updatedAt: Date.now(), people: list, baseInfo: baseInfo };
   var body = {
     comment: JSON.stringify(payload), url: PEOPLE_PATH,
     nick: (user && user.display_name) || ANON_NICK,
@@ -6476,6 +6622,11 @@ async function savePeopleToWaline(){
     PEOPLE_FULL = list;
     PEOPLE = PEOPLE_FULL.map(function(p){ return { n: p.name, g: p.group }; });
     savePeopleCache();                       // 管理员保存后同步写缓存，避免本地仍是旧缓存
+    // 基础信息：回填内存 + 写缓存 + 立刻刷新页面（尾部公司名 / 顶栏 logo），无需刷新页面
+    BASE_INFO = normalizeBaseInfo(baseInfo);
+    saveBaseInfoCache();
+    applyBaseInfoToPage();
+    try { delete _assetCache[BASE_INFO.logoFile]; } catch(e){}   // 换了 logo 路径 → 清掉旧判定，下次打印重新取图
     rebuildGroups(); renderGroups(); renderPeople(); applyView();
     cloudToastHide('savePeople');
     var msg;
@@ -6487,6 +6638,7 @@ async function savePeopleToWaline(){
       msg = '已保存：新建了一条归属你账号的记录（#' + res.oid + '），以后每次保存都会原地复写。\n共 ' + list.length + ' 人。' +
             (res.oldOid ? '\n注意：旧记录 #' + res.oldOid + ' 删除失败（可能权限不足），请到 Waline 后台手动删掉，否则会残留一条。' : '');
     }
+    msg += '\n基础信息（公司名称 / 负责人 / logo）已一并保存。';
     showAlert(msg);
   } catch(err){
     cloudToastError('数据写入失败!','savePeople');
@@ -6504,11 +6656,14 @@ async function openPeopleConfig(){
       peopleOid.oid = best.oid;
       list = best.obj.people;
     }
+    // 基础信息独立于人员条数：people 为空/未配置时也要把 baseInfo 读进来
+    if (best && best.obj) applyBaseInfoFrom(best.obj);
     cloudToastHide('peopleOpen');
   } catch(e){
     cloudToastError('人员配置读取失败!', 'peopleOpen');  // 读取失败也提示，不静默
   }
   renderPeopleTable(list);
+  fillBaseInfoForm();            // 用最新的 BASE_INFO 回填基础信息三项
   $('#peopleMask').hidden = false;
 }
 $('#peopleConfigBtn').addEventListener('click', openPeopleConfig);
@@ -7077,6 +7232,8 @@ $('#archiveBtn').addEventListener('click', async function(){
   else cloudToast('error', '归档请求写入后未读回，请重试', 'archiveReq');
 });
 $('#peopleSync').addEventListener('click', savePeopleToWaline);
+// logo 路径输入即刷新预览小图（边填边看路径对不对）
+$('#biLogo').addEventListener('input', refreshLogoPreview);
 $('#peopleAddRow').addEventListener('click', addPeopleRow);
 $('#peopleExport').addEventListener('click', exportPeopleXlsx);
 $('#peopleImport').addEventListener('click', function(){ $('#peopleFile').click(); });
@@ -7102,7 +7259,10 @@ document.addEventListener('keydown', function(e){
   renderRecords();          // 首屏即显示加载圆圈，稍后 loadRecordsFromWaline 从 Waline 拉取后再次渲染
   renderPresets();
   refreshSaveBtn();          // 初始：新增模式「添加」(绿)
-  $('#companyName').textContent = COMPANY_NAME;
+  // 基础信息（公司名称 / logo）：先同步恢复缓存 → 尾部公司名与顶栏 logo 首屏即可见；
+  // 无缓存时用内置默认公司名（与改造前一致），真正的值随后由 loadPeople 从 Waline 覆盖。
+  loadBaseInfoCache();
+  applyBaseInfoToPage();
   // 打开页面：人员（优先缓存）、考勤配置、常用说明 立即读取（公开接口，无需登录）；
   // 节假日同样「缓存优先」：先同步恢复本年缓存（菜单状态立即可见），再后台静默读库（详见 initHolidays）；
   // 记录表 / 归档列表 仍为懒加载（详见各 ensure*/lazy* 触发点），打开页面不阻塞、不弹遮罩。
