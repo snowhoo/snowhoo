@@ -44,6 +44,28 @@
             --transition-slow: 0.35s ease;
         }
 
+        /* ================= 滚动条 ================= */
+        /* 替换 Windows 默认滚动条（带上下箭头按钮的灰色粗条）：10px 槽位里放 6px 圆头滑块，
+           静止时低调、悬停/拖动加深。配色不新增色值，只用文件里已有的 slate 阶
+           （--text-muted #94a3b8 → --text-secondary #64748b），与整体配色一致。 */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-button { width: 0; height: 0; display: none; }  /* 去掉两端的箭头按钮 */
+        ::-webkit-scrollbar-corner { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--text-muted);
+            border: 2px solid transparent;      /* 透明边框 + content-box 裁出细滑块，四周留白 */
+            background-clip: content-box;
+            border-radius: var(--radius-full);
+        }
+        ::-webkit-scrollbar-thumb:hover,
+        ::-webkit-scrollbar-thumb:active { background-color: var(--text-secondary); }
+        /* 不支持 ::-webkit-scrollbar 的浏览器（Firefox 等）走标准属性；
+           Chrome 里同时写 scrollbar-* 会反过来覆盖上面的写法，故用 @supports 隔离 */
+        @supports not selector(::-webkit-scrollbar) {
+            * { scrollbar-width: thin; scrollbar-color: var(--text-muted) transparent; }
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body { 
@@ -52,7 +74,7 @@
             padding: var(--space-lg); 
             min-height: 100vh; 
             color: var(--text-primary);
-            line-height: 1.6;
+            line-height: 1;
         }
         
         .container { 
@@ -127,7 +149,7 @@
         input, select {
             border-radius: var(--radius-lg) !important;
             border: 1.5px solid var(--border-color) !important;
-            padding: 6px 12px !important;
+            padding: 5px 5px !important;
             font-size: 0.85rem !important;
             height: 32px !important;
             box-sizing: border-box !important;
@@ -213,7 +235,7 @@
         
         .tab-content.active { display: block; }
 
-        .panel { margin-bottom: var(--space-lg); }
+        .panel { }
         
         .panel-title { 
             font-size: 1rem; 
@@ -239,7 +261,7 @@
         .upload-zone { 
             border: 2px dashed #cbd5e1; 
             border-radius: var(--radius-lg); 
-            padding: var(--space-xl); 
+            padding: var(--space-md); 
             text-align: center; 
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); 
             cursor: pointer; 
@@ -271,7 +293,7 @@
         }
         
         .upload-zone .icon { 
-            font-size: 42px; 
+            font-size: 24px; 
             margin-bottom: var(--space-sm);
             display: block;
             animation: float 3s ease-in-out infinite;
@@ -284,7 +306,7 @@
 
         .column-selector { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); 
             gap: var(--space-sm); 
             margin: var(--space-md) 0; 
         }
@@ -526,6 +548,25 @@
         .resize-handle.sw { bottom: -9px; left: -9px; cursor: sw-resize; }
         .resize-handle.s { bottom: -9px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
         .resize-handle.se { bottom: -9px; right: -9px; cursor: se-resize; }
+
+        /* 条码这类「尺寸完全由内容决定」的元素：去掉 1px 透明边框（改用 outline 画 hover/选中框），
+           元素框 = 内容外框，占位与实际显示尺寸严格 1:1（不再多出 2px） */
+        .canvas-element.no-border {
+            border: none;
+            outline: 1px solid transparent;
+        }
+        .canvas-element.no-border:hover { outline-color: var(--primary-color); }
+        .canvas-element.no-border.selected { outline-color: var(--danger-color); }
+
+        /* 框选（橡皮筋）：挂在 body 上、用屏幕坐标，画布 200%/100% 缩放都不影响 */
+        .marquee-box {
+            position: fixed;
+            z-index: 9999;
+            border: 1px dashed var(--primary-color);
+            background: rgba(59, 130, 246, 0.10);
+            pointer-events: none;
+            border-radius: 2px;
+        }
 
         .prop-block {
             margin-bottom: var(--space-md);
@@ -863,34 +904,6 @@
             height: 26px;
         }
 
-        .arc-offset-group {
-            display: flex;
-            gap: var(--space-sm);
-            align-items: center;
-            margin-left: var(--space-lg);
-        }
-        
-        .arc-offset-item {
-            display: flex;
-            align-items: center;
-            gap: var(--space-xs);
-            background: transparent;
-            padding: 6px 12px;
-            border-radius: var(--radius-full);
-            font-size: 0.8rem;
-            height: 36px;
-            border: none;
-        }
-        
-        .arc-offset-item input {
-            width: 50px;
-            padding: 2px 6px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            text-align: center;
-            height: 26px;
-        }
-
         .font-picker-panel {
             position: absolute;
             background: white;
@@ -926,14 +939,14 @@
 
         .data-tab-layout {
             display: flex;
-            gap: var(--space-xl);
+            gap: var(--space-md);
             align-items: flex-start;
         }
         
         .data-left {
             flex: 1;
-            display: flex;
             flex-direction: column;
+			width: 100%;
         }
         
         .data-right {
@@ -945,6 +958,7 @@
             padding: var(--space-md);
             border: 1px solid var(--border-color);
             overflow: hidden;
+			width: 100%;
         }
         
         .data-right .panel-title {
@@ -975,6 +989,7 @@
             word-break: break-all;
             border: 1px solid #b9d0e7;
             display: none;
+			line-height: 1.6;
         }
         
         .file-info.empty {
@@ -995,7 +1010,7 @@
             font-weight: 600;
             color: var(--primary-color);
             display: inline-block;
-            min-width: 60px;
+            
         }
 
         .error-msg {
@@ -1093,7 +1108,7 @@
         /* 左栏顶端与右区（工具栏）顶端齐平，比画布区高出 140px（画布尺寸行 + 数量列/序号设置行），
            故高度按「画布区 543 + 工具栏 140 = 683」对齐，底边与画布区底边平齐；
            max-height 兜底：左栏内容过高时不撑高页面，改为栏内滚动。 */
-        .data-panel { flex: 0 0 360px; max-width: 360px; height: auto; max-height: 683px; overflow-y: auto; border-right: 1px solid #e2e8f0; padding-right: 16px; }
+        .data-panel { flex: 0 0 250px; max-width: 360px; height: auto; max-height: 692px; overflow-y: auto; border-right: 1px solid #e2e8f0; padding-right: 16px; }
         .data-panel .data-tab-layout { flex-direction: column; }
         .design-panel { flex: 1 1 auto; min-width: 0; }
         @media (max-width: 980px) {
@@ -1125,14 +1140,14 @@
                             <div class="panel-title">上传Excel文件</div>
                             <div class="upload-zone" id="dropZone">
                                 <div class="icon">📂</div>
-                                <p>点击或拖拽 .xlsx / .xls 文件</p>
+                                <p>.xlsx / .xls 文件</p>
                                 <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none;">
                             </div>
                         </div>
 
                         <div class="file-info empty" id="fileInfo">
-                            <div><span class="label">📄 文件名：</span> <span id="fileName"></span></div>
-                            <div><span class="label">📦 大小：</span> <span id="fileSize"></span></div>
+                            <div><span class="label"> </span> <span id="fileName"></span></div>
+                            <div><span class="label"> </span> <span id="fileSize"></span></div>
                         </div>
 
                         <div class="error-msg" id="errorMsg"></div>
@@ -1157,16 +1172,6 @@
                 <span id="zoomPercent" style="min-width:45px; text-align:center; font-size:0.85rem;">200%</span>
                 <button class="btn" onclick="zoomCanvas(0.1)" style="padding:4px 8px;">+</button>
                 <button class="btn" onclick="zoomCanvas(0, true)" style="padding:4px 8px;">↺</button>
-            </div>
-
-            <!-- 弧线偏移输入框 -->
-            <div style="display:flex; gap:8px; align-items:center; margin-left:20px; flex-shrink:0;">
-                <span style="font-size:0.85rem;">弧线偏移X</span>
-                <input type="number" id="arcOffsetX" value="0" step="0.5" min="-10" max="10" style="width:60px;">
-            </div>
-            <div style="display:flex; gap:8px; align-items:center; margin-left:10px; flex-shrink:0;">
-                <span style="font-size:0.85rem;">Y</span>
-                <input type="number" id="arcOffsetY" value="0" step="0.5" min="-10" max="10" style="width:60px;">
             </div>
 
             <div style="display:flex; gap:8px; margin-left:auto; align-items:center; flex-shrink:0;">
@@ -1286,6 +1291,142 @@
         const truePx = Math.max(MIN_DIM, el.lineWidth || 1) * MM_TO_PX;
         return Math.max(truePx, MIN_HLINE_SCREEN_PX / canvasScale);
     }
+
+    // ===== 条形码：画布 / 预览共用一套绘制（句柄拖动时可实时重画）=====
+    // 尺寸模型：
+    //  - 勾选「显示数值」：元素框高 = 「高度」= 数字区 + 条区，数字画在「数值位置」那一侧（默认上方）；
+    //  - 取消勾选：不画数字，元素框收缩到只剩条码本身（条区高度与显示时一致）；
+    //  - SVG 外框尺寸 = 元素框尺寸 → 占位与显示大小严格 1:1。
+    const BARCODE_EXAMPLE = '12345678'; // 无数据时的示例值：CODE128 只接受 ASCII，占位符（如 {条码}）直接送进去会抛异常
+    const BARCODE_FONT_SIZE = 10;    // 数字字号(px)
+    const BARCODE_TEXT_MARGIN = 2;   // 数字与条之间的空隙(px)
+    const BARCODE_TEXT_PAD = 2;      // 数字下方留白(px)：JsBarcode 把数字基线压在 SVG 底边，留 2px 免得贴边被裁
+    // 数字占用的高度（JsBarcode：SVG 总高 = 参数 height + fontSize + textMargin）
+    function barcodeTextSpace() {
+        return BARCODE_FONT_SIZE + BARCODE_TEXT_MARGIN;
+    }
+    // 整块高度(mm → px)：勾选「显示数值」时元素框就是它
+    function barcodeTotalPx(el) {
+        return Math.max(1, (el.height || 7) * MM_TO_PX);
+    }
+    // 条高 = 整块高 - 数字占位 - 底部留白（不显示数字时那 2px 留白也不需要）
+    function barcodeBarPx(el) {
+        const show = el.displayValue !== false;
+        const pad = (show && (el.textPosition || 'top') === 'bottom') ? BARCODE_TEXT_PAD : 0;
+        return Math.max(1, barcodeTotalPx(el) - barcodeTextSpace() - pad);
+    }
+    // 元素框高度(px)：显示数字 = 整块高；隐藏数字 = 只剩条码
+    function barcodeBoxPx(el) {
+        return el.displayValue === false ? barcodeBarPx(el) : barcodeTotalPx(el);
+    }
+    // 把 SVG 外框补到元素框高度：只加高 viewBox，内容不缩放、不位移
+    //（数字在上方时补在底部；数字在下方时补出的正是 descender 的那 2px 留白）
+    function fitBarcodeSvg(svg, el) {
+        const target = barcodeBoxPx(el);
+        const w = parseFloat(svg.getAttribute('width')) || 0;
+        const h = parseFloat(svg.getAttribute('height')) || 0;
+        if (!(w > 0) || !(h > 0)) return;
+        if (Math.abs(h - target) < 0.01) return;
+        svg.setAttribute('height', target + 'px');
+        svg.setAttribute('viewBox', '0 0 ' + w + ' ' + target);
+        const bg = svg.querySelector('rect');
+        if (bg) bg.setAttribute('height', target);
+    }
+    function paintBarcode(svg, el, content) {
+        if (!svg) return;
+        const text = (content === undefined || content === null) ? (svg.dataset.bcText || ' ') : content;
+        svg.dataset.bcText = text;
+        const showingText = el.displayValue !== false;
+        try {
+            JsBarcode(svg, text, {
+                format: 'CODE128',
+                width: el.barWidth || 1.5,
+                height: barcodeBarPx(el),
+                displayValue: showingText,
+                // JsBarcode 的 drawSvgBarcode 把条的 y 偏移写死为「textPosition==='top' ? fontSize+textMargin : 0」，
+                // 压根不看 displayValue —— 隐藏数字时若仍是 top，条会被下移 12px、而 SVG 总高只剩条高，底部 12px 就被裁掉
+                //（表现：条被"压扁"、上方留一条空白）。此处隐藏时强制按 bottom 排版：条从 y=0 起，框高 = 条高，严丝合缝。
+                textPosition: showingText ? (el.textPosition || 'top') : 'bottom',
+                fontSize: BARCODE_FONT_SIZE,
+                textMargin: BARCODE_TEXT_MARGIN,
+                lineColor: el.color || '#000000',
+                background: '#ffffff',
+                margin: 0
+            });
+        } catch (e) {}
+        fitBarcodeSvg(svg, el);
+        // display:block：inline SVG 会在下方留出基线 descender 空隙，导致选中框比内容高一截
+        svg.style.display = 'block';
+    }
+    // 拖动中按帧节流重画，避免一次 mousemove 就重绘一遍
+    let _barcodeFrame = 0;
+    function paintBarcodeLive(div, el) {
+        const svg = div.querySelector('svg');
+        if (!svg || _barcodeFrame) return;
+        _barcodeFrame = requestAnimationFrame(() => { _barcodeFrame = 0; paintBarcode(svg, el); });
+    }
+
+    // ===== 弧线：画布 / 预览共用一套绘制（句柄拖动时可实时重画）=====
+    // 元素框 = 旋转后椭圆的真实外接框。椭圆 rx≠ry 且 rotation≠0 时，旋转会让外接框变大
+    //（半宽 = √((rx·cosθ)²+(ry·sinθ)²)，半高 = √((rx·sinθ)²+(ry·cosθ)²)，θ=rotation），
+    // 老代码按未旋转的 2rx×2ry 画框 —— 曲线会鼓到框外（实测 rx15/ry10/45° 上下各溢出 2.75mm），
+    // 这就是「弧线选中框位置看着有点偏」的根因。rot=0 时 w=rx、h=ry，与旧行为逐像素一致。
+    function arcBoxMm(el) {
+        const rx = Math.max(MIN_DIM, el.rx || 10), ry = Math.max(MIN_DIM, el.ry || 10);
+        const a = degToRad(el.rotation || 0), c = Math.cos(a), s = Math.sin(a);
+        return {
+            rx, ry,
+            w: Math.sqrt((rx * c) * (rx * c) + (ry * s) * (ry * s)),   // 外接框半宽(mm)
+            h: Math.sqrt((rx * s) * (rx * s) + (ry * c) * (ry * c))    // 外接框半高(mm)
+        };
+    }
+    function arcPathData(el) {
+        const bx = arcBoxMm(el);
+        const rxPx = bx.rx * MM_TO_PX, ryPx = bx.ry * MM_TO_PX;
+        // 椭圆自身盒(2rx×2ry)在外接框内居中 → 在 SVG 用户坐标里整体偏移 -origin
+        const originX = rxPx - bx.w * MM_TO_PX, originY = ryPx - bx.h * MM_TO_PX;
+        const boxW = 2 * bx.w * MM_TO_PX, boxH = 2 * bx.h * MM_TO_PX;
+        const startRad = degToRad(el.startAngle || 0), endRad = degToRad(el.endAngle || 90), rotRad = degToRad(el.rotation || 0);
+        const x0 = rxPx * Math.cos(startRad), y0 = ryPx * Math.sin(startRad);
+        const startX = x0 * Math.cos(rotRad) - y0 * Math.sin(rotRad), startY = x0 * Math.sin(rotRad) + y0 * Math.cos(rotRad);
+        const x1 = rxPx * Math.cos(endRad), y1 = ryPx * Math.sin(endRad);
+        const endX = x1 * Math.cos(rotRad) - y1 * Math.sin(rotRad), endY = x1 * Math.sin(rotRad) + y1 * Math.cos(rotRad);
+        const largeArcFlag = (el.endAngle - el.startAngle) > 180 ? 1 : 0;
+        return {
+            rxPx, ryPx, originX, originY, boxW, boxH,
+            d: `M ${rxPx + startX} ${ryPx + startY} A ${rxPx} ${ryPx} ${el.rotation || 0} ${largeArcFlag} 1 ${rxPx + endX} ${ryPx + endY}`
+        };
+    }
+    // 画布/预览共用：viewBox 用负偏移把「椭圆自身盒」的原点摆回原位 —— 曲线绝对位置与改前完全一致，只换框
+    function paintArcSvg(svg, el) {
+        if (!svg) return;
+        const { originX, originY, boxW, boxH, d } = arcPathData(el);
+        svg.setAttribute('viewBox', `${originX} ${originY} ${boxW} ${boxH}`);
+        svg.style.width = boxW + 'px';
+        svg.style.height = boxH + 'px';
+        const p = svg.querySelector('path');
+        if (p) {
+            p.setAttribute('d', d);
+            p.setAttribute('stroke', el.color || '#000');
+            p.setAttribute('stroke-width', el.lineWidth || 1);
+        }
+    }
+
+    // 元素外接框尺寸(mm)：优先取模型值。DOM 尺寸含 1px 透明边框（还会被取整），
+    // 在细条码 / 弧线上会带来 0.4~0.5mm 的起始偏差（一按句柄就跳一下）。
+    function modelBoxMM(el) {
+        const R = (v, d) => (typeof v === 'number' && isFinite(v)) ? v : d;
+        switch (el.type) {
+            case 'text':    return { w: R(el.width, 30), h: R(el.height, 10) };
+            case 'image':   return { w: R(el.width, 30), h: R(el.height, 30) };
+            case 'qrcode':  return { w: R(el.size, 20), h: R(el.size, 20) };
+            case 'arc':     { const bx = arcBoxMm(el); return { w: 2 * bx.w, h: 2 * bx.h }; }
+            case 'hline':   return { w: R(el.width, 75), h: R(el.lineWidth, 1) };
+            case 'barcode': return { w: null, h: barcodeBoxPx(el) / MM_TO_PX };
+            default:        return { w: null, h: null };
+        }
+    }
+
     let qtyColumnIndex = null;
     let localTemplates = JSON.parse(localStorage.getItem('labelTemplates') || '{}');
 
@@ -1340,8 +1481,6 @@
     let seqFormat = { type: 'seqTotal', prefix: '', suffix: '', showTotal: false, padding: 0 };
     let canvasScale = 2.0;
     const MIN_SCALE = 0.5, MAX_SCALE = 2.0;
-    let arcOffsetX = 0;
-    let arcOffsetY = 0;
 
     const fileInput = document.getElementById('fileInput');
     const dropZone = document.getElementById('dropZone');
@@ -1349,8 +1488,6 @@
     const propPanel = document.getElementById('propPanel');
     const dataFieldList = document.getElementById('dataFieldList');
     const zoomPercent = document.getElementById('zoomPercent');
-    const arcOffsetXInput = document.getElementById('arcOffsetX');
-    const arcOffsetYInput = document.getElementById('arcOffsetY');
     const designQtySelect = document.getElementById('designQtyColumn');
     const seqRadios = document.querySelectorAll('input[name="seqFormat"]');
     const seqPrefix = document.getElementById('seqPrefix');
@@ -1365,13 +1502,6 @@
     const fileInfoDiv = document.getElementById('fileInfo');
     const fileNameSpan = document.getElementById('fileName');
     const fileSizeSpan = document.getElementById('fileSize');
-
-    arcOffsetXInput.addEventListener('input', () => {
-        arcOffsetX = parseFloat(arcOffsetXInput.value) || 0;
-    });
-    arcOffsetYInput.addEventListener('input', () => {
-        arcOffsetY = parseFloat(arcOffsetYInput.value) || 0;
-    });
 
     function escapeRegExp(string) {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1437,21 +1567,16 @@
         labelCanvas.dataset.scale = canvasScale;
         labelCanvas.style.transform = `scale(${canvasScale})`;
         updateZoomDisplay();
-        arcOffsetX = 0;
-        arcOffsetY = 0;
-        const savedArcX = localStorage.getItem('arcOffsetX');
-        if (savedArcX !== null) {
-            arcOffsetX = parseFloat(savedArcX);
-            arcOffsetXInput.value = arcOffsetX;
-        }
-        const savedArcY = localStorage.getItem('arcOffsetY');
-        if (savedArcY !== null) {
-            arcOffsetY = parseFloat(savedArcY);
-            arcOffsetYInput.value = arcOffsetY;
-        }
         updateSeqFormatPreview();
 
         window.addEventListener('keydown', handleKeyDown);
+        // 画布空白处按下拖动 = 框选（元素上的按下由元素自己的 handler 处理，并已 stopPropagation）
+        labelCanvas.addEventListener('mousedown', (e) => {
+            if (e.button !== 0 || isResizing || isDragging) return;
+            if (e.target.closest('.canvas-element')) return;
+            startMarquee(e);
+        });
+
         labelCanvas.addEventListener('click', (e) => {
             if (isResizing || isDragging) return;
             // 拖动/缩放刚结束产生的那次 click 不清除选中
@@ -1683,6 +1808,16 @@
 
     function showEmptyProperties() {
         propPanel.innerHTML = '<p style="color:#64748b; font-size:0.8rem;">点击画布上的元素开始编辑</p>';
+    }
+
+    // 拖动 / 缩放 / 框选过程中刷新右侧属性面板：按帧节流，一帧最多重建一次 DOM
+    let _propsFrame = 0;
+    function schedulePropsRefresh() {
+        if (_propsFrame) return;
+        _propsFrame = requestAnimationFrame(() => {
+            _propsFrame = 0;
+            if (selectedElements.length) showProperties();
+        });
     }
 
     function handleKeyDown(e) {
@@ -1919,9 +2054,7 @@
                 suffix: seqSuffix.value,
                 showTotal: seqShowTotal.checked,
                 padding: parseInt(seqPadding.value) || 0
-            },
-            arcOffsetX: arcOffsetX,
-            arcOffsetY: arcOffsetY
+            }
         };
         localStorage.setItem('labelTemplates', JSON.stringify(localTemplates));
         renderLocalTemplateList();
@@ -1958,9 +2091,7 @@
                 suffix: seqSuffix.value,
                 showTotal: seqShowTotal.checked,
                 padding: parseInt(seqPadding.value) || 0
-            },
-            arcOffsetX: arcOffsetX,
-            arcOffsetY: arcOffsetY
+            }
         };
         const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
         const a = document.createElement('a');
@@ -2009,14 +2140,6 @@
                     seqPadding.value = sf.padding || 0;
                     seqShowTotal.checked = sf.showTotal || false;
                     updateSeqFormatPreview();
-                }
-                if (t.arcOffsetX !== undefined) {
-                    arcOffsetX = t.arcOffsetX;
-                    arcOffsetXInput.value = t.arcOffsetX;
-                }
-                if (t.arcOffsetY !== undefined) {
-                    arcOffsetY = t.arcOffsetY;
-                    arcOffsetYInput.value = t.arcOffsetY;
                 }
             } catch(err) { alert('导入失败'); }
         };
@@ -2081,14 +2204,6 @@
             seqShowTotal.checked = sf.showTotal || false;
             updateSeqFormatPreview();
         }
-        if (t.arcOffsetX !== undefined) {
-            arcOffsetX = t.arcOffsetX;
-            arcOffsetXInput.value = t.arcOffsetX;
-        }
-        if (t.arcOffsetY !== undefined) {
-            arcOffsetY = t.arcOffsetY;
-            arcOffsetYInput.value = t.arcOffsetY;
-        }
         afterDesignChange();
     }
 
@@ -2125,7 +2240,7 @@
         selectSingleElement(el);
         afterDesignChange();
     }
-    function addBarcodeElement(c='{条码}', x=10, y=20, h=7, dv=true, tp='bottom', bw=1.5, rot=0) {
+    function addBarcodeElement(c='{条码}', x=10, y=20, h=7, dv=true, tp='top', bw=1.5, rot=0) {
         const el = { id:'el_'+(++elementIdCounter), type:'barcode', content:c, x, y, height:h, displayValue:dv, textPosition:tp, barWidth:bw, rotation:rot };
         renderElement(el, true); canvasElements.push(el);
         selectSingleElement(el);
@@ -2191,29 +2306,50 @@
             if (!selectedElements.some(sel => sel.id === el.id)) selectSingleElement(el);
         }
 
-        if (selectedElements.length === 1 && selectedElements[0].id === el.id) {
+        // 拖动：单选拖自身，多选拖整组（Ctrl 点击只做增减选中，不进入拖动）
+        if (!ctrlKey) {
             isDragging = true;
             const scale = parseFloat(labelCanvas.dataset.scale) || 1;
             const startX = e.clientX, startY = e.clientY;
-            const ox = el.x, oy = el.y;
-            const div = document.getElementById(el.id);
-            if (!div) return;
-            const elWidth = div.offsetWidth / MM_TO_PX;
-            const elHeight = div.offsetHeight / MM_TO_PX;
             const cw = parseFloat(labelCanvas.dataset.width), ch = parseFloat(labelCanvas.dataset.height);
-            const maxX = Math.max(0, cw - elWidth);
-            const maxY = Math.max(0, ch - elHeight);
+            const items = selectedElements.map(sel => {
+                const d = document.getElementById(sel.id);
+                const w = d ? d.offsetWidth / MM_TO_PX : 0;
+                const h = d ? d.offsetHeight / MM_TO_PX : 0;
+                return { el: sel, div: d, x0: sel.x, y0: sel.y, maxX: Math.max(0, cw - w), maxY: Math.max(0, ch - h) };
+            });
             let dragMoved = false;
 
             function move(e) {
-                const dx = ((e.clientX - startX) / scale) / MM_TO_PX;
-                const dy = ((e.clientY - startY) / scale) / MM_TO_PX;
+                let dx = ((e.clientX - startX) / scale) / MM_TO_PX;
+                let dy = ((e.clientY - startY) / scale) / MM_TO_PX;
                 if (Math.abs(e.clientX - startX) > 2 || Math.abs(e.clientY - startY) > 2) dragMoved = true;
-                el.x = Math.max(0, Math.min(maxX, ox+dx));
-                el.y = Math.max(0, Math.min(maxY, oy+dy));
-                div.style.left = (el.x * MM_TO_PX) + 'px';
-                div.style.top = (el.y * MM_TO_PX) + 'px';
-                if (selectedElements.length === 1) showProperties();
+                // 整组一起钳制：取整组里最紧的边界，拖动全程相对位置不变
+                let minDX = -Infinity, maxDX = Infinity, minDY = -Infinity, maxDY = Infinity;
+                items.forEach(it => {
+                    minDX = Math.max(minDX, -it.x0);
+                    maxDX = Math.min(maxDX, it.maxX - it.x0);
+                    minDY = Math.max(minDY, -it.y0);
+                    maxDY = Math.min(maxDY, it.maxY - it.y0);
+                });
+                // 组内已有元素在画布外时边界会互相打架（min>max）→ 退化为「只钳制手指按住的那个元素」，
+                // 否则整组会彻底拖不动
+                if (minDX > maxDX || minDY > maxDY) {
+                    const me = items.find(it => it.el.id === el.id) || items[0];
+                    minDX = -me.x0; maxDX = me.maxX - me.x0;
+                    minDY = -me.y0; maxDY = me.maxY - me.y0;
+                }
+                dx = (minDX > maxDX) ? 0 : Math.max(minDX, Math.min(maxDX, dx));
+                dy = (minDY > maxDY) ? 0 : Math.max(minDY, Math.min(maxDY, dy));
+                items.forEach(it => {
+                    it.el.x = it.x0 + dx;
+                    it.el.y = it.y0 + dy;
+                    if (it.div) {
+                        it.div.style.left = (it.el.x * MM_TO_PX) + 'px';
+                        it.div.style.top = (it.el.y * MM_TO_PX) + 'px';
+                    }
+                });
+                schedulePropsRefresh();   // 拖动中同步刷新右侧 X/Y 等数值
             }
             function up() {
                 isDragging = false;
@@ -2225,6 +2361,54 @@
             window.addEventListener('mousemove',move);
             window.addEventListener('mouseup',up);
         }
+    }
+
+    // ===== 鼠标框选（橡皮筋）=====
+    // 在画布空白处按下并拖动 → 画出选框，松手后选中所框到的元素；
+    // 按住 Ctrl 在已有选中基础上追加框选；只是点一下没拖动 → 交给 click 走原来的「点空白清选中」。
+    function startMarquee(e) {
+        const additive = e.ctrlKey || e.metaKey;
+        const baseIds = additive ? new Set(selectedElements.map(s => s.id)) : new Set();
+        const sx = e.clientX, sy = e.clientY;
+        const box = document.createElement('div');
+        box.className = 'marquee-box';
+        box.style.left = sx + 'px';
+        box.style.top = sy + 'px';
+        document.body.appendChild(box);
+        let moved = false;
+
+        function move(ev) {
+            const l = Math.min(sx, ev.clientX), t = Math.min(sy, ev.clientY);
+            const w = Math.abs(ev.clientX - sx), h = Math.abs(ev.clientY - sy);
+            box.style.left = l + 'px';
+            box.style.top = t + 'px';
+            box.style.width = w + 'px';
+            box.style.height = h + 'px';
+            if (w < 3 && h < 3) return;   // 3px 死区：区分「点击」与「拖动」
+            moved = true;
+            const r = { l, t, r: l + w, b: t + h };
+            const ids = new Set(baseIds);
+            canvasElements.forEach(el => {
+                const div = document.getElementById(el.id);
+                if (!div) return;
+                const b = div.getBoundingClientRect();   // 屏幕坐标（含画布缩放与旋转后的外接框）
+                if (b.right >= r.l && b.left <= r.r && b.bottom >= r.t && b.top <= r.b) ids.add(el.id);
+            });
+            selectedElements = canvasElements.filter(el => ids.has(el.id));
+            refreshSelectionUI();
+            schedulePropsRefresh();
+        }
+        function up() {
+            window.removeEventListener('mousemove', move);
+            window.removeEventListener('mouseup', up);
+            box.remove();
+            if (!moved) return;
+            suppressCanvasClick = true;
+            if (selectedElements.length > 0) { showProperties(); updateLayerButtonsDisabled(false); }
+            else clearSelection();
+        }
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', up);
     }
 
     function renderElement(el, useExample) {
@@ -2285,21 +2469,11 @@
             div.appendChild(span);
         } else if (el.type === 'barcode') {
             const svgId = 'barcode_'+el.id;
+            // no-border：占位框 = 条码实际外框，1:1（详见 CSS 中 .canvas-element.no-border）
+            div.classList.add('no-border');
             div.innerHTML = `<svg id="${svgId}"></svg>`;
-            const displayContent = useExample ? '12345678' : (el.content || ' ');
-            requestAnimationFrame(() => {
-                try {
-                    JsBarcode('#'+svgId, displayContent, {
-                        format:'CODE128',
-                        width: el.barWidth || 1.5,
-                        height: el.height * MM_TO_PX,
-                        displayValue: el.displayValue !== false,
-                        textPosition: el.textPosition||'bottom',
-                        fontSize: 10,
-                        margin: 0
-                    });
-                } catch(e){}
-            });
+            const displayContent = useExample ? BARCODE_EXAMPLE : (el.content || ' ');
+            requestAnimationFrame(() => paintBarcode(document.getElementById(svgId), el, displayContent));
         } else if (el.type === 'qrcode') {
             const sizePx = el.size * MM_TO_PX;
             div.style.width = sizePx + 'px';
@@ -2313,7 +2487,9 @@
                 try {
                     new QRCode(document.getElementById(qrId), {
                         text: useExample ? 'https://ex.com' : (el.content||' '),
-                        width: sizePx, height: sizePx
+                        width: sizePx, height: sizePx,
+                        colorDark: el.color || '#000000',
+                        colorLight: '#ffffff'
                     });
                     const q = document.getElementById(qrId);
                     const canvas = q.querySelector('canvas');
@@ -2330,7 +2506,7 @@
             const hPx = Math.max(MIN_DIM, el.lineWidth || 1) * MM_TO_PX;
             div.style.width = ((el.width || 75) * MM_TO_PX) + 'px';
             div.style.height = (canvasScale ? hlineHeightCss(el) : hPx) + 'px';
-            div.style.background = '#000';
+            div.style.background = el.color || '#000';
             div.style.backgroundClip = 'border-box';
             div.innerHTML = '';
         } else if (el.type === 'vline') {
@@ -2341,19 +2517,17 @@
             div.style.height = (el.height * MM_TO_PX) + 'px';
             div.innerHTML = `<img src="${el.src}" style="width:100%;height:100%;object-fit:contain;">`;
         } else if (el.type === 'arc') {
-            const rxPx = (el.rx||10) * MM_TO_PX;
-            const ryPx = (el.ry||10) * MM_TO_PX;
-            div.style.width = (2 * rxPx) + 'px';
-            div.style.height = (2 * ryPx) + 'px';
-            const centerX = rxPx, centerY = ryPx;
-            const startRad = degToRad(el.startAngle||0), endRad = degToRad(el.endAngle||90), rotRad = degToRad(el.rotation||0);
-            let x0 = rxPx * Math.cos(startRad), y0 = ryPx * Math.sin(startRad);
-            const startX = x0 * Math.cos(rotRad) - y0 * Math.sin(rotRad), startY = x0 * Math.sin(rotRad) + y0 * Math.cos(rotRad);
-            let x1 = rxPx * Math.cos(endRad), y1 = ryPx * Math.sin(endRad);
-            const endX = x1 * Math.cos(rotRad) - y1 * Math.sin(rotRad), endY = x1 * Math.sin(rotRad) + y1 * Math.cos(rotRad);
-            const largeArcFlag = (el.endAngle - el.startAngle) > 180 ? 1 : 0, sweepFlag = 1;
-            const pathData = `M ${centerX + startX} ${centerY + startY} A ${rxPx} ${ryPx} ${el.rotation||0} ${largeArcFlag} ${sweepFlag} ${centerX + endX} ${centerY + endY}`;
-            div.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 ${2*rxPx} ${2*ryPx}" style="overflow:visible;"><path d="${pathData}" fill="none" stroke="${el.color||'#000'}" stroke-width="${el.lineWidth||1}" /></svg>`;
+            const bx = arcBoxMm(el);
+            const boxW = 2 * bx.w * MM_TO_PX, boxH = 2 * bx.h * MM_TO_PX;
+            div.style.width = boxW + 'px';
+            div.style.height = boxH + 'px';
+            // 元素框 = 旋转后椭圆的外接框；el.x/el.y 仍指「椭圆自身盒」左上角，框在它外面居中撑开
+            div.style.left = ((el.x + bx.rx - bx.w) * MM_TO_PX) + 'px';
+            div.style.top = ((el.y + bx.ry - bx.h) * MM_TO_PX) + 'px';
+            // 元素自带 1px 透明边框 + border-box，会把内容盒吃掉 2px；SVG 绝对定位到 border-box 原点并按精确 px 铺开，
+            // 半径才不会小 1px（画布与预览严格一致）。
+            div.innerHTML = `<svg style="display:block;position:absolute;left:-1px;top:-1px;overflow:visible;"><path fill="none" d="" /></svg>`;
+            paintArcSvg(div.querySelector('svg'), el);
         }
 
         div.onmousedown = (e) => handleElementMousedown(e, el);
@@ -2373,16 +2547,36 @@
                 labelCanvas.classList.add('resizing');
                 const scale = parseFloat(labelCanvas.dataset.scale) || 1;
                 const startX = e.clientX, startY = e.clientY;
-                // 线条(矩形)直接取模型值，避开 1px 边框带来的 ~0.5mm 偏差（细线尤其明显）
-                const sw = el.type === 'hline' ? (el.width || 75) : div.offsetWidth / MM_TO_PX;
-                const sh = el.type === 'hline' ? (el.lineWidth || 1) : div.offsetHeight / MM_TO_PX;
+                // 缩放起始尺寸取模型值：DOM 尺寸含 1px 透明边框（且被取整），细条码/弧线上会有起始偏差
+                const mb = modelBoxMM(el);
+                const sw = (mb.w !== null) ? mb.w : div.offsetWidth / MM_TO_PX;
+                const sh = (mb.h !== null) ? mb.h : div.offsetHeight / MM_TO_PX;
                 const sl = el.x, st = el.y;
+                const bw0 = el.barWidth || 1.5;                 // 条码起始条宽：按它算「模块数」，避免逐帧连乘导致指数加速
+                const arc0 = el.type === 'arc' ? arcBoxMm(el) : null;
                 const cw = parseFloat(labelCanvas.dataset.width), ch = parseFloat(labelCanvas.dataset.height);
                 let resizeMoved = false;
                 function move(e) {
                     const dx = ((e.clientX - startX) / scale) / MM_TO_PX;
                     const dy = ((e.clientY - startY) / scale) / MM_TO_PX;
                     if (Math.abs(e.clientX - startX) > 2 || Math.abs(e.clientY - startY) > 2) resizeMoved = true;
+                    // 条码：宽度由「条宽」决定 —— 水平手柄按比例改条宽，占位随显示尺寸一起缩放
+                    if (el.type === 'barcode') {
+                        const nh2 = Math.max(MIN_DIM, sh + (pos.includes('s') ? dy : 0) - (pos.includes('n') ? dy : 0));
+                        const nw2 = Math.max(3, sw + (pos.includes('e') ? dx : 0) - (pos.includes('w') ? dx : 0));
+                        if (pos.includes('e') || pos.includes('w')) {
+                            // 条宽 = 起始条宽 × (目标宽 / 起始宽)：每次都用起始值算，拖动才线性、不抖
+                            el.barWidth = Math.max(0.5, Math.min(5, +(bw0 * (nw2 / (sw || 1))).toFixed(3)));
+                        }
+                        el.height = (el.displayValue === false ? nh2 + barcodeTextSpace() / MM_TO_PX : nh2);
+                        if (pos.includes('w')) el.x = Math.max(0, sl + sw - nw2);
+                        if (pos.includes('n')) el.y = Math.max(0, st + sh - nh2);
+                        div.style.left = (el.x * MM_TO_PX) + 'px';
+                        div.style.top = (el.y * MM_TO_PX) + 'px';
+                        paintBarcodeLive(div, el);
+                        schedulePropsRefresh();
+                        return;
+                    }
                     const minDim = el.type === 'hline' ? MIN_DIM : 3;
                     let nw = sw, nh = sh, nx = sl, ny = st;
                     if (pos.includes('e')) nw = Math.max(minDim, sw+dx);
@@ -2400,16 +2594,32 @@
                     else if (el.type === 'image') { el.width = nw; el.height = nh; }
                     else if (el.type === 'hline') { el.width = nw; el.lineWidth = nh; }
                     else if (el.type === 'vline') el.height = nh;
+                    // 弧线：外接框尺寸按比例缩放两个半径（rot=0 时等价于 rx=nw/2、ry=nh/2，行为不变）
+                    else if (el.type === 'arc') {
+                        el.rx = arc0.rx * (nw / (2 * arc0.w));
+                        el.ry = arc0.ry * (nh / (2 * arc0.h));
+                    }
                     div.style.left = (el.x * MM_TO_PX) + 'px';
                     div.style.top = (el.y * MM_TO_PX) + 'px';
                     if (el.type === 'text') {
                         div.style.width = (el.width * MM_TO_PX) + 'px';
                         div.style.height = (el.height * MM_TO_PX) + 'px';
-                    } else if (el.type === 'barcode') div.style.height = (el.height * MM_TO_PX) + 'px';
-                    else if (el.type === 'qrcode') { div.style.width = (el.size * MM_TO_PX) + 'px'; div.style.height = (el.size * MM_TO_PX) + 'px'; }
+                    } else if (el.type === 'barcode') {
+                        // 条码尺寸由 JsBarcode 的 height 决定，只改 div 高度是看不出变化的 —— 必须重绘 SVG 才实时
+                        paintBarcodeLive(div, el);
+                    } else if (el.type === 'qrcode') { div.style.width = (el.size * MM_TO_PX) + 'px'; div.style.height = (el.size * MM_TO_PX) + 'px'; }
                     else if (el.type === 'image') { div.style.width = (el.width * MM_TO_PX) + 'px'; div.style.height = (el.height * MM_TO_PX) + 'px'; }
                     else if (el.type === 'hline') { div.style.width = (el.width * MM_TO_PX) + 'px'; div.style.height = (el.lineWidth * MM_TO_PX) + 'px'; }
                     else if (el.type === 'vline') div.style.height = (el.height * MM_TO_PX) + 'px';
+                    else if (el.type === 'arc') {
+                        const bx = arcBoxMm(el);
+                        div.style.width = (2 * bx.w * MM_TO_PX) + 'px';
+                        div.style.height = (2 * bx.h * MM_TO_PX) + 'px';
+                        div.style.left = ((el.x + bx.rx - bx.w) * MM_TO_PX) + 'px';
+                        div.style.top = ((el.y + bx.ry - bx.h) * MM_TO_PX) + 'px';
+                        paintArcSvg(div.querySelector('svg'), el);
+                    }
+                    schedulePropsRefresh();   // 拖动/缩放过程中同步刷新右侧属性数值（按帧节流）
                 }
                 function up() {
                     isResizing = false;
@@ -2426,6 +2636,8 @@
                             }
                         });
                     }
+                    // 松手后再同步一次：属性面板显示最终尺寸/坐标
+                    if (selectedElements.length) showProperties();
                     window.removeEventListener('mousemove', move);
                     window.removeEventListener('mouseup', up);
                     afterDesignChange();
@@ -2573,6 +2785,7 @@
             const commonBarWidth = allSameValue(selectedElements, 'barWidth');
             const commonDisplayValue = allSameValue(selectedElements, 'displayValue');
             const commonTextPosition = allSameValue(selectedElements, 'textPosition');
+            const commonColor = allSameValue(selectedElements, 'color');
             leftHtml = `
                 <div class="prop-block">
                     <div class="prop-cell"><label>数据</label><input value="${commonContent !== undefined ? commonContent : ''}" placeholder="${commonContent === undefined ? '多种' : ''}" onchange="updateMultiElementProp('content',this.value)"></div>
@@ -2606,6 +2819,12 @@
                 </div>
                 <div class="prop-block">
                     <div class="prop-cell">
+                        <label>颜色</label>
+                        <input type="color" value="${commonColor !== undefined ? commonColor : '#000000'}" onchange="updateMultiElementProp('color',this.value)" style="flex:0 0 auto; width:28px;">
+                    </div>
+                </div>
+                <div class="prop-block">
+                    <div class="prop-cell">
                         <label>旋转</label>
                         <input type="number" value="${commonRotation !== undefined ? commonRotation : ''}" placeholder="${commonRotation === undefined ? '多种' : ''}" step="5" min="0" max="360" onchange="updateMultiElementProp('rotation',parseFloat(this.value)||0)">
                     </div>
@@ -2614,6 +2833,7 @@
         } else if (el.type === 'qrcode') {
             const commonContent = allSameValue(selectedElements, 'content');
             const commonSize = allSameValue(selectedElements, 'size');
+            const commonColor = allSameValue(selectedElements, 'color');
             leftHtml = `
                 <div class="prop-block">
                     <div class="prop-cell"><label>数据</label><input value="${commonContent !== undefined ? commonContent : ''}" placeholder="${commonContent === undefined ? '多种' : ''}" onchange="updateMultiElementProp('content',this.value)"></div>
@@ -2631,6 +2851,12 @@
                 </div>
                 <div class="prop-block">
                     <div class="prop-cell">
+                        <label>颜色</label>
+                        <input type="color" value="${commonColor !== undefined ? commonColor : '#000000'}" onchange="updateMultiElementProp('color',this.value)" style="flex:0 0 auto; width:28px;">
+                    </div>
+                </div>
+                <div class="prop-block">
+                    <div class="prop-cell">
                         <label>旋转</label>
                         <input type="number" value="${commonRotation !== undefined ? commonRotation : ''}" placeholder="${commonRotation === undefined ? '多种' : ''}" step="5" min="0" max="360" onchange="updateMultiElementProp('rotation',parseFloat(this.value)||0)">
                     </div>
@@ -2639,6 +2865,7 @@
         } else if (el.type === 'hline') {
             const commonWidth = allSameValue(selectedElements, 'width');
             const commonLineWidth = allSameValue(selectedElements, 'lineWidth');
+            const commonColor = allSameValue(selectedElements, 'color');
             leftHtml = `
                 <div class="prop-block">
                     <div class="prop-row">
@@ -2650,6 +2877,12 @@
                     <div class="prop-row">
                         <div class="prop-cell"><label>长</label><input type="number" value="${commonWidth !== undefined ? commonWidth : ''}" step="0.1" min="0.1" placeholder="${commonWidth === undefined ? '多种' : ''}" onchange="updateMultiElementProp('width',clampDim(this.value))"></div>
                         <div class="prop-cell"><label>宽</label><input type="number" value="${commonLineWidth !== undefined ? commonLineWidth : ''}" step="0.1" min="0.1" placeholder="${commonLineWidth === undefined ? '多种' : ''}" onchange="updateMultiElementProp('lineWidth',clampDim(this.value))"></div>
+                    </div>
+                </div>
+                <div class="prop-block">
+                    <div class="prop-cell">
+                        <label>颜色</label>
+                        <input type="color" value="${commonColor !== undefined ? commonColor : '#000000'}" onchange="updateMultiElementProp('color',this.value)" style="flex:0 0 auto; width:28px;">
                     </div>
                 </div>
                 <div class="prop-block">
@@ -2779,6 +3012,14 @@
     function updateMultiElementProp(prop, val) {
         if (selectedElements.length === 0) return;
         selectedElements.forEach(el => {
+            // 条码勾/去「显示数值」会让元素框高度变（差值 = 数字占位 12px）：数字在上方时把 Y 挪回来，
+            // 让条码本体留在原地，只有框在收缩/展开
+            if (prop === 'displayValue' && el.type === 'barcode'
+                && (el.displayValue !== false) !== (val !== false)
+                && (el.textPosition || 'top') === 'top') {
+                const dMM = barcodeTextSpace() / MM_TO_PX;
+                el.y = Math.max(0, el.y + (val ? -dMM : dMM));
+            }
             el[prop] = val;
             const div = document.getElementById(el.id);
             if (!div) return;
@@ -2931,9 +3172,6 @@
         printStartRow.value = start;
         printEndRow.value = end;
 
-        localStorage.setItem('arcOffsetX', arcOffsetX);
-        localStorage.setItem('arcOffsetY', arcOffsetY);
-
         // 未导入数据：直接按打印份数生成当前画布预览，数据行显示为 0
         if (totalRows === 0) {
             const grid = document.getElementById('previewGrid');
@@ -3017,9 +3255,8 @@
             });
             content = content.replace(/{序号}/g, getFormattedSequence(seq, total));
 
-            let left = (el.x * MM_TO_PX);
-            let top = (el.y * MM_TO_PX);
-            if (el.type === 'arc') { left += arcOffsetX; top += arcOffsetY; }
+            const left = (el.x * MM_TO_PX);
+            const top = (el.y * MM_TO_PX);
 
             const item = document.createElement('div');
             item.style.position = 'absolute';
@@ -3074,19 +3311,10 @@
                 const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
                 svg.id = 'pre_'+rowIdx+'_'+seq+'_'+el.id;
                 item.appendChild(svg);
-                requestAnimationFrame(() => {
-                    try {
-                        JsBarcode('#'+svg.id, content||' ', {
-                            format:'CODE128',
-                            width: el.barWidth || 1.5,
-                            height: (el.height||7)*MM_TO_PX,
-                            displayValue: el.displayValue!==false,
-                            textPosition: el.textPosition||'bottom',
-                            fontSize: 10,
-                            margin: 0
-                        });
-                    } catch(e){}
-                });
+                // 与画布占位保持一致：内容为空、或占位符没被替换（无对应列 / 没导入数据）时用示例值。
+                // 否则 '{条码}' 这种非 ASCII 会直接让 JsBarcode 抛异常 → svg 空标签、尺寸塌成 0，预览里条码整块消失。
+                const bcText = (content.trim() === '' || /\{[^}]*\}/.test(content)) ? BARCODE_EXAMPLE : content;
+                requestAnimationFrame(() => paintBarcode(svg, el, bcText));
             } else if (el.type === 'qrcode') {
                 const sizePx = (el.size||20) * MM_TO_PX;
                 const qr = document.createElement('div');
@@ -3102,7 +3330,7 @@
                 item.style.fontSize = '0';
                 requestAnimationFrame(() => {
                     try {
-                        new QRCode(qr, { text:content||' ', width: sizePx, height: sizePx });
+                        new QRCode(qr, { text:content||' ', width: sizePx, height: sizePx, colorDark: el.color || '#000000', colorLight: '#ffffff' });
                         const canvas = qr.querySelector('canvas');
                         if (canvas) { canvas.style.display = 'block'; canvas.style.width = '100%'; canvas.style.height = '100%'; canvas.style.boxSizing = 'border-box'; }
                         const img = qr.querySelector('img');
@@ -3114,7 +3342,8 @@
                 const heightPx = Math.max(MIN_DIM, el.lineWidth||1) * MM_TO_PX;
                 item.style.width = widthPx + 'px';
                 item.style.height = heightPx + 'px';
-                item.innerHTML = `<div style="width:100%;height:100%;background:#000;"></div>`;
+                item.style.background = el.color || '#000';
+                item.innerHTML = '';
             } else if (el.type === 'vline') {
                 const heightPx = (el.height||35) * MM_TO_PX;
                 item.style.height = heightPx + 'px';
@@ -3124,19 +3353,13 @@
                 item.style.height = (el.height||30) * MM_TO_PX + 'px';
                 item.innerHTML = `<img src="${el.src}" style="width:100%;height:100%;object-fit:contain;">`;
             } else if (el.type === 'arc') {
-                const rxPx = (el.rx||10) * MM_TO_PX;
-                const ryPx = (el.ry||10) * MM_TO_PX;
-                item.style.width = (2 * rxPx) + 'px';
-                item.style.height = (2 * ryPx) + 'px';
-                const centerX = rxPx, centerY = ryPx;
-                const startRad = degToRad(el.startAngle||0), endRad = degToRad(el.endAngle||90), rotRad = degToRad(el.rotation||0);
-                let x0 = rxPx * Math.cos(startRad), y0 = ryPx * Math.sin(startRad);
-                const startX = x0 * Math.cos(rotRad) - y0 * Math.sin(rotRad), startY = x0 * Math.sin(rotRad) + y0 * Math.cos(rotRad);
-                let x1 = rxPx * Math.cos(endRad), y1 = ryPx * Math.sin(endRad);
-                const endX = x1 * Math.cos(rotRad) - y1 * Math.sin(rotRad), endY = x1 * Math.sin(rotRad) + y1 * Math.cos(rotRad);
-                const largeArcFlag = (el.endAngle - el.startAngle) > 180 ? 1 : 0, sweepFlag = 1;
-                const pathData = `M ${centerX + startX} ${centerY + startY} A ${rxPx} ${ryPx} ${el.rotation||0} ${largeArcFlag} ${sweepFlag} ${centerX + endX} ${centerY + endY}`;
-                item.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 ${2*rxPx} ${2*ryPx}" style="overflow:visible;"><path d="${pathData}" fill="none" stroke="${el.color||'#000'}" stroke-width="${el.lineWidth||1}" /></svg>`;
+                const bx = arcBoxMm(el);
+                item.style.width = (2 * bx.w * MM_TO_PX) + 'px';
+                item.style.height = (2 * bx.h * MM_TO_PX) + 'px';
+                item.style.left = ((el.x + bx.rx - bx.w) * MM_TO_PX) + 'px';
+                item.style.top = ((el.y + bx.ry - bx.h) * MM_TO_PX) + 'px';
+                item.innerHTML = `<svg style="display:block;overflow:visible;"><path fill="none" d="" /></svg>`;
+                paintArcSvg(item.querySelector('svg'), el);
             }
             label.appendChild(item);
         });

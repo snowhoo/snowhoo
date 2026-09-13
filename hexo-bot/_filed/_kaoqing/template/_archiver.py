@@ -24,6 +24,7 @@
 2. 对 Waline 中本月数据也做清洗（去重：同 id 多余旧评论删冗余、被 del 标记的评论物理删除，不再复写）
 3. 即使没有"本月之前"的数据，也照样清洗本月数据
 4. 未来日期数据当作本月数据处理（归入 current，不归档、只清洗）
+5. 每写入一个归档文件到 R2，就在本地 _archive/ 子目录同步复制一份（本地备份；失败仅告警，不影响归档）
 
    py -3 kaoqing_archiver.py            # 单次：归档历史 + 清洗当月
    py -3 kaoqing_archiver.py --loop     # 常驻：每 POLL_INTERVAL 秒自检一次
@@ -273,9 +274,33 @@ def purge_orphans(path, type_name, dry_run=False):
 
 
 # ----------------------------- R2 -----------------------------
+LOCAL_ARCHIVE_DIR = os.path.join(HERE, "_archive")   # 本地备份目录：与 R2 的 kaoqing-archive/ 内容一一对应
+
+
+def _local_backup(key, data):
+    """把刚写入 R2 的归档对象同步复制一份到本地 _archive/ 子目录（本地备份）。
+    key 形如 kaoqing-archive/2026-11.json → 落盘 _archive/2026-11.json（去掉 R2 前缀）。
+    备份失败只告警，不影响归档主流程（R2 已写成功即视为归档完成、Waline 照常标记）。"""
+    try:
+        rel = key[len(ARCHIVE_PREFIX):] if key.startswith(ARCHIVE_PREFIX) else key
+        if not rel or rel.endswith("/"):
+            print("[WARN] 本地备份跳过（key 不是文件）: %s" % key)
+            return
+        dst = os.path.join(LOCAL_ARCHIVE_DIR, rel.replace("/", os.sep))
+        d = os.path.dirname(dst)
+        if d and not os.path.isdir(d):
+            os.makedirs(d, exist_ok=True)
+        with open(dst, "wb") as f:
+            f.write(data)
+        print("[BACKUP] 本地备份 %s (%d 字节)" % (os.path.relpath(dst, HERE), len(data)))
+    except Exception as e:
+        print("[WARN] 本地备份 %s 失败(不影响归档): %s" % (key, e))
+
+
 def put_r2(key, obj):
     data = json.dumps(obj, ensure_ascii=False).encode("utf-8")
     upload_r2.put_object(R2_CFG, key, data)
+    _local_backup(key, data)   # 写 R2 成功后再同步本地 _archive/ 备份（失败仅告警）
 
 
 def determine_archive_key(r2_keys, ym):
