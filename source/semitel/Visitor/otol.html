@@ -103,6 +103,15 @@ async function run(){
     var list = await loadVisitors();
     if (!list.length){ setMsg('云端暂无访客记录', 'ok'); return; }
 
+    /* 弹窗模式（由本地 main 的「刷新云端」打开）：直接 postMessage 回传，不跳转、不丢本地页状态 */
+    if (window.opener && !window.opener.closed){
+      window.opener.postMessage({ type: 'visitor-sync', recs: list }, '*');
+      setMsg('已回传 ' + list.length + ' 条记录到本地管理页，本窗口将自动关闭', 'ok');
+      setTimeout(function(){ window.close(); }, 800);
+      return;
+    }
+
+    /* 直接打开模式（向后兼容）：走 URL 片段跳转本地 main */
     var b64 = b64enc(JSON.stringify(list));
     var params = new URLSearchParams(location.search);
     var target = params.get('target') || 'http://localhost:8080/main.html';
