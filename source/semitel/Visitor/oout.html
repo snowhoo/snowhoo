@@ -1,0 +1,247 @@
+---
+layout: false
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>访客离场（外网）</title>
+<style>
+  :root{
+    --bg:#eef2f7; --card:#ffffff; --ink:#1f2733; --sub:#6b7785;
+    --line:#e2e8f0; --brand:#2563eb; --brand2:#1d4ed8; --ok:#16a34a; --err:#dc2626;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .app{max-width:520px;margin:0 auto;padding:18px 16px calc(28px + env(safe-area-inset-bottom));}
+  header.top{text-align:center;padding:14px 0 10px}
+  header.top h1{font-size:22px;margin:0;letter-spacing:2px;font-weight:700}
+  header.top p{margin:6px 0 0;color:var(--sub);font-size:13px;letter-spacing:1px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 16px;
+    box-shadow:0 6px 20px rgba(31,39,51,.06)}
+  .field label{display:block;font-size:14px;font-weight:600;margin-bottom:8px}
+  .field input[type=text]{width:100%;height:48px;font-size:16px;padding:0 14px;border:1px solid var(--line);
+    border-radius:12px;background:#fbfdff;color:var(--ink);outline:none}
+  .field input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(37,99,235,.15);background:#fff}
+  .submit{width:100%;height:52px;margin-top:14px;border:none;border-radius:14px;
+    background:linear-gradient(180deg,var(--brand),var(--brand2));color:#fff;font-size:17px;font-weight:700;
+    letter-spacing:3px;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.35);transition:transform .08s,opacity .15s}
+  .submit:active{transform:translateY(1px)} .submit:disabled{opacity:.6;cursor:not-allowed}
+  .msg{margin-top:14px;min-height:20px;font-size:14px;text-align:center}
+  .msg.ok{color:var(--ok)} .msg.err{color:var(--err)}
+  .cand{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;background:#fff}
+  .cand .cn{font-size:18px;font-weight:700;margin-bottom:4px}
+  .cand .cm{font-size:13px;color:var(--sub);line-height:1.7}
+  .cand .cm b{color:var(--ink);font-weight:600}
+  .cand .cbtn{margin-top:12px;width:100%;height:44px;border:none;border-radius:10px;background:#16a34a;color:#fff;
+    font-size:15px;font-weight:600;cursor:pointer}
+  .cand.left{border-color:#d8e2ee;background:#f7fafc}
+  .cand .left-tag{display:inline-block;margin-top:10px;color:var(--sub);font-size:13px}
+  .done{text-align:center;padding:26px 10px}
+  .done .tick{width:64px;height:64px;margin:0 auto 14px;border-radius:50%;background:#e8f7ee;
+    display:flex;align-items:center;justify-content:center;color:var(--ok);font-size:34px}
+  .done h2{margin:0 0 6px;font-size:19px}
+  .done p{margin:0;color:var(--sub);font-size:14px;line-height:1.7}
+  .again{margin-top:18px;width:100%;height:48px;border:1px solid var(--brand);border-radius:12px;
+    background:#fff;color:var(--brand);font-size:15px;font-weight:600;cursor:pointer}
+  .hint{margin-top:16px;font-size:12px;color:var(--sub);text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>访客离场</h1>
+    <p>输入流水号或姓名，确认离场</p>
+  </header>
+
+  <div class="card" id="formCard">
+    <form id="f" autocomplete="off">
+      <div class="field">
+        <label>访客流水号 / 姓名</label>
+        <input type="text" id="q" placeholder="如 v1234567890123456 或 张三" maxlength="40">
+      </div>
+      <button type="submit" class="submit" id="submitBtn">查询离场</button>
+      <div class="msg" id="msg"></div>
+    </form>
+  </div>
+  <div id="result"></div>
+  <p class="hint">离场登记将记录离开时间，完成访客出入闭环。</p>
+</div>
+
+<script>
+/* ====== 在线 Waline 连接配置（外网，固定云端地址） ====== */
+var WALINE_SERVER = 'https://waline.snowhoo.net';
+var CLOUD_BASE    = WALINE_SERVER;
+var RECORDS_PATH  = '/visitor/records';
+var ANON_NICK     = '访客登记';
+var ANON_MAIL     = 'visitor@local';
+
+/* ====== 工具 ====== */
+function robustParse(raw){
+  if (!raw) return null;
+  var s = String(raw).replace(/<[^>]*>/g, '').replace(/[\u201C\u201D]/g, '"').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  var st = s.indexOf('{'), en = s.lastIndexOf('}');
+  if (st >= 0 && en > st) s = s.slice(st, en + 1);
+  try { return JSON.parse(s); } catch(e){ return null; }
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function fmtTime(ts){
+  if (!ts) return '';
+  var d = new Date(ts); function p(n){ return (n<10?'0':'')+n; }
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+function setMsg(t, cls){ var m = document.getElementById('msg'); m.textContent = t; m.className = 'msg ' + (cls || ''); }
+/* 由 id 反推访问时间：v + 16 位微秒时间戳 -> 毫秒；旧格式/非法 id 返回 0 */
+function idToTime(id){
+  if (!id || id.charAt(0) !== 'v') return 0;
+  var d = id.slice(1);
+  if (!/^\d{16}$/.test(d)) return 0;
+  return parseInt(d, 10) / 1000;
+}
+function visitTimeOf(v){ return idToTime(v && v.id) || (v && v.enterTime) || (v && v.createdAt) || 0; }
+
+/* ====== 读取在线 Waline（匿名 GET，无 Authorization；CORS 已验证 *） ====== */
+async function fetchAllComments(path){
+  var out=[], page=1;
+  while(true){
+    var url = CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(path)
+            + '&page=' + page + '&pageSize=100&sortBy=insertedAt_desc&lang=zh-CN';
+    var r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var resp = await r.json();
+    var dd = (resp.data && resp.data.data) || [];
+    if (!dd.length) break;
+    out = out.concat(dd);
+    var totalPages = (resp.data && resp.data.totalPages) || 0;
+    if (totalPages && page >= totalPages) break;
+    if (dd.length < 100) break;
+    page++;
+  }
+  return out;
+}
+async function loadVisitors(){
+  var all = await fetchAllComments(RECORDS_PATH);
+  var map = {};
+  all.forEach(function(c){
+    var rec = robustParse(c.orig || c.comment || '');
+    if (!rec || rec.type !== 'visitor' || !rec.id) return;
+    var oid = parseInt(c.objectId, 10) || 0;
+    if (!map[rec.id] || oid > map[rec.id].oid) map[rec.id] = { oid: oid, rec: rec };
+  });
+  var list = [];
+  for (var id in map){ if (!map[id].rec.deleted) list.push(map[id].rec); }
+  list.sort(function(a,b){ return visitTimeOf(b) - visitTimeOf(a); });
+  return list;
+}
+
+/* ====== 写入在线 Waline（匿名 POST，无 Authorization；命中限流自动退避重试） ====== */
+async function postComment(rec, opt){
+  opt = opt || {};
+  var statusCb = opt.status || function(){};
+  var delays = [0, 20, 20, 20];
+  for (var i = 0; i < delays.length; i++){
+    if (i > 0){
+      await new Promise(function(res){ setTimeout(res, delays[i] * 1000); });
+      statusCb('提交较频繁，系统限流中，正在自动重试（' + i + '/3）…');
+    }
+    try {
+      var body = { comment: JSON.stringify(rec), url: RECORDS_PATH, nick: rec.name || ANON_NICK, mail: ANON_MAIL, link: '', ua: navigator.userAgent };
+      var resp = await fetch(CLOUD_BASE + '/api/comment?lang=zh-CN', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      var j = await resp.json().catch(function(){ return {}; });
+      if (j && j.errno && j.errno !== 0){
+        if ((j.errmsg||'').indexOf('太快') >= 0) continue;
+        throw new Error('保存失败（' + j.errno + (j.errmsg ? '：' + j.errmsg : '') + '）');
+      }
+      if (!resp.ok) throw new Error('网络错误 HTTP ' + resp.status);
+      return (j.data && j.data.objectId) || 0;
+    } catch(e){
+      if ((e.message||'').indexOf('太快') >= 0) continue;
+      throw e;
+    }
+  }
+  throw new Error('提交过于频繁，请稍候约 1 分钟后再试');
+}
+
+var VISITORS = [];
+
+/* ====== 查询 ====== */
+document.getElementById('f').addEventListener('submit', async function(ev){
+  ev.preventDefault();
+  var q = document.getElementById('q').value.trim();
+  if (!q){ setMsg('请输入流水号或姓名', 'err'); return; }
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true; setMsg('查询中…', '');
+  try {
+    VISITORS = await loadVisitors();
+    var key = q.toLowerCase();
+    var matched = VISITORS.filter(function(v){
+      return (v.id && v.id.toLowerCase() === key) || (v.name && v.name.toLowerCase().indexOf(key) >= 0);
+    });
+    if (!matched.length){ setMsg('未找到匹配的访客记录', 'err'); renderResult([]); }
+    else { setMsg('找到 ' + matched.length + ' 条匹配记录', 'ok'); renderResult(matched); }
+  } catch(e){ setMsg('查询失败：' + (e.message||e), 'err'); }
+  btn.disabled = false;
+});
+
+function renderResult(list){
+  var box = document.getElementById('result');
+  if (!list.length){ box.innerHTML = ''; return; }
+  box.innerHTML = list.map(function(v, idx){
+    var left = !!v.leaveTime;
+    var info = '<div class="cm">拜访：<b>'+esc(v.visitPerson)+'</b>　单位：<b>'+esc(v.unit||'—')+'</b><br>' +
+      '访问时间：<b>'+esc(fmtTime(visitTimeOf(v)))+'</b><br>' +
+      '流水号：<b>'+esc(v.id)+'</b></div>';
+    if (left){
+      return '<div class="cand left"><div class="cn">'+esc(v.name)+'</div>'+info+
+        '<div class="left-tag">该访客已于 '+esc(fmtTime(v.leaveTime))+' 离场</div></div>';
+    }
+    return '<div class="cand" data-leave="'+esc(v.id)+'"><div class="cn">'+esc(v.name)+'</div>'+info+
+      '<button class="cbtn" data-leave="'+esc(v.id)+'">确认离场</button></div>';
+  }).join('');
+}
+
+document.getElementById('result').addEventListener('click', function(e){
+  var t = e.target;
+  if (t && t.dataset && t.dataset.leave){
+    if (confirm('确认该访客离场？将记录离开时间。')) doLeave(t.dataset.leave);
+  }
+});
+
+async function doLeave(id){
+  var v = VISITORS.filter(function(x){ return x.id === id; })[0];
+  if (!v) return;
+  setMsg('登记离场中…', '');
+  var now = Date.now();
+  /* 携带在线已有的加密身份证/手机，写新版本，保持在线端始终为密文 */
+  var rec = {
+    type:'visitor', id:id, name:v.name, idNumber:v.idNumber, phone:v.phone, unit:v.unit,
+    visitPerson:v.visitPerson, registrar:v.registrar, reasons:v.reasons,
+    enterTime:v.enterTime, leaveTime:now, status:'已离',
+    createdAt:v.createdAt||now, updatedAt:now
+  };
+  try {
+    await postComment(rec, { status: setMsg });
+    showDone(v, now);
+  } catch(err){ setMsg(err.message || '离场登记失败', 'err'); }
+}
+
+function showDone(v, leaveTs){
+  document.getElementById('formCard').innerHTML =
+    '<div class="done">' +
+      '<div class="tick">&#10003;</div>' +
+      '<h2>离场已登记</h2>' +
+      '<p>'+esc(v.name)+' 已于 '+esc(fmtTime(leaveTs))+' 离场</p>' +
+      '<button class="again" id="againBtn">再登记离场</button>' +
+    '</div>';
+  document.getElementById('againBtn').addEventListener('click', function(){ location.reload(); });
+}
+</script>
+</body>
+</html>
