@@ -23,6 +23,12 @@ layout: false
   .btn:active{transform:translateY(1px)}
   .note{font-size:12px;color:var(--sub);line-height:1.7;margin-top:8px}
   code{background:#f1f5fb;padding:2px 6px;border-radius:6px;font-size:12px}
+  /* iframe 内嵌模式（被本地 main 嵌入）：去卡片/去边距，与 main 视觉融合 */
+  body.embed{background:#fff}
+  body.embed .wrap{max-width:none;margin:0;padding:8px 14px}
+  body.embed h1,body.embed .sub{display:none}
+  body.embed .card{border:none;padding:0;margin:0}
+  body.embed #box{display:none}
 </style>
 </head>
 <body>
@@ -98,12 +104,21 @@ async function loadVisitors(){
 function b64enc(s){ return btoa(unescape(encodeURIComponent(s))); }
 
 async function run(){
+  var isEmbed = !!(window.parent && window.parent !== window.self);  // 被本地 main 以 iframe 嵌入
   try {
     setMsg('正在读取云端记录…', '');
     var list = await loadVisitors();
-    if (!list.length){ setMsg('云端暂无访客记录', 'ok'); return; }
+    if (!list.length){ setMsg('云端暂无访客记录', 'ok'); if (isEmbed) document.body.className = 'embed'; return; }
 
-    /* 弹窗模式（由本地 main 的「刷新云端」打开）：直接 postMessage 回传，不跳转、不丢本地页状态 */
+    /* iframe 内嵌模式（主路径）：postMessage 回传父页 main，不跳转、不弹窗、不丢本地页状态 */
+    if (isEmbed){
+      document.body.className = 'embed';
+      try { window.parent.postMessage({ type: 'visitor-sync', recs: list }, '*'); } catch(e){}
+      setMsg('已回传 ' + list.length + ' 条记录到本地管理页', 'ok');
+      return;
+    }
+
+    /* 弹窗模式（兼容旧 window.open 入口）：postMessage 回传并自动关窗 */
     if (window.opener && !window.opener.closed){
       window.opener.postMessage({ type: 'visitor-sync', recs: list }, '*');
       setMsg('已回传 ' + list.length + ' 条记录到本地管理页，本窗口将自动关闭', 'ok');
