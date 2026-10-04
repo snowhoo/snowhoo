@@ -58,6 +58,7 @@ layout: false
   .pass-idbox{flex:1;min-width:0}
   .pass-idbox .nm{font-size:24px;font-weight:800;line-height:1.2;word-break:break-all}
   .pass-idbox .un{font-size:13px;color:var(--sub);margin-top:5px;word-break:break-all}
+  .pass-idbox .pid{font-size:12px;color:var(--sub);margin-top:7px;word-break:break-all;font-family:ui-monospace,Menlo,Consolas,monospace}
   .pass-info{border-top:1px dashed var(--line);padding-top:12px}
   .pass-info .row{display:flex;font-size:14px;padding:5px 0;border-bottom:1px solid #f1f5f9}
   .pass-info .row .k{color:var(--sub);width:74px;flex:0 0 auto}
@@ -67,6 +68,7 @@ layout: false
   .pass-id .num{font-size:18px;font-weight:800;letter-spacing:1px;color:var(--pass);font-family:ui-monospace,Menlo,Consolas,monospace}
   .pass-bar{display:block;margin:14px auto 0;max-width:300px;height:auto}
   .pass-tip{text-align:center;color:var(--pass);font-size:13px;font-weight:600;padding:12px 16px 4px}
+  .pass-note{text-align:center;color:var(--sub);font-size:11px;letter-spacing:1px;padding:0 16px 14px;opacity:.85}
   .again{margin-top:18px;width:100%;height:48px;border:1px solid var(--brand);border-radius:12px;
     background:#fff;color:var(--brand);font-size:15px;font-weight:600;cursor:pointer}
   /* 红色印章式样：45° 浮动覆盖，置于变灰层之上不被去色 */
@@ -76,6 +78,15 @@ layout: false
     background:rgba(255,255,255,.1);text-shadow:0 0 2px rgba(220,38,38,.35);
     box-shadow:0 0 0 2px rgba(220,38,38,.12)}
   .hint{margin-top:16px;font-size:12px;color:var(--sub);text-align:center;line-height:1.6}
+  /* 长按保存访客证：全屏遮罩 + 长按图片存相册 */
+  .card-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;
+    flex-direction:column;z-index:50;padding:18px}
+  .card-overlay img{max-width:86%;max-height:60%;border-radius:12px;background:#fff;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+  .card-overlay .co-tip{color:#fff;font-size:13px;margin-top:14px;text-align:center;line-height:1.6}
+  .card-overlay .co-dl{margin-top:14px;color:#fff;background:var(--brand);padding:10px 22px;border-radius:10px;
+    font-size:14px;text-decoration:none}
+  .card-overlay .co-close{margin-top:10px;color:#cbd5e1;background:transparent;border:1px solid #64748b;
+    padding:8px 20px;border-radius:10px;font-size:13px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -116,6 +127,13 @@ function robustParse(raw){
   try { return JSON.parse(s); } catch(e){ return null; }
 }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+/* PII 脱敏：身份证保留前6后4，手机保留前3后4 */
+function maskId(s){ s=String(s==null?'':s); if(s.length<10) return s; var mid=''; for(var i=0;i<s.length-10;i++) mid+='*'; return s.slice(0,6)+mid+s.slice(-4); }
+function maskPhone(s){ s=String(s==null?'':s); if(s.length<7) return s; return s.slice(0,3)+'****'+s.slice(-4); }
+/* PII 解密（在线端身份证/手机存密文，此处还原用于显示与查询） */
+var PII_KEY = 'Vt9@Kq3#';
+function xorStr(s, key){ var o=''; for (var i=0;i<s.length;i++) o+=String.fromCharCode(s.charCodeAt(i) ^ key.charCodeAt(i % key.length)); return o; }
+function deobfPII(s){ if(!s) return s; try { return xorStr(decodeURIComponent(escape(atob(s))), PII_KEY); } catch(e){ return s; } }
 function fmtTime(ts){
   if (!ts) return '';
   var d = new Date(ts); function p(n){ return (n<10?'0':'')+n; }
@@ -226,7 +244,8 @@ document.getElementById('f').addEventListener('submit', async function(ev){
     VISITORS = await loadVisitors();
     var key = q.toLowerCase();
     var matched = VISITORS.filter(function(v){
-      return (v.id && v.id.toLowerCase() === key) || (v.name && v.name.toLowerCase().indexOf(key) >= 0);
+      return (v.id && v.id.toLowerCase() === key) || (v.name && v.name.toLowerCase().indexOf(key) >= 0)
+        || (v.phone && deobfPII(v.phone).indexOf(key) >= 0);
     });
     if (!matched.length){ setMsg('未找到匹配的访客记录', 'err'); renderResult([]); }
     else { setMsg('找到 ' + matched.length + ' 条匹配记录', 'ok'); renderResult(matched); }
@@ -240,6 +259,7 @@ function renderResult(list){
   box.innerHTML = list.map(function(v, idx){
     var left = !!v.leaveTime;
     var info = '<div class="cm">拜访：<b>'+esc(v.visitPerson)+'</b>　单位：<b>'+esc(v.unit||'—')+'</b><br>' +
+      '手机：<b>'+esc(deobfPII(v.phone))+'</b><br>' +
       '访问时间：<b>'+esc(fmtTime(visitTimeOf(v)))+'</b><br>' +
       '流水号：<b>'+esc(v.id)+'</b></div>';
     if (left){
@@ -276,6 +296,59 @@ async function doLeave(id){
   } catch(err){ setMsg(err.message || '离场登记失败', 'err'); }
 }
 
+/* 访客证长按保存图片：html2canvas 懒加载（与 JsBarcode 同策略，离线可用），
+   生成后弹出遮罩，移动端长按图片即可存入相册，桌面端提供「下载图片」。 */
+var _h2cLoading = false, _h2cQueue = [];
+function ensureHtml2Canvas(cb){
+  if (window.html2canvas){ cb(); return; }
+  _h2cQueue.push(cb);
+  if (_h2cLoading) return;
+  _h2cLoading = true;
+  var s = document.createElement('script');
+  s.src = 'html2canvas.min.js'; s.async = true;
+  s.onload = function(){ var q = _h2cQueue; _h2cQueue = []; q.forEach(function(fn){ try{ fn(); }catch(e){} }); };
+  s.onerror = function(){ alert('图片组件加载失败，请改用截屏保存'); };
+  document.head.appendChild(s);
+}
+function bindLongPress(el, onLong){
+  if (!el) return;
+  var timer = null;
+  function clear(){ if (timer){ clearTimeout(timer); timer = null; } }
+  el.addEventListener('touchstart', function(){ clear(); timer = setTimeout(function(){ timer = null; onLong(); }, 600); }, { passive: true });
+  el.addEventListener('touchend', clear);
+  el.addEventListener('touchmove', clear);
+  el.addEventListener('touchcancel', clear);
+  el.addEventListener('contextmenu', function(e){ e.preventDefault(); onLong(); }); /* 桌面端右键亦可触发 */
+}
+function showCardOverlay(dataUrl){
+  var ov = document.getElementById('cardOverlay');
+  if (!ov){
+    ov = document.createElement('div'); ov.id = 'cardOverlay'; ov.className = 'card-overlay';
+    ov.innerHTML = '<img id="coImg" alt="访客证">' +
+      '<div class="co-tip">长按上方图片即可保存到手机相册（iOS / 安卓通用）</div>' +
+      '<a id="coDl" class="co-dl" download="访客证.png">下载图片</a>' +
+      '<button id="coClose" class="co-close" type="button">关闭</button>';
+    document.body.appendChild(ov);
+  }
+  document.getElementById('coImg').src = dataUrl;
+  document.getElementById('coDl').href = dataUrl;
+  ov.style.display = 'flex';
+  document.getElementById('coClose').onclick = function(){ ov.style.display = 'none'; };
+}
+function saveCardImage(card){
+  ensureHtml2Canvas(function(){
+    if (!window.html2canvas){ alert('图片组件加载失败，请改用截屏保存'); return; }
+    html2canvas(card, { backgroundColor: null, scale: 2, logging: false }).then(function(cv){
+      try { showCardOverlay(cv.toDataURL('image/png')); }
+      catch(e){ alert('生成图片失败，请改用截屏保存'); }
+    }).catch(function(){ alert('生成图片失败，请改用截屏保存'); });
+  });
+}
+function enableCardSave(){
+  var card = document.querySelector('.pass');
+  if (card && !card._lpBound){ card._lpBound = true; bindLongPress(card, function(){ saveCardImage(card); }); }
+}
+
 function showDone(v, leaveTs){
   var reasons = (v.reasons || []).join('、') || '—';
   var html =
@@ -290,7 +363,8 @@ function showDone(v, leaveTs){
               '<span class="ph-txt">证件照片</span>' +
             '</div>' +
             '<div class="pass-idbox"><div class="nm">' + esc(v.name) + '</div>' +
-            '<div class="un">' + (v.unit ? esc(v.unit) : '来访人员') + '</div></div>' +
+            '<div class="un">' + (v.unit ? esc(v.unit) : '来访人员') + '</div>' +
+            '<div class="pid">证件号 ' + esc(maskId(v.idNumber)) + '</div></div>' +
           '</div>' +
           '<div class="pass-info">' +
             '<div class="row"><span class="k">拜访</span><span class="v">' + esc(v.visitPerson) + '</span></div>' +
@@ -298,11 +372,13 @@ function showDone(v, leaveTs){
             '<div class="row"><span class="k">访问时间</span><span class="v">' + esc(fmtTime(visitTimeOf(v))) + '</span></div>' +
             '<div class="row"><span class="k">离场时间</span><span class="v">' + esc(fmtTime(leaveTs)) + '</span></div>' +
             (v.registrar ? '<div class="row"><span class="k">登记人</span><span class="v">' + esc(v.registrar) + '</span></div>' : '') +
+            '<div class="row"><span class="k">手机</span><span class="v">'+esc(maskPhone(v.phone))+'</span></div>' +
           '</div>' +
           '<div class="pass-id"><div class="lbl">访客流水号</div><div class="num">' + esc(v.id) + '</div></div>' +
           '<svg class="pass-bar" id="passBar"></svg>' +
         '</div>' +
         '<div class="pass-tip">该访客已离场，此证已失效</div>' +
+        '<div class="pass-note">个人信息已脱敏</div>' +
       '</div>' +
       '<div class="pass-stamp">已失效</div>' +
     '</div>' +
@@ -322,6 +398,7 @@ function showDone(v, leaveTs){
   var rb = document.getElementById('result');
   if (rb) rb.innerHTML = '';
   document.getElementById('againBtn').addEventListener('click', function(){ location.reload(); });
+  enableCardSave();
 }
 </script>
 </body>
