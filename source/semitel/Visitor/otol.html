@@ -105,16 +105,36 @@ if (IS_PUSH){
     if (!e.data || e.data.type !== 'visitor-leave-push' || !e.data.rec) return;
     try {
       var rec = e.data.rec;
-      var body = { comment: JSON.stringify(rec), url: RECORDS_PATH, nick: rec.name || '访客登记', mail: 'visitor@local', link: '', ua: navigator.userAgent };
-      var resp = await fetch(CLOUD_BASE + '/api/comment?lang=zh-CN', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + admToken() },
-        body: JSON.stringify(body)
+      /* 按流水号找该记录在云端的最新版本，原地 PUT 更新（管理员令牌），不追加新版本 */
+      var all = await fetchAllComments(RECORDS_PATH);
+      var oid = 0;
+      all.forEach(function(c){
+        var r = robustParse(c.orig || c.comment || '');
+        if (r && r.type === 'visitor' && r.id === rec.id){
+          var o = parseInt(c.objectId, 10) || 0;
+          if (o > oid) oid = o;
+        }
       });
+      var resp;
+      if (oid){
+        resp = await fetch(CLOUD_BASE + '/api/comment/' + oid, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + admToken() },
+          body: JSON.stringify({ comment: JSON.stringify(rec) })   /* 与 books.html 同款：仅更新 comment，其余字段服务端保留 */
+        });
+      } else {
+        /* 云端无此记录（理论不会发生）→ 退回新建 */
+        var body = { comment: JSON.stringify(rec), url: RECORDS_PATH, nick: rec.name || '访客登记', mail: 'visitor@local', link: '', ua: navigator.userAgent };
+        resp = await fetch(CLOUD_BASE + '/api/comment?lang=zh-CN', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + admToken() },
+          body: JSON.stringify(body)
+        });
+      }
       var j = await resp.json().catch(function(){ return {}; });
       if (j && j.errno && j.errno !== 0) throw new Error('云端拒绝（' + j.errno + (j.errmsg ? '：' + j.errmsg : '') + '）');
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      setMsg('云端签离已回写', 'ok');
+      setMsg(oid ? '云端签离已更新（原地 PUT，版本数不变）' : '云端签离已回写（新建）', 'ok');
       try { window.parent.postMessage({ type: 'visitor-leave-push-result', ok: true }, '*'); } catch(e2){}
     } catch(err){
       setMsg('云端回写失败：' + (err.message || err), 'err');
