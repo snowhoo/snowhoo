@@ -18,9 +18,10 @@ layout: false
 <body>
 <div class="wrap"><div class="msg" id="msg">准备读取云端记录…</div></div>
 
+<script src="registrar.config.js"></script>
 <script>
 /* ====== 在线 Waline 连接配置（外网，固定云端地址） ====== */
-var CLOUD_BASE    = 'https://waline.snowhoo.net';
+var CLOUD_BASE    = (window.CLOUD_WALINE || '').trim() || 'https://waline.snowhoo.net';  // 优先取配置
 var RECORDS_PATH  = '/visitor/records';
 
 /* ====== 工具 ====== */

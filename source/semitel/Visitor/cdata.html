@@ -88,9 +88,10 @@ layout: false
   </div>
 </div>
 
+<script src="registrar.config.js"></script>
 <script>
 /* ====== 在线 Waline 连接配置（外网，固定云端地址） ====== */
-var WALINE_SERVER = 'https://waline.snowhoo.net';
+var WALINE_SERVER = (window.CLOUD_WALINE || '').trim() || 'https://waline.snowhoo.net';  // 优先取配置
 var CLOUD_BASE    = WALINE_SERVER;
 var RECORDS_PATH  = '/visitor/records';   // 本应用唯一数据路径——所有操作只在此路径下
 

@@ -7,3 +7,13 @@ window.REGISTRAR_DEFAULT = '蒋雯';
 window.COMPANY_NAME = '苏州晶讯科技股份有限公司';
 window.COMPANY_LOGO = 'logo.png';
 window.LOGO_PASS = 'logo_pass.png'
+
+/* ====== 地址配置（迁移时改这里即可） ======
+   LOCAL_WALINE：本地 waline-mini 地址（如 'http://192.168.1.10:8360'）；留空 = 自动跟随访问地址(:8360)
+   LOCAL_H5：本地 H5 页面地址（预留，当前本地页面均同源访问）
+   CLOUD_WALINE：云端 Waline 地址（oin/oout/otol/cdata 使用）
+   CLOUD_H5：云端 H5 页面目录（main 引用 otol/cdata 的来源） */
+window.LOCAL_WALINE = '';
+window.LOCAL_H5 = '';
+window.CLOUD_WALINE = 'https://waline.snowhoo.net';
+window.CLOUD_H5 = 'https://snowhoo.net/semitel/Visitor';
