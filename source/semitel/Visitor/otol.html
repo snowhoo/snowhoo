@@ -24,7 +24,7 @@ layout: false
 var CLOUD_BASE    = (window.CLOUD_WALINE || '').trim() || 'https://waline.snowhoo.net';  // 优先取配置
 var RECORDS_PATH  = '/visitor/records';
 
-/* ====== 云端回写模式（?push=1）：main 编辑签离时经此中转 POST，本页与云端 Waline 同源无跨域 ====== */
+/* ====== 云端状态回写模式（?push=1）：main 编辑/强签/恢复时经此中转写云端（PUT 复写 / POST 新建），本页与云端 Waline 同源无跨域 ====== */
 var IS_PUSH = /[?&]push=1/.test(location.search);
 var ADM_SEED = 'Vs#9kQ~';
 var ADM_OBF  = 'MwppUQkWHT88SnMiBAQfQm1QIWhQGyINb0ZgCj0fdVUdNRpgAEIJKgAcMiBHXzQFKm8kVlwCFzUnGHFbLgs1bzRGCQ==';
@@ -134,7 +134,7 @@ if (IS_PUSH){
       var j = await resp.json().catch(function(){ return {}; });
       if (j && j.errno && j.errno !== 0) throw new Error('云端拒绝（' + j.errno + (j.errmsg ? '：' + j.errmsg : '') + '）');
       if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      setMsg(oid ? '云端签离已更新（原地 PUT，版本数不变）' : '云端签离已回写（新建）', 'ok');
+      setMsg(oid ? '云端状态已更新（原地 PUT，版本数不变）' : '云端记录已重建（新建）', 'ok');
       try { window.parent.postMessage({ type: 'visitor-leave-push-result', ok: true }, '*'); } catch(e2){}
     } catch(err){
       setMsg('云端回写失败：' + (err.message || err), 'err');
