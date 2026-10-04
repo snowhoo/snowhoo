@@ -86,15 +86,16 @@ async function loadVisitors(){
   return list;
 }
 
-/* ====== 主流程：读云端 → postMessage 回传父页 main ====== */
+/* ====== 主流程：读云端 → postMessage 回传父页 main ======
+   注意：空数据/读失败也必须回消息，否则 main 会永远停在「正在从云端读取」 */
 async function run(){
   try {
     setMsg('正在读取云端记录…', '');
     var list = await loadVisitors();
-    if (!list.length){ setMsg('云端暂无访客记录', 'ok'); return; }
     try { window.parent.postMessage({ type: 'visitor-sync', recs: list }, '*'); } catch(e){}
-    setMsg('已回传 ' + list.length + ' 条记录到本地管理页', 'ok');
+    setMsg(list.length ? ('已回传 ' + list.length + ' 条记录到本地管理页') : '云端暂无访客记录', 'ok');
   } catch(e){
+    try { window.parent.postMessage({ type: 'visitor-sync', recs: [], error: (e.message || String(e)) }, '*'); } catch(e2){}
     setMsg('读取失败：' + (e.message || e), 'err');
   }
 }
