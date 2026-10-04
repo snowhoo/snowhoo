@@ -62,7 +62,7 @@ layout: false
     letter-spacing:3px;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.35);transition:transform .08s,opacity .15s}
   .submit:active{transform:translateY(1px)}
   .submit:disabled{opacity:.6;cursor:not-allowed}
-  .msg{margin-top:14px;min-height:20px;font-size:14px;text-align:center}
+  .msg{margin-top:14px;min-height:20px;font-size:14px;text-align:center;justify-content: space-around}
   .msg.ok{color:var(--ok)} .msg.err{color:var(--err)}
 
   /* 访客通行卡（胸卡样式） */
@@ -71,7 +71,7 @@ layout: false
   .pass-top{background:linear-gradient(135deg,var(--pass),#3b82f6);color:#fff;padding:14px 18px;
     display:flex;justify-content:space-between;align-items:center}
   .pass-top .t1{font-size:16px;font-weight:700;letter-spacing:1px}
-  .pass-top .t2{font-size:12px;opacity:.9}
+  .pass-sub{text-align:center;padding:10px 18px 0;font-size:12px;color:#6b7785;letter-spacing:2px}
   .pass-body{padding:18px}
   .pass-head{display:flex;gap:14px;align-items:center;margin-bottom:14px}
   .pass-photo{flex:0 0 auto;width:92px;height:116px;border-radius:10px;background:#eef2f7;
@@ -378,15 +378,16 @@ function enableCardSave(){
 
 function showBadge(rec){
   var hd = document.getElementById('pageHead'); if (hd) hd.style.display = 'none'; /* 访客单生成后隐藏页头 */
-  var companyName = (window.COMPANY_NAME || '').trim(), companyLogo = (window.COMPANY_LOGO || '').trim();
+  var companyName = (window.COMPANY_NAME || '').trim();
+  var passLogo = (window.LOGO_PASS || '').trim() || (window.COMPANY_LOGO || '').trim();
   var reasons = (rec.reasons || []).join('、') || '—';
   var html =
     '<div class="pass">' +
       '<div class="pass-top">' +
-        (companyLogo ? '<img class="pt-logo" src="' + companyLogo + '" alt="" onerror="this.style.display=\'none\'">' : '') +
+        (passLogo ? '<img class="pt-logo" src="' + passLogo + '" alt="" onerror="this.style.display=\'none\'">' : '') +
         '<span class="t1">' + esc(companyName || '访客通行卡') + '</span>' +
-        '<span class="t2">VISITOR PASS</span>' +
       '</div>' +
+      '<div class="pass-sub">访客通行证 VISITOR PASS</div>' +
       '<div class="pass-body">' +
         '<div class="pass-head">' +
           '<div class="pass-photo">' +

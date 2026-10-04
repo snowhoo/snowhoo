@@ -66,9 +66,9 @@ layout: false
     box-shadow:0 10px 30px rgba(29,78,216,.25);border:1px solid #d7e0f5;position:relative}
   .pass-inner{filter:grayscale(1);opacity:.85}
   .pass-top{background:linear-gradient(135deg,var(--pass),#3b82f6);color:#fff;padding:14px 18px;
-    display:flex;justify-content:space-between;align-items:center}
+    display:flex;justify-content:space-between;align-items:center;justify-content: space-around}
   .pass-top .t1{font-size:16px;font-weight:700;letter-spacing:1px}
-  .pass-top .t2{font-size:12px;opacity:.9}
+  .pass-sub{text-align:center;padding:10px 18px 0;font-size:12px;color:#6b7785;letter-spacing:2px}
   .pass-body{padding:18px}
   .pass-head{display:flex;gap:14px;align-items:center;margin-bottom:14px}
   .pass-photo{flex:0 0 auto;width:92px;height:116px;border-radius:10px;background:#eef2f7;
@@ -371,16 +371,17 @@ function enableCardSave(){
 
 function showDone(v, leaveTs){
   var hd = document.getElementById('pageHead'); if (hd) hd.style.display = 'none'; /* 失效访客单生成后隐藏页头 */
-  var companyName = (window.COMPANY_NAME || '').trim(), companyLogo = (window.COMPANY_LOGO || '').trim();
+  var companyName = (window.COMPANY_NAME || '').trim();
+  var passLogo = (window.LOGO_PASS || '').trim() || (window.COMPANY_LOGO || '').trim();
   var reasons = (v.reasons || []).join('、') || '—';
   var html =
     '<div class="pass">' +
       '<div class="pass-inner">' +
         '<div class="pass-top">' +
-          (companyLogo ? '<img class="pt-logo" src="' + companyLogo + '" alt="" onerror="this.style.display=\'none\'">' : '') +
+          (passLogo ? '<img class="pt-logo" src="' + passLogo + '" alt="" onerror="this.style.display=\'none\'">' : '') +
           '<span class="t1">' + esc(companyName || '访客通行卡') + '</span>' +
-          '<span class="t2">VISITOR PASS</span>' +
         '</div>' +
+        '<div class="pass-sub">访客通行证 VISITOR PASS</div>' +
         '<div class="pass-body">' +
           '<div class="pass-head">' +
             '<div class="pass-photo">' +
