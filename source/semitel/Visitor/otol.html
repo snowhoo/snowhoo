@@ -73,7 +73,7 @@ async function fetchAllComments(path){
   while(true){
     var url = CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(path)
             + '&page=' + page + '&pageSize=100&sortBy=insertedAt_desc&lang=zh-CN';
-    var r = await fetch(url);
+    var r = await fetch(url, { cache: 'no-store' });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     var resp = await r.json();
     var dd = (resp.data && resp.data.data) || [];

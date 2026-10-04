@@ -73,7 +73,24 @@ layout: false
     border-radius:12px;background:#fff;color:var(--brand);font-size:15px;font-weight:600;cursor:pointer}
   .hint{margin-top:16px;font-size:12px;color:var(--sub);text-align:center;line-height:1.6}
 </style>
-<script src="JsBarcode.all.min.js"></script>
+<script>
+/* 条码组件：页面打开后后台无感懒加载，不阻塞表单提交 */
+var _bcLoading = false, _bcQueue = [];
+function ensureBarcodeLib(cb){
+  if (window.JsBarcode){ cb(); return; }
+  _bcQueue.push(cb);
+  if (_bcLoading) return;
+  _bcLoading = true;
+  var s = document.createElement('script');
+  s.src = 'JsBarcode.all.min.js'; s.async = true;
+  s.onload = function(){ var q = _bcQueue; _bcQueue = []; q.forEach(function(fn){ try{ fn(); }catch(e){} }); };
+  s.onerror = function(){ /* 加载失败则条码留空 */ };
+  document.head.appendChild(s);
+}
+/* 打开即后台拉取（非阻塞） */
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ ensureBarcodeLib(function(){}); });
+else ensureBarcodeLib(function(){});
+</script>
 </head>
 <body>
 <div class="app">
@@ -270,15 +287,15 @@ function showBadge(rec){
     '</div>' +
     '<button class="again" id="againBtn">再登记一位</button>';
   document.getElementById('formCard').innerHTML = html;
-  try {
-    if (window.JsBarcode) {
+  ensureBarcodeLib(function(){
+    try {
       JsBarcode('#passBar', rec.id, {
         format: 'CODE128', width: 2, height: 48,
         displayValue: true, fontSize: 13, margin: 0,
         lineColor: '#1f2733', background: '#ffffff'
       });
-    }
-  } catch (e) { /* 条码库缺失则忽略，保留空白占位 */ }
+    } catch (e) { /* 条码库缺失则忽略，保留空白占位 */ }
+  });
   document.getElementById('againBtn').addEventListener('click', function(){ location.reload(); });
 }
 </script>

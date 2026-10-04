@@ -10,7 +10,7 @@ layout: false
 <style>
   :root{
     --bg:#eef2f7; --card:#ffffff; --ink:#1f2733; --sub:#6b7785;
-    --line:#e2e8f0; --brand:#2563eb; --brand2:#1d4ed8; --ok:#16a34a; --err:#dc2626;
+    --line:#e2e8f0; --brand:#2563eb; --brand2:#1d4ed8; --pass:#1d4ed8; --ok:#16a34a; --err:#dc2626;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0}
@@ -40,13 +40,41 @@ layout: false
     font-size:15px;font-weight:600;cursor:pointer}
   .cand.left{border-color:#d8e2ee;background:#f7fafc}
   .cand .left-tag{display:inline-block;margin-top:10px;color:var(--sub);font-size:13px}
-  .done{text-align:center;padding:26px 10px}
-  .done .tick{width:64px;height:64px;margin:0 auto 14px;border-radius:50%;background:#e8f7ee;
-    display:flex;align-items:center;justify-content:center;color:var(--ok);font-size:34px}
-  .done h2{margin:0 0 6px;font-size:19px}
-  .done p{margin:0;color:var(--sub);font-size:14px;line-height:1.7}
+  /* 访客通行卡（与登记页同款） */
+  .pass{max-width:340px;margin:0 auto;background:#fff;border-radius:18px;overflow:hidden;
+    box-shadow:0 10px 30px rgba(29,78,216,.25);border:1px solid #d7e0f5;position:relative}
+  .pass-inner{filter:grayscale(1);opacity:.85}
+  .pass-top{background:linear-gradient(135deg,var(--pass),#3b82f6);color:#fff;padding:14px 18px;
+    display:flex;justify-content:space-between;align-items:center}
+  .pass-top .t1{font-size:16px;font-weight:700;letter-spacing:2px}
+  .pass-top .t2{font-size:12px;opacity:.9}
+  .pass-body{padding:18px}
+  .pass-head{display:flex;gap:14px;align-items:center;margin-bottom:14px}
+  .pass-photo{flex:0 0 auto;width:92px;height:116px;border-radius:10px;background:#eef2f7;
+    border:1px dashed #c4cedd;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:#9aa7b8;overflow:hidden}
+  .pass-photo svg{width:48px;height:48px;display:block}
+  .pass-photo .ph-txt{font-size:11px;margin-top:6px;letter-spacing:1px;color:#9aa7b8}
+  .pass-idbox{flex:1;min-width:0}
+  .pass-idbox .nm{font-size:24px;font-weight:800;line-height:1.2;word-break:break-all}
+  .pass-idbox .un{font-size:13px;color:var(--sub);margin-top:5px;word-break:break-all}
+  .pass-info{border-top:1px dashed var(--line);padding-top:12px}
+  .pass-info .row{display:flex;font-size:14px;padding:5px 0;border-bottom:1px solid #f1f5f9}
+  .pass-info .row .k{color:var(--sub);width:74px;flex:0 0 auto}
+  .pass-info .row .v{flex:1;text-align:right;word-break:break-all}
+  .pass-id{margin-top:14px;background:#f1f5fb;border-radius:10px;padding:10px 12px;text-align:center}
+  .pass-id .lbl{font-size:11px;color:var(--sub);letter-spacing:1px}
+  .pass-id .num{font-size:18px;font-weight:800;letter-spacing:1px;color:var(--pass);font-family:ui-monospace,Menlo,Consolas,monospace}
+  .pass-bar{display:block;margin:14px auto 0;max-width:300px;height:auto}
+  .pass-tip{text-align:center;color:var(--pass);font-size:13px;font-weight:600;padding:12px 16px 4px}
   .again{margin-top:18px;width:100%;height:48px;border:1px solid var(--brand);border-radius:12px;
     background:#fff;color:var(--brand);font-size:15px;font-weight:600;cursor:pointer}
+  /* 红色印章式样：45° 浮动覆盖，置于变灰层之上不被去色 */
+  .pass-stamp{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);
+    z-index:2;color:#dc2626;border:4px double #dc2626;border-radius:12px;padding:8px 26px;
+    font-size:30px;font-weight:800;letter-spacing:8px;opacity:.85;pointer-events:none;
+    background:rgba(255,255,255,.1);text-shadow:0 0 2px rgba(220,38,38,.35);
+    box-shadow:0 0 0 2px rgba(220,38,38,.12)}
   .hint{margin-top:16px;font-size:12px;color:var(--sub);text-align:center;line-height:1.6}
 </style>
 </head>
@@ -169,6 +197,22 @@ async function postComment(rec, opt){
   throw new Error('提交过于频繁，请稍候约 1 分钟后再试');
 }
 
+/* 条码组件：页面打开后后台无感懒加载（与登记页一致） */
+var _bcLoading = false, _bcQueue = [];
+function ensureBarcodeLib(cb){
+  if (window.JsBarcode){ cb(); return; }
+  _bcQueue.push(cb);
+  if (_bcLoading) return;
+  _bcLoading = true;
+  var s = document.createElement('script');
+  s.src = 'JsBarcode.all.min.js'; s.async = true;
+  s.onload = function(){ var q = _bcQueue; _bcQueue = []; q.forEach(function(fn){ try{ fn(); }catch(e){} }); };
+  s.onerror = function(){ /* 加载失败则条码留空 */ };
+  document.head.appendChild(s);
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ ensureBarcodeLib(function(){}); });
+else ensureBarcodeLib(function(){});
+
 var VISITORS = [];
 
 /* ====== 查询 ====== */
@@ -233,13 +277,50 @@ async function doLeave(id){
 }
 
 function showDone(v, leaveTs){
-  document.getElementById('formCard').innerHTML =
-    '<div class="done">' +
-      '<div class="tick">&#10003;</div>' +
-      '<h2>离场已登记</h2>' +
-      '<p>'+esc(v.name)+' 已于 '+esc(fmtTime(leaveTs))+' 离场</p>' +
-      '<button class="again" id="againBtn">再登记离场</button>' +
-    '</div>';
+  var reasons = (v.reasons || []).join('、') || '—';
+  var html =
+    '<div class="pass">' +
+      '<div class="pass-inner">' +
+        '<div class="pass-top"><span class="t1">访客通行卡</span><span class="t2">VISITOR PASS</span></div>' +
+        '<div class="pass-body">' +
+          '<div class="pass-head">' +
+            '<div class="pass-photo">' +
+              '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/>' +
+              '<path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7v1H4z"/></svg>' +
+              '<span class="ph-txt">证件照片</span>' +
+            '</div>' +
+            '<div class="pass-idbox"><div class="nm">' + esc(v.name) + '</div>' +
+            '<div class="un">' + (v.unit ? esc(v.unit) : '来访人员') + '</div></div>' +
+          '</div>' +
+          '<div class="pass-info">' +
+            '<div class="row"><span class="k">拜访</span><span class="v">' + esc(v.visitPerson) + '</span></div>' +
+            '<div class="row"><span class="k">事由</span><span class="v">' + esc(reasons) + '</span></div>' +
+            '<div class="row"><span class="k">访问时间</span><span class="v">' + esc(fmtTime(visitTimeOf(v))) + '</span></div>' +
+            '<div class="row"><span class="k">离场时间</span><span class="v">' + esc(fmtTime(leaveTs)) + '</span></div>' +
+            (v.registrar ? '<div class="row"><span class="k">登记人</span><span class="v">' + esc(v.registrar) + '</span></div>' : '') +
+          '</div>' +
+          '<div class="pass-id"><div class="lbl">访客流水号</div><div class="num">' + esc(v.id) + '</div></div>' +
+          '<svg class="pass-bar" id="passBar"></svg>' +
+        '</div>' +
+        '<div class="pass-tip">该访客已离场，此证已失效</div>' +
+      '</div>' +
+      '<div class="pass-stamp">已失效</div>' +
+    '</div>' +
+    '<button class="again" id="againBtn">再登记离场</button>';
+  document.getElementById('formCard').innerHTML = html;
+  /* 无感补画条码（与登记页同款） */
+  ensureBarcodeLib(function(){
+    try {
+      JsBarcode('#passBar', v.id, {
+        format: 'CODE128', width: 2, height: 48,
+        displayValue: true, fontSize: 13, margin: 0,
+        lineColor: '#1f2733', background: '#ffffff'
+      });
+    } catch (e) { /* 条码库缺失则忽略，保留空白占位 */ }
+  });
+  /* 清掉下方残留的候选卡片（含「确认离场」按钮），避免离场完成后被二次点击 */
+  var rb = document.getElementById('result');
+  if (rb) rb.innerHTML = '';
   document.getElementById('againBtn').addEventListener('click', function(){ location.reload(); });
 }
 </script>
