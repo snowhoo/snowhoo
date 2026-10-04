@@ -10,6 +10,12 @@ layout: false
 <script>
 /* 公司名称/logo：读配置渲染页头品牌行（未配置则不显示） */
 (function(){
+  /* 提前与云端 Waline 建立连接（DNS+TLS 与表单填写并行，提交时省去握手时间） */
+  try {
+    var _srv = (window.CLOUD_WALINE || '').trim() || 'https://waline.snowhoo.net';
+    var _l = document.createElement('link'); _l.rel = 'preconnect'; _l.href = _srv; _l.crossOrigin = '';
+    document.head.appendChild(_l);
+  } catch(e){}
   function renderBrand(){
     var n = (window.COMPANY_NAME || '').trim(), l = (window.COMPANY_LOGO || '').trim();
     if (!n && !l) return;
@@ -173,6 +179,14 @@ var CLOUD_BASE    = WALINE_SERVER;
 var RECORDS_PATH  = '/visitor/records';
 var ANON_NICK     = '访客登记';
 var ANON_MAIL     = 'visitor@local';
+
+/* 实例预热：页面打开即后台发一次轻量 GET，提前唤醒云端 serverless 实例，
+   访客填完表单提交时命中热实例，避开数秒级冷启动。失败静默，不影响使用 */
+try {
+  fetch(CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(RECORDS_PATH)
+    + '&page=1&pageSize=1&sortBy=insertedAt_desc&lang=zh-CN', { cache: 'no-store' })
+    .catch(function(){});
+} catch(e){}
 
 /* ====== PII 轻量可逆加密（仅混淆，非强加密；在线存密文，本地同步时还原） ====== */
 var PII_KEY = 'Vt9@Kq3#';

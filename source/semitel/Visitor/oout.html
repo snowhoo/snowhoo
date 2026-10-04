@@ -10,6 +10,12 @@ layout: false
 <script>
 /* 公司名称/logo：读配置渲染页头品牌行（未配置则不显示） */
 (function(){
+  /* 提前与云端 Waline 建立连接（DNS+TLS 与页面操作并行，查询/签离时省去握手时间） */
+  try {
+    var _srv = (window.CLOUD_WALINE || '').trim() || 'https://waline.snowhoo.net';
+    var _l = document.createElement('link'); _l.rel = 'preconnect'; _l.href = _srv; _l.crossOrigin = '';
+    document.head.appendChild(_l);
+  } catch(e){}
   function renderBrand(){
     var n = (window.COMPANY_NAME || '').trim(), l = (window.COMPANY_LOGO || '').trim();
     if (!n && !l) return;
@@ -108,6 +114,16 @@ layout: false
     font-size:14px;text-decoration:none}
   .card-overlay .co-close{margin-top:10px;color:#cbd5e1;background:transparent;border:1px solid #64748b;
     padding:8px 20px;border-radius:10px;font-size:13px;cursor:pointer}
+  /* 等待遮罩 + 模拟进度条：云端请求等待期间的视觉反馈，避免误以为卡死 */
+  .wait-mask{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:99}
+  .wait-mask.show{display:flex}
+  .wait-mask .wm-box{background:#fff;border-radius:14px;padding:20px 22px;width:270px;text-align:center;
+    box-shadow:0 10px 30px rgba(15,23,42,.25)}
+  .wait-mask .wm-txt{font-size:14px;color:var(--ink);font-weight:600;min-height:20px}
+  .wait-mask .wm-sub{font-size:12px;color:var(--sub);margin-top:4px;min-height:16px}
+  .wait-mask .wm-bar{height:8px;background:#eef2f7;border-radius:999px;overflow:hidden;margin-top:12px}
+  .wait-mask .wm-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));
+    border-radius:999px;transition:width .25s ease}
 </style>
 </head>
 <body>
@@ -137,6 +153,14 @@ var CLOUD_BASE    = WALINE_SERVER;
 var RECORDS_PATH  = '/visitor/records';
 var ANON_NICK     = '访客登记';
 var ANON_MAIL     = 'visitor@local';
+
+/* 实例预热：页面打开即后台发一次轻量 GET，提前唤醒云端 serverless 实例，
+   查询/签离时命中热实例，避开数秒级冷启动。失败静默，不影响使用 */
+try {
+  fetch(CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(RECORDS_PATH)
+    + '&page=1&pageSize=1&sortBy=insertedAt_desc&lang=zh-CN', { cache: 'no-store' })
+    .catch(function(){});
+} catch(e){}
 
 /* ====== 工具 ====== */
 function robustParse(raw){
@@ -260,6 +284,7 @@ document.getElementById('f').addEventListener('submit', async function(ev){
   if (!q){ setMsg('请输入流水号或姓名', 'err'); return; }
   var btn = document.getElementById('submitBtn');
   btn.disabled = true; setMsg('查询中…', '');
+  showMask('正在查询…', '正在读取云端访客记录');
   try {
     VISITORS = await loadVisitors();
     var key = q.toLowerCase();
@@ -270,6 +295,7 @@ document.getElementById('f').addEventListener('submit', async function(ev){
     if (!matched.length){ setMsg('未找到匹配的访客记录', 'err'); renderResult([]); }
     else { setMsg('找到 ' + matched.length + ' 条匹配记录', 'ok'); renderResult(matched); }
   } catch(e){ setMsg('查询失败：' + (e.message||e), 'err'); }
+  hideMask();
   btn.disabled = false;
 });
 
@@ -303,6 +329,7 @@ async function doLeave(id){
   var v = VISITORS.filter(function(x){ return x.id === id; })[0];
   if (!v) return;
   setMsg('登记离厂中…', '');
+  showMask('正在登记离厂…', '正在写入云端记录');
   var now = Date.now();
   /* 携带在线已有的加密身份证/手机，写新版本，保持在线端始终为密文 */
   var rec = {
@@ -312,9 +339,10 @@ async function doLeave(id){
     createdAt:v.createdAt||now, updatedAt:now
   };
   try {
-    await postComment(rec, { status: setMsg });
+    await postComment(rec, { status: function(t){ setMsg(t, ''); setMaskTxt(t, '云端限流退避中，请稍候'); } });
+    hideMask();
     showDone(v, now);
-  } catch(err){ setMsg(err.message || '离厂登记失败', 'err'); }
+  } catch(err){ hideMask(); setMsg(err.message || '离厂登记失败', 'err'); }
 }
 
 /* 访客证长按保存图片：html2canvas 懒加载（与 JsBarcode 同策略，离线可用），
@@ -427,6 +455,47 @@ function showDone(v, leaveTs){
   if (rb) rb.innerHTML = '';
   document.getElementById('againBtn').addEventListener('click', function(){ location.reload(); });
   enableCardSave();
+}
+</script>
+
+<!-- 等待遮罩：模拟进度条（快→慢→爬行，永不到 100%，完成后直接充满） -->
+<div class="wait-mask" id="waitMask">
+  <div class="wm-box">
+    <div class="wm-txt" id="wmTxt">处理中…</div>
+    <div class="wm-sub" id="wmSub">正在与云端服务器通信</div>
+    <div class="wm-bar"><i id="wmBar"></i></div>
+  </div>
+</div>
+<script>
+var _wmTimer = null;
+function showMask(txt, sub){
+  var m = document.getElementById('waitMask');
+  if (!m) return;
+  document.getElementById('wmTxt').textContent = txt || '处理中…';
+  document.getElementById('wmSub').textContent = sub || '正在与云端服务器通信';
+  var bar = document.getElementById('wmBar');
+  bar.style.width = '0';
+  m.classList.add('show');
+  clearInterval(_wmTimer);
+  var p = 0;
+  _wmTimer = setInterval(function(){
+    p += (p < 55 ? 8 : (p < 80 ? 2.5 : 0.6));   /* 快→慢→爬行，停在 92% 内等待真实完成 */
+    if (p > 92) p = 92;
+    bar.style.width = p + '%';
+  }, 200);
+}
+function setMaskTxt(t, sub){
+  document.getElementById('wmTxt').textContent = t;
+  if (sub !== undefined) document.getElementById('wmSub').textContent = sub;
+}
+function hideMask(){
+  clearInterval(_wmTimer); _wmTimer = null;
+  var bar = document.getElementById('wmBar');
+  bar.style.width = '100%';                    /* 完成时充满，视觉收尾 */
+  setTimeout(function(){
+    document.getElementById('waitMask').classList.remove('show');
+    bar.style.width = '0';
+  }, 250);
 }
 </script>
 </body>
