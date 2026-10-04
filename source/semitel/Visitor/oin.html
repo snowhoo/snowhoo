@@ -111,6 +111,16 @@ layout: false
     font-size:14px;text-decoration:none}
   .card-overlay .co-close{margin-top:10px;color:#cbd5e1;background:transparent;border:1px solid #64748b;
     padding:8px 20px;border-radius:10px;font-size:13px;cursor:pointer}
+  /* 等待遮罩 + 模拟进度条：提交等待期间的视觉反馈，避免误以为卡死（与 out/oout 同款） */
+  .wait-mask{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:99}
+  .wait-mask.show{display:flex}
+  .wait-mask .wm-box{background:#fff;border-radius:14px;padding:20px 22px;width:270px;text-align:center;
+    box-shadow:0 10px 30px rgba(15,23,42,.25)}
+  .wait-mask .wm-txt{font-size:14px;color:var(--ink);font-weight:600;min-height:20px}
+  .wait-mask .wm-sub{font-size:12px;color:var(--sub);margin-top:4px;min-height:16px}
+  .wait-mask .wm-bar{height:8px;background:#eef2f7;border-radius:999px;overflow:hidden;margin-top:12px}
+  .wait-mask .wm-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));
+    border-radius:999px;transition:width .25s ease}
 </style>
 <script>
 /* 条码组件：页面打开后后台无感懒加载，不阻塞表单提交 */
@@ -321,6 +331,7 @@ document.getElementById('f').addEventListener('submit', async function(ev){
 
   var btn = document.getElementById('submitBtn');
   btn.disabled = true; setMsg('提交中…', '');
+  showMask('正在提交登记…', '正在写入云端记录');
 
   var now = Date.now();
   /* 身份证号/手机号在线端加密存储，本地同步时再还原 */
@@ -330,9 +341,11 @@ document.getElementById('f').addEventListener('submit', async function(ev){
     leaveTime: null, status: '在访', createdAt: now, updatedAt: now
   };
   try {
-    await postComment(rec, { status: setMsg });
+    await postComment(rec, { status: function(t){ setMsg(t, ''); setMaskTxt(t, '云端限流退避中，请稍候'); } });
+    hideMask();
     showBadge(rec);
   } catch(err){
+    hideMask();
     setMsg(err.message || '提交失败，请重试', 'err');
     btn.disabled = false;
   }
@@ -440,6 +453,47 @@ function showBadge(rec){
   });
   document.getElementById('againBtn').addEventListener('click', function(){ location.reload(); });
   enableCardSave();
+}
+</script>
+
+<!-- 等待遮罩：模拟进度条（快→慢→爬行，永不到 100%，完成后直接充满） -->
+<div class="wait-mask" id="waitMask">
+  <div class="wm-box">
+    <div class="wm-txt" id="wmTxt">处理中…</div>
+    <div class="wm-sub" id="wmSub">正在与云端服务器通信</div>
+    <div class="wm-bar"><i id="wmBar"></i></div>
+  </div>
+</div>
+<script>
+var _wmTimer = null;
+function showMask(txt, sub){
+  var m = document.getElementById('waitMask');
+  if (!m) return;
+  document.getElementById('wmTxt').textContent = txt || '处理中…';
+  document.getElementById('wmSub').textContent = sub || '正在与云端服务器通信';
+  var bar = document.getElementById('wmBar');
+  bar.style.width = '0';
+  m.classList.add('show');
+  clearInterval(_wmTimer);
+  var p = 0;
+  _wmTimer = setInterval(function(){
+    p += (p < 55 ? 8 : (p < 80 ? 2.5 : 0.6));   /* 快→慢→爬行，停在 92% 内等待真实完成 */
+    if (p > 92) p = 92;
+    bar.style.width = p + '%';
+  }, 200);
+}
+function setMaskTxt(t, sub){
+  document.getElementById('wmTxt').textContent = t;
+  if (sub !== undefined) document.getElementById('wmSub').textContent = sub;
+}
+function hideMask(){
+  clearInterval(_wmTimer); _wmTimer = null;
+  var bar = document.getElementById('wmBar');
+  bar.style.width = '100%';                    /* 完成时充满，视觉收尾 */
+  setTimeout(function(){
+    document.getElementById('waitMask').classList.remove('show');
+    bar.style.width = '0';
+  }, 250);
 }
 </script>
 </body>
