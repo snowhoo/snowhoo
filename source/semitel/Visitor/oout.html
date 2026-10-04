@@ -6,7 +6,25 @@ layout: false
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>访客离场</title>
+<script src="registrar.config.js"></script>
+<script>
+/* 公司名称/logo：读配置渲染页头品牌行（未配置则不显示） */
+(function(){
+  function renderBrand(){
+    var n = (window.COMPANY_NAME || '').trim(), l = (window.COMPANY_LOGO || '').trim();
+    if (!n && !l) return;
+    var hd = document.getElementById('pageHead'); if (!hd) return;
+    var b = document.createElement('div'); b.className = 'brand';
+    if (l){ var im = document.createElement('img'); im.className = 'brand-logo'; im.src = l; im.alt = '';
+      im.onerror = function(){ im.style.display = 'none'; }; b.appendChild(im); }
+    if (n){ var sp = document.createElement('span'); sp.className = 'brand-name'; sp.textContent = n; b.appendChild(sp); }
+    hd.insertBefore(b, hd.firstChild);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderBrand);
+  else renderBrand();
+})();
+</script>
+<title>访客离厂</title>
 <style>
   :root{
     --bg:#ffffff; --card:#ffffff; --ink:#1f2733; --sub:#6b7785;
@@ -20,6 +38,10 @@ layout: false
   header.top{text-align:center;padding:14px 0 10px}
   header.top h1{font-size:22px;margin:0;letter-spacing:2px;font-weight:700}
   header.top p{margin:6px 0 0;color:var(--sub);font-size:13px;letter-spacing:1px}
+  header.top .brand{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px}
+  header.top .brand-logo{height:30px;max-width:150px;object-fit:contain}
+  header.top .brand-name{font-size:15px;font-weight:700;letter-spacing:1px}
+  .pass-top .pt-logo{height:26px;max-width:110px;object-fit:contain;display:block}
   .card{}
   .field label{display:block;font-size:14px;font-weight:600;margin-bottom:8px}
   .field input[type=text]{width:100%;height:48px;font-size:16px;padding:0 14px;border:1px solid var(--line);
@@ -91,22 +113,21 @@ layout: false
 <body>
 <div class="app">
   <header class="top" id="pageHead">
-    <h1>访客离场</h1>
-    <p>输入流水号或姓名，确认离场</p>
+    <h1>访客离厂</h1>
   </header>
 
   <div class="card" id="formCard">
     <form id="f" autocomplete="off">
       <div class="field">
-        <label>访客流水号 / 姓名</label>
-        <input type="text" id="q" placeholder="如 v1234567890123456 或 张三" maxlength="40">
+        <label>输入访客证号 / 姓名 / 手机号，查询确认离厂</label>
+        <input type="text" id="q" placeholder="" maxlength="40">
       </div>
-      <button type="submit" class="submit" id="submitBtn">查询离场</button>
+      <button type="submit" class="submit" id="submitBtn">查询来访信息</button>
       <div class="msg" id="msg"></div>
     </form>
   </div>
   <div id="result"></div>
-  <p class="hint">离场登记将记录离开时间，完成访客出入闭环。</p>
+  <p class="hint">离厂登记将记录离开时间，完成访客出入闭环。</p>
 </div>
 
 <script>
@@ -263,24 +284,24 @@ function renderResult(list){
       '流水号：<b>'+esc(v.id)+'</b></div>';
     if (left){
       return '<div class="cand left"><div class="cn">'+esc(v.name)+'</div>'+info+
-        '<div class="left-tag">该访客已于 '+esc(fmtTime(v.leaveTime))+' 离场</div></div>';
+        '<div class="left-tag">该访客已于 '+esc(fmtTime(v.leaveTime))+' 离厂</div></div>';
     }
     return '<div class="cand" data-leave="'+esc(v.id)+'"><div class="cn">'+esc(v.name)+'</div>'+info+
-      '<button class="cbtn" data-leave="'+esc(v.id)+'">确认离场</button></div>';
+      '<button class="cbtn" data-leave="'+esc(v.id)+'">确认离厂</button></div>';
   }).join('');
 }
 
 document.getElementById('result').addEventListener('click', function(e){
   var t = e.target;
   if (t && t.dataset && t.dataset.leave){
-    if (confirm('确认该访客离场？将记录离开时间。')) doLeave(t.dataset.leave);
+    if (confirm('确认该访客离厂？将记录离开时间。')) doLeave(t.dataset.leave);
   }
 });
 
 async function doLeave(id){
   var v = VISITORS.filter(function(x){ return x.id === id; })[0];
   if (!v) return;
-  setMsg('登记离场中…', '');
+  setMsg('登记离厂中…', '');
   var now = Date.now();
   /* 携带在线已有的加密身份证/手机，写新版本，保持在线端始终为密文 */
   var rec = {
@@ -292,7 +313,7 @@ async function doLeave(id){
   try {
     await postComment(rec, { status: setMsg });
     showDone(v, now);
-  } catch(err){ setMsg(err.message || '离场登记失败', 'err'); }
+  } catch(err){ setMsg(err.message || '离厂登记失败', 'err'); }
 }
 
 /* 访客证长按保存图片：html2canvas 懒加载（与 JsBarcode 同策略，离线可用），
@@ -350,11 +371,16 @@ function enableCardSave(){
 
 function showDone(v, leaveTs){
   var hd = document.getElementById('pageHead'); if (hd) hd.style.display = 'none'; /* 失效访客单生成后隐藏页头 */
+  var companyName = (window.COMPANY_NAME || '').trim(), companyLogo = (window.COMPANY_LOGO || '').trim();
   var reasons = (v.reasons || []).join('、') || '—';
   var html =
     '<div class="pass">' +
       '<div class="pass-inner">' +
-        '<div class="pass-top"><span class="t1">访客通行卡</span><span class="t2">VISITOR PASS</span></div>' +
+        '<div class="pass-top">' +
+          (companyLogo ? '<img class="pt-logo" src="' + companyLogo + '" alt="" onerror="this.style.display=\'none\'">' : '') +
+          '<span class="t1">' + esc(companyName || '访客通行卡') + '</span>' +
+          '<span class="t2">VISITOR PASS</span>' +
+        '</div>' +
         '<div class="pass-body">' +
           '<div class="pass-head">' +
             '<div class="pass-photo">' +
@@ -370,19 +396,19 @@ function showDone(v, leaveTs){
             '<div class="row"><span class="k">拜访</span><span class="v">' + esc(v.visitPerson) + '</span></div>' +
             '<div class="row"><span class="k">事由</span><span class="v">' + esc(reasons) + '</span></div>' +
             '<div class="row"><span class="k">访问时间</span><span class="v">' + esc(fmtTime(visitTimeOf(v))) + '</span></div>' +
-            '<div class="row"><span class="k">离场时间</span><span class="v">' + esc(fmtTime(leaveTs)) + '</span></div>' +
+            '<div class="row"><span class="k">离厂时间</span><span class="v">' + esc(fmtTime(leaveTs)) + '</span></div>' +
             (v.registrar ? '<div class="row"><span class="k">登记人</span><span class="v">' + esc(v.registrar) + '</span></div>' : '') +
             '<div class="row"><span class="k">手机</span><span class="v">'+esc(maskPhone(deobfPII(v.phone)))+'</span></div>' +
           '</div>' +
           '<div class="pass-id"><div class="lbl">访客流水号</div><div class="num">' + esc(v.id) + '</div></div>' +
           '<svg class="pass-bar" id="passBar"></svg>' +
         '</div>' +
-        '<div class="pass-tip">该访客已离场，此证已失效</div>' +
+        '<div class="pass-tip">该访客已离厂，此证已失效</div>' +
         '<div class="pass-note">个人信息已脱敏</div>' +
       '</div>' +
       '<div class="pass-stamp">已失效</div>' +
     '</div>' +
-    '<button class="again" id="againBtn">再登记离场</button>';
+    '<button class="again" id="againBtn">再登记离厂</button>';
   document.getElementById('formCard').innerHTML = html;
   /* 无感补画条码（与登记页同款） */
   ensureBarcodeLib(function(){
@@ -394,7 +420,7 @@ function showDone(v, leaveTs){
       });
     } catch (e) { /* 条码库缺失则忽略，保留空白占位 */ }
   });
-  /* 清掉下方残留的候选卡片（含「确认离场」按钮），避免离场完成后被二次点击 */
+  /* 清掉下方残留的候选卡片（含「确认离厂」按钮），避免离厂完成后被二次点击 */
   var rb = document.getElementById('result');
   if (rb) rb.innerHTML = '';
   document.getElementById('againBtn').addEventListener('click', function(){ location.reload(); });

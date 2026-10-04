@@ -6,6 +6,24 @@ layout: false
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<script src="registrar.config.js"></script>
+<script>
+/* 公司名称/logo：读配置渲染页头品牌行（未配置则不显示） */
+(function(){
+  function renderBrand(){
+    var n = (window.COMPANY_NAME || '').trim(), l = (window.COMPANY_LOGO || '').trim();
+    if (!n && !l) return;
+    var hd = document.getElementById('pageHead'); if (!hd) return;
+    var b = document.createElement('div'); b.className = 'brand';
+    if (l){ var im = document.createElement('img'); im.className = 'brand-logo'; im.src = l; im.alt = '';
+      im.onerror = function(){ im.style.display = 'none'; }; b.appendChild(im); }
+    if (n){ var sp = document.createElement('span'); sp.className = 'brand-name'; sp.textContent = n; b.appendChild(sp); }
+    hd.insertBefore(b, hd.firstChild);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderBrand);
+  else renderBrand();
+})();
+</script>
 <title>访客登记</title>
 <style>
   :root{
@@ -21,6 +39,10 @@ layout: false
   header.top{text-align:center;padding:14px 0 10px}
   header.top h1{font-size:22px;margin:0;letter-spacing:2px;font-weight:700}
   header.top p{margin:6px 0 0;color:var(--sub);font-size:13px;letter-spacing:1px}
+  header.top .brand{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px}
+  header.top .brand-logo{height:30px;max-width:150px;object-fit:contain}
+  header.top .brand-name{font-size:15px;font-weight:700;letter-spacing:1px}
+  .pass-top .pt-logo{height:26px;max-width:110px;object-fit:contain;display:block}
   .card{}
   .field{margin-bottom:16px}
   .field label{display:block;font-size:14px;font-weight:600;margin-bottom:8px}
@@ -363,10 +385,15 @@ function enableCardSave(){
 
 function showBadge(rec){
   var hd = document.getElementById('pageHead'); if (hd) hd.style.display = 'none'; /* 访客单生成后隐藏页头 */
+  var companyName = (window.COMPANY_NAME || '').trim(), companyLogo = (window.COMPANY_LOGO || '').trim();
   var reasons = (rec.reasons || []).join('、') || '—';
   var html =
     '<div class="pass">' +
-      '<div class="pass-top"><span class="t1">访客通行卡</span><span class="t2">VISITOR PASS</span></div>' +
+      '<div class="pass-top">' +
+        (companyLogo ? '<img class="pt-logo" src="' + companyLogo + '" alt="" onerror="this.style.display=\'none\'">' : '') +
+        '<span class="t1">' + esc(companyName || '访客通行卡') + '</span>' +
+        '<span class="t2">VISITOR PASS</span>' +
+      '</div>' +
       '<div class="pass-body">' +
         '<div class="pass-head">' +
           '<div class="pass-photo">' +
