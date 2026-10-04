@@ -24,6 +24,17 @@ layout: false
 var CLOUD_BASE    = (window.CLOUD_WALINE || '').trim() || 'https://waline.snowhoo.net';  // 优先取配置
 var RECORDS_PATH  = '/visitor/records';
 
+/* ====== 云端回写模式（?push=1）：main 编辑签离时经此中转 POST，本页与云端 Waline 同源无跨域 ====== */
+var IS_PUSH = /[?&]push=1/.test(location.search);
+var ADM_SEED = 'Vs#9kQ~';
+var ADM_OBF  = 'MwppUQkWHT88SnMiBAQfQm1QIWhQGyINb0ZgCj0fdVUdNRpgAEIJKgAcMiBHXzQFKm8kVlwCFzUnGHFbLgs1bzRGCQ==';
+function admToken(){
+  var bin = atob(ADM_OBF);
+  var s = '';
+  for (var i = 0; i < bin.length; i++) s += String.fromCharCode(bin.charCodeAt(i) ^ ADM_SEED.charCodeAt(i % ADM_SEED.length));
+  return s;
+}
+
 /* ====== 工具 ====== */
 function robustParse(raw){
   if (!raw) return null;
@@ -87,7 +98,32 @@ async function run(){
     setMsg('读取失败：' + (e.message || e), 'err');
   }
 }
-run();
+if (IS_PUSH){
+  /* 回写模式：等 main 发来加密记录 → 同源 POST 云端 → 回传结果 */
+  try { window.parent.postMessage({ type: 'otol-ready' }, '*'); } catch(e){}
+  window.addEventListener('message', async function(e){
+    if (!e.data || e.data.type !== 'visitor-leave-push' || !e.data.rec) return;
+    try {
+      var rec = e.data.rec;
+      var body = { comment: JSON.stringify(rec), url: RECORDS_PATH, nick: rec.name || '访客登记', mail: 'visitor@local', link: '', ua: navigator.userAgent };
+      var resp = await fetch(CLOUD_BASE + '/api/comment?lang=zh-CN', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + admToken() },
+        body: JSON.stringify(body)
+      });
+      var j = await resp.json().catch(function(){ return {}; });
+      if (j && j.errno && j.errno !== 0) throw new Error('云端拒绝（' + j.errno + (j.errmsg ? '：' + j.errmsg : '') + '）');
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      setMsg('云端签离已回写', 'ok');
+      try { window.parent.postMessage({ type: 'visitor-leave-push-result', ok: true }, '*'); } catch(e2){}
+    } catch(err){
+      setMsg('云端回写失败：' + (err.message || err), 'err');
+      try { window.parent.postMessage({ type: 'visitor-leave-push-result', ok: false, error: (err.message || err) }, '*'); } catch(e2){}
+    }
+  });
+} else {
+  run();
+}
 </script>
 </body>
 </html>
