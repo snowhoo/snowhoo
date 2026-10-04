@@ -364,7 +364,7 @@ function showDone(v, leaveTs){
             '</div>' +
             '<div class="pass-idbox"><div class="nm">' + esc(v.name) + '</div>' +
             '<div class="un">' + (v.unit ? esc(v.unit) : '来访人员') + '</div>' +
-            '<div class="pid">证件号 ' + esc(maskId(v.idNumber)) + '</div></div>' +
+            '<div class="pid">证件号 ' + esc(maskId(deobfPII(v.idNumber))) + '</div></div>' +
           '</div>' +
           '<div class="pass-info">' +
             '<div class="row"><span class="k">拜访</span><span class="v">' + esc(v.visitPerson) + '</span></div>' +
@@ -372,7 +372,7 @@ function showDone(v, leaveTs){
             '<div class="row"><span class="k">访问时间</span><span class="v">' + esc(fmtTime(visitTimeOf(v))) + '</span></div>' +
             '<div class="row"><span class="k">离场时间</span><span class="v">' + esc(fmtTime(leaveTs)) + '</span></div>' +
             (v.registrar ? '<div class="row"><span class="k">登记人</span><span class="v">' + esc(v.registrar) + '</span></div>' : '') +
-            '<div class="row"><span class="k">手机</span><span class="v">'+esc(maskPhone(v.phone))+'</span></div>' +
+            '<div class="row"><span class="k">手机</span><span class="v">'+esc(maskPhone(deobfPII(v.phone)))+'</span></div>' +
           '</div>' +
           '<div class="pass-id"><div class="lbl">访客流水号</div><div class="num">' + esc(v.id) + '</div></div>' +
           '<svg class="pass-bar" id="passBar"></svg>' +
