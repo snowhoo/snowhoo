@@ -91,6 +91,11 @@ layout: false
 </head>
 <body>
 <div class="app">
+  <header class="top" id="pageHead">
+    <h1>访客离场</h1>
+    <p>输入流水号或姓名，确认离场</p>
+  </header>
+
   <div class="card" id="formCard">
     <form id="f" autocomplete="off">
       <div class="field">
@@ -345,6 +350,7 @@ function enableCardSave(){
 }
 
 function showDone(v, leaveTs){
+  var hd = document.getElementById('pageHead'); if (hd) hd.style.display = 'none'; /* 失效访客单生成后隐藏页头 */
   var reasons = (v.reasons || []).join('、') || '—';
   var html =
     '<div class="pass">' +

@@ -107,6 +107,11 @@ else ensureBarcodeLib(function(){});
 </head>
 <body>
 <div class="app">
+  <header class="top" id="pageHead">
+    <h1>访客登记</h1>
+    <p>请如实填写以下信息</p>
+  </header>
+
   <div class="card" id="formCard">
     <form id="f" autocomplete="off">
       <div class="field">
@@ -359,6 +364,7 @@ function enableCardSave(){
 }
 
 function showBadge(rec){
+  var hd = document.getElementById('pageHead'); if (hd) hd.style.display = 'none'; /* 访客单生成后隐藏页头 */
   var reasons = (rec.reasons || []).join('、') || '—';
   var html =
     '<div class="pass">' +
