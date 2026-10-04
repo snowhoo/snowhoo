@@ -1,0 +1,265 @@
+---
+layout: false
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>云端访客数据清理</title>
+<style>
+  :root{ --bg:#eef2f7; --card:#fff; --ink:#1f2733; --sub:#6b7785; --line:#e2e8f0; --brand:#2563eb; --ok:#16a34a; --err:#dc2626; --warn:#d97706; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:720px;margin:0 auto;padding:24px 16px 40px}
+  h1{font-size:20px;margin:0 0 6px;letter-spacing:2px}
+  .sub{color:var(--sub);font-size:13px;margin:0 0 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+  .warnbox{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.7;margin-bottom:16px}
+  .warnbox b{color:#7c2d12}
+  label{display:block;font-size:14px;font-weight:600;margin-bottom:8px}
+  .btn{display:inline-block;border:none;border-radius:10px;height:44px;padding:0 18px;font-size:15px;font-weight:600;
+    background:var(--brand);color:#fff;cursor:pointer;line-height:44px;text-decoration:none}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+  .btn.danger{background:var(--err)}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .msg{margin:12px 0 0;font-size:14px;min-height:18px}
+  .msg.ok{color:var(--ok)} .msg.err{color:var(--err)} .msg.warn{color:var(--warn)}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .stat-row{display:flex;gap:12px;flex-wrap:wrap;margin:6px 0 4px}
+  .stat{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:10px 14px;text-align:center;min-width:90px}
+  .stat b{display:block;font-size:22px;line-height:1.1}
+  .stat span{font-size:12px;color:var(--sub)}
+  .stat.s-del b{color:var(--err)} .stat.s-keep b{color:var(--ok)}
+  .preview{margin-top:14px;max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+  .preview table{width:100%;border-collapse:collapse;font-size:13px}
+  .preview th,.preview td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+  .preview th{background:#f5f8fc;color:var(--sub);font-weight:600;position:sticky;top:0}
+  .preview .delname{color:var(--err)} .preview .keepname{color:var(--ok)}
+  .note{font-size:12px;color:var(--sub);line-height:1.7;margin-top:10px}
+  code{background:#f1f5fb;padding:2px 6px;border-radius:6px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>云端访客数据清理</h1>
+  <p class="sub">仅清理本应用（访客登记）在云端的已离场 / 作废数据；<b>在访（未签出）记录不会被清理</b>。</p>
+
+  <div class="warnbox">
+    <b>数据安全红线：</b>本页所有操作只针对 Waline 中路径为 <code>/visitor/records</code> 的评论（即本应用数据）。
+    云端 Waline 上还托管着其它应用的数据，本工具<b>绝不会触碰</b>它们——删除前会逐条校验路径，仅删除本路径下的记录。
+    真删除不可逆，请确认无误后再执行。
+  </div>
+
+  <div class="card">
+    <label>第一步：扫描并清理云端数据</label>
+    <div class="actions">
+      <button class="btn" id="scanBtn">扫描并分析云端数据</button>
+    </div>
+    <div class="msg" id="msg">点击上方按钮，本页内置管理员令牌（已混淆写死）将自动鉴权并扫描云端。</div>
+  </div>
+
+  <div class="card" id="result" hidden>
+    <h3 style="margin:0 0 10px;font-size:15px">分析结果</h3>
+    <div class="stat-row">
+      <div class="stat"><b id="stTotal">0</b><span>记录总数</span></div>
+      <div class="stat s-keep"><b id="stKeep">0</b><span>保留（在访）</span></div>
+      <div class="stat s-del"><b id="stDel">0</b><span>待清理（已离/作废）</span></div>
+      <div class="stat s-del"><b id="stVer">0</b><span>将删除版本数</span></div>
+    </div>
+    <div class="preview">
+      <table>
+        <thead><tr><th>姓名</th><th>流水号</th><th>访问时间</th><th>状态</th><th>处置</th></tr></thead>
+        <tbody id="prevBody"></tbody>
+      </table>
+    </div>
+    <div class="actions">
+      <button class="btn danger" id="confirmBtn">确认清理（真删除）</button>
+      <button class="btn ghost" id="cancelBtn">取消</button>
+    </div>
+    <div class="note">“待清理”含：已签出（有离开时间）的记录，以及在访客登记中被删除（墓碑）的记录。所有版本（含历史修改版本）将一并真删除。</div>
+  </div>
+
+  <div class="card" id="progressCard" hidden>
+    <h3 style="margin:0 0 10px;font-size:15px">清理中…</h3>
+    <div class="msg" id="progMsg">准备中…</div>
+  </div>
+</div>
+
+<script>
+/* ====== 在线 Waline 连接配置（外网，固定云端地址） ====== */
+var WALINE_SERVER = 'https://waline.snowhoo.net';
+var CLOUD_BASE    = WALINE_SERVER;
+var RECORDS_PATH  = '/visitor/records';   // 本应用唯一数据路径——所有操作只在此路径下
+
+/* ====== 云端管理员令牌（XOR+base64 简单混淆写死，与本地 main.html 同一套写法） ====== */
+var ADM_SEED = 'Vs#9kQ~';
+var ADM_OBF  = 'MwppUQkWHT88SnMiBAQfQm1QIWhQGyINb0ZgCj0fdVUdNRpgAEIJKgAcMiBHXzQFKm8kVlwCFzUnGHFbLgs1bzRGCQ==';
+function admToken(){
+  var bin = atob(ADM_OBF);
+  var s = '';
+  for (var i = 0; i < bin.length; i++) s += String.fromCharCode(bin.charCodeAt(i) ^ ADM_SEED.charCodeAt(i % ADM_SEED.length));
+  return s;
+}
+
+/* ====== 工具 ====== */
+function robustParse(raw){
+  if (!raw) return null;
+  var s = String(raw).replace(/<[^>]*>/g, '').replace(/[\u201C\u201D]/g, '"').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  var st = s.indexOf('{'), en = s.lastIndexOf('}');
+  if (st >= 0 && en > st) s = s.slice(st, en + 1);
+  try { return JSON.parse(s); } catch(e){ return null; }
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function idToTime(id){
+  if (!id || id.charAt(0) !== 'v') return 0;
+  var d = id.slice(1);
+  if (!/^\d{16}$/.test(d)) return 0;
+  return parseInt(d, 10) / 1000;
+}
+function visitTimeOf(v){ return idToTime(v && v.id) || (v && v.enterTime) || (v && v.createdAt) || 0; }
+function fmtTime(ts){
+  if (!ts) return '';
+  var d = new Date(ts); function p(n){ return (n<10?'0':'')+n; }
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+function setMsg(t, cls){ var m=document.getElementById('msg'); m.textContent=t; m.className='msg '+(cls||''); }
+
+/* ====== 读取在线 Waline（GET；仅本路径，带管理员令牌） ====== */
+async function fetchAllComments(path, token){
+  var out=[], page=1;
+  while(true){
+    var url = CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(path)
+            + '&page=' + page + '&pageSize=100&sortBy=insertedAt_desc&lang=zh-CN'
+            + (token ? '&token=' + encodeURIComponent(token) : '');
+    var r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var resp = await r.json();
+    var dd = (resp.data && resp.data.data) || [];
+    if (!dd.length) break;
+    out = out.concat(dd);
+    var totalPages = (resp.data && resp.data.totalPages) || 0;
+    if (totalPages && page >= totalPages) break;
+    if (dd.length < 100) break;
+    page++;
+  }
+  return out;
+}
+
+/* ====== 状态 ====== */
+var SCAN = null;   // { groups, toDeleteOids, keepCount, delCount, verCount }
+
+/* ====== 扫描 + 分析 ====== */
+async function scan(){
+  var token = admToken();
+  var resultCard = document.getElementById('result');
+  var progCard = document.getElementById('progressCard');
+  resultCard.hidden = true; progCard.hidden = true;
+  setMsg('正在同步并扫描云端数据（仅 ' + esc(RECORDS_PATH) + '）…', '');
+  try {
+    var all = await fetchAllComments(RECORDS_PATH, token);
+    /* 严格只处理本路径下的评论（双保险：API 已按 path 过滤，这里再校验一次 url） */
+    var groups = {};   // recId -> { versions:[commentObj], maxOid, latest }
+    all.forEach(function(c){
+      if (!c) return;
+      if (c.url && c.url !== RECORDS_PATH) return;          // 非本路径 → 直接跳过，绝不碰
+      var rec = robustParse(c.orig || c.comment || '');
+      if (!rec || rec.type !== 'visitor' || !rec.id) return;
+      if (!groups[rec.id]) groups[rec.id] = { versions: [], maxOid: 0, latest: null };
+      groups[rec.id].versions.push(c);
+      var oid = parseInt(c.objectId, 10) || 0;
+      if (oid > groups[rec.id].maxOid){ groups[rec.id].maxOid = oid; groups[rec.id].latest = rec; }
+    });
+
+    var toDeleteOids = [], keepCount = 0, delCount = 0, verCount = 0;
+    var rows = [];
+    for (var id in groups){
+      var g = groups[id];
+      // 保留判定：最新版本仍为“在访”且未作废 → 保留；其余（已签出 / 已删除墓碑）清理
+      var isActiveCheckIn = g.latest && !g.latest.deleted && !g.latest.leaveTime;
+      if (isActiveCheckIn){
+        keepCount++;
+        rows.push({ name: g.latest.name, id: id, t: visitTimeOf(g.latest), state: '在访', act: 'keep' });
+      } else {
+        delCount++;
+        g.versions.forEach(function(c){ toDeleteOids.push(parseInt(c.objectId, 10) || 0); });
+        var st = (g.latest && g.latest.deleted) ? '已作废' : '已离场';
+        rows.push({ name: (g.latest && g.latest.name) || '—', id: id, t: visitTimeOf(g.latest), state: st, act: 'del' });
+      }
+    }
+    verCount = toDeleteOids.length;
+    toDeleteOids = toDeleteOids.filter(function(x){ return x > 0; });
+
+    SCAN = { groups: groups, toDeleteOids: toDeleteOids, keepCount: keepCount, delCount: delCount, verCount: verCount, rows: rows };
+
+    /* 渲染分析结果 */
+    document.getElementById('stTotal').textContent = rows.length;
+    document.getElementById('stKeep').textContent = keepCount;
+    document.getElementById('stDel').textContent = delCount;
+    document.getElementById('stVer').textContent = verCount;
+    var pb = document.getElementById('prevBody');
+    pb.innerHTML = rows.map(function(r){
+      var cls = r.act === 'del' ? 'delname' : 'keepname';
+      return '<tr><td class="'+cls+'">'+esc(r.name)+'</td><td>'+esc(r.id)+'</td><td>'+esc(fmtTime(r.t))+'</td>'+
+             '<td>'+esc(r.state)+'</td><td>'+(r.act==='del'?'<span style="color:var(--err)">清理</span>':'<span style="color:var(--ok)">保留</span>')+'</td></tr>';
+    }).join('');
+    resultCard.hidden = false;
+    var verb = verCount > 0 ? ('将真删除 ' + delCount + ' 条已离/作废记录（共 ' + verCount + ' 个历史版本）') : '没有需要清理的记录';
+    setMsg('扫描完成：保留 ' + keepCount + ' 条在访记录，' + verb + '。请核对上方列表后确认。', verCount > 0 ? 'warn' : 'ok');
+  } catch(e){
+    setMsg('扫描失败：' + (e.message||e), 'err');
+  }
+}
+
+/* ====== 真删除（仅本路径下的待清理版本；用内置管理员令牌鉴权） ====== */
+async function doDelete(token){
+  if (!SCAN || !SCAN.toDeleteOids.length){
+    setMsg('没有需要删除的记录', 'ok');
+    return { done:0, fail:0 };
+  }
+  var oids = SCAN.toDeleteOids, done = 0, fail = 0;
+  for (var i = 0; i < oids.length; i++){
+    try {
+      var r = await fetch(CLOUD_BASE + '/api/comment/' + oids[i], {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (r.ok || r.status === 404){ done++; }       // 404 = 已不存在，按成功计
+      else { fail++; setMsg('删除版本 ' + oids[i] + ' 失败 HTTP ' + r.status, 'err'); }
+    } catch(e){ fail++; }
+    var pm = document.getElementById('progMsg');
+    if (pm) pm.textContent = '已处理 ' + (i + 1) + ' / ' + oids.length + '（成功 ' + done + '，失败 ' + fail + '）';
+  }
+  return { done: done, fail: fail };
+}
+
+/* ====== 事件 ====== */
+document.getElementById('scanBtn').addEventListener('click', scan);
+document.getElementById('cancelBtn').addEventListener('click', function(){
+  document.getElementById('result').hidden = true;
+  setMsg('已取消。', '');
+});
+document.getElementById('confirmBtn').addEventListener('click', async function(){
+  var token = admToken();
+  if (!SCAN || !SCAN.toDeleteOids.length){ setMsg('没有需要删除的记录', 'ok'); return; }
+  if (!confirm('确认对云端 ' + SCAN.delCount + ' 条已离/作废记录（' + SCAN.verCount + ' 个版本）执行【真删除】？此操作不可逆，且仅作用于 ' + RECORDS_PATH + '。')) return;
+  document.getElementById('result').hidden = true;
+  document.getElementById('progressCard').hidden = false;
+  try {
+    var res = await doDelete(token);
+    var pc = document.getElementById('progressCard');
+    if (pc) pc.hidden = true;
+    if (res.fail === 0){
+      setMsg('✓ 云端清理完成：真删除 ' + res.done + ' 个版本（' + SCAN.delCount + ' 条已离/作废记录），保留 ' + SCAN.keepCount + ' 条在访记录。本次操作仅作用于 ' + esc(RECORDS_PATH) + '。', 'ok');
+    } else {
+      setMsg('清理部分完成：成功 ' + res.done + '，失败 ' + res.fail + '（失败的多为令牌权限或网络问题，可重试）。', 'err');
+    }
+  } catch(e){
+    setMsg('清理中断：' + (e.message||e), 'err');
+  }
+});
+</script>
+</body>
+</html>
