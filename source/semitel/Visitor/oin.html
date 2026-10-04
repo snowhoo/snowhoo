@@ -6,7 +6,7 @@ layout: false
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>访客登记（外网）</title>
+<title>访客登记</title>
 <style>
   :root{
     --bg:#ffffff; --card:#ffffff; --ink:#1f2733; --sub:#6b7785;
@@ -21,8 +21,7 @@ layout: false
   header.top{text-align:center;padding:14px 0 10px}
   header.top h1{font-size:22px;margin:0;letter-spacing:2px;font-weight:700}
   header.top p{margin:6px 0 0;color:var(--sub);font-size:13px;letter-spacing:1px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 16px;
-    box-shadow:0 6px 20px rgba(31,39,51,.06)}
+  .card{}
   .field{margin-bottom:16px}
   .field label{display:block;font-size:14px;font-weight:600;margin-bottom:8px}
   .field label .req{color:var(--err);margin-left:2px}
@@ -149,7 +148,7 @@ else ensureBarcodeLib(function(){});
       <div class="msg" id="msg"></div>
     </form>
   </div>
-  <p class="hint">提交即完成登记，数据将安全保存到云端服务器。</p>
+  <p class="hint">提交即完成登记。</p>
 </div>
 
 <script>
