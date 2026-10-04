@@ -77,9 +77,11 @@ layout: false
     </div>
     <div class="actions">
       <button class="btn danger" id="confirmBtn">确认清理（真删除）</button>
+      <button class="btn danger" id="forceBtn" hidden>强制清理全部（含在访）</button>
       <button class="btn ghost" id="cancelBtn">取消</button>
     </div>
-    <div class="note">“待清理”含：已签出（有离开时间）的记录，以及在访客登记中被删除（墓碑）的记录。所有版本（含历史修改版本）将一并真删除。</div>
+    <div class="note">“待清理”含：已签出（有离开时间）的记录，以及在访客登记中被删除（墓碑）的记录。所有版本（含历史修改版本）将一并真删除。
+      在访记录默认保留以保护未离场访客；<b>如需连在访一并清空</b>，用「强制清理全部」（需两次确认，不可逆）。</div>
   </div>
 
   <div class="card" id="progressCard" hidden>
@@ -193,7 +195,11 @@ async function scan(){
     verCount = toDeleteOids.length;
     toDeleteOids = toDeleteOids.filter(function(x){ return x > 0; });
 
-    SCAN = { groups: groups, toDeleteOids: toDeleteOids, keepCount: keepCount, delCount: delCount, verCount: verCount, rows: rows };
+    /* 强制清理通道：本路径下全部版本（含在访保留项），仅收集 objectId，不自动执行 */
+    var allOids = [];
+    for (var gid in groups){ groups[gid].versions.forEach(function(c){ var o = parseInt(c.objectId, 10) || 0; if (o > 0) allOids.push(o); }); }
+
+    SCAN = { groups: groups, toDeleteOids: toDeleteOids, allOids: allOids, keepCount: keepCount, delCount: delCount, verCount: verCount, rows: rows };
 
     /* 渲染分析结果 */
     document.getElementById('stTotal').textContent = rows.length;
@@ -207,6 +213,8 @@ async function scan(){
              '<td>'+esc(r.state)+'</td><td>'+(r.act==='del'?'<span style="color:var(--err)">清理</span>':'<span style="color:var(--ok)">保留</span>')+'</td></tr>';
     }).join('');
     resultCard.hidden = false;
+    var fb = document.getElementById('forceBtn');
+    if (fb) fb.hidden = keepCount === 0;   // 无在访保留项时无需强制通道
     var verb = verCount > 0 ? ('将真删除 ' + delCount + ' 条已离/作废记录（共 ' + verCount + ' 个历史版本）') : '没有需要清理的记录';
     setMsg('扫描完成：保留 ' + keepCount + ' 条在访记录，' + verb + '。请核对上方列表后确认。', verCount > 0 ? 'warn' : 'ok');
   } catch(e){
@@ -214,13 +222,13 @@ async function scan(){
   }
 }
 
-/* ====== 真删除（仅本路径下的待清理版本；用内置管理员令牌鉴权） ====== */
-async function doDelete(token){
-  if (!SCAN || !SCAN.toDeleteOids.length){
+/* ====== 真删除（仅本路径下的指定版本；用内置管理员令牌鉴权） ====== */
+async function doDelete(token, oids){
+  if (!oids || !oids.length){
     setMsg('没有需要删除的记录', 'ok');
     return { done:0, fail:0 };
   }
-  var oids = SCAN.toDeleteOids, done = 0, fail = 0;
+  var done = 0, fail = 0;
   for (var i = 0; i < oids.length; i++){
     try {
       var r = await fetch(CLOUD_BASE + '/api/comment/' + oids[i], {
@@ -249,13 +257,35 @@ document.getElementById('confirmBtn').addEventListener('click', async function()
   document.getElementById('result').hidden = true;
   document.getElementById('progressCard').hidden = false;
   try {
-    var res = await doDelete(token);
+    var res = await doDelete(token, SCAN.toDeleteOids);
     var pc = document.getElementById('progressCard');
     if (pc) pc.hidden = true;
     if (res.fail === 0){
       setMsg('✓ 云端清理完成：真删除 ' + res.done + ' 个版本（' + SCAN.delCount + ' 条已离/作废记录），保留 ' + SCAN.keepCount + ' 条在访记录。本次操作仅作用于 ' + esc(RECORDS_PATH) + '。', 'ok');
     } else {
       setMsg('清理部分完成：成功 ' + res.done + '，失败 ' + res.fail + '（失败的多为令牌权限或网络问题，可重试）。', 'err');
+    }
+  } catch(e){
+    setMsg('清理中断：' + (e.message||e), 'err');
+  }
+});
+
+/* ====== 强制清理全部（含在访保留项）：两次确认后真删除本路径下所有版本 ====== */
+document.getElementById('forceBtn').addEventListener('click', async function(){
+  var token = admToken();
+  if (!SCAN || !SCAN.allOids || !SCAN.allOids.length){ setMsg('没有可清理的数据', 'ok'); return; }
+  if (!confirm('⚠️ 强制清理将真删除 ' + RECORDS_PATH + ' 下全部 ' + SCAN.allOids.length + ' 个版本（含 ' + SCAN.keepCount + ' 条在访记录）。确认继续？')) return;
+  if (!confirm('再次确认：在访记录将被一并删除且不可恢复（本地已删除的不受影响）。确认真删除全部 ' + SCAN.allOids.length + ' 个版本？')) return;
+  document.getElementById('result').hidden = true;
+  document.getElementById('progressCard').hidden = false;
+  try {
+    var res = await doDelete(token, SCAN.allOids);
+    var pc = document.getElementById('progressCard');
+    if (pc) pc.hidden = true;
+    if (res.fail === 0){
+      setMsg('✓ 强制清理完成：真删除 ' + res.done + ' 个版本（含在访）。' + RECORDS_PATH + ' 已清空。', 'ok');
+    } else {
+      setMsg('强制清理部分完成：成功 ' + res.done + '，失败 ' + res.fail + '（可重新扫描后重试）。', 'err');
     }
   } catch(e){
     setMsg('清理中断：' + (e.message||e), 'err');
