@@ -181,7 +181,9 @@ async function scan(){
     for (var id in groups){
       var g = groups[id];
       // 保留判定：最新版本仍为“在访”且未作废 → 保留；其余（已签出 / 已删除墓碑）清理
-      var isActiveCheckIn = g.latest && !g.latest.deleted && !g.latest.leaveTime;
+      // 状态口径与本地 main 一致：status 字段优先（强签记录 status=已离 且 leaveTime=null），历史数据无 status 时回退 leaveTime
+      var isActiveCheckIn = g.latest && !g.latest.deleted &&
+        (g.latest.status ? g.latest.status !== '已离' : !g.latest.leaveTime);
       if (isActiveCheckIn){
         keepCount++;
         rows.push({ name: g.latest.name, id: id, t: visitTimeOf(g.latest), state: '在访', act: 'keep' });

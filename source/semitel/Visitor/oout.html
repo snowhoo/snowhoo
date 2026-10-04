@@ -277,14 +277,15 @@ function renderResult(list){
   var box = document.getElementById('result');
   if (!list.length){ box.innerHTML = ''; return; }
   box.innerHTML = list.map(function(v, idx){
-    var left = !!v.leaveTime;
+    /* 状态判定与本地 main 统一口径：status 字段优先，无 status 的历史数据回退 leaveTime */
+    var left = v.status ? (v.status === '已离') : !!v.leaveTime;
     var info = '<div class="cm">拜访：<b>'+esc(v.visitPerson)+'</b>　单位：<b>'+esc(v.unit||'—')+'</b><br>' +
       '手机：<b>'+esc(deobfPII(v.phone))+'</b><br>' +
       '访问时间：<b>'+esc(fmtTime(visitTimeOf(v)))+'</b><br>' +
       '流水号：<b>'+esc(v.id)+'</b></div>';
     if (left){
       return '<div class="cand left"><div class="cn">'+esc(v.name)+'</div>'+info+
-        '<div class="left-tag">该访客已于 '+esc(fmtTime(v.leaveTime))+' 离厂</div></div>';
+        '<div class="left-tag">'+(v.leaveTime?('该访客已于 '+esc(fmtTime(v.leaveTime))+' 离厂'):'该访客已登记离开（未记录离开时间）')+'</div></div>';
     }
     return '<div class="cand" data-leave="'+esc(v.id)+'"><div class="cn">'+esc(v.name)+'</div>'+info+
       '<button class="cbtn" data-leave="'+esc(v.id)+'">确认离厂</button></div>';
