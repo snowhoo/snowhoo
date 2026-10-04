@@ -9,7 +9,7 @@ layout: false
 <title>访客登记（外网）</title>
 <style>
   :root{
-    --bg:#eef2f7; --card:#ffffff; --ink:#1f2733; --sub:#6b7785;
+    --bg:#ffffff; --card:#ffffff; --ink:#1f2733; --sub:#6b7785;
     --line:#e2e8f0; --brand:#2563eb; --brand2:#1d4ed8; --ok:#16a34a; --err:#dc2626;
     --pass:#1d4ed8;
   }
@@ -107,11 +107,6 @@ else ensureBarcodeLib(function(){});
 </head>
 <body>
 <div class="app">
-  <header class="top">
-    <h1>访客登记</h1>
-    <p>请如实填写以下信息</p>
-  </header>
-
   <div class="card" id="formCard">
     <form id="f" autocomplete="off">
       <div class="field">
@@ -134,10 +129,6 @@ else ensureBarcodeLib(function(){});
       <div class="field">
         <label>拜访人<span class="req">*</span></label>
         <input type="text" id="visitPerson" placeholder="请输入被拜访人姓名" maxlength="20">
-      </div>
-      <div class="field">
-        <label>登记人</label>
-        <input type="text" id="registrar" placeholder="前台登记人（选填）" maxlength="20">
       </div>
       <div class="field">
         <label>来访事由<span class="req">*</span></label>
@@ -285,7 +276,6 @@ document.getElementById('f').addEventListener('submit', async function(ev){
   var phone = document.getElementById('phone').value.trim();
   var unit = document.getElementById('unit').value.trim();
   var visitPerson = document.getElementById('visitPerson').value.trim();
-  var registrar = document.getElementById('registrar').value.trim();
   var reasons = Array.prototype.slice.call(reasonsBox.querySelectorAll('input:checked')).map(function(c){ return c.value; });
 
   if (!name){ setMsg('请填写访客姓名', 'err'); return; }
@@ -303,7 +293,7 @@ document.getElementById('f').addEventListener('submit', async function(ev){
   /* 身份证号/手机号在线端加密存储，本地同步时再还原 */
   var rec = {
     type: 'visitor', id: genId(), name: name, idNumber: obfPII(idNumber), phone: obfPII(phone), unit: unit,
-    visitPerson: visitPerson, registrar: registrar, reasons: reasons,
+    visitPerson: visitPerson, reasons: reasons,
     leaveTime: null, status: '在访', createdAt: now, updatedAt: now
   };
   try {
