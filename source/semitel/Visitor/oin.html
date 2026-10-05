@@ -85,6 +85,11 @@ layout: false
     color:#9aa7b8;overflow:hidden}
   .pass-photo svg{width:48px;height:48px;display:block}
   .pass-photo .ph-txt{font-size:11px;margin-top:6px;letter-spacing:1px;color:#9aa7b8}
+  /* 性别着色：由身份证第17位判定，无法判断时保持原样（无 g-* 类）。淡彩50%透明度，避免过重 */
+  .pass-photo.g-female{background:rgba(249,168,212,.5);border-color:#fbcfe8;color:rgba(236,72,153,.5)}
+  .pass-photo.g-female .ph-txt{color:rgba(236,72,153,.5)}
+  .pass-photo.g-male{background:rgba(147,197,253,.5);border-color:#bfdbfe;color:rgba(37,99,235,.5)}
+  .pass-photo.g-male .ph-txt{color:rgba(37,99,235,.5)}
   .pass-idbox{flex:1;min-width:0}
   .pass-idbox .nm{font-size:24px;font-weight:800;line-height:1.2;word-break:break-all}
   .pass-idbox .un{font-size:13px;color:var(--sub);margin-top:5px;word-break:break-all}
@@ -404,11 +409,23 @@ function enableCardSave(){
   if (card && !card._lpBound){ card._lpBound = true; bindLongPress(card, function(){ saveCardImage(card); }); }
 }
 
+/* 由身份证号第17位判断性别：奇=男(1) 偶=女(2) 无法判断=0 */
+function genderFromId(raw){
+  if (typeof raw !== 'string') return 0;
+  var s = raw.trim();
+  if (s.length !== 18) return 0;
+  var d = s.charAt(16);
+  if (d < '0' || d > '9') return 0;
+  return (parseInt(d, 10) % 2 === 1) ? 1 : 2;
+}
+
 function showBadge(rec){
   var hd = document.getElementById('pageHead'); if (hd) hd.style.display = 'none'; /* 访客单生成后隐藏页头 */
   var companyName = (window.COMPANY_NAME || '').trim();
   var passLogo = (window.LOGO_PASS || '').trim() || (window.COMPANY_LOGO || '').trim();
   var reasons = (rec.reasons || []).join('、') || '—';
+  var gid = genderFromId(deobfPII(rec.idNumber));
+  var gcls = gid === 2 ? ' g-female' : (gid === 1 ? ' g-male' : '');
   var html =
     '<div class="pass">' +
       '<div class="pass-top">' +
@@ -418,7 +435,7 @@ function showBadge(rec){
       '<div class="pass-sub">访客通行证 VISITOR PASS</div>' +
       '<div class="pass-body">' +
         '<div class="pass-head">' +
-          '<div class="pass-photo">' +
+          '<div class="pass-photo' + gcls + '">' +
             '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/>' +
             '<path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7v1H4z"/></svg>' +
             '<span class="ph-txt">证件照片</span>' +
