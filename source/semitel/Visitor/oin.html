@@ -429,7 +429,9 @@ document.getElementById('f').addEventListener('submit', async function(ev){
     await postComment(rec, { status: function(t){ setMsg(t, ''); setMaskTxt(t, '云端限流退避中，请稍候'); } });
     hideMask();
     cachePass(rec);
-    showBadge(rec);
+    FRESH_PASS[rec.id] = Date.now();   /* 本会话刚提交：跳过联网校验，防尚未可读被误清缓存 */
+    resetForm();
+    showTab('issued');                 /* 提交成功直接定位「已发访客证」页签，不再单独弹卡 */
   } catch(err){
     hideMask();
     setMsg(err.message || '提交失败，请重试', 'err');
@@ -556,6 +558,7 @@ function showBadge(rec){
 
 /* ====== 我的访客证：本机已登记缓存（localStorage），自动载入 / 卡片化 / 勾选签出 ====== */
 var PASS_KEY = 'visitor_local_passes';
+var FRESH_PASS = {};   /* 本会话刚提交的访客证 id -> 时间戳；跳过联网校验，避免刚写入尚未可读被误清缓存 */
 function getPasses(){ try { return JSON.parse(localStorage.getItem(PASS_KEY) || '[]') || []; } catch(e){ return []; } }
 function savePasses(list){ try { localStorage.setItem(PASS_KEY, JSON.stringify(list)); } catch(e){} }
 function cachePass(rec){
@@ -607,7 +610,10 @@ async function verifyPasses(list){
     var st;
     try { st = await fetchLatestById(rec.id); } catch(e){ st = { err: true }; }
     if (st.err) return { rec: rec, keep: true };                       /* 网络异常：保留本地判定 */
-    if (st.notFound || st.deleted) return { rec: rec, keep: false };   /* 已删：清缓存 */
+    if (st.notFound || st.deleted){
+      if (FRESH_PASS[rec.id]) return { rec: rec, keep: true };   /* 本会话刚提交，暂按在访保留 */
+      return { rec: rec, keep: false };   /* 已删：清缓存 */
+    }
     if (isLeft(st.rec)) return { rec: rec, keep: false };              /* 已签出：清缓存 */
     return { rec: rec, keep: true };
   }));
@@ -864,6 +870,15 @@ function showDone(v, leaveTs){
   var again = document.getElementById('againBtn');
   if (again) again.addEventListener('click', function(){ location.reload(); });
   enableCardSave();
+}
+
+/* 提交成功后重置登记表单（字段清空、按钮恢复、错误提示清除），切回「访客登记」页签时为干净状态 */
+function resetForm(){
+  var f = document.getElementById('f');
+  if (f) f.reset();
+  reasonsBox.querySelectorAll('.chk.on').forEach(function(c){ c.classList.remove('on'); });
+  var b = document.getElementById('submitBtn'); if (b) b.disabled = false;
+  setMsg('', '');
 }
 
 /* 页签切换：访客登记(表单) / 已发访客证(缓存列表) / 访客离厂(查询签出)，三者分离 */
