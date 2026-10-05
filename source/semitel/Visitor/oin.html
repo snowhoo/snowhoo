@@ -46,7 +46,7 @@ layout: false
   header.top h1{font-size:22px;margin:20px 0 0;letter-spacing:2px;font-weight:700}
   header.top p{margin:6px 0 0;color:var(--sub);font-size:13px;letter-spacing:1px}
   header.top .tabs{display:flex;width:100%;margin-top:14px;padding:4px;background:#eef2f7;border-radius:12px}
-  header.top .tab{flex:1 1 50%;display:inline-flex;align-items:center;justify-content:center;height:52px;
+  header.top .tab{flex:1 1 0;display:inline-flex;align-items:center;justify-content:center;height:52px;
     border-radius:9px;font-size:15px;font-weight:600;letter-spacing:1px;cursor:pointer;text-decoration:none;
     color:var(--sub);background:transparent;transition:.15s}
   header.top .tab:hover{color:var(--brand)}
@@ -133,6 +133,29 @@ layout: false
   .wait-mask .wm-bar{height:8px;background:#eef2f7;border-radius:999px;overflow:hidden;margin-top:12px}
   .wait-mask .wm-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));
     border-radius:999px;transition:width .25s ease}
+
+/* 访客离厂（页签内联，原 oout.html 搬入） */
+.cand{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;background:#fff}
+.cand .cn{font-size:18px;font-weight:700;margin-bottom:4px}
+.cand .cm{font-size:13px;color:var(--sub);line-height:1.7}
+.cand .cm b{color:var(--ink);font-weight:600}
+.cand .cbtn{margin-top:12px;width:100%;height:44px;border:none;border-radius:10px;background:#16a34a;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+.cand.left{border-color:#d8e2ee;background:#f7fafc}
+.cand .left-tag{display:inline-block;margin-top:10px;color:var(--sub);font-size:13px}
+.pass-inner{filter:grayscale(1);opacity:.85}
+.pass-stamp{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);z-index:2;color:#dc2626;border:4px solid #dc2626;border-radius:12px;padding:8px 26px;font-size:30px;font-weight:800;letter-spacing:8px;opacity:.85;pointer-events:none;white-space:nowrap;background:rgba(255,255,255,.1);text-shadow:0 0 2px rgba(220,38,38,.35);box-shadow:0 0 0 2px rgba(220,38,38,.12)}
+
+/* 我的访客证：本机已登记缓存（localStorage），卡片化 + 勾选签出 */
+.mypass-wrap{margin-top:22px}
+.mypass-title{font-size:14px;font-weight:600;color:var(--ink);margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+.mypass-title .mp-clear{font-size:12px;color:var(--sub);font-weight:400;cursor:pointer}
+.mypass-list{display:flex;flex-direction:column;gap:14px}
+.mypass-item{position:relative}
+.mypass-item .pass{position:relative}
+.mypass-item.done .pass{filter:grayscale(1);opacity:.82}
+.mypass-bar{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);z-index:6;color:#dc2626;border:4px solid #dc2626;border-radius:12px;padding:6px 20px;font-size:24px;font-weight:800;letter-spacing:6px;opacity:.85;pointer-events:none;white-space:nowrap;background:rgba(255,255,255,.1);text-shadow:0 0 2px rgba(220,38,38,.35)}
+.mypass-co{width:100%;height:46px;margin-top:10px;border:none;border-radius:12px;background:linear-gradient(180deg,#16a34a,#15803d);color:#fff;font-size:16px;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:0 6px 16px rgba(22,163,74,.3)}
+.mypass-co:disabled{opacity:.6;cursor:not-allowed}
 </style>
 <script>
 /* 条码组件：页面打开后后台无感懒加载，不阻塞表单提交 */
@@ -157,10 +180,11 @@ else ensureBarcodeLib(function(){});
 <div class="app">
   <header class="top" id="pageHead">
     <div class="tabs">
-      <div class="tab active">访客登记</div>
-      <a class="tab" href="oout.html">访客离厂</a>
+      <div class="tab active" data-tab="reg">访客登记</div>
+      <div class="tab" data-tab="leave">访客离厂</div>
+      <div class="tab" data-tab="issued">已发访客证</div>
     </div>
-    <p class="tab-hint">请如实填写以下信息</p>
+    <p class="tab-hint" id="tabHint">请如实填写以下信息</p>
   </header>
 
   <div class="card" id="formCard">
@@ -194,6 +218,18 @@ else ensureBarcodeLib(function(){});
       <button type="submit" class="submit" id="submitBtn">提交登记</button>
       <div class="msg" id="msg"></div>
     </form>
+  </div>
+  <div id="myPasses"></div>
+  <div id="leaveView" style="display:none">
+    <form id="lf" autocomplete="off">
+      <div class="field">
+        <input type="text" id="q" placeholder="" maxlength="40">
+      </div>
+      <button type="submit" class="submit" id="leaveSubmitBtn">查询来访信息</button>
+      <div class="msg" id="leaveMsg"></div>
+    </form>
+    <div id="result"></div>
+    <p class="hint">离厂登记将记录离开时间，完成访客出入闭环。</p>
   </div>
 </div>
 
@@ -305,6 +341,40 @@ async function postComment(rec, opt){
   throw new Error('提交过于频繁，请稍候约 1 分钟后再试');
 }
 
+/* ====== 读取全部访客（GET，按 id 去重保留最新版本；墓碑=删除） ====== */
+async function fetchAllComments(path){
+  var out = [], page = 1;
+  while (true){
+    var url = CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(path)
+            + '&page=' + page + '&pageSize=100&sortBy=insertedAt_desc&lang=zh-CN';
+    var r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var resp = await r.json();
+    var dd = (resp.data && resp.data.data) || [];
+    if (!dd.length) break;
+    out = out.concat(dd);
+    var totalPages = (resp.data && resp.data.totalPages) || 0;
+    if (totalPages && page >= totalPages) break;
+    if (dd.length < 100) break;
+    page++;
+  }
+  return out;
+}
+async function loadVisitors(){
+  var all = await fetchAllComments(RECORDS_PATH);
+  var map = {};
+  all.forEach(function(c){
+    var rec = robustParse(c.orig || c.comment || '');
+    if (!rec || rec.type !== 'visitor' || !rec.id) return;
+    var oid = parseInt(c.objectId, 10) || 0;
+    if (!map[rec.id] || oid > map[rec.id].oid) map[rec.id] = { oid: oid, rec: rec };
+  });
+  var list = [];
+  for (var id in map){ if (!map[id].rec.deleted) list.push(map[id].rec); }
+  list.sort(function(a,b){ return visitTimeOf(b) - visitTimeOf(a); });
+  return list;
+}
+
 /* ====== 表单交互 ====== */
 var reasonsBox = document.getElementById('reasons');
 reasonsBox.addEventListener('change', function(e){
@@ -358,6 +428,7 @@ document.getElementById('f').addEventListener('submit', async function(ev){
   try {
     await postComment(rec, { status: function(t){ setMsg(t, ''); setMaskTxt(t, '云端限流退避中，请稍候'); } });
     hideMask();
+    cachePass(rec);
     showBadge(rec);
   } catch(err){
     hideMask();
@@ -431,6 +502,7 @@ function genderFromId(raw){
 
 function showBadge(rec){
   var hd = document.getElementById('pageHead'); if (hd) hd.style.display = 'none'; /* 访客单生成后隐藏页头 */
+  var mp = document.getElementById('myPasses'); if (mp) mp.style.display = 'none'; /* 登记成功后隐藏缓存面板，避免与新访客单重复 */
   var companyName = (window.COMPANY_NAME || '').trim();
   var passLogo = (window.LOGO_PASS || '').trim() || (window.COMPANY_LOGO || '').trim();
   var reasons = (rec.reasons || []).join('、') || '—';
@@ -481,6 +553,358 @@ function showBadge(rec){
   document.getElementById('againBtn').addEventListener('click', function(){ location.reload(); });
   enableCardSave();
 }
+
+/* ====== 我的访客证：本机已登记缓存（localStorage），自动载入 / 卡片化 / 勾选签出 ====== */
+var PASS_KEY = 'visitor_local_passes';
+function getPasses(){ try { return JSON.parse(localStorage.getItem(PASS_KEY) || '[]') || []; } catch(e){ return []; } }
+function savePasses(list){ try { localStorage.setItem(PASS_KEY, JSON.stringify(list)); } catch(e){} }
+function cachePass(rec){
+  var list = getPasses();
+  if (list.some(function(r){ return r.id === rec.id; })) return;            /* 同 id 去重 */
+  list.push(rec);
+  savePasses(list);
+}
+function removePass(id){ savePasses(getPasses().filter(function(r){ return r.id !== id; })); }
+function passById(id){ return getPasses().filter(function(r){ return r.id === id; })[0]; }
+
+/* 云端 PII 存密文，显示时需 deobfPII 还原；本地版直接用明文（见本地 in.html） */
+function dispId(r){ return deobfPII(r.idNumber); }
+function dispPhone(r){ return deobfPII(r.phone); }
+
+/* 载入前联网校验每张访客证真实状态，防止「已在别处签出 / 已被删除」被错误载入：
+   按 rec.id 去 waline 找最新版本 -> 已签出(已离)或已删(墓碑/查无)则清缓存不显示，在访则保留。
+   查询失败(网络异常)降级为本地判定，不阻断本机已登记的正常显示。 */
+var PASS_VERIFY_MAXPAGES = 20, PASS_PAGE_SIZE = 100;
+async function fetchLatestById(id){
+  var page = 1;
+  while (page <= PASS_VERIFY_MAXPAGES){
+    var url = CLOUD_BASE + '/api/comment?path=' + encodeURIComponent(RECORDS_PATH)
+      + '&page=' + page + '&pageSize=' + PASS_PAGE_SIZE + '&sortBy=insertedAt_desc&lang=zh-CN';
+    var resp, j;
+    try { resp = await fetch(url, { cache: 'no-store' }); j = await resp.json().catch(function(){ return {}; }); }
+    catch(e){ return { err: true }; }
+    var arr = (j && j.data && j.data.data) || [];
+    var hit = null, hitU = -1;
+    for (var i = 0; i < arr.length; i++){
+      var c = arr[i];
+      var rec = robustParse(c.comment);
+      if (!rec || rec.id !== id) continue;
+      if (c.deleted || rec.deleted) return { deleted: true };   /* 墓碑删除 */
+      var u = rec.updatedAt || 0;
+      if (u > hitU){ hitU = u; hit = rec; }
+    }
+    if (hit) return { rec: hit };
+    var cnt = (j && j.data && j.data.count) || 0;
+    if (!arr.length || page * PASS_PAGE_SIZE >= cnt) break;
+    page++;
+  }
+  return { notFound: true };   /* 查无此 id：已真删，或超出扫描范围 */
+}
+/* 真实状态口径：status 优先，leaveTime 兜底（与全端一致） */
+function isLeft(rec){ return rec.status ? (rec.status === '已离') : !!rec.leaveTime; }
+async function verifyPasses(list){
+  return await Promise.all(list.map(async function(rec){
+    var st;
+    try { st = await fetchLatestById(rec.id); } catch(e){ st = { err: true }; }
+    if (st.err) return { rec: rec, keep: true };                       /* 网络异常：保留本地判定 */
+    if (st.notFound || st.deleted) return { rec: rec, keep: false };   /* 已删：清缓存 */
+    if (isLeft(st.rec)) return { rec: rec, keep: false };              /* 已签出：清缓存 */
+    return { rec: rec, keep: true };
+  }));
+}
+
+function passCardHtml(rec){
+  var companyName = (window.COMPANY_NAME || '').trim();
+  var passLogo = (window.LOGO_PASS || '').trim() || (window.COMPANY_LOGO || '').trim();
+  var reasons = (rec.reasons || []).join('、') || '—';
+  var gid = genderFromId(dispId(rec));
+  var gcls = gid === 2 ? ' g-female' : (gid === 1 ? ' g-male' : '');
+  return '<div class="pass-top">' +
+      (passLogo ? '<img class="pt-logo" src="' + passLogo + '" alt="" onerror="this.style.display=\'none\'">' : '') +
+      '<span class="t1">' + esc(companyName || '访客通行卡') + '</span></div>' +
+    '<div class="pass-sub">访客通行证 VISITOR PASS</div>' +
+    '<div class="pass-body">' +
+      '<div class="pass-head">' +
+        '<div class="pass-photo' + gcls + '">' +
+          '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/>' +
+          '<path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7v1H4z"/></svg>' +
+          '<span class="ph-txt">证件照片</span></div>' +
+        '<div class="pass-idbox"><div class="nm">' + esc(rec.name) + '</div>' +
+          '<div class="un">' + (rec.unit ? esc(rec.unit) : '来访人员') + '</div>' +
+          '<div class="pid">证件号 ' + esc(maskId(dispId(rec))) + '</div></div>' +
+      '</div>' +
+      '<div class="pass-info">' +
+        '<div class="row"><span class="k">拜访</span><span class="v">' + esc(rec.visitPerson) + '</span></div>' +
+        '<div class="row"><span class="k">事由</span><span class="v">' + esc(reasons) + '</span></div>' +
+        '<div class="row"><span class="k">访问时间</span><span class="v">' + esc(fmtTime(visitTimeOf(rec))) + '</span></div>' +
+        (rec.registrar ? '<div class="row"><span class="k">登记人</span><span class="v">' + esc(rec.registrar) + '</span></div>' : '') +
+        '<div class="row"><span class="k">手机</span><span class="v">' + esc(maskPhone(dispPhone(rec))) + '</span></div>' +
+      '</div>' +
+      '<div class="pass-id"><div class="lbl">访客流水号</div><div class="num">' + esc(rec.id) + '</div></div>' +
+      '<svg class="pass-bar mp-bar"></svg>' +
+    '</div>' +
+    '<div class="pass-tip">请截屏保存，入闸时向安保出示此卡</div>' +
+    '<div class="pass-note">个人信息已脱敏</div>';
+}
+function buildPassItem(rec, done){
+  var stamp = done ? '<div class="mypass-bar">已失效</div>' : '';
+  var co = done ? '' : '<button type="button" class="mypass-co" data-id="' + esc(rec.id) + '">签出</button>';
+  return '<div class="mypass-item' + (done ? ' done' : '') + '" data-id="' + esc(rec.id) + '">' +
+    '<div class="pass">' + passCardHtml(rec) + stamp + '</div>' + co + '</div>';
+}
+async function renderMyPasses(){
+  var box = document.getElementById('myPasses');
+  if (!box) return;
+  var list = getPasses();
+  var fc = document.getElementById('formCard');
+  if (!list.length){
+    if (fc && fc.style.display === 'none'){
+      box.innerHTML = '<div class="mypass-wrap"><div class="mypass-title"><span>已发访客证</span></div>'
+        + '<div class="mypass-list"><div style="color:var(--sub);font-size:13px;padding:10px 0">暂无已发访客证</div></div></div>';
+      box.style.display = '';
+    } else { box.innerHTML = ''; box.style.display = 'none'; }
+    return;
+  }
+  box.style.display = '';
+  box.innerHTML = '<div class="mypass-wrap"><div class="mypass-title"><span>已发访客证</span></div>'
+    + '<div class="mypass-list"><div style="color:var(--sub);font-size:13px;padding:10px 0">正在校验访客证实际状态…</div></div></div>';
+  var verified = await verifyPasses(list);
+  var stale = verified.filter(function(v){ return !v.keep; }).map(function(v){ return v.rec.id; });
+  if (stale.length) stale.forEach(removePass);                 /* 已签出/已删的清缓存 */
+  list = verified.filter(function(v){ return v.keep; }).map(function(v){ return v.rec; });
+  if (!list.length){
+    if (fc && fc.style.display === 'none'){
+      box.innerHTML = '<div class="mypass-wrap"><div class="mypass-title"><span>已发访客证</span></div>'
+        + '<div class="mypass-list"><div style="color:var(--sub);font-size:13px;padding:10px 0">暂无已发访客证</div></div></div>';
+    } else { box.innerHTML = ''; box.style.display = 'none'; }
+    return;
+  }
+  var items = list.map(function(rec){
+    return buildPassItem(rec, isLeft(rec));
+  }).join('');
+  box.innerHTML = '<div class="mypass-wrap">' +
+    '<div class="mypass-title"><span>已发访客证（' + list.length + '）</span>' +
+      '<span class="mp-clear" id="mpClear">清空缓存</span></div>' +
+    '<div class="mypass-list">' + items + '</div>' +
+    '</div>';
+  var clr = document.getElementById('mpClear');
+  if (clr) clr.onclick = function(){ if (confirm('确定清空本机访客证缓存？此操作不可恢复。')){ savePasses([]); renderMyPasses(); } };
+  box.querySelectorAll('.mypass-co').forEach(function(b){
+    b.onclick = function(){ checkoutOneById(b.getAttribute('data-id')); };
+  });
+  ensureBarcodeLib(function(){
+    box.querySelectorAll('.mypass-item').forEach(function(it){
+      var rec = passById(it.getAttribute('data-id'));
+      var svg = it.querySelector('.mp-bar');
+      if (svg && rec){ try { JsBarcode(svg, rec.id, { format:'CODE128', width:2, height:48, displayValue:true, fontSize:13, margin:0, lineColor:'#1f2733', background:'#ffffff' }); } catch(e){} }
+    });
+  });
+}
+function markDone(it){
+  it.classList.add('done');
+  var pass = it.querySelector('.pass');
+  if (pass && !pass.querySelector('.mypass-bar')){
+    var st = document.createElement('div'); st.className = 'mypass-bar'; st.textContent = '已失效';
+    pass.appendChild(st);
+  }
+}
+async function checkoutOne(rec){
+  var now = Date.now();
+  var out = {
+    type:'visitor', id:rec.id, name:rec.name, idNumber:rec.idNumber, phone:rec.phone, unit:rec.unit,
+    visitPerson:rec.visitPerson, registrar:rec.registrar, reasons:rec.reasons,
+    enterTime:rec.enterTime, leaveTime:now, status:'已离',
+    createdAt:rec.createdAt || now, updatedAt:now
+  };
+  return await postComment(out, { status: function(t){ setMsg(t, ''); setMaskTxt(t, '云端限流退避中，请稍候'); } });
+}
+async function checkoutOneById(id){
+  var box = document.getElementById('myPasses');
+  if (!box) return;
+  var rec = passById(id);
+  if (!rec) return;
+  if (!confirm('确认签出该访客证？将记录离开时间。')) return;
+  var btn = box.querySelector('.mypass-co[data-id="' + id + '"]');
+  if (btn){ btn.disabled = true; btn.textContent = '签出中…'; }
+  showMask('正在签出…', '正在写入云端记录');
+  try {
+    await checkoutOne(rec);
+    var it = box.querySelector('.mypass-item[data-id="' + id + '"]');
+    if (it) markDone(it);
+    removePass(id);
+    hideMask();
+    setMsg('已签出访客证', 'ok');
+  } catch(e){
+    hideMask();
+    setMsg('签出失败：' + (e.message || e), 'err');
+    if (btn){ btn.disabled = false; btn.textContent = '签出'; }
+  }
+}
+
+/* ====== 访客离厂（页签内联，原 oout.html 搬入）：按 证号/姓名/手机号 查询并签出 ====== */
+var VISITORS = [];
+function setLeaveMsg(t, cls){ var m = document.getElementById('leaveMsg'); if (m){ m.textContent = t; m.className = 'msg ' + (cls || ''); } }
+
+document.getElementById('lf').addEventListener('submit', async function(ev){
+  ev.preventDefault();
+  var q = document.getElementById('q').value.trim();
+  if (!q){ setLeaveMsg('请输入流水号 / 姓名 / 手机号', 'err'); return; }
+  var btn = document.getElementById('leaveSubmitBtn');
+  btn.disabled = true; setLeaveMsg('查询中…', '');
+  showMask('正在查询…', '正在读取访客记录');
+  try {
+    VISITORS = await loadVisitors();
+    var key = q.toLowerCase();
+    var matched = VISITORS.filter(function(v){
+      return (v.id && v.id.toLowerCase() === key) || (v.name && v.name.toLowerCase().indexOf(key) >= 0)
+        || (dispPhone(v) && dispPhone(v).indexOf(key) >= 0);
+    });
+    if (!matched.length){ setLeaveMsg('未找到匹配的访客记录', 'err'); renderResult([]); }
+    else { setLeaveMsg('找到 ' + matched.length + ' 条匹配记录', 'ok'); renderResult(matched); }
+  } catch(e){ setLeaveMsg('查询失败：' + (e.message||e), 'err'); }
+  hideMask();
+  btn.disabled = false;
+});
+
+function renderResult(list){
+  var box = document.getElementById('result');
+  if (!list.length){ box.innerHTML = ''; return; }
+  box.innerHTML = list.map(function(v){
+    var left = isLeft(v);
+    var info = '<div class="cm">拜访：<b>'+esc(v.visitPerson)+'</b>　单位：<b>'+esc(v.unit||'—')+'</b><br>' +
+      '手机：<b>'+esc(dispPhone(v)||'—')+'</b><br>' +
+      '访问时间：<b>'+esc(fmtTime(visitTimeOf(v)))+'</b><br>' +
+      '流水号：<b>'+esc(v.id)+'</b></div>';
+    if (left){
+      var lt = v.leaveTime ? ('该访客已于 ' + esc(fmtTime(v.leaveTime)) + ' 离厂') : '该访客已离厂';
+      return '<div class="cand left"><div class="cn">'+esc(v.name)+'</div>'+info+
+        '<div class="left-tag">'+lt+'</div></div>';
+    }
+    return '<div class="cand" data-leave="'+esc(v.id)+'"><div class="cn">'+esc(v.name)+'</div>'+info+
+      '<button class="cbtn" data-leave="'+esc(v.id)+'">确认离厂</button></div>';
+  }).join('');
+}
+
+document.getElementById('result').addEventListener('click', function(e){
+  var t = e.target;
+  if (t && t.dataset && t.dataset.leave){
+    if (confirm('确认该访客离厂？将记录离开时间。')) doLeave(t.dataset.leave);
+  }
+});
+
+async function doLeave(id){
+  var v = VISITORS.filter(function(x){ return x.id === id; })[0];
+  if (!v) return;
+  setLeaveMsg('登记离厂中…', '');
+  showMask('正在登记离厂…', '正在写入记录');
+  var now = Date.now();
+  var rec = {
+    type:'visitor', id:id, name:v.name, idNumber:v.idNumber, phone:v.phone, unit:v.unit,
+    visitPerson:v.visitPerson, registrar:v.registrar, reasons:v.reasons,
+    enterTime:v.enterTime, leaveTime:now, status:'已离',
+    createdAt:v.createdAt||now, updatedAt:now
+  };
+  try {
+    await postComment(rec, { status: function(t){ setLeaveMsg(t, ''); setMaskTxt(t, '系统限流退避中，请稍候'); } });
+    hideMask();
+    showDone(v, now);
+  } catch(err){ hideMask(); setLeaveMsg(err.message || '离厂登记失败', 'err'); }
+}
+
+function showDone(v, leaveTs){
+  var companyName = (window.COMPANY_NAME || '').trim();
+  var passLogo = (window.LOGO_PASS || '').trim() || (window.COMPANY_LOGO || '').trim();
+  var reasons = (v.reasons || []).join('、') || '—';
+  var html =
+    '<div class="pass">' +
+      '<div class="pass-inner">' +
+        '<div class="pass-top">' +
+          (passLogo ? '<img class="pt-logo" src="' + passLogo + '" alt="" onerror="this.style.display=\'none\'">' : '') +
+          '<span class="t1">' + esc(companyName || '访客通行卡') + '</span>' +
+        '</div>' +
+        '<div class="pass-sub">访客通行证 VISITOR PASS</div>' +
+        '<div class="pass-body">' +
+          '<div class="pass-head">' +
+            '<div class="pass-photo">' +
+              '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/>' +
+              '<path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7v1H4z"/></svg>' +
+              '<span class="ph-txt">证件照片</span>' +
+            '</div>' +
+            '<div class="pass-idbox"><div class="nm">' + esc(v.name) + '</div>' +
+            '<div class="un">' + (v.unit ? esc(v.unit) : '来访人员') + '</div>' +
+            '<div class="pid">证件号 ' + esc(maskId(dispId(v))) + '</div></div>' +
+          '</div>' +
+          '<div class="pass-info">' +
+            '<div class="row"><span class="k">拜访</span><span class="v">' + esc(v.visitPerson) + '</span></div>' +
+            '<div class="row"><span class="k">事由</span><span class="v">' + esc(reasons) + '</span></div>' +
+            '<div class="row"><span class="k">访问时间</span><span class="v">' + esc(fmtTime(visitTimeOf(v))) + '</span></div>' +
+            '<div class="row"><span class="k">离厂时间</span><span class="v">' + esc(fmtTime(leaveTs)) + '</span></div>' +
+            (v.registrar ? '<div class="row"><span class="k">登记人</span><span class="v">' + esc(v.registrar) + '</span></div>' : '') +
+            '<div class="row"><span class="k">手机</span><span class="v">'+esc(maskPhone(dispPhone(v)))+'</span></div>' +
+          '</div>' +
+          '<div class="pass-id"><div class="lbl">访客流水号</div><div class="num">' + esc(v.id) + '</div></div>' +
+          '<svg class="pass-bar" id="passBar"></svg>' +
+        '</div>' +
+        '<div class="pass-tip">该访客已离厂，此证已失效</div>' +
+        '<div class="pass-note">个人信息已脱敏</div>' +
+      '</div>' +
+      '<div class="pass-stamp">已失效</div>' +
+    '</div>' +
+    '<button class="again" id="againBtn">再登记离厂</button>';
+  document.getElementById('leaveView').innerHTML = html;
+  ensureBarcodeLib(function(){
+    try {
+      JsBarcode('#passBar', v.id, {
+        format: 'CODE128', width: 2, height: 48,
+        displayValue: true, fontSize: 13, margin: 0,
+        lineColor: '#1f2733', background: '#ffffff'
+      });
+    } catch (e) { /* 条码库缺失则忽略，保留空白占位 */ }
+  });
+  var again = document.getElementById('againBtn');
+  if (again) again.addEventListener('click', function(){ location.reload(); });
+  enableCardSave();
+}
+
+/* 页签切换：访客登记(表单) / 已发访客证(缓存列表) / 访客离厂(查询签出)，三者分离 */
+function showTab(which){
+  var regTab = document.querySelector('.tab[data-tab="reg"]');
+  var issTab = document.querySelector('.tab[data-tab="issued"]');
+  var leaveTab = document.querySelector('.tab[data-tab="leave"]');
+  var formCard = document.getElementById('formCard');
+  var mp = document.getElementById('myPasses');
+  var lv = document.getElementById('leaveView');
+  var hint = document.getElementById('tabHint');
+  if (!formCard || !mp || !lv) return;
+  if (which === 'issued'){
+    formCard.style.display = 'none'; lv.style.display = 'none';
+    if (regTab) regTab.classList.remove('active');
+    if (leaveTab) leaveTab.classList.remove('active');
+    if (issTab) issTab.classList.add('active');
+    if (hint) hint.textContent = '本机已登记的访客证（进入时联网校验真实状态）';
+    renderMyPasses();
+  } else if (which === 'leave'){
+    formCard.style.display = 'none'; mp.style.display = 'none';
+    lv.style.display = '';
+    if (regTab) regTab.classList.remove('active');
+    if (issTab) issTab.classList.remove('active');
+    if (leaveTab) leaveTab.classList.add('active');
+    if (hint) hint.textContent = '输入访客证号 / 姓名 / 手机号，查询确认离厂';
+  } else {
+    formCard.style.display = ''; mp.style.display = 'none'; lv.style.display = 'none';
+    if (issTab) issTab.classList.remove('active');
+    if (leaveTab) leaveTab.classList.remove('active');
+    if (regTab) regTab.classList.add('active');
+    if (hint) hint.textContent = '请如实填写以下信息';
+  }
+}
+var _regTab = document.querySelector('.tab[data-tab="reg"]');
+var _issTab = document.querySelector('.tab[data-tab="issued"]');
+var _leaveTab = document.querySelector('.tab[data-tab="leave"]');
+if (_regTab) _regTab.addEventListener('click', function(){ showTab('reg'); });
+if (_issTab) _issTab.addEventListener('click', function(){ showTab('issued'); });
+if (_leaveTab) _leaveTab.addEventListener('click', function(){ showTab('leave'); });
+showTab(getPasses().length ? 'issued' : 'reg');   /* 有缓存直接定位已发页签，否则登记页 */
 </script>
 
 <!-- 等待遮罩：模拟进度条（快→慢→爬行，永不到 100%，完成后直接充满） -->
