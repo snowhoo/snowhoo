@@ -705,9 +705,11 @@ async function doLeave(id){
   };
   try {
     await postComment(rec, { status: function(t){ setLeaveMsg(t, ''); setMaskTxt(t, '系统限流退避中，请稍候'); } });
-    removePass(id);
     v.status = '已离'; v.leaveTime = now;
-    markLeftCard(id, function(g){ return byIdFromVisitors(g) || passById(g); });
+    /* 就地盖章：直接用已更新状态的内存记录 v，不依赖 byIdFromVisitors/passById
+       （已发证页签 VISITORS 为空、缓存即将移除，旧取数方式会拿不到 rec 导致早退卡「签离中…」） */
+    markLeftCard(id, function(){ return v; });
+    removePass(id);
     hideMask();
     setLeaveMsg('已登记离厂：' + (v.name || ''), 'ok');
   } catch(err){
