@@ -422,7 +422,7 @@ document.getElementById('f').addEventListener('submit', async function(ev){
 
   var btn = document.getElementById('submitBtn');
   btn.disabled = true; setMsg('提交中…', '');
-  showMask('正在提交登记…', '正在写入云端记录');
+  showMask('正在提交登记…', '正在写入记录');
 
   var now = Date.now();
   /* 身份证号/手机号在线端加密存储，本地同步时再还原 */
@@ -432,7 +432,7 @@ document.getElementById('f').addEventListener('submit', async function(ev){
     leaveTime: null, status: '在访', createdAt: now, updatedAt: now
   };
   try {
-    await postComment(rec, { status: function(t){ setMsg(t, ''); setMaskTxt(t, '云端限流退避中，请稍候'); } });
+    await postComment(rec, { status: function(t){ setMsg(t, ''); setMaskTxt(t, '限流退避中，请稍候'); } });
     hideMask();
     cachePass(rec);
     FRESH_PASS[rec.id] = Date.now();   /* 本会话刚提交：跳过联网校验，防尚未可读被误清缓存 */
@@ -771,7 +771,7 @@ showTab(getPasses().length ? 'issued' : 'reg');   /* 有缓存直接定位已发
 <div class="wait-mask" id="waitMask">
   <div class="wm-box">
     <div class="wm-txt" id="wmTxt">处理中…</div>
-    <div class="wm-sub" id="wmSub">正在与云端服务器通信</div>
+    <div class="wm-sub" id="wmSub">正在与服务器通信</div>
     <div class="wm-bar"><i id="wmBar"></i></div>
   </div>
 </div>
@@ -781,7 +781,7 @@ function showMask(txt, sub){
   var m = document.getElementById('waitMask');
   if (!m) return;
   document.getElementById('wmTxt').textContent = txt || '处理中…';
-  document.getElementById('wmSub').textContent = sub || '正在与云端服务器通信';
+  document.getElementById('wmSub').textContent = sub || '正在与服务器通信';
   var bar = document.getElementById('wmBar');
   bar.style.width = '0';
   m.classList.add('show');
