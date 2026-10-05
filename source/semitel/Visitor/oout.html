@@ -44,6 +44,13 @@ layout: false
   header.top{text-align:center;padding:14px 0 10px}
   header.top h1{font-size:22px;margin:20px 0 0;letter-spacing:2px;font-weight:700}
   header.top p{margin:6px 0 0;color:var(--sub);font-size:13px;letter-spacing:1px}
+  header.top .tabs{display:flex;width:100%;margin-top:14px;padding:4px;background:#eef2f7;border-radius:12px}
+  header.top .tab{flex:1 1 50%;display:inline-flex;align-items:center;justify-content:center;height:38px;
+    border-radius:9px;font-size:15px;font-weight:600;letter-spacing:1px;cursor:pointer;text-decoration:none;
+    color:var(--sub);background:transparent;transition:.15s}
+  header.top .tab:hover{color:var(--brand)}
+  header.top .tab.active{background:var(--brand);color:#fff;box-shadow:0 1px 3px rgba(15,23,42,.18);cursor:default}
+  header.top .tab-hint{margin:8px 0 0;font-size:12px;color:var(--sub);text-align:center;letter-spacing:1px}
   header.top .brand{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px}
   header.top .brand-logo{height:32px;object-fit:contain}
   header.top .brand-name{font-size:16px;font-weight:500;letter-spacing:1px}
@@ -129,13 +136,16 @@ layout: false
 <body>
 <div class="app">
   <header class="top" id="pageHead">
-    <h1>访客离厂</h1>
+    <div class="tabs">
+      <a class="tab" href="oin.html">访客登记</a>
+      <div class="tab active">访客离厂</div>
+    </div>
+    <p class="tab-hint">输入访客证号 / 姓名 / 手机号，查询确认离厂</p>
   </header>
 
   <div class="card" id="formCard">
     <form id="f" autocomplete="off">
       <div class="field">
-        <label>输入访客证号 / 姓名 / 手机号，查询确认离厂</label>
         <input type="text" id="q" placeholder="" maxlength="40">
       </div>
       <button type="submit" class="submit" id="submitBtn">查询来访信息</button>
