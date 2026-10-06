@@ -42,7 +42,7 @@ layout: false
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
     background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
   .app{max-width:100%;margin:0 auto;padding:18px 16px calc(28px + env(safe-area-inset-bottom));}
-  header.top{text-align:center;padding:14px 0 10px}
+  header.top{text-align:center;padding:0px}
   header.top h1{font-size:22px;margin:20px 0 0;letter-spacing:2px;font-weight:700}
   header.top p{margin:6px 0 0;color:var(--sub);font-size:13px;letter-spacing:1px}
   header.top .tabs{display:flex;width:100%;margin-top:14px;padding:4px;background:#eef2f7;border-radius:12px}
@@ -52,11 +52,17 @@ layout: false
   header.top .tab:hover{color:var(--brand)}
   header.top .tab.active{background:var(--brand);color:#fff;box-shadow:0 1px 3px rgba(15,23,42,.18);cursor:default}
   header.top .tab[data-tab="reg"].active{background:#16a34a;color:#fff}
-  header.top .tab[data-tab="leave"].active{background:linear-gradient(180deg, #fe4b00, #fe4b00);color:#fff}
-  header.top .tab-hint{margin:20px 0 0;font-size:12px;color:var(--sub);text-align:center;letter-spacing:1px}
-  header.top .brand{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:36px}
+  header.top .tab-hint{margin:10px 0 10px;font-size:12px;color:var(--sub);text-align:center;letter-spacing:1px}
+  /* 已发证子页签：自动识别 / 手动查询 */
+  .subtabs{display:flex;margin:10px 0 16px;padding:3px;background:#eef2f7;border-radius:10px}
+  .subtab{flex:1 1 0;display:inline-flex;align-items:center;justify-content:center;height:40px;
+    border-radius:8px;font-size:14px;font-weight:600;color:var(--sub);cursor:pointer;
+    transition:background .15s,color .15s;user-select:none}
+  .subtab:hover{color:var(--brand)}
+  .subtab.active{background:#fff;color:var(--brand);box-shadow:0 1px 3px rgba(15,23,42,.12);cursor:default}
+  header.top .brand{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:24px}
   header.top .brand-logo{height:32px;object-fit:contain}
-  header.top .brand-name{font-size:16px;font-weight:500;letter-spacing:1px}
+  header.top .brand-name{font-size:17px;font-weight:700;letter-spacing:1px}
   .pass-top .pt-logo{height:26px;max-width:110px;object-fit:contain;display:block}
   .card{}
   .field{display:flex;flex-wrap:wrap;align-items:center;margin-bottom:14px}
@@ -76,11 +82,12 @@ layout: false
     background:linear-gradient(180deg,var(--brand),var(--brand2));color:#fff;font-size:17px;font-weight:700;
     letter-spacing:3px;cursor:pointer;box-shadow:0 8px 18px rgba(37,99,235,.35);transition:transform .08s,opacity .15s}
   .submit:active{transform:translateY(1px)}
-  #submitBtn{background:linear-gradient(180deg,#22c55e,#16a34a);box-shadow:0 8px 18px rgba(22,163,74,.35)}
+  #submitBtn{background:linear-gradient(180deg,#16a34a,#16a34a);box-shadow:0 0px 0px rgba(22,163,74,.35)}
   .submit:disabled{opacity:.6;cursor:not-allowed}
-  .msg{margin-top:14px;min-height:20px;font-size:14px;text-align:center;justify-content: space-around}
+  .msg{margin-top:14px;font-size:14px;text-align:center;justify-content: space-around}
+  .msg:empty{display:none}   /* 无提示时不占位 */
   /* 访客离厂页签：查询输入框与查询按钮同行，按钮缩小 */
-  #leaveView .lf-row{display:flex;gap:10px;align-items:stretch;margin-top:4px}
+  #leaveView .lf-row{display:flex;gap:10px;align-items:stretch;margin:0px 0 14px}
   #leaveView #q{flex:1;min-width:0;height:46px;border:1px solid var(--line);border-radius:12px;
     padding:0 14px;font-size:15px;background:#fff;box-sizing:border-box;outline:none}
   #leaveSubmitBtn{width:auto;height:46px;margin-top:0;padding:0 22px;font-size:15px;letter-spacing:1px;flex-shrink:0;
@@ -175,7 +182,6 @@ else ensureBarcodeLib(function(){});
   <header class="top" id="pageHead">
     <div class="tabs">
       <div class="tab active" data-tab="reg">访客登记</div>
-      <div class="tab" data-tab="leave">访客离厂</div>
       <div class="tab" data-tab="issued">已发证</div>
     </div>
     <p class="tab-hint" id="tabHint">请如实填写以下信息</p>
@@ -213,17 +219,23 @@ else ensureBarcodeLib(function(){});
       <div class="msg" id="msg"></div>
     </form>
   </div>
-  <div id="myPasses"></div>
-  <div id="leaveView" style="display:none">
-    <form id="lf" autocomplete="off">
-      <div class="lf-row">
-        <input type="text" id="q" placeholder="" maxlength="40">
-        <button type="submit" class="submit" id="leaveSubmitBtn">查询</button>
-      </div>
-      <div class="msg" id="leaveMsg"></div>
-    </form>
-    <div id="result"></div>
-    <p class="hint">离厂登记将记录离开时间，完成访客出入闭环。</p>
+  <div id="issuedWrap" style="display:none">
+    <div class="subtabs">
+      <div class="subtab active" data-sub="auto">自动识别</div>
+      <div class="subtab" data-sub="manual">手动查询</div>
+    </div>
+    <div id="myPasses"></div>
+    <div id="leaveView" style="display:none">
+      <form id="lf" autocomplete="off">
+        <div class="lf-row">
+          <input type="text" id="q" placeholder="" maxlength="40">
+          <button type="submit" class="submit" id="leaveSubmitBtn">查询</button>
+        </div>
+        <div class="msg" id="leaveMsg"></div>
+      </form>
+      <div id="result"></div>
+      <p class="hint">离厂登记将记录离开时间，完成访客出入闭环。</p>
+    </div>
   </div>
 </div>
 
@@ -589,10 +601,12 @@ function markLeftCard(id, getRec){
     });
   });
 }
-/* 页签数量显示：有记录显示「已发证（N）」，无记录显示「已发证」 */
+/* 数量显示：主页签「已发证（N）」+ 子页签「自动识别（N）」，无记录均不带数量 */
 function updateIssuedTab(n){
   var t = document.querySelector('.tab[data-tab="issued"]');
   if (t) t.textContent = n > 0 ? ('已发证（' + n + '）') : '已发证';
+  var s = document.querySelector('.subtab[data-sub="auto"]');
+  if (s) s.textContent = n > 0 ? ('自动识别（' + n + '）') : '自动识别';
 }
 async function renderMyPasses(){
   var box = document.getElementById('myPasses');
@@ -639,22 +653,29 @@ function setLeaveMsg(t, cls){ var m = document.getElementById('leaveMsg'); if (m
 document.getElementById('lf').addEventListener('submit', async function(ev){
   ev.preventDefault();
   var q = document.getElementById('q').value.trim();
-  if (!q){ setLeaveMsg('请输入访客证号 / 姓名 / 手机号', 'err'); return; }
+  if (!q){ setLeaveMsg('请输入访客证号 / 完整姓名 / 手机号（至少后四位）', 'err'); return; }
   var btn = document.getElementById('leaveSubmitBtn');
-  btn.disabled = true; setLeaveMsg('查询中…', '');
+  btn.disabled = true;
   showMask('正在查询…', '正在读取访客记录');
   var key = q.toLowerCase();
   function matchAll(list){
     return list.filter(function(v){
-      return (v.id && v.id.toLowerCase() === key) || (v.name && v.name.toLowerCase().indexOf(key) >= 0)
-        || (dispPhone(v) && dispPhone(v).indexOf(key) >= 0);
+      if (v.id && v.id.toLowerCase() === key) return true;                       /* 证号：精确匹配 */
+      if (v.name && v.name.toLowerCase() === key) return true;                   /* 姓名：精确匹配，防枚举 */
+      var p = dispPhone(v) || '';
+      return key.length >= 4 && p.slice(-key.length) === key;                    /* 手机号：至少后四位、尾部匹配，防枚举 */
     });
   }
+  /* 数量上子页签：找到 N 条在访记录显示「手动查询（N）」，无结果/失败恢复「手动查询」 */
+  function updateManualSub(n){
+    var s = document.querySelector('.subtab[data-sub="manual"]');
+    if (s) s.textContent = n > 0 ? ('手动查询（' + n + '）') : '手动查询';
+  }
   function showMatched(matched){
-    if (!matched.length){ setLeaveMsg('未找到匹配的访客记录', 'err'); renderResult([]); return; }
+    if (!matched.length){ updateManualSub(0); setLeaveMsg('未找到匹配的访客记录', 'err'); renderResult([]); return; }
     var show = matched.filter(function(v){ return !isLeft(v); });   /* 已离厂记录不列出 */
-    if (!show.length){ setLeaveMsg('匹配记录均已离厂，无需重复签离', 'err'); renderResult([]); }
-    else { setLeaveMsg('找到 ' + show.length + ' 条匹配记录', 'err'); renderResult(show); }
+    if (!show.length){ updateManualSub(0); setLeaveMsg('匹配记录均已离厂，无需重复签离', 'err'); renderResult([]); }
+    else { updateManualSub(show.length); setLeaveMsg('', ''); renderResult(show); }   /* 清掉上一轮操作残留提示 */
   }
   try {
     /* 查询只读数据库（云端为准），绝不读本机缓存：缓存副本 status 冻结在登记时刻，
@@ -662,6 +683,7 @@ document.getElementById('lf').addEventListener('submit', async function(ev){
     VISITORS = await loadVisitors();
     showMatched(matchAll(VISITORS));
   } catch(e){
+    updateManualSub(0);
     setLeaveMsg('查询失败：' + (e.message || e), 'err');
     renderResult([]);
   }
@@ -728,44 +750,53 @@ function resetForm(){
   setMsg('', '');
 }
 
-/* 页签切换：访客登记(表单) / 已发访客证(缓存列表) / 访客离厂(查询签离)，三者分离 */
+/* 页签切换：访客登记(表单) / 已发证(子页签：自动识别 + 手动查询) */
 function showTab(which){
   var regTab = document.querySelector('.tab[data-tab="reg"]');
   var issTab = document.querySelector('.tab[data-tab="issued"]');
-  var leaveTab = document.querySelector('.tab[data-tab="leave"]');
   var formCard = document.getElementById('formCard');
-  var mp = document.getElementById('myPasses');
-  var lv = document.getElementById('leaveView');
+  var issuedWrap = document.getElementById('issuedWrap');
   var hint = document.getElementById('tabHint');
-  if (!formCard || !mp || !lv) return;
+  if (!formCard || !issuedWrap) return;
   if (which === 'issued'){
-    formCard.style.display = 'none'; lv.style.display = 'none';
+    formCard.style.display = 'none'; issuedWrap.style.display = '';
     if (regTab) regTab.classList.remove('active');
-    if (leaveTab) leaveTab.classList.remove('active');
     if (issTab) issTab.classList.add('active');
-    if (hint) hint.textContent = '本机已登记的访客证';
-    renderMyPasses();
-  } else if (which === 'leave'){
-    formCard.style.display = 'none'; mp.style.display = 'none';
-    lv.style.display = '';
-    if (regTab) regTab.classList.remove('active');
-    if (issTab) issTab.classList.remove('active');
-    if (leaveTab) leaveTab.classList.add('active');
-    if (hint) hint.textContent = '输入访客证号 / 姓名 / 手机号，查询确认离厂';
+    showIssuedSub(currentSub);
   } else {
-    formCard.style.display = ''; mp.style.display = 'none'; lv.style.display = 'none';
+    formCard.style.display = ''; issuedWrap.style.display = 'none';
     if (issTab) issTab.classList.remove('active');
-    if (leaveTab) leaveTab.classList.remove('active');
     if (regTab) regTab.classList.add('active');
     if (hint) hint.textContent = '请如实填写以下信息';
   }
 }
+/* 已发证子页签：auto=自动识别(本机缓存列表) / manual=手动查询(证号/姓名/手机号) */
+var currentSub = 'auto';
+function showIssuedSub(which){
+  currentSub = (which === 'manual') ? 'manual' : 'auto';
+  document.querySelectorAll('.subtab').forEach(function(st){
+    st.classList.toggle('active', st.dataset.sub === currentSub);
+  });
+  var mp = document.getElementById('myPasses');
+  var lv = document.getElementById('leaveView');
+  var hint = document.getElementById('tabHint');
+  if (currentSub === 'manual'){
+    if (mp) mp.style.display = 'none';
+    if (lv) lv.style.display = '';
+    if (hint) hint.textContent = '输入访客证号 / 完整姓名 / 手机号（至少后四位）';
+  } else {
+    if (lv) lv.style.display = 'none';
+    if (hint) hint.textContent = '本机已登记的访客证';
+    renderMyPasses();   /* 自动识别：缓存列表由 renderMyPasses 控制显隐 */
+  }
+}
 var _regTab = document.querySelector('.tab[data-tab="reg"]');
 var _issTab = document.querySelector('.tab[data-tab="issued"]');
-var _leaveTab = document.querySelector('.tab[data-tab="leave"]');
 if (_regTab) _regTab.addEventListener('click', function(){ showTab('reg'); });
 if (_issTab) _issTab.addEventListener('click', function(){ showTab('issued'); });
-if (_leaveTab) _leaveTab.addEventListener('click', function(){ showTab('leave'); });
+document.querySelectorAll('.subtab').forEach(function(st){
+  st.addEventListener('click', function(){ showIssuedSub(st.dataset.sub); });
+});
 showTab(getPasses().length ? 'issued' : 'reg');   /* 有缓存直接定位已发页签，否则登记页 */
 </script>
 
