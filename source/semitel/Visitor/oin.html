@@ -740,8 +740,7 @@ async function doLeave(id){
        （已发访客证页签 VISITORS 为空、缓存即将移除，旧取数方式会拿不到 rec 导致早退卡「签离中…」） */
     markLeftCard(id, function(){ return v; });
     removePass(id);
-    hideMask();
-    setLeaveMsg('已登记离厂：' + (v.name || ''), 'ok');
+    hideMask();   /* 卡片就地盖章已是明确反馈，不再弹文字提示 */
   } catch(err){
     hideMask();
     setLeaveMsg(err.message || '离厂登记失败', 'err');
