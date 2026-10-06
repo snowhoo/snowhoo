@@ -53,7 +53,7 @@ layout: false
   header.top .tab.active{background:var(--brand);color:#fff;box-shadow:0 1px 3px rgba(15,23,42,.18);cursor:default}
   header.top .tab[data-tab="reg"].active{background:#16a34a;color:#fff}
   header.top .tab-hint{margin:10px 0 10px;font-size:12px;color:var(--sub);text-align:center;letter-spacing:1px}
-  /* 已发证子页签：自动识别 / 手动查询 */
+  /* 已发访客证子页签：自动识别 / 手动查询 */
   .subtabs{display:flex;margin:10px 0 16px;padding:3px;background:#eef2f7;border-radius:10px}
   .subtab{flex:1 1 0;display:inline-flex;align-items:center;justify-content:center;height:40px;
     border-radius:8px;font-size:14px;font-weight:600;color:var(--sub);cursor:pointer;
@@ -62,7 +62,7 @@ layout: false
   .subtab.active{background:#fff;color:var(--brand);box-shadow:0 1px 3px rgba(15,23,42,.12);cursor:default}
   header.top .brand{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:24px}
   header.top .brand-logo{height:32px;object-fit:contain}
-  header.top .brand-name{font-size:17px;font-weight:700;letter-spacing:1px}
+  header.top .brand-name{font-size:17px;font-weight:700;letter-spacing:0px}
   .pass-top .pt-logo{height:26px;max-width:110px;object-fit:contain;display:block}
   .card{}
   .field{display:flex;flex-wrap:wrap;align-items:center;margin-bottom:14px}
@@ -182,7 +182,7 @@ else ensureBarcodeLib(function(){});
   <header class="top" id="pageHead">
     <div class="tabs">
       <div class="tab active" data-tab="reg">访客登记</div>
-      <div class="tab" data-tab="issued">已发证</div>
+      <div class="tab" data-tab="issued">已发访客证</div>
     </div>
     <p class="tab-hint" id="tabHint">请如实填写以下信息</p>
   </header>
@@ -601,10 +601,10 @@ function markLeftCard(id, getRec){
     });
   });
 }
-/* 数量显示：主页签「已发证（N）」+ 子页签「自动识别（N）」，无记录均不带数量 */
+/* 数量显示：主页签「已发访客证（N）」+ 子页签「自动识别（N）」，无记录均不带数量 */
 function updateIssuedTab(n){
   var t = document.querySelector('.tab[data-tab="issued"]');
-  if (t) t.textContent = n > 0 ? ('已发证（' + n + '）') : '已发证';
+  if (t) t.textContent = n > 0 ? ('已发访客证（' + n + '）') : '已发访客证';
   var s = document.querySelector('.subtab[data-sub="auto"]');
   if (s) s.textContent = n > 0 ? ('自动识别（' + n + '）') : '自动识别';
 }
@@ -729,7 +729,7 @@ async function doLeave(id){
     await postComment(rec, { status: function(t){ setLeaveMsg(t, ''); setMaskTxt(t, '系统限流退避中，请稍候'); } });
     v.status = '已离'; v.leaveTime = now;
     /* 就地盖章：直接用已更新状态的内存记录 v，不依赖 byIdFromVisitors/passById
-       （已发证页签 VISITORS 为空、缓存即将移除，旧取数方式会拿不到 rec 导致早退卡「签离中…」） */
+       （已发访客证页签 VISITORS 为空、缓存即将移除，旧取数方式会拿不到 rec 导致早退卡「签离中…」） */
     markLeftCard(id, function(){ return v; });
     removePass(id);
     hideMask();
@@ -750,7 +750,7 @@ function resetForm(){
   setMsg('', '');
 }
 
-/* 页签切换：访客登记(表单) / 已发证(子页签：自动识别 + 手动查询) */
+/* 页签切换：访客登记(表单) / 已发访客证(子页签：自动识别 + 手动查询) */
 function showTab(which){
   var regTab = document.querySelector('.tab[data-tab="reg"]');
   var issTab = document.querySelector('.tab[data-tab="issued"]');
@@ -770,7 +770,7 @@ function showTab(which){
     if (hint) hint.textContent = '请如实填写以下信息';
   }
 }
-/* 已发证子页签：auto=自动识别(本机缓存列表) / manual=手动查询(证号/姓名/手机号) */
+/* 已发访客证子页签：auto=自动识别(本机缓存列表) / manual=手动查询(证号/姓名/手机号) */
 var currentSub = 'auto';
 function showIssuedSub(which){
   currentSub = (which === 'manual') ? 'manual' : 'auto';
