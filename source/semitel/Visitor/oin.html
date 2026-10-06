@@ -459,6 +459,7 @@ document.getElementById('f').addEventListener('submit', async function(ev){
     cachePass(rec);
     FRESH_PASS[rec.id] = Date.now();   /* 本会话刚提交：跳过联网校验，防尚未可读被误清缓存 */
     resetForm();
+    currentSub = 'auto';               /* 登记成功切回「自动识别」，而非停留在手动查询 */
     showTab('issued');                 /* 提交成功直接定位「已发访客证」页签，不再单独弹卡 */
   } catch(err){
     hideMask();
