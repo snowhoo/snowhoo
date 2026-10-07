@@ -23,7 +23,10 @@ layout: false
     var b = document.createElement('div'); b.className = 'brand';
     if (l){ var im = document.createElement('img'); im.className = 'brand-logo'; im.src = l; im.alt = '';
       im.onerror = function(){ im.style.display = 'none'; }; b.appendChild(im); }
-    if (n){ var sp = document.createElement('span'); sp.className = 'brand-name'; sp.textContent = n; b.appendChild(sp); }
+    if (n){ var sp = document.createElement('span'); sp.className = 'brand-name'; sp.textContent = n;
+      var en = (window.COMPANY_NAME_EN || '').trim();
+      if (en){ var se = document.createElement('span'); se.className = 'brand-en'; se.textContent = en; sp.appendChild(se); }
+      b.appendChild(sp); }
     hd.insertBefore(b, hd.firstChild);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderBrand);
@@ -60,9 +63,10 @@ layout: false
     transition:background .15s,color .15s;user-select:none}
   .subtab:hover{color:var(--brand)}
   .subtab.active{background:#fff;color:var(--brand);box-shadow:0 1px 3px rgba(15,23,42,.12);cursor:default}
-  header.top .brand{display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:20px}
+  header.top .brand{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:20px;width:100%}
   header.top .brand-logo{height:32px;object-fit:contain}
-  header.top .brand-name{font-size:17px;font-weight:700;letter-spacing:0px}
+  header.top .brand-name{font-size:17px;font-weight:700;letter-spacing:0px;display:flex;flex-direction:column;align-items:center;line-height:1.25}
+  header.top .brand-name .brand-en{font-size:11px;font-weight:500;color:#6b7785;letter-spacing:.5px;margin-top:2px}
   .pass-top .pt-logo{height:26px;max-width:110px;object-fit:contain;display:block}
   .card{}
   .field{display:flex;flex-wrap:wrap;align-items:center;margin-bottom:10px}
@@ -99,37 +103,44 @@ layout: false
     box-shadow:0 10px 30px rgba(29,78,216,.25);border:1px solid #d7e0f5}
   .pass-top{background:linear-gradient(135deg,var(--pass),#3b82f6);color:#fff;padding:14px 18px;
     display:flex;justify-content:space-between;align-items:center}
-  .pass-top .t1{font-size:16px;font-weight:700;letter-spacing:1px}
+  .pass-top .t1{font-size:16px;font-weight:700;letter-spacing:1px;display:flex;flex-direction:column;align-items:center;line-height:1.2}
+  .pass-top .t1-en{font-size:10px;font-weight:500;opacity:.85;letter-spacing:1px;margin-top:2px}
   .pass-sub{text-align:center;padding:10px 18px 0;font-size:12px;color:#6b7785;letter-spacing:2px}
   .pass-title{display:flex;flex-direction:column;line-height:1.8}
   .pass-title .zh{font-size:15px;font-weight:700;color:var(--ink)}
   .pass-title .en{font-size:11px;color:#6b7785;letter-spacing:2px}
   .pass-body{padding:18px}
-  .pass-head{display:flex;gap:14px;align-items:center;margin-bottom:14px}
+  .pass-head{display:flex;gap:14px;align-items:flex-end;margin-bottom:14px}
   .pass-photo{flex:0 0 auto;width:92px;height:116px;border-radius:10px;background:#eef2f7;
     border:1px dashed #c4cedd;display:flex;flex-direction:column;align-items:center;justify-content:center;
     color:#9aa7b8;overflow:hidden}
   .pass-photo svg{width:48px;height:48px;display:block}
-  .pass-photo .ph-txt{font-size:11px;margin-top:6px;letter-spacing:1px;color:#9aa7b8}
+  .pass-photo .ph-txt{font-size:11px;margin-top:6px;letter-spacing:1px;color:#9aa7b8;text-align:center}
   /* 性别着色：由身份证第17位判定，无法判断时保持原样（无 g-* 类）。淡彩50%透明度，避免过重 */
   .pass-photo.g-female{background:rgba(249,168,212,.2);border-color:#fbcfe8;color:rgba(236,72,153,.2)}
   .pass-photo.g-female .ph-txt{color:rgba(236,72,153,.2)}
   .pass-photo.g-male{background:rgba(147,197,253,.2);border-color:#bfdbfe;color:rgba(37,99,235,.2)}
   .pass-photo.g-male .ph-txt{color:rgba(37,99,235,.2)}
   .pass-idbox{flex:1;min-width:0}
+  .pass-idbox .nm-row{display:flex;align-items:flex-end;gap:10px}
   .pass-idbox .nm{font-size:24px;font-weight:800;line-height:1.2;word-break:break-all}
+  .pass-idbox .role{font-size:11px;color:#9aa7b4;letter-spacing:1px;line-height:1.2;white-space:nowrap;margin-bottom:3px}
   .pass-idbox .un{font-size:13px;color:var(--sub);margin-top:5px;word-break:break-all}
-  .pass-idbox .pid{font-size:12px;color:var(--sub);margin-top:7px;word-break:break-all;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .pass-idbox .pid{font-size:14px;color:var(--sub);margin-top:7px;word-break:break-all}
+  .pass-idbox .pid .ek{display:inline;margin-left:4px;font-size:10px;color:#9aa7b4;letter-spacing:1px}
   .pass-info{border-top:1px dashed var(--line);padding-top:0px}
   .pass-info .row{display:flex;font-size:14px;padding:5px 0;border-bottom:1px solid #f1f5f9}
-  .pass-info .row .k{color:var(--sub);width:74px;flex:0 0 auto}
+  .pass-info .row .k{color:var(--sub);flex:0 0 auto;white-space:nowrap;padding-right:10px}
   .pass-info .row .v{flex:1;text-align:right;word-break:break-all}
+  .pass-info .row .k .ek{display:inline;margin-left:6px;font-size:10px;color:#9aa7b4;letter-spacing:1px}
   .pass-id{margin-top:14px;background:#f1f5fb;border-radius:10px;padding:10px 12px;text-align:center}
   .pass-id .lbl{font-size:11px;color:var(--sub);letter-spacing:1px}
   .pass-id .num{font-size:18px;font-weight:800;letter-spacing:1px;color:var(--pass);font-family:ui-monospace,Menlo,Consolas,monospace}
   .pass-bar{display:block;margin:14px auto 0;max-width:100%;min-width:100%;height:auto}
   .pass-tip{text-align:center;color:var(--pass);font-size:13px;font-weight:600;padding:12px 16px 4px}
   .pass-note{text-align:center;color:var(--sub);font-size:11px;letter-spacing:1px;padding:0 16px 14px;opacity:.85}
+  .pass-tip .en{display:block;font-size:11px;font-weight:400;opacity:.85;margin-top:3px;letter-spacing:.3px}
+  .pass-note .en{display:block;font-size:10px;margin-top:2px}
   .hint{margin-top:16px;font-size:12px;color:var(--sub);text-align:center;line-height:1.6}
   /* 等待遮罩 + 模拟进度条：提交等待期间的视觉反馈，避免误以为卡死（与 out/oout 同款） */
   .wait-mask{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:99}
@@ -549,30 +560,32 @@ function passCardHtml(rec, coBtnHtml){
   var gcls = gid === 2 ? ' g-female' : (gid === 1 ? ' g-male' : '');
   return '<div class="pass-top">' +
       (passLogo ? '<img class="pt-logo" src="' + passLogo + '" alt="" onerror="this.style.display=\'none\'">' : '') +
-      '<span class="t1">' + esc(companyName || '访客通行卡') + '</span></div>' +
+      '<span class="t1">' + esc(companyName || '访客通行卡') +
+        ((window.COMPANY_NAME_EN||'').trim() ? '<span class="t1-en">' + esc((window.COMPANY_NAME_EN||'').trim()) + '</span>' : '') +
+      '</span></div>' +
     '<div class="pass-sub"><div class="pass-title"><div class="zh">访客证</div><div class="en">VISITOR PASS</div></div>' + (coBtnHtml || '') + '</div>' +
     '<div class="pass-body">' +
       '<div class="pass-head">' +
         '<div class="pass-photo' + gcls + '">' +
           '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/>' +
           '<path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7v1H4z"/></svg>' +
-          '<span class="ph-txt">证件照片</span></div>' +
-        '<div class="pass-idbox"><div class="nm">' + esc(rec.name) + '</div>' +
-          '<div class="un">' + (rec.unit ? esc(rec.unit) : '来访人员') + '</div>' +
-          '<div class="pid">证件号 ' + esc(maskId(dispId(rec))) + '</div>' +
-          '<div class="pid">手机 ' + esc(maskPhone(dispPhone(rec))) + '</div></div>' +
+          '<span class="ph-txt">证件照片 PHOTO</span></div>' +
+        '<div class="pass-idbox">' +
+          '<div class="nm-row"><div class="nm">' + esc(rec.name) + '</div><div class="role">来访人员 VISITOR</div></div>' +
+          '<div class="un">' + (rec.unit ? esc(rec.unit) : '—') + '</div>' +
+          '<div class="pid">证件 <span class="ek">ID NO.</span> ' + esc(maskId(dispId(rec))) + '</div>' +
+          '<div class="pid">手机 <span class="ek">MOBILE</span> ' + esc(maskPhone(dispPhone(rec))) + '</div></div>' +
       '</div>' +
       '<div class="pass-info">' +
-        '<div class="row"><span class="k">拜访</span><span class="v">' + esc(rec.visitPerson) + '</span></div>' +
-        '<div class="row"><span class="k">事由</span><span class="v">' + esc(reasons) + '</span></div>' +
-        '<div class="row"><span class="k">访问时间</span><span class="v">' + esc(fmtTime(visitTimeOf(rec))) + '</span></div>' +
-        (rec.registrar ? '<div class="row"><span class="k">登记人</span><span class="v">' + esc(rec.registrar) + '</span></div>' : '') +
+        '<div class="row"><span class="k">拜访人员<span class="ek">VISIT</span></span><span class="v">' + esc(rec.visitPerson) + '</span></div>' +
+        '<div class="row"><span class="k">拜访事由<span class="ek">REASON</span></span><span class="v">' + esc(reasons) + '</span></div>' +
+        '<div class="row"><span class="k">访问时间<span class="ek">TIME IN</span></span><span class="v">' + esc(fmtTime(visitTimeOf(rec))) + '</span></div>' +
       '</div>' +
-      '<div class="pass-id"><div class="lbl">访客证号</div><div class="num">' + esc(rec.id) + '</div></div>' +
+      '<div class="pass-id"><div class="lbl">访客证号 PASS NO.</div></div>' +
       '<svg class="pass-bar"></svg>' +
     '</div>' +
-    '<div class="pass-tip">请截屏保存备查，方便门禁扫码通行</div>' +
-    '<div class="pass-note">个人信息已脱敏</div>';
+    '<div class="pass-tip">请截屏保存备查，方便门禁扫码通行<div class="en">Please screenshot for gate QR scan</div></div>' +
+    '<div class="pass-note">个人信息已脱敏<div class="en">PII masked</div></div>';
 }
 /* ====== 统一离厂卡片组件：已发访客证 / 离厂查询 两页签共用一套 ====== */
 var BARCODE_OPT = { format:'CODE128', width:2, height:48, displayValue:true, fontSize:13, margin:0, lineColor:'#1f2733', background:'#ffffff' };
