@@ -693,6 +693,7 @@ async function renderMyPasses(){
   var stale = verified.filter(function(v){ return !v.keep; }).map(function(v){ return v.rec.id; });
   if (stale.length) stale.forEach(removePass);                 /* 已签离/已删的清缓存 */
   list = verified.filter(function(v){ return v.keep; }).map(function(v){ return v.rec; });
+  list.sort(function(a,b){ return visitTimeOf(b) - visitTimeOf(a); });   /* 已发访客证：新到旧 */
   updateIssuedTab(list.length);
   if (!list.length){
     if (fc && fc.style.display === 'none'){
@@ -796,7 +797,8 @@ async function doLeave(id){
        （已发访客证页签 VISITORS 为空、缓存即将移除，旧取数方式会拿不到 rec 导致早退卡「签离中…」） */
     markLeftCard(id, function(){ return v; });
     removePass(id);
-    hideMask();   /* 卡片就地盖章已是明确反馈，不再弹文字提示 */
+    setLeaveMsg('', '');   /* 签离成功：清掉「登记离厂中…」残留提示（卡片就地盖章已是明确反馈） */
+    hideMask();
   } catch(err){
     hideMask();
     setLeaveMsg(err.message || '离厂登记失败', 'err');
