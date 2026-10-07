@@ -5,8 +5,12 @@
    LOGO_PASS：访客单（pass）顶部专用 logo，独立于页头 logo；留空时回退用 COMPANY_LOGO */
 window.REGISTRAR_DEFAULT = '蒋雯';
 window.COMPANY_NAME = '苏州晶讯科技股份有限公司';
+window.COMPANY_NAME_EN = 'Suzhou Semitel Technology Co., Ltd.';
 window.COMPANY_LOGO = 'logo.png';
 window.LOGO_PASS = 'logo_pass.png'
+
+/* 管理员密码（明文）：防止误操作的二次确认，用于清空回收站 / 彻底删除 / 清理云端。留空则不拦截 */
+window.ADMIN_PWD = '123'
 
 /* ====== 地址配置（迁移时改这里即可） ======
    LOCAL_WALINE：本地 waline-mini 地址（如 'http://192.168.1.10:8360'）；留空 = 自动跟随访问地址(:8360)
