@@ -572,8 +572,8 @@ function passCardHtml(rec, coBtnHtml){
           '<span class="ph-txt">证件照片 PHOTO</span></div>' +
         '<div class="pass-idbox">' +
           '<div class="nm-row"><div class="nm">' + esc(rec.name) + '</div><div class="role">来访人员 VISITOR</div></div>' +
-          '<div class="un">' + (rec.unit ? esc(rec.unit) : '—') + '</div>' +
-          '<div class="pid">证件 <span class="ek">ID NO.</span> ' + esc(maskId(dispId(rec))) + '</div>' +
+          (rec.unit ? '<div class="un">' + esc(rec.unit) + '</div>' : '') +
+          '<div class="pid">证件 <span class="ek">ID</span> ' + esc(maskId(dispId(rec))) + '</div>' +
           '<div class="pid">手机 <span class="ek">MOBILE</span> ' + esc(maskPhone(dispPhone(rec))) + '</div></div>' +
       '</div>' +
       '<div class="pass-info">' +
