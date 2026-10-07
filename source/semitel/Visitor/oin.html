@@ -793,8 +793,8 @@ async function doLeave(id){
   var v = byIdFromVisitors(id) || passById(id);
   if (!v) return;
   var btn = document.querySelector('.mypass-co[data-leave="' + id + '"]');
-  if (btn){ btn.disabled = true; btn.textContent = '签离中… / Checking out'; }
-  setLeaveMsg('登记离厂中… / Checking out', '');
+  if (btn){ btn.disabled = true; btn.textContent = '签离中 Checking out'; }
+  setLeaveMsg('登记离厂中 Checking out', '');
   showMask('正在登记离厂…', 'Writing check-out');
   var now = Date.now();
   var rec = {
