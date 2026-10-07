@@ -122,9 +122,9 @@ layout: false
   .pass-photo.g-male{background:rgba(147,197,253,.2);border-color:#bfdbfe;color:rgba(37,99,235,.2)}
   .pass-photo.g-male .ph-txt{color:rgba(37,99,235,.2)}
   .pass-idbox{flex:1;min-width:0}
-  .pass-idbox .nm-row{display:flex;align-items:flex-end;gap:10px}
+  .pass-idbox .nm-row{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
   .pass-idbox .nm{font-size:24px;font-weight:800;line-height:1.2;word-break:break-all}
-  .pass-idbox .role{font-size:11px;color:#9aa7b4;letter-spacing:1px;line-height:1.2;white-space:nowrap;margin-bottom:3px}
+  .pass-idbox .role{font-size:11px;color:#9aa7b4;letter-spacing:1px;line-height:1.2;white-space:nowrap}
   .pass-idbox .un{font-size:13px;color:var(--sub);margin-top:5px;word-break:break-all}
   .pass-idbox .pid{font-size:14px;color:var(--sub);margin-top:7px;word-break:break-all}
   .pass-idbox .pid .ek{display:inline;margin-left:4px;font-size:10px;color:#9aa7b4;letter-spacing:1px}
@@ -571,8 +571,8 @@ function passCardHtml(rec, coBtnHtml){
           '<path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7v1H4z"/></svg>' +
           '<span class="ph-txt">证件照片 PHOTO</span></div>' +
         '<div class="pass-idbox">' +
-          '<div class="nm-row"><div class="nm">' + esc(rec.name) + '</div><div class="role">来访人员 VISITOR</div></div>' +
-          (rec.unit ? '<div class="un">' + esc(rec.unit) + '</div>' : '') +
+          '<div class="nm-row"><div class="role">来访人员 VISITOR</div><div class="nm">' + esc(rec.name) + '</div></div>' +
+          (rec.unit ? '<div class="un">' + esc(rec.unit) + '</div>' : '<div class="un">&nbsp;</div>') +
           '<div class="pid">证件 <span class="ek">ID</span> ' + esc(maskId(dispId(rec))) + '</div>' +
           '<div class="pid">手机 <span class="ek">MOBILE</span> ' + esc(maskPhone(dispPhone(rec))) + '</div></div>' +
       '</div>' +
