@@ -752,7 +752,7 @@ document.getElementById('lf').addEventListener('submit', async function(ev){
   function showMatched(matched){
     if (!matched.length){ updateManualSub(0); setLeaveMsg('未找到匹配的访客记录 / No matching record', 'err'); renderResult([]); return; }
     var show = matched.filter(function(v){ return !isLeft(v); });   /* 已离厂记录不列出 */
-    if (!show.length){ updateManualSub(0); setLeaveMsg('匹配记录均已离厂，无需重复签离 / Already checked out', 'err'); renderResult([]); }
+    if (!show.length){ updateManualSub(0); setLeaveMsg('匹配记录均已离厂 Already checked out', 'err'); renderResult([]); }
     else { updateManualSub(show.length); setLeaveMsg('', ''); renderResult(show); }   /* 清掉上一轮操作残留提示 */
   }
   try {
