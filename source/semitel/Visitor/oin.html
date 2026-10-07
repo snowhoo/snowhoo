@@ -160,7 +160,7 @@ layout: false
 .mypass-co{display:inline-flex;align-items:center;justify-content:center;height:30px;padding:0 12px;border:1px solid #16a34a;border-radius:8px;background:#fff;color:#16a34a;font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer;box-sizing:border-box}
 .mypass-co:disabled{opacity:.6;cursor:not-allowed}
 .mypass-item .pass-sub{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left}
-/* 「正在访问...」按钮 + 「离厂请点击」提示：呼吸跳动动画 */
+/* 「正在访问」按钮 + 「离厂请点击」提示：呼吸跳动动画 */
 .co-wrap{display:inline-flex;flex-direction:column;align-items:center;gap:3px}
 .co-tip{font-size:10px;color:#16a34a;letter-spacing:1px;animation:coBlink 2.4s ease-in-out infinite}
 .co-tip .co-ico{width:11px;height:11px;vertical-align:-1.5px;margin-right:1px}
@@ -550,7 +550,7 @@ function passCardHtml(rec, coBtnHtml){
   return '<div class="pass-top">' +
       (passLogo ? '<img class="pt-logo" src="' + passLogo + '" alt="" onerror="this.style.display=\'none\'">' : '') +
       '<span class="t1">' + esc(companyName || '访客通行卡') + '</span></div>' +
-    '<div class="pass-sub"><div class="pass-title"><div class="zh">访客通行证</div><div class="en">VISITOR PASS</div></div>' + (coBtnHtml || '') + '</div>' +
+    '<div class="pass-sub"><div class="pass-title"><div class="zh">访客证</div><div class="en">VISITOR PASS</div></div>' + (coBtnHtml || '') + '</div>' +
     '<div class="pass-body">' +
       '<div class="pass-head">' +
         '<div class="pass-photo' + gcls + '">' +
@@ -568,7 +568,7 @@ function passCardHtml(rec, coBtnHtml){
         '<div class="row"><span class="k">访问时间</span><span class="v">' + esc(fmtTime(visitTimeOf(rec))) + '</span></div>' +
         (rec.registrar ? '<div class="row"><span class="k">登记人</span><span class="v">' + esc(rec.registrar) + '</span></div>' : '') +
       '</div>' +
-      '<div class="pass-id"><div class="lbl">访客通行证号</div><div class="num">' + esc(rec.id) + '</div></div>' +
+      '<div class="pass-id"><div class="lbl">访客证号</div><div class="num">' + esc(rec.id) + '</div></div>' +
       '<svg class="pass-bar"></svg>' +
     '</div>' +
     '<div class="pass-tip">请截屏保存备查，方便门禁扫码通行</div>' +
@@ -576,11 +576,11 @@ function passCardHtml(rec, coBtnHtml){
 }
 /* ====== 统一离厂卡片组件：已发访客证 / 离厂查询 两页签共用一套 ====== */
 var BARCODE_OPT = { format:'CODE128', width:2, height:48, displayValue:true, fontSize:13, margin:0, lineColor:'#1f2733', background:'#ffffff' };
-/* 签离按钮：未离=绿钮「正在访问...」，已离=禁用「已离厂」 */
+/* 签离按钮：未离=绿钮「正在访问」，已离=禁用「已离厂」 */
 function coBtnHtml(id, done){
   return done
     ? '<button type="button" class="mypass-co" disabled>已离厂</button>'
-    : '<span class="co-wrap"><button type="button" class="mypass-co co-pulse" data-leave="' + esc(id) + '">正在访问...</button>'
+    : '<span class="co-wrap"><button type="button" class="mypass-co co-pulse" data-leave="' + esc(id) + '">正在访问</button>'
       + '<span class="co-tip"><svg class="co-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6a1.5 1.5 0 0 0-3 0v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg>离厂请点击</span></span>';
 }
 /* 单张胸卡条目：done 时置灰 + 打「已失效」章 */
@@ -714,7 +714,7 @@ function renderResult(list){
   drawBarcodes(box, byIdFromVisitors);
 }
 
-/* 统一签离委托：两页签所有「正在访问...」按钮（data-leave）都走 doLeave */
+/* 统一签离委托：两页签所有「正在访问」按钮（data-leave）都走 doLeave */
 document.addEventListener('click', function(e){
   var t = e.target;
     if (t && t.dataset && t.dataset.leave){
@@ -748,7 +748,7 @@ async function doLeave(id){
   } catch(err){
     hideMask();
     setLeaveMsg(err.message || '离厂登记失败', 'err');
-    if (btn){ btn.disabled = false; btn.textContent = '正在访问...'; }
+    if (btn){ btn.disabled = false; btn.textContent = '正在访问'; }
   }
 }
 
