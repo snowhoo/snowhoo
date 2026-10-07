@@ -588,7 +588,7 @@ function passCardHtml(rec, coBtnHtml){
     '<div class="pass-note">个人信息已脱敏<div class="en">PII masked</div></div>';
 }
 /* ====== 统一离厂卡片组件：已发访客证 / 离厂查询 两页签共用一套 ====== */
-var BARCODE_OPT = { format:'CODE128', width:2, height:48, displayValue:true, fontSize:13, margin:0, lineColor:'#1f2733', background:'#ffffff' };
+var BARCODE_OPT = { format:'CODE128', width:2, height:36, displayValue:true, fontSize:13, margin:0, lineColor:'#1f2733', background:'#ffffff' };
 /* 签离按钮：未离=绿钮「正在访问」，已离=禁用「已离厂」 */
 function coBtnHtml(id, done){
   return done
