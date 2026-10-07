@@ -240,7 +240,7 @@ else ensureBarcodeLib(function(){});
           <label class="chk"><input type="checkbox" value="其它">其它</label>
         </div>
         <span class="ferr" id="reasonErr"></span>
-        <input type="text" id="reasonOther" class="reason-other" placeholder="请填写具体事由（选填）" maxlength="20" disabled>
+        <input type="text" id="reasonOther" class="reason-other" placeholder="请填写具体事由（选填）" maxlength="20">
         </div>
       <button type="submit" class="submit" id="submitBtn">提交登记</button>
       <div class="msg" id="msg"></div>
@@ -426,10 +426,6 @@ var reasonOther = document.getElementById('reasonOther');
 reasonsBox.addEventListener('change', function(e){
   if (e.target && e.target.type === 'checkbox'){
     e.target.closest('.chk').classList.toggle('on', e.target.checked);
-    if (e.target.value === '其它'){
-      reasonOther.disabled = !e.target.checked;
-      if (e.target.checked){ reasonOther.focus(); } else { reasonOther.value = ''; }
-    }
   }
 });
 
@@ -483,10 +479,9 @@ document.getElementById('f').addEventListener('submit', async function(ev){
   var phone = document.getElementById('phone').value.trim();
   var unit = document.getElementById('unit').value.trim();
   var visitPerson = document.getElementById('visitPerson').value.trim();
-  var reasons = Array.prototype.slice.call(reasonsBox.querySelectorAll('input:checked')).map(function(c){
-    if (c.value === '其它'){ var t = reasonOther.value.trim(); return t || '其它'; }
-    return c.value;
-  });
+  var reasons = Array.prototype.slice.call(reasonsBox.querySelectorAll('input:checked')).map(function(c){ return c.value; });
+  var otherText = (reasonOther.value || '').trim();
+  if (otherText){ if (reasons.length){ reasons[0] = reasons[0] + '-' + otherText; } else { reasons.push(otherText); } }
 
   if (!name){ showNameErr('请填写访客姓名'); return; }
   if (!idNumber){ showIdErr('请填写身份证号'); return; }
@@ -495,7 +490,7 @@ document.getElementById('f').addEventListener('submit', async function(ev){
   var phoneCheck = validPhone(phone);
   if (phoneCheck !== true){ showPhoneErr(phoneCheck); return; }
   if (!visitPerson){ showVisitErr('请填写拜访人'); return; }
-  if (!reasons.length){ showReasonErr('请至少勾选一项来访事由'); return; }
+  if (!reasons.length){ showReasonErr('请至少勾选一项来访事由或填写具体事由'); return; }
 
   var btn = document.getElementById('submitBtn');
   btn.disabled = true; setMsg('提交中…', '');
@@ -814,7 +809,7 @@ function resetForm(){
   var f = document.getElementById('f');
   if (f) f.reset();
   reasonsBox.querySelectorAll('.chk.on').forEach(function(c){ c.classList.remove('on'); });
-  reasonOther.disabled = true; reasonOther.value = '';
+  reasonOther.value = '';
   var b = document.getElementById('submitBtn'); if (b) b.disabled = false;
   setMsg('', '');
 }
