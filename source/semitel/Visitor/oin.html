@@ -644,7 +644,7 @@ var BARCODE_OPT = { format:'CODE128', width:2, height:36, displayValue:true, fon
 /* 签离按钮：未离=绿钮「正在访问」，已离=禁用「已离厂」 */
 function coBtnHtml(id, done){
   return done
-    ? '<button type="button" class="mypass-co" disabled>已离厂 / Checked out</button>'
+    ? '<button type="button" class="mypass-co" disabled>已离厂 Checked out</button>'
     : '<span class="co-wrap"><button type="button" class="mypass-co co-pulse" data-leave="' + esc(id) + '">正在访问 Visiting</button>'
       + '<span class="co-tip"><svg class="co-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6a1.5 1.5 0 0 0-3 0v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg>离厂点击 Tap to check out</span></span>';
 }
@@ -694,14 +694,14 @@ async function renderMyPasses(){
   if (!list.length){
     if (fc && fc.style.display === 'none'){
       box.innerHTML = '<div class="mypass-wrap">'
-        + '<div class="mypass-list"><div style="color:var(--sub);font-size:13px;padding:10px 0;text-align: center">暂无已发访客证 / No issued passes</div></div></div>';
+        + '<div class="mypass-list"><div style="color:var(--sub);font-size:13px;padding:10px 0;text-align: center">暂无已发访客证 No issued passes</div></div></div>';
       box.style.display = '';
     } else { box.innerHTML = ''; box.style.display = 'none'; }
     return;
   }
   box.style.display = '';
   box.innerHTML = '<div class="mypass-wrap">'
-    + '<div class="mypass-list"><div style="color:var(--sub);font-size:13px;padding:10px 0;text-align: center">正在校验访客证实际状态… / Verifying pass status</div></div></div>';
+    + '<div class="mypass-list"><div style="color:var(--sub);font-size:13px;padding:10px 0;text-align: center">正在校验访客证实际状态… Verifying pass status</div></div></div>';
   var verified = await verifyPasses(list);
   var stale = verified.filter(function(v){ return !v.keep; }).map(function(v){ return v.rec.id; });
   if (stale.length) stale.forEach(removePass);                 /* 已签离/已删的清缓存 */
@@ -711,7 +711,7 @@ async function renderMyPasses(){
   if (!list.length){
     if (fc && fc.style.display === 'none'){
       box.innerHTML = '<div class="mypass-wrap">'
-        + '<div class="mypass-list"><div style="color:var(--sub);font-size:13px;padding:10px 0">暂无已发访客证 / No issued passes</div></div></div>';
+        + '<div class="mypass-list"><div style="color:var(--sub);font-size:13px;padding:10px 0">暂无已发访客证 No issued passes</div></div></div>';
     } else { box.innerHTML = ''; box.style.display = 'none'; }
     return;
   }
@@ -793,7 +793,7 @@ async function doLeave(id){
   var v = byIdFromVisitors(id) || passById(id);
   if (!v) return;
   var btn = document.querySelector('.mypass-co[data-leave="' + id + '"]');
-  if (btn){ btn.disabled = true; btn.textContent = '签离中…'; }
+  if (btn){ btn.disabled = true; btn.textContent = '签离中… / Checking out'; }
   setLeaveMsg('登记离厂中… / Checking out', '');
   showMask('正在登记离厂…', 'Writing check-out');
   var now = Date.now();
