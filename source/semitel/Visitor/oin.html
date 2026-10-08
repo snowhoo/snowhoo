@@ -506,7 +506,7 @@ document.getElementById('f').addEventListener('submit', async function(ev){
   if (!reasons.length){ showReasonErr('请至少勾选一项来访事由或填写具体事由 Select a reason or fill in details'); return; }
 
   var btn = document.getElementById('submitBtn');
-  btn.disabled = true; setMsg('提交中… / Submitting', '');
+  btn.disabled = true; setMsg('提交中 Submitting', '');
   showMask('正在提交登记…', 'Writing registration');
 
   var now = Date.now();
@@ -526,7 +526,7 @@ document.getElementById('f').addEventListener('submit', async function(ev){
     showTab('issued');                 /* 提交成功直接定位「已发访客证」页签，不再单独弹卡 */
   } catch(err){
     hideMask();
-    setMsg(err.message || '提交失败，请重试 / Submission failed, please retry', 'err');
+    setMsg(err.message || '提交失败，请重试 Submission failed, please retry', 'err');
     btn.disabled = false;
   }
 });
@@ -750,7 +750,7 @@ document.getElementById('lf').addEventListener('submit', async function(ev){
     if (s) s.textContent = n > 0 ? ('手动查询（' + n + '）') : '手动查询';
   }
   function showMatched(matched){
-    if (!matched.length){ updateManualSub(0); setLeaveMsg('未找到匹配的访客记录 / No matching record', 'err'); renderResult([]); return; }
+    if (!matched.length){ updateManualSub(0); setLeaveMsg('未找到匹配的访客记录 No matching record', 'err'); renderResult([]); return; }
     var show = matched.filter(function(v){ return !isLeft(v); });   /* 已离厂记录不列出 */
     if (!show.length){ updateManualSub(0); setLeaveMsg('匹配记录均已离厂 Already checked out', 'err'); renderResult([]); }
     else { updateManualSub(show.length); setLeaveMsg('', ''); renderResult(show); }   /* 清掉上一轮操作残留提示 */
@@ -762,7 +762,7 @@ document.getElementById('lf').addEventListener('submit', async function(ev){
     showMatched(matchAll(VISITORS));
   } catch(e){
     updateManualSub(0);
-    setLeaveMsg('查询失败 / Query failed: ' + (e.message || e), 'err');
+    setLeaveMsg('查询失败 Query failed: ' + (e.message || e), 'err');
     renderResult([]);
   }
   hideMask();
@@ -814,7 +814,7 @@ async function doLeave(id){
     hideMask();
   } catch(err){
     hideMask();
-    setLeaveMsg(err.message || '离厂登记失败 / Check-out failed', 'err');
+    setLeaveMsg(err.message || '离厂登记失败 Check-out failed', 'err');
     if (btn){ btn.disabled = false; btn.textContent = '正在访问'; }
   }
 }
