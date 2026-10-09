@@ -1,14 +1,14 @@
-[2026/10/08 ���� 18:00:00.99] === catalog_toc.bat START === 
-[周四 2026/10/08 18:00:01.06] === step 1/2 incremental catalog + toc === 
+[2026/10/09 ���� 18:00:00.97] === catalog_toc.bat START === 
+[周五 2026/10/09 18:00:01.08] === step 1/2 incremental catalog + toc === 
 [INFO] 预热并解析书库首页...
 [INFO] 书库总页数：1
 [INFO] 多线程收集书库列表（第 1~1 页，workers=20）...
 [INFO] 书库列表共收集到 0 本书
 [ERROR] 书库列表解析为 0 本，疑似被反爬限流或返回空壳页，终止本次抓取（不更新数据）。
-[周四 2026/10/08 18:00:03.01] crawl exit=0 
-[周四 2026/10/08 18:00:03.01] === count toc.json on disk === 
+[周五 2026/10/09 18:00:02.69] crawl exit=0 
+[周五 2026/10/09 18:00:02.69] === count toc.json on disk === 
 [info] toc.json on disk = 10773
-[周四 2026/10/08 18:00:06.60] === step 2/2 upload index + toc to R2 === 
+[周五 2026/10/09 18:00:06.45] === step 2/2 upload index + toc to R2 === 
 [INFO] 待处理 10782 个文件 (dry=False, force=False)
 [INFO] 列举桶内已有对象以做增量比对...
   [进度] 200/10782 (1.9%)  OK:0 SKIP:200 FAIL:0
@@ -67,4 +67,4 @@
   [进度] 10782/10782 (100.0%)  OK:0 SKIP:10782 FAIL:0
 [DONE] 上传成功 0，跳过 10782，失败 0
 [INFO] 公开访问基址: https://pub-d583e3093dc1438882b43509c1571302.r2.dev/
-[周四 2026/10/08 18:00:54.36] upload exit=0 
+[周五 2026/10/09 18:00:51.42] upload exit=0 
