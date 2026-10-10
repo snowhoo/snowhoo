@@ -632,7 +632,6 @@ function passCardHtml(rec, coBtnHtml){
         '<div class="row"><span class="k">拜访人员<span class="ek">VISIT</span></span><span class="v">' + esc(rec.visitPerson) + '</span></div>' +
         '<div class="row"><span class="k">拜访事由<span class="ek">REASON</span></span><span class="v">' + esc(reasons) + '</span></div>' +
         '<div class="row"><span class="k">访问时间<span class="ek">TIME IN</span></span><span class="v">' + esc(fmtTime(visitTimeOf(rec))) + '</span></div>' +
-        '<div class="row"><span class="k">离厂时间<span class="ek">TIME OUT</span></span><span class="v">' + (rec.leaveTime ? esc(fmtTime(rec.leaveTime)) : '') + '</span></div>' +
       '</div>' +
       '<div class="pass-id"><div class="lbl">访客证号 PASS NO.</div></div>' +
       '<svg class="pass-bar"></svg>' +
