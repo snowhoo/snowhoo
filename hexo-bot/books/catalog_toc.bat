@@ -50,8 +50,9 @@ echo.
 
 echo [%date% %time%] === step 1/2 incremental catalog + toc === >> "%LOG%"
 echo [step 1/2] incremental catalog + toc crawl ... (see %LOG% for live detail)
-"%PY%" "%SCRIPT%" --toc --no-mirror 2>&1 | "%PY%" -u tee.py "%LOG%"
-set /a RC=%errorlevel%
+REM redirect straight to the log (no pipe) so %errorlevel% is the crawl's real exit code
+"%PY%" "%SCRIPT%" --toc --no-mirror >> "%LOG%" 2>&1
+set "RC=%errorlevel%"
 echo [%date% %time%] crawl exit=%RC% >> "%LOG%"
 if not %RC%==0 (
   echo [ERR] crawl phase exit=%RC%. Usually lewx.cc is rate-limiting this IP.
@@ -65,8 +66,8 @@ echo.
 
 echo [%date% %time%] === step 2/2 upload index + toc to R2 === >> "%LOG%"
 echo [step 2/2] upload index + toc to R2 (skip content) ...
-"%PY%" "%UPLOAD%" --toc 2>&1 | "%PY%" -u tee.py "%LOG%"
-set /a RC=%errorlevel%
+"%PY%" "%UPLOAD%" --toc >> "%LOG%" 2>&1
+set "RC=%errorlevel%"
 echo [%date% %time%] upload exit=%RC% >> "%LOG%"
 if not %RC%==0 (
   echo [ERR] upload phase exit=%RC% - see %LOG%.
