@@ -119,7 +119,10 @@ S3_NS = '{http://s3.amazonaws.com/doc/2006-03-01/}'
 
 
 def list_objects(cfg, prefix=''):
-    """返回 {key: (etag_md5, size)}。单 part 上传的 ETag 即内容 MD5。"""
+    """返回 {key: (etag_md5, size)}。单 part 上传的 ETag 即内容 MD5。
+    列举可能跨多页，R2 偶发断开连接(RemoteDisconnected/超时)，加重试避免整脚本崩溃；
+    多次重试仍失败则放弃增量比对、退化为全量重传(PUT 幂等，安全)。
+    """
     existing = {}
     cont = None
     while True:
@@ -128,12 +131,25 @@ def list_objects(cfg, prefix=''):
             q['prefix'] = prefix
         if cont:
             q['continuation-token'] = cont
-        try:
-            resp = _request(cfg, 'GET', '/%s' % cfg['bucket'], query=q)
-            xml = resp.read().decode('utf-8')
-        except urllib.error.HTTPError as e:
-            print('[WARN] 列举桶失败:', e.code, e.read().decode('utf-8', 'ignore')[:300])
-            break
+        raw = None
+        for attempt in range(1, 6):
+            try:
+                resp = _request(cfg, 'GET', '/%s' % cfg['bucket'], query=q)
+                raw = resp.read()
+                break
+            except urllib.error.HTTPError as e:
+                print('[WARN] 列举桶失败(HTTP %s): %s' % (e.code, e.read().decode('utf-8', 'ignore')[:300]))
+                return existing
+            except (urllib.error.URLError, OSError, ConnectionError, TimeoutError) as e:
+                print('[WARN] 列举桶连接中断(第%d次重试): %s' % (attempt, e))
+                if attempt >= 5:
+                    print('[WARN] 列举桶多次失败，放弃增量比对，后续将全量重传(幂等)')
+                    return existing
+                time.sleep(1.5 * attempt)
+                continue
+        if raw is None:
+            return existing
+        xml = raw.decode('utf-8')
         root = ET.fromstring(xml)
         for c in root.iter(S3_NS + 'Contents'):
             key = c.findtext(S3_NS + 'Key')

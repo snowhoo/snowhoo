@@ -3,7 +3,7 @@ REM keep window open on double-click:
 REM   re-launch in its OWN detached cmd /k window (start gives it a separate console
 REM   that survives the launcher's exit). Passing _reenter as %1 prevents infinite loops.
 if "%~1"=="" (
-    start "" cmd /k "%~f0" _reenter
+    start "" cmd /c "%~f0" _reenter
     exit /b
 )
 setlocal
@@ -50,8 +50,8 @@ echo.
 
 echo [%date% %time%] === step 1/2 incremental catalog + toc === >> "%LOG%"
 echo [step 1/2] incremental catalog + toc crawl ... (see %LOG% for live detail)
-REM redirect straight to the log (no pipe) so %errorlevel% is the crawl's real exit code
-"%PY%" "%SCRIPT%" --toc --no-mirror >> "%LOG%" 2>&1
+REM run_and_log streams output BOTH to console and %LOG%, and exits with the child's real code (no cmd pipe on this line)
+"%PY%" run_and_log.py "%LOG%" "%SCRIPT%" --toc --no-mirror
 set "RC=%errorlevel%"
 echo [%date% %time%] crawl exit=%RC% >> "%LOG%"
 if not %RC%==0 (
@@ -66,7 +66,7 @@ echo.
 
 echo [%date% %time%] === step 2/2 upload index + toc to R2 === >> "%LOG%"
 echo [step 2/2] upload index + toc to R2 (skip content) ...
-"%PY%" "%UPLOAD%" --toc >> "%LOG%" 2>&1
+"%PY%" run_and_log.py "%LOG%" "%UPLOAD%" --toc
 set "RC=%errorlevel%"
 echo [%date% %time%] upload exit=%RC% >> "%LOG%"
 if not %RC%==0 (

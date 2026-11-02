@@ -91,21 +91,47 @@ def _throttle():
         _last_req[0] = time.time()
 
 
+def _merge_cookie(resp):
+    """把响应下发的 Set-Cookie 合并进全局 COOKIE（按名去重）。
+    lewx.cc 的 JS 跳转挑战命中后会下发会话令牌（如 q_tuc），复用它即可免去后续挑战。"""
+    global COOKIE
+    try:
+        sc = resp.headers.get_all("Set-Cookie") or []
+    except Exception:
+        return
+    if not sc:
+        return
+    with _cookie_lock:
+        pairs = COOKIE.split("; ") if COOKIE else []
+        names = {p.split("=")[0] for p in pairs if "=" in p}
+        for c in sc:
+            kv = c.split(";")[0].strip()
+            if "=" in kv:
+                k = kv.split("=", 1)[0].strip()
+                if k and k not in names:
+                    pairs.append(kv)
+                    names.add(k)
+        COOKIE = "; ".join(pairs)
+
+
 def fetch_html(url, referer=None, _depth=0):
     global COOKIE
     if _depth > RETRY:
         return None
     headers = {
         "User-Agent": UA,
-        "Cookie": COOKIE,
         "Accept-Language": "zh-CN,zh;q=0.9",
     }
+    if COOKIE:
+        headers["Cookie"] = COOKIE
     if referer:
         headers["Referer"] = referer
     _throttle()
     req = urllib.request.Request(url, headers=headers)
     try:
-        data = urllib.request.urlopen(req, timeout=TIMEOUT).read()
+        resp = urllib.request.urlopen(req, timeout=TIMEOUT)
+        data = resp.read()
+        _merge_cookie(resp)
     except (urllib.error.URLError, ConnectionError, TimeoutError) as e:
         if _depth < RETRY:
             time.sleep(MIN_INTERVAL * 2)
@@ -126,15 +152,20 @@ def fetch_html(url, referer=None, _depth=0):
             return fetch_html(url, referer, _depth + 1)
         return None
 
+    # JS 跳转挑战：lewx.cc 把 ?__K= 拆成字符串拼接写入 window.location，
+    # 故字面量 "?__K=" 不存在，须先还原拼接后的真实目标再跟随。
+    # 命中后服务端下发会话 cookie（如 q_tuc），由 _merge_cookie 接管，后续请求免挑战。
     m = re.search(r'window\.location\s*=\s*(.*?);', html, re.S)
-    if m and "?__K=" in m.group(1):
+    if m:
         parts = re.findall(r'"([^"]*)"', m.group(1))
         target = "".join(parts)
         if not target.startswith("http"):
             target = BASE + ("" if target.startswith("/") else "/") + target
-        if _depth == 0:
-            print("  [INFO] 跟随 JS 重定向 -> %s" % target)
-        return fetch_html(target, referer, _depth + 1)
+        if "__K" in target:
+            if _depth == 0:
+                print("  [INFO] 跟随 JS 跳转挑战 -> %s" % target)
+            time.sleep(0.2)
+            return fetch_html(target, referer, _depth + 1)
 
     return html
 
@@ -144,15 +175,19 @@ def warm_up():
 
 
 def is_bot_page(html):
-    """判断页面是否为反爬挑战/跳转页（当前 IP 被限流时，fetch_html 跟随 __K 跳转后仍会拿回这类页）。"""
+    """判断页面是否为反爬挑战/跳转页。lewx.cc 把 ?__K= 拆成字符串拼接，故需还原后再判定。"""
     if not html:
         return False
     if "ckc.js" in html[:800]:
         return True
     if "<title>Loading</title>" in html:
         return True
-    if "window.location" in html and "__K=" in html:
-        return True
+    if "window.location" in html:
+        rm = re.search(r'window\.location\s*=\s*(.*?);', html, re.S)
+        if rm:
+            target = "".join(re.findall(r'"([^"]*)"', rm.group(1)))
+            if "__K" in target:
+                return True
     return False
 
 
