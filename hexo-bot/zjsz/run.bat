@@ -6,7 +6,7 @@ echo  照见苏州 - 文章数据更新脚本
 echo ============================================
 
 set SCRIPTS_DIR=%~dp0
-set OUTPUT_DIR=D:\hexo\source\js\sevencolor\1
+set OUTPUT_DIR=e:\snowhoo\hexo\source\js\sevencolor\1
 
 echo 脚本目录: %SCRIPTS_DIR%
 echo 输出目录: %OUTPUT_DIR%
@@ -19,7 +19,7 @@ py -3 album_scraper.py --incremental --outdir "%OUTPUT_DIR%"
 
 echo.
 echo [2/2] 检查是否有更新，自动提交推送 ...
-cd /d "D:\hexo"
+cd /d "e:\snowhoo\hexo"
 git add -A source/js/sevencolor/1/
 git diff --cached --quiet
 if %errorlevel% equ 0 (
