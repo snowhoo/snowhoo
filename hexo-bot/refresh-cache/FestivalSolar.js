@@ -1,18 +1,19 @@
 // FestivalSolar.js - 自动刷新 FestivalSolar.json 中的节日节气日期
 // 原则：已过去的日期使用下一年的日期，未过去的日期使用当年的日期
-// 用法: node D:\hexo\hexo-bot\refresh-cache\FestivalSolar.js
+// 用法: node hexo-bot\refresh-cache\FestivalSolar.js
 
 'use strict';
 
 // 加载本地项目 node_modules 中的 lunar-javascript
-module.paths.unshift(require('path').join(__dirname, '..', '..', 'node_modules'));
+const path = require('path');
+module.paths.unshift(path.join(__dirname, '..', '..', 'node_modules'));
 
 const { Solar, Lunar } = require('lunar-javascript');
 const fs = require('fs');
 const { execSync } = require('child_process');
 
-const JSON_FILE = 'D:\\hexo\\source\\js\\FestivalSolar\\FestivalSolar.json';
-const HEXO_DIR = 'D:\\hexo';
+const JSON_FILE = path.join(__dirname, '..', '..', 'source', 'js', 'FestivalSolar', 'FestivalSolar.json');
+const HEXO_DIR = path.resolve(__dirname, '..', '..');
 
 // ---------- 节日定义 ----------
 // type: fixed(公历固定) | lunar(农历) | chuxi(除夕=春节前一天) | jieqi(节气)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
-d = r'D:\hexo\source\js\sevencolor\1\fo_data'
+from pathlib import Path
+d = Path(__file__).resolve().parents[3] / 'source' / 'js' / 'sevencolor' / '1' / 'fo_data'
 names = ['fo_01_feige','fo_02_nianfo','fo_03_zhouyu','fo_04_niansong',
          'fo_05_jizan','fo_06_fanyue','fo_07_youshengshu','fo_08_jiangzuo']
 total = 0

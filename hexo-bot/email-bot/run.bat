@@ -1,3 +1,3 @@
 @echo off
-cd /d D:\hexo
-"C:\Program Files\nodejs\node.exe" "D:\hexo\hexo-bot\email-bot\email-to-hexo.js"
+cd /d "%~dp0..\.."
+"C:\Program Files\nodejs\node.exe" "%~dp0email-to-hexo.js"

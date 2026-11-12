@@ -1,5 +1,5 @@
 @echo off
-cd /d D:\hexo
+cd /d "%~dp0..\.."
 node hexo-bot\refresh-cache\DailyPoetry.js
 timeout /t 10
 node hexo-bot\refresh-cache\HistoryToday.js

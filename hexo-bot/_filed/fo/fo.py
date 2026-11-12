@@ -4,11 +4,12 @@
 按用户8个分类输出单独JS文件
 """
 import urllib.request, ssl, re, json, os, time
+from pathlib import Path
 ssl._create_default_https_context = ssl._create_unverified_context
 
 HEADERS = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
 BASE = 'https://y.fzps.org'
-OUTPUT_DIR = r'D:\hexo\source\js\sevencolor\1\fo_data'
+OUTPUT_DIR = Path(__file__).resolve().parents[3] / 'source' / 'js' / 'sevencolor' / '1' / 'fo_data'
 
 # ===== 步骤1: 定义分类结构 =====
 # 从 lm.htm 提取的8个主分类及其子分类URL

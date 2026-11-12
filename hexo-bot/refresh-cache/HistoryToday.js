@@ -1,12 +1,14 @@
 ﻿// refresh-history-cache.js - pure Node.js, no PowerShell encoding issues
-// Run by: node D:\hexo\refresh-history-cache-node.js
+// Run by: node hexo-bot\refresh-cache\HistoryToday.js (from repo root)
 // Scheduled task calls this instead of .ps1
 
 const fs = require('fs');
 const { execSync } = require('child_process');
+const path = require('path');
+const HEXO_DIR = path.resolve(__dirname, '..', '..');
 
 const apiUrl = 'https://query.asilu.com/today/list/';
-const jsonFile = 'D:\\hexo\\source\\js\\HistoryToday.json';
+const jsonFile = path.join(HEXO_DIR, 'source', 'js', 'HistoryToday.json');
 
 function fetchApi(url) {
     const mod = url.startsWith('https') ? require('https') : require('http');
@@ -69,22 +71,22 @@ async function main() {
     console.log('[OK] Written ' + jsonFile + ' - ' + events.length + ' events');
 
     // git timestamp
-    const gitTs = runGit('git log -1 --format="%ai"', 'D:\\hexo');
+    const gitTs = runGit('git log -1 --format="%ai"', HEXO_DIR);
     const ts = gitTs.ok
         ? gitTs.out.replace(/[ :]/g, '-').substring(0, 19)
         : new Date().toISOString().replace(/[-:T]/g, '').substring(0, 19);
     console.log('[GIT] ts: ' + ts + ' (git ok: ' + gitTs.ok + ')');
 
     // git add
-    const add = runGit('git add "source/js/HistoryToday.json"', 'D:\\hexo');
+    const add = runGit('git add "source/js/HistoryToday.json"', HEXO_DIR);
     console.log('[GIT] add ok: ' + add.ok + (add.err ? ' err: ' + add.err : ''));
 
     // git commit
-    const commit = runGit('git commit -m "[Bot] Auto refresh HistoryToday ' + ts + '"', 'D:\\hexo');
+    const commit = runGit('git commit -m "[Bot] Auto refresh HistoryToday ' + ts + '"', HEXO_DIR);
     console.log('[GIT] commit ok: ' + commit.ok + (commit.err ? ' err: ' + commit.err : ''));
 
     // git push
-    const push = runGit('git push origin source', 'D:\\hexo');
+    const push = runGit('git push origin source', HEXO_DIR);
     console.log('[GIT] push ok: ' + push.ok + (push.err ? ' err: ' + push.err : ''));
 }
 

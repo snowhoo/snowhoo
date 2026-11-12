@@ -1,9 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const postsDir = 'd:\\hexo\\source\\_posts';
-const targetDir = 'd:\\hexo\\source\\images\\posts';
-const logFile = 'd:\\hexo\\scripts\\migrate-images-log.txt';
+const HEXO_DIR = path.resolve(__dirname, '..');
+const postsDir = path.join(HEXO_DIR, 'source', '_posts');
+const targetDir = path.join(HEXO_DIR, 'source', 'images', 'posts');
+const logFile = path.join(HEXO_DIR, 'scripts', 'migrate-images-log.txt');
 
 // 确保目标目录存在
 if (!fs.existsSync(targetDir)) {
@@ -72,7 +73,7 @@ imagePaths.forEach(oldPath => {
         stats.skipped++;
         return;
     }
-    const sourcePath = path.join('d:\\hexo\\source', oldPath.replace(/^\//, ''));
+    const sourcePath = path.join(HEXO_DIR, 'source', oldPath.replace(/^\//, ''));
     
     if (!fs.existsSync(sourcePath)) {
         stats.errors++;

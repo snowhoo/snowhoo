@@ -1,6 +1,6 @@
 import json, subprocess, os
 
-bot_dir = r'D:\hexo\hexo-bot\video-bot'
+bot_dir = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(bot_dir, 'config.json'), 'r', encoding='utf-8') as f:
     config = json.load(f)
 

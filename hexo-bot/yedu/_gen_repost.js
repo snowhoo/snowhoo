@@ -2,9 +2,10 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const TEMP_DIR = 'D:/hexo/hexo-bot/yedu/_temp_repost';
-const IMG_DIR = 'D:/hexo/source/images/repost';
-const POSTS_DIR = 'D:/hexo/source/_posts';
+const HEXO_DIR = path.resolve(__dirname, '..', '..');
+const TEMP_DIR = path.join(__dirname, '_temp_repost');
+const IMG_DIR = path.join(HEXO_DIR, 'source', 'images', 'repost');
+const POSTS_DIR = path.join(HEXO_DIR, 'source', '_posts');
 const slug = 'sweat-blister-summer';
 const dateStr = '2026-05-27';
 

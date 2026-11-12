@@ -9,7 +9,7 @@ r"""无窗口启动 books_poller.py。
 import os
 import sys
 
-HERE = r"D:\hexo\hexo-bot\books"
+HERE = os.path.dirname(os.path.abspath(__file__))
 LOG = os.path.join(HERE, "poller.log")
 
 try:

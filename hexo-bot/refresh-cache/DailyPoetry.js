@@ -2,7 +2,7 @@
 const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
-const HEXO = "D:\\hexo";
+const HEXO = path.resolve(__dirname, "..", "..");
 const TARGET = path.join(HEXO, "source", "js", "DailyPoetry.json");
 const CWD = HEXO;
 const DATA_DIR = path.join(__dirname, "poetry_data");

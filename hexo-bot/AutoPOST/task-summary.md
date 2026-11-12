@@ -1,7 +1,7 @@
 # Hexo AutoPOST 自动评论发布系统
 
 ## 任务目标
-参照 schedule-generator.js，在 `D:\hexo\hexo-bot\AutoPOST\` 下创建新的自动评论发布系统，每天 02:00 执行，随机3个时间（06:00-23:00，精确到秒），每个时间生成一篇随机文章评论，创建3个一次性Windows计划任务。
+参照 schedule-generator.js，在 `hexo-bot\AutoPOST\` 下创建新的自动评论发布系统，每天 02:00 执行，随机3个时间（06:00-23:00，精确到秒），每个时间生成一篇随机文章评论，创建3个一次性Windows计划任务。
 
 ## 核心文件
 

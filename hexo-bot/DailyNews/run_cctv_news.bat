@@ -1,27 +1,27 @@
 @echo off
-cd /d D:\hexo\hexo-bot\DailyNews
+cd /d "%~dp0"
 echo.
 echo ============================
-echo   Е╓╝Х╖├Ф√╟И≈╩Ф╞▐Ф≈╔Х▌╥Е▐√
+echo   яКйспбнец©ху╩Ях║
 echo ============================
 echo.
-"C:\Program Files\Python313\python.exe" DailyNews_CCTV.py %*
+"python.exe" DailyNews_CCTV.py %*
 echo.
-echo [Е╝▄Ф┬░] Е╓╝Х╖├Ф√╟И≈╩Е╥╡Ф⌡╢Ф√╟
+echo [мЙЁи] яКйспбнеря╦Эпб
 echo.
 echo ============================
-echo   Фё─Ф÷╔Ф⌡╢Ф√╟Е╧╤Ф▌╗И─│Х┤ЁGit
+echo   ╪Л╡И╦Эпб╡╒мфкмжаGit
 echo ============================
-cd /d D:\hexo
+cd /d "%~dp0..\.."
 git add source/app/news_CCTV/
 git diff --cached --quiet
 if %errorlevel% neq 0 (
-    git commit -m "Ф╞▐Ф≈╔Ф√╟И≈╩Х┤╙Е┼╗Ф⌡╢Ф√╟ %date%"
+    git commit -m "ц©хупбневт╤╞╦Эпб %date%"
     git push
-    echo [Е╝▄Ф┬░] Е╥╡Ф▌╗И─│Х┤ЁХ©°Г╗▀Д╩⌠Е╨⌠
+    echo [мЙЁи] рямфкмжат╤Ёл╡ж©Б
 ) else (
-    echo [Ф▐░Г╓╨] Ф≈═Ф√╟Е├┘Е╝╧Ф⌡╢Ф√╟
+    echo [лАй╬] нчпбдзхщ╦Эпб
 )
 echo.
-echo 10 Г╖▓Е░▌Х┤╙Е┼╗И──Е┤╨ ...
+echo 10 цК╨Свт╤╞мкЁЖ ...
 ping -n 10 127.0.0.1

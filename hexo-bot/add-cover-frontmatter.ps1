@@ -1,7 +1,8 @@
 # 批量为 Hexo 文章添加 cover 字段（提取正文第一张图片）
 
-$postsDir = "d:\hexo\source\_posts"
-$logFile = "d:\hexo\scripts\cover-update-log.txt"
+$hexoRoot = Split-Path -Parent $PSScriptRoot
+$postsDir = Join-Path $hexoRoot "source\_posts"
+$logFile = Join-Path $hexoRoot "scripts\cover-update-log.txt"
 $processedCount = 0
 $skippedCount = 0
 $errorCount = 0

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import importlib.util, re, os
 
-PATH = r"D:\hexo\hexo-bot\books\lewx.cc.books.py"
+PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lewx.cc.books.py")
 spec = importlib.util.spec_from_file_location("lewxbooks", PATH)
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)

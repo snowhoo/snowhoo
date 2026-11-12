@@ -13,11 +13,19 @@ const { execSync } = require('child_process');
 
 // ============ 配置 ============
 const ALBUM_URL = 'https://www.peopleapp.com/audiotopic/21622-10000002141';
-const OUTPUT_DIR = 'D:\\hexo\\source\\js\\sevencolor\\1';
+const HEXO_DIR = path.resolve(__dirname, '..', '..');
+const OUTPUT_DIR = path.join(HEXO_DIR, 'source', 'js', 'sevencolor', '1');
 const DATA_DIR = path.join(OUTPUT_DIR, 'yedu_data');
 const IMAGES_DIR = path.join(OUTPUT_DIR, 'yedu_data', 'images');
-const HEXO_DIR = 'D:\\hexo';
 const sharp = require('sharp');
+
+// 封面图宽高比允许区间。
+// 正文配图常见 0.72（724x1006）、1.33、1.78；站点插入的广告横幅是 3.86
+// （3840x995 / 1080x280），站点 logo 是 5.03。2026-09 下旬起广告被排到
+// 正文配图之前，原先「取第一张大图」的策略会稳定命中广告，故按比例排除。
+const MIN_COVER_RATIO = 0.45;
+const MAX_COVER_RATIO = 2.5;
+const PLACEHOLDER_COVER = './yedu_data/images/placeholder.webp';
 
 // ============ 工具函数 ============
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -63,6 +71,17 @@ async function downloadImage(imgUrl, pubDate) {
             // 使用 sharp 压缩：宽度800以内，转为webp格式，高压缩比
             const metadata = await sharp(localPath + '.tmp').metadata();
             const w = metadata.width || 0;
+            const h = metadata.height || 0;
+            const ratio = h ? w / h : 0;
+
+            // 落盘前用真实像素复核：DOM 阶段 naturalHeight 可能为 0，
+            // 或图片被重定向换成横幅，这一层兜住漏网的广告图。
+            if (ratio > MAX_COVER_RATIO || ratio < MIN_COVER_RATIO) {
+              try { fs.unlinkSync(localPath + '.tmp'); } catch (_) {}
+              log(`  [拦截] 非封面比例 ${w}x${h} (ratio=${ratio.toFixed(2)}): ${imgUrl}`);
+              resolve(null);
+              return;
+            }
 
             let processor = sharp(localPath + '.tmp');
             if (w > 800) {
@@ -145,11 +164,15 @@ async function fetchDetail(page) {
     const audioSrc = document.querySelector('audio')?.src || '';
 
     const imgs = [];
-    document.querySelectorAll('img').forEach(img => {
+    // 只从正文容器里取图：页头 logo、评论区头像、_nuxt 站点 UI 资源都不该进候选。
+    // 容器类名变动时逐级回退，避免整个页面找不到图。
+    const contentRoot = document.querySelector('.newsContent, [class*=newsContent], article') || document;
+    contentRoot.querySelectorAll('img').forEach(img => {
       const src = img.getAttribute('data-src') || img.src || '';
-      if (!src || src.includes('data:') || /logo|icon|audioBg/.test(src)) return;
+      if (!src || src.includes('data:') || /logo|icon|audioBg|_nuxt\//.test(src)) return;
       const w = img.naturalWidth || parseInt(img.getAttribute('width') || '0');
-      if (w >= 400) imgs.push({ src, w });
+      const h = img.naturalHeight || parseInt(img.getAttribute('height') || '0');
+      if (w >= 400) imgs.push({ src, w, h });
     });
 
     const allText = document.body.innerText;
@@ -278,8 +301,14 @@ async function main() {
 
       // 下载封面图
       let localCover = null;
+      // 通用筛选：按原始宽高比排除广告横幅（3.86）与站点 logo（5.03）；
+      // naturalHeight 为 0 时先放行，交给 downloadImage 的真实像素复核。
       const validImgs = (detail.imgs || []).filter(img => {
         if (img.w < 400) return false;
+        if (img.h > 0) {
+          const ratio = img.w / img.h;
+          if (ratio > MAX_COVER_RATIO || ratio < MIN_COVER_RATIO) return false;
+        }
         const src = img.src || '';
         if (/logo|icon|avatar|_avatar|show_type\/201808|user_app|cdnpeoplefront.*\/_nuxt\//.test(src)) return false;
         if (src.includes('cdnjdout.aikan.pdnews.cn') && /default|cover|logo|icon/i.test(src)) return false;
@@ -287,9 +316,11 @@ async function main() {
       });
       if (validImgs.length > 0) {
         const downloaded = await downloadImage(validImgs[0].src, detail.pubDate);
-        localCover = downloaded || validImgs[0].src;
+        // 不再回退到远程原图：被比例规则拦截时必须走占位，否则广告仍会显示
+        localCover = downloaded || PLACEHOLDER_COVER;
+        if (!downloaded) log('  [占位] 封面下载失败或被比例规则拦截');
       } else {
-        localCover = 'images/placeholder.svg';
+        localCover = PLACEHOLDER_COVER;
         log('  [占位] no cover image');
       }
 

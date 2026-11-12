@@ -15,7 +15,7 @@ from pathlib import Path
 from urllib.parse import urlparse, urlunparse, quote
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-DATA_DIR = Path(r"D:\hexo\source\js\sevencolor\3\data")
+DATA_DIR = Path(__file__).resolve().parents[2] / 'source' / 'js' / 'sevencolor' / '3' / 'data'
 OUTPUT_DIR = DATA_DIR / "TV-LOGO"
 CONCURRENT = 5
 TIMEOUT = 30

@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const postsDir = 'd:\\hexo\\source\\_posts';
-const logFile = 'd:\\hexo\\scripts\\cover-update-log.txt';
+const HEXO_DIR = path.resolve(__dirname, '..');
+const postsDir = path.join(HEXO_DIR, 'source', '_posts');
+const logFile = path.join(HEXO_DIR, 'scripts', 'cover-update-log.txt');
 
 let processedCount = 0;
 let skippedCount = 0;

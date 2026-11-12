@@ -27,7 +27,7 @@ DailyNews_CCTV.py — 央视新闻每日获取（增量合并模式）
   python DailyNews_CCTV.py --detail              # 同时获取全文（较慢）
 
 输出:
-  D:/hexo/source/app/news_CCTV/YYYYMMDD/{栏目名}.json
+  source/app/news_CCTV/YYYYMMDD/{栏目名}.json
 
 依赖:
   pip install requests beautifulsoup4 lxml
@@ -41,10 +41,11 @@ import sys
 import time
 from datetime import datetime, timezone, timedelta
 from bs4 import BeautifulSoup
+from pathlib import Path
 
 # ======================== 配置 ========================
 
-OUTPUT_BASE = r'D:\hexo\source\app\news_CCTV'
+OUTPUT_BASE = Path(__file__).resolve().parents[2] / 'source' / 'app' / 'news_CCTV'
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',

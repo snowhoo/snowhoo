@@ -7,7 +7,8 @@ echo  参考 yedu 模式，使用 Playwright 提取音频
 echo ============================================
 
 set SCRIPTS_DIR=%~dp0
-set OUTPUT_DIR=D:\hexo\source\js\sevencolor\1
+set "HEXO_ROOT=%~dp0..\..\.."
+set "OUTPUT_DIR=%HEXO_ROOT%\source\js\sevencolor\1"
 
 echo 脚本目录: %SCRIPTS_DIR%
 echo 输出目录: %OUTPUT_DIR%
@@ -20,7 +21,7 @@ py -3 dongjian_scraper.py --incremental --outdir "%OUTPUT_DIR%"
 
 echo.
 echo [2/2] 提交推送 ...
-cd /d "D:\hexo"
+cd /d "%HEXO_ROOT%"
 git add -A source/js/sevencolor/1/
 git diff --cached --quiet
 if %errorlevel% equ 0 (

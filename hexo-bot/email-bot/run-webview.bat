@@ -1,4 +1,4 @@
 @echo off
-cd /d D:\hexo\hexo-bot\email-bot
+cd /d "%~dp0"
 "C:\Program Files\nodejs\node.exe" "webview-bot.js"
 pause

@@ -126,7 +126,7 @@ def rename_hexo_posts(posts_dir):
     print(f"\n✅ 完成！成功重命名 {success_count}/{len(rename_pairs)} 个文件")
 
 if __name__ == '__main__':
-    default_path = r"D:\hexo\source\_posts"
+    default_path = str(Path(__file__).resolve().parents[1] / 'source' / '_posts')
     
     path_input = input(f"文章目录路径 (默认：{default_path}): ").strip()
     posts_dir = path_input if path_input else default_path

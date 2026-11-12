@@ -197,7 +197,7 @@ function convertHtmlToMarkdown(html, attachments, imgDir) {
 }
 
 // ─── 配置 ───────────────────────────────────────────────────────────────────
-const HEXO_PATH = 'D:/hexo';
+const HEXO_PATH = path.resolve(__dirname, '..', '..');
 const HEXO_SOURCE = path.join(HEXO_PATH, 'source', '_posts');
 const HEXO_DRAFTS = path.join(HEXO_PATH, 'source', '_drafts');
 const AUTO_DEPLOY = true;
