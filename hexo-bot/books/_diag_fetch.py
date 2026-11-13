@@ -26,7 +26,9 @@ print(head)
 print("--- 关键信号 ---")
 print("ckc.js in [:600]:", "ckc.js" in (h[:600] if isinstance(h,str) else ""))
 print("<title>Loading</title>:", "<title>Loading</title>" in (h if isinstance(h,str) else ""))
-print("__K redirect:", ("window.location" in (h if isinstance(h,str) else "")) and ("__K=" in (h if isinstance(h,str) else "")))
+_mj = re.search(r'window\.location\s*=\s*(.*?);', h, re.S) if isinstance(h, str) else None
+_jt = "".join(re.findall(r'"([^"]*)"', _mj.group(1))) if _mj else ""
+print("JS 跳转壳:", bool(_jt), "| 还原目标:", _jt[:100])
 m = re.search(r'data-param1="([^"]+)"', h) if isinstance(h,str) else None
 print("data-param1 found:", bool(m), (m.group(1) if m else ""))
 mt = re.search(r'href="/shuku_0_0_0_(\d+)\.html"', h) if isinstance(h,str) else None

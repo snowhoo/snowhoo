@@ -16,7 +16,8 @@ lewx.cc 小说增量爬虫（多线程 + 边爬边更新索引 + 分类拆分索
   - --content：单遍抓取——抓书页拿章节 url+标题，多线程拉前 --cap 章正文，写分片 + 更新 book.json(hc/nc)。
     与早期“先存章节列表再重读”相比，少一轮抓章节列表的冗余请求。
 
-反爬：站点首访返回 ckc.js 挑战页，脚本自动提取 data-param1 并以 cookie 形式带上（页面 gbk 编码）。
+反爬：站点首访可能返回 ckc.js 挑战页或 JS 跳转壳页；脚本按页面结构识别（不依赖挑战参数名），
+      自动提取 data-param1 置 cookie，或还原 window.location 拼接目标后跟随，服务端据此下发会话 cookie。
 多线程：目录收集 + 书页抓取 + 章节正文均并发（--workers 可调，默认 20），全局限速礼貌。
 边爬边更新索引：每 FLUSH_EVERY 本书 flush 一次，中断不丢索引。
 增量：已存在非连载中书跳过；连载中书自动复查章节数；--update 全体 diff；--force 全重抓。
@@ -43,6 +44,7 @@ import argparse
 import threading
 import urllib.request
 import urllib.error
+from urllib.parse import urlparse
 from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -114,6 +116,30 @@ def _merge_cookie(resp):
         COOKIE = "; ".join(pairs)
 
 
+def js_redirect_target(html):
+    """还原 window.location="<字符串拼接>" 型反爬跳转，返回绝对 URL；非挑战页返回 None.
+
+    判定只看页面结构，不依赖站点当前使用的参数名：站点曾用 ?__K=，后改 ?__CAdk=，
+    将来仍可能再改，故一律不做名字匹配，避免每次换名都要补一个特判。
+    """
+    if not html or len(html) > 4096 or "window.location" not in html:
+        return None
+    m = re.search(r'window\.location\s*=\s*(.*?);', html, re.S)
+    if not m:
+        return None
+    target = "".join(re.findall(r'"([^"]*)"', m.group(1)))
+    if not target:
+        return None
+    if target.startswith("http"):
+        if urlparse(target).netloc != urlparse(BASE).netloc:
+            return None          # 站外跳转，不跟随
+    else:
+        target = BASE + ("" if target.startswith("/") else "/") + target
+    # 挑战跳转一定带查询串；无查询串的属站内普通跳转，不跟随
+    if "?" not in target:
+        return None
+    return target
+
 def fetch_html(url, referer=None, _depth=0):
     global COOKIE
     if _depth > RETRY:
@@ -152,20 +178,15 @@ def fetch_html(url, referer=None, _depth=0):
             return fetch_html(url, referer, _depth + 1)
         return None
 
-    # JS 跳转挑战：lewx.cc 把 ?__K= 拆成字符串拼接写入 window.location，
-    # 故字面量 "?__K=" 不存在，须先还原拼接后的真实目标再跟随。
+    # JS 跳转挑战：站点把参数名拆成字符串拼接写入 window.location，
+    # 由 js_redirect_target() 按页面结构统一还原（不依赖 __K / __CAdk 等具体名字）。
     # 命中后服务端下发会话 cookie（如 q_tuc），由 _merge_cookie 接管，后续请求免挑战。
-    m = re.search(r'window\.location\s*=\s*(.*?);', html, re.S)
-    if m:
-        parts = re.findall(r'"([^"]*)"', m.group(1))
-        target = "".join(parts)
-        if not target.startswith("http"):
-            target = BASE + ("" if target.startswith("/") else "/") + target
-        if "__K" in target:
-            if _depth == 0:
-                print("  [INFO] 跟随 JS 跳转挑战 -> %s" % target)
-            time.sleep(0.2)
-            return fetch_html(target, referer, _depth + 1)
+    target = js_redirect_target(html)
+    if target:
+        if _depth == 0:
+            print("  [INFO] 跟随 JS 跳转挑战 -> %s" % target)
+        time.sleep(0.2)
+        return fetch_html(target, referer, _depth + 1)
 
     return html
 
@@ -175,20 +196,14 @@ def warm_up():
 
 
 def is_bot_page(html):
-    """判断页面是否为反爬挑战/跳转页。lewx.cc 把 ?__K= 拆成字符串拼接，故需还原后再判定。"""
+    """判断页面是否为反爬挑战/跳转页（按结构识别，不依赖站点当前参数名）。"""
     if not html:
         return False
     if "ckc.js" in html[:800]:
         return True
     if "<title>Loading</title>" in html:
         return True
-    if "window.location" in html:
-        rm = re.search(r'window\.location\s*=\s*(.*?);', html, re.S)
-        if rm:
-            target = "".join(re.findall(r'"([^"]*)"', rm.group(1)))
-            if "__K" in target:
-                return True
-    return False
+    return js_redirect_target(html) is not None
 
 
 # ----------------------------- 解析：书库列表页 -----------------------------
@@ -658,7 +673,7 @@ def crawl(opts):
         print("[ERROR] 无法抓取书库首页（请求失败或被网络拦截），退出。")
         return
     if is_bot_page(first):
-        print("[ERROR] 书库首页返回反爬跳转页(__K/ckc.js)，当前 IP 疑似被 lewx.cc 限流。")
+        print("[ERROR] 书库首页返回反爬挑战/跳转页，当前 IP 疑似被 lewx.cc 限流。")
         print("        限流期内无法抓取：请稍后（通常数小时）重试，或换网络/IP 后重试。")
         print("        可稍后用 catalog_toc.bat（增量模式，已去掉强制全量）重试验证，或等限流窗口过再跑。")
         sys.exit(1)
