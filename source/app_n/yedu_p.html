@@ -228,7 +228,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   let articles = [];          // 已加载的文章（按索引稀疏填充）
   let fileList = [];          // index.json 的文件列表（总篇数/顺序依据）
   let currentIndex = 0;
-  const STORAGE_KEY = 'yedu_page_idx';
   let startX = 0, startY = 0, moveX = 0, moveY = 0;
   let isDragging = false;
   let hintVisible = true;
@@ -350,7 +349,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
   // 数据加载：只取索引 → 建卡 → 加载首屏文章
   function loadData() {
-    fetch(basePath + 'yedu_data/index.json')
+    fetch(basePath + 'yedu_data/index.json?_=' + Date.now())
       .then(function(r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
@@ -358,12 +357,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       .then(function(files) {
         fileList = files;
 
-        // 恢复保存的页码
-        var savedIdx = localStorage.getItem(STORAGE_KEY);
-        if (savedIdx !== null) {
-          var n = parseInt(savedIdx, 10);
-          if (n >= 0 && n < fileList.length) currentIndex = n;
-        }
         // 从系统媒体卡片进入（?resume=1）：优先恢复到播放中的文章
         var resume = (location.search.indexOf('resume=1') >= 0) ? getResume() : null;
         if (resume && resume.index >= 0 && resume.index < fileList.length) {
@@ -523,7 +516,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       if (i > currentIndex) card.classList.add('right');
     });
     pageBtn.textContent = (currentIndex + 1) + ' / ' + fileList.length;
-    localStorage.setItem(STORAGE_KEY, currentIndex);
     if (hintVisible) {
       hintEl.classList.remove('hidden');
       setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);

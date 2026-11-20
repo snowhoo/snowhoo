@@ -307,7 +307,7 @@ layout: false
 
   // 数据加载
   function loadData() {
-    fetch(basePath + 'yedu_data/index.json')
+    fetch(basePath + 'yedu_data/index.json?_=' + Date.now())
       .then(function(r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();

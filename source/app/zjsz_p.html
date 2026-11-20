@@ -202,7 +202,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   
   let articles = [];
   let currentIndex = 0;
-  const STORAGE_KEY = 'zjsz_page_idx';
   let startX = 0, startY = 0, moveX = 0, moveY = 0;
   let isDragging = false;
   let hintVisible = true;
@@ -286,12 +285,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         }
         articles = data;
 
-        // 恢复保存的页码
-        var savedIdx = localStorage.getItem(STORAGE_KEY);
-        if (savedIdx !== null) {
-          var n = parseInt(savedIdx, 10);
-          if (n >= 0 && n < articles.length) currentIndex = n;
-        }
 
         createPageNav();
         createCards();
@@ -434,7 +427,6 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       if (i > currentIndex) card.classList.add('right');
     });
     pageBtn.textContent = (currentIndex + 1) + ' / ' + articles.length;
-    localStorage.setItem(STORAGE_KEY, currentIndex);
     if (hintVisible) {
       hintEl.classList.remove('hidden');
       setTimeout(function() { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);

@@ -254,7 +254,6 @@ const POSTS_PATH = 'source/_posts';
 let POSTS = [];
 let currentIndex = 0;
 let currentCategory = '';
-const STORAGE_KEY = 'reader_page_idx';
 const CAT_KEY = 'reader_cat';
 let startX = 0, startY = 0, moveX = 0, moveY = 0;
 let isDragging = false;
@@ -525,12 +524,6 @@ async function main() {
         });
         app.innerHTML = '';
         createPageNav();
-        // 恢复保存的页码
-        var savedIdx = localStorage.getItem(STORAGE_KEY);
-        if (savedIdx !== null) {
-          var n = parseInt(savedIdx, 10);
-          if (n >= 0 && n < POSTS.length) currentIndex = n;
-        }
         // 先构建分类列表（恢复保存的分类），再创建卡片
         buildCategoryList();
         createCards();
@@ -555,12 +548,6 @@ async function main() {
     });
     app.innerHTML = '';
     createPageNav();
-    // 恢复保存的页码
-    var savedIdx = localStorage.getItem(STORAGE_KEY);
-    if (savedIdx !== null) {
-      var n = parseInt(savedIdx, 10);
-      if (n >= 0 && n < POSTS.length) currentIndex = n;
-    }
     // 构建分类列表（需先恢复保存的分类）
     buildCategoryList();
     createCards();
@@ -797,7 +784,6 @@ function updateCards() {
     if (i > currentIndex) card.classList.add('right');
   });
   pageBtn.textContent = (currentIndex + 1) + ' / ' + total;
-  localStorage.setItem(STORAGE_KEY, currentIndex);
   if (hintVisible) {
     hintEl.classList.remove('hidden');
     setTimeout(() => { hintEl.classList.add('hidden'); hintVisible = false; }, 3000);
