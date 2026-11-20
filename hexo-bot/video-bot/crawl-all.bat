@@ -18,5 +18,5 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 REM ── 无论成败都暂停以便查看 ─────────────────────────────
-pause
+
 exit /b %ERRORLEVEL%
