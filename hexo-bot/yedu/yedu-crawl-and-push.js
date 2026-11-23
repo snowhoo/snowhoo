@@ -30,9 +30,28 @@ const PLACEHOLDER_COVER = './yedu_data/images/placeholder.webp';
 // ============ 工具函数 ============
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
+// 卡死兜底：锁屏期间 Playwright/msedge 子进程可能挂起，page.evaluate 等
+// 无超时接口会永久等待，计划任务就一直卡在「访问列表页...」。
+// 连续 60 秒没有任何日志进展则强杀浏览器并退出，让计划任务正常结束。
+const STALL_TIMEOUT_MS = 60 * 1000;
+let stallTimer = null;
+let activeBrowser = null;
+
+function armStallTimer() {
+  clearTimeout(stallTimer);
+  stallTimer = setTimeout(() => {
+    const ts = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+    console.log(`[${ts}] [超时] 超过 ${STALL_TIMEOUT_MS / 1000} 秒无进展，强制退出`);
+    try { activeBrowser?.process()?.kill('SIGKILL'); } catch (_) {}
+    process.exit(1);
+  }, STALL_TIMEOUT_MS);
+  stallTimer.unref(); // 不阻止进程正常退出
+}
+
 const log = (msg) => {
   const ts = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
   console.log(`[${ts}] ${msg}`);
+  armStallTimer(); // 每次有进展就重置兜底计时
 };
 
 // 图片文件名：YYYYMMDD-HHMM-001.ext
@@ -246,6 +265,7 @@ async function main() {
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
+    activeBrowser = browser;
 
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36 Edg/147.0.0.0',
@@ -359,6 +379,10 @@ async function main() {
     console.error(err);
     if (browser) { try { await browser.close(); } catch (_) {} }
     process.exit(1);
+  } finally {
+    clearTimeout(stallTimer);
+    stallTimer = null;
+    activeBrowser = null;
   }
 }
 
