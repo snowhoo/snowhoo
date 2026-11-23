@@ -3,7 +3,6 @@ cd /d "%~dp0..\.."
 "C:\Program Files\nodejs\node.exe" hexo-bot\refresh-cache\FestivalSolar.js
 if %ERRORLEVEL% NEQ 0 (
     echo [ERR] FestivalSolar script failed!
-    pause
     exit /b 1
 )
 

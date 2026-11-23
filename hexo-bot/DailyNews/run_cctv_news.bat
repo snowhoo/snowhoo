@@ -23,5 +23,3 @@ if %errorlevel% neq 0 (
     echo [提示] 无新内容更新
 )
 echo.
-echo 10 秒后自动退出 ...
-ping -n 10 127.0.0.1
